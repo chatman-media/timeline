@@ -1,6 +1,10 @@
 {
   "tasks": {
-    "test": "deno test"
+    "test": "deno test",
+    "lint": "deno lint"
+  },
+  "lint": {
+    "exclude": [".next/", ".history/"]
   },
   "fmt": {
     "lineWidth": 100,
