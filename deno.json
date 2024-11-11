@@ -1,6 +1,6 @@
 {
   "tasks": {
-    "test": "deno test",
+    "test": "deno test src/tests/",
     "lint": "deno lint"
   },
   "lint": {

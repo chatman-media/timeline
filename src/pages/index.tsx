@@ -202,7 +202,8 @@ export default function Home() {
               const videoTime = new Date(video.metadata.creation_time).getTime()
               const startTime = new Date(videos[0].metadata.creation_time!).getTime()
               const videoSeconds = Math.floor((videoTime - startTime) / 1000)
-              return videoSeconds <= currentTime
+              const videoEndSeconds = videoSeconds + video.metadata.format.duration
+              return videoSeconds <= currentTime && currentTime <= videoEndSeconds
             }).length === 0
             ? <EmptyState />
             : (
@@ -212,7 +213,8 @@ export default function Home() {
                   const videoTime = new Date(video.metadata.creation_time).getTime()
                   const startTime = new Date(videos[0].metadata.creation_time!).getTime()
                   const videoSeconds = Math.floor((videoTime - startTime) / 1000)
-                  return videoSeconds <= currentTime
+                  const videoEndSeconds = videoSeconds + video.metadata.format.duration
+                  return videoSeconds <= currentTime && currentTime <= videoEndSeconds
                 })
                 .map((video) => {
                   const videoFrame = frames.find(frame => frame.videoPath === video.path)
