@@ -1,6 +1,6 @@
 import Image from "next/image"
 import localFont from "next/font/local"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
@@ -25,6 +25,12 @@ interface VideoInfo {
   }
 }
 
+// Добавляем интерфейс VideoFrame
+interface VideoFrame {
+  videoPath: string
+  framePath: string
+}
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -47,9 +53,8 @@ const formatDuration = (seconds: number) => {
 
 // Добавим компонент-заглушку
 const EmptyState = () => (
-  <div className="flex gap-4 items-center">
-    <div className="w-[160px] h-[90px] bg-gray-900 rounded-lg" />
-    <div className="flex flex-col">
+  <div className="w-full aspect-video bg-gray-900 rounded-lg">
+    <div className="flex flex-col p-4">
       <div className="h-6 w-32 bg-gray-800 rounded animate-pulse" />
       <div className="h-4 w-48 bg-gray-800 rounded mt-2 animate-pulse" />
     </div>
@@ -60,6 +65,8 @@ export default function Home() {
   const [videos, setVideos] = useState<VideoInfo[]>([])
   const [timeRange, setTimeRange] = useState({ min: 0, max: 0 })
   const [currentTime, setCurrentTime] = useState(0)
+  const [frames, setFrames] = useState<VideoFrame[]>([])
+  const [isLoadingFrames, setIsLoadingFrames] = useState(false)
 
   useEffect(() => {
     fetch("/api/hello")
@@ -97,18 +104,90 @@ export default function Home() {
       .catch((error) => console.error("Error fetching videos:", error))
   }, [])
 
+  // Добавяем debounced версию fetchFrames
+  const debouncedFetchFrames = useCallback(
+    (() => {
+      let timeoutId: NodeJS.Timeout
+      return (timestamp: number) => {
+        clearTimeout(timeoutId)
+        timeoutId = setTimeout(() => {
+          fetchFrames(timestamp)
+        }, 500) // 500ms задержка
+      }
+    })(),
+    [videos] // Зависимость от videos, так как используется внутри функции
+  )
+
+  // Добавляем функцию для получения кадров
+  const fetchFrames = async (timestamp: number) => {
+    setIsLoadingFrames(true)
+    try {
+      const activeVideos = videos.filter((video) => {
+        if (!video.metadata.creation_time) return false
+        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
+        const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
+        return videoTime <= (startTime + timestamp)
+      })
+
+      if (activeVideos.length === 0) {
+        setFrames([])
+        return
+      }
+
+      // Изменяем структуру запроса согласно требованиям API
+      const requestData = activeVideos.map(video => {
+        const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
+        const firstVideoTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
+        const relativeTimestamp = Math.max(0, timestamp - (videoStartTime - firstVideoTime))
+        
+        return {
+          path: video.path,
+          timestamp: relativeTimestamp // Отправляем массив timestamps
+        }
+      })
+
+      console.log('Full request payload:', requestData)
+
+      const response = await fetch('/api/video-frames', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Server response:', errorText)
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
+      }
+
+      const data = await response.json()
+      setFrames(data.frames)
+    } catch (error) {
+      console.error('Error fetching frames:', error)
+      setFrames([])
+    } finally {
+      setIsLoadingFrames(false)
+    }
+  }
+
+  // Модифицируем обработчик изменения слайдера
+  const handleTimeChange = (value: number[]) => {
+    setCurrentTime(value[0])
+    debouncedFetchFrames(value[0])
+  }
+
   return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]`}
-    >
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start w-full max-w-6xl">
+    <div className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen font-[family-name:var(--font-geist-sans)]`}>
+      <main className="flex flex-col gap-8 row-start-2 items-center w-full px-12 sm:px-16">
         <div className="w-full">
           <Slider
             defaultValue={[0]}
             max={timeRange.max - timeRange.min}
             step={1}
             value={[currentTime]}
-            onValueChange={(value) => setCurrentTime(value[0])}
+            onValueChange={handleTimeChange}
           />
           <div className="mt-2 text-sm text-gray-500">
             {videos.length > 0 && videos[0].metadata.creation_time && (
@@ -117,11 +196,11 @@ export default function Home() {
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-4 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
           {videos.filter((video) => {
               if (!video.metadata.creation_time) return false
               const videoTime = new Date(video.metadata.creation_time).getTime()
-              const startTime = new Date(videos[0].metadata.creation_time!).getTime() // Используем первое (самое старое) видео как точку отсчета
+              const startTime = new Date(videos[0].metadata.creation_time!).getTime()
               const videoSeconds = Math.floor((videoTime - startTime) / 1000)
               return videoSeconds <= currentTime
             }).length === 0
@@ -131,34 +210,39 @@ export default function Home() {
                 .filter((video) => {
                   if (!video.metadata.creation_time) return false
                   const videoTime = new Date(video.metadata.creation_time).getTime()
-                  const startTime = new Date(videos[0].metadata.creation_time!).getTime() // Используем первое (самое старое) видео как точку отсчета
+                  const startTime = new Date(videos[0].metadata.creation_time!).getTime()
                   const videoSeconds = Math.floor((videoTime - startTime) / 1000)
                   return videoSeconds <= currentTime
                 })
-                .map((video) => (
-                  <div key={video.path} className="flex gap-4 items-center">
-                    <Image
-                      src={video.thumbnail}
-                      alt={video.name}
-                      width={160}
-                      height={90}
-                      className="rounded-lg object-cover"
-                    />
-                    <div className="flex flex-col">
-                      <h3 className="font-medium">{video.name}</h3>
-                      <div className="flex gap-2 text-sm text-gray-500">
-                        <span>
-                          {video.metadata.creation_time &&
-                            dayjs(video.metadata.creation_time).tz("Asia/Bangkok").format(
-                              "D MMM YYYY, HH:mm:ss",
-                            )}
-                        </span>
-                        <span>•</span>
-                        <span>{formatDuration(video.metadata.format.duration)}</span>
+                .map((video) => {
+                  const videoFrame = frames.find(frame => frame.videoPath === video.path)
+                  
+                  return (
+                    <div key={video.path} className="flex flex-col gap-3">
+                      <div className="w-full aspect-video relative">
+                        <Image
+                          src={videoFrame?.framePath || video.thumbnail}
+                          alt={video.name}
+                          fill
+                          className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <h3 className="font-medium">{video.name}</h3>
+                        <div className="flex gap-2 text-sm text-gray-500">
+                          <span>
+                            {video.metadata.creation_time &&
+                              dayjs(video.metadata.creation_time).tz("Asia/Bangkok").format(
+                                "D MMM YYYY, HH:mm:ss",
+                              )}
+                          </span>
+                          <span>•</span>
+                          <span>{formatDuration(video.metadata.format.duration)}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  )
+                })
             )}
         </div>
       </main>
