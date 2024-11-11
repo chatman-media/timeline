@@ -89,7 +89,7 @@ interface FFProbeData {
 }
 
 export default async function handler(
-  req: NextApiRequest,
+  _req: NextApiRequest,
   res: NextApiResponse<{ videos: VideoInfo[] }>,
 ) {
   try {
