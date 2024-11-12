@@ -6,6 +6,8 @@ import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
 import { Slider } from "@/components/ui/slider"
+import { Button } from "@/components/ui/button"
+import { Play, Pause } from "lucide-react"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -67,6 +69,8 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState(0)
   const [frames, setFrames] = useState<VideoFrame[]>([])
   const [isLoadingFrames, setIsLoadingFrames] = useState(false)
+  const [timezone, setTimezone] = useState("Asia/Bangkok")
+  const [isPlaying, setIsPlaying] = useState(false)
 
   useEffect(() => {
     fetch("/api/hello")
@@ -178,9 +182,36 @@ export default function Home() {
     debouncedFetchFrames(value[0])
   }
 
+  // Добавляем функцию для управления воспроизведением
+  const togglePlayback = () => {
+    setIsPlaying(!isPlaying)
+  }
+
   return (
-    <div className={`${geistSans.variable} ${geistMono.variable} grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen font-[family-name:var(--font-geist-sans)]`}>
-      <main className="flex flex-col gap-8 row-start-2 items-center w-full px-12 sm:px-16">
+    <div className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-[family-name:var(--font-geist-sans)] relative`}>
+      <div className="absolute top-4 right-4">
+        {/* <TimeZoneSelect value={timezone} onValueChange={setTimezone} /> */}
+      </div>
+      <main className="flex flex-col gap-8 items-center w-full px-12 sm:px-16 py-16">
+        {/* Добавляем панель управления */}
+        <div className="flex items-center gap-4 w-full">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={togglePlayback}
+            className="h-8 w-8"
+          >
+            {isPlaying ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
+          </Button>
+          <span className="text-sm text-gray-500">
+            {dayjs.duration(currentTime, "seconds").format("mm:ss")}
+          </span>
+        </div>
+
         <div className="w-full">
           <Slider
             defaultValue={[0]}
@@ -188,14 +219,10 @@ export default function Home() {
             step={1}
             value={[currentTime]}
             onValueChange={handleTimeChange}
+            className="w-full"
           />
-          <div className="mt-2 text-sm text-gray-500">
-            {videos.length > 0 && videos[0].metadata.creation_time && (
-              dayjs(new Date(videos[0].metadata.creation_time).getTime() + (currentTime * 1000))
-                .format("D MMM YYYY, HH:mm:ss")
-            )}
-          </div>
         </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
           {videos.filter((video) => {
               if (!video.metadata.creation_time) return false
@@ -234,9 +261,10 @@ export default function Home() {
                         <div className="flex gap-2 text-sm text-gray-500">
                           <span>
                             {video.metadata.creation_time &&
-                              dayjs(video.metadata.creation_time).tz("Asia/Bangkok").format(
-                                "D MMM YYYY, HH:mm:ss",
-                              )}
+                              dayjs(video.metadata.creation_time)
+                                .tz(timezone)
+                                .format("D MMM YYYY, HH:mm:ss")
+                            }
                           </span>
                           <span>•</span>
                           <span>{formatDuration(video.metadata.format.duration)}</span>
@@ -248,8 +276,6 @@ export default function Home() {
             )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-      </footer>
     </div>
   )
 }

@@ -18,7 +18,6 @@ export default async function handler(
   }
 
   try {
-    console.log(req.body)
 
     const requestData = req.body
     const framesDir = pth.join(process.cwd(), "public", "frames")
