@@ -193,7 +193,7 @@ export default function Home() {
         {/* <TimeZoneSelect value={timezone} onValueChange={setTimezone} /> */}
       </div>
       <main className="flex flex-col gap-8 items-center w-full px-12 sm:px-16 py-16">
-        {/* Добавляем панель управления */}
+        {/* Панель управления */}
         <div className="flex items-center gap-4 w-full">
           <Button
             variant="outline"
@@ -223,57 +223,127 @@ export default function Home() {
           />
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-          {videos.filter((video) => {
-              if (!video.metadata.creation_time) return false
-              const videoTime = new Date(video.metadata.creation_time).getTime()
-              const startTime = new Date(videos[0].metadata.creation_time!).getTime()
-              const videoSeconds = Math.floor((videoTime - startTime) / 1000)
-              const videoEndSeconds = videoSeconds + video.metadata.format.duration
-              return videoSeconds <= currentTime && currentTime <= videoEndSeconds
-            }).length === 0
-            ? <EmptyState />
-            : (
-              videos
-                .filter((video) => {
-                  if (!video.metadata.creation_time) return false
-                  const videoTime = new Date(video.metadata.creation_time).getTime()
-                  const startTime = new Date(videos[0].metadata.creation_time!).getTime()
-                  const videoSeconds = Math.floor((videoTime - startTime) / 1000)
-                  const videoEndSeconds = videoSeconds + video.metadata.format.duration
-                  return videoSeconds <= currentTime && currentTime <= videoEndSeconds
-                })
-                .map((video) => {
-                  const videoFrame = frames.find(frame => frame.videoPath === video.path)
-                  
-                  return (
-                    <div key={video.path} className="flex flex-col gap-3">
-                      <div className="w-full aspect-video relative">
-                        <Image
-                          src={videoFrame?.framePath || video.thumbnail}
-                          alt={video.name}
-                          fill
-                          className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <h3 className="font-medium">{video.name}</h3>
-                        <div className="flex gap-2 text-sm text-gray-500">
-                          <span>
-                            {video.metadata.creation_time &&
-                              dayjs(video.metadata.creation_time)
-                                .tz(timezone)
-                                .format("D MMM YYYY, HH:mm:ss")
-                            }
-                          </span>
-                          <span>•</span>
-                          <span>{formatDuration(video.metadata.format.duration)}</span>
+        {/* Новый контейнер с разделением на две части */}
+        <div className="flex gap-6 w-full">
+          {/* Левая часть (2/3) для обычных видео */}
+          <div className="w-2/3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {videos.filter(video => {
+                if (!video.metadata.creation_time) return false
+                const videoTime = new Date(video.metadata.creation_time).getTime()
+                const startTime = new Date(videos[0].metadata.creation_time!).getTime()
+                const videoSeconds = Math.floor((videoTime - startTime) / 1000)
+                const videoEndSeconds = videoSeconds + video.metadata.format.duration
+                // Добавляем фильтр для обычных видео (не INSV)
+                return videoSeconds <= currentTime && 
+                  currentTime <= videoEndSeconds && 
+                  !video.name.toLowerCase().includes('.insv')
+              }).length === 0 ? (
+                <EmptyState />
+              ) : (
+                videos
+                  .filter(video => {
+                    if (!video.metadata.creation_time) return false
+                    const videoTime = new Date(video.metadata.creation_time).getTime()
+                    const startTime = new Date(videos[0].metadata.creation_time!).getTime()
+                    const videoSeconds = Math.floor((videoTime - startTime) / 1000)
+                    const videoEndSeconds = videoSeconds + video.metadata.format.duration
+                    return videoSeconds <= currentTime && 
+                      currentTime <= videoEndSeconds && 
+                      !video.name.toLowerCase().includes('.insv')
+                  })
+                  .map((video) => {
+                    const videoFrame = frames.find(frame => frame.videoPath === video.path)
+                    return (
+                      <div key={video.path} className="flex flex-col gap-3">
+                        <div className="w-full aspect-video relative">
+                          <Image
+                            src={videoFrame?.framePath || video.thumbnail}
+                            alt={video.name}
+                            fill
+                            className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <h3 className="font-medium">{video.name}</h3>
+                          <div className="flex gap-2 text-sm text-gray-500">
+                            <span>
+                              {video.metadata.creation_time &&
+                                dayjs(video.metadata.creation_time)
+                                  .tz(timezone)
+                                  .format("D MMM YYYY, HH:mm:ss")
+                              }
+                            </span>
+                            <span>•</span>
+                            <span>{formatDuration(video.metadata.format.duration)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })
-            )}
+                    )
+                  })
+              )}
+            </div>
+          </div>
+
+          {/* Правая часть (1/3) для INSV */}
+          <div className="w-1/3">
+            <div className="grid grid-cols-1 gap-6">
+              {videos.filter(video => {
+                if (!video.metadata.creation_time) return false
+                const videoTime = new Date(video.metadata.creation_time).getTime()
+                const startTime = new Date(videos[0].metadata.creation_time!).getTime()
+                const videoSeconds = Math.floor((videoTime - startTime) / 1000)
+                const videoEndSeconds = videoSeconds + video.metadata.format.duration
+                // Фильтр только для INSV видео
+                return videoSeconds <= currentTime && 
+                  currentTime <= videoEndSeconds && 
+                  video.name.toLowerCase().includes('.insv')
+              }).length === 0 ? (
+                <EmptyState />
+              ) : (
+                videos
+                  .filter(video => {
+                    if (!video.metadata.creation_time) return false
+                    const videoTime = new Date(video.metadata.creation_time).getTime()
+                    const startTime = new Date(videos[0].metadata.creation_time!).getTime()
+                    const videoSeconds = Math.floor((videoTime - startTime) / 1000)
+                    const videoEndSeconds = videoSeconds + video.metadata.format.duration
+                    return videoSeconds <= currentTime && 
+                      currentTime <= videoEndSeconds && 
+                      video.name.toLowerCase().includes('.insv')
+                  })
+                  .map((video) => {
+                    const videoFrame = frames.find(frame => frame.videoPath === video.path)
+                    return (
+                      <div key={video.path} className="flex flex-col gap-3">
+                        <div className="w-full aspect-video relative">
+                          <Image
+                            src={videoFrame?.framePath || video.thumbnail}
+                            alt={video.name}
+                            fill
+                            className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <h3 className="font-medium">{video.name}</h3>
+                          <div className="flex gap-2 text-sm text-gray-500">
+                            <span>
+                              {video.metadata.creation_time &&
+                                dayjs(video.metadata.creation_time)
+                                  .tz(timezone)
+                                  .format("D MMM YYYY, HH:mm:ss")
+                              }
+                            </span>
+                            <span>•</span>
+                            <span>{formatDuration(video.metadata.format.duration)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })
+              )}
+            </div>
+          </div>
         </div>
       </main>
     </div>
