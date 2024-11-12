@@ -18,7 +18,6 @@ export default async function handler(
   }
 
   try {
-
     const requestData = req.body
     const framesDir = pth.join(process.cwd(), "public", "frames")
     await fs.mkdir(framesDir, { recursive: true })

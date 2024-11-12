@@ -12,11 +12,7 @@ import {
   CommandInput,
   CommandItem,
 } from "@/components/ui/command"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 const timezones = [
   { value: "UTC", label: "UTC" },
@@ -84,7 +80,7 @@ export function TimeZoneSelect({
                 <Check
                   className={cn(
                     "mr-2 h-3 w-3",
-                    value === timezone.value ? "opacity-100" : "opacity-0"
+                    value === timezone.value ? "opacity-100" : "opacity-0",
                   )}
                 />
                 {timezone.label}
@@ -95,4 +91,4 @@ export function TimeZoneSelect({
       </PopoverContent>
     </Popover>
   )
-} 
+}

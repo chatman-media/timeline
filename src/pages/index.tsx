@@ -1,13 +1,14 @@
 import Image from "next/image"
 import localFont from "next/font/local"
-import { useEffect, useState, useCallback } from "react"
+import { useCallback, useEffect, useState } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
 import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
-import { Play, Pause } from "lucide-react"
+import { Pause, Play } from "lucide-react"
+import { formatTimeWithDecisecond } from "@/lib/utils"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -33,6 +34,13 @@ interface VideoFrame {
   framePath: string
 }
 
+// Add new interfaces and types
+interface RecordEntry {
+  camera: number
+  startTime: number
+  endTime?: number
+}
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -53,15 +61,6 @@ const formatDuration = (seconds: number) => {
   return duration.format("m:ss")
 }
 
-// Добавим компонент-заглушку
-const EmptyState = () => (
-  <div className="w-full aspect-video bg-gray-900 rounded-lg">
-    <div className="flex flex-col p-4">
-      <div className="h-6 w-32 bg-gray-800 rounded animate-pulse" />
-      <div className="h-4 w-48 bg-gray-800 rounded mt-2 animate-pulse" />
-    </div>
-  </div>
-)
 
 export default function Home() {
   const [videos, setVideos] = useState<VideoInfo[]>([])
@@ -69,8 +68,11 @@ export default function Home() {
   const [currentTime, setCurrentTime] = useState(0)
   const [frames, setFrames] = useState<VideoFrame[]>([])
   const [isLoadingFrames, setIsLoadingFrames] = useState(false)
-  const [timezone, setTimezone] = useState("Asia/Bangkok")
+  const [timezone] = useState("Asia/Bangkok")
   const [isPlaying, setIsPlaying] = useState(false)
+  const [activeCamera, setActiveCamera] = useState(1)
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordings, setRecordings] = useState<RecordEntry[]>([])
 
   useEffect(() => {
     fetch("/api/hello")
@@ -95,7 +97,7 @@ export default function Home() {
         const minTime = Math.min(...times)
         const maxTime = Math.max(...times)
 
-        // Устанавливаем диапазон в секундах
+        // Устанавливаем диапазн в секундах
         setTimeRange({
           min: Math.floor(minTime / 1000),
           max: Math.floor(maxTime / 1000),
@@ -119,7 +121,7 @@ export default function Home() {
         }, 500) // 500ms задержка
       }
     })(),
-    [videos] // Зависимость от videos, так как используется внутри функции
+    [videos], // Зависимость от videos, так как используется внутри функции
   )
 
   // Добавляем функцию для получения кадров
@@ -139,37 +141,37 @@ export default function Home() {
       }
 
       // Изменяем структуру запроса согласно требованиям API
-      const requestData = activeVideos.map(video => {
+      const requestData = activeVideos.map((video) => {
         const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
         const firstVideoTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
         const relativeTimestamp = Math.max(0, timestamp - (videoStartTime - firstVideoTime))
-        
+
         return {
           path: video.path,
-          timestamp: relativeTimestamp // Отправляем массив timestamps
+          timestamp: relativeTimestamp, // Отправляем массив timestamps
         }
       })
 
-      console.log('Full request payload:', requestData)
+      console.log("Full request payload:", requestData)
 
-      const response = await fetch('/api/video-frames', {
-        method: 'POST',
+      const response = await fetch("/api/video-frames", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestData)
+        body: JSON.stringify(requestData),
       })
 
       if (!response.ok) {
         const errorText = await response.text()
-        console.error('Server response:', errorText)
+        console.error("Server response:", errorText)
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
       }
 
       const data = await response.json()
       setFrames(data.frames)
     } catch (error) {
-      console.error('Error fetching frames:', error)
+      console.error("Error fetching frames:", error)
       setFrames([])
     } finally {
       setIsLoadingFrames(false)
@@ -178,85 +180,175 @@ export default function Home() {
 
   // Добавляем эффект для воспроизведения
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
+    let intervalId: NodeJS.Timeout
 
     if (isPlaying) {
       intervalId = setInterval(() => {
         setCurrentTime((prevTime) => {
           if (prevTime >= timeRange.max - timeRange.min) {
-            setIsPlaying(false);
-            fetchFrames(prevTime);
-            return prevTime;
+            setIsPlaying(false)
+            fetchFrames(prevTime)
+            return prevTime
           }
-          const newTime = prevTime + 1;
+          const newTime = prevTime + 1
           // Обновляем кадры каждую секунду во время воспроизведения
-          fetchFrames(newTime);
-          return newTime;
-        });
-      }, 2000);
+          fetchFrames(newTime)
+          return newTime
+        })
+      }, 2000)
     }
 
     return () => {
       if (intervalId) {
-        clearInterval(intervalId);
+        clearInterval(intervalId)
       }
-    };
-  }, [isPlaying, timeRange.max, timeRange.min]);
+    }
+  }, [isPlaying, timeRange.max, timeRange.min])
 
   // Модифицируем функцию handleTimeChange
   const handleTimeChange = (value: number[]) => {
-    setCurrentTime(value[0]);
-    debouncedFetchFrames(value[0]);
-  };
+    setCurrentTime(value[0])
+    debouncedFetchFrames(value[0])
+  }
 
   // Добавляем функцию для управления воспроизведением
   const togglePlayback = () => {
-    const newPlayingState = !isPlaying;
-    setIsPlaying(newPlayingState);
-    
+    const newPlayingState = !isPlaying
+    setIsPlaying(newPlayingState)
+
     if (!newPlayingState) {
-      fetchFrames(currentTime);
+      fetchFrames(currentTime)
     }
-  };
+  }
 
   // Создаем функцию для фильтрации активных видео
   const isVideoActive = (video: VideoInfo) => {
-    if (!video.metadata.creation_time) return false;
-    const videoTime = new Date(video.metadata.creation_time).getTime() / 1000;
-    const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000;
-    const videoSeconds = videoTime - startTime;
-    const videoEndSeconds = videoSeconds + video.metadata.format.duration;
-    return videoSeconds <= currentTime && currentTime <= videoEndSeconds;
-  };
+    if (!video.metadata.creation_time) return false
+    const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
+    const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
+    const videoSeconds = videoTime - startTime
+    const videoEndSeconds = videoSeconds + video.metadata.format.duration
+    return videoSeconds <= currentTime && currentTime <= videoEndSeconds
+  }
 
   // Создаем функцию для получения всех активных видео
   const getActiveVideos = () => {
-    return videos.filter(isVideoActive);
-  };
+    return videos.filter(isVideoActive)
+  }
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      const key = parseInt(event.key)
+      if (!isNaN(key) && key >= 1 && key <= 9) {
+        const activeVideos = getActiveVideos()
+        if (key <= activeVideos.length) {
+          setActiveCamera(key)
+        }
+      }
+    }
+
+    globalThis.addEventListener("keydown", handleKeyPress)
+    return () => globalThis.removeEventListener("keydown", handleKeyPress)
+  }, [videos, currentTime])
+
+  // Add new function to handle recording
+  const toggleRecording = () => {
+    if (!isRecording) {
+      // Start new recording
+      setIsRecording(true)
+      setRecordings((prev) => [...prev, {
+        camera: activeCamera,
+        startTime: currentTime,
+      }])
+    } else {
+      // End current recording
+      setIsRecording(false)
+      setRecordings((prev) => {
+        const updatedRecordings = [...prev]
+        if (updatedRecordings.length > 0) {
+          updatedRecordings[updatedRecordings.length - 1].endTime = currentTime
+        }
+        return updatedRecordings
+      })
+    }
+  }
+
+  // Modify the camera change effect to track camera changes during recording
+  useEffect(() => {
+    if (isRecording) {
+      setRecordings((prev) => {
+        const updatedRecordings = [...prev]
+        const lastRecord = updatedRecordings[updatedRecordings.length - 1]
+
+        if (lastRecord && lastRecord.camera !== activeCamera) {
+          // End previous camera recording
+          lastRecord.endTime = currentTime
+          // Start new camera recording
+          updatedRecordings.push({
+            camera: activeCamera,
+            startTime: currentTime,
+          })
+        }
+
+        return updatedRecordings
+      })
+    }
+  }, [activeCamera, isRecording, currentTime])
 
   return (
-    <div className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-[family-name:var(--font-geist-sans)] relative`}>
+    <div
+      className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-[family-name:var(--font-geist-sans)] relative`}
+    >
       <div className="absolute top-4 right-4">
         {/* <TimeZoneSelect value={timezone} onValueChange={setTimezone} /> */}
       </div>
       <main className="flex flex-col gap-8 items-center w-full px-12 sm:px-16 py-16">
         {/* Панель управления */}
         <div className="flex items-center gap-4 w-full">
+          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl">
+            {activeCamera}
+          </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleRecording}
+            className={`h-12 w-12 rounded-full ${
+              isRecording
+                ? "bg-red-500 text-white hover:bg-red-600"
+                : "hover:bg-gray-200 dark:hover:bg-gray-700"
+            }`}
+          >
+            <div className={`h-4 w-4 rounded-full ${isRecording ? "bg-white" : "bg-red-500"}`} />
+          </Button>
           <Button
             variant="outline"
             size="icon"
             onClick={togglePlayback}
             className="h-8 w-8"
           >
-            {isPlaying ? (
-              <Pause className="h-4 w-4" />
-            ) : (
-              <Play className="h-4 w-4" />
-            )}
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
           </Button>
           <span className="text-sm text-gray-500">
-            {dayjs.duration(currentTime, "seconds").format("mm:ss")}
+            {formatTimeWithDecisecond(currentTime)}
           </span>
+
+          <span className="text-xl font-medium ml-auto">
+            {dayjs(videos[0]?.metadata?.creation_time)
+              .add(currentTime, "second")
+              .format("HH:mm:ss")}
+          </span>
+
+          {/* Optional: Add a display for recordings */}
+          {recordings.length > 0 && (
+            <div className="ml-4 text-sm text-gray-500">
+              {recordings.map((record, index) => (
+                <div key={index}>
+                  Camera {record.camera}: {formatDuration(record.startTime)} →{" "}
+                  {record.endTime ? formatDuration(record.endTime) : "recording..."}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="w-full">
@@ -279,11 +371,13 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {videos
-                .filter(video => isVideoActive(video) && !video.name.toLowerCase().includes('.insv'))
+                .filter((video) =>
+                  isVideoActive(video) && !video.name.toLowerCase().includes(".insv")
+                )
                 .map((video) => {
-                  const videoFrame = frames.find(frame => frame.videoPath === video.path);
+                  const videoFrame = frames.find((frame) => frame.videoPath === video.path)
                   // Находим индекс видео среди всех активных видео
-                  const activeIndex = getActiveVideos().findIndex(v => v.path === video.path);
+                  const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
                   return (
                     <div key={video.path} className="flex flex-col gap-3">
                       <div className="w-full aspect-video relative">
@@ -291,7 +385,9 @@ export default function Home() {
                           src={videoFrame?.framePath || video.thumbnail}
                           alt={video.name}
                           fill
-                          className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
+                          className={`rounded-lg object-cover ${
+                            isLoadingFrames ? "opacity-50" : ""
+                          }`}
                         />
                       </div>
                       <div className="flex flex-col">
@@ -300,17 +396,16 @@ export default function Home() {
                             {activeIndex + 1}
                           </span>
                           <h3 className="font-medium">{video.name}</h3>
-                        </div>
-                        <div className="flex gap-2 text-sm text-gray-500">
-                          <span>
-                            {video.metadata.creation_time &&
-                              dayjs(video.metadata.creation_time)
-                                .tz(timezone)
-                                .format("D MMM YYYY, HH:mm:ss")
-                            }
-                          </span>
-                          <span>•</span>
-                          <span>{formatDuration(video.metadata.format.duration)}</span>
+                          <div className="flex gap-2 ml-auto text-sm">
+                            <span>
+                              {video.metadata.creation_time &&
+                                dayjs(video.metadata.creation_time)
+                                  .tz(timezone)
+                                  .format("D MMM YYYY, HH:mm:ss")}
+                            </span>
+                            <span>•</span>
+                            <span>{formatDuration(video.metadata.format.duration)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -329,11 +424,13 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 gap-6">
               {videos
-                .filter(video => isVideoActive(video) && video.name.toLowerCase().includes('.insv'))
+                .filter((video) =>
+                  isVideoActive(video) && video.name.toLowerCase().includes(".insv")
+                )
                 .map((video) => {
-                  const videoFrame = frames.find(frame => frame.videoPath === video.path);
+                  const videoFrame = frames.find((frame) => frame.videoPath === video.path)
                   // Находим индекс видео среди всех активных видео
-                  const activeIndex = getActiveVideos().findIndex(v => v.path === video.path);
+                  const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
                   return (
                     <div key={video.path} className="flex flex-col gap-3">
                       <div className="w-full aspect-video relative">
@@ -341,7 +438,9 @@ export default function Home() {
                           src={videoFrame?.framePath || video.thumbnail}
                           alt={video.name}
                           fill
-                          className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
+                          className={`rounded-lg object-cover ${
+                            isLoadingFrames ? "opacity-50" : ""
+                          }`}
                         />
                       </div>
                       <div className="flex flex-col">
@@ -350,17 +449,16 @@ export default function Home() {
                             {activeIndex + 1}
                           </span>
                           <h3 className="font-medium">{video.name}</h3>
-                        </div>
-                        <div className="flex gap-2 text-sm text-gray-500">
-                          <span>
-                            {video.metadata.creation_time &&
-                              dayjs(video.metadata.creation_time)
-                                .tz(timezone)
-                                .format("D MMM YYYY, HH:mm:ss")
-                            }
-                          </span>
-                          <span>•</span>
-                          <span>{formatDuration(video.metadata.format.duration)}</span>
+                          <div className="flex gap-2 ml-auto text-sm">
+                            <span>
+                              {video.metadata.creation_time &&
+                                dayjs(video.metadata.creation_time)
+                                  .tz(timezone)
+                                  .format("D MMM YYYY, HH:mm:ss")}
+                            </span>
+                            <span>•</span>
+                            <span>{formatDuration(video.metadata.format.duration)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
