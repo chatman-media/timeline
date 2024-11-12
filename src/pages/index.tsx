@@ -176,16 +176,63 @@ export default function Home() {
     }
   }
 
-  // Модифицируем обработчик изменения слайдера
+  // Добавляем эффект для воспроизведения
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
+    if (isPlaying) {
+      intervalId = setInterval(() => {
+        setCurrentTime((prevTime) => {
+          if (prevTime >= timeRange.max - timeRange.min) {
+            setIsPlaying(false);
+            fetchFrames(prevTime);
+            return prevTime;
+          }
+          const newTime = prevTime + 1;
+          // Обновляем кадры каждую секунду во время воспроизведения
+          fetchFrames(newTime);
+          return newTime;
+        });
+      }, 2000);
+    }
+
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [isPlaying, timeRange.max, timeRange.min]);
+
+  // Модифицируем функцию handleTimeChange
   const handleTimeChange = (value: number[]) => {
-    setCurrentTime(value[0])
-    debouncedFetchFrames(value[0])
-  }
+    setCurrentTime(value[0]);
+    debouncedFetchFrames(value[0]);
+  };
 
   // Добавляем функцию для управления воспроизведением
   const togglePlayback = () => {
-    setIsPlaying(!isPlaying)
-  }
+    const newPlayingState = !isPlaying;
+    setIsPlaying(newPlayingState);
+    
+    if (!newPlayingState) {
+      fetchFrames(currentTime);
+    }
+  };
+
+  // Создаем функцию для фильтрации активных видео
+  const isVideoActive = (video: VideoInfo) => {
+    if (!video.metadata.creation_time) return false;
+    const videoTime = new Date(video.metadata.creation_time).getTime() / 1000;
+    const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000;
+    const videoSeconds = videoTime - startTime;
+    const videoEndSeconds = videoSeconds + video.metadata.format.duration;
+    return videoSeconds <= currentTime && currentTime <= videoEndSeconds;
+  };
+
+  // Создаем функцию для получения всех активных видео
+  const getActiveVideos = () => {
+    return videos.filter(isVideoActive);
+  };
 
   return (
     <div className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-[family-name:var(--font-geist-sans)] relative`}>
@@ -232,20 +279,11 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {videos
-                .filter(video => {
-                  if (!video.metadata.creation_time) return false
-                  const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-                  const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
-                  const videoSeconds = videoTime - startTime
-                  const videoEndSeconds = videoSeconds + video.metadata.format.duration
-                  return videoSeconds <= currentTime && 
-                         currentTime <= videoEndSeconds && 
-                         !video.name.toLowerCase().includes('.insv')
-                })
+                .filter(video => isVideoActive(video) && !video.name.toLowerCase().includes('.insv'))
                 .map((video) => {
-                  // Находим индекс видео в общем массиве
-                  const videoIndex = videos.findIndex(v => v.path === video.path)
-                  const videoFrame = frames.find(frame => frame.videoPath === video.path)
+                  const videoFrame = frames.find(frame => frame.videoPath === video.path);
+                  // Находим индекс видео среди всех активных видео
+                  const activeIndex = getActiveVideos().findIndex(v => v.path === video.path);
                   return (
                     <div key={video.path} className="flex flex-col gap-3">
                       <div className="w-full aspect-video relative">
@@ -259,7 +297,7 @@ export default function Home() {
                       <div className="flex flex-col">
                         <div className="flex items-center gap-3">
                           <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl">
-                            {videoIndex + 1}
+                            {activeIndex + 1}
                           </span>
                           <h3 className="font-medium">{video.name}</h3>
                         </div>
@@ -291,19 +329,11 @@ export default function Home() {
             </div>
             <div className="grid grid-cols-1 gap-6">
               {videos
-                .filter(video => {
-                  if (!video.metadata.creation_time) return false
-                  const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-                  const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
-                  const videoSeconds = videoTime - startTime
-                  const videoEndSeconds = videoSeconds + video.metadata.format.duration
-                  return videoSeconds <= currentTime && 
-                         currentTime <= videoEndSeconds && 
-                         video.name.toLowerCase().includes('.insv')
-                })
+                .filter(video => isVideoActive(video) && video.name.toLowerCase().includes('.insv'))
                 .map((video) => {
-                  const videoIndex = videos.findIndex(v => v.path === video.path)
-                  const videoFrame = frames.find(frame => frame.videoPath === video.path)
+                  const videoFrame = frames.find(frame => frame.videoPath === video.path);
+                  // Находим индекс видео среди всех активных видео
+                  const activeIndex = getActiveVideos().findIndex(v => v.path === video.path);
                   return (
                     <div key={video.path} className="flex flex-col gap-3">
                       <div className="w-full aspect-video relative">
@@ -317,7 +347,7 @@ export default function Home() {
                       <div className="flex flex-col">
                         <div className="flex items-center gap-3">
                           <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl">
-                            {videoIndex + 1}
+                            {activeIndex + 1}
                           </span>
                           <h3 className="font-medium">{video.name}</h3>
                         </div>
