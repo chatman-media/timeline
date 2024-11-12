@@ -102,7 +102,7 @@ export default function Home() {
         })
 
         setVideos(sortedVideos)
-        // Устанавливаем начальное значение слайдера в максимум
+        // Устаавливаем начальное значение слайдера в максимум
         setCurrentTime(timeRange.min)
       })
       .catch((error) => console.error("Error fetching videos:", error))
@@ -224,124 +224,118 @@ export default function Home() {
         </div>
 
         {/* Новый контейнер с разделением на две части */}
-        <div className="flex gap-6 w-full">
+        <div className="flex gap-8 w-full">
           {/* Левая часть (2/3) для обычных видео */}
-          <div className="w-2/3">
+          <div className="w-2/3 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium">Основные камеры</h2>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {videos.filter(video => {
-                if (!video.metadata.creation_time) return false
-                const videoTime = new Date(video.metadata.creation_time).getTime()
-                const startTime = new Date(videos[0].metadata.creation_time!).getTime()
-                const videoSeconds = Math.floor((videoTime - startTime) / 1000)
-                const videoEndSeconds = videoSeconds + video.metadata.format.duration
-                // Добавляем фильтр для обычных видео (не INSV)
-                return videoSeconds <= currentTime && 
-                  currentTime <= videoEndSeconds && 
-                  !video.name.toLowerCase().includes('.insv')
-              }).length === 0 ? (
-                <EmptyState />
-              ) : (
-                videos
-                  .filter(video => {
-                    if (!video.metadata.creation_time) return false
-                    const videoTime = new Date(video.metadata.creation_time).getTime()
-                    const startTime = new Date(videos[0].metadata.creation_time!).getTime()
-                    const videoSeconds = Math.floor((videoTime - startTime) / 1000)
-                    const videoEndSeconds = videoSeconds + video.metadata.format.duration
-                    return videoSeconds <= currentTime && 
-                      currentTime <= videoEndSeconds && 
-                      !video.name.toLowerCase().includes('.insv')
-                  })
-                  .map((video) => {
-                    const videoFrame = frames.find(frame => frame.videoPath === video.path)
-                    return (
-                      <div key={video.path} className="flex flex-col gap-3">
-                        <div className="w-full aspect-video relative">
-                          <Image
-                            src={videoFrame?.framePath || video.thumbnail}
-                            alt={video.name}
-                            fill
-                            className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
-                          />
-                        </div>
-                        <div className="flex flex-col">
+              {videos
+                .filter(video => {
+                  if (!video.metadata.creation_time) return false
+                  const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
+                  const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
+                  const videoSeconds = videoTime - startTime
+                  const videoEndSeconds = videoSeconds + video.metadata.format.duration
+                  return videoSeconds <= currentTime && 
+                         currentTime <= videoEndSeconds && 
+                         !video.name.toLowerCase().includes('.insv')
+                })
+                .map((video) => {
+                  // Находим индекс видео в общем массиве
+                  const videoIndex = videos.findIndex(v => v.path === video.path)
+                  const videoFrame = frames.find(frame => frame.videoPath === video.path)
+                  return (
+                    <div key={video.path} className="flex flex-col gap-3">
+                      <div className="w-full aspect-video relative">
+                        <Image
+                          src={videoFrame?.framePath || video.thumbnail}
+                          alt={video.name}
+                          fill
+                          className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl">
+                            {videoIndex + 1}
+                          </span>
                           <h3 className="font-medium">{video.name}</h3>
-                          <div className="flex gap-2 text-sm text-gray-500">
-                            <span>
-                              {video.metadata.creation_time &&
-                                dayjs(video.metadata.creation_time)
-                                  .tz(timezone)
-                                  .format("D MMM YYYY, HH:mm:ss")
-                              }
-                            </span>
-                            <span>•</span>
-                            <span>{formatDuration(video.metadata.format.duration)}</span>
-                          </div>
+                        </div>
+                        <div className="flex gap-2 text-sm text-gray-500">
+                          <span>
+                            {video.metadata.creation_time &&
+                              dayjs(video.metadata.creation_time)
+                                .tz(timezone)
+                                .format("D MMM YYYY, HH:mm:ss")
+                            }
+                          </span>
+                          <span>•</span>
+                          <span>{formatDuration(video.metadata.format.duration)}</span>
                         </div>
                       </div>
-                    )
-                  })
-              )}
+                    </div>
+                  )
+                })}
             </div>
           </div>
 
+          {/* Разделитель */}
+          <div className="w-px bg-gray-200 dark:bg-gray-800" />
+
           {/* Правая часть (1/3) для INSV */}
-          <div className="w-1/3">
+          <div className="w-1/3 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium">360° камеры</h2>
+            </div>
             <div className="grid grid-cols-1 gap-6">
-              {videos.filter(video => {
-                if (!video.metadata.creation_time) return false
-                const videoTime = new Date(video.metadata.creation_time).getTime()
-                const startTime = new Date(videos[0].metadata.creation_time!).getTime()
-                const videoSeconds = Math.floor((videoTime - startTime) / 1000)
-                const videoEndSeconds = videoSeconds + video.metadata.format.duration
-                // Фильтр только для INSV видео
-                return videoSeconds <= currentTime && 
-                  currentTime <= videoEndSeconds && 
-                  video.name.toLowerCase().includes('.insv')
-              }).length === 0 ? (
-                <EmptyState />
-              ) : (
-                videos
-                  .filter(video => {
-                    if (!video.metadata.creation_time) return false
-                    const videoTime = new Date(video.metadata.creation_time).getTime()
-                    const startTime = new Date(videos[0].metadata.creation_time!).getTime()
-                    const videoSeconds = Math.floor((videoTime - startTime) / 1000)
-                    const videoEndSeconds = videoSeconds + video.metadata.format.duration
-                    return videoSeconds <= currentTime && 
-                      currentTime <= videoEndSeconds && 
-                      video.name.toLowerCase().includes('.insv')
-                  })
-                  .map((video) => {
-                    const videoFrame = frames.find(frame => frame.videoPath === video.path)
-                    return (
-                      <div key={video.path} className="flex flex-col gap-3">
-                        <div className="w-full aspect-video relative">
-                          <Image
-                            src={videoFrame?.framePath || video.thumbnail}
-                            alt={video.name}
-                            fill
-                            className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
-                          />
-                        </div>
-                        <div className="flex flex-col">
+              {videos
+                .filter(video => {
+                  if (!video.metadata.creation_time) return false
+                  const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
+                  const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
+                  const videoSeconds = videoTime - startTime
+                  const videoEndSeconds = videoSeconds + video.metadata.format.duration
+                  return videoSeconds <= currentTime && 
+                         currentTime <= videoEndSeconds && 
+                         video.name.toLowerCase().includes('.insv')
+                })
+                .map((video) => {
+                  const videoIndex = videos.findIndex(v => v.path === video.path)
+                  const videoFrame = frames.find(frame => frame.videoPath === video.path)
+                  return (
+                    <div key={video.path} className="flex flex-col gap-3">
+                      <div className="w-full aspect-video relative">
+                        <Image
+                          src={videoFrame?.framePath || video.thumbnail}
+                          alt={video.name}
+                          fill
+                          className={`rounded-lg object-cover ${isLoadingFrames ? 'opacity-50' : ''}`}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-3">
+                          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl">
+                            {videoIndex + 1}
+                          </span>
                           <h3 className="font-medium">{video.name}</h3>
-                          <div className="flex gap-2 text-sm text-gray-500">
-                            <span>
-                              {video.metadata.creation_time &&
-                                dayjs(video.metadata.creation_time)
-                                  .tz(timezone)
-                                  .format("D MMM YYYY, HH:mm:ss")
-                              }
-                            </span>
-                            <span>•</span>
-                            <span>{formatDuration(video.metadata.format.duration)}</span>
-                          </div>
+                        </div>
+                        <div className="flex gap-2 text-sm text-gray-500">
+                          <span>
+                            {video.metadata.creation_time &&
+                              dayjs(video.metadata.creation_time)
+                                .tz(timezone)
+                                .format("D MMM YYYY, HH:mm:ss")
+                            }
+                          </span>
+                          <span>•</span>
+                          <span>{formatDuration(video.metadata.format.duration)}</span>
                         </div>
                       </div>
-                    )
-                  })
-              )}
+                    </div>
+                  )
+                })}
             </div>
           </div>
         </div>
