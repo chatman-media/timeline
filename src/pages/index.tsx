@@ -1,6 +1,5 @@
-import Image from "next/image"
 import localFont from "next/font/local"
-import { useCallback, useEffect, useState, useRef } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
@@ -61,13 +60,12 @@ const formatDuration = (seconds: number) => {
   return duration.format("m:ss")
 }
 
-
 export default function Home() {
   const [videos, setVideos] = useState<VideoInfo[]>([])
   const [timeRange, setTimeRange] = useState({ min: 0, max: 0 })
   const [currentTime, setCurrentTime] = useState(0)
-  const [frames, setFrames] = useState<VideoFrame[]>([])
-  const [isLoadingFrames, setIsLoadingFrames] = useState(false)
+  const [_frames, setFrames] = useState<VideoFrame[]>([])
+  const [_isLoadingFrames, setIsLoadingFrames] = useState(false)
   const [timezone] = useState("Asia/Bangkok")
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeCamera, setActiveCamera] = useState(1)
@@ -308,9 +306,9 @@ export default function Home() {
           const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
           const firstVideoTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
           const relativeTime = Math.max(0, currentTime - (videoStartTime - firstVideoTime))
-          
+
           videoElement.currentTime = relativeTime
-          
+
           if (isPlaying) {
             videoElement.play()
           } else {
@@ -328,7 +326,9 @@ export default function Home() {
       <div className="w-full aspect-video relative">
         <video
           ref={(el) => {
-            if (el) videoRefs.current[video.path] = el
+            if (el) {
+              videoRefs.current[video.path] = el
+            }
           }}
           src={`/videos/${video.name}`}
           className="w-full h-full rounded-lg object-cover"
