@@ -1,6 +1,6 @@
 import Image from "next/image"
 import localFont from "next/font/local"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useState, useRef } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
@@ -73,6 +73,7 @@ export default function Home() {
   const [activeCamera, setActiveCamera] = useState(1)
   const [isRecording, setIsRecording] = useState(false)
   const [recordings, setRecordings] = useState<RecordEntry[]>([])
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
 
   useEffect(() => {
     fetch("/api/hello")
@@ -104,7 +105,7 @@ export default function Home() {
         })
 
         setVideos(sortedVideos)
-        // Устаавливаем начальное значение слайдера в максимум
+        // Устаавливаем начаьное значение слайдера в максимум
         setCurrentTime(timeRange.min)
       })
       .catch((error) => console.error("Error fetching videos:", error))
@@ -211,7 +212,7 @@ export default function Home() {
     debouncedFetchFrames(value[0])
   }
 
-  // Добавляем функцию для управления воспроизведением
+  // Добавляем функцию для управ��ения воспроизведением
   const togglePlayback = () => {
     const newPlayingState = !isPlaying
     setIsPlaying(newPlayingState)
@@ -254,15 +255,17 @@ export default function Home() {
   // Add new function to handle recording
   const toggleRecording = () => {
     if (!isRecording) {
-      // Start new recording
+      // Start new recording and playback
       setIsRecording(true)
+      setIsPlaying(true)
       setRecordings((prev) => [...prev, {
         camera: activeCamera,
         startTime: currentTime,
       }])
     } else {
-      // End current recording
+      // End current recording and pause playback
       setIsRecording(false)
+      setIsPlaying(false)
       setRecordings((prev) => {
         const updatedRecordings = [...prev]
         if (updatedRecordings.length > 0) {
@@ -295,6 +298,65 @@ export default function Home() {
     }
   }, [activeCamera, isRecording, currentTime])
 
+  // Добавляем эффект для синхронизации видео с текущим временем
+  useEffect(() => {
+    if (videos.length > 0) {
+      const activeVids = getActiveVideos()
+      activeVids.forEach((video) => {
+        const videoElement = videoRefs.current[video.path]
+        if (videoElement) {
+          const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
+          const firstVideoTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
+          const relativeTime = Math.max(0, currentTime - (videoStartTime - firstVideoTime))
+          
+          videoElement.currentTime = relativeTime
+          
+          if (isPlaying) {
+            videoElement.play()
+          } else {
+            videoElement.pause()
+          }
+        }
+      })
+    }
+  }, [currentTime, isPlaying, videos])
+
+  // Модифицируем рендер видео в обеих секциях (основные камеры и 360° камеры)
+  // Заменяем блок с Image на:
+  const renderVideo = (video: VideoInfo, activeIndex: number) => (
+    <div key={video.path} className="flex flex-col gap-3">
+      <div className="w-full aspect-video relative">
+        <video
+          ref={(el) => {
+            if (el) videoRefs.current[video.path] = el
+          }}
+          src={`/videos/${video.name}`}
+          className="w-full h-full rounded-lg object-cover"
+          playsInline
+          muted
+        />
+      </div>
+      <div className="flex flex-col">
+        <div className="flex items-center gap-3">
+          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
+            {activeIndex + 1}
+          </span>
+          <h3 className="font-medium">{video.name}</h3>
+          <div className="flex gap-2 ml-auto text-sm">
+            <span>
+              {video.metadata.creation_time &&
+                dayjs(video.metadata.creation_time)
+                  .tz(timezone)
+                  .format("D MMM YYYY, HH:mm:ss")}
+            </span>
+            <span>•</span>
+            <span>{formatDuration(video.metadata.format.duration)}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   return (
     <div
       className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-[family-name:var(--font-geist-sans)] relative`}
@@ -305,7 +367,7 @@ export default function Home() {
       <main className="flex flex-col gap-8 items-center w-full px-12 sm:px-16 py-16">
         {/* Панель управления */}
         <div className="flex items-center gap-4 w-full">
-          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl">
+          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
             {activeCamera}
           </span>
           <Button
@@ -338,7 +400,6 @@ export default function Home() {
               .format("HH:mm:ss")}
           </span>
 
-          {/* Optional: Add a display for recordings */}
           {recordings.length > 0 && (
             <div className="ml-4 text-sm text-gray-500">
               {recordings.map((record, index) => (
@@ -375,41 +436,8 @@ export default function Home() {
                   isVideoActive(video) && !video.name.toLowerCase().includes(".insv")
                 )
                 .map((video) => {
-                  const videoFrame = frames.find((frame) => frame.videoPath === video.path)
-                  // Находим индекс видео среди всех активных видео
                   const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
-                  return (
-                    <div key={video.path} className="flex flex-col gap-3">
-                      <div className="w-full aspect-video relative">
-                        <Image
-                          src={videoFrame?.framePath || video.thumbnail}
-                          alt={video.name}
-                          fill
-                          className={`rounded-lg object-cover ${
-                            isLoadingFrames ? "opacity-50" : ""
-                          }`}
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-3">
-                          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl">
-                            {activeIndex + 1}
-                          </span>
-                          <h3 className="font-medium">{video.name}</h3>
-                          <div className="flex gap-2 ml-auto text-sm">
-                            <span>
-                              {video.metadata.creation_time &&
-                                dayjs(video.metadata.creation_time)
-                                  .tz(timezone)
-                                  .format("D MMM YYYY, HH:mm:ss")}
-                            </span>
-                            <span>•</span>
-                            <span>{formatDuration(video.metadata.format.duration)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
+                  return renderVideo(video, activeIndex)
                 })}
             </div>
           </div>
@@ -428,41 +456,8 @@ export default function Home() {
                   isVideoActive(video) && video.name.toLowerCase().includes(".insv")
                 )
                 .map((video) => {
-                  const videoFrame = frames.find((frame) => frame.videoPath === video.path)
-                  // Находим индекс видео среди всех активных видео
                   const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
-                  return (
-                    <div key={video.path} className="flex flex-col gap-3">
-                      <div className="w-full aspect-video relative">
-                        <Image
-                          src={videoFrame?.framePath || video.thumbnail}
-                          alt={video.name}
-                          fill
-                          className={`rounded-lg object-cover ${
-                            isLoadingFrames ? "opacity-50" : ""
-                          }`}
-                        />
-                      </div>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-3">
-                          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl">
-                            {activeIndex + 1}
-                          </span>
-                          <h3 className="font-medium">{video.name}</h3>
-                          <div className="flex gap-2 ml-auto text-sm">
-                            <span>
-                              {video.metadata.creation_time &&
-                                dayjs(video.metadata.creation_time)
-                                  .tz(timezone)
-                                  .format("D MMM YYYY, HH:mm:ss")}
-                            </span>
-                            <span>•</span>
-                            <span>{formatDuration(video.metadata.format.duration)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
+                  return renderVideo(video, activeIndex)
                 })}
             </div>
           </div>
