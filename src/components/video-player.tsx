@@ -1,50 +1,38 @@
-import BitrateChart from "@/components/BitrateChart"
+import BitrateChart from "@/components/bitrate-chart"
 import { VideoMetadata } from "./video-metadata"
-import { VideoInfo } from "@/pages/api/hello"
+import { VideoInfo } from "@/types/video"
 
 interface VideoPlayerProps {
-  video: VideoInfo
-  activeIndex: number
-  cameraNumber: number // добавляем новый проп
-  timezone: string
-  formatDuration: (seconds: number) => string
+  video: VideoInfo & { activeIndex: number }
+  cameraNumber: number
   onVideoRef: (el: HTMLVideoElement | null) => void
 }
 
 export function VideoPlayer({
   video,
-  activeIndex,
   cameraNumber,
-  timezone,
-  formatDuration,
   onVideoRef,
 }: VideoPlayerProps) {
-  console.log("Video bitrate data:", video.bitrate_data) // для отладки
+  console.log("Video bitrate data:", video.bitrate_data)
 
-  console.log(`VideoPlayer render - Camera ${cameraNumber}, Active: ${activeIndex}`, {
-    isActive: activeIndex === cameraNumber,
-    activeIndex,
+  console.log(`VideoPlayer render - Camera ${cameraNumber}`, {
     cameraNumber,
   })
 
   return (
-    <div
-      className={`relative rounded-lg overflow-hidden ${
-        activeIndex === cameraNumber ? "ring-2 ring-blue-500" : ""
-      }`}
-    >
+    <div className="relative rounded-lg overflow-hidden">
       <div
         className={`relative w-full ${
-          video.metadata.video_stream?.display_aspect_ratio === "1:1"
-            ? "pt-[75%]" // Уменьшаем высоту для квадратных видео до 75% от ширины
-            : "pt-[56.25%]" // Оставляем 16:9 для обычных
+          video.metadata.video_stream?.width === video.metadata.video_stream?.height
+            ? "pt-[75%]"
+            : "pt-[56.25%]"
         }`}
       >
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black">
           <video
             ref={onVideoRef}
             src={`/videos/${video.name}`}
-            className={video.metadata.video_stream?.display_aspect_ratio === "1:1"
+            className={video.metadata.video_stream?.width === video.metadata.video_stream?.height
               ? "h-full w-auto"
               : "w-full h-auto"}
             muted
@@ -57,7 +45,7 @@ export function VideoPlayer({
           ? (
             <BitrateChart
               data={video.bitrate_data}
-              width="100%"
+              width={400}
               height={96}
               tooltipOpen={true}
               showTooltip={() => {}}
@@ -74,9 +62,6 @@ export function VideoPlayer({
       <div className="flex flex-col">
         <VideoMetadata
           video={video}
-          activeIndex={activeIndex}
-          timezone={timezone}
-          formatDuration={formatDuration}
         />
       </div>
     </div>

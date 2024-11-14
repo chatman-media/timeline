@@ -1,34 +1,31 @@
+import { VideoInfo } from "@/types/video"
 import dayjs from "dayjs"
 
 interface VideoMetadataProps {
-  video: {
-    name: string
+  video: VideoInfo & {
+    activeIndex: number
+    timezone: string
     metadata: {
-      format: {
-        duration: number
-        size: number
-      }
       video_stream?: {
-        width: number
-        height: number
         display_aspect_ratio: string
         codec_name: string
+        width: number
+        height: number
       }
-      creation_time?: string
+      format: {
+        size: number
+        duration?: number
+      }
+      // ... остальные поля metadata
     }
   }
-  activeIndex: number
-  timezone: string
-  formatDuration: (seconds: number) => string
-  videoWidth?: number
-  videoHeight?: number
 }
 
-export function VideoMetadata({ video, activeIndex, timezone }: VideoMetadataProps) {
+export function VideoMetadata({ video }: VideoMetadataProps) {
   return (
     <div className="flex items-center gap-3">
       <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
-        {activeIndex + 1}
+        {video.activeIndex + 1}
       </span>
       <h3 className="font-medium">{video.name}</h3>
       <div className="flex flex-col ml-auto text-sm text-gray-600 dark:text-gray-400">
@@ -36,13 +33,13 @@ export function VideoMetadata({ video, activeIndex, timezone }: VideoMetadataPro
           {video.metadata?.creation_time && (
             <>
               {dayjs(video.metadata.creation_time)
-                .tz(timezone)
+                .tz(video.timezone)
                 .format("YYYY-MM-DD")} {dayjs(video.metadata.creation_time)
-                .tz(timezone)
+                .tz(video.timezone)
                 .format("HH:mm")}
               -
               {dayjs(video.metadata.creation_time)
-                .tz(timezone)
+                .tz(video.timezone)
                 .add(video.metadata?.format?.duration || 0, "second")
                 .format("HH:mm")}
             </>

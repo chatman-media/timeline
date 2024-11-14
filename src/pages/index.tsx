@@ -1,5 +1,5 @@
 import localFont from "next/font/local"
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
@@ -8,8 +8,9 @@ import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
 import { Pause, Play } from "lucide-react"
 import { formatTimeWithDecisecond } from "@/lib/utils"
-import { VideoPlayer } from "../components/VideoPlayer"
+import { VideoPlayer } from "../components/video-player"
 import type { VideoInfo } from "@/types/video"
+import { ActiveVideo } from "@/components/active-video"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -34,73 +35,10 @@ const geistMono = localFont({
   weight: "100 900",
 })
 
-// Добавлям функцию формтирования времени
-const formatDuration = (seconds: number) => {
-  const duration = dayjs.duration(seconds, "seconds")
-  if (duration.hours() > 0) {
-    return duration.format("H:mm:ss")
-  }
-  return duration.format("m:ss")
-}
-
-const ActiveVideo = memo(({
-  video,
-  index,
-  timezone,
-  activeCamera,
-  formatDuration,
-  isPlaying,
-  videoRefs,
-}: {
-  video: VideoInfo
-  index: number
-  timezone: string
-  activeCamera: number
-  formatDuration: (duration: number) => string
-  isPlaying: boolean
-  videoRefs: React.MutableRefObject<{ [key: string]: HTMLVideoElement }>
-}) => {
-  useEffect(() => {
-    const activeVideo = videoRefs.current[`active-${video.path}`]
-    if (activeVideo) {
-      if (isPlaying) {
-        activeVideo.play()
-      } else {
-        activeVideo.pause()
-      }
-    }
-  }, [isPlaying, video.path])
-
-  return (
-    <VideoPlayer
-      key={`active-${video.path}`}
-      video={video}
-      activeIndex={activeCamera}
-      cameraNumber={index} // оставляем оригинальный индекс камеры
-      timezone={timezone}
-      formatDuration={formatDuration}
-      onVideoRef={(el) => {
-        if (el) {
-          videoRefs.current[`active-${video.path}`] = el
-          const mainVideo = videoRefs.current[video.path]
-          if (mainVideo) {
-            el.currentTime = mainVideo.currentTime
-            if (isPlaying) {
-              el.play()
-            }
-          }
-        }
-      }}
-    />
-  )
-})
-ActiveVideo.displayName = "ActiveVideo"
-
 export default function Home() {
   const [videos, setVideos] = useState<VideoInfo[]>([])
   const [timeRange, setTimeRange] = useState({ min: 0, max: 0 })
   const [currentTime, setCurrentTime] = useState(0)
-  const [timezone] = useState("Asia/Bangkok")
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeCamera, setActiveCamera] = useState(1)
   const [isRecording, setIsRecording] = useState(false)
@@ -112,7 +50,9 @@ export default function Home() {
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()
 
-  const RecordingsList = ({ recordings, baseVideoTime }) => {
+  const RecordingsList = (
+    { recordings, baseVideoTime }: { recordings: RecordEntry[]; baseVideoTime: string },
+  ) => {
     return useMemo(() =>
       recordings.map((record, idx) => {
         const baseTime = baseVideoTime ? new Date(baseVideoTime).getTime() / 1000 : 0
@@ -258,39 +198,39 @@ export default function Home() {
   useEffect(() => {
     if (videos.length > 0) {
       const activeVids = getActiveVideos()
-      
+
       const updatePlayback = (timestamp: number) => {
         if (!lastUpdateTime.current) {
           lastUpdateTime.current = timestamp
         }
-        
+
         const deltaTime = timestamp - lastUpdateTime.current
         lastUpdateTime.current = timestamp
 
         if (isPlaying) {
-          setCurrentTime(prev => prev + (deltaTime / 1000))
+          setCurrentTime((prev) => prev + (deltaTime / 1000))
           animationFrameId.current = requestAnimationFrame(updatePlayback)
         }
       }
 
       const syncVideos = async () => {
         const videoElements = activeVids
-          .map(video => videoRefs.current[video.path])
+          .map((video) => videoRefs.current[video.path])
           .filter(Boolean)
-        
+
         const activeVideoElements = activeVids
-          .map(video => videoRefs.current[`active-${video.path}`])
+          .map((video) => videoRefs.current[`active-${video.path}`])
           .filter(Boolean)
 
         const allVideos = [...videoElements, ...activeVideoElements]
 
         if (isPlaying) {
-          await Promise.all(allVideos.map(video => video.play()))
+          await Promise.all(allVideos.map((video) => video.play()))
           if (!animationFrameId.current) {
             animationFrameId.current = requestAnimationFrame(updatePlayback)
           }
         } else {
-          await Promise.all(allVideos.map(video => video.pause()))
+          await Promise.all(allVideos.map((video) => video.pause()))
           if (animationFrameId.current) {
             cancelAnimationFrame(animationFrameId.current)
             lastUpdateTime.current = 0
@@ -302,12 +242,12 @@ export default function Home() {
       activeVids.forEach((video) => {
         const videoElement = videoRefs.current[video.path]
         const activeVideoElement = videoRefs.current[`active-${video.path}`]
-        
+
         if (videoElement) {
           const videoTime = new Date(video.metadata.creation_time!).getTime() / 1000
           const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
           const relativeTime = currentTime - (videoTime - startTime)
-          
+
           if (Math.abs(videoElement.currentTime - relativeTime) > 0.5) {
             videoElement.currentTime = relativeTime
             if (activeVideoElement) {
@@ -384,7 +324,7 @@ export default function Home() {
         {/* <TimeZoneSelect value={timezone} onValueChange={setTimezone} /> */}
       </div>
       <main className="flex gap-16 w-full px-12 sm:px-16 py-16">
-        {/* Левая часть с сеткой видео */}
+        {/* Левая часть с секой видео */}
         <div className="w-[75%] flex flex-col gap-8">
           {/* Панель управления */}
           <div className="flex items-center gap-4 w-full">
@@ -425,7 +365,7 @@ export default function Home() {
               <div className="ml-4 text-sm text-gray-500">
                 <RecordingsList
                   recordings={recordings}
-                  baseVideoTime={videos[0]?.metadata.creation_time}
+                  baseVideoTime={videos[0]?.metadata.creation_time ?? ""}
                 />
               </div>
             )}
@@ -447,11 +387,8 @@ export default function Home() {
             {activeVideos.map(({ video, index }) => (
               <VideoPlayer
                 key={video.path}
-                video={video}
-                activeIndex={activeCamera}
+                video={{ ...video, activeIndex: index - 1 }}
                 cameraNumber={index}
-                timezone={timezone}
-                formatDuration={formatDuration}
                 onVideoRef={(el) => {
                   if (el) {
                     videoRefs.current[video.path] = el
@@ -469,11 +406,7 @@ export default function Home() {
             .map(({ video, index }) => (
               <ActiveVideo
                 key={`active-${video.path}`}
-                video={video}
-                index={index}
-                timezone={timezone}
-                activeCamera={activeCamera}
-                formatDuration={formatDuration}
+                video={{ ...video, activeIndex: index - 1 }}
                 isPlaying={isPlaying}
                 videoRefs={videoRefs}
               />

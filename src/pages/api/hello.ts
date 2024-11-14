@@ -66,14 +66,6 @@ interface VideoMetadata {
   tags?: Record<string, string>
 }
 
-export interface VideoInfo {
-  name: string
-  path: string
-  thumbnail: string
-  metadata: VideoMetadata
-  bitrate_data?: Array<{ timestamp: number; bitrate: number }>
-}
-
 interface FFProbeData {
   streams: VideoStream[]
   format: {
