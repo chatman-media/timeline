@@ -150,7 +150,7 @@ export default function Home() {
         const times = sortedVideos.flatMap((v: VideoInfo) => {
           if (!v.metadata.creation_time) return []
           const startTime = new Date(v.metadata.creation_time).getTime()
-          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длительност�� в миллисекунды
+          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длительност в миллисекунды
           return [startTime, endTime]
         }).filter((t: number) => t > 0)
         console.log(times.map((t: number) => new Date(Math.floor(t))))
