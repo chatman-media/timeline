@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
 import { Pause, Play } from "lucide-react"
 import { formatTimeWithDecisecond } from "@/lib/utils"
+import { VideoMetadata } from "../components/video-metadata"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -210,7 +211,7 @@ export default function Home() {
     debouncedFetchFrames(value[0])
   }
 
-  // Добавляем функцию для управ��ения воспроизведением
+  // Добавляем функцию для управления воспроизведением
   const togglePlayback = () => {
     const newPlayingState = !isPlaying
     setIsPlaying(newPlayingState)
@@ -321,41 +322,40 @@ export default function Home() {
 
   // Модифицируем рендер видео в обеих секциях (основные камеры и 360° камеры)
   // Заменяем блок с Image на:
-  const renderVideo = (video: VideoInfo, activeIndex: number) => (
-    <div key={video.path} className="flex flex-col gap-3">
-      <div className="w-full aspect-video relative">
-        <video
-          ref={(el) => {
-            if (el) {
-              videoRefs.current[video.path] = el
-            }
-          }}
-          src={`/videos/${video.name}`}
-          className="w-full h-full rounded-lg object-cover"
-          playsInline
-          muted
-        />
-      </div>
-      <div className="flex flex-col">
-        <div className="flex items-center gap-3">
-          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
-            {activeIndex + 1}
-          </span>
-          <h3 className="font-medium">{video.name}</h3>
-          <div className="flex gap-2 ml-auto text-sm">
-            <span>
-              {video.metadata.creation_time &&
-                dayjs(video.metadata.creation_time)
-                  .tz(timezone)
-                  .format("D MMM YYYY, HH:mm:ss")}
-            </span>
-            <span>•</span>
-            <span>{formatDuration(video.metadata.format.duration)}</span>
+  const renderVideo = (video: VideoInfo, activeIndex: number) => {
+    const is360Video = video.name.toLowerCase().includes(".insv")
+    
+    return (
+      <div key={video.path} className="flex flex-col gap-3">
+        <div className="w-full aspect-video relative overflow-hidden">
+          <video
+            ref={(el) => {
+              if (el) {
+                videoRefs.current[video.path] = el
+              }
+            }}
+            src={`/videos/${video.name}`}
+            className="w-full h-full rounded-lg object-cover"
+            playsInline
+            muted
+          />
+        </div>
+        {is360Video && (
+          <div className="flex items-center gap-2 px-2">
+            {/* ... angle slider ... */}
           </div>
+        )}
+        <div className="flex flex-col">
+          <VideoMetadata
+            video={video}
+            activeIndex={activeIndex}
+            timezone={timezone}
+            formatDuration={formatDuration}
+          />
         </div>
       </div>
-    </div>
-  )
+    )
+  }
 
   return (
     <div

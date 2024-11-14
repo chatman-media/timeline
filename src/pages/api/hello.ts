@@ -66,7 +66,7 @@ interface VideoMetadata {
   tags?: Record<string, string>
 }
 
-interface VideoInfo {
+export interface VideoInfo {
   name: string
   path: string
   thumbnail: string
