@@ -144,7 +144,7 @@ export default async function handler(
           (stream: VideoStream) => stream.codec_type === "audio",
         )
 
-        // console.log(probeData.format)
+        console.log(videoStream)
 
         // Формируем метаданные
         const metadata: VideoMetadata = {

@@ -24,6 +24,10 @@ interface VideoInfo {
     format: {
       duration: number
     }
+    video_stream?: {
+      width: number
+      height: number
+    }
     creation_time?: string
   }
 }
@@ -178,32 +182,37 @@ export default function Home() {
     }
   }
 
-  // Добавляем эффект для воспроизведения
+  // Модифицируем эффект для воспроизведения
   useEffect(() => {
-    let intervalId: NodeJS.Timeout
+    let animationFrameId: number
 
     if (isPlaying) {
-      intervalId = setInterval(() => {
-        setCurrentTime((prevTime) => {
-          if (prevTime >= timeRange.max - timeRange.min) {
-            setIsPlaying(false)
-            fetchFrames(prevTime)
-            return prevTime
-          }
-          const newTime = prevTime + 1
-          // Обновляем кадры каждую секунду во время воспроизведения
-          fetchFrames(newTime)
-          return newTime
-        })
-      }, 2000)
+      const startTime = performance.now()
+      const initialCurrentTime = currentTime
+
+      const animate = (timestamp: number) => {
+        const elapsed = (timestamp - startTime) / 1000 // Convert to seconds
+        const newTime = initialCurrentTime + elapsed
+
+        if (newTime >= timeRange.max) {
+          setIsPlaying(false)
+          setCurrentTime(timeRange.max)
+          return
+        }
+
+        setCurrentTime(newTime)
+        animationFrameId = requestAnimationFrame(animate)
+      }
+
+      animationFrameId = requestAnimationFrame(animate)
     }
 
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId)
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId)
       }
     }
-  }, [isPlaying, timeRange.max, timeRange.min])
+  }, [isPlaying, timeRange.max])
 
   // Модифицируем функцию handleTimeChange
   const handleTimeChange = (value: number[]) => {
@@ -211,7 +220,7 @@ export default function Home() {
     debouncedFetchFrames(value[0])
   }
 
-  // Добавляем функцию для управления воспроизведением
+  // Добавляем функцию для управленя воспроизведением
   const togglePlayback = () => {
     const newPlayingState = !isPlaying
     setIsPlaying(newPlayingState)
@@ -297,7 +306,7 @@ export default function Home() {
     }
   }, [activeCamera, isRecording, currentTime])
 
-  // Добавляем эффект для синхронизации видео с текущим временем
+  // Модифицируем эффект для синхронизации видео
   useEffect(() => {
     if (videos.length > 0) {
       const activeVids = getActiveVideos()
@@ -308,11 +317,13 @@ export default function Home() {
           const firstVideoTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
           const relativeTime = Math.max(0, currentTime - (videoStartTime - firstVideoTime))
 
-          videoElement.currentTime = relativeTime
+          if (Math.abs(videoElement.currentTime - relativeTime) > 0.1) {
+            videoElement.currentTime = relativeTime
+          }
 
-          if (isPlaying) {
+          if (isPlaying && videoElement.paused) {
             videoElement.play()
-          } else {
+          } else if (!isPlaying && !videoElement.paused) {
             videoElement.pause()
           }
         }
@@ -340,11 +351,6 @@ export default function Home() {
             muted
           />
         </div>
-        {is360Video && (
-          <div className="flex items-center gap-2 px-2">
-            {/* ... angle slider ... */}
-          </div>
-        )}
         <div className="flex flex-col">
           <VideoMetadata
             video={video}
