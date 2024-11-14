@@ -1,5 +1,5 @@
 import localFont from "next/font/local"
-import { useEffect, useRef, useState, useCallback, useMemo } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
@@ -34,7 +34,7 @@ const geistMono = localFont({
   weight: "100 900",
 })
 
-// Добавляем функцию форматирования времени
+// Добавлям функцию формтирования времени
 const formatDuration = (seconds: number) => {
   const duration = dayjs.duration(seconds, "seconds")
   if (duration.hours() > 0) {
@@ -43,31 +43,58 @@ const formatDuration = (seconds: number) => {
   return duration.format("m:ss")
 }
 
-const RecordingsList = ({ recordings, baseVideoTime }) => {
-  return useMemo(() => 
-    recordings.map((record, idx) => {
-      const baseTime = baseVideoTime
-        ? new Date(baseVideoTime).getTime() / 1000 
-        : 0
+const ActiveVideo = memo(({
+  video,
+  index,
+  timezone,
+  activeCamera,
+  formatDuration,
+  isPlaying,
+  videoRefs,
+}: {
+  video: VideoInfo
+  index: number
+  timezone: string
+  activeCamera: number
+  formatDuration: (duration: number) => string
+  isPlaying: boolean
+  videoRefs: React.MutableRefObject<{ [key: string]: HTMLVideoElement }>
+}) => {
+  useEffect(() => {
+    const activeVideo = videoRefs.current[`active-${video.path}`]
+    if (activeVideo) {
+      if (isPlaying) {
+        activeVideo.play()
+      } else {
+        activeVideo.pause()
+      }
+    }
+  }, [isPlaying, video.path])
 
-      const startTimeFormatted = dayjs.unix(baseTime)
-        .add(record.startTime, 'second')
-        .format('HH:mm:ss.SSS')
-
-      const endTimeFormatted = record.endTime 
-        ? dayjs.unix(baseTime)
-          .add(record.endTime, 'second')
-          .format('HH:mm:ss.SSS')
-        : "recording..."
-
-      return (
-        <div key={idx}>
-          Camera {record.camera}: {startTimeFormatted} → {endTimeFormatted}
-        </div>
-      )
-    }), [recordings, baseVideoTime]
+  return (
+    <VideoPlayer
+      key={`active-${video.path}`}
+      video={video}
+      activeIndex={activeCamera}
+      cameraNumber={index} // оставляем оригинальный индекс камеры
+      timezone={timezone}
+      formatDuration={formatDuration}
+      onVideoRef={(el) => {
+        if (el) {
+          videoRefs.current[`active-${video.path}`] = el
+          const mainVideo = videoRefs.current[video.path]
+          if (mainVideo) {
+            el.currentTime = mainVideo.currentTime
+            if (isPlaying) {
+              el.play()
+            }
+          }
+        }
+      }}
+    />
   )
-}
+})
+ActiveVideo.displayName = "ActiveVideo"
 
 export default function Home() {
   const [videos, setVideos] = useState<VideoInfo[]>([])
@@ -79,8 +106,34 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false)
   const [recordings, setRecordings] = useState<RecordEntry[]>([])
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
-  const [activeVideos, setActiveVideos] = useState<Array<{video: VideoInfo, index: number}>>([])
+  const [activeVideos, setActiveVideos] = useState<Array<{ video: VideoInfo; index: number }>>([])
   const [globalPlayTime, setGlobalPlayTime] = useState(0)
+
+  const lastUpdateTime = useRef<number>(0)
+  const animationFrameId = useRef<number>()
+
+  const RecordingsList = ({ recordings, baseVideoTime }) => {
+    return useMemo(() =>
+      recordings.map((record, idx) => {
+        const baseTime = baseVideoTime ? new Date(baseVideoTime).getTime() / 1000 : 0
+
+        const startTimeFormatted = dayjs.unix(baseTime)
+          .add(record.startTime, "second")
+          .format("HH:mm:ss.SSS")
+
+        const endTimeFormatted = record.endTime
+          ? dayjs.unix(baseTime)
+            .add(record.endTime, "second")
+            .format("HH:mm:ss.SSS")
+          : "recording..."
+
+        return (
+          <div key={idx}>
+            Camera {record.camera}: {startTimeFormatted} → {endTimeFormatted}
+          </div>
+        )
+      }), [recordings, baseVideoTime])
+  }
 
   useEffect(() => {
     fetch("/api/hello")
@@ -205,24 +258,54 @@ export default function Home() {
   useEffect(() => {
     if (videos.length > 0) {
       const activeVids = getActiveVideos()
+      
+      const updatePlayback = (timestamp: number) => {
+        if (!lastUpdateTime.current) {
+          lastUpdateTime.current = timestamp
+        }
+        
+        const deltaTime = timestamp - lastUpdateTime.current
+        lastUpdateTime.current = timestamp
+
+        if (isPlaying) {
+          setCurrentTime(prev => prev + (deltaTime / 1000))
+          animationFrameId.current = requestAnimationFrame(updatePlayback)
+        }
+      }
+
       activeVids.forEach((video) => {
         const videoElement = videoRefs.current[video.path]
         if (videoElement) {
-          const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
-          const firstVideoTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
-          const relativeTime = Math.max(0, currentTime - (videoStartTime - firstVideoTime))
-
-          if (Math.abs(videoElement.currentTime - relativeTime) > 0.1) {
+          // Синхронизируем только при явном изменении времени (промотке)
+          const videoTime = new Date(video.metadata.creation_time!).getTime() / 1000
+          const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
+          const relativeTime = currentTime - (videoTime - startTime)
+          
+          if (Math.abs(videoElement.currentTime - relativeTime) > 0.5) {
             videoElement.currentTime = relativeTime
           }
 
           if (isPlaying && videoElement.paused) {
             videoElement.play()
+            if (!animationFrameId.current) {
+              animationFrameId.current = requestAnimationFrame(updatePlayback)
+            }
           } else if (!isPlaying && !videoElement.paused) {
             videoElement.pause()
+            if (animationFrameId.current) {
+              cancelAnimationFrame(animationFrameId.current)
+              lastUpdateTime.current = 0
+            }
           }
         }
       })
+    }
+
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current)
+        lastUpdateTime.current = 0
+      }
     }
   }, [currentTime, isPlaying, videos])
 
@@ -233,8 +316,8 @@ export default function Home() {
       .filter(({ video }) => {
         if (!video.metadata.creation_time) return false
         const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-        const startTime = videos[0]?.metadata.creation_time 
-          ? new Date(videos[0].metadata.creation_time).getTime() / 1000 
+        const startTime = videos[0]?.metadata.creation_time
+          ? new Date(videos[0].metadata.creation_time).getTime() / 1000
           : 0
         const videoSeconds = videoTime - startTime
         const videoEndSeconds = videoSeconds + video.metadata.format.duration
@@ -251,11 +334,28 @@ export default function Home() {
   useEffect(() => {
     if (isPlaying) {
       const interval = setInterval(() => {
-        setGlobalPlayTime(prev => prev + 0.1)
+        setGlobalPlayTime((prev) => prev + 0.1)
       }, 100)
       return () => clearInterval(interval)
     }
   }, [isPlaying])
+
+  useEffect(() => {
+    const activeVideo = document.querySelector(`.video-${activeCamera}`)
+    const container = document.getElementById("active-video-container")
+
+    console.log("Debug:", {
+      activeCamera,
+      foundActiveVideo: !!activeVideo,
+      foundContainer: !!container,
+    })
+
+    if (activeVideo && container) {
+      container.innerHTML = ""
+      const clone = activeVideo.cloneNode(true)
+      container.appendChild(clone)
+    }
+  }, [activeCamera])
 
   return (
     <div
@@ -264,70 +364,68 @@ export default function Home() {
       <div className="absolute top-4 right-4">
         {/* <TimeZoneSelect value={timezone} onValueChange={setTimezone} /> */}
       </div>
-      <main className="flex flex-col gap-8 items-center w-full px-12 sm:px-16 py-16">
-        {/* Панель управления */}
-        <div className="flex items-center gap-4 w-full">
-          <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
-            {activeCamera}
-          </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={toggleRecording}
-            className={`h-12 w-12 rounded-full ${
-              isRecording
-                ? "bg-red-500 text-white hover:bg-red-600"
-                : "hover:bg-gray-200 dark:hover:bg-gray-700"
-            }`}
-          >
-            <div className={`h-4 w-4 rounded-full ${isRecording ? "bg-white" : "bg-red-500"}`} />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={togglePlayback}
-            className="h-8 w-8"
-          >
-            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-          </Button>
-          <span className="text-sm text-gray-500">
-            {formatTimeWithDecisecond(currentTime)}
-          </span>
+      <main className="flex gap-16 w-full px-12 sm:px-16 py-16">
+        {/* Левая часть с сеткой видео */}
+        <div className="w-[75%] flex flex-col gap-8">
+          {/* Панель управления */}
+          <div className="flex items-center gap-4 w-full">
+            <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
+              {activeCamera}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleRecording}
+              className={`h-12 w-12 rounded-full ${
+                isRecording
+                  ? "bg-red-500 text-white hover:bg-red-600"
+                  : "hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              <div className={`h-4 w-4 rounded-full ${isRecording ? "bg-white" : "bg-red-500"}`} />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={togglePlayback}
+              className="h-8 w-8"
+            >
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            <span className="text-sm text-gray-500">
+              {formatTimeWithDecisecond(currentTime)}
+            </span>
 
-          <span className="text-xl font-medium ml-auto">
-            {dayjs(videos[0]?.metadata?.creation_time)
-              .add(currentTime, "second")
-              .format("HH:mm:ss")}
-          </span>
+            <span className="text-xl font-medium ml-auto">
+              {dayjs(videos[0]?.metadata?.creation_time)
+                .add(currentTime, "second")
+                .format("HH:mm:ss")}
+            </span>
 
-          {recordings.length > 0 && (
-            <div className="ml-4 text-sm text-gray-500">
-              <RecordingsList 
-                recordings={recordings} 
-                baseVideoTime={videos[0]?.metadata.creation_time}
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="w-full">
-          <Slider
-            defaultValue={[0]}
-            max={timeRange.max - timeRange.min}
-            step={1}
-            value={[currentTime]}
-            onValueChange={handleTimeChange}
-            className="w-full"
-          />
-        </div>
-
-        {/* Единый список всех видео */}
-        <div className="w-full space-y-4">
-          <div className="flex items-center justify-between w-full">
-            <h2 className="text-lg font-medium">Все камеры</h2>
+            {recordings.length > 0 && (
+              <div className="ml-4 text-sm text-gray-500">
+                <RecordingsList
+                  recordings={recordings}
+                  baseVideoTime={videos[0]?.metadata.creation_time}
+                />
+              </div>
+            )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-            {activeVideos.map(({video, index}) => (
+
+          <div className="w-full">
+            <Slider
+              defaultValue={[0]}
+              max={timeRange.max - timeRange.min}
+              step={1}
+              value={[currentTime]}
+              onValueChange={handleTimeChange}
+              className="w-full"
+            />
+          </div>
+
+          {/* Сетка видео */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+            {activeVideos.map(({ video, index }) => (
               <VideoPlayer
                 key={video.path}
                 video={video}
@@ -343,6 +441,24 @@ export default function Home() {
               />
             ))}
           </div>
+        </div>
+
+        {/* Правая часть с активным видео */}
+        <div className="w-[25%] sticky top-4">
+          {activeVideos
+            .filter(({ index }) => index === activeCamera)
+            .map(({ video, index }) => (
+              <ActiveVideo
+                key={`active-${video.path}`}
+                video={video}
+                index={index}
+                timezone={timezone}
+                activeCamera={activeCamera}
+                formatDuration={formatDuration}
+                isPlaying={isPlaying}
+                videoRefs={videoRefs}
+              />
+            ))}
         </div>
       </main>
     </div>

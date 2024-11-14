@@ -19,8 +19,6 @@ export function VideoPlayer({
   formatDuration,
   onVideoRef,
 }: VideoPlayerProps) {
-  const width = 600 // или можно передавать через пропсы
-
   console.log("Video bitrate data:", video.bitrate_data) // для отладки
 
   console.log(`VideoPlayer render - Camera ${cameraNumber}, Active: ${activeIndex}`, {
@@ -30,26 +28,36 @@ export function VideoPlayer({
   })
 
   return (
-    <div className="flex flex-col gap-3">
+    <div
+      className={`relative rounded-lg overflow-hidden ${
+        activeIndex === cameraNumber ? "ring-2 ring-blue-500" : ""
+      }`}
+    >
       <div
-        className={`relative overflow-hidden border ${
-          activeIndex === cameraNumber ? "border-red-500 border-2" : "border-gray-200"
+        className={`relative w-full ${
+          video.metadata.video_stream?.display_aspect_ratio === "1:1"
+            ? "pt-[75%]" // Уменьшаем высоту для квадратных видео до 75% от ширины
+            : "pt-[56.25%]" // Оставляем 16:9 для обычных
         }`}
       >
-        <video
-          ref={onVideoRef}
-          src={`/videos/${video.name}`}
-          className="w-full h-full object-cover"
-          playsInline
-          muted
-        />
+        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black">
+          <video
+            ref={onVideoRef}
+            src={`/videos/${video.name}`}
+            className={video.metadata.video_stream?.display_aspect_ratio === "1:1"
+              ? "h-full w-auto"
+              : "w-full h-auto"}
+            muted
+            playsInline
+          />
+        </div>
       </div>
       <div className="w-full h-24">
         {video.bitrate_data && video.bitrate_data.length > 0
           ? (
             <BitrateChart
               data={video.bitrate_data}
-              width={width}
+              width="100%"
               height={96}
               tooltipOpen={true}
               showTooltip={() => {}}
