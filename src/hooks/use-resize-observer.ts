@@ -33,4 +33,4 @@ export function useResizeObserver<T extends HTMLElement>(): [
   }, [ref, handleSize])
 
   return [setRef, size]
-} 
+}

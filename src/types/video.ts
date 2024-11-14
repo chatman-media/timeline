@@ -16,4 +16,4 @@ export interface VideoInfo {
     timestamp: number
     bitrate: number
   }>
-} 
+}

@@ -1,8 +1,8 @@
-import { AreaClosed, Line, Bar } from "@visx/shape"
+import { AreaClosed, Bar, Line } from "@visx/shape"
 import { curveMonotoneX } from "@visx/curve"
-import { GridRows, GridColumns } from "@visx/grid"
-import { scaleTime, scaleLinear } from "@visx/scale"
-import { withTooltip, TooltipWithBounds } from "@visx/tooltip"
+import { GridColumns, GridRows } from "@visx/grid"
+import { scaleLinear, scaleTime } from "@visx/scale"
+import { TooltipWithBounds, withTooltip } from "@visx/tooltip"
 import { WithTooltipProvidedProps } from "@visx/tooltip/lib/enhancers/withTooltip"
 import { localPoint } from "@visx/event"
 import { bisector } from "d3-array"
@@ -48,7 +48,10 @@ const BitrateChart = withTooltip(
       () =>
         scaleTime({
           range: [0, innerWidth],
-          domain: [Math.min(...data.map((d) => d.timestamp)), Math.max(...data.map((d) => d.timestamp))],
+          domain: [
+            Math.min(...data.map((d) => d.timestamp)),
+            Math.max(...data.map((d) => d.timestamp)),
+          ],
         }),
       [data, innerWidth],
     )
@@ -73,7 +76,9 @@ const BitrateChart = withTooltip(
         const d1 = data[index]
         let d = d0
         if (d1 && getTimestamp(d1)) {
-          d = x0.valueOf() - getTimestamp(d0).valueOf() > getTimestamp(d1).valueOf() - x0.valueOf() ? d1 : d0
+          d = x0.valueOf() - getTimestamp(d0).valueOf() > getTimestamp(d1).valueOf() - x0.valueOf()
+            ? d1
+            : d0
         }
         showTooltip({
           tooltipData: d,
@@ -174,4 +179,4 @@ const BitrateChart = withTooltip(
   },
 )
 
-export default BitrateChart 
+export default BitrateChart

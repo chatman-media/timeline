@@ -25,7 +25,6 @@ interface VideoMetadataProps {
 }
 
 export function VideoMetadata({ video, activeIndex, timezone }: VideoMetadataProps) {
-
   return (
     <div className="flex items-center gap-3">
       <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
@@ -38,15 +37,13 @@ export function VideoMetadata({ video, activeIndex, timezone }: VideoMetadataPro
             <>
               {dayjs(video.metadata.creation_time)
                 .tz(timezone)
-                .format("YYYY-MM-DD")}
-              {" "}
-              {dayjs(video.metadata.creation_time)
+                .format("YYYY-MM-DD")} {dayjs(video.metadata.creation_time)
                 .tz(timezone)
                 .format("HH:mm")}
               -
               {dayjs(video.metadata.creation_time)
                 .tz(timezone)
-                .add(video.metadata?.format?.duration || 0, 'second')
+                .add(video.metadata?.format?.duration || 0, "second")
                 .format("HH:mm")}
             </>
           )}
@@ -77,4 +74,4 @@ export function VideoMetadata({ video, activeIndex, timezone }: VideoMetadataPro
       </div>
     </div>
   )
-} 
+}

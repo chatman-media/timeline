@@ -16,12 +16,6 @@ dayjs.extend(duration)
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
-// Добавляем интерфейс VideoFrame
-interface VideoFrame {
-  videoPath: string
-  framePath: string
-}
-
 // Add new interfaces and types
 interface RecordEntry {
   camera: number
@@ -53,8 +47,6 @@ export default function Home() {
   const [videos, setVideos] = useState<VideoInfo[]>([])
   const [timeRange, setTimeRange] = useState({ min: 0, max: 0 })
   const [currentTime, setCurrentTime] = useState(0)
-  const [_frames, setFrames] = useState<VideoFrame[]>([])
-  const [_isLoadingFrames, setIsLoadingFrames] = useState(false)
   const [timezone] = useState("Asia/Bangkok")
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeCamera, setActiveCamera] = useState(1)
@@ -98,120 +90,15 @@ export default function Home() {
       .catch((error) => console.error("Error fetching videos:", error))
   }, [])
 
-  // Добавяем debounced версию fetchFrames
-  const debouncedFetchFrames = useCallback(
-    (() => {
-      let timeoutId: NodeJS.Timeout
-      return (timestamp: number) => {
-        clearTimeout(timeoutId)
-        timeoutId = setTimeout(() => {
-          fetchFrames(timestamp)
-        }, 500) // 500ms задержка
-      }
-    })(),
-    [videos], // Зависимость от videos, так как используется внутри функции
-  )
-
-  // Добавляем функцию для получения кадров
-  const fetchFrames = async (timestamp: number) => {
-    setIsLoadingFrames(true)
-    try {
-      const activeVideos = videos.filter((video) => {
-        if (!video.metadata.creation_time) return false
-        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-        const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
-        return videoTime <= (startTime + timestamp)
-      })
-
-      if (activeVideos.length === 0) {
-        setFrames([])
-        return
-      }
-
-      // Изменяем структуру запроса согласно требованиям API
-      const requestData = activeVideos.map((video) => {
-        const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
-        const firstVideoTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
-        const relativeTimestamp = Math.max(0, timestamp - (videoStartTime - firstVideoTime))
-
-        return {
-          path: video.path,
-          timestamp: relativeTimestamp, // Отправляем массив timestamps
-        }
-      })
-
-      console.log("Full request payload:", requestData)
-
-      const response = await fetch("/api/video-frames", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestData),
-      })
-
-      if (!response.ok) {
-        const errorText = await response.text()
-        console.error("Server response:", errorText)
-        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`)
-      }
-
-      const data = await response.json()
-      setFrames(data.frames)
-    } catch (error) {
-      console.error("Error fetching frames:", error)
-      setFrames([])
-    } finally {
-      setIsLoadingFrames(false)
-    }
-  }
-
-  // Модифицируем эффект для воспроизведения
-  useEffect(() => {
-    let animationFrameId: number
-
-    if (isPlaying) {
-      const startTime = performance.now()
-      const initialCurrentTime = currentTime
-
-      const animate = (timestamp: number) => {
-        const elapsed = (timestamp - startTime) / 1000 // Convert to seconds
-        const newTime = initialCurrentTime + elapsed
-
-        if (newTime >= timeRange.max) {
-          setIsPlaying(false)
-          setCurrentTime(timeRange.max)
-          return
-        }
-
-        setCurrentTime(newTime)
-        animationFrameId = requestAnimationFrame(animate)
-      }
-
-      animationFrameId = requestAnimationFrame(animate)
-    }
-
-    return () => {
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId)
-      }
-    }
-  }, [isPlaying, timeRange.max])
-
   // Модифицируем функцию handleTimeChange
   const handleTimeChange = (value: number[]) => {
     setCurrentTime(value[0])
-    debouncedFetchFrames(value[0])
   }
 
   // Добавляем функцию для управленя воспроизведением
   const togglePlayback = () => {
     const newPlayingState = !isPlaying
     setIsPlaying(newPlayingState)
-
-    if (!newPlayingState) {
-      fetchFrames(currentTime)
-    }
   }
 
   // Создаем функцию для фильтрации активных видео
@@ -290,7 +177,7 @@ export default function Home() {
     }
   }, [activeCamera, isRecording, currentTime])
 
-  // Модифицируем эффект для синхронизации видео
+  // Модифицирум эффект для синхронизации видео
   useEffect(() => {
     if (videos.length > 0) {
       const activeVids = getActiveVideos()
@@ -388,14 +275,19 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {videos
-              .filter((video) => isVideoActive(video))
-              .map((video) => {
-                const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
+              .map((video, originalIndex) => ({video, cameraNumber: originalIndex + 1}))
+              .filter(({video}) => isVideoActive(video))
+              .map(({video, cameraNumber}) => {
+                console.log(`Rendering video ${cameraNumber}`, {
+                  activeCamera,
+                  cameraNumber
+                })
                 return (
                   <VideoPlayer
                     key={video.path}
                     video={video}
-                    activeIndex={activeIndex}
+                    activeIndex={activeCamera}
+                    cameraNumber={cameraNumber}
                     timezone={timezone}
                     formatDuration={formatDuration}
                     onVideoRef={(el) => {
