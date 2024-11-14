@@ -22,7 +22,7 @@ export function VideoPlayer({
   return (
     <div className="relative rounded-lg overflow-hidden">
       <div
-        className={`relative w-full ${
+        className={`relative w-full  ${
           video.metadata.video_stream?.width === video.metadata.video_stream?.height
             ? "pt-[75%]"
             : "pt-[56.25%]"

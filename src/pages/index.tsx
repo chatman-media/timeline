@@ -325,7 +325,7 @@ export default function Home() {
       </div>
       <main className="flex gap-16 w-full px-12 sm:px-16 py-16">
         {/* Левая часть с секой видео */}
-        <div className="w-[75%] flex flex-col gap-8">
+        <div className="w-[70%] flex flex-col gap-8">
           {/* Панель управления */}
           <div className="flex items-center gap-4 w-full">
             <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
@@ -383,7 +383,7 @@ export default function Home() {
           </div>
 
           {/* Сетка видео */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {activeVideos.map(({ video, index }) => (
               <VideoPlayer
                 key={video.path}
@@ -400,7 +400,7 @@ export default function Home() {
         </div>
 
         {/* Правая часть с активным видео */}
-        <div className="w-[25%] sticky top-4">
+        <div className="w-[30%] sticky top-4">
           {activeVideos
             .filter(({ index }) => index === activeCamera)
             .map(({ video, index }) => (
