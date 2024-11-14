@@ -1,4 +1,3 @@
-import { VideoInfo } from "@/pages/api/hello"
 import dayjs from "dayjs"
 
 interface VideoMetadataProps {
@@ -25,10 +24,7 @@ interface VideoMetadataProps {
   videoHeight?: number
 }
 
-export function VideoMetadata({ video, activeIndex, timezone, formatDuration }: VideoMetadataProps) {
-  const videoWidth = video.metadata?.streams?.[0]?.width
-  const videoHeight = video.metadata?.streams?.[0]?.height
-  const videoSize = video.metadata?.format?.size
+export function VideoMetadata({ video, activeIndex, timezone }: VideoMetadataProps) {
 
   return (
     <div className="flex items-center gap-3">

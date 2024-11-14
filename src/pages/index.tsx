@@ -8,29 +8,13 @@ import { Slider } from "@/components/ui/slider"
 import { Button } from "@/components/ui/button"
 import { Pause, Play } from "lucide-react"
 import { formatTimeWithDecisecond } from "@/lib/utils"
-import { VideoMetadata } from "../components/video-metadata"
+import { VideoPlayer } from "../components/VideoPlayer"
+import type { VideoInfo } from "@/types/video"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
 dayjs.extend(utc)
 dayjs.extend(timezone)
-
-// Добавляем интерфейс VideoInfo
-interface VideoInfo {
-  name: string
-  path: string
-  thumbnail: string
-  metadata: {
-    format: {
-      duration: number
-    }
-    video_stream?: {
-      width: number
-      height: number
-    }
-    creation_time?: string
-  }
-}
 
 // Добавляем интерфейс VideoFrame
 interface VideoFrame {
@@ -331,38 +315,6 @@ export default function Home() {
     }
   }, [currentTime, isPlaying, videos])
 
-  // Модифицируем рендер видео в обеих секциях (основные камеры и 360° камеры)
-  // Заменяем блок с Image на:
-  const renderVideo = (video: VideoInfo, activeIndex: number) => {
-    const is360Video = video.name.toLowerCase().includes(".insv")
-    
-    return (
-      <div key={video.path} className="flex flex-col gap-3">
-        <div className="w-full aspect-video relative overflow-hidden">
-          <video
-            ref={(el) => {
-              if (el) {
-                videoRefs.current[video.path] = el
-              }
-            }}
-            src={`/videos/${video.name}`}
-            className="w-full h-full rounded-lg object-cover"
-            playsInline
-            muted
-          />
-        </div>
-        <div className="flex flex-col">
-          <VideoMetadata
-            video={video}
-            activeIndex={activeIndex}
-            timezone={timezone}
-            formatDuration={formatDuration}
-          />
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div
       className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-[family-name:var(--font-geist-sans)] relative`}
@@ -433,17 +385,30 @@ export default function Home() {
         <div className="flex gap-8 w-full">
           {/* Левая часть (2/3) для обычных видео */}
           <div className="w-2/3 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between w-full">
               <h2 className="text-lg font-medium">Основные камеры</h2>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
               {videos
                 .filter((video) =>
                   isVideoActive(video) && !video.name.toLowerCase().includes(".insv")
                 )
                 .map((video) => {
                   const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
-                  return renderVideo(video, activeIndex)
+                  return (
+                    <VideoPlayer
+                      key={video.path}
+                      video={video}
+                      activeIndex={activeIndex}
+                      timezone={timezone}
+                      formatDuration={formatDuration}
+                      onVideoRef={(el) => {
+                        if (el) {
+                          videoRefs.current[video.path] = el
+                        }
+                      }}
+                    />
+                  )
                 })}
             </div>
           </div>
@@ -453,17 +418,30 @@ export default function Home() {
 
           {/* Правая часть (1/3) для INSV */}
           <div className="w-1/3 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between w-full">
               <h2 className="text-lg font-medium">360° камеры</h2>
             </div>
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grid grid-cols-1 gap-6 w-full">
               {videos
                 .filter((video) =>
                   isVideoActive(video) && video.name.toLowerCase().includes(".insv")
                 )
                 .map((video) => {
                   const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
-                  return renderVideo(video, activeIndex)
+                  return (
+                    <VideoPlayer
+                      key={video.path}
+                      video={video}
+                      activeIndex={activeIndex}
+                      timezone={timezone}
+                      formatDuration={formatDuration}
+                      onVideoRef={(el) => {
+                        if (el) {
+                          videoRefs.current[video.path] = el
+                        }
+                      }}
+                    />
+                  )
                 })}
             </div>
           </div>

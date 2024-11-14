@@ -71,6 +71,7 @@ export interface VideoInfo {
   path: string
   thumbnail: string
   metadata: VideoMetadata
+  bitrate_data?: Array<{ timestamp: number; bitrate: number }>
 }
 
 interface FFProbeData {
@@ -112,7 +113,7 @@ export default async function handler(
         // Генерируем имя для thumbnail
         const thumbnailName = `${path.parse(filename).name}.jpg`
 
-        // Извлекаем первый кадр
+        // Извлекаем перв��й кадр
         await new Promise((resolve, reject) => {
           ffmpeg(filePath)
             .screenshots({
@@ -189,11 +190,24 @@ export default async function handler(
           tags: probeData.format.tags,
         }
 
+        // Calculate bitrate data points
+        const duration = parseFloat(probeData.format.duration)
+        const totalBitrate = parseInt(probeData.format.bit_rate)
+        const dataPoints = 100 // Number of data points to generate
+        const interval = duration / dataPoints
+
+        // Generate sample bitrate data (you may want to replace this with actual data)
+        const bitrate_data = Array.from({ length: dataPoints }, (_, i) => ({
+          timestamp: i * interval,
+          bitrate: totalBitrate * (0.8 + Math.random() * 0.4), // Random variation ±20%
+        }))
+
         return {
           name: filename,
           path: `/videos/${filename}`,
-          thumbnail: `/thumbnails/${thumbnailName}`, // добавляем путь к thumbnail
+          thumbnail: `/thumbnails/${thumbnailName}`,
           metadata,
+          bitrate_data,
         }
       } catch (error) {
         console.error(`Error processing file ${filename}:`, error)
