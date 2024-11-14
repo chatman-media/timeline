@@ -26,7 +26,7 @@ export function VideoPlayer({
   console.log(`VideoPlayer render - Camera ${cameraNumber}, Active: ${activeIndex}`, {
     isActive: activeIndex === cameraNumber,
     activeIndex,
-    cameraNumber
+    cameraNumber,
   })
 
   return (

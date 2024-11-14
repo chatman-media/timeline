@@ -1,5 +1,5 @@
 import localFont from "next/font/local"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
@@ -275,12 +275,12 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {videos
-              .map((video, originalIndex) => ({video, cameraNumber: originalIndex + 1}))
-              .filter(({video}) => isVideoActive(video))
-              .map(({video, cameraNumber}) => {
+              .map((video, originalIndex) => ({ video, cameraNumber: originalIndex + 1 }))
+              .filter(({ video }) => isVideoActive(video))
+              .map(({ video, cameraNumber }) => {
                 console.log(`Rendering video ${cameraNumber}`, {
                   activeCamera,
-                  cameraNumber
+                  cameraNumber,
                 })
                 return (
                   <VideoPlayer
