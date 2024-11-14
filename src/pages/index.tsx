@@ -1,5 +1,5 @@
 import localFont from "next/font/local"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback, useMemo } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
@@ -43,6 +43,32 @@ const formatDuration = (seconds: number) => {
   return duration.format("m:ss")
 }
 
+const RecordingsList = ({ recordings, baseVideoTime }) => {
+  return useMemo(() => 
+    recordings.map((record, idx) => {
+      const baseTime = baseVideoTime
+        ? new Date(baseVideoTime).getTime() / 1000 
+        : 0
+
+      const startTimeFormatted = dayjs.unix(baseTime)
+        .add(record.startTime, 'second')
+        .format('HH:mm:ss.SSS')
+
+      const endTimeFormatted = record.endTime 
+        ? dayjs.unix(baseTime)
+          .add(record.endTime, 'second')
+          .format('HH:mm:ss.SSS')
+        : "recording..."
+
+      return (
+        <div key={idx}>
+          Camera {record.camera}: {startTimeFormatted} → {endTimeFormatted}
+        </div>
+      )
+    }), [recordings, baseVideoTime]
+  )
+}
+
 export default function Home() {
   const [videos, setVideos] = useState<VideoInfo[]>([])
   const [timeRange, setTimeRange] = useState({ min: 0, max: 0 })
@@ -53,6 +79,8 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false)
   const [recordings, setRecordings] = useState<RecordEntry[]>([])
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
+  const [activeVideos, setActiveVideos] = useState<Array<{video: VideoInfo, index: number}>>([])
+  const [globalPlayTime, setGlobalPlayTime] = useState(0)
 
   useEffect(() => {
     fetch("/api/hello")
@@ -134,28 +162,26 @@ export default function Home() {
   // Add new function to handle recording
   const toggleRecording = () => {
     if (!isRecording) {
-      // Start new recording and playback
       setIsRecording(true)
       setIsPlaying(true)
       setRecordings((prev) => [...prev, {
         camera: activeCamera,
-        startTime: currentTime,
+        startTime: globalPlayTime,
       }])
     } else {
-      // End current recording and pause playback
       setIsRecording(false)
       setIsPlaying(false)
       setRecordings((prev) => {
         const updatedRecordings = [...prev]
         if (updatedRecordings.length > 0) {
-          updatedRecordings[updatedRecordings.length - 1].endTime = currentTime
+          updatedRecordings[updatedRecordings.length - 1].endTime = globalPlayTime
         }
         return updatedRecordings
       })
     }
   }
 
-  // Modify the camera change effect to track camera changes during recording
+  // Modify camera change effect
   useEffect(() => {
     if (isRecording) {
       setRecordings((prev) => {
@@ -163,19 +189,17 @@ export default function Home() {
         const lastRecord = updatedRecordings[updatedRecordings.length - 1]
 
         if (lastRecord && lastRecord.camera !== activeCamera) {
-          // End previous camera recording
-          lastRecord.endTime = currentTime
-          // Start new camera recording
+          lastRecord.endTime = globalPlayTime
           updatedRecordings.push({
             camera: activeCamera,
-            startTime: currentTime,
+            startTime: globalPlayTime,
           })
         }
 
         return updatedRecordings
       })
     }
-  }, [activeCamera, isRecording, currentTime])
+  }, [activeCamera, isRecording])
 
   // Модифицирум эффект для синхронизации видео
   useEffect(() => {
@@ -201,6 +225,37 @@ export default function Home() {
       })
     }
   }, [currentTime, isPlaying, videos])
+
+  // Обновляем функцию для получения активных видео
+  const updateActiveVideos = useCallback(() => {
+    const active = videos
+      .map((video, index) => ({ video, index: index + 1 }))
+      .filter(({ video }) => {
+        if (!video.metadata.creation_time) return false
+        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
+        const startTime = videos[0]?.metadata.creation_time 
+          ? new Date(videos[0].metadata.creation_time).getTime() / 1000 
+          : 0
+        const videoSeconds = videoTime - startTime
+        const videoEndSeconds = videoSeconds + video.metadata.format.duration
+        return videoSeconds <= currentTime && currentTime <= videoEndSeconds
+      })
+    setActiveVideos(active)
+  }, [videos, currentTime])
+
+  // Добавляем эффект для обновления активных видео
+  useEffect(() => {
+    updateActiveVideos()
+  }, [videos, updateActiveVideos])
+
+  useEffect(() => {
+    if (isPlaying) {
+      const interval = setInterval(() => {
+        setGlobalPlayTime(prev => prev + 0.1)
+      }, 100)
+      return () => clearInterval(interval)
+    }
+  }, [isPlaying])
 
   return (
     <div
@@ -247,12 +302,10 @@ export default function Home() {
 
           {recordings.length > 0 && (
             <div className="ml-4 text-sm text-gray-500">
-              {recordings.map((record, index) => (
-                <div key={index}>
-                  Camera {record.camera}: {formatDuration(record.startTime)} →{" "}
-                  {record.endTime ? formatDuration(record.endTime) : "recording..."}
-                </div>
-              ))}
+              <RecordingsList 
+                recordings={recordings} 
+                baseVideoTime={videos[0]?.metadata.creation_time}
+              />
             </div>
           )}
         </div>
@@ -274,30 +327,21 @@ export default function Home() {
             <h2 className="text-lg font-medium">Все камеры</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
-            {videos
-              .map((video, originalIndex) => ({ video, cameraNumber: originalIndex + 1 }))
-              .filter(({ video }) => isVideoActive(video))
-              .map(({ video, cameraNumber }) => {
-                console.log(`Rendering video ${cameraNumber}`, {
-                  activeCamera,
-                  cameraNumber,
-                })
-                return (
-                  <VideoPlayer
-                    key={video.path}
-                    video={video}
-                    activeIndex={activeCamera}
-                    cameraNumber={cameraNumber}
-                    timezone={timezone}
-                    formatDuration={formatDuration}
-                    onVideoRef={(el) => {
-                      if (el) {
-                        videoRefs.current[video.path] = el
-                      }
-                    }}
-                  />
-                )
-              })}
+            {activeVideos.map(({video, index}) => (
+              <VideoPlayer
+                key={video.path}
+                video={video}
+                activeIndex={activeCamera}
+                cameraNumber={index}
+                timezone={timezone}
+                formatDuration={formatDuration}
+                onVideoRef={(el) => {
+                  if (el) {
+                    videoRefs.current[video.path] = el
+                  }
+                }}
+              />
+            ))}
           </div>
         </div>
       </main>
