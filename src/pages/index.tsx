@@ -381,69 +381,31 @@ export default function Home() {
           />
         </div>
 
-        {/* Новый контейнер с разделением на две части */}
-        <div className="flex gap-8 w-full">
-          {/* Левая часть (2/3) для обычных видео */}
-          <div className="w-2/3 space-y-4">
-            <div className="flex items-center justify-between w-full">
-              <h2 className="text-lg font-medium">Основные камеры</h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
-              {videos
-                .filter((video) =>
-                  isVideoActive(video) && !video.name.toLowerCase().includes(".insv")
-                )
-                .map((video) => {
-                  const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
-                  return (
-                    <VideoPlayer
-                      key={video.path}
-                      video={video}
-                      activeIndex={activeIndex}
-                      timezone={timezone}
-                      formatDuration={formatDuration}
-                      onVideoRef={(el) => {
-                        if (el) {
-                          videoRefs.current[video.path] = el
-                        }
-                      }}
-                    />
-                  )
-                })}
-            </div>
+        {/* Единый список всех видео */}
+        <div className="w-full space-y-4">
+          <div className="flex items-center justify-between w-full">
+            <h2 className="text-lg font-medium">Все камеры</h2>
           </div>
-
-          {/* Разделитель */}
-          <div className="w-px bg-gray-200 dark:bg-gray-800" />
-
-          {/* Правая часть (1/3) для INSV */}
-          <div className="w-1/3 space-y-4">
-            <div className="flex items-center justify-between w-full">
-              <h2 className="text-lg font-medium">360° камеры</h2>
-            </div>
-            <div className="grid grid-cols-1 gap-6 w-full">
-              {videos
-                .filter((video) =>
-                  isVideoActive(video) && video.name.toLowerCase().includes(".insv")
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
+            {videos
+              .filter((video) => isVideoActive(video))
+              .map((video) => {
+                const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
+                return (
+                  <VideoPlayer
+                    key={video.path}
+                    video={video}
+                    activeIndex={activeIndex}
+                    timezone={timezone}
+                    formatDuration={formatDuration}
+                    onVideoRef={(el) => {
+                      if (el) {
+                        videoRefs.current[video.path] = el
+                      }
+                    }}
+                  />
                 )
-                .map((video) => {
-                  const activeIndex = getActiveVideos().findIndex((v) => v.path === video.path)
-                  return (
-                    <VideoPlayer
-                      key={video.path}
-                      video={video}
-                      activeIndex={activeIndex}
-                      timezone={timezone}
-                      formatDuration={formatDuration}
-                      onVideoRef={(el) => {
-                        if (el) {
-                          videoRefs.current[video.path] = el
-                        }
-                      }}
-                    />
-                  )
-                })}
-            </div>
+              })}
           </div>
         </div>
       </main>
