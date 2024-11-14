@@ -150,7 +150,7 @@ export default function Home() {
         const times = sortedVideos.flatMap((v: VideoInfo) => {
           if (!v.metadata.creation_time) return []
           const startTime = new Date(v.metadata.creation_time).getTime()
-          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длительность в миллисекунды
+          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длительност�� в миллисекунды
           return [startTime, endTime]
         }).filter((t: number) => t > 0)
         console.log(times.map((t: number) => new Date(Math.floor(t))))
@@ -273,32 +273,51 @@ export default function Home() {
         }
       }
 
+      const syncVideos = async () => {
+        const videoElements = activeVids
+          .map(video => videoRefs.current[video.path])
+          .filter(Boolean)
+        
+        const activeVideoElements = activeVids
+          .map(video => videoRefs.current[`active-${video.path}`])
+          .filter(Boolean)
+
+        const allVideos = [...videoElements, ...activeVideoElements]
+
+        if (isPlaying) {
+          await Promise.all(allVideos.map(video => video.play()))
+          if (!animationFrameId.current) {
+            animationFrameId.current = requestAnimationFrame(updatePlayback)
+          }
+        } else {
+          await Promise.all(allVideos.map(video => video.pause()))
+          if (animationFrameId.current) {
+            cancelAnimationFrame(animationFrameId.current)
+            lastUpdateTime.current = 0
+          }
+        }
+      }
+
+      // Синхронизация времени при промотке
       activeVids.forEach((video) => {
         const videoElement = videoRefs.current[video.path]
+        const activeVideoElement = videoRefs.current[`active-${video.path}`]
+        
         if (videoElement) {
-          // Синхронизируем только при явном изменении времени (промотке)
           const videoTime = new Date(video.metadata.creation_time!).getTime() / 1000
           const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
           const relativeTime = currentTime - (videoTime - startTime)
           
           if (Math.abs(videoElement.currentTime - relativeTime) > 0.5) {
             videoElement.currentTime = relativeTime
-          }
-
-          if (isPlaying && videoElement.paused) {
-            videoElement.play()
-            if (!animationFrameId.current) {
-              animationFrameId.current = requestAnimationFrame(updatePlayback)
-            }
-          } else if (!isPlaying && !videoElement.paused) {
-            videoElement.pause()
-            if (animationFrameId.current) {
-              cancelAnimationFrame(animationFrameId.current)
-              lastUpdateTime.current = 0
+            if (activeVideoElement) {
+              activeVideoElement.currentTime = relativeTime
             }
           }
         }
       })
+
+      syncVideos().catch(console.error)
     }
 
     return () => {
