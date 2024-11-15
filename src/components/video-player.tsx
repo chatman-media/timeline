@@ -32,15 +32,6 @@ export function VideoPlayer({
     return () => globalThis.removeEventListener("resize", updateWidth)
   }, [])
 
-  const formatDuration = (seconds: number) => {
-    const duration = dayjs.duration(seconds, "seconds")
-    const hours = duration.hours().toString().padStart(2, "0")
-    const minutes = duration.minutes().toString().padStart(2, "0")
-    const secs = duration.seconds().toString().padStart(2, "0")
-    const ms = Math.floor(duration.milliseconds() / 10).toString().padStart(2, "0")
-    return `${hours}:${minutes}:${secs}.${ms}`
-  }
-
   const formatBitrate = (bitrate: number) => {
     return `${(bitrate / 1000000).toFixed(1)} Mbps`
   }
