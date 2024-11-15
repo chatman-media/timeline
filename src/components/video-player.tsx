@@ -1,7 +1,7 @@
 import BitrateChart from "@/components/bitrate-chart"
 import { VideoInfo } from "@/types/video"
 import dayjs from "dayjs"
-import { useState, useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 interface VideoPlayerProps {
   video: VideoInfo & { activeIndex: number }
@@ -28,16 +28,16 @@ export function VideoPlayer({
 
     updateWidth()
 
-    window.addEventListener('resize', updateWidth)
-    return () => window.removeEventListener('resize', updateWidth)
+    globalThis.addEventListener("resize", updateWidth)
+    return () => globalThis.removeEventListener("resize", updateWidth)
   }, [])
 
   const formatDuration = (seconds: number) => {
-    const duration = dayjs.duration(seconds, 'seconds')
-    const hours = duration.hours().toString().padStart(2, '0')
-    const minutes = duration.minutes().toString().padStart(2, '0')
-    const secs = duration.seconds().toString().padStart(2, '0')
-    const ms = Math.floor(duration.milliseconds() / 10).toString().padStart(2, '0')
+    const duration = dayjs.duration(seconds, "seconds")
+    const hours = duration.hours().toString().padStart(2, "0")
+    const minutes = duration.minutes().toString().padStart(2, "0")
+    const secs = duration.seconds().toString().padStart(2, "0")
+    const ms = Math.floor(duration.milliseconds() / 10).toString().padStart(2, "0")
     return `${hours}:${minutes}:${secs}.${ms}`
   }
 
@@ -53,7 +53,7 @@ export function VideoPlayer({
 
   return (
     <div className="space-y-2">
-      <div 
+      <div
         ref={videoContainerRef}
         className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-gray-800"
       >
@@ -94,7 +94,9 @@ export function VideoPlayer({
           <p className="font-medium">{video.name}</p>
           <p className="text-right">{video.metadata.video_stream?.codec_name.toUpperCase()}</p>
           <span className="w-full flex justify-between">
-            <span className="">{video.metadata.video_stream?.width} × {video.metadata.video_stream?.height}</span>
+            <span className="">
+              {video.metadata.video_stream?.width} × {video.metadata.video_stream?.height}
+            </span>
             <span className="text-right">{video.metadata.video_stream?.display_aspect_ratio}</span>
           </span>
           <p className="text-right">{formatBitrate(video.metadata.format.bit_rate)}</p>

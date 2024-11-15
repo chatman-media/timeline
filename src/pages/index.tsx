@@ -45,7 +45,7 @@ export default function Home() {
   const [recordings, setRecordings] = useState<RecordEntry[]>([])
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
   const [activeVideos, setActiveVideos] = useState<Array<{ video: VideoInfo; index: number }>>([])
-  const [globalPlayTime, setGlobalPlayTime] = useState(0)
+  // const [globalPlayTime, setGlobalPlayTime] = useState(0)
 
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()
@@ -118,7 +118,7 @@ export default function Home() {
 
   // Добавляем функцию для управленя воспроизведением
   const togglePlayback = useCallback(() => {
-    setIsPlaying(prev => !prev)
+    setIsPlaying((prev) => !prev)
   }, [])
 
   // Создаем функцию для фильтрации активных видео
@@ -172,14 +172,14 @@ export default function Home() {
           setActiveCamera(key)
         }
       }
-      
+
       // Обработка клавиши R для записи
-      if (event.key.toLowerCase() === 'r') {
+      if (event.key.toLowerCase() === "r") {
         toggleRecording()
       }
 
       // Обработка пробела для паузы/воспроизведения
-      if (event.code === 'Space') {
+      if (event.code === "Space") {
         event.preventDefault() // Предотвращаем прокрутку страницы
         togglePlayback()
       }
@@ -304,15 +304,6 @@ export default function Home() {
   useEffect(() => {
     updateActiveVideos()
   }, [videos, updateActiveVideos])
-
-  useEffect(() => {
-    if (isPlaying) {
-      const interval = setInterval(() => {
-        setGlobalPlayTime((prev) => prev + 0.1)
-      }, 100)
-      return () => clearInterval(interval)
-    }
-  }, [isPlaying])
 
   useEffect(() => {
     const activeVideo = document.querySelector(`.video-${activeCamera}`)
