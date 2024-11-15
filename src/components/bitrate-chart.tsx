@@ -20,7 +20,7 @@ interface BitrateChartProps {
   margin?: { top: number; right: number; bottom: number; left: number }
 }
 
-const defaultMargin = { top: 20, right: 20, bottom: 20, left: 50 }
+const defaultMargin = { top: 0, right: 0, bottom: 0, left: 66 }
 
 // Вспомогательные функции
 const getTimestamp = (d: BitratePoint) => new Date(d.timestamp * 1000)
@@ -93,8 +93,8 @@ const BitrateChart = withTooltip(
       <div className="relative">
         <svg width={width} height={height}>
           <rect
-            x={margin.left}
-            y={margin.top}
+            x={0}
+            y={0}
             width={innerWidth}
             height={innerHeight}
             fill="var(--background)"
@@ -130,8 +130,8 @@ const BitrateChart = withTooltip(
             curve={curveMonotoneX}
           />
           <Bar
-            x={margin.left}
-            y={margin.top}
+            x={0}
+            y={0}
             width={innerWidth}
             height={innerHeight}
             fill="transparent"

@@ -117,10 +117,9 @@ export default function Home() {
   }
 
   // Добавляем функцию для управленя воспроизведением
-  const togglePlayback = () => {
-    const newPlayingState = !isPlaying
-    setIsPlaying(newPlayingState)
-  }
+  const togglePlayback = useCallback(() => {
+    setIsPlaying(prev => !prev)
+  }, [])
 
   // Создаем функцию для фильтрации активных видео
   const isVideoActive = (video: VideoInfo) => {
@@ -137,6 +136,33 @@ export default function Home() {
     return videos.filter(isVideoActive)
   }
 
+  // Оборачиваем toggleRecording в useCallback
+  const toggleRecording = useCallback(() => {
+    if (!isRecording) {
+      // Начало записи
+      setIsRecording(true)
+      if (!isPlaying) {
+        setIsPlaying(true)
+      }
+      setRecordings((prev) => [...prev, {
+        camera: activeCamera,
+        startTime: currentTime,
+      }])
+    } else {
+      // Остановка записи
+      setIsRecording(false)
+      setIsPlaying(false)
+      setRecordings((prev) => {
+        const updatedRecordings = [...prev]
+        if (updatedRecordings.length > 0) {
+          updatedRecordings[updatedRecordings.length - 1].endTime = currentTime
+        }
+        return updatedRecordings
+      })
+    }
+  }, [isRecording, activeCamera, currentTime, isPlaying])
+
+  // Обновляем useEffect с правильными зависимостями
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       const key = parseInt(event.key)
@@ -146,33 +172,22 @@ export default function Home() {
           setActiveCamera(key)
         }
       }
+      
+      // Обработка клавиши R для записи
+      if (event.key.toLowerCase() === 'r') {
+        toggleRecording()
+      }
+
+      // Обработка пробела для паузы/воспроизведения
+      if (event.code === 'Space') {
+        event.preventDefault() // Предотвращаем прокрутку страницы
+        togglePlayback()
+      }
     }
 
     globalThis.addEventListener("keydown", handleKeyPress)
     return () => globalThis.removeEventListener("keydown", handleKeyPress)
-  }, [videos, currentTime])
-
-  // Add new function to handle recording
-  const toggleRecording = () => {
-    if (!isRecording) {
-      setIsRecording(true)
-      setIsPlaying(true)
-      setRecordings((prev) => [...prev, {
-        camera: activeCamera,
-        startTime: globalPlayTime,
-      }])
-    } else {
-      setIsRecording(false)
-      setIsPlaying(false)
-      setRecordings((prev) => {
-        const updatedRecordings = [...prev]
-        if (updatedRecordings.length > 0) {
-          updatedRecordings[updatedRecordings.length - 1].endTime = globalPlayTime
-        }
-        return updatedRecordings
-      })
-    }
-  }
+  }, [videos, currentTime, toggleRecording, togglePlayback])
 
   // Modify camera change effect
   useEffect(() => {
@@ -182,10 +197,10 @@ export default function Home() {
         const lastRecord = updatedRecordings[updatedRecordings.length - 1]
 
         if (lastRecord && lastRecord.camera !== activeCamera) {
-          lastRecord.endTime = globalPlayTime
+          lastRecord.endTime = currentTime
           updatedRecordings.push({
             camera: activeCamera,
-            startTime: globalPlayTime,
+            startTime: currentTime,
           })
         }
 

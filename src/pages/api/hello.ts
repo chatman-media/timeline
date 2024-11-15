@@ -5,81 +5,13 @@ import path from "path"
 import { promisify } from "util"
 import ffmpeg, { ffprobe } from "fluent-ffmpeg"
 import process from "node:process"
+import { VideoStream } from "@/types/video-stream"
+import { VideoMetadata } from "@/types/video-metadata"
+import { FFProbeData } from "@/types/ffprobe"
+import { VideoInfo } from "@/types/video"
 
 // Промисифицируем ffprobe
 const ffprobeAsync = promisify(ffprobe)
-
-interface VideoStream {
-  codec_type: string
-  codec_name: string
-  codec_long_name: string
-  width?: number
-  height?: number
-  display_aspect_ratio?: string
-  r_frame_rate?: string
-  bit_rate?: string
-  sample_rate?: string
-  channels?: number
-  color_space?: string
-  color_range?: string
-  level?: number
-  is_avc?: boolean
-  pix_fmt?: string
-  nb_frames?: string
-}
-
-interface VideoMetadata {
-  format: {
-    filename: string
-    format_name: string
-    format_long_name: string
-    duration: number
-    size: number
-    bit_rate: number
-    start_time?: number
-    nb_streams?: number
-    probe_score?: number
-  }
-  video_stream?: {
-    codec_name: string
-    codec_long_name: string
-    width: number
-    height: number
-    display_aspect_ratio: string
-    fps: number
-    bit_rate: number
-    pix_fmt?: string
-    color_space?: string
-    color_range?: string
-    level?: number
-    is_avc?: boolean
-    frame_count?: number
-  }
-  audio_stream?: {
-    codec_name: string
-    codec_long_name: string
-    sample_rate: string
-    channels: number
-    bit_rate: number
-  }
-  creation_time?: string
-  tags?: Record<string, string>
-}
-
-interface FFProbeData {
-  streams: VideoStream[]
-  format: {
-    format_name: string
-    format_long_name: string
-    duration: string
-    size: number
-    bit_rate: string
-    tags?: Record<string, string>
-    start_time?: string
-    nb_streams?: number
-    probe_score?: number
-  }
-}
 
 export default async function handler(
   _req: NextApiRequest,
@@ -105,7 +37,7 @@ export default async function handler(
         // Генерируем имя для thumbnail
         const thumbnailName = `${path.parse(filename).name}.jpg`
 
-        // Извлекаем перв��й кадр
+        // Извлекаем первй кадр
         await new Promise((resolve, reject) => {
           ffmpeg(filePath)
             .screenshots({

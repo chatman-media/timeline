@@ -1,6 +1,7 @@
 import BitrateChart from "@/components/bitrate-chart"
-import { VideoMetadata } from "./video-metadata"
 import { VideoInfo } from "@/types/video"
+import dayjs from "dayjs"
+import { useState, useEffect, useRef } from "react"
 
 interface VideoPlayerProps {
   video: VideoInfo & { activeIndex: number }
@@ -13,6 +14,37 @@ export function VideoPlayer({
   cameraNumber,
   onVideoRef,
 }: VideoPlayerProps) {
+  const [chartWidth, setChartWidth] = useState(0)
+  const videoContainerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!videoContainerRef.current) return
+
+    const updateWidth = () => {
+      if (videoContainerRef.current) {
+        setChartWidth(videoContainerRef.current.offsetWidth + 66)
+      }
+    }
+
+    updateWidth()
+
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
+
+  const formatDuration = (seconds: number) => {
+    const duration = dayjs.duration(seconds, 'seconds')
+    const hours = duration.hours().toString().padStart(2, '0')
+    const minutes = duration.minutes().toString().padStart(2, '0')
+    const secs = duration.seconds().toString().padStart(2, '0')
+    const ms = Math.floor(duration.milliseconds() / 10).toString().padStart(2, '0')
+    return `${hours}:${minutes}:${secs}.${ms}`
+  }
+
+  const formatBitrate = (bitrate: number) => {
+    return `${(bitrate / 1000000).toFixed(1)} Mbps`
+  }
+
   console.log("Video bitrate data:", video.bitrate_data)
 
   console.log(`VideoPlayer render - Camera ${cameraNumber}`, {
@@ -20,33 +52,31 @@ export function VideoPlayer({
   })
 
   return (
-    <div className="relative rounded-lg overflow-hidden">
-      <div
-        className={`relative w-full  ${
-          video.metadata.video_stream?.width === video.metadata.video_stream?.height
-            ? "pt-[75%]"
-            : "pt-[56.25%]"
-        }`}
+    <div className="space-y-2">
+      <div 
+        ref={videoContainerRef}
+        className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-gray-800"
       >
-        <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black">
-          <video
-            ref={onVideoRef}
-            src={`/videos/${video.name}`}
-            className={video.metadata.video_stream?.width === video.metadata.video_stream?.height
-              ? "h-full w-auto"
-              : "w-full h-auto"}
-            muted
-            playsInline
-          />
+        <video
+          ref={onVideoRef}
+          src={video.path}
+          className={`video-${cameraNumber} w-full h-full object-contain`}
+          playsInline
+          muted
+        />
+        <div className="absolute top-2 left-4">
+          <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black/50 text-xl font-bold text-white">
+            {cameraNumber}
+          </span>
         </div>
       </div>
-      <div className="w-full h-24">
+      <div className="w-full">
         {video.bitrate_data && video.bitrate_data.length > 0
           ? (
             <BitrateChart
               data={video.bitrate_data}
-              width={400}
-              height={96}
+              width={chartWidth}
+              height={50}
               tooltipOpen={true}
               showTooltip={() => {}}
               hideTooltip={() => {}}
@@ -54,15 +84,22 @@ export function VideoPlayer({
             />
           )
           : (
-            <div className="w-full h-full flex items-center justify-center text-gray-500">
+            <div className="w-full h-full flex items-center justify-center text-gray-500 hidden">
               No bitrate data available
             </div>
           )}
       </div>
-      <div className="flex flex-col">
-        <VideoMetadata
-          video={video}
-        />
+      <div className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="grid grid-cols-2 gap-x-4">
+          <p className="font-medium">{video.name}</p>
+          <p className="text-right">{video.metadata.video_stream?.codec_name.toUpperCase()}</p>
+          <span className="w-full flex justify-between">
+            <span className="">{video.metadata.video_stream?.width} × {video.metadata.video_stream?.height}</span>
+            <span className="text-right">{video.metadata.video_stream?.display_aspect_ratio}</span>
+          </span>
+          <p className="text-right">{formatBitrate(video.metadata.format.bit_rate)}</p>
+          {/* <p>{formatDuration(video.metadata.format.duration)}</p> */}
+        </div>
       </div>
     </div>
   )
