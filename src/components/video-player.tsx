@@ -1,28 +1,30 @@
 import BitrateChart from "@/components/bitrate-chart"
 import { VideoInfo } from "@/types/video"
-import dayjs from "dayjs"
 import { useEffect, useRef, useState } from "react"
 
 interface VideoPlayerProps {
   video: VideoInfo & { activeIndex: number }
   cameraNumber: number
   onVideoRef: (el: HTMLVideoElement | null) => void
+  currentTime: number
 }
 
 export function VideoPlayer({
   video,
   cameraNumber,
   onVideoRef,
+  currentTime,
 }: VideoPlayerProps) {
   const [chartWidth, setChartWidth] = useState(0)
   const videoContainerRef = useRef<HTMLDivElement>(null)
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false)
 
   useEffect(() => {
     if (!videoContainerRef.current) return
 
     const updateWidth = () => {
       if (videoContainerRef.current) {
-        setChartWidth(videoContainerRef.current.offsetWidth + 66)
+        setChartWidth(videoContainerRef.current.offsetWidth)
       }
     }
 
@@ -68,10 +70,10 @@ export function VideoPlayer({
               data={video.bitrate_data}
               width={chartWidth}
               height={50}
-              tooltipOpen={true}
-              showTooltip={() => {}}
-              hideTooltip={() => {}}
-              updateTooltip={() => {}}
+              tooltipOpen={isTooltipOpen}
+              showTooltip={() => setIsTooltipOpen(true)}
+              hideTooltip={() => setIsTooltipOpen(false)}
+              currentTime={currentTime}
             />
           )
           : (

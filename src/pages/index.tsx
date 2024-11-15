@@ -76,7 +76,7 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetch("/api/hello")
+    fetch("/api/videos")
       .then((res) => res.json())
       .then((data) => {
         // Сортируем видео по времени создания
@@ -395,6 +395,7 @@ export default function Home() {
                 key={video.path}
                 video={{ ...video, activeIndex: index - 1 }}
                 cameraNumber={index}
+                currentTime={currentTime}
                 onVideoRef={(el) => {
                   if (el) {
                     videoRefs.current[video.path] = el

@@ -18,9 +18,10 @@ interface BitrateChartProps {
   width: number
   height: number
   margin?: { top: number; right: number; bottom: number; left: number }
+  currentTime?: number
 }
 
-const defaultMargin = { top: 0, right: 0, bottom: 0, left: 66 }
+const defaultMargin = { top: 0, right: 0, bottom: 0, left: 0 }
 
 // Вспомогательные функции
 const getTimestamp = (d: BitratePoint) => new Date(d.timestamp * 1000)
@@ -33,6 +34,7 @@ const BitrateChart = withTooltip(
     width,
     height,
     margin = defaultMargin,
+    currentTime,
     showTooltip,
     hideTooltip,
     tooltipData,
@@ -88,6 +90,8 @@ const BitrateChart = withTooltip(
       },
       [showTooltip, bitrateScale, timeScale, data, margin.left],
     )
+
+    console.log(currentTime)
 
     return (
       <div className="relative">
@@ -161,6 +165,16 @@ const BitrateChart = withTooltip(
                 pointerEvents="none"
               />
             </g>
+          )}
+          {currentTime && (
+            <line
+            x1={timeScale(currentTime)}
+            x2={timeScale(currentTime)}
+            y1={0}
+            y2={height}
+            stroke="#FFEB3B"  // или можно использовать "#FFD700" для более золотистого оттенка
+            strokeWidth={2}
+          />
           )}
         </svg>
         {tooltipData && (
