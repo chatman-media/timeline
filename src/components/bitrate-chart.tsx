@@ -93,6 +93,13 @@ const BitrateChart = withTooltip(
 
     console.log(currentTime)
 
+    // Обновляем позицию линии текущего времени
+    const currentTimePosition = useMemo(() => {
+      const firstTimestamp = Math.min(...data.map(d => d.timestamp))
+      const relativeTime = currentTime - firstTimestamp
+      return timeScale(firstTimestamp + relativeTime)
+    }, [currentTime, data, timeScale])
+
     return (
       <div className="relative">
         <svg width={width} height={height}>
@@ -166,15 +173,16 @@ const BitrateChart = withTooltip(
               />
             </g>
           )}
-          {currentTime && (
+          {/* Обновляем линию текущего времени */}
+          {currentTime !== undefined && currentTimePosition >= 0 && currentTimePosition <= innerWidth && (
             <line
-            x1={timeScale(currentTime)}
-            x2={timeScale(currentTime)}
-            y1={0}
-            y2={height}
-            stroke="#FFEB3B"  // или можно использовать "#FFD700" для более золотистого оттенка
-            strokeWidth={2}
-          />
+              x1={currentTimePosition}
+              x2={currentTimePosition}
+              y1={0}
+              y2={height}
+              stroke="#FFEB3B"
+              strokeWidth={2}
+            />
           )}
         </svg>
         {tooltipData && (
