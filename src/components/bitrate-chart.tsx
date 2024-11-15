@@ -181,7 +181,7 @@ const BitrateChart = withTooltip(
               y1={0}
               y2={height}
               stroke="#FFEB3B"
-              strokeWidth={2}
+              strokeWidth={1}
             />
           )}
         </svg>

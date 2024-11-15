@@ -223,7 +223,15 @@ export default function Home() {
         lastUpdateTime.current = timestamp
 
         if (isPlaying) {
-          setCurrentTime((prev) => prev + (deltaTime / 1000))
+          setCurrentTime((prev) => {
+            const newTime = prev + (deltaTime / 1000)
+            // Проверяем, не вышли ли мы за пределы диапазона
+            if (newTime > timeRange.max) {
+              setIsPlaying(false)
+              return timeRange.max
+            }
+            return newTime
+          })
           animationFrameId.current = requestAnimationFrame(updatePlayback)
         }
       }
@@ -263,10 +271,13 @@ export default function Home() {
           const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
           const relativeTime = currentTime - (videoTime - startTime)
 
-          if (Math.abs(videoElement.currentTime - relativeTime) > 0.5) {
-            videoElement.currentTime = relativeTime
-            if (activeVideoElement) {
-              activeVideoElement.currentTime = relativeTime
+          // Добавляем более точную синхронизацию
+          if (videoElement.readyState >= 2) { // Проверяем, что видео готово к воспроизведению
+            if (Math.abs(videoElement.currentTime - relativeTime) > 0.1) { // Уменьшаем порог синхронизации
+              videoElement.currentTime = relativeTime
+              if (activeVideoElement) {
+                activeVideoElement.currentTime = relativeTime
+              }
             }
           }
         }
@@ -281,7 +292,7 @@ export default function Home() {
         lastUpdateTime.current = 0
       }
     }
-  }, [currentTime, isPlaying, videos])
+  }, [currentTime, isPlaying, videos, timeRange.max])
 
   // Обновляем функцию для получения активных видео
   const updateActiveVideos = useCallback(() => {
@@ -330,7 +341,7 @@ export default function Home() {
         {/* <TimeZoneSelect value={timezone} onValueChange={setTimezone} /> */}
       </div>
       <main className="flex gap-16 w-full px-12 sm:px-16 py-16">
-        {/* Левая часть с секой видео */}
+        {/* Левая часть с с��кой видео */}
         <div className="w-[70%] flex flex-col gap-8">
           {/* Панель управления */}
           <div className="flex items-center gap-4 w-full">
