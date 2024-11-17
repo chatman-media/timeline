@@ -26,8 +26,15 @@ export default async function handler(
     // Получаем список файлов
     const files = await fs.readdir(videosDir)
 
+    // Фильтруем файлы, оставляя только видео файлы
+    const videoFiles = files.filter(file => {
+      const ext = path.extname(file).toLowerCase()
+      return ['.mp4', '.mov', '.avi', '.mkv', '.webm'].includes(ext) && 
+             !file.startsWith('.') // Пропускаем скрытые файлы
+    })
+
     // Обрабатываем все файлы параллельно
-    const videosPromises = files.map(async (filename) => {
+    const videosPromises = videoFiles.map(async (filename) => {
       try {
         const filePath = path.join(videosDir, filename)
         // Создаем директорию для thumbnails, если её нет

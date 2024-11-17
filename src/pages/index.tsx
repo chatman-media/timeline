@@ -24,6 +24,13 @@ interface RecordEntry {
   endTime?: number
 }
 
+interface EditSegment {
+  camera: number
+  startTime: number
+  endTime: number
+  bitrate: number
+}
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -45,6 +52,9 @@ export default function Home() {
   const [recordings, setRecordings] = useState<RecordEntry[]>([])
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
   const [activeVideos, setActiveVideos] = useState<Array<{ video: VideoInfo; index: number }>>([])
+  const [editSegments, setEditSegments] = useState<EditSegment[]>([])
+  const [mainCamera, setMainCamera] = useState(1)
+  const [bitrateThreshold, setBitrateThreshold] = useState(5000000) // 5 Mbps default
   // const [globalPlayTime, setGlobalPlayTime] = useState(0)
 
   const lastUpdateTime = useRef<number>(0)
@@ -90,7 +100,7 @@ export default function Home() {
         const times = sortedVideos.flatMap((v: VideoInfo) => {
           if (!v.metadata.creation_time) return []
           const startTime = new Date(v.metadata.creation_time).getTime()
-          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длительност в миллисекунды
+          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длит��льност в миллисекунды
           return [startTime, endTime]
         }).filter((t: number) => t > 0)
         console.log(times.map((t: number) => new Date(Math.floor(t))))
@@ -333,6 +343,122 @@ export default function Home() {
     }
   }, [activeCamera])
 
+  // Add new function to analyze bitrate and create segments
+  const analyzeAndCreateSegments = useCallback(() => {
+    if (!videos.length || !videos[0]?.metadata?.creation_time) {
+      console.warn('No videos or missing metadata')
+      return
+    }
+
+    const segments: EditSegment[] = []
+    let currentCamera = mainCamera
+    let currentSegment: EditSegment | null = null
+
+    // Get the base time from the first video
+    const baseTime = new Date(videos[0].metadata.creation_time).getTime() / 1000
+
+    // Helper function to get bitrate at specific time
+    const getBitrateAtTime = (video: VideoInfo, time: number) => {
+      if (!video?.metadata?.creation_time || !video.bitrate_data) {
+        return 0
+      }
+
+      try {
+        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
+        const relativeTime = time - (videoTime - baseTime)
+        
+        const bitratePoint = video.bitrate_data.find(point => 
+          Math.abs(point.timestamp - relativeTime) < 0.1
+        )
+        return bitratePoint?.bitrate || 0
+      } catch (error) {
+        console.error('Error calculating bitrate:', error)
+        return 0
+      }
+    }
+
+    // Analyze each time point
+    for (let time = timeRange.min; time <= timeRange.max; time += 0.1) { // 100ms intervals
+      const activeVids = videos.filter(video => {
+        if (!video?.metadata?.creation_time || !video?.metadata?.format?.duration) {
+          return false
+        }
+
+        try {
+          const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
+          const videoStart = videoTime - baseTime
+          const videoEnd = videoStart + video.metadata.format.duration
+          return time >= videoStart && time <= videoEnd
+        } catch (error) {
+          console.error('Error filtering active videos:', error)
+          return false
+        }
+      })
+
+      if (!activeVids.length) continue
+
+      activeVids.forEach((video, index) => {
+        const bitrate = getBitrateAtTime(video, time)
+        const cameraNumber = index + 1
+
+        if (bitrate < bitrateThreshold && cameraNumber === currentCamera) {
+          // Switch to another camera with better bitrate
+          const betterCamera = activeVids.findIndex((v, i) => 
+            getBitrateAtTime(v, time) >= bitrateThreshold && i + 1 !== currentCamera
+          )
+
+          if (betterCamera !== -1) {
+            if (currentSegment) {
+              currentSegment.endTime = time
+              segments.push(currentSegment)
+            }
+            currentCamera = betterCamera + 1
+            currentSegment = {
+              camera: currentCamera,
+              startTime: time,
+              endTime: time,
+              bitrate: getBitrateAtTime(activeVids[betterCamera], time)
+            }
+          }
+        }
+      })
+
+      if (!currentSegment) {
+        const currentVideo = activeVids.find((_, i) => i + 1 === currentCamera)
+        if (currentVideo) {
+          currentSegment = {
+            camera: currentCamera,
+            startTime: time,
+            endTime: time,
+            bitrate: getBitrateAtTime(currentVideo, time)
+          }
+        }
+      }
+    }
+
+    // Add the last segment
+    if (currentSegment) {
+      currentSegment.endTime = timeRange.max
+      segments.push(currentSegment)
+    }
+
+    // Merge adjacent segments with the same camera
+    const mergedSegments = segments.reduce((acc: EditSegment[], segment) => {
+      const lastSegment = acc[acc.length - 1]
+      
+      if (lastSegment && lastSegment.camera === segment.camera) {
+        lastSegment.endTime = segment.endTime
+        lastSegment.bitrate = (lastSegment.bitrate + segment.bitrate) / 2 // Average bitrate
+        return acc
+      }
+      
+      acc.push(segment)
+      return acc
+    }, [])
+
+    setEditSegments(mergedSegments)
+  }, [videos, mainCamera, bitrateThreshold, timeRange])
+
   return (
     <div
       className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-[family-name:var(--font-geist-sans)] relative`}
@@ -341,7 +467,7 @@ export default function Home() {
         {/* <TimeZoneSelect value={timezone} onValueChange={setTimezone} /> */}
       </div>
       <main className="flex gap-16 w-full px-12 sm:px-16 py-16">
-        {/* Левая часть с с��кой видео */}
+        {/* Левая часть с ской видео */}
         <div className="w-[70%] flex flex-col gap-8">
           {/* Панель управления */}
           <div className="flex items-center gap-4 w-full">
@@ -386,6 +512,24 @@ export default function Home() {
                 />
               </div>
             )}
+            <div className="flex items-center gap-2">
+              <label>Main Camera:</label>
+              <select 
+                value={mainCamera} 
+                onChange={(e) => setMainCamera(parseInt(e.target.value))}
+                className="border rounded px-2 py-1"
+              >
+                {activeVideos.map(({index}) => (
+                  <option key={index} value={index}>{index}</option>
+                ))}
+              </select>
+            </div>
+            <Button
+              variant="outline"
+              onClick={analyzeAndCreateSegments}
+            >
+              Analyze Segments
+            </Button>
           </div>
 
           <div className="w-full">
@@ -431,6 +575,24 @@ export default function Home() {
             ))}
         </div>
       </main>
+      {editSegments.length > 0 && (
+        <div className="mt-4 space-y-2">
+          <h3 className="font-bold">Edit Segments:</h3>
+          {editSegments.map((segment, idx) => (
+            <div key={idx} className="flex gap-4 text-sm">
+              <span>Camera {segment.camera}</span>
+              <span>{dayjs(videos[0]?.metadata?.creation_time)
+                .add(segment.startTime, "second")
+                .format("HH:mm:ss.SSS")}</span>
+              <span>-</span>
+              <span>{dayjs(videos[0]?.metadata?.creation_time)
+                .add(segment.endTime, "second")
+                .format("HH:mm:ss.SSS")}</span>
+              <span>{(segment.bitrate / 1000000).toFixed(2)} Mbps</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
