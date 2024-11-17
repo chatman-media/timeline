@@ -13,16 +13,12 @@ export const ActiveVideo = memo(({
   videoRefs,
 }: ActiveVideoProps) => {
   useEffect(() => {
-    const activeVideo = videoRefs.current[`active-${video.path}`]
-    const mainVideo = videoRefs.current[video.path]
-
-    if (activeVideo && mainVideo) {
-      activeVideo.currentTime = mainVideo.currentTime
-
+    const videoElement = videoRefs.current[video.path]
+    if (videoElement) {
       if (isPlaying) {
-        activeVideo.play()
+        videoElement.play().catch(console.error)
       } else {
-        activeVideo.pause()
+        videoElement.pause()
       }
     }
   }, [isPlaying, video.path, videoRefs])
@@ -33,7 +29,7 @@ export const ActiveVideo = memo(({
         <video
           ref={(el) => {
             if (el) {
-              videoRefs.current[`active-${video.path}`] = el
+              videoRefs.current[video.path] = el
             }
           }}
           src={video.path}

@@ -91,10 +91,11 @@ const BitrateChart = withTooltip(
       [showTooltip, bitrateScale, timeScale, data, margin.left],
     )
 
-    console.log(currentTime)
+    console.log(currentTime ?? 0)
 
     // Обновляем позицию линии текущего времени
     const currentTimePosition = useMemo(() => {
+      if (!currentTime) return 0
       const firstTimestamp = Math.min(...data.map((d) => d.timestamp))
       const relativeTime = currentTime - firstTimestamp
       return timeScale(firstTimestamp + relativeTime)

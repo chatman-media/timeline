@@ -1,16 +1,21 @@
 import localFont from "next/font/local"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
 import { Slider } from "@/components/ui/slider"
-import { Button } from "@/components/ui/button"
-import { Pause, Play } from "lucide-react"
-import { formatTimeWithDecisecond } from "@/lib/utils"
 import { VideoPlayer } from "../components/video-player"
 import type { VideoInfo } from "@/types/video"
 import { ActiveVideo } from "@/components/active-video"
+import { CompilationControls } from "../components/compilation-controls"
+import { createVideoSegments } from "../lib/compilation"
+import { SegmentsTimeline } from "@/components/segments-timeline"
+import { Button } from "@/components/ui/button"
+import { Pause } from "lucide-react"
+import { Play } from "lucide-react"
+import { formatTimeWithDecisecond } from "@/lib/utils"
+import { useMemo } from "react"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -24,11 +29,17 @@ interface RecordEntry {
   endTime?: number
 }
 
-interface EditSegment {
+interface VideoSegment {
   camera: number
   startTime: number
-  endTime: number
+  duration: number
   bitrate: number
+}
+
+interface CompilationSettings {
+  targetDuration: number
+  minSegmentLength: number
+  maxSegmentLength: number
 }
 
 const geistSans = localFont({
@@ -52,10 +63,13 @@ export default function Home() {
   const [recordings, setRecordings] = useState<RecordEntry[]>([])
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
   const [activeVideos, setActiveVideos] = useState<Array<{ video: VideoInfo; index: number }>>([])
-  const [editSegments, setEditSegments] = useState<EditSegment[]>([])
   const [mainCamera, setMainCamera] = useState(1)
-  const [bitrateThreshold, setBitrateThreshold] = useState(5000000) // 5 Mbps default
-  // const [globalPlayTime, setGlobalPlayTime] = useState(0)
+  const [compilationSettings, setCompilationSettings] = useState<CompilationSettings>({
+    targetDuration: 60,
+    minSegmentLength: 0.2,
+    maxSegmentLength: 10,
+  })
+  const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
 
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()
@@ -100,7 +114,7 @@ export default function Home() {
         const times = sortedVideos.flatMap((v: VideoInfo) => {
           if (!v.metadata.creation_time) return []
           const startTime = new Date(v.metadata.creation_time).getTime()
-          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длит��льност в миллисекунды
+          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длитльност в миллисекунды
           return [startTime, endTime]
         }).filter((t: number) => t > 0)
         console.log(times.map((t: number) => new Date(Math.floor(t))))
@@ -126,7 +140,7 @@ export default function Home() {
     setCurrentTime(value[0])
   }
 
-  // Добавляем функцию для управленя воспроизведением
+  // Добавляем функцию для управления воспроизведением
   const togglePlayback = useCallback(() => {
     setIsPlaying((prev) => !prev)
   }, [])
@@ -146,7 +160,7 @@ export default function Home() {
     return videos.filter(isVideoActive)
   }
 
-  // Оборачиваем toggleRecording в useCallback
+  // Добавляем функцию для записи
   const toggleRecording = useCallback(() => {
     if (!isRecording) {
       // Начало записи
@@ -162,6 +176,7 @@ export default function Home() {
       // Остановка записи
       setIsRecording(false)
       setIsPlaying(false)
+
       setRecordings((prev) => {
         const updatedRecordings = [...prev]
         if (updatedRecordings.length > 0) {
@@ -172,34 +187,35 @@ export default function Home() {
     }
   }, [isRecording, activeCamera, currentTime, isPlaying])
 
-  // Обновляем useEffect с правильными зависимостями
+  // Обновляем эффект для обработки клавиш
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
+      // Выбор камеры цифрами
       const key = parseInt(event.key)
       if (!isNaN(key) && key >= 1 && key <= 9) {
-        const activeVideos = getActiveVideos()
-        if (key <= activeVideos.length) {
+        const activeVids = activeVideos
+        if (key <= activeVids.length) {
           setActiveCamera(key)
         }
       }
 
-      // Обработка клавиши R для записи
+      // Запись (R)
       if (event.key.toLowerCase() === "r") {
         toggleRecording()
       }
 
-      // Обработка пробела для паузы/воспроизведения
+      // Пауза/воспроизведение (Space)
       if (event.code === "Space") {
-        event.preventDefault() // Предотвращаем прокрутку страницы
+        event.preventDefault()
         togglePlayback()
       }
     }
 
     globalThis.addEventListener("keydown", handleKeyPress)
     return () => globalThis.removeEventListener("keydown", handleKeyPress)
-  }, [videos, currentTime, toggleRecording, togglePlayback])
+  }, [activeVideos, toggleRecording, togglePlayback])
 
-  // Modify camera change effect
+  // Обновляем эффект для смены камеры во время записи
   useEffect(() => {
     if (isRecording) {
       setRecordings((prev) => {
@@ -217,7 +233,7 @@ export default function Home() {
         return updatedRecordings
       })
     }
-  }, [activeCamera, isRecording])
+  }, [activeCamera, isRecording, currentTime])
 
   // Модифицирум эффект для синхронизации видео
   useEffect(() => {
@@ -271,7 +287,7 @@ export default function Home() {
         }
       }
 
-      // Синхронизация времени при промотке
+      // Синхронизация времен при промотке
       activeVids.forEach((video) => {
         const videoElement = videoRefs.current[video.path]
         const activeVideoElement = videoRefs.current[`active-${video.path}`]
@@ -343,133 +359,42 @@ export default function Home() {
     }
   }, [activeCamera])
 
-  // Add new function to analyze bitrate and create segments
-  const analyzeAndCreateSegments = useCallback(() => {
-    if (!videos.length || !videos[0]?.metadata?.creation_time) {
-      console.warn("No videos or missing metadata")
-      return
-    }
+  // Модифицируем createCompilation для учета ручных записей
+  const createCompilation = useCallback(() => {
+    // Преобразуем ручные записи в сегменты
+    const manualSegments = recordings
+      .filter((rec) => rec.endTime !== undefined)
+      .map((rec) => ({
+        camera: rec.camera,
+        startTime: rec.startTime,
+        duration: (rec.endTime! - rec.startTime),
+        bitrate: 0, // для ручных записей битрейт не важен
+      }))
 
-    const segments: EditSegment[] = []
-    let currentCamera = mainCamera
-    let currentSegment: EditSegment | null = null
+    // Получаем автоматические сегменты
+    const autoSegments = createVideoSegments(
+      videos,
+      mainCamera,
+      {
+        ...compilationSettings,
+        targetDuration: compilationSettings.targetDuration -
+          manualSegments.reduce((sum, seg) => sum + seg.duration, 0),
+      },
+    )
 
-    // Get the base time from the first video
-    const baseTime = new Date(videos[0].metadata.creation_time).getTime() / 1000
+    // Объединяем и сортируем все сегменты
+    const allSegments = [...manualSegments, ...autoSegments]
+      .sort((a, b) => a.startTime - b.startTime)
 
-    // Helper function to get bitrate at specific time
-    const getBitrateAtTime = (video: VideoInfo, time: number) => {
-      if (!video?.metadata?.creation_time || !video.bitrate_data) {
-        return 0
-      }
-
-      try {
-        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-        const relativeTime = time - (videoTime - baseTime)
-
-        const bitratePoint = video.bitrate_data.find((point) =>
-          Math.abs(point.timestamp - relativeTime) < 0.1
-        )
-        return bitratePoint?.bitrate || 0
-      } catch (error) {
-        console.error("Error calculating bitrate:", error)
-        return 0
-      }
-    }
-
-    // Analyze each time point
-    for (let time = timeRange.min; time <= timeRange.max; time += 0.1) { // 100ms intervals
-      const activeVids = videos.filter((video) => {
-        if (!video?.metadata?.creation_time || !video?.metadata?.format?.duration) {
-          return false
-        }
-
-        try {
-          const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-          const videoStart = videoTime - baseTime
-          const videoEnd = videoStart + video.metadata.format.duration
-          return time >= videoStart && time <= videoEnd
-        } catch (error) {
-          console.error("Error filtering active videos:", error)
-          return false
-        }
-      })
-
-      if (!activeVids.length) continue
-
-      activeVids.forEach((video, index) => {
-        const bitrate = getBitrateAtTime(video, time)
-        const cameraNumber = index + 1
-
-        if (bitrate < bitrateThreshold && cameraNumber === currentCamera) {
-          // Switch to another camera with better bitrate
-          const betterCamera = activeVids.findIndex((v, i) =>
-            getBitrateAtTime(v, time) >= bitrateThreshold && i + 1 !== currentCamera
-          )
-
-          if (betterCamera !== -1) {
-            if (currentSegment) {
-              currentSegment.endTime = time
-              segments.push(currentSegment)
-            }
-            currentCamera = betterCamera + 1
-            currentSegment = {
-              camera: currentCamera,
-              startTime: time,
-              endTime: time,
-              bitrate: getBitrateAtTime(activeVids[betterCamera], time),
-            }
-          }
-        }
-      })
-
-      if (!currentSegment) {
-        const currentVideo = activeVids.find((_, i) => i + 1 === currentCamera)
-        if (currentVideo) {
-          currentSegment = {
-            camera: currentCamera,
-            startTime: time,
-            endTime: time,
-            bitrate: getBitrateAtTime(currentVideo, time),
-          }
-        }
-      }
-    }
-
-    // Add the last segment
-    if (currentSegment) {
-      currentSegment.endTime = timeRange.max
-      segments.push(currentSegment)
-    }
-
-    // Merge adjacent segments with the same camera
-    const mergedSegments = segments.reduce((acc: EditSegment[], segment) => {
-      const lastSegment = acc[acc.length - 1]
-
-      if (lastSegment && lastSegment.camera === segment.camera) {
-        lastSegment.endTime = segment.endTime
-        lastSegment.bitrate = (lastSegment.bitrate + segment.bitrate) / 2 // Average bitrate
-        return acc
-      }
-
-      acc.push(segment)
-      return acc
-    }, [])
-
-    setEditSegments(mergedSegments)
-  }, [videos, mainCamera, bitrateThreshold, timeRange])
+    setSelectedSegments(allSegments)
+  }, [videos, mainCamera, compilationSettings, recordings])
 
   return (
     <div
       className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-[family-name:var(--font-geist-sans)] relative`}
     >
-      <div className="absolute top-4 right-4">
-        {/* <TimeZoneSelect value={timezone} onValueChange={setTimezone} /> */}
-      </div>
       <main className="flex gap-16 w-full px-12 sm:px-16 py-16">
-        {/* Левая часть с ской видео */}
         <div className="w-[70%] flex flex-col gap-8">
-          {/* Панель управления */}
           <div className="flex items-center gap-4 w-full">
             <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
               {activeCamera}
@@ -512,24 +437,21 @@ export default function Home() {
                 />
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <label>Main Camera:</label>
-              <select
-                value={mainCamera}
-                onChange={(e) => setMainCamera(parseInt(e.target.value))}
-                className="border rounded px-2 py-1"
-              >
-                {activeVideos.map(({ index }) => <option key={index} value={index}>{index}
-                </option>)}
-              </select>
-            </div>
-            <Button
-              variant="outline"
-              onClick={analyzeAndCreateSegments}
-            >
-              Analyze Segments
-            </Button>
           </div>
+
+          <CompilationControls
+            mainCamera={mainCamera}
+            activeVideos={activeVideos}
+            targetDuration={compilationSettings.targetDuration}
+            onMainCameraChange={setMainCamera}
+            onTargetDurationChange={(duration) =>
+              setCompilationSettings((prev) => ({ ...prev, targetDuration: duration }))}
+            onCreateCompilation={createCompilation}
+            isRecording={isRecording}
+            onToggleRecording={toggleRecording}
+            isPlaying={isPlaying}
+            onTogglePlayback={togglePlayback}
+          />
 
           <div className="w-full">
             <Slider
@@ -574,26 +496,17 @@ export default function Home() {
             ))}
         </div>
       </main>
-      {editSegments.length > 0 && (
-        <div className="mt-4 space-y-2">
-          <h3 className="font-bold">Edit Segments:</h3>
-          {editSegments.map((segment, idx) => (
-            <div key={idx} className="flex gap-4 text-sm">
-              <span>Camera {segment.camera}</span>
-              <span>
-                {dayjs(videos[0]?.metadata?.creation_time)
-                  .add(segment.startTime, "second")
-                  .format("HH:mm:ss.SSS")}
-              </span>
-              <span>-</span>
-              <span>
-                {dayjs(videos[0]?.metadata?.creation_time)
-                  .add(segment.endTime, "second")
-                  .format("HH:mm:ss.SSS")}
-              </span>
-              <span>{(segment.bitrate / 1000000).toFixed(2)} Mbps</span>
-            </div>
-          ))}
+      {selectedSegments.length > 0 && (
+        <div className="mt-8 space-y-4">
+          <h3 className="font-bold">Selected Segments Timeline:</h3>
+          <SegmentsTimeline
+            segments={selectedSegments}
+            timeRange={timeRange}
+          />
+          <div className="text-sm text-gray-500">
+            Total Duration:{" "}
+            {selectedSegments.reduce((sum, seg) => sum + seg.duration, 0).toFixed(2)}s
+          </div>
         </div>
       )}
     </div>

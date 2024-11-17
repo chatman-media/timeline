@@ -44,6 +44,14 @@ export function VideoPlayer({
     cameraNumber,
   })
 
+  const isInsvVideo = video.name.toLowerCase().endsWith(".insv")
+  const videoStyle = isInsvVideo
+    ? {
+      transform: "scaleY(0.5625)", // 9/16 для преобразования в 16:9
+      transformOrigin: "top",
+    }
+    : {}
+
   return (
     <div className="space-y-2">
       <div
@@ -54,6 +62,7 @@ export function VideoPlayer({
           ref={onVideoRef}
           src={video.path}
           className={`video-${cameraNumber} w-full h-full object-contain`}
+          style={videoStyle}
           playsInline
           muted
         />
@@ -73,6 +82,7 @@ export function VideoPlayer({
               tooltipOpen={isTooltipOpen}
               showTooltip={() => setIsTooltipOpen(true)}
               hideTooltip={() => setIsTooltipOpen(false)}
+              updateTooltip={() => {}}
               currentTime={currentTime}
             />
           )
