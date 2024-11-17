@@ -27,10 +27,10 @@ export default async function handler(
     const files = await fs.readdir(videosDir)
 
     // Фильтруем файлы, оставляя только видео файлы
-    const videoFiles = files.filter(file => {
+    const videoFiles = files.filter((file) => {
       const ext = path.extname(file).toLowerCase()
-      return ['.mp4', '.mov', '.avi', '.mkv', '.webm'].includes(ext) && 
-             !file.startsWith('.') // Пропускаем скрытые файлы
+      return [".mp4", ".mov", ".avi", ".mkv", ".webm", ".insv"].includes(ext) &&
+        !file.startsWith(".") // Пропускаем скрытые файлы
     })
 
     // Обрабатываем все файлы параллельно

@@ -95,7 +95,7 @@ const BitrateChart = withTooltip(
 
     // Обновляем позицию линии текущего времени
     const currentTimePosition = useMemo(() => {
-      const firstTimestamp = Math.min(...data.map(d => d.timestamp))
+      const firstTimestamp = Math.min(...data.map((d) => d.timestamp))
       const relativeTime = currentTime - firstTimestamp
       return timeScale(firstTimestamp + relativeTime)
     }, [currentTime, data, timeScale])
@@ -174,7 +174,8 @@ const BitrateChart = withTooltip(
             </g>
           )}
           {/* Обновляем линию текущего времени */}
-          {currentTime !== undefined && currentTimePosition >= 0 && currentTimePosition <= innerWidth && (
+          {currentTime !== undefined && currentTimePosition >= 0 &&
+            currentTimePosition <= innerWidth && (
             <line
               x1={currentTimePosition}
               x2={currentTimePosition}

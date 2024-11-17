@@ -346,7 +346,7 @@ export default function Home() {
   // Add new function to analyze bitrate and create segments
   const analyzeAndCreateSegments = useCallback(() => {
     if (!videos.length || !videos[0]?.metadata?.creation_time) {
-      console.warn('No videos or missing metadata')
+      console.warn("No videos or missing metadata")
       return
     }
 
@@ -366,20 +366,20 @@ export default function Home() {
       try {
         const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
         const relativeTime = time - (videoTime - baseTime)
-        
-        const bitratePoint = video.bitrate_data.find(point => 
+
+        const bitratePoint = video.bitrate_data.find((point) =>
           Math.abs(point.timestamp - relativeTime) < 0.1
         )
         return bitratePoint?.bitrate || 0
       } catch (error) {
-        console.error('Error calculating bitrate:', error)
+        console.error("Error calculating bitrate:", error)
         return 0
       }
     }
 
     // Analyze each time point
     for (let time = timeRange.min; time <= timeRange.max; time += 0.1) { // 100ms intervals
-      const activeVids = videos.filter(video => {
+      const activeVids = videos.filter((video) => {
         if (!video?.metadata?.creation_time || !video?.metadata?.format?.duration) {
           return false
         }
@@ -390,7 +390,7 @@ export default function Home() {
           const videoEnd = videoStart + video.metadata.format.duration
           return time >= videoStart && time <= videoEnd
         } catch (error) {
-          console.error('Error filtering active videos:', error)
+          console.error("Error filtering active videos:", error)
           return false
         }
       })
@@ -403,7 +403,7 @@ export default function Home() {
 
         if (bitrate < bitrateThreshold && cameraNumber === currentCamera) {
           // Switch to another camera with better bitrate
-          const betterCamera = activeVids.findIndex((v, i) => 
+          const betterCamera = activeVids.findIndex((v, i) =>
             getBitrateAtTime(v, time) >= bitrateThreshold && i + 1 !== currentCamera
           )
 
@@ -417,7 +417,7 @@ export default function Home() {
               camera: currentCamera,
               startTime: time,
               endTime: time,
-              bitrate: getBitrateAtTime(activeVids[betterCamera], time)
+              bitrate: getBitrateAtTime(activeVids[betterCamera], time),
             }
           }
         }
@@ -430,7 +430,7 @@ export default function Home() {
             camera: currentCamera,
             startTime: time,
             endTime: time,
-            bitrate: getBitrateAtTime(currentVideo, time)
+            bitrate: getBitrateAtTime(currentVideo, time),
           }
         }
       }
@@ -445,13 +445,13 @@ export default function Home() {
     // Merge adjacent segments with the same camera
     const mergedSegments = segments.reduce((acc: EditSegment[], segment) => {
       const lastSegment = acc[acc.length - 1]
-      
+
       if (lastSegment && lastSegment.camera === segment.camera) {
         lastSegment.endTime = segment.endTime
         lastSegment.bitrate = (lastSegment.bitrate + segment.bitrate) / 2 // Average bitrate
         return acc
       }
-      
+
       acc.push(segment)
       return acc
     }, [])
@@ -514,14 +514,13 @@ export default function Home() {
             )}
             <div className="flex items-center gap-2">
               <label>Main Camera:</label>
-              <select 
-                value={mainCamera} 
+              <select
+                value={mainCamera}
                 onChange={(e) => setMainCamera(parseInt(e.target.value))}
                 className="border rounded px-2 py-1"
               >
-                {activeVideos.map(({index}) => (
-                  <option key={index} value={index}>{index}</option>
-                ))}
+                {activeVideos.map(({ index }) => <option key={index} value={index}>{index}
+                </option>)}
               </select>
             </div>
             <Button
@@ -581,13 +580,17 @@ export default function Home() {
           {editSegments.map((segment, idx) => (
             <div key={idx} className="flex gap-4 text-sm">
               <span>Camera {segment.camera}</span>
-              <span>{dayjs(videos[0]?.metadata?.creation_time)
-                .add(segment.startTime, "second")
-                .format("HH:mm:ss.SSS")}</span>
+              <span>
+                {dayjs(videos[0]?.metadata?.creation_time)
+                  .add(segment.startTime, "second")
+                  .format("HH:mm:ss.SSS")}
+              </span>
               <span>-</span>
-              <span>{dayjs(videos[0]?.metadata?.creation_time)
-                .add(segment.endTime, "second")
-                .format("HH:mm:ss.SSS")}</span>
+              <span>
+                {dayjs(videos[0]?.metadata?.creation_time)
+                  .add(segment.endTime, "second")
+                  .format("HH:mm:ss.SSS")}
+              </span>
               <span>{(segment.bitrate / 1000000).toFixed(2)} Mbps</span>
             </div>
           ))}
