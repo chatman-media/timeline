@@ -3871,6 +3871,7 @@
         "npm:@ffmpeg/util@~0.12.1",
         "npm:@radix-ui/react-dialog@^1.1.2",
         "npm:@radix-ui/react-popover@^1.1.2",
+        "npm:@radix-ui/react-progress@^1.1.0",
         "npm:@radix-ui/react-select@^2.1.2",
         "npm:@radix-ui/react-slider@^1.2.1",
         "npm:@radix-ui/react-slot@^1.1.0",
