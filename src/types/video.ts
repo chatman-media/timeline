@@ -1,11 +1,10 @@
+import { VideoMetadata } from "@/components/video-metadata"
+
 export interface VideoInfo {
   name: string
   path: string
   thumbnail: string
-  metadata: {
-    creation_time: string
-    duration: number
-  }
+  metadata: typeof VideoMetadata
   bitrate_data: Array<{
     timestamp: number
     bitrate: number

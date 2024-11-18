@@ -1,23 +1,12 @@
 import { VideoInfo } from "@/types/video"
 import dayjs from "dayjs"
+import type { VideoMetadata } from "@/types/video-metadata"
 
 interface VideoMetadataProps {
   video: VideoInfo & {
     activeIndex: number
     timezone: string
-    metadata: {
-      video_stream?: {
-        display_aspect_ratio: string
-        codec_name: string
-        width: number
-        height: number
-      }
-      format: {
-        size: number
-        duration?: number
-      }
-      // ... остальные поля metadata
-    }
+    metadata: VideoMetadata
   }
 }
 

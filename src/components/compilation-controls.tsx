@@ -91,7 +91,7 @@ const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedSegments
 
   return (
     <div className="w-full">
-      {groupedVideos.map((group, ) => {
+      {groupedVideos.map((group) => {
         const firstVideo = group[0]
         const lastVideo = group[group.length - 1]
 
@@ -158,7 +158,7 @@ export function CompilationControls({
   onSettingsChange,
 }: CompilationControlsProps) {
   const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
-  const [averageSceneDuration, ] = useState(3)
+  const [averageSceneDuration] = useState(3)
   const [cameraChangeFrequency, setCameraChangeFrequency] = useState(4 / 7)
 
   const handleCreateCompilation = () => {
