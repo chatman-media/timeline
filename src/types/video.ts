@@ -5,10 +5,7 @@ export interface VideoInfo {
   path: string
   thumbnail: string
   metadata: VideoMetadata
-  bitrate_data: Array<{
-    timestamp: number
-    bitrate: number
-  }>
+  bitrate_data: BitrateDataPoint[]
   activeIndex?: number
   thumbnails?: string[]
   filename: string
@@ -16,4 +13,15 @@ export interface VideoInfo {
 
 export interface VideoWithThumbnail extends VideoInfo {
   thumbnailUrl: string
+}
+
+export interface BitrateDataPoint {
+  time: number
+  bitrate: number
+}
+
+export interface VideoSegment {
+  cameraIndex: number
+  startTime: number
+  endTime: number
 }

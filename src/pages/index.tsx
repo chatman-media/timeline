@@ -6,7 +6,7 @@ import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
 import { Slider } from "@/components/ui/slider"
 import { VideoPlayer } from "../components/video-player"
-import type { VideoInfo } from "@/types/video"
+import type { BitrateDataPoint, VideoInfo } from "@/types/video"
 import { ActiveVideo } from "@/components/active-video"
 import { CompilationControls } from "../components/compilation-controls"
 import { createVideoSegments } from "../lib/compilation"
@@ -75,6 +75,7 @@ export default function Home() {
       endTime: number
     }>
   >([])
+  const [bitrateData, setBitrateData] = useState<Array<BitrateDataPoint[]>>([])
 
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()
@@ -108,34 +109,38 @@ export default function Home() {
     fetch("/api/videos")
       .then((res) => res.json())
       .then((data) => {
-        // Сортируем видео по времени создания
-        const sortedVideos = data.videos.sort((a: VideoInfo, b: VideoInfo) => {
-          const timeA = a.metadata.creation_time ? new Date(a.metadata.creation_time).getTime() : 0
-          const timeB = b.metadata.creation_time ? new Date(b.metadata.creation_time).getTime() : 0
-          return timeA - timeB
-        })
-
-        // Находим минимальное время начала и максимальное время окончания среди всех видо
-        const times = sortedVideos.flatMap((v: VideoInfo) => {
-          if (!v.metadata.creation_time) return []
-          const startTime = new Date(v.metadata.creation_time).getTime()
-          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длитльност в миллисекунды
-          return [startTime, endTime]
-        }).filter((t: number) => t > 0)
-        console.log(times.map((t: number) => new Date(Math.floor(t))))
-
-        const minTime = Math.min(...times)
-        const maxTime = Math.max(...times)
-
-        // Устанавливаем диапазн в секундах
-        setTimeRange({
-          min: Math.floor(minTime / 1000),
-          max: Math.floor(maxTime / 1000),
-        })
-
-        setVideos(sortedVideos)
-        // Устаавливаем начаьное значение слайдера в максимум
-        setCurrentTime(timeRange.min)
+        // Используем bitrate_data из каждого видео
+        const bitrateData = data.videos.map((video: VideoInfo) => video.bitrate_data || [])
+        setBitrateData(bitrateData)
+                // Сортируем видео по времени создания
+                const sortedVideos = data.videos.sort((a: VideoInfo, b: VideoInfo) => {
+                  const timeA = a.metadata.creation_time ? new Date(a.metadata.creation_time).getTime() : 0
+                  const timeB = b.metadata.creation_time ? new Date(b.metadata.creation_time).getTime() : 0
+                  return timeA - timeB
+                })
+        
+                // Находим минимальное время начала и максимальное время окончания среди всех видо
+                const times = sortedVideos.flatMap((v: VideoInfo) => {
+                  if (!v.metadata.creation_time) return []
+                  const startTime = new Date(v.metadata.creation_time).getTime()
+                  const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длитльност в миллисекунды
+                  return [startTime, endTime]
+                }).filter((t: number) => t > 0)
+                console.log(times.map((t: number) => new Date(Math.floor(t))))
+        
+                const minTime = Math.min(...times)
+                const maxTime = Math.max(...times)
+        
+                // Устанавливаем диапазн в секундах
+                setTimeRange({
+                  min: Math.floor(minTime / 1000),
+                  max: Math.floor(maxTime / 1000),
+                })
+        
+                setVideos(sortedVideos)
+                // Устаавливаем начаьное значение слайдера в максимум
+                setCurrentTime(timeRange.min)
+        
       })
       .catch((error) => console.error("Error fetching videos:", error))
   }, [])
@@ -435,7 +440,7 @@ export default function Home() {
           <CompilationControls
             mainCamera={mainCamera}
             activeVideos={activeVideos}
-            targetDuration={compilationSettings.targetDuration}
+            targetDuration={Number(compilationSettings.targetDuration)}
             isRecording={isRecording}
             isPlaying={isPlaying}
             onMainCameraChange={setMainCamera}
@@ -447,6 +452,7 @@ export default function Home() {
             onSegmentsChange={setSelectedSegments}
             timeRange={timeRange}
             videos={videos}
+            bitrateData={bitrateData}
           />
 
           <div className="w-full">
@@ -463,7 +469,7 @@ export default function Home() {
           {/* Сетка видео */}
           <div className="" style={{ display: "flex", flexWrap: "wrap", rowGap: "30px" }}>
             {videos.map((video, index) => {
-              // Исправляем проверку активного видео
+              // Исправляем проверку активног�� видео
               const activeVideo = activeVideos.find((v) => v.video.path === video.path)
               const isActive = activeVideo?.isActive ?? false
 

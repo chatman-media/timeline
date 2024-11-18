@@ -5,12 +5,7 @@ import { distributeScenes } from "@/utils/scene-distribution"
 import { VideoInfo } from "@/types/video"
 import { Input } from "./ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
-
-interface Segment {
-  cameraIndex: number
-  startTime: number
-  endTime: number
-}
+import type { BitrateDataPoint, VideoSegment } from "@/types/video"
 
 interface CompilationControlsProps {
   mainCamera: number
@@ -23,9 +18,10 @@ interface CompilationControlsProps {
   onCreateCompilation: () => void
   onToggleRecording: () => void
   onTogglePlayback: () => void
-  onSegmentsChange: (segments: Segment[]) => void
+  onSegmentsChange: (segments: VideoSegment[]) => void
   timeRange: { min: number; max: number }
   videos: VideoInfo[]
+  bitrateData?: Array<BitrateDataPoint[]>
 }
 
 interface TimelineProps {
@@ -95,21 +91,34 @@ export function CompilationControls({
   onSegmentsChange,
   timeRange,
   videos,
+  bitrateData,
 }: CompilationControlsProps) {
-  const [selectedSegments, setSelectedSegments] = useState<Segment[]>([])
+  const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
 
   const handleCreateCompilation = () => {
+    console.log("Creating compilation with params:", {
+      targetDuration,
+      timeRange,
+      activeVideos: activeVideos.length,
+      bitrateData,
+    })
+
     const scenes = distributeScenes(
       targetDuration,
-      targetDuration,
+      timeRange.max - timeRange.min,
       activeVideos.length,
+      bitrateData,
     )
+
+    console.log("Generated scenes:", scenes)
 
     const segments = scenes.map((scene) => ({
       cameraIndex: scene.cameraIndex,
       startTime: timeRange.min + scene.startTime,
       endTime: timeRange.min + scene.startTime + scene.duration,
     }))
+
+    console.log("Generated segments:", segments)
 
     setSelectedSegments(segments)
     onSegmentsChange(segments)
@@ -168,7 +177,7 @@ export function CompilationControls({
         <Button
           variant="outline"
           onClick={handleCreateCompilation}
-          disabled={isRecording}
+          disabled={isRecording || !targetDuration || activeVideos.length === 0}
         >
           Создать видео
         </Button>
