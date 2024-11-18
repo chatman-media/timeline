@@ -110,7 +110,7 @@ const BitrateChart = withTooltip(
             width={innerWidth}
             height={innerHeight}
             fill="var(--background)"
-            rx={14}
+            // rx={14}
           />
           <GridRows
             scale={bitrateScale}
@@ -147,7 +147,7 @@ const BitrateChart = withTooltip(
             width={innerWidth}
             height={innerHeight}
             fill="transparent"
-            rx={14}
+            // rx={14}
             onTouchStart={handleTooltip}
             onTouchMove={handleTooltip}
             onMouseMove={handleTooltip}

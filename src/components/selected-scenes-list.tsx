@@ -13,16 +13,16 @@ interface SelectedScenesListProps {
 
 export function SelectedScenesList({ segments, videos, onSegmentClick }: SelectedScenesListProps) {
   return (
-    <div className="border rounded-md max-h-[200px] overflow-auto">
+    <div className="border max-h-[200px] overflow-auto">
       <table className="w-full text-xs border-collapse">
         <thead className="sticky top-0 bg-background shadow-sm">
           <tr>
-            <th className="p-1 text-left bg-muted border-b">#</th>
-            <th className="p-1 text-left bg-muted border-b">Источник</th>
-            <th className="p-1 text-left bg-muted border-b">Начало</th>
-            <th className="p-1 text-left bg-muted border-b">Конец</th>
-            <th className="p-1 text-left bg-muted border-b">Длительность</th>
-            <th className="p-1 text-left bg-muted border-b">Файл</th>
+            <th className="p-1 text-left text-muted-foreground border-b">#</th>
+            <th className="p-1 text-left text-muted-foreground border-b">Источник</th>
+            <th className="p-1 text-left text-muted-foreground border-b">Начало</th>
+            <th className="p-1 text-left text-muted-foreground border-b">Конец</th>
+            <th className="p-1 text-left text-muted-foreground border-b">Длительность</th>
+            <th className="p-1 text-left text-muted-foreground border-b">Файл</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-muted">
@@ -37,12 +37,12 @@ export function SelectedScenesList({ segments, videos, onSegmentClick }: Selecte
                 className="hover:bg-muted/50 cursor-pointer"
                 onClick={() => onSegmentClick(segment.startTime)}
               >
-                <td className="p-1">{index + 1}</td>
-                <td className="p-1">V{segment.cameraIndex}</td>
-                <td className="p-1">{formatTimeWithMilliseconds(segment.startTime)}</td>
-                <td className="p-1">{formatTimeWithMilliseconds(segment.endTime)}</td>
-                <td className="p-1">{formatTimeWithDecisecond(duration, 3)}</td>
-                <td className="p-1 font-mono">{fileName}</td>
+                <td className="p-1 text-gray-600 dark:text-gray-100">{index + 1}</td>
+                <td className="p-1 text-gray-600 dark:text-gray-100">V{segment.cameraIndex}</td>
+                <td className="p-1 text-gray-600 dark:text-gray-100">{formatTimeWithMilliseconds(segment.startTime)}</td>
+                <td className="p-1 text-gray-600 dark:text-gray-100">{formatTimeWithMilliseconds(segment.endTime)}</td>
+                <td className="p-1 text-gray-600 dark:text-gray-100">{formatTimeWithDecisecond(duration, 3)}</td>
+                <td className="p-1 text-gray-600 dark:text-gray-100 font-mono">{fileName}</td>
               </tr>
             )
           })}

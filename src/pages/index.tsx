@@ -1,4 +1,3 @@
-import localFont from "next/font/local"
 import { useCallback, useEffect, useRef, useState } from "react"
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
@@ -42,17 +41,6 @@ interface VideoSegment {
   endTime: number
   duration: number
 }
-
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-})
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-})
 
 export default function Home() {
   const [videos, setVideos] = useState<VideoInfo[]>([])
@@ -391,47 +379,47 @@ export default function Home() {
   }, [videos, compilationSettings, recordings, timeRange.max, timeRange.min, bitrateData])
 
   return (
-    <div
-      className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-[family-name:var(--font-geist-sans)] relative`}
-    >
+    <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
       <main className="flex gap-16 w-full px-12 sm:px-16 py-16">
         <div className="w-[70%] flex flex-col gap-8">
-          <div className="flex items-center gap-4 w-full">
-            <span className="flex items-center justify-center w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-white">
+          <div className="flex items-center gap-6 w-full">
+            <span className="flex items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
               {activeCamera}
             </span>
             <Button
               variant="outline"
               size="icon"
               onClick={toggleRecording}
-              className={`h-12 w-12 rounded-full ${
+              className={`h-12 w-12 border border-gray-200 dark:border-gray-700 ${
                 isRecording
-                  ? "bg-red-500 text-white hover:bg-red-600"
-                  : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                  ? "bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
               }`}
             >
-              <div className={`h-4 w-4 rounded-full ${isRecording ? "bg-white" : "bg-red-500"}`} />
+              <div
+                className={`h-4 w-4 ${isRecording ? "bg-white" : "bg-red-500 dark:bg-red-600"}`}
+              />
             </Button>
             <Button
               variant="outline"
               size="icon"
               onClick={togglePlayback}
-              className="h-8 w-8"
+              className="h-8 w-8 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
             >
               {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-gray-600 dark:text-gray-100">
               {formatTimeWithDecisecond(currentTime)}
             </span>
 
-            <span className="text-xl font-medium ml-auto">
+            <span className="text-xl font-medium ml-auto text-gray-900 dark:text-gray-100">
               {dayjs(videos[0]?.metadata?.creation_time)
                 .add(currentTime, "second")
                 .format("HH:mm:ss")}
             </span>
 
             {recordings.length > 0 && (
-              <div className="ml-4 text-sm text-gray-500">
+              <div className="ml-6 text-sm text-gray-600 dark:text-gray-100">
                 <RecordingsList
                   recordings={recordings}
                   baseVideoTime={videos[0]?.metadata.creation_time ?? ""}
@@ -456,7 +444,10 @@ export default function Home() {
             videos={videos}
             bitrateData={bitrateData}
             onSeek={(time) => {
-              videoRefs.current[`active-${activeCamera}`].currentTime = time
+              const videoElement = videoRefs.current[`active-${activeCamera}`]
+              if (videoElement) {
+                videoElement.currentTime = time
+              }
             }}
             compilationSettings={compilationSettings}
             onSettingsChange={setCompilationSettings}
@@ -498,7 +489,7 @@ export default function Home() {
         </div>
 
         {/* Правая часть с активным видео */}
-        <div className="w-[40%] sticky top-4">
+        <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
           {activeVideos
             .filter(({ index }) => index === activeCamera)
             .map(({ video, index }) => (
