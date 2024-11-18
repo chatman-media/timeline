@@ -445,6 +445,8 @@ export default function Home() {
             onToggleRecording={toggleRecording}
             onTogglePlayback={togglePlayback}
             onSegmentsChange={setSelectedSegments}
+            timeRange={timeRange}
+            videos={videos}
           />
 
           <div className="w-full">
@@ -484,7 +486,7 @@ export default function Home() {
         </div>
 
         {/* Правая часть с активным видео */}
-        <div className="w-[30%] sticky top-4">
+        <div className="w-[40%] sticky top-4">
           {activeVideos
             .filter(({ index }) => index === activeCamera)
             .map(({ video, index }) => (

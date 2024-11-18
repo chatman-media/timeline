@@ -2,6 +2,9 @@ import { useState } from "react"
 import { Button } from "./ui/button"
 import { PauseIcon, PlayIcon } from "lucide-react"
 import { distributeScenes } from "@/utils/scene-distribution"
+import { VideoInfo } from "@/types/video"
+import { Input } from "./ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 
 interface Segment {
   cameraIndex: number
@@ -21,38 +24,59 @@ interface CompilationControlsProps {
   onToggleRecording: () => void
   onTogglePlayback: () => void
   onSegmentsChange: (segments: Segment[]) => void
+  timeRange: { min: number; max: number }
+  videos: VideoInfo[]
 }
 
-interface SegmentTimelineProps {
-  segments: Segment[]
-  totalDuration: number
+interface TimelineProps {
+  videos: VideoInfo[]
+  timeRange: { min: number; max: number }
+  selectedSegments: Array<{ cameraIndex: number; startTime: number; endTime: number }>
 }
 
-function SegmentTimeline({ segments, totalDuration }: SegmentTimelineProps) {
-  const cameras = Array.from(new Set(segments.map((s) => s.cameraIndex))).sort()
+const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedSegments }) => {
+  const totalDuration = timeRange.max - timeRange.min
 
   return (
-    <div className="space-y-1">
-      <h3 className="font-semibold">Selected Segments Timeline:</h3>
-      {cameras.map((cameraIndex) => (
-        <div key={cameraIndex} className="flex items-center gap-2">
-          <span className="w-16 text-sm">Cam {cameraIndex}</span>
-          <div className="flex-1 h-6 bg-gray-200 dark:bg-gray-800 relative">
-            {segments
-              .filter((s) => s.cameraIndex === cameraIndex)
-              .map((segment, idx) => (
-                <div
-                  key={idx}
-                  className="absolute h-full bg-green-500 dark:bg-green-600"
-                  style={{
-                    left: `${(segment.startTime / totalDuration) * 100}%`,
-                    width: `${((segment.endTime - segment.startTime) / totalDuration) * 100}%`,
-                  }}
-                />
-              ))}
+    <div className="w-full">
+      {videos.map((video, index) => {
+        const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
+        const videoEndTime = videoStartTime + video.metadata.format.duration
+
+        const startOffset = ((videoStartTime - timeRange.min) / totalDuration) * 100
+        const width = ((videoEndTime - videoStartTime) / totalDuration) * 100
+
+        const cameraSegments = selectedSegments.filter((seg) => seg.cameraIndex === index)
+
+        return (
+          <div key={video.path} className="h-6 w-full relative mb-0.5 flex items-center">
+            <span className="absolute left-0 w-16 text-sm text-muted-foreground">Cam {index}</span>
+            <div className="absolute h-4 bg-secondary left-16 right-0">
+              <div
+                className="absolute h-full bg-secondary-foreground/20"
+                style={{ left: `${startOffset}%`, width: `${width}%` }}
+              >
+                {cameraSegments.map((segment, idx) => {
+                  const segStartOffset =
+                    ((segment.startTime - timeRange.min) / totalDuration) * 100 - startOffset
+                  const segWidth = ((segment.endTime - segment.startTime) / totalDuration) * 100
+
+                  return (
+                    <div
+                      key={idx}
+                      className="absolute h-full bg-primary/50"
+                      style={{
+                        left: `${segStartOffset}%`,
+                        width: `${segWidth}%`,
+                      }}
+                    />
+                  )
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -69,20 +93,22 @@ export function CompilationControls({
   onToggleRecording,
   onTogglePlayback,
   onSegmentsChange,
+  timeRange,
+  videos,
 }: CompilationControlsProps) {
   const [selectedSegments, setSelectedSegments] = useState<Segment[]>([])
 
   const handleCreateCompilation = () => {
     const scenes = distributeScenes(
-      targetDuration * 2,
+      targetDuration,
       targetDuration,
       activeVideos.length,
     )
 
     const segments = scenes.map((scene) => ({
       cameraIndex: scene.cameraIndex,
-      startTime: scene.startTime,
-      endTime: scene.startTime + scene.duration,
+      startTime: timeRange.min + scene.startTime,
+      endTime: timeRange.min + scene.startTime + scene.duration,
     }))
 
     setSelectedSegments(segments)
@@ -104,23 +130,31 @@ export function CompilationControls({
         </div>
 
         <div className="flex items-center gap-2">
-          <label>Main Camera:</label>
-          <select
-            value={mainCamera}
-            onChange={(e) => onMainCameraChange(parseInt(e.target.value))}
-            className="border rounded px-2 py-1"
+          <span className="text-sm">Main Camera:</span>
+          <Select
+            value={mainCamera.toString()}
+            onValueChange={(value) => onMainCameraChange(parseInt(value))}
           >
-            {activeVideos.map(({ index }) => <option key={index} value={index}>{index}</option>)}
-          </select>
+            <SelectTrigger className="w-24">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {activeVideos.map(({ index }) => (
+                <SelectItem key={index} value={index.toString()}>
+                  Camera {index}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div className="flex items-center gap-2">
-          <label>Target Duration (s):</label>
-          <input
+          <span className="text-sm">Target Duration (s):</span>
+          <Input
             type="number"
             value={targetDuration}
             onChange={(e) => onTargetDurationChange(Number(e.target.value))}
-            className="border rounded px-2 py-1 w-20"
+            className="w-20"
           />
         </div>
 
@@ -140,12 +174,11 @@ export function CompilationControls({
         </Button>
       </div>
 
-      {selectedSegments.length > 0 && (
-        <SegmentTimeline
-          segments={selectedSegments}
-          totalDuration={targetDuration * 2}
-        />
-      )}
+      <Timeline
+        videos={videos}
+        timeRange={timeRange}
+        selectedSegments={selectedSegments}
+      />
     </div>
   )
 }
