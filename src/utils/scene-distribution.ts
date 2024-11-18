@@ -26,11 +26,9 @@ interface SceneDistributionParams {
  */
 export function distributeScenes({
   targetDuration,
-  totalDuration,
   numCameras,
   averageSceneDuration,
-  cameraChangeFrequency,
-  bitrateData,
+  // cameraChangeFrequency,
 }: SceneDistributionParams): Array<{ cameraIndex: number; startTime: number; duration: number }> {
   const scenes: Array<{ cameraIndex: number; startTime: number; duration: number }> = []
   let remainingDuration = targetDuration
@@ -64,7 +62,7 @@ export function distributeScenes({
   return scenes
 }
 
-function findBitratePeaks(
+export function findBitratePeaks(
   bitrateData: Array<{ time: number; bitrate: number }>,
   numPeaks: number,
 ): number[] {

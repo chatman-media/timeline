@@ -9,6 +9,7 @@ import { Slider } from "./ui/slider"
 import { formatTimeWithDecisecond } from "@/lib/utils"
 import { SelectedScenesList } from "./selected-scenes-list"
 import { Label } from "./ui/label"
+import { CompilationSettings } from "@/lib/compilation"
 
 interface CompilationControlsProps {
   mainCamera: number
@@ -32,7 +33,7 @@ interface CompilationControlsProps {
     averageSceneDuration: number
     cameraChangeFrequency: number
   }
-  onSettingsChange: (settings: any) => void
+  onSettingsChange: (settings: CompilationSettings) => void
 }
 
 interface TimelineProps {
@@ -44,29 +45,72 @@ interface TimelineProps {
 const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedSegments }) => {
   const totalDuration = timeRange.max - timeRange.min
 
-  // const getSegmentOffset = (video: VideoInfo, firstVideoTime: number) => {
-  //   if (!video.metadata.creation_time || !firstVideoTime) return 0
-  //   const videoStartTime = new Date(video.metadata.creation_time).getTime()
-  //   return (videoStartTime - firstVideoTime) / 1000
-  // }
+  // Функция для проверки последовательности видео
+  const isSequentialVideos = (video1: VideoInfo, video2: VideoInfo) => {
+    // Извлекаем числа из имени файла формата VID_YYYYMMDD_HHMMSS_XXX
+    const getFileInfo = (path: string) => {
+      const match = path.match(/VID_(\d{8})_(\d{6})_(\d+)/)
+      if (!match) return null
+      return {
+        date: match[1],
+        time: match[2],
+        sequence: parseInt(match[3]),
+      }
+    }
+
+    const info1 = getFileInfo(video1.path)
+    const info2 = getFileInfo(video2.path)
+
+    if (!info1 || !info2) return false
+
+    // Проверяем, что файлы от одной даты
+    if (info1.date !== info2.date) return false
+
+    // Проверяем последовательность номеров
+    if (info2.sequence !== info1.sequence + 1) return false
+
+    // Используем metadata для проверки временной последовательности
+    const video1End = video1.metadata.format.start_time + video1.metadata.format.duration
+    const video2Start = video2.metadata.format.start_time
+
+    // Увеличиваем допуск до 1 секунды
+    return Math.abs(video1End - video2Start) < 1
+  }
+
+  // Группируем последовательные видео
+  const groupedVideos = videos.reduce((acc: VideoInfo[][], video, index) => {
+    const prevVideo = videos[index - 1]
+
+    if (prevVideo && isSequentialVideos(prevVideo, video)) {
+      acc[acc.length - 1].push(video)
+    } else {
+      acc.push([video])
+    }
+    return acc
+  }, [])
 
   return (
     <div className="w-full">
-      {videos.map((video, index) => {
-        // const firstVideoTime = new Date(videos[0]?.metadata.creation_time || 0).getTime()
-        // const offset = getSegmentOffset(video, firstVideoTime)
+      {groupedVideos.map((group, ) => {
+        const firstVideo = group[0]
+        const lastVideo = group[group.length - 1]
 
-        const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
-        const videoEndTime = videoStartTime + video.metadata.format.duration
+        const videoStartTime = new Date(firstVideo.metadata.creation_time!).getTime() / 1000
+        const videoEndTime = new Date(lastVideo.metadata.creation_time!).getTime() / 1000 +
+          lastVideo.metadata.format.duration
 
         const startOffset = ((videoStartTime - timeRange.min) / totalDuration) * 100
         const width = ((videoEndTime - videoStartTime) / totalDuration) * 100
 
-        const cameraSegments = selectedSegments.filter((seg) => seg.cameraIndex === index)
+        const cameraSegments = selectedSegments.filter(
+          (seg) => seg.cameraIndex === videos.indexOf(firstVideo),
+        )
 
         return (
-          <div key={video.path} className="h-6 w-full relative mb-0.5 flex items-center">
-            <span className="absolute left-0 w-16 text-sm text-muted-foreground">V{index}</span>
+          <div key={firstVideo.path} className="h-6 w-full relative mb-0.5 flex items-center">
+            <span className="absolute left-0 w-16 text-sm text-muted-foreground">
+              V{videos.indexOf(firstVideo)}
+            </span>
             <div className="absolute h-4 bg-secondary left-16 right-0">
               <div
                 className="absolute h-full bg-secondary-foreground/20"
@@ -114,7 +158,7 @@ export function CompilationControls({
   onSettingsChange,
 }: CompilationControlsProps) {
   const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
-  const [averageSceneDuration, setAverageSceneDuration] = useState(3)
+  const [averageSceneDuration, ] = useState(3)
   const [cameraChangeFrequency, setCameraChangeFrequency] = useState(4 / 7)
 
   const handleCreateCompilation = () => {
