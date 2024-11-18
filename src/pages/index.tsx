@@ -28,13 +28,6 @@ interface RecordEntry {
   endTime?: number
 }
 
-interface VideoSegment {
-  camera: number
-  startTime: number
-  duration: number
-  bitrate: number
-}
-
 interface CompilationSettings {
   targetDuration: number
   minSegmentLength: number
@@ -75,11 +68,13 @@ export default function Home() {
     minSegmentLength: 0.2,
     maxSegmentLength: 10,
   })
-  const [selectedSegments, setSelectedSegments] = useState<Array<{
-    cameraIndex: number
-    startTime: number
-    endTime: number
-  }>>([])
+  const [selectedSegments, setSelectedSegments] = useState<
+    Array<{
+      cameraIndex: number
+      startTime: number
+      endTime: number
+    }>
+  >([])
 
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()
@@ -329,7 +324,7 @@ export default function Home() {
           const videoEndSeconds = videoSeconds + video.metadata.format.duration
           return videoSeconds <= currentTime && currentTime <= videoEndSeconds
         })()
-        
+
         return { video, index: index + 1, isActive }
       })
     setActiveVideos(active)
@@ -464,10 +459,10 @@ export default function Home() {
           </div>
 
           {/* Сетка видео */}
-          <div className="" style={{ display: 'flex', flexWrap: 'wrap', rowGap: '30px' }}>
+          <div className="" style={{ display: "flex", flexWrap: "wrap", rowGap: "30px" }}>
             {videos.map((video, index) => {
               // Исправляем проверку активного видео
-              const activeVideo = activeVideos.find(v => v.video.path === video.path)
+              const activeVideo = activeVideos.find((v) => v.video.path === video.path)
               const isActive = activeVideo?.isActive ?? false
 
               return (

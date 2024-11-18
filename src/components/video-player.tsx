@@ -47,22 +47,23 @@ export function VideoPlayer({
   })
 
   return (
-    <div className="" style={{ width: '10vw', float: 'left', marginRight: '30px' }}>
+    <div className="" style={{ width: "10vw", float: "left", marginRight: "30px" }}>
       <div
         ref={videoContainerRef}
         className={`relative overflow-hidden bg-black dark:bg-black ${
-          !isActive ? 'opacity-50 grayscale' : ''
+          !isActive ? "opacity-50 grayscale" : ""
         }`}
         style={{
-          width: '10vw',
-          float: 'left',
-          marginRight: '30px'
+          width: "10vw",
+          float: "left",
+          marginRight: "30px",
         }}
       >
-        <div 
+        <div
           style={{
             height: 150,
-            width: (video.metadata.video_stream?.width || 1) * (150 / (video.metadata.video_stream?.height || 1)),
+            width: (video.metadata.video_stream?.width || 1) *
+              (150 / (video.metadata.video_stream?.height || 1)),
           }}
         >
           <video
@@ -98,20 +99,22 @@ export function VideoPlayer({
               No bitrate data available
             </div>
           )}
-      <div className="text-xs text-gray-500 dark:text-gray-400">
-        <div className="grid grid-cols-2 gap-x-4">
-          <p className="font-medium">{video.name}</p>
-          <p className="text-right">{video.metadata.video_stream?.codec_name.toUpperCase()}</p>
-          <span className="w-full flex justify-between">
-            <span className="">
-              {video.metadata.video_stream?.width} × {video.metadata.video_stream?.height}
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          <div className="grid grid-cols-2 gap-x-4">
+            <p className="font-medium">{video.name}</p>
+            <p className="text-right">{video.metadata.video_stream?.codec_name.toUpperCase()}</p>
+            <span className="w-full flex justify-between">
+              <span className="">
+                {video.metadata.video_stream?.width} × {video.metadata.video_stream?.height}
+              </span>
+              <span className="text-right">
+                {video.metadata.video_stream?.display_aspect_ratio}
+              </span>
             </span>
-            <span className="text-right">{video.metadata.video_stream?.display_aspect_ratio}</span>
-          </span>
-          <p className="text-right">{formatBitrate(video.metadata.format.bit_rate)}</p>
-          {/* <p>{formatDuration(video.metadata.format.duration)}</p> */}
+            <p className="text-right">{formatBitrate(video.metadata.format.bit_rate)}</p>
+            {/* <p>{formatDuration(video.metadata.format.duration)}</p> */}
+          </div>
         </div>
-      </div>
       </div>
     </div>
   )
