@@ -6,13 +6,13 @@ import { VideoInfo } from "@/types/video"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import type { BitrateDataPoint, VideoSegment } from "@/types/video"
 import { Slider } from "./ui/slider"
-import { formatDuration } from "@/lib/utils"
+import { formatTimeWithDecisecond } from "@/lib/utils"
 import { SelectedScenesList } from "./selected-scenes-list"
+import { Label } from "./ui/label"
 
 interface CompilationControlsProps {
   mainCamera: number
   activeVideos: Array<{ index: number }>
-  targetDuration: number
   isRecording: boolean
   isPlaying: boolean
   onMainCameraChange: (camera: number) => void
@@ -25,6 +25,14 @@ interface CompilationControlsProps {
   videos: VideoInfo[]
   bitrateData?: Array<BitrateDataPoint[]>
   onSeek: (time: number) => void
+  compilationSettings: {
+    targetDuration: number
+    minSegmentLength: number
+    maxSegmentLength: number
+    averageSceneDuration: number
+    cameraChangeFrequency: number
+  }
+  onSettingsChange: (settings: any) => void
 }
 
 interface TimelineProps {
@@ -36,17 +44,17 @@ interface TimelineProps {
 const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedSegments }) => {
   const totalDuration = timeRange.max - timeRange.min
 
-  const getSegmentOffset = (video: VideoInfo, firstVideoTime: number) => {
-    if (!video.metadata.creation_time || !firstVideoTime) return 0
-    const videoStartTime = new Date(video.metadata.creation_time).getTime()
-    return (videoStartTime - firstVideoTime) / 1000
-  }
+  // const getSegmentOffset = (video: VideoInfo, firstVideoTime: number) => {
+  //   if (!video.metadata.creation_time || !firstVideoTime) return 0
+  //   const videoStartTime = new Date(video.metadata.creation_time).getTime()
+  //   return (videoStartTime - firstVideoTime) / 1000
+  // }
 
   return (
     <div className="w-full">
       {videos.map((video, index) => {
-        const firstVideoTime = new Date(videos[0]?.metadata.creation_time || 0).getTime()
-        const offset = getSegmentOffset(video, firstVideoTime)
+        // const firstVideoTime = new Date(videos[0]?.metadata.creation_time || 0).getTime()
+        // const offset = getSegmentOffset(video, firstVideoTime)
 
         const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
         const videoEndTime = videoStartTime + video.metadata.format.duration
@@ -65,8 +73,7 @@ const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedSegments
                 style={{ left: `${startOffset}%`, width: `${width}%` }}
               >
                 {cameraSegments.map((segment, idx) => {
-                  const segStartOffset =
-                    ((segment.startTime - timeRange.min) / totalDuration) * 100
+                  const segStartOffset = ((segment.startTime - timeRange.min) / totalDuration) * 100
                   const segWidth = ((segment.endTime - segment.startTime) / totalDuration) * 100
 
                   return (
@@ -92,7 +99,6 @@ const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedSegments
 export function CompilationControls({
   mainCamera,
   activeVideos,
-  targetDuration,
   isRecording,
   isPlaying,
   onMainCameraChange,
@@ -104,23 +110,34 @@ export function CompilationControls({
   videos,
   bitrateData,
   onSeek,
+  compilationSettings,
+  onSettingsChange,
 }: CompilationControlsProps) {
   const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
+  const [averageSceneDuration, setAverageSceneDuration] = useState(3)
+  const [cameraChangeFrequency, setCameraChangeFrequency] = useState(4 / 7)
 
   const handleCreateCompilation = () => {
+    setSelectedSegments([])
+    onSegmentsChange([])
+
     console.log("Creating compilation with params:", {
-      targetDuration,
+      targetDuration: compilationSettings.targetDuration,
       timeRange,
       activeVideos: activeVideos.length,
+      averageSceneDuration,
+      cameraChangeFrequency,
       bitrateData,
     })
 
-    const scenes = distributeScenes(
-      targetDuration,
-      timeRange.max - timeRange.min,
-      activeVideos.length,
+    const scenes = distributeScenes({
+      targetDuration: compilationSettings.targetDuration,
+      totalDuration: timeRange.max - timeRange.min,
+      numCameras: activeVideos.length,
+      averageSceneDuration,
+      cameraChangeFrequency,
       bitrateData,
-    )
+    })
 
     console.log("Generated scenes:", scenes)
 
@@ -138,6 +155,31 @@ export function CompilationControls({
   }
 
   const maxDuration = timeRange.max - timeRange.min
+
+  const getCameraChangeLabel = (value: number): string => {
+    if (value <= 1 / 7) return "Очень редко"
+    if (value <= 2 / 7) return "Редко"
+    if (value <= 3 / 7) return "Умеренно редко"
+    if (value <= 4 / 7) return "Средне"
+    if (value <= 5 / 7) return "Умеренно часто"
+    if (value <= 6 / 7) return "Часто"
+    return "Очень часто"
+  }
+
+  const handleSceneDurationChange = (value: number) => {
+    onSettingsChange({
+      ...compilationSettings,
+      averageSceneDuration: value,
+    })
+  }
+
+  // const handleFrequencyChange = (value: number) => {
+  //   onSettingsChange({
+  //     ...compilationSettings,
+  //     cameraChangeFrequency: Math.round(value * 7) / 7,
+  //   })
+  // }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
@@ -172,10 +214,10 @@ export function CompilationControls({
 
         <div className="flex items-center gap-2 flex-1">
           <span className="text-sm whitespace-nowrap">
-            Длительность: {formatDuration(targetDuration)}
+            Длительность: {formatTimeWithDecisecond(compilationSettings.targetDuration)}
           </span>
           <Slider
-            value={[targetDuration]}
+            value={[compilationSettings.targetDuration]}
             onValueChange={([value]) => onTargetDurationChange(value)}
             min={2}
             max={maxDuration}
@@ -184,17 +226,59 @@ export function CompilationControls({
           />
         </div>
 
-        {/* <Button
+        {
+          /* <Button
           variant={isRecording ? "destructive" : "outline"}
           onClick={onToggleRecording}
         >
           {isRecording ? "Stop Recording" : "Start Recording"}
-        </Button> */}
+        </Button> */
+        }
+
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Средняя длительность сцены</Label>
+            <div className="flex items-center gap-2">
+              <Slider
+                value={[compilationSettings.averageSceneDuration]}
+                onValueChange={([value]) => handleSceneDurationChange(value)}
+                min={0.5}
+                max={10}
+                step={0.1}
+                className="flex-1"
+              />
+              <span className="text-sm w-16 text-right">
+                {compilationSettings.averageSceneDuration.toFixed(1)} сек
+                {averageSceneDuration.toFixed(1)} сек
+              </span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Частота смены камеры</Label>
+            <div className="flex flex-col gap-1">
+              <Slider
+                value={[cameraChangeFrequency]}
+                onValueChange={([value]) =>
+                  setCameraChangeFrequency(
+                    // Округляем до ближайшей 1/7 для 7 уровней
+                    Math.round(value * 7) / 7,
+                  )}
+                min={0}
+                max={1}
+                step={1 / 7}
+                className="flex-1"
+              />
+              <span className="text-sm text-muted-foreground">
+                {getCameraChangeLabel(cameraChangeFrequency)}
+              </span>
+            </div>
+          </div>
+        </div>
 
         <Button
           variant="outline"
           onClick={handleCreateCompilation}
-          disabled={isRecording || !targetDuration || activeVideos.length === 0}
+          disabled={isRecording || !compilationSettings.targetDuration || activeVideos.length === 0}
         >
           Создать видео
         </Button>
@@ -206,7 +290,7 @@ export function CompilationControls({
         selectedSegments={selectedSegments}
       />
 
-      <SelectedScenesList 
+      <SelectedScenesList
         segments={selectedSegments}
         videos={videos}
         onSegmentClick={(time) => onSeek(time)}

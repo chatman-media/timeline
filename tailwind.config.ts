@@ -49,12 +49,10 @@ export default {
   				'3': 'hsl(var(--chart-3))',
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
-  			}
-  		},
-  		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			},
+  			'background-primary': 'var(--background-primary)',
+  			'foreground-primary': 'var(--foreground-primary)',
+  			'foreground-tertiary': 'var(--foreground-tertiary)',
   		}
   	}
   },

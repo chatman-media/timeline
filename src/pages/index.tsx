@@ -9,12 +9,13 @@ import { VideoPlayer } from "../components/video-player"
 import type { BitrateDataPoint, VideoInfo } from "@/types/video"
 import { ActiveVideo } from "@/components/active-video"
 import { CompilationControls } from "../components/compilation-controls"
-import { createVideoSegments } from "../lib/compilation"
 import { Button } from "@/components/ui/button"
 import { Pause } from "lucide-react"
 import { Play } from "lucide-react"
 import { formatTimeWithDecisecond } from "@/lib/utils"
 import { useMemo } from "react"
+import { distributeScenes } from "@/utils/scene-distribution"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -28,17 +29,18 @@ interface RecordEntry {
   endTime?: number
 }
 
-interface CompilationSettings {
-  targetDuration: number
-  minSegmentLength: number
-  maxSegmentLength: number
-}
-
 // Добавляем isActive в интерфейс для активных видео
 interface ActiveVideoEntry {
   video: VideoInfo
   index: number
   isActive: boolean
+}
+
+interface VideoSegment {
+  cameraIndex: number
+  startTime: number
+  endTime: number
+  duration: number
 }
 
 const geistSans = localFont({
@@ -63,18 +65,14 @@ export default function Home() {
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
   const [activeVideos, setActiveVideos] = useState<ActiveVideoEntry[]>([])
   const [mainCamera, setMainCamera] = useState(1)
-  const [compilationSettings, setCompilationSettings] = useState<CompilationSettings>({
-    targetDuration: 60,
-    minSegmentLength: 0.2,
+  const [compilationSettings, setCompilationSettings] = useState({
+    targetDuration: 300,
+    minSegmentLength: 0.5,
     maxSegmentLength: 10,
+    averageSceneDuration: 3,
+    cameraChangeFrequency: 4 / 7,
   })
-  const [selectedSegments, setSelectedSegments] = useState<
-    Array<{
-      cameraIndex: number
-      startTime: number
-      endTime: number
-    }>
-  >([])
+  const [, setSelectedSegments] = useState<VideoSegment[]>([])
   const [bitrateData, setBitrateData] = useState<Array<BitrateDataPoint[]>>([])
 
   const lastUpdateTime = useRef<number>(0)
@@ -112,37 +110,37 @@ export default function Home() {
         // Используем bitrate_data из каждого видео
         const bitrateData = data.videos.map((video: VideoInfo) => video.bitrate_data || [])
         setBitrateData(bitrateData)
-                // Сортируем видео по времени создания
-                const sortedVideos = data.videos.sort((a: VideoInfo, b: VideoInfo) => {
-                  const timeA = a.metadata.creation_time ? new Date(a.metadata.creation_time).getTime() : 0
-                  const timeB = b.metadata.creation_time ? new Date(b.metadata.creation_time).getTime() : 0
-                  return timeA - timeB
-                })
-        
-                // Находим минимальное время начала и максимальное время окончания среди всех видо
-                const times = sortedVideos.flatMap((v: VideoInfo) => {
-                  if (!v.metadata.creation_time) return []
-                  const startTime = new Date(v.metadata.creation_time).getTime()
-                  const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длитльност в миллисекунды
-                  return [startTime, endTime]
-                }).filter((t: number) => t > 0)
-                console.log(times.map((t: number) => new Date(Math.floor(t))))
-        
-                const minTime = Math.min(...times)
-                const maxTime = Math.max(...times)
-        
-                // Устанавливаем диапазн в секундах
-                setTimeRange({
-                  min: Math.floor(minTime / 1000),
-                  max: Math.floor(maxTime / 1000),
-                })
-        
-                setVideos(sortedVideos)
-                // Устаавливаем начаьное значение слайдера в максимум
-                setCurrentTime(timeRange.min)
-        
+        // Сортируем видео по времени создания
+        const sortedVideos = data.videos.sort((a: VideoInfo, b: VideoInfo) => {
+          const timeA = a.metadata.creation_time ? new Date(a.metadata.creation_time).getTime() : 0
+          const timeB = b.metadata.creation_time ? new Date(b.metadata.creation_time).getTime() : 0
+          return timeA - timeB
+        })
+
+        // Находим минимальное время начала и максимальное время окончания среди всех видо
+        const times = sortedVideos.flatMap((v: VideoInfo) => {
+          if (!v.metadata.creation_time) return []
+          const startTime = new Date(v.metadata.creation_time).getTime()
+          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длитльност в миллисекунды
+          return [startTime, endTime]
+        }).filter((t: number) => t > 0)
+        console.log(times.map((t: number) => new Date(Math.floor(t))))
+
+        const minTime = Math.min(...times)
+        const maxTime = Math.max(...times)
+
+        // Устанавливаем диапазн в секундах
+        setTimeRange({
+          min: Math.floor(minTime / 1000),
+          max: Math.floor(maxTime / 1000),
+        })
+
+        setVideos(sortedVideos)
+        // Устаавливаем начаьное значение слайдера в максимум
+        setCurrentTime(timeRange.min)
       })
       .catch((error) => console.error("Error fetching videos:", error))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Модифицируем функцию handleTimeChange
@@ -155,7 +153,7 @@ export default function Home() {
     setIsPlaying((prev) => !prev)
   }, [])
 
-  // Добавляем функцию для записи
+  // Добавляем функцию дя записи
   const toggleRecording = useCallback(() => {
     if (!isRecording) {
       // Начало записи
@@ -363,29 +361,34 @@ export default function Home() {
     const manualSegments = recordings
       .filter((rec) => rec.endTime !== undefined)
       .map((rec) => ({
-        camera: rec.camera,
+        cameraIndex: rec.camera,
         startTime: rec.startTime,
-        duration: (rec.endTime! - rec.startTime),
-        bitrate: 0, // для ручных записей битрейт не важен
+        endTime: rec.endTime!,
+        duration: rec.endTime! - rec.startTime,
       }))
 
-    // Получаем автоматческие сегменты
-    const autoSegments = createVideoSegments(
-      videos,
-      mainCamera,
-      {
-        ...compilationSettings,
-        targetDuration: compilationSettings.targetDuration -
-          manualSegments.reduce((sum, seg) => sum + seg.duration, 0),
-      },
-    )
+    // Получаем автоматические сегменты
+    const autoSegments = distributeScenes({
+      targetDuration: compilationSettings.targetDuration -
+        manualSegments.reduce((sum, seg) => sum + seg.duration, 0),
+      totalDuration: timeRange.max - timeRange.min,
+      numCameras: videos.length,
+      averageSceneDuration: compilationSettings.averageSceneDuration,
+      cameraChangeFrequency: compilationSettings.cameraChangeFrequency,
+      bitrateData: videos.map((video) => video.bitrate_data),
+    }).map((scene) => ({
+      cameraIndex: scene.cameraIndex,
+      startTime: scene.startTime,
+      endTime: scene.startTime + scene.duration,
+      duration: scene.duration,
+    }))
 
     // Объединяем и сортируем все сегменты
     const allSegments = [...manualSegments, ...autoSegments]
       .sort((a, b) => a.startTime - b.startTime)
 
     setSelectedSegments(allSegments)
-  }, [videos, mainCamera, compilationSettings, recordings])
+  }, [videos, compilationSettings, recordings, timeRange.max, timeRange.min, bitrateData])
 
   return (
     <div
@@ -440,7 +443,6 @@ export default function Home() {
           <CompilationControls
             mainCamera={mainCamera}
             activeVideos={activeVideos}
-            targetDuration={Number(compilationSettings.targetDuration)}
             isRecording={isRecording}
             isPlaying={isPlaying}
             onMainCameraChange={setMainCamera}
@@ -453,6 +455,11 @@ export default function Home() {
             timeRange={timeRange}
             videos={videos}
             bitrateData={bitrateData}
+            onSeek={(time) => {
+              videoRefs.current[`active-${activeCamera}`].currentTime = time
+            }}
+            compilationSettings={compilationSettings}
+            onSettingsChange={setCompilationSettings}
           />
 
           <div className="w-full">
@@ -469,7 +476,6 @@ export default function Home() {
           {/* Сетка видео */}
           <div className="" style={{ display: "flex", flexWrap: "wrap", rowGap: "30px" }}>
             {videos.map((video, index) => {
-              // Исправляем проверку активног�� видео
               const activeVideo = activeVideos.find((v) => v.video.path === video.path)
               const isActive = activeVideo?.isActive ?? false
 
@@ -504,6 +510,7 @@ export default function Home() {
               />
             ))}
         </div>
+        <ThemeToggle />
       </main>
     </div>
   )

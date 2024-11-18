@@ -1,8 +1,12 @@
-interface VideoSegment {
-  cameraIndex: number
-  startTime: number
-  duration: number
-  bitrate?: number
+import { BitrateDataPoint } from "@/types/video"
+
+interface SceneDistributionParams {
+  targetDuration: number
+  totalDuration: number
+  numCameras: number
+  averageSceneDuration: number
+  cameraChangeFrequency: number
+  bitrateData?: Array<BitrateDataPoint[]>
 }
 
 /**
@@ -20,42 +24,44 @@ interface VideoSegment {
  * const scenesWithCustomSegments = distributeScenes(30, 120, 4, [{ time: 10, bitrate: 1000 }, { time: 20, bitrate: 1500 }])
  * // Вернет массив из 500 сцен для более частого переключения
  */
-export function distributeScenes(
-  targetDuration: number,
-  totalDuration: number,
-  numCameras: number,
-  bitrateData?: Array<{ time: number; bitrate: number }>[],
-): Array<{ cameraIndex: number; startTime: number; duration: number }> {
-  // Убедимся, что у нас есть положительные значения
-  if (targetDuration <= 0 || totalDuration <= 0 || numCameras <= 0) {
-    console.error("Invalid input parameters:", { targetDuration, totalDuration, numCameras })
-    return []
+export function distributeScenes({
+  targetDuration,
+  totalDuration,
+  numCameras,
+  averageSceneDuration,
+  cameraChangeFrequency,
+  bitrateData,
+}: SceneDistributionParams): Array<{ cameraIndex: number; startTime: number; duration: number }> {
+  const scenes: Array<{ cameraIndex: number; startTime: number; duration: number }> = []
+  let remainingDuration = targetDuration
+  let currentTime = 0
+  let lastCameraIndex = -1
+
+  while (remainingDuration > 0 && numCameras > 0) {
+    // Генерируем длительность сцены с вариацией ±30% от средней
+    const variance = averageSceneDuration * 0.3
+    const minDuration = Math.max(1, averageSceneDuration - variance)
+    const maxDuration = Math.min(remainingDuration, averageSceneDuration + variance)
+    const segmentDuration = minDuration + Math.random() * (maxDuration - minDuration)
+
+    // Выбираем новую камеру, исключая предыдущую
+    let newCameraIndex
+    do {
+      newCameraIndex = Math.floor(Math.random() * numCameras)
+    } while (newCameraIndex === lastCameraIndex && numCameras > 1)
+
+    scenes.push({
+      cameraIndex: newCameraIndex,
+      startTime: currentTime,
+      duration: segmentDuration,
+    })
+
+    lastCameraIndex = newCameraIndex
+    currentTime += segmentDuration
+    remainingDuration -= segmentDuration
   }
 
-  // Количество сегментов на камеру (минимум 1)
-  const segmentsPerCamera = Math.max(1, Math.floor(targetDuration / numCameras))
-
-  // Длительность каждого сегмента
-  const segmentDuration = targetDuration / (numCameras * segmentsPerCamera)
-
-  const segments: Array<{ cameraIndex: number; startTime: number; duration: number }> = []
-
-  // Распределяем сегменты по камерам
-  for (let cameraIndex = 0; cameraIndex < numCameras; cameraIndex++) {
-    // Равномерно распределяем сегменты по всей длительности
-    for (let i = 0; i < segmentsPerCamera; i++) {
-      const startTime = (totalDuration / (segmentsPerCamera + 1)) * (i + 1)
-
-      segments.push({
-        cameraIndex,
-        startTime,
-        duration: segmentDuration,
-      })
-    }
-  }
-
-  // Сортируем сегменты по времени
-  return segments.sort((a, b) => a.startTime - b.startTime)
+  return scenes
 }
 
 function findBitratePeaks(

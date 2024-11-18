@@ -29,10 +29,9 @@ export function createVideoSegments(
   const baseTime = new Date(videos[0].metadata.creation_time).getTime() / 1000
   const segments: VideoSegment[] = []
   let totalDuration = 0
+  let lastUsedCamera: number | undefined
 
   const allPossibleSegments = getAllPossibleSegments(videos, baseTime, mainCamera)
-
-  // Сортируем сегменты по битрейту
   allPossibleSegments.sort((a, b) => b.bitrate - a.bitrate)
 
   while (totalDuration < settings.targetDuration && allPossibleSegments.length > 0) {
@@ -40,10 +39,12 @@ export function createVideoSegments(
       allPossibleSegments,
       settings,
       totalDuration,
+      lastUsedCamera,
     )
 
     segments.push(segment)
     totalDuration += segment.duration
+    lastUsedCamera = segment.camera
   }
 
   return segments.sort((a, b) => a.startTime - b.startTime)
@@ -57,7 +58,7 @@ function getAllPossibleSegments(
   const segments: VideoSegment[] = []
 
   videos.forEach((video, videoIndex) => {
-    if (!video.bitrate_data || !video.metadata.creation_time) return
+    if (!video.bitrate_data || !video.metadata?.creation_time) return
 
     const cameraNumber = videoIndex + 1
     const isCameraMain = cameraNumber === mainCamera
@@ -88,10 +89,15 @@ function selectRandomSegment(
   segments: VideoSegment[],
   settings: CompilationSettings,
   currentDuration: number,
+  lastCamera?: number,
 ): VideoSegment {
-  const topSegmentsCount = Math.max(1, Math.floor(segments.length * 0.2))
+  const availableSegments = segments.filter((seg) =>
+    lastCamera === undefined || seg.camera !== lastCamera
+  )
+
+  const topSegmentsCount = Math.max(1, Math.floor(availableSegments.length * 0.2))
   const randomIndex = Math.floor(Math.random() * topSegmentsCount)
-  const selectedSegment = segments[randomIndex]
+  const selectedSegment = availableSegments[randomIndex]
 
   const maxPossibleDuration = Math.min(
     settings.maxSegmentLength,
@@ -101,7 +107,7 @@ function selectRandomSegment(
       (maxPossibleDuration - settings.minSegmentLength) +
     settings.minSegmentLength
 
-  segments.splice(randomIndex, 1)
+  segments.splice(segments.indexOf(selectedSegment), 1)
 
   return {
     ...selectedSegment,

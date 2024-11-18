@@ -1,6 +1,5 @@
 import { VideoInfo } from "@/types/video"
-import { formatDuration } from "@/lib/utils"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table"
+import { formatTimeWithDecisecond, formatTimeWithMilliseconds } from "@/lib/utils"
 
 interface SelectedScenesListProps {
   segments: Array<{
@@ -14,41 +13,41 @@ interface SelectedScenesListProps {
 
 export function SelectedScenesList({ segments, videos, onSegmentClick }: SelectedScenesListProps) {
   return (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead className="w-16">#</TableHead>
-          <TableHead className="w-24">Источник</TableHead>
-          <TableHead>Начало</TableHead>
-          <TableHead>Конец</TableHead>
-          <TableHead>Длительность</TableHead>
-          <TableHead>Файл</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {segments.map((segment, index) => {
-          const video = videos[segment.cameraIndex]
-          const isAudio = video.path.includes('audio') || video.path.includes('A')
-          const sourceLabel = isAudio ? `A${segment.cameraIndex}` : `V${segment.cameraIndex}`
-          const duration = segment.endTime - segment.startTime
-          const fileName = video.path.split('/').pop() || ''
+    <div className="border rounded-md max-h-[200px] overflow-auto">
+      <table className="w-full text-xs border-collapse">
+        <thead className="sticky top-0 bg-background shadow-sm">
+          <tr>
+            <th className="p-1 text-left bg-muted border-b">#</th>
+            <th className="p-1 text-left bg-muted border-b">Источник</th>
+            <th className="p-1 text-left bg-muted border-b">Начало</th>
+            <th className="p-1 text-left bg-muted border-b">Конец</th>
+            <th className="p-1 text-left bg-muted border-b">Длительность</th>
+            <th className="p-1 text-left bg-muted border-b">Файл</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-muted">
+          {segments.map((segment, index) => {
+            const video = videos[segment.cameraIndex]
+            const duration = segment.endTime - segment.startTime
+            const fileName = video?.path.split("/").pop() || "-"
 
-          return (
-            <TableRow 
-              key={index}
-              className="cursor-pointer hover:bg-secondary/50"
-              onClick={() => onSegmentClick(segment.startTime)}
-            >
-              <TableCell>{index + 1}</TableCell>
-              <TableCell>{sourceLabel}</TableCell>
-              <TableCell>{formatDuration(segment.startTime)}</TableCell>
-              <TableCell>{formatDuration(segment.endTime)}</TableCell>
-              <TableCell>{formatDuration(duration)}</TableCell>
-              <TableCell className="font-mono text-sm">{fileName}</TableCell>
-            </TableRow>
-          )
-        })}
-      </TableBody>
-    </Table>
+            return (
+              <tr
+                key={index}
+                className="hover:bg-muted/50 cursor-pointer"
+                onClick={() => onSegmentClick(segment.startTime)}
+              >
+                <td className="p-1">{index + 1}</td>
+                <td className="p-1">V{segment.cameraIndex}</td>
+                <td className="p-1">{formatTimeWithMilliseconds(segment.startTime)}</td>
+                <td className="p-1">{formatTimeWithMilliseconds(segment.endTime)}</td>
+                <td className="p-1">{formatTimeWithDecisecond(duration, 3)}</td>
+                <td className="p-1 font-mono">{fileName}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
   )
-} 
+}

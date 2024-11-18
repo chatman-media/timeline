@@ -47,7 +47,7 @@ export default async function handler(
     console.log("Executing ffmpeg command...")
     const command = `ffmpeg -ss 0 -i "${inputPath}" -vframes 1 -vf "scale=320:-1" "${outputPath}"`
 
-    const { stdout, stderr } = await execAsync(command)
+    const { _, stderr } = await execAsync(command)
     if (stderr) {
       console.log("FFMPEG stderr:", stderr)
     }
