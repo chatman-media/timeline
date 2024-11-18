@@ -3,9 +3,10 @@ import { Button } from "./ui/button"
 import { PauseIcon, PlayIcon } from "lucide-react"
 import { distributeScenes } from "@/utils/scene-distribution"
 import { VideoInfo } from "@/types/video"
-import { Input } from "./ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import type { BitrateDataPoint, VideoSegment } from "@/types/video"
+import { Slider } from "./ui/slider"
+import { formatDuration } from "@/lib/utils"
 
 interface CompilationControlsProps {
   mainCamera: number
@@ -86,7 +87,6 @@ export function CompilationControls({
   onMainCameraChange,
   onTargetDurationChange,
   onCreateCompilation,
-  onToggleRecording,
   onTogglePlayback,
   onSegmentsChange,
   timeRange,
@@ -125,6 +125,7 @@ export function CompilationControls({
     onCreateCompilation()
   }
 
+  const maxDuration = timeRange.max - timeRange.min
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
@@ -157,22 +158,26 @@ export function CompilationControls({
           </Select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-sm">Target Duration (s):</span>
-          <Input
-            type="number"
-            value={targetDuration}
-            onChange={(e) => onTargetDurationChange(Number(e.target.value))}
-            className="w-20"
+        <div className="flex items-center gap-2 flex-1">
+          <span className="text-sm whitespace-nowrap">
+            Длительность: {formatDuration(targetDuration)}
+          </span>
+          <Slider
+            value={[targetDuration]}
+            onValueChange={([value]) => onTargetDurationChange(value)}
+            min={2}
+            max={maxDuration}
+            step={1}
+            className="w-[200px]"
           />
         </div>
 
-        <Button
+        {/* <Button
           variant={isRecording ? "destructive" : "outline"}
           onClick={onToggleRecording}
         >
           {isRecording ? "Stop Recording" : "Start Recording"}
-        </Button>
+        </Button> */}
 
         <Button
           variant="outline"
