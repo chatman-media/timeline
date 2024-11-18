@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import type { BitrateDataPoint, VideoSegment } from "@/types/video"
 import { Slider } from "./ui/slider"
 import { formatDuration } from "@/lib/utils"
+import { SelectedScenesList } from "./selected-scenes-list"
 
 interface CompilationControlsProps {
   mainCamera: number
@@ -23,6 +24,7 @@ interface CompilationControlsProps {
   timeRange: { min: number; max: number }
   videos: VideoInfo[]
   bitrateData?: Array<BitrateDataPoint[]>
+  onSeek: (time: number) => void
 }
 
 interface TimelineProps {
@@ -34,9 +36,18 @@ interface TimelineProps {
 const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedSegments }) => {
   const totalDuration = timeRange.max - timeRange.min
 
+  const getSegmentOffset = (video: VideoInfo, firstVideoTime: number) => {
+    if (!video.metadata.creation_time || !firstVideoTime) return 0
+    const videoStartTime = new Date(video.metadata.creation_time).getTime()
+    return (videoStartTime - firstVideoTime) / 1000
+  }
+
   return (
     <div className="w-full">
       {videos.map((video, index) => {
+        const firstVideoTime = new Date(videos[0]?.metadata.creation_time || 0).getTime()
+        const offset = getSegmentOffset(video, firstVideoTime)
+
         const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
         const videoEndTime = videoStartTime + video.metadata.format.duration
 
@@ -47,7 +58,7 @@ const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedSegments
 
         return (
           <div key={video.path} className="h-6 w-full relative mb-0.5 flex items-center">
-            <span className="absolute left-0 w-16 text-sm text-muted-foreground">Cam {index}</span>
+            <span className="absolute left-0 w-16 text-sm text-muted-foreground">V{index}</span>
             <div className="absolute h-4 bg-secondary left-16 right-0">
               <div
                 className="absolute h-full bg-secondary-foreground/20"
@@ -55,13 +66,13 @@ const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedSegments
               >
                 {cameraSegments.map((segment, idx) => {
                   const segStartOffset =
-                    ((segment.startTime - timeRange.min) / totalDuration) * 100 - startOffset
+                    ((segment.startTime - timeRange.min) / totalDuration) * 100
                   const segWidth = ((segment.endTime - segment.startTime) / totalDuration) * 100
 
                   return (
                     <div
                       key={idx}
-                      className="absolute h-full bg-primary/50"
+                      className="absolute h-full bg-yellow-400"
                       style={{
                         left: `${segStartOffset}%`,
                         width: `${segWidth}%`,
@@ -92,6 +103,7 @@ export function CompilationControls({
   timeRange,
   videos,
   bitrateData,
+  onSeek,
 }: CompilationControlsProps) {
   const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
 
@@ -140,7 +152,7 @@ export function CompilationControls({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-sm">Main Camera:</span>
+          <span className="text-sm">Главная камера:</span>
           <Select
             value={mainCamera.toString()}
             onValueChange={(value) => onMainCameraChange(parseInt(value))}
@@ -151,7 +163,7 @@ export function CompilationControls({
             <SelectContent>
               {activeVideos.map(({ index }) => (
                 <SelectItem key={index} value={index.toString()}>
-                  Camera {index}
+                  V{index}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -192,6 +204,12 @@ export function CompilationControls({
         videos={videos}
         timeRange={timeRange}
         selectedSegments={selectedSegments}
+      />
+
+      <SelectedScenesList 
+        segments={selectedSegments}
+        videos={videos}
+        onSegmentClick={(time) => onSeek(time)}
       />
     </div>
   )
