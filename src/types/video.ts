@@ -10,4 +10,10 @@ export interface VideoInfo {
     bitrate: number
   }>
   activeIndex?: number
+  thumbnails?: string[]
+  filename: string
+}
+
+export interface VideoWithThumbnail extends VideoInfo {
+  thumbnailUrl: string
 }

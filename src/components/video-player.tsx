@@ -6,14 +6,16 @@ interface VideoPlayerProps {
   video: VideoInfo & { activeIndex: number }
   cameraNumber: number
   onVideoRef: (el: HTMLVideoElement | null) => void
+  isActive: boolean
   currentTime: number
 }
 
 export function VideoPlayer({
   video,
   cameraNumber,
-  onVideoRef,
   currentTime,
+  isActive,
+  onVideoRef,
 }: VideoPlayerProps) {
   const [chartWidth, setChartWidth] = useState(0)
   const videoContainerRef = useRef<HTMLDivElement>(null)
@@ -45,18 +47,32 @@ export function VideoPlayer({
   })
 
   return (
-    <div className="space-y-2">
+    <div className="" style={{ width: '10vw', float: 'left', marginRight: '30px' }}>
       <div
         ref={videoContainerRef}
-        className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-gray-800"
+        className={`relative overflow-hidden bg-black dark:bg-black ${
+          !isActive ? 'opacity-50 grayscale' : ''
+        }`}
+        style={{
+          width: '10vw',
+          float: 'left',
+          marginRight: '30px'
+        }}
       >
-        <video
-          ref={onVideoRef}
-          src={video.path}
-          className={`video-${cameraNumber} w-full h-full object-contain`}
-          playsInline
-          muted
-        />
+        <div 
+          style={{
+            height: 150,
+            width: (video.metadata.video_stream?.width || 1) * (150 / (video.metadata.video_stream?.height || 1)),
+          }}
+        >
+          <video
+            ref={onVideoRef}
+            src={video.path}
+            className={`video-${cameraNumber} w-full h-full object-cover`}
+            playsInline
+            muted
+          />
+        </div>
         <div className="absolute top-2 left-4">
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-black/50 text-xl font-bold text-white">
             {cameraNumber}
@@ -82,7 +98,6 @@ export function VideoPlayer({
               No bitrate data available
             </div>
           )}
-      </div>
       <div className="text-xs text-gray-500 dark:text-gray-400">
         <div className="grid grid-cols-2 gap-x-4">
           <p className="font-medium">{video.name}</p>
@@ -96,6 +111,7 @@ export function VideoPlayer({
           <p className="text-right">{formatBitrate(video.metadata.format.bit_rate)}</p>
           {/* <p>{formatDuration(video.metadata.format.duration)}</p> */}
         </div>
+      </div>
       </div>
     </div>
   )

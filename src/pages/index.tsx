@@ -10,7 +10,6 @@ import type { VideoInfo } from "@/types/video"
 import { ActiveVideo } from "@/components/active-video"
 import { CompilationControls } from "../components/compilation-controls"
 import { createVideoSegments } from "../lib/compilation"
-import { SegmentsTimeline } from "@/components/segments-timeline"
 import { Button } from "@/components/ui/button"
 import { Pause } from "lucide-react"
 import { Play } from "lucide-react"
@@ -42,6 +41,13 @@ interface CompilationSettings {
   maxSegmentLength: number
 }
 
+// Добавляем isActive в интерфейс для активных видео
+interface ActiveVideoEntry {
+  video: VideoInfo
+  index: number
+  isActive: boolean
+}
+
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -62,14 +68,18 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false)
   const [recordings, setRecordings] = useState<RecordEntry[]>([])
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
-  const [activeVideos, setActiveVideos] = useState<Array<{ video: VideoInfo; index: number }>>([])
+  const [activeVideos, setActiveVideos] = useState<ActiveVideoEntry[]>([])
   const [mainCamera, setMainCamera] = useState(1)
   const [compilationSettings, setCompilationSettings] = useState<CompilationSettings>({
     targetDuration: 60,
     minSegmentLength: 0.2,
     maxSegmentLength: 10,
   })
-  const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
+  const [selectedSegments, setSelectedSegments] = useState<Array<{
+    cameraIndex: number
+    startTime: number
+    endTime: number
+  }>>([])
 
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()
@@ -144,21 +154,6 @@ export default function Home() {
   const togglePlayback = useCallback(() => {
     setIsPlaying((prev) => !prev)
   }, [])
-
-  // Создаем функцию для фильтрации активных видео
-  const isVideoActive = (video: VideoInfo) => {
-    if (!video.metadata.creation_time) return false
-    const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-    const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
-    const videoSeconds = videoTime - startTime
-    const videoEndSeconds = videoSeconds + video.metadata.format.duration
-    return videoSeconds <= currentTime && currentTime <= videoEndSeconds
-  }
-
-  // Создаем функцию для получения всех активных видео
-  const getActiveVideos = () => {
-    return videos.filter(isVideoActive)
-  }
 
   // Добавляем функцию для записи
   const toggleRecording = useCallback(() => {
@@ -238,7 +233,7 @@ export default function Home() {
   // Модифицирум эффект для синхронизации видео
   useEffect(() => {
     if (videos.length > 0) {
-      const activeVids = getActiveVideos()
+      const activeVids = videos
 
       const updatePlayback = (timestamp: number) => {
         if (!lastUpdateTime.current) {
@@ -320,19 +315,22 @@ export default function Home() {
     }
   }, [currentTime, isPlaying, videos, timeRange.max])
 
-  // Обновляем функцию для получения активных видео
+  // Модифицируем updateActiveVideos для определения активных видео
   const updateActiveVideos = useCallback(() => {
     const active = videos
-      .map((video, index) => ({ video, index: index + 1 }))
-      .filter(({ video }) => {
-        if (!video.metadata.creation_time) return false
-        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-        const startTime = videos[0]?.metadata.creation_time
-          ? new Date(videos[0].metadata.creation_time).getTime() / 1000
-          : 0
-        const videoSeconds = videoTime - startTime
-        const videoEndSeconds = videoSeconds + video.metadata.format.duration
-        return videoSeconds <= currentTime && currentTime <= videoEndSeconds
+      .map((video, index) => {
+        const isActive = (() => {
+          if (!video.metadata.creation_time) return false
+          const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
+          const startTime = videos[0]?.metadata.creation_time
+            ? new Date(videos[0].metadata.creation_time).getTime() / 1000
+            : 0
+          const videoSeconds = videoTime - startTime
+          const videoEndSeconds = videoSeconds + video.metadata.format.duration
+          return videoSeconds <= currentTime && currentTime <= videoEndSeconds
+        })()
+        
+        return { video, index: index + 1, isActive }
       })
     setActiveVideos(active)
   }, [videos, currentTime])
@@ -371,7 +369,7 @@ export default function Home() {
         bitrate: 0, // для ручных записей битрейт не важен
       }))
 
-    // Получаем автоматические сегменты
+    // Получаем автоматческие сегменты
     const autoSegments = createVideoSegments(
       videos,
       mainCamera,
@@ -443,14 +441,15 @@ export default function Home() {
             mainCamera={mainCamera}
             activeVideos={activeVideos}
             targetDuration={compilationSettings.targetDuration}
+            isRecording={isRecording}
+            isPlaying={isPlaying}
             onMainCameraChange={setMainCamera}
             onTargetDurationChange={(duration) =>
               setCompilationSettings((prev) => ({ ...prev, targetDuration: duration }))}
             onCreateCompilation={createCompilation}
-            isRecording={isRecording}
             onToggleRecording={toggleRecording}
-            isPlaying={isPlaying}
             onTogglePlayback={togglePlayback}
+            onSegmentsChange={setSelectedSegments}
           />
 
           <div className="w-full">
@@ -465,20 +464,27 @@ export default function Home() {
           </div>
 
           {/* Сетка видео */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {activeVideos.map(({ video, index }) => (
-              <VideoPlayer
-                key={video.path}
-                video={{ ...video, activeIndex: index - 1 }}
-                cameraNumber={index}
-                currentTime={currentTime}
-                onVideoRef={(el) => {
-                  if (el) {
-                    videoRefs.current[video.path] = el
-                  }
-                }}
-              />
-            ))}
+          <div className="" style={{ display: 'flex', flexWrap: 'wrap', rowGap: '30px' }}>
+            {videos.map((video, index) => {
+              // Исправляем проверку активного видео
+              const activeVideo = activeVideos.find(v => v.video.path === video.path)
+              const isActive = activeVideo?.isActive ?? false
+
+              return (
+                <VideoPlayer
+                  key={video.path}
+                  video={{ ...video, activeIndex: index }}
+                  cameraNumber={index + 1}
+                  currentTime={currentTime}
+                  isActive={isActive}
+                  onVideoRef={(el) => {
+                    if (el) {
+                      videoRefs.current[video.path] = el
+                    }
+                  }}
+                />
+              )
+            })}
           </div>
         </div>
 
@@ -496,19 +502,6 @@ export default function Home() {
             ))}
         </div>
       </main>
-      {selectedSegments.length > 0 && (
-        <div className="mt-8 space-y-4">
-          <h3 className="font-bold">Selected Segments Timeline:</h3>
-          <SegmentsTimeline
-            segments={selectedSegments}
-            timeRange={timeRange}
-          />
-          <div className="text-sm text-gray-500">
-            Total Duration:{" "}
-            {selectedSegments.reduce((sum, seg) => sum + seg.duration, 0).toFixed(2)}s
-          </div>
-        </div>
-      )}
     </div>
   )
 }
