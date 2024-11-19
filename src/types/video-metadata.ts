@@ -1,4 +1,4 @@
-export type VideoMetadata = {
+export interface VideoMetadata {
   format: {
     filename: string
     format_name: string

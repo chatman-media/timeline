@@ -7,7 +7,7 @@ import { Slider } from "@/components/ui/slider"
 import { VideoPlayer } from "../components/video-player"
 import type { BitrateDataPoint, VideoInfo } from "@/types/video"
 import { ActiveVideo } from "@/components/active-video"
-import { CompilationControls } from "../components/compilation-controls"
+import CompilationControls from "../components/compilation-controls"
 import { Button } from "@/components/ui/button"
 import { Pause } from "lucide-react"
 import { Play } from "lucide-react"
@@ -60,7 +60,7 @@ export default function Home() {
     averageSceneDuration: 3,
     cameraChangeFrequency: 4 / 7,
   })
-  const [, setSelectedSegments] = useState<VideoSegment[]>([])
+  const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
   const [bitrateData, setBitrateData] = useState<Array<BitrateDataPoint[]>>([])
 
   const lastUpdateTime = useRef<number>(0)
@@ -166,7 +166,7 @@ export default function Home() {
         return updatedRecordings
       })
     }
-  }, [isRecording, activeCamera, currentTime, isPlaying])
+  }, [isRecording, activeCamera, isPlaying])
 
   // Обновляем эффект для обработки клавиш
   useEffect(() => {
@@ -181,9 +181,9 @@ export default function Home() {
       }
 
       // Запись (R)
-      if (event.key.toLowerCase() === "r") {
-        toggleRecording()
-      }
+      // if (event.key.toLowerCase() === "r") {
+      //   toggleRecording()
+      // }
 
       // Пауза/воспроизведение (Space)
       if (event.code === "Space") {
@@ -214,7 +214,7 @@ export default function Home() {
         return updatedRecordings
       })
     }
-  }, [activeCamera, isRecording, currentTime])
+  }, [activeCamera, isRecording])
 
   // Модифицирум эффект для синхронизации видео
   useEffect(() => {
@@ -278,7 +278,7 @@ export default function Home() {
           const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
           const relativeTime = currentTime - (videoTime - startTime)
 
-          // Добавляем более точную синхронизацию
+          // Добавляем более точную ��инхронизацию
           if (videoElement.readyState >= 2) { // Проверяем, что видео готово к воспроизведению
             if (Math.abs(videoElement.currentTime - relativeTime) > 0.1) { // Уменьшаем порог синхронизации
               videoElement.currentTime = relativeTime
@@ -299,7 +299,7 @@ export default function Home() {
         lastUpdateTime.current = 0
       }
     }
-  }, [currentTime, isPlaying, videos, timeRange.max])
+  }, [isPlaying, videos, timeRange.max])
 
   // Модифицируем updateActiveVideos для определения активных видео
   const updateActiveVideos = useCallback(() => {
@@ -428,7 +428,7 @@ export default function Home() {
             )}
           </div>
 
-          <CompilationControls
+        <CompilationControls
             mainCamera={mainCamera}
             activeVideos={activeVideos}
             isRecording={isRecording}
@@ -440,6 +440,7 @@ export default function Home() {
             onToggleRecording={toggleRecording}
             onTogglePlayback={togglePlayback}
             onSegmentsChange={setSelectedSegments}
+            selectedSegments={selectedSegments}
             timeRange={timeRange}
             videos={videos}
             bitrateData={bitrateData}
