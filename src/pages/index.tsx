@@ -4,7 +4,6 @@ import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
 import { Slider } from "@/components/ui/slider"
-import { VideoPlayer } from "../components/video-player"
 import type { BitrateDataPoint, VideoInfo } from "@/types/video"
 import { ActiveVideo } from "@/components/active-video"
 import CompilationControls from "../components/compilation-controls"
@@ -55,13 +54,11 @@ export default function Home() {
       recordings.map((record, idx) => {
         const baseTime = baseVideoTime ? new Date(baseVideoTime).getTime() / 1000 : 0
 
-        const startTimeFormatted = dayjs.unix(baseTime)
-          .add(record.startTime, "second")
+        const startTimeFormatted = dayjs.unix(baseTime + record.startTime)
           .format("HH:mm:ss.SSS")
 
         const endTimeFormatted = record.endTime
-          ? dayjs.unix(baseTime)
-            .add(record.endTime, "second")
+          ? dayjs.unix(baseTime + record.endTime)
             .format("HH:mm:ss.SSS")
           : "recording..."
 
@@ -285,23 +282,42 @@ export default function Home() {
 
   // Модифицируем updateActiveVideos для определения активных видео
   const updateActiveVideos = useCallback(() => {
-    const active = videos
-      .map((video, index) => {
-        const isActive = (() => {
-          if (!video.metadata.creation_time) return false
-          const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-          const startTime = videos[0]?.metadata.creation_time
-            ? new Date(videos[0].metadata.creation_time).getTime() / 1000
-            : 0
-          const videoSeconds = videoTime - startTime
-          const videoEndSeconds = videoSeconds + video.metadata.format.duration
-          return videoSeconds <= currentTime && currentTime <= videoEndSeconds
-        })()
+    // Создаем мапу для группировки видео по их номеру камеры
+    const videoGroups = new Map<number, VideoInfo[]>();
+    
+    videos.forEach((video, index) => {
+      // Извлекаем номер камеры из имени файла или другим способом
+      // Предполагаем, что номер камеры содержится в имени файла
+      const cameraNumber = parseInt(video.path.match(/camera[_-]?(\d+)/i)?.[1] || '1');
+      
+      if (!videoGroups.has(cameraNumber)) {
+        videoGroups.set(cameraNumber, []);
+      }
+      videoGroups.get(cameraNumber)?.push(video);
+    });
 
-        return { video, index: index + 1, isActive }
-      })
-    setActiveVideos(active)
-  }, [videos, currentTime])
+    const active = Array.from(videoGroups.entries()).map(([cameraNumber, groupVideos]) => {
+      const isActive = groupVideos.some(video => {
+        if (!video.metadata.creation_time) return false;
+        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000;
+        const startTime = videos[0]?.metadata.creation_time
+          ? new Date(videos[0].metadata.creation_time).getTime() / 1000
+          : 0;
+        const videoSeconds = videoTime - startTime;
+        const videoEndSeconds = videoSeconds + video.metadata.format.duration;
+        return videoSeconds <= currentTime && currentTime <= videoEndSeconds;
+      });
+
+      return {
+        video: groupVideos[0], // Используем первое видео для метаданных
+        index: cameraNumber,
+        isActive,
+        allVideos: groupVideos // Сохраняем все видео для этой камеры
+      };
+    });
+
+    setActiveVideos(active);
+  }, [videos, currentTime]);
 
   // Добавляем эффект для обновления активных видео
   useEffect(() => {
@@ -467,29 +483,6 @@ export default function Home() {
               onValueChange={handleTimeChange}
               className="w-full"
             />
-          </div>
-
-          {/* Сетка видео */}
-          <div className="" style={{ display: "flex", flexWrap: "wrap", rowGap: "30px" }}>
-            {videos.map((video, index) => {
-              const activeVideo = activeVideos.find((v) => v.video.path === video.path)
-              const isActive = activeVideo?.isActive ?? false
-
-              return (
-                <VideoPlayer
-                  key={video.path}
-                  video={{ ...video, activeIndex: index }}
-                  cameraNumber={index + 1}
-                  currentTime={currentTime}
-                  isActive={isActive}
-                  onVideoRef={(el) => {
-                    if (el) {
-                      videoRefs.current[video.path] = el
-                    }
-                  }}
-                />
-              )
-            })}
           </div>
         </div>
 

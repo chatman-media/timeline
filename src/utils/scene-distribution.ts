@@ -1,6 +1,6 @@
 import { BitrateDataPoint } from "@/types/video"
 
-interface SceneDistributionParams {
+export interface SceneDistributionParams {
   targetDuration: number
   totalDuration: number
   numCameras: number
@@ -12,13 +12,14 @@ interface SceneDistributionParams {
 /**
  * Создает распределение сцен для мультикамерного монтажа
  * @param targetDuration - Желаемая длительность итогового видео в секундах
- * @param videoDuration - Длительность видео в секундах
  * @param numCameras - Количество активных камер
+ * @param averageSceneDuration - Средняя длительность сцены в секундах
+ * @param cameraChangeFrequency - Частота смены камеры (от 0 до 1)
  * @param bitrateData - Данные о bitrate для каждой камеры
  * @returns Массив сцен с указанием камеры, времени начала и длительности
  *
  * @example
- * const scenes = distributeScenes(30, 120, 4)
+ * const scenes = distributeScenes(30, 4, 10, 0.5)
  * // Вернет массив сцен для 30-секундного видео из 120 секунд записи с 4 камер
  *
  * const scenesWithCustomSegments = distributeScenes(30, 120, 4, [{ time: 10, bitrate: 1000 }, { time: 20, bitrate: 1500 }])
@@ -28,35 +29,45 @@ export function distributeScenes({
   targetDuration,
   numCameras,
   averageSceneDuration,
-  // cameraChangeFrequency,
-}: SceneDistributionParams): Array<{ cameraIndex: number; startTime: number; duration: number }> {
-  const scenes: Array<{ cameraIndex: number; startTime: number; duration: number }> = []
-  let remainingDuration = targetDuration
+  cameraChangeFrequency,
+  bitrateData,
+}: SceneDistributionParams) {
+  const scenes: Array<{
+    cameraIndex: number
+    startTime: number
+    duration: number
+  }> = []
+
   let currentTime = 0
-  let lastCameraIndex = -1
+  let lastCameraIndex = 0
 
-  while (remainingDuration > 0 && numCameras > 0) {
-    // Генерируем длительность сцены с вариацией ±30% от средней
-    const variance = averageSceneDuration * 0.3
-    const minDuration = Math.max(1, averageSceneDuration - variance)
-    const maxDuration = Math.min(remainingDuration, averageSceneDuration + variance)
-    const segmentDuration = minDuration + Math.random() * (maxDuration - minDuration)
+  while (currentTime < targetDuration) {
+    // Вычисляем длительность следующей сцены
+    const remainingTime = targetDuration - currentTime
+    const maxSceneDuration = Math.min(averageSceneDuration * 1.5, remainingTime)
+    const minSceneDuration = Math.min(averageSceneDuration * 0.5, remainingTime)
+    const sceneDuration = minSceneDuration + Math.random() * (maxSceneDuration - minSceneDuration)
 
-    // Выбираем новую камеру, исключая предыдущую
-    let newCameraIndex
-    do {
-      newCameraIndex = Math.floor(Math.random() * numCameras)
-    } while (newCameraIndex === lastCameraIndex && numCameras > 1)
+    // Выбираем следующую камеру
+    let nextCameraIndex
+    if (Math.random() < cameraChangeFrequency) {
+      // Выбираем новую камеру, исключая текущую
+      do {
+        nextCameraIndex = Math.floor(Math.random() * numCameras)
+      } while (nextCameraIndex === lastCameraIndex && numCameras > 1)
+    } else {
+      nextCameraIndex = lastCameraIndex
+    }
 
+    // Добавляем сцену
     scenes.push({
-      cameraIndex: newCameraIndex,
+      cameraIndex: nextCameraIndex,
       startTime: currentTime,
-      duration: segmentDuration,
+      duration: sceneDuration,
     })
 
-    lastCameraIndex = newCameraIndex
-    currentTime += segmentDuration
-    remainingDuration -= segmentDuration
+    lastCameraIndex = nextCameraIndex
+    currentTime += sceneDuration
   }
 
   return scenes
