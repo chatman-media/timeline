@@ -1,7 +1,7 @@
-import { VideoInfo, VideoSegment } from "@/types/video"
+import { VideoInfo } from "@/types/video"
 
 interface SelectedScenesListProps {
-  segments: VideoSegment
+  segments: Array<{ cameraIndex: number; startTime: number; endTime: number, duration: number }>
   videos: VideoInfo[]
   onSegmentClick: (startTime: number) => void
 }

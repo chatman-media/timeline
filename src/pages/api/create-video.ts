@@ -1,26 +1,45 @@
 import type { NextApiRequest, NextApiResponse } from "next"
 
-export default async function handler(
+export default function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
-    return res.status(405).json({ message: "Method not allowed" })
+    return res.status(405).json({ 
+      success: false,
+      message: "Only POST method is supported" 
+    })
   }
 
   try {
-    // const { } = req.body
+    const { videoTitle, sourceUrl } = req.body
+
+    if (!videoTitle || !sourceUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required parameters: videoTitle and sourceUrl"
+      })
+    }
 
     // Here you would implement the video creation logic
-    // This could involve using ffmpeg or another video processing tool
-    // For now, we'll just return a success message
+    const jobId = `video_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
     return res.status(200).json({
-      message: "Video creation started",
-      jobId: Date.now().toString(), // You might want to generate a real job ID
+      success: true,
+      message: "Video creation initiated successfully",
+      data: {
+        jobId,
+        videoTitle,
+        estimatedProcessingTime: "2-3 minutes",
+        status: "processing"
+      }
     })
   } catch (error) {
     console.error("Error creating video:", error)
-    return res.status(500).json({ message: "Error creating video" })
+    return res.status(500).json({ 
+      success: false,
+      message: "Internal server error during video creation",
+      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+    })
   }
 }

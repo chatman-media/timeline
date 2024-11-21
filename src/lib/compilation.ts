@@ -27,7 +27,7 @@ export function createVideoSegments(
 
     segments.push(segment)
     totalDuration += segment.duration
-    lastUsedCamera = segment.camera
+    lastUsedCamera = segment.cameraIndex
   }
 
   return segments.sort((a, b) => a.startTime - b.startTime)
@@ -57,7 +57,7 @@ function getAllPossibleSegments(
       const avgBitrate = (point.bitrate + prevPoint.bitrate) / 2
 
       segments.push({
-        camera: cameraNumber,
+        cameraIndex: cameraNumber,
         startTime: relativeStartTime + prevPoint.timestamp,
         duration,
         bitrate: isCameraMain ? avgBitrate * 1.2 : avgBitrate,
@@ -75,7 +75,7 @@ function selectRandomSegment(
   lastCamera?: number,
 ): VideoSegment {
   const availableSegments = segments.filter((seg) =>
-    lastCamera === undefined || seg.camera !== lastCamera
+    lastCamera === undefined || seg.cameraIndex !== lastCamera
   )
 
   const topSegmentsCount = Math.max(1, Math.floor(availableSegments.length * 0.2))
