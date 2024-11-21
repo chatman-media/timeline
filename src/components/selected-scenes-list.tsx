@@ -24,7 +24,17 @@ export function SelectedScenesList({ segments, videos, onSegmentClick }: Selecte
   return (
     <div className="border max-h-[200px] overflow-auto">
       <table className="w-full text-xs border-collapse">
-        <tbody className="divide-y divide-muted">
+        <thead>
+          <tr className="bg-muted/50 text-gray-900 dark:text-gray-100">
+            <th className="p-1 text-left">№</th>
+            <th className="p-1 text-left">Камера</th>
+            <th className="p-1 text-left">Начало</th>
+            <th className="p-1 text-left">Конец</th>
+            <th className="p-1 text-left">Длительность</th>
+            <th className="p-1 text-left">Файл</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-muted text-gray-900 dark:text-gray-100">
           {segments.map((segment, index) => {
             const video = videos[segment.cameraIndex]
 
@@ -38,7 +48,7 @@ export function SelectedScenesList({ segments, videos, onSegmentClick }: Selecte
                 <td className="p-1">V{segment.cameraIndex}</td>
                 <td className="p-1">{formatTimeForDisplay(segment.startTime)}</td>
                 <td className="p-1">{formatTimeForDisplay(segment.endTime)}</td>
-                <td className="p-1">{formatTimeForDisplay(segment.duration)}</td>
+                <td className="p-1">{formatTimeForDisplay(segment.endTime - segment.startTime)}</td>
                 <td className="p-1 font-mono">{video?.path.split("/").pop() || "-"}</td>
               </tr>
             )
