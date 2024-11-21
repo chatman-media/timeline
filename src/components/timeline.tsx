@@ -12,61 +12,81 @@ export const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedS
 
   // Функция для проверки последовательности видео
   const isSequentialVideos = (video1: VideoInfo, video2: VideoInfo) => {
-    // Извлекаем числа из имени файла формата VID_YYYYMMDD_HHMMSS_XXX
-    const getFileInfo = (path: string) => {
-      const match = path.match(/VID_(\d{8})_(\d{6})_(\d+)/)
-      if (!match) return null
-      return {
-        date: match[1],
-        time: match[2],
-        sequence: parseInt(match[3]),
+    if (!video1.metadata.creation_time || !video2.metadata.creation_time) return false
+
+    // Получаем время окончания первого видео
+    const video1End = new Date(video1.metadata.creation_time).getTime() / 1000 + 
+      video1.metadata.format.duration
+
+    // Получаем время начала второго видео
+    const video2Start = new Date(video2.metadata.creation_time).getTime() / 1000
+
+    // Проверяем метаданные видео на совместимость
+    const isSameFormat = 
+      video1.metadata.video_stream?.codec_name === video2.metadata.video_stream?.codec_name &&
+      video1.metadata.video_stream?.width === video2.metadata.video_stream?.width &&
+      video1.metadata.video_stream?.height === video2.metadata.video_stream?.height
+
+    // Увеличиваем допуск до 5 секунд, так как видим небольшие расхождения в логах
+    const isTimeSequential = Math.abs(video1End - video2Start) <= 5
+
+    console.log('Checking sequence:', {
+      video1Path: video1.path,
+      video2Path: video2.path,
+      video1End,
+      video2Start,
+      timeDiff: Math.abs(video1End - video2Start),
+      isTimeSequential,
+      isSameFormat
+    });
+
+    return isSameFormat && isTimeSequential
+  }
+
+  // Новая логика группировки
+  const groupedVideos = videos.reduce((acc: VideoInfo[][], currentVideo) => {
+    // Проверяем, можно ли добавить текущее видео в существующую группу
+    let addedToExisting = false;
+    
+    for (let i = 0; i < acc.length; i++) {
+      const group = acc[i];
+      // Проверяем с каждым видео в группе
+      const canJoinGroup = group.some(groupVideo => 
+        isSequentialVideos(groupVideo, currentVideo) || 
+        isSequentialVideos(currentVideo, groupVideo)
+      );
+
+      if (canJoinGroup) {
+        acc[i] = [...group, currentVideo];
+        addedToExisting = true;
+        break;
       }
     }
 
-    const info1 = getFileInfo(video1.path)
-    const info2 = getFileInfo(video2.path)
-
-    if (!info1 || !info2) return false
-
-    // Проверяем, что файлы от одной даты
-    if (info1.date !== info2.date) return false
-
-    // Проверяем последовательность номеров
-    if (info2.sequence !== info1.sequence + 1) return false
-
-    // Используем metadata для проверки временной последовательности
-    const video1End = new Date(video1.metadata.creation_time!).getTime() / 1000 +
-      video1.metadata.format.duration
-    const video2Start = new Date(video2.metadata.creation_time!).getTime() / 1000
-
-    // Увеличиваем допуск до 1 секунды
-    return Math.abs(video1End - video2Start) < 1
-  }
-
-  // Группируем последовательные видео
-  const groupedVideos = videos.reduce((acc: VideoInfo[][], video, index) => {
-    const prevVideo = videos[index - 1]
-
-    if (prevVideo && isSequentialVideos(prevVideo, video)) {
-      acc[acc.length - 1].push(video)
-    } else {
-      acc.push([video])
+    // Если видео не добавлено в существующие группы, создаем новую
+    if (!addedToExisting) {
+      acc.push([currentVideo]);
     }
-    return acc
-  }, [])
+
+    return acc;
+  }, []);
 
   return (
     <div className="w-full">
       {groupedVideos.map((group) => {
         const firstVideo = group[0]
-        const lastVideo = group[group.length - 1]
-
+        
+        // Рассчитываем общую длительность группы как сумму длительностей всех видео
+        const groupDuration = group.reduce((total, video) => 
+          total + video.metadata.format.duration, 0
+        )
+        
         const videoStartTime = new Date(firstVideo.metadata.creation_time!).getTime() / 1000
-        const videoEndTime = new Date(lastVideo.metadata.creation_time!).getTime() / 1000 +
-          lastVideo.metadata.format.duration
+        const videoEndTime = videoStartTime + groupDuration
 
         const startOffset = ((videoStartTime - timeRange.min) / totalDuration) * 100
         const width = ((videoEndTime - videoStartTime) / totalDuration) * 100
+        console.log(`videoStartTime: ${videoStartTime}, videoEndTime: ${videoEndTime}`)
 
         const cameraSegments = selectedSegments.filter(
           (seg) => seg.cameraIndex === videos.indexOf(firstVideo),
