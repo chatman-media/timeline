@@ -1,6 +1,3 @@
-"use client"
-
-import { useState } from "react"
 import { Button } from "./ui/button"
 import { PauseIcon, PlayIcon } from "lucide-react"
 import { distributeScenes } from "@/utils/scene-distribution"
@@ -8,16 +5,15 @@ import { VideoInfo } from "@/types/video"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select"
 import type { BitrateDataPoint, VideoSegment } from "@/types/video"
 import { Slider } from "./ui/slider"
-import { formatTimeWithDecisecond } from "@/lib/utils"
+import { formatDuration } from "@/lib/utils"
 import { SelectedScenesList } from "./selected-scenes-list"
 import { Label } from "./ui/label"
-import { CompilationSettings } from "@/lib/compilation"
-import { Segment } from "next/dist/server/app-render/types"
 import { Timeline } from "./timeline"
+import { CompilationSettings } from "@/types/compilation-settings"
 
 interface CompilationControlsProps {
   mainCamera: number
-  activeVideos: Array<{ index: number }>
+  activeVideos: Array<{ video: VideoInfo; index: number; isActive: boolean }>
   isRecording: boolean
   isPlaying: boolean
   onMainCameraChange: (camera: number) => void
@@ -26,22 +22,14 @@ interface CompilationControlsProps {
   onToggleRecording: () => void
   onTogglePlayback: () => void
   onSegmentsChange: (segments: VideoSegment[]) => void
+  selectedSegments: VideoSegment[]
   timeRange: { min: number; max: number }
   videos: VideoInfo[]
-  bitrateData?: Array<BitrateDataPoint[]>
+  bitrateData: Array<BitrateDataPoint[]>
   onSeek: (time: number) => void
-  compilationSettings: {
-    targetDuration: number
-    minSegmentLength: number
-    maxSegmentLength: number
-    averageSceneDuration: number
-    cameraChangeFrequency: number
-  }
+  compilationSettings: CompilationSettings
   onSettingsChange: (settings: CompilationSettings) => void
-  selectedSegments: Segment[]
-  setSelectedSegments: (segments: Segment[]) => void
-  averageSceneDuration: number
-  setAverageSceneDuration: (duration: number) => void
+  onCreateVideo: () => void
 }
 
 const CompilationControls: React.FC<CompilationControlsProps> = ({
@@ -54,52 +42,32 @@ const CompilationControls: React.FC<CompilationControlsProps> = ({
   onCreateCompilation,
   onTogglePlayback,
   onSegmentsChange,
+  selectedSegments,
   timeRange,
   videos,
   bitrateData,
   onSeek,
   compilationSettings,
   onSettingsChange,
-  setSelectedSegments,
-  selectedSegments,
-  averageSceneDuration = 5,
-  setAverageSceneDuration,
+  onCreateVideo,
 }) => {
-  const [cameraChangeFrequency, setCameraChangeFrequency] = useState(4 / 7)
-
   const handleCreateCompilation = () => {
-    setSelectedSegments([])
-    onSegmentsChange([])
-
-    console.log("Creating compilation with params:", {
-      targetDuration: compilationSettings.targetDuration,
-      timeRange,
-      activeVideos: activeVideos.length,
-      averageSceneDuration,
-      cameraChangeFrequency,
-      bitrateData,
-    })
-
     const scenes = distributeScenes({
       targetDuration: compilationSettings.targetDuration,
       totalDuration: timeRange.max - timeRange.min,
-      numCameras: activeVideos.length,
-      averageSceneDuration,
-      cameraChangeFrequency,
+      numCameras: videos.length,
+      averageSceneDuration: compilationSettings.averageSceneDuration,
+      cameraChangeFrequency: compilationSettings.cameraChangeFrequency,
       bitrateData,
     })
-
-    console.log("Generated scenes:", scenes)
 
     const segments = scenes.map((scene) => ({
       cameraIndex: scene.cameraIndex,
       startTime: timeRange.min + scene.startTime,
       endTime: timeRange.min + scene.startTime + scene.duration,
+      duration: scene.duration,
     }))
 
-    console.log("Generated segments:", segments)
-
-    setSelectedSegments(segments)
     onSegmentsChange(segments)
     onCreateCompilation()
   }
@@ -120,6 +88,13 @@ const CompilationControls: React.FC<CompilationControlsProps> = ({
     onSettingsChange({
       ...compilationSettings,
       averageSceneDuration: value,
+    })
+  }
+
+  const handleCameraChangeFrequencyChange = (value: number) => {
+    onSettingsChange({
+      ...compilationSettings,
+      cameraChangeFrequency: Math.round(value * 7) / 7,
     })
   }
 
@@ -157,7 +132,7 @@ const CompilationControls: React.FC<CompilationControlsProps> = ({
 
         <div className="flex items-center gap-2 flex-1">
           <span className="text-sm whitespace-nowrap text-gray-900 dark:text-gray-100">
-            Длительность: {formatTimeWithDecisecond(compilationSettings.targetDuration)}
+            Длительность: {formatDuration(compilationSettings.targetDuration, 0)}
           </span>
           <Slider
             value={[compilationSettings.targetDuration]}
@@ -192,7 +167,6 @@ const CompilationControls: React.FC<CompilationControlsProps> = ({
               />
               <span className="text-sm w-16 text-right text-muted-foreground">
                 {compilationSettings.averageSceneDuration.toFixed(1)} сек
-                {averageSceneDuration.toFixed(1)} сек
               </span>
             </div>
           </div>
@@ -200,19 +174,15 @@ const CompilationControls: React.FC<CompilationControlsProps> = ({
             <Label>Частота смены камеры</Label>
             <div className="flex flex-col gap-1">
               <Slider
-                value={[cameraChangeFrequency]}
-                onValueChange={([value]) =>
-                  setCameraChangeFrequency(
-                    // Округляем до ближайшей 1/7 для 7 уровней
-                    Math.round(value * 7) / 7,
-                  )}
+                value={[compilationSettings.cameraChangeFrequency]}
+                onValueChange={([value]) => handleCameraChangeFrequencyChange(value)}
                 min={0}
                 max={1}
                 step={1 / 7}
                 className="flex-1"
               />
               <span className="text-sm text-muted-foreground">
-                {getCameraChangeLabel(cameraChangeFrequency)}
+                {getCameraChangeLabel(compilationSettings.cameraChangeFrequency)}
               </span>
             </div>
           </div>
@@ -223,7 +193,13 @@ const CompilationControls: React.FC<CompilationControlsProps> = ({
           onClick={handleCreateCompilation}
           disabled={isRecording || !compilationSettings.targetDuration || activeVideos.length === 0}
         >
-          Создать видео
+          Авто-монтаж
+        </Button>
+        <Button
+          onClick={onCreateVideo}
+          variant="default"
+        >
+          Сохранить
         </Button>
       </div>
 

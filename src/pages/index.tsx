@@ -11,36 +11,18 @@ import CompilationControls from "../components/compilation-controls"
 import { Button } from "@/components/ui/button"
 import { Pause } from "lucide-react"
 import { Play } from "lucide-react"
-import { formatTimeWithDecisecond } from "@/lib/utils"
+import { formatDuration } from "@/lib/utils"
 import { useMemo } from "react"
 import { distributeScenes } from "@/utils/scene-distribution"
 import { ThemeToggle } from "@/components/theme-toggle"
+import type { RecordEntry } from "@/types/record-entry"
+import type { ActiveVideoEntry } from "@/types/active-video-entry"
+import type { VideoSegment } from "@/types/video-segment"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
 dayjs.extend(utc)
 dayjs.extend(timezone)
-
-// Add new interfaces and types
-interface RecordEntry {
-  camera: number
-  startTime: number
-  endTime?: number
-}
-
-// Добавляем isActive в интерфейс для активных видео
-interface ActiveVideoEntry {
-  video: VideoInfo
-  index: number
-  isActive: boolean
-}
-
-interface VideoSegment {
-  cameraIndex: number
-  startTime: number
-  endTime: number
-  duration: number
-}
 
 export default function Home() {
   const [videos, setVideos] = useState<VideoInfo[]>([])
@@ -278,7 +260,7 @@ export default function Home() {
           const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
           const relativeTime = currentTime - (videoTime - startTime)
 
-          // Добавляем более точную ��инхронизацию
+          // Добавляем более точную инхронизацию
           if (videoElement.readyState >= 2) { // Проверяем, что видео готово к воспроизведению
             if (Math.abs(videoElement.currentTime - relativeTime) > 0.1) { // Уменьшаем порог синхронизации
               videoElement.currentTime = relativeTime
@@ -363,7 +345,7 @@ export default function Home() {
       numCameras: videos.length,
       averageSceneDuration: compilationSettings.averageSceneDuration,
       cameraChangeFrequency: compilationSettings.cameraChangeFrequency,
-      bitrateData: videos.map((video) => video.bitrate_data),
+      bitrateData,
     }).map((scene) => ({
       cameraIndex: scene.cameraIndex,
       startTime: scene.startTime,
@@ -376,7 +358,28 @@ export default function Home() {
       .sort((a, b) => a.startTime - b.startTime)
 
     setSelectedSegments(allSegments)
-  }, [videos, compilationSettings, recordings, timeRange.max, timeRange.min, bitrateData])
+  }, [compilationSettings, recordings, timeRange.max, timeRange.min, bitrateData, videos.length])
+
+  // Add new function near other callbacks
+  const createVideo = useCallback(() => {
+    fetch("/api/create-video", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        segments: selectedSegments,
+        videos: videos,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Video creation started:", data)
+      })
+      .catch((error) => {
+        console.error("Error creating video:", error)
+      })
+  }, [selectedSegments, videos])
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
@@ -409,7 +412,7 @@ export default function Home() {
               {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             </Button>
             <span className="text-sm text-gray-600 dark:text-gray-100">
-              {formatTimeWithDecisecond(currentTime)}
+              {formatDuration(currentTime, 0)}
             </span>
 
             <span className="text-xl font-medium ml-auto text-gray-900 dark:text-gray-100">
@@ -428,7 +431,7 @@ export default function Home() {
             )}
           </div>
 
-        <CompilationControls
+          <CompilationControls
             mainCamera={mainCamera}
             activeVideos={activeVideos}
             isRecording={isRecording}
@@ -452,6 +455,7 @@ export default function Home() {
             }}
             compilationSettings={compilationSettings}
             onSettingsChange={setCompilationSettings}
+            onCreateVideo={createVideo}
           />
 
           <div className="w-full">

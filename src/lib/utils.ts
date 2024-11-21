@@ -14,24 +14,19 @@ if (!dayjs.isDuration) {
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
-export const formatDuration = (seconds: number): string => {
+export const formatDuration = (seconds: number, afterComa: number = 3): string => {
   const duration = dayjs.duration(seconds, "seconds")
+
+  if (afterComa === 0) {
+    return duration.format("mm:ss")
+  }
   const ms = Math.floor((seconds % 1) * 1000)
 
-  return `${duration.format("mm:ss")}.${ms.toString().padStart(3, "0")}`
+  return `${duration.format("mm:ss")}.${ms.toString().padStart(afterComa, "0")}`
 }
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
-}
-
-export function formatTimeWithDecisecond(time: number, precision = 0): string {
-  const minutes = Math.floor(time / 60)
-  const seconds = Math.floor(time % 60)
-  const decisecond = precision > 0 ? Math.floor((time % 1) * 10 ** (precision + 1)) : 0
-  return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}${
-    decisecond ? `.${decisecond}` : ""
-  }`
 }
 
 export function formatTimeWithMilliseconds(seconds: number): string {
@@ -54,4 +49,9 @@ export function formatTimeWithMilliseconds(seconds: number): string {
       .toString()
       .padStart(3, "0")
   }`
+}
+
+export function formatBitrate(bitrate: number | undefined): string {
+  if (!bitrate) return "N/A"
+  return `${(bitrate / 1_000_000).toFixed(1)} Mbps`
 }

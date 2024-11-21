@@ -1,23 +1,6 @@
 import { VideoInfo } from "@/types/video"
-
-export interface VideoSegment {
-  camera: number
-  startTime: number
-  duration: number
-  bitrate: number
-}
-
-export interface RecordEntry {
-  camera: number
-  startTime: number
-  endTime?: number
-}
-
-export interface CompilationSettings {
-  targetDuration: number
-  minSegmentLength: number
-  maxSegmentLength: number
-}
+import { VideoSegment } from "@/types/video-segment"
+import { CompilationSettings } from "@/types/compilation-settings"
 
 export function createVideoSegments(
   videos: VideoInfo[],

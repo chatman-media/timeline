@@ -1,4 +1,5 @@
 import { VideoInfo } from "@/types/video"
+import { formatBitrate, formatDuration } from "@/lib/utils"
 
 interface TimelineProps {
   videos: VideoInfo[]
@@ -34,8 +35,9 @@ export const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedS
     if (info2.sequence !== info1.sequence + 1) return false
 
     // Используем metadata для проверки временной последовательности
-    const video1End = +video1.metadata.creation_time! + video1.metadata.format.duration
-    const video2Start = +video2.metadata.creation_time!
+    const video1End = new Date(video1.metadata.creation_time!).getTime() / 1000 +
+      video1.metadata.format.duration
+    const video2Start = new Date(video2.metadata.creation_time!).getTime() / 1000
 
     // Увеличиваем допуск до 1 секунды
     return Math.abs(video1End - video2Start) < 1
@@ -71,11 +73,28 @@ export const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedS
         )
 
         return (
-          <div key={firstVideo.path} className="h-6 w-full relative mb-0.5 flex items-center">
-            <span className="absolute left-0 w-16 text-sm text-muted-foreground">
-              V{videos.indexOf(firstVideo)}
-            </span>
-            <div className="absolute h-4 bg-secondary left-16 right-0">
+          <div key={firstVideo.path} className="h-12 w-full relative mb-1 flex items-center">
+            <div className="absolute left-0 w-48 text-sm text-muted-foreground">
+              <span>V{videos.indexOf(firstVideo) + 1}</span>
+            </div>
+            <div className="absolute h-4 bg-secondary left-8 right-0 flex items-center justify-between px-2 text-xs">
+              <div className="flex gap-2 text-muted-foreground z-10">
+                <span>{firstVideo.metadata.format?.filename.toUpperCase()}</span>
+                <span>•</span>
+                <span>{firstVideo.metadata.video_stream?.codec_name.toUpperCase()}</span>
+                <span>•</span>
+                <span>
+                  {firstVideo.metadata.video_stream?.width}×{firstVideo.metadata.video_stream
+                    ?.height}
+                </span>
+                <span>•</span>
+                <span>{firstVideo.metadata.video_stream?.display_aspect_ratio}</span>
+                <span>•</span>
+                <span>{formatBitrate(firstVideo.metadata.format.bit_rate)}</span>
+                <span>•</span>
+                <span>{formatDuration(firstVideo.metadata.format.duration, 0)}</span>
+              </div>
+
               <div
                 className="absolute h-full bg-secondary-foreground/20"
                 style={{ left: `${startOffset}%`, width: `${width}%` }}

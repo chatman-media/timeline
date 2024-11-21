@@ -1,5 +1,5 @@
 import { VideoInfo } from "@/types/video"
-import { formatTimeWithDecisecond, formatTimeWithMilliseconds } from "@/lib/utils"
+import { formatDuration } from "@/lib/utils"
 
 interface SelectedScenesListProps {
   segments: Array<{
@@ -40,13 +40,13 @@ export function SelectedScenesList({ segments, videos, onSegmentClick }: Selecte
                 <td className="p-1 text-gray-600 dark:text-gray-100">{index + 1}</td>
                 <td className="p-1 text-gray-600 dark:text-gray-100">V{segment.cameraIndex}</td>
                 <td className="p-1 text-gray-600 dark:text-gray-100">
-                  {formatTimeWithMilliseconds(segment.startTime)}
+                  {formatDuration(segment.startTime)}
                 </td>
                 <td className="p-1 text-gray-600 dark:text-gray-100">
-                  {formatTimeWithMilliseconds(segment.endTime)}
+                  {formatDuration(segment.endTime)}
                 </td>
                 <td className="p-1 text-gray-600 dark:text-gray-100">
-                  {formatTimeWithDecisecond(duration, 3)}
+                  {formatDuration(duration, 3)}
                 </td>
                 <td className="p-1 text-gray-600 dark:text-gray-100 font-mono">{fileName}</td>
               </tr>
