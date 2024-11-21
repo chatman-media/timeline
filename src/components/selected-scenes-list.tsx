@@ -12,6 +12,8 @@ interface SelectedScenesListProps {
 }
 
 export function SelectedScenesList({ segments, videos, onSegmentClick }: SelectedScenesListProps) {
+  if (!segments.length) return null
+
   return (
     <div className="border max-h-[200px] overflow-auto">
       <table className="w-full text-xs border-collapse">
