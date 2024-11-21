@@ -1,5 +1,6 @@
-import { BitrateDataPoint, VideoSegment } from "@/types/video"
+import { BitrateDataPoint } from "@/types/video"
 import { SceneDistributionParams, SceneSegment } from "@/types/scenes"
+import { VideoSegment } from "@/types/video-segment"
 
 /**
  * Создает распределение сцен для мультикамерного монтажа
@@ -170,7 +171,7 @@ function selectBestSegments(
       endTime: potentialSegment[potentialSegment.length - 1].endTime,
       cameraIndex: potentialSegment[0].cameraIndex,
       segments: potentialSegment,
-      totalBitrate: totalBitrate,
+      totalBitrate,
     })
   }
 
