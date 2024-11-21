@@ -1,4 +1,4 @@
-import { VideoSegment } from "@/lib/compilation"
+import { VideoSegment } from "@/types/video-segment"
 
 interface SegmentsTimelineProps {
   segments: VideoSegment[]

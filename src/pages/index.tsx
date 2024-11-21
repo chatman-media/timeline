@@ -283,41 +283,41 @@ export default function Home() {
   // Модифицируем updateActiveVideos для определения активных видео
   const updateActiveVideos = useCallback(() => {
     // Создаем мапу для группировки видео по их номеру камеры
-    const videoGroups = new Map<number, VideoInfo[]>();
-    
+    const videoGroups = new Map<number, VideoInfo[]>()
+
     videos.forEach((video, index) => {
       // Извлекаем номер камеры из имени файла или другим способом
       // Предполагаем, что номер камеры содержится в имени файла
-      const cameraNumber = parseInt(video.path.match(/camera[_-]?(\d+)/i)?.[1] || '1');
-      
+      const cameraNumber = parseInt(video.path.match(/camera[_-]?(\d+)/i)?.[1] || "1")
+
       if (!videoGroups.has(cameraNumber)) {
-        videoGroups.set(cameraNumber, []);
+        videoGroups.set(cameraNumber, [])
       }
-      videoGroups.get(cameraNumber)?.push(video);
-    });
+      videoGroups.get(cameraNumber)?.push(video)
+    })
 
     const active = Array.from(videoGroups.entries()).map(([cameraNumber, groupVideos]) => {
-      const isActive = groupVideos.some(video => {
-        if (!video.metadata.creation_time) return false;
-        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000;
+      const isActive = groupVideos.some((video) => {
+        if (!video.metadata.creation_time) return false
+        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
         const startTime = videos[0]?.metadata.creation_time
           ? new Date(videos[0].metadata.creation_time).getTime() / 1000
-          : 0;
-        const videoSeconds = videoTime - startTime;
-        const videoEndSeconds = videoSeconds + video.metadata.format.duration;
-        return videoSeconds <= currentTime && currentTime <= videoEndSeconds;
-      });
+          : 0
+        const videoSeconds = videoTime - startTime
+        const videoEndSeconds = videoSeconds + video.metadata.format.duration
+        return videoSeconds <= currentTime && currentTime <= videoEndSeconds
+      })
 
       return {
         video: groupVideos[0], // Используем первое видео для метаданных
         index: cameraNumber,
         isActive,
-        allVideos: groupVideos // Сохраняем все видео для этой камеры
-      };
-    });
+        allVideos: groupVideos, // Сохраняем все видео для этой камеры
+      }
+    })
 
-    setActiveVideos(active);
-  }, [videos, currentTime]);
+    setActiveVideos(active)
+  }, [videos, currentTime])
 
   // Добавляем эффект для обновления активных видео
   useEffect(() => {

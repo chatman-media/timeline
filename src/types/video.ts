@@ -1,4 +1,5 @@
 import { VideoMetadata } from "@/types/video-metadata"
+import { SceneSegment } from "@/types/scenes"
 
 export interface VideoInfo {
   name: string
@@ -27,4 +28,6 @@ export interface VideoSegment {
   cameraIndex: number
   startTime: number
   endTime: number
+  segments: SceneSegment[]
+  totalBitrate?: number
 }

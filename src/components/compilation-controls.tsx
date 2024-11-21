@@ -10,6 +10,7 @@ import { SelectedScenesList } from "./selected-scenes-list"
 import { Label } from "./ui/label"
 import { Timeline } from "./timeline"
 import { CompilationSettings } from "@/types/compilation-settings"
+import { useEffect, useState } from "react"
 
 interface CompilationControlsProps {
   mainCamera: number
@@ -30,6 +31,7 @@ interface CompilationControlsProps {
   compilationSettings: CompilationSettings
   onSettingsChange: (settings: CompilationSettings) => void
   onCreateVideo: () => void
+  currentTime: number
 }
 
 const CompilationControls: React.FC<CompilationControlsProps> = ({
@@ -50,7 +52,24 @@ const CompilationControls: React.FC<CompilationControlsProps> = ({
   compilationSettings,
   onSettingsChange,
   onCreateVideo,
+  currentTime,
 }) => {
+  const [activeSegmentEnd, setActiveSegmentEnd] = useState<number | null>(null)
+
+  useEffect(() => {
+    if (activeSegmentEnd !== null && isPlaying) {
+      const checkInterval = setInterval(() => {
+        const currentTime = timeRange.min
+        if (currentTime >= activeSegmentEnd) {
+          onTogglePlayback()
+          setActiveSegmentEnd(null)
+        }
+      }, 100)
+
+      return () => clearInterval(checkInterval)
+    }
+  }, [activeSegmentEnd, isPlaying, onTogglePlayback])
+
   const handleCreateCompilation = () => {
     const scenes = distributeScenes({
       targetDuration: compilationSettings.targetDuration,
@@ -207,6 +226,14 @@ const CompilationControls: React.FC<CompilationControlsProps> = ({
         videos={videos}
         timeRange={timeRange}
         selectedSegments={selectedSegments}
+        onPlaySegment={(cameraIndex, startTime, endTime) => {
+          onSeek(startTime)
+          onMainCameraChange(cameraIndex)
+          setActiveSegmentEnd(endTime)
+          if (!isPlaying) {
+            onTogglePlayback()
+          }
+        }}
       />
 
       <SelectedScenesList

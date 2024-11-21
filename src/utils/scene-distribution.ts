@@ -1,17 +1,10 @@
-import { BitrateDataPoint } from "@/types/video"
-
-export interface SceneDistributionParams {
-  targetDuration: number
-  totalDuration: number
-  numCameras: number
-  averageSceneDuration: number
-  cameraChangeFrequency: number
-  bitrateData?: Array<BitrateDataPoint[]>
-}
+import { BitrateDataPoint, VideoSegment } from "@/types/video"
+import { SceneDistributionParams, SceneSegment } from "@/types/scenes"
 
 /**
  * Создает распределение сцен для мультикамерного монтажа
  * @param targetDuration - Желаемая длительность итогового видео в секундах
+ * @param totalDuration - Общая длительность видео в секундах
  * @param numCameras - Количество активных камер
  * @param averageSceneDuration - Средняя длительность сцены в секундах
  * @param cameraChangeFrequency - Частота смены камеры (от 0 до 1)
@@ -27,76 +20,165 @@ export interface SceneDistributionParams {
  */
 export function distributeScenes({
   targetDuration,
+  totalDuration,
   numCameras,
   averageSceneDuration,
   cameraChangeFrequency,
   bitrateData,
 }: SceneDistributionParams) {
-  const scenes: Array<{
-    cameraIndex: number
-    startTime: number
-    duration: number
-  }> = []
+  console.log("Distribution params:", {
+    targetDuration,
+    totalDuration,
+    numCameras,
+    averageSceneDuration,
+    cameraChangeFrequency,
+  })
 
+  // 1. Сначала создаем полную запись с переключением камер
+  const fullRecording: SceneSegment[] = []
+
+  // Используем totalDuration вместо расчета из bitrateData
+  const totalVideoDuration = totalDuration
+
+  // Длительность одного отрезка с одной камерой (минимум 1 секунда)
+  const cameraSegmentDuration = Math.max(1, 1 / cameraChangeFrequency)
+
+  // Создаем полную запись, разбитую по времени переключения камер
   let currentTime = 0
-  let lastCameraIndex = 0
+  while (currentTime < totalVideoDuration) {
+    const segmentEndTime = Math.min(currentTime + cameraSegmentDuration, totalVideoDuration)
 
-  while (currentTime < targetDuration) {
-    // Вычисляем длительность следующей сцены
-    const remainingTime = targetDuration - currentTime
-    const maxSceneDuration = Math.min(averageSceneDuration * 1.5, remainingTime)
-    const minSceneDuration = Math.min(averageSceneDuration * 0.5, remainingTime)
-    const sceneDuration = minSceneDuration + Math.random() * (maxSceneDuration - minSceneDuration)
-
-    // Выбираем следующую камеру
-    let nextCameraIndex
-    if (Math.random() < cameraChangeFrequency) {
-      // Выбираем новую камеру, исключая текущую
-      do {
-        nextCameraIndex = Math.floor(Math.random() * numCameras)
-      } while (nextCameraIndex === lastCameraIndex && numCameras > 1)
-    } else {
-      nextCameraIndex = lastCameraIndex
-    }
-
-    // Добавляем сцену
-    scenes.push({
-      cameraIndex: nextCameraIndex,
-      startTime: currentTime,
-      duration: sceneDuration,
-    })
-
-    lastCameraIndex = nextCameraIndex
-    currentTime += sceneDuration
-  }
-
-  return scenes
-}
-
-export function findBitratePeaks(
-  bitrateData: Array<{ time: number; bitrate: number }>,
-  numPeaks: number,
-): number[] {
-  // Сортируем по bitrate по убыванию
-  const sortedData = [...bitrateData].sort((a, b) => b.bitrate - a.bitrate)
-
-  // Берем топ N пиков, но следим за минимальным расстоянием между ними
-  const minDistance = 5 // минимум 5 секунд между пиками
-  const peaks: number[] = []
-
-  for (const data of sortedData) {
-    if (peaks.length >= numPeaks) break
-
-    // Проверяем, достаточно ли далеко этот пик от уже выбранных
-    const isFarEnough = peaks.every(
-      (existingPeak) => Math.abs(data.time - existingPeak) >= minDistance,
+    // Для каждого временного отрезка определяем лучшую камеру
+    const bestCamera = findBestCameraForSegment(
+      currentTime,
+      segmentEndTime,
+      bitrateData,
+      numCameras,
     )
 
-    if (isFarEnough) {
-      peaks.push(data.time)
-    }
+    fullRecording.push({
+      startTime: currentTime,
+      endTime: segmentEndTime,
+      cameraIndex: bestCamera,
+      totalBitrate: calculateTotalBitrate(
+        currentTime,
+        segmentEndTime,
+        bitrateData,
+      ),
+    })
+
+    currentTime = segmentEndTime
   }
 
-  // Сортируем пики по времени
-  return peaks.sort((a, b) => a - b)
+  // 2. Теперь выбираем лучшие сегменты заданной длительности
+  const numSegmentsNeeded = Math.ceil(targetDuration / averageSceneDuration)
+  const segmentsToSelect = selectBestSegments(
+    fullRecording,
+    numSegmentsNeeded,
+    averageSceneDuration,
+  )
+
+  console.log("Generated segments:", {
+    totalSegments: segmentsToSelect.length,
+    fullRecordingLength: fullRecording.length,
+    averageSceneDuration,
+    cameraChangeFrequency,
+  })
+
+  return segmentsToSelect
+}
+
+function findBestCameraForSegment(
+  startTime: number,
+  endTime: number,
+  bitrateData: Array<BitrateDataPoint[]> | undefined,
+  numCameras: number,
+): number {
+  if (!bitrateData) return Math.floor(Math.random() * numCameras)
+
+  const cameraBitrates = new Array(numCameras).fill(0)
+
+  bitrateData.forEach((cameraBitrate, cameraIndex) => {
+    const relevantPoints = cameraBitrate.filter(
+      (point) => point.time >= startTime && point.time <= endTime,
+    )
+    if (relevantPoints.length > 0) {
+      cameraBitrates[cameraIndex] = relevantPoints.reduce(
+        (sum, point) => sum + point.bitrate,
+        0,
+      ) / relevantPoints.length
+    }
+  })
+
+  // Возвращаем индекс камеры с максимальным битрейтом
+  const maxBitrateIndex = cameraBitrates.indexOf(Math.max(...cameraBitrates))
+  return maxBitrateIndex >= 0 ? maxBitrateIndex : 0
+}
+
+function calculateTotalBitrate(
+  startTime: number,
+  endTime: number,
+  bitrateData: Array<BitrateDataPoint[]> | undefined,
+): number {
+  if (!bitrateData) return 0
+
+  let totalBitrate = 0
+  bitrateData.forEach((cameraBitrate) => {
+    const relevantPoints = cameraBitrate.filter(
+      (point) => point.time >= startTime && point.time <= endTime,
+    )
+    if (relevantPoints.length > 0) {
+      totalBitrate += relevantPoints.reduce(
+        (sum, point) => sum + point.bitrate,
+        0,
+      ) / relevantPoints.length
+    }
+  })
+  return totalBitrate
+}
+
+function selectBestSegments(
+  fullRecording: SceneSegment[],
+  numSegments: number,
+  averageSceneDuration: number,
+): VideoSegment[] {
+  // Проверяем, что у нас есть записи
+  if (!fullRecording.length) {
+    return []
+  }
+
+  const segmentDuration = fullRecording[0].endTime - fullRecording[0].startTime
+  const segmentsInScene = Math.floor(averageSceneDuration / segmentDuration)
+
+  // Проверяем, что у нас достаточно сегментов
+  if (segmentsInScene <= 0 || fullRecording.length < segmentsInScene) {
+    return []
+  }
+
+  const selectedSegments: VideoSegment[] = []
+
+  // Ищем сегменты с наибольшим суммарным битрейтом
+  for (let i = 0; i < fullRecording.length - segmentsInScene; i++) {
+    const potentialSegment = fullRecording.slice(i, i + segmentsInScene)
+    const totalBitrate = potentialSegment.reduce(
+      (sum, segment) => sum + (segment.totalBitrate || 0),
+      0,
+    )
+
+    selectedSegments.push({
+      startTime: potentialSegment[0].startTime,
+      endTime: potentialSegment[potentialSegment.length - 1].endTime,
+      cameraIndex: potentialSegment[0].cameraIndex,
+      segments: potentialSegment,
+      totalBitrate: totalBitrate,
+    })
+  }
+
+  // Сортируем по битрейту и берем лучшие
+  return selectedSegments
+    .sort((a, b) =>
+      (b.segments.reduce((sum, s) => sum + (s.totalBitrate || 0), 0)) -
+      (a.segments.reduce((sum, s) => sum + (s.totalBitrate || 0), 0))
+    )
+    .slice(0, numSegments)
 }
