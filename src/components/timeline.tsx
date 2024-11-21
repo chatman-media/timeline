@@ -79,11 +79,6 @@ export const Timeline: React.FC<TimelineProps> = (
     return acc
   }, [])
 
-  const convertTimeToSeconds = (timeString: string) => {
-    const [minutes, seconds] = timeString.split(":").map(Number)
-    return minutes * 60 + seconds
-  }
-
   return (
     <div className="w-full">
       {groupedVideos.map((group) => {
@@ -133,85 +128,47 @@ export const Timeline: React.FC<TimelineProps> = (
             <div className="absolute left-0 w-8 text-xs text-muted-foreground">
               <span>V{videos.indexOf(firstVideo) + 1}</span>
             </div>
-            <div className="absolute h-4 bg-secondary left-8 right-0 flex items-center space-between px-2 text-[10px]">
-              <div className="flex gap-2 text-[11px] text-muted-foreground z-10 w-full">
-                <span>
-                  {group.length > 1
-                    ? `${group.length} FILES`
-                    : firstVideo.metadata.format?.filename.toUpperCase()}
-                </span>
-                <span>•</span>
-                <span>{firstVideo.metadata.video_stream?.codec_name.toUpperCase()}</span>
-                <span>•</span>
-                <span>
-                  {firstVideo.metadata.video_stream?.width}×{firstVideo.metadata.video_stream
-                    ?.height}
-                </span>
-                <span>•</span>
-                <span>{firstVideo.metadata.video_stream?.display_aspect_ratio}</span>
-                <span>•</span>
-                <span>
-                  {formatBitrate(
-                    group.reduce((sum, video) => sum + video.metadata.format.bit_rate, 0) /
-                      group.length,
-                  )}
-                </span>
-                <div className="text-[11px] text-muted-foreground z-10 text-right">
+            <div className="absolute h-4 bg-secondary left-8 right-0">
+              <div className="absolute inset-0 flex items-center px-2 justify-between">
+                <div className="flex gap-2 text-[11px] text-muted-foreground">
+                  <span>{group.length > 1 ? `${group.length} FILES` : firstVideo.metadata.format?.filename.toUpperCase()}</span>
+                  <span>•</span>
+                  <span>{firstVideo.metadata.video_stream?.codec_name.toUpperCase()}</span>
+                  <span>•</span>
+                  <span>
+                    {firstVideo.metadata.video_stream?.width}×{firstVideo.metadata.video_stream
+                      ?.height}
+                  </span>
+                  <span>•</span>
+                  <span>{firstVideo.metadata.video_stream?.display_aspect_ratio}</span>
+                  <span>•</span>
+                  <span>
+                    {formatBitrate(
+                      group.reduce((sum, video) => sum + video.metadata.format.bit_rate, 0) /
+                        group.length,
+                    )}
+                  </span>
+                </div>
+                <div className="text-[11px] text-muted-foreground">
                   {formatDuration(groupDuration, 0)}
                 </div>
               </div>
 
-              <div
-                className="absolute h-full bg-secondary-foreground/20 relative"
+              <div 
+                className="absolute h-full bg-secondary-foreground/20"
                 style={{ left: `${startOffset}%`, width: `${width}%` }}
               >
-                {cameraSegments.map((segment, idx) => {
-                  const startSeconds = typeof segment.startTime === "string"
-                    ? convertTimeToSeconds(segment.startTime)
-                    : segment.startTime
-                  const endSeconds = typeof segment.endTime === "string"
-                    ? convertTimeToSeconds(segment.endTime)
-                    : segment.endTime
-
-                  // Нормализуем значения относительно начала timeRange
-                  const segStartOffset = Math.max(
-                    0,
-                    Math.min(100, ((startSeconds - timeRange.min) / totalDuration) * 100),
-                  )
-                  const segWidth = Math.max(
-                    0,
-                    Math.min(100, ((endSeconds - startSeconds) / totalDuration) * 100),
-                  )
-
-                  // Добавляем отладочный вывод
-                  console.log("Segment timing:", {
-                    originalStart: segment.startTime,
-                    originalEnd: segment.endTime,
-                    normalizedStart: startSeconds - timeRange.min,
-                    normalizedEnd: endSeconds - timeRange.min,
-                    timeRange,
-                    segStartOffset,
-                    segWidth,
-                  })
-
-                  return (
-                    <div
-                      key={idx}
-                      className="absolute h-full bg-yellow-400 hover:bg-yellow-500 transition-colors cursor-pointer"
-                      style={{
-                        left: `${segStartOffset}%`,
-                        width: `${segWidth}%`,
-                        zIndex: 10,
-                      }}
-                      onClick={() =>
-                        onPlaySegment(
-                          segment.cameraIndex,
-                          startSeconds,
-                          endSeconds,
-                        )}
-                    />
-                  )
-                })}
+                {cameraSegments.map((segment, idx) => (
+                  <div
+                    key={idx}
+                    className="absolute h-full bg-yellow-400 hover:bg-yellow-500 transition-colors cursor-pointer"
+                    style={{
+                      left: `${((segment.startTime - timeRange.min) / totalDuration) * 100}%`,
+                      width: `${((segment.endTime - segment.startTime) / totalDuration) * 100}%`
+                    }}
+                    onClick={() => onPlaySegment(segment.cameraIndex, segment.startTime, segment.endTime)}
+                  />
+                ))}
               </div>
             </div>
           </div>

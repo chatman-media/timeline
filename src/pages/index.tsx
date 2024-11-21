@@ -6,9 +6,8 @@ import timezone from "dayjs/plugin/timezone"
 import { Slider } from "@/components/ui/slider"
 import type { BitrateDataPoint, VideoInfo } from "@/types/video"
 import { ActiveVideo } from "@/components/active-video"
-import CompilationControls from "../components/compilation-controls"
 import { Button } from "@/components/ui/button"
-import { Pause } from "lucide-react"
+import { Pause, PauseIcon, PlayIcon } from "lucide-react"
 import { Play } from "lucide-react"
 import { formatDuration } from "@/lib/utils"
 import { useMemo } from "react"
@@ -16,7 +15,17 @@ import { distributeScenes } from "@/utils/scene-distribution"
 import { ThemeToggle } from "@/components/theme-toggle"
 import type { RecordEntry } from "@/types/record-entry"
 import type { ActiveVideoEntry } from "@/types/active-video-entry"
-import type { VideoSegment } from "@/types/video-segment"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { SelectedScenesList } from "@/components/selected-scenes-list"
+import { Label } from "@/components/ui/label"
+import { Timeline } from "@/components/timeline"
+import { VideoSegment } from "@/types/video-segment"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -70,13 +79,92 @@ export default function Home() {
       }), [recordings, baseVideoTime])
   }
 
+  const [activeSegmentEnd, setActiveSegmentEnd] = useState<number | null>(null)
+
   useEffect(() => {
+    if (activeSegmentEnd !== null && isPlaying) {
+      const checkInterval = setInterval(() => {
+        const currentTime = timeRange.min
+        if (currentTime >= activeSegmentEnd) {
+          setActiveSegmentEnd(null)
+        }
+      }, 100)
+
+      return () => clearInterval(checkInterval)
+    }
+  }, [activeSegmentEnd, isPlaying])
+
+  const handleCreateCompilation = () => {
+    const scenes = distributeScenes({
+      targetDuration: compilationSettings.targetDuration,
+      totalDuration: timeRange.max - timeRange.min,
+      numCameras: videos.length,
+      averageSceneDuration: compilationSettings.averageSceneDuration,
+      cameraChangeFrequency: compilationSettings.cameraChangeFrequency,
+      bitrateData,
+    })
+
+    const segments = scenes.map((scene) => ({
+      cameraIndex: scene.cameraIndex,
+      startTime: timeRange.min + scene.startTime,
+      endTime: timeRange.min + scene.startTime + scene.duration,
+      duration: scene.duration,
+    }))
+
+    setSelectedSegments(segments as VideoSegment[])
+    createCompilation()
+  }
+
+  const maxDuration = timeRange.max - timeRange.min
+
+  const getCameraChangeLabel = (value: number): string => {
+    if (value <= 1 / 7) return "Очень редко"
+    if (value <= 2 / 7) return "Редко"
+    if (value <= 3 / 7) return "Умеренно редко"
+    if (value <= 4 / 7) return "Средне"
+    if (value <= 5 / 7) return "Умеренно часто"
+    if (value <= 6 / 7) return "Часто"
+    return "Очень часто"
+  }
+
+  const handleTargetDurationChange = (value: number) => {
+    setCompilationSettings({
+      ...compilationSettings,
+      targetDuration: value,
+    })
+  }
+
+  const handleSceneDurationChange = (value: number) => {
+    setCompilationSettings({
+      ...compilationSettings,
+      averageSceneDuration: value,
+    })
+  }
+
+  const handleCameraChangeFrequencyChange = (value: number) => {
+    setCompilationSettings({
+      ...compilationSettings,
+      cameraChangeFrequency: Math.round(value * 7) / 7,
+    })
+  }
+
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    setIsLoading(true)
     fetch("/api/videos")
       .then((res) => res.json())
       .then((data) => {
-        // Используем bitrate_data из каждого видео
+        console.log("Received video data:", data)
+        
+        if (!data.videos || !Array.isArray(data.videos) || data.videos.length === 0) {
+          console.error("No videos received from API")
+          return
+        }
+
         const bitrateData = data.videos.map((video: VideoInfo) => video.bitrate_data || [])
         setBitrateData(bitrateData)
+        
         // Сортируем видео по времени создания
         const sortedVideos = data.videos.sort((a: VideoInfo, b: VideoInfo) => {
           const timeA = a.metadata.creation_time ? new Date(a.metadata.creation_time).getTime() : 0
@@ -106,7 +194,15 @@ export default function Home() {
         // Устаавливаем начаьное значение слайдера в максимум
         setCurrentTime(timeRange.min)
       })
-      .catch((error) => console.error("Error fetching videos:", error))
+      .catch((error) => {
+        console.error("Error fetching videos:", error)
+        if (error instanceof Response) {
+          error.text().then(text => console.error("Response text:", text))
+        }
+      })
+      .finally(() => {
+        setIsLoading(false)
+      })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -282,6 +378,15 @@ export default function Home() {
 
   // Модифицируем updateActiveVideos для определения активных видео
   const updateActiveVideos = useCallback(() => {
+    console.log("Updating active videos:", {
+      videosCount: videos.length,
+      currentTime,
+      videoGroups: videos.map(v => ({
+        path: v.path,
+        creationTime: v.metadata.creation_time
+      }))
+    })
+    
     // Создаем мапу для группировки видео по их номеру камеры
     const videoGroups = new Map<number, VideoInfo[]>()
 
@@ -373,134 +478,225 @@ export default function Home() {
     const allSegments = [...manualSegments, ...autoSegments]
       .sort((a, b) => a.startTime - b.startTime)
 
-    setSelectedSegments(allSegments)
+    setSelectedSegments(allSegments as VideoSegment[])
   }, [compilationSettings, recordings, timeRange.max, timeRange.min, bitrateData, videos.length])
-
-  // Add new function near other callbacks
-  const createVideo = useCallback(() => {
-    fetch("/api/create-video", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        segments: selectedSegments,
-        videos: videos,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Video creation started:", data)
-      })
-      .catch((error) => {
-        console.error("Error creating video:", error)
-      })
-  }, [selectedSegments, videos])
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
-      <main className="flex gap-16 w-full px-12 sm:px-16 py-16">
-        <div className="w-[70%] flex flex-col gap-8">
-          <div className="flex items-center gap-6 w-full">
-            <span className="flex items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
-              {activeCamera}
-            </span>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={toggleRecording}
-              className={`h-12 w-12 border border-gray-200 dark:border-gray-700 ${
-                isRecording
-                  ? "bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
-              }`}
-            >
-              <div
-                className={`h-4 w-4 ${isRecording ? "bg-white" : "bg-red-500 dark:bg-red-600"}`}
-              />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={togglePlayback}
-              className="h-8 w-8 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            </Button>
-            <span className="text-sm text-gray-600 dark:text-gray-100">
-              {formatDuration(currentTime, 0)}
-            </span>
-
-            <span className="text-xl font-medium ml-auto text-gray-900 dark:text-gray-100">
-              {dayjs(videos[0]?.metadata?.creation_time)
-                .add(currentTime, "second")
-                .format("HH:mm:ss")}
-            </span>
-
-            {recordings.length > 0 && (
-              <div className="ml-6 text-sm text-gray-600 dark:text-gray-100">
-                <RecordingsList
-                  recordings={recordings}
-                  baseVideoTime={videos[0]?.metadata.creation_time ?? ""}
+      {isLoading ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-gray-600 dark:text-gray-400">Загрузка видео...</div>
+        </div>
+      ) : videos.length === 0 ? (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-gray-600 dark:text-gray-400">Видео не найдены</div>
+        </div>
+      ) : (
+        <main className="flex gap-16 w-full px-12 sm:px-16 py-16">
+          <div className="w-[70%] flex flex-col gap-8">
+            <div className="flex items-center gap-6 w-full">
+              <span className="flex items-center justify-center w-12 h-12 bg-gray-100 dark:bg-gray-800 text-base text-4xl font-extrabold tracking-tight lg:text-3xl text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700">
+                {activeCamera}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={toggleRecording}
+                className={`h-12 w-12 border border-gray-200 dark:border-gray-700 ${
+                  isRecording
+                    ? "bg-red-500 dark:bg-red-600 text-white hover:bg-red-600 dark:hover:bg-red-700"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
+              >
+                <div
+                  className={`h-4 w-4 ${isRecording ? "bg-white" : "bg-red-500 dark:bg-red-600"}`}
                 />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={togglePlayback}
+                className="h-8 w-8 border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+              </Button>
+              <span className="text-sm text-gray-600 dark:text-gray-100">
+                {formatDuration(currentTime, 0)}
+              </span>
+
+              <span className="text-xl font-medium ml-auto text-gray-900 dark:text-gray-100">
+                {dayjs(videos[0]?.metadata?.creation_time)
+                  .add(currentTime, "second")
+                  .format("HH:mm:ss")}
+              </span>
+
+              {recordings.length > 0 && (
+                <div className="ml-6 text-sm text-gray-600 dark:text-gray-100">
+                  <RecordingsList
+                    recordings={recordings}
+                    baseVideoTime={videos[0]?.metadata.creation_time ?? ""}
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2  text-gray-900 dark:text-gray-100">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={togglePlayback}
+                  >
+                    {isPlaying ? <PauseIcon className="h-4 w-4" /> : <PlayIcon className="h-4 w-4" />}
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                  <span className="text-sm">Главная камера:</span>
+                  <Select
+                    value={mainCamera.toString()}
+                    onValueChange={(value) => setMainCamera(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activeVideos.map(({ index }) => (
+                        <SelectItem key={index} value={index.toString()}>
+                          V{index}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-sm whitespace-nowrap text-gray-900 dark:text-gray-100">
+                    Длительность: {formatDuration(compilationSettings.targetDuration, 0)}
+                  </span>
+                  <Slider
+                    value={[compilationSettings.targetDuration]}
+                    onValueChange={([value]) => handleTargetDurationChange(value)}
+                    min={2}
+                    max={maxDuration}
+                    step={1}
+                    className="w-[200px]"
+                  />
+                </div>
+
+                {
+                  /* <Button
+          variant={isRecording ? "destructive" : "outline"}
+          onClick={onToggleRecording}
+        >
+          {isRecording ? "Stop Recording" : "Start Recording"}
+        </Button> */
+                }
+
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2">
+                  <div className="space-y-2 text-gray-900 dark:text-gray-100">
+                    <Label>Средняя длительность сцены</Label>
+                    <div className="flex items-center gap-2">
+                      <Slider
+                        value={[compilationSettings.averageSceneDuration]}
+                        onValueChange={([value]) => handleSceneDurationChange(value)}
+                        min={0.5}
+                        max={10}
+                        step={0.1}
+                        className="flex-1"
+                      />
+                      <span className="text-sm w-16 text-right text-muted-foreground">
+                        {compilationSettings.averageSceneDuration.toFixed(1)} сек
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-gray-900 dark:text-gray-100">
+                    <Label>Частота смены камеры</Label>
+                    <div className="flex flex-col gap-1">
+                      <Slider
+                        value={[compilationSettings.cameraChangeFrequency]}
+                        onValueChange={([value]) => handleCameraChangeFrequencyChange(value)}
+                        min={0}
+                        max={1}
+                        step={1 / 7}
+                        className="flex-1"
+                      />
+                      <span className="text-sm text-muted-foreground">
+                        {getCameraChangeLabel(compilationSettings.cameraChangeFrequency)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <Button
+                  // variant="outline"
+                  onClick={handleCreateCompilation}
+                  disabled={isRecording || !compilationSettings.targetDuration ||
+                    activeVideos.length === 0}
+                >
+                  Авто-монтаж
+                </Button>
+                <Button
+                  onClick={() => {}}
+                  variant="default"
+                >
+                  Сохранить
+                </Button>
               </div>
-            )}
-          </div>
 
-          <CompilationControls
-            mainCamera={mainCamera}
-            activeVideos={activeVideos}
-            isRecording={isRecording}
-            isPlaying={isPlaying}
-            onMainCameraChange={setMainCamera}
-            onTargetDurationChange={(duration) =>
-              setCompilationSettings((prev) => ({ ...prev, targetDuration: duration }))}
-            onCreateCompilation={createCompilation}
-            onToggleRecording={toggleRecording}
-            onTogglePlayback={togglePlayback}
-            onSegmentsChange={setSelectedSegments}
-            selectedSegments={selectedSegments}
-            timeRange={timeRange}
-            videos={videos}
-            bitrateData={bitrateData}
-            onSeek={(time) => {
-              const videoElement = videoRefs.current[`active-${activeCamera}`]
-              if (videoElement) {
-                videoElement.currentTime = time
-              }
-            }}
-            compilationSettings={compilationSettings}
-            onSettingsChange={setCompilationSettings}
-            onCreateVideo={createVideo}
-          />
-
-          <div className="w-full">
-            <Slider
-              defaultValue={[0]}
-              max={timeRange.max - timeRange.min}
-              step={1}
-              value={[currentTime]}
-              onValueChange={handleTimeChange}
-              className="w-full"
-            />
-          </div>
-        </div>
-
-        {/* Правая часть с активным видео */}
-        <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
-          {activeVideos
-            .filter(({ index }) => index === activeCamera)
-            .map(({ video, index }) => (
-              <ActiveVideo
-                key={`active-${video.path}`}
-                video={{ ...video, activeIndex: index - 1 }}
-                isPlaying={isPlaying}
-                videoRefs={videoRefs}
+              <Timeline
+                videos={videos}
+                timeRange={timeRange}
+                selectedSegments={selectedSegments}
+                onPlaySegment={(cameraIndex, startTime, endTime) => {
+                  const videoElement = videoRefs.current[`active-${activeCamera}`]
+                if (videoElement) {
+                  videoElement.currentTime = startTime
+                }
+                  // setMainCamera(cameraIndex)
+                  // setActiveSegmentEnd(endTime)
+                  // if (!isPlaying) {
+                  //   togglePlayback()
+                  // }
+                }}
               />
-            ))}
-        </div>
-        <ThemeToggle />
-      </main>
+
+              <SelectedScenesList
+                segments={selectedSegments}
+                videos={videos}
+                onSegmentClick={() => {}}
+              />
+            </div>
+
+            <div className="w-full">
+              <Slider
+                defaultValue={[0]}
+                max={timeRange.max - timeRange.min}
+                step={1}
+                value={[currentTime]}
+                onValueChange={handleTimeChange}
+                className="w-full"
+              />
+            </div>
+          </div>
+
+          {/* Правая часть с активным видео */}
+          <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
+            {activeVideos
+              .filter(({ index }) => index === activeCamera)
+              .map(({ video, index }) => (
+                <ActiveVideo
+                  key={`active-${video.path}`}
+                  video={{ ...video, activeIndex: index - 1 }}
+                  isPlaying={isPlaying}
+                  videoRefs={videoRefs}
+                />
+              ))}
+          </div>
+          <ThemeToggle />
+        </main>
+      )}
     </div>
   )
 }

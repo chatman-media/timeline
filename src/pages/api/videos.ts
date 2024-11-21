@@ -5,9 +5,7 @@ import path from "path"
 import { promisify } from "util"
 import ffmpeg, { ffprobe } from "fluent-ffmpeg"
 import process from "node:process"
-import { VideoStream } from "@/types/video-stream"
-import { VideoMetadata } from "@/types/video-metadata"
-import { FFProbeData } from "@/types/ffprobe"
+import { AudioStream, VideoMetadata, VideoStream } from "@/types/metadata"
 import { VideoInfo } from "@/types/video"
 
 // Промисифицируем ffprobe
@@ -73,7 +71,7 @@ export default async function handler(
           (stream: VideoStream) => stream.codec_type === "video",
         )
         const audioStream = probeData.streams.find(
-          (stream: VideoStream) => stream.codec_type === "audio",
+          (stream: AudioStream) => stream.codec_type === "audio",
         )
 
         // Формируем метаданные
