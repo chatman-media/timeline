@@ -73,12 +73,12 @@ export const Timeline: React.FC<TimelineProps> = ({ videos, timeRange, selectedS
         )
 
         return (
-          <div key={firstVideo.path} className="h-12 w-full relative mb-1 flex items-center">
-            <div className="absolute left-0 w-48 text-sm text-muted-foreground">
+          <div key={firstVideo.path} className="h-5 w-full relative mb-1 flex items-center">
+            <div className="absolute left-0 w-48 text-xs text-muted-foreground">
               <span>V{videos.indexOf(firstVideo) + 1}</span>
             </div>
-            <div className="absolute h-4 bg-secondary left-8 right-0 flex items-center justify-between px-2 text-xs">
-              <div className="flex gap-2 text-muted-foreground z-10">
+            <div className="absolute h-4 bg-secondary left-8 right-0 flex items-center justify-between px-2 text-[10px]">
+              <div className="flex gap-2 text-[11px] text-muted-foreground z-10">
                 <span>{firstVideo.metadata.format?.filename.toUpperCase()}</span>
                 <span>•</span>
                 <span>{firstVideo.metadata.video_stream?.codec_name.toUpperCase()}</span>
