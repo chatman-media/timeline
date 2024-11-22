@@ -41,33 +41,33 @@ export function distributeScenes({
   const scenes: VideoSegment[] = []
   let currentTime = timeRange.min
   let lastCamera = mainCamera
-  
+
   // Вычисляем общий доступный диапазон времени
   const totalTimeRange = timeRange.max - timeRange.min
-  
+
   // Вычисляем примерное количество сегментов
   const numberOfSegments = Math.ceil(targetDuration / averageSceneDuration)
-  
+
   // Вычисляем шаг для равномерного распределения по всему диапазону
   const timeStep = totalTimeRange / numberOfSegments
 
   for (let i = 0; i < numberOfSegments; i++) {
     // Определяем камеру для текущей сцены
     let selectedCamera = mainCamera
-    
+
     // Если пришло время менять камеру (на основе cameraChangeFrequency)
     if (Math.random() < cameraChangeFrequency) {
       // Выбираем случайную камеру, но с учетом mainCameraProb для главной камеры
       if (Math.random() > mainCameraProb) {
         // Выбираем любую камеру, кроме текущей
         const availableCameras = Array.from({ length: numCameras }, (_, i) => i)
-          .filter(i => i !== lastCamera)
+          .filter((i) => i !== lastCamera)
         selectedCamera = availableCameras[Math.floor(Math.random() * availableCameras.length)]
       }
     }
 
     // Находим подходящее видео для выбранной камеры
-    const cameraVideos = videos.filter(video => {
+    const cameraVideos = videos.filter((video) => {
       const cameraMatch = video.path.match(/camera[_-]?(\d+)/i)
       const videoCamera = cameraMatch ? parseInt(cameraMatch[1]) - 1 : 0
       return videoCamera === selectedCamera
@@ -75,11 +75,11 @@ export function distributeScenes({
 
     const duration = Math.min(
       averageSceneDuration * (0.8 + Math.random() * 0.4), // ±20% от средней длительности
-      timeStep // Ограничиваем длительность шагом
+      timeStep, // Ограничиваем длительность шагом
     )
 
     // Находим подходящее видео для текущего времени
-    const videoFile = cameraVideos.find(video => {
+    const videoFile = cameraVideos.find((video) => {
       const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
       const videoEndTime = videoStartTime + video.metadata.format.duration
       return currentTime >= videoStartTime && (currentTime + duration) <= videoEndTime

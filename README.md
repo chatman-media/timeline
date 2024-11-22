@@ -15,11 +15,15 @@ ffmpeg -version
 Install deps and run server
 
 ```bash
-deno i
+deno i # to install deps
 
-deno task dev
+deno task dev # to start dev server
 
-deno lint
+deno lint --fix # to lint code
 
-deno test
+deno fmt # to format code
+
+deno test # to run tests
+
+deno outdated --recursive --update --latest # to update deps to latest versions (if needed)
 ```
