@@ -50,7 +50,7 @@ export default function Home() {
     cameraChangeFrequency: 4 / 7,
   })
   const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
-  const [bitrateData, setBitrateData] = useState<Array<BitrateDataPoint[]>>([])
+  const [, setBitrateData] = useState<Array<BitrateDataPoint[]>>([])
 
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()

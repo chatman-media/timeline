@@ -39,27 +39,30 @@ export function distributeScenes({
   videos,
 }: SceneDistributionParams): VideoSegment[] {
   const scenes: VideoSegment[] = []
-  let currentTime = timeRange.min
   let lastCamera = mainCamera
+
+  // Генерируем сегменты времени с нормальным распределением
+  const timeSegments = generateGaussianSceneDurations(
+    targetDuration,
+    averageSceneDuration,
+  )
 
   // Вычисляем общий доступный диапазон времени
   const totalTimeRange = timeRange.max - timeRange.min
+  
+  // Вычисляем коэффициент масштабирования для распределения по всему диапазону
+  const timeScale = totalTimeRange / targetDuration
 
-  // Вычисляем примерное количество сегментов
-  const numberOfSegments = Math.ceil(targetDuration / averageSceneDuration)
-
-  // Вычисляем шаг для равномерного распределения по всему диапазону
-  const timeStep = totalTimeRange / numberOfSegments
-
-  for (let i = 0; i < numberOfSegments; i++) {
+  for (const segment of timeSegments) {
+    // Масштабируем время начала к полному диапазону
+    const currentTime = timeRange.min + (segment.startTime * timeScale)
+    
     // Определяем камеру для текущей сцены
     let selectedCamera = mainCamera
 
     // Если пришло время менять камеру (на основе cameraChangeFrequency)
     if (Math.random() < cameraChangeFrequency) {
-      // Выбираем случайную камеру, но с учетом mainCameraProb для главной камеры
       if (Math.random() > mainCameraProb) {
-        // Выбираем любую камеру, кроме текущей
         const availableCameras = Array.from({ length: numCameras }, (_, i) => i)
           .filter((i) => i !== lastCamera)
         selectedCamera = availableCameras[Math.floor(Math.random() * availableCameras.length)]
@@ -73,10 +76,8 @@ export function distributeScenes({
       return videoCamera === selectedCamera
     })
 
-    const duration = Math.min(
-      averageSceneDuration * (0.8 + Math.random() * 0.4), // ±20% от средней длительности
-      timeStep, // Ограничиваем длительность шагом
-    )
+    // Масштабируем длительность к полному диапазону
+    const duration = segment.duration * timeScale
 
     // Находим подходящее видео для текущего времени
     const videoFile = cameraVideos.find((video) => {
@@ -96,9 +97,6 @@ export function distributeScenes({
       })
       lastCamera = selectedCamera
     }
-
-    // Увеличиваем текущее время на шаг
-    currentTime += timeStep
   }
 
   return scenes

@@ -29,3 +29,15 @@ deno test # to run tests
 
 deno outdated --recursive --update --latest # to update deps to latest versions (if needed)
 ```
+
+## Development
+
+This project uses pre-commit hooks to ensure code quality. To set up:
+
+```bash
+# Install pre-commit
+brew install pre-commit
+
+# Install the pre-commit hooks
+pre-commit install
+```

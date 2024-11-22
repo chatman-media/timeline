@@ -28,7 +28,7 @@ function formatDurationForDisplay(durationInSeconds: number): string {
   return `${seconds.toString().padStart(2, "0")}.${ms.toString().padStart(3, "0")}`
 }
 
-export function SelectedScenesList({ segments, videos, onSegmentClick }: SelectedScenesListProps) {
+export function SelectedScenesList({ segments, onSegmentClick }: SelectedScenesListProps) {
   return (
     <div className="border max-h-[200px] overflow-auto">
       <table className="w-full text-xs border-collapse">
