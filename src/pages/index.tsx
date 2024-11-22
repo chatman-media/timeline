@@ -43,10 +43,10 @@ export default function Home() {
   const [activeVideos, setActiveVideos] = useState<ActiveVideoEntry[]>([])
   const [mainCamera, setMainCamera] = useState(1)
   const [compilationSettings, setCompilationSettings] = useState({
-    targetDuration: 300,
-    minSegmentLength: 0.5,
-    maxSegmentLength: 10,
-    averageSceneDuration: 3,
+    targetDuration: 900,
+    minSegmentLength: 0.2,
+    maxSegmentLength: 100,
+    averageSceneDuration: 5,
     cameraChangeFrequency: 4 / 7,
   })
   const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])

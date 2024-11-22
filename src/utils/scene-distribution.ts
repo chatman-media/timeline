@@ -1,5 +1,7 @@
 import { VideoSegment } from "@/types/video-segment"
 import { VideoInfo } from "@/types/video"
+import { generateGaussianSceneDurations } from "./generate-scene-durations"
+
 export interface SceneDistributionParams {
   targetDuration: number
   mainCamera: number
@@ -131,43 +133,4 @@ export function distributeScenes({
   }
 
   return scenes
-}
-
-interface TimeSegment {
-  startTime: number
-  duration: number
-}
-
-function generateGaussianSceneDurations(
-  totalDuration: number,
-  meanDuration: number,
-  standardDeviation: number = meanDuration * 0.2,
-): TimeSegment[] {
-  const segments: TimeSegment[] = []
-  let currentTime = 0
-
-  while (currentTime < totalDuration) {
-    // Генерируем случайную длительность по нормальному распределению
-    let duration = 0
-    do {
-      const uniform1 = Math.random()
-      const uniform2 = Math.random()
-      const normalValue = Math.sqrt(-2.0 * Math.log(uniform1)) * Math.cos(2.0 * Math.PI * uniform2)
-      duration = meanDuration + standardDeviation * normalValue
-    } while (duration < meanDuration * 0.5 || duration > meanDuration * 1.5)
-
-    // Убеждаемся, что не выходим за пределы общей длительности
-    if (currentTime + duration > totalDuration) {
-      duration = totalDuration - currentTime
-    }
-
-    segments.push({
-      startTime: currentTime,
-      duration,
-    })
-
-    currentTime += duration
-  }
-
-  return segments
 }
