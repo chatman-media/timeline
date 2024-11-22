@@ -5,6 +5,8 @@ git clone git@github.com:chatman-media/timeline.git
 cd timeline
 ```
 
+Пока ожидается, что в папке /public/videos/ будут видео, коорые он анализирует. Если нет, то создайте папку и загрузите видео в нее.
+
 Install ffmpeg ([brew](https://formulae.brew.sh/formula/ffmpeg))
 
 ```
