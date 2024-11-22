@@ -49,14 +49,14 @@ export function distributeScenes({
 
   // Вычисляем общий доступный диапазон времени
   const totalTimeRange = timeRange.max - timeRange.min
-  
+
   // Вычисляем коэффициент масштабирования для распределения по всему диапазону
   const timeScale = totalTimeRange / targetDuration
 
   for (const segment of timeSegments) {
     // Масштабируем время начала к полному диапазону
     const currentTime = timeRange.min + (segment.startTime * timeScale)
-    
+
     // Определяем камеру для текущей сцены
     let selectedCamera = mainCamera
 
