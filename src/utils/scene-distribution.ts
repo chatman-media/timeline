@@ -26,7 +26,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   const scenes: SceneSegment[] = []
   let lastCamera = params.mainCamera
 
-  // Используем assembledTracks вместо группировки видео
+  // Используем assembledTracks для группировки видео
   const videosByCamera = new Map(
     params.assembledTracks.map((track) => [
       track.index,
@@ -34,26 +34,34 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
     ]),
   )
 
-  // Находим диапазоны для каждой камеры
-  const cameraRanges = new Map<number, { min: number; max: number }>()
-  params.assembledTracks.forEach((track) => {
-    const ranges = track.allVideos.map((video) => ({
+  // Вспомогательная функция для поиска видео для сегмента
+  const findVideoForSegment = (camera: number, startTime: number, endTime: number) => {
+    const videos = videosByCamera.get(camera) || []
+    return videos.find((video) => {
+      const videoStart = new Date(video.metadata.creation_time!).getTime() / 1000
+      const videoEnd = videoStart + video.metadata.format.duration
+      return videoStart <= startTime && videoEnd >= endTime
+    })
+  }
+
+  // Находим общий временной диапазон всех видео
+  const timeRanges = params.assembledTracks.map((track) => {
+    const trackRanges = track.allVideos.map((video) => ({
       start: new Date(video.metadata.creation_time!).getTime() / 1000,
       end: new Date(video.metadata.creation_time!).getTime() / 1000 +
         video.metadata.format.duration,
     }))
-
-    const min = Math.min(...ranges.map((r) => r.start))
-    const max = Math.max(...ranges.map((r) => r.end))
-    cameraRanges.set(track.index, { min, max })
+    return {
+      camera: track.index,
+      min: Math.min(...trackRanges.map((r) => r.start)),
+      max: Math.max(...trackRanges.map((r) => r.end)),
+    }
   })
 
-  console.log("Camera ranges:", Object.fromEntries(cameraRanges))
-
-  // Находим общий диапазон, где есть видео со всех камер
+  // Берем самый широкий диапазон
   const effectiveTimeRange = {
-    min: Math.max(...Array.from(cameraRanges.values()).map((r) => r.min)),
-    max: Math.min(...Array.from(cameraRanges.values()).map((r) => r.max)),
+    min: Math.min(...timeRanges.map((r) => r.min)),
+    max: Math.max(...timeRanges.map((r) => r.max)),
   }
 
   console.log("Effective time range:", effectiveTimeRange)
@@ -75,7 +83,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
 
   // Генерируем базовые сегменты
   let timeSegments = generateGaussianSceneDurations(
-    Math.min(availableDuration, params.targetDuration),
+    availableDuration,
     params.averageSceneDuration,
   )
 
@@ -104,9 +112,6 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
 
   // Распределение камер внутри сегментов
   for (const segment of timeSegments) {
-    // Пропускаем сегменты за пределами доступного времени
-    if (segment.startTime >= effectiveTimeRange.max) continue
-
     const numChanges = Math.floor(
       segment.duration / params.averageSceneDuration * params.cameraChangeFrequency,
     )
@@ -132,13 +137,35 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
           })
         )
         .map(([camera]) => camera)
-        .filter((camera) => camera !== lastCamera)
 
-      if (availableCameras.length === 0) continue
+      if (availableCameras.length === 0) {
+        console.warn("No available cameras for segment:", {
+          subSegmentStart,
+          subSegmentEnd,
+          lastCamera,
+        })
+        continue
+      }
 
+      // Выбираем камеру с учетом вероятности
       let selectedCamera = params.mainCamera
-      if (Math.random() < params.cameraChangeFrequency && Math.random() > params.mainCameraProb) {
-        selectedCamera = availableCameras[Math.floor(Math.random() * availableCameras.length)]
+      console.log("Camera selection:", {
+        mainCamera: params.mainCamera,
+        mainCameraProb: params.mainCameraProb,
+        random: Math.random(),
+        availableCameras,
+        lastCamera,
+      })
+
+      if (Math.random() > params.mainCameraProb) {
+        // Выбираем из всех доступных камер, кроме текущей
+        const otherCameras = availableCameras.filter((c) => c !== lastCamera)
+        if (otherCameras.length > 0) {
+          selectedCamera = otherCameras[Math.floor(Math.random() * otherCameras.length)]
+          console.log("Selected other camera:", selectedCamera)
+        }
+      } else {
+        console.log("Selected main camera:", selectedCamera)
       }
 
       const video = findVideoForSegment(selectedCamera, subSegmentStart, subSegmentEnd)
@@ -147,25 +174,14 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
           startTime: subSegmentStart,
           endTime: subSegmentEnd,
           duration: subSegmentEnd - subSegmentStart,
-          cameraIndex: selectedCamera,
+          cameraIndex: selectedCamera, // Используем выбранную камеру как есть
           videoFile: video.path,
           totalBitrate: video.metadata.format.bit_rate || 0,
         })
-
         lastCamera = selectedCamera
       }
     }
   }
 
   return scenes
-}
-
-// При выборе видео для сегмента
-const findVideoForSegment = (camera: number, startTime: number, endTime: number) => {
-  const trackVideos = videosByCamera.get(camera) || []
-  return trackVideos.find((video) => {
-    const videoStart = new Date(video.metadata.creation_time!).getTime() / 1000
-    const videoEnd = videoStart + video.metadata.format.duration
-    return videoStart <= startTime && videoEnd >= endTime
-  })
 }

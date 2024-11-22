@@ -85,7 +85,8 @@ export default function Home() {
     const videoGroups = new Map<number, VideoInfo[]>()
 
     videos.forEach((video) => {
-      const cameraNumber = parseInt(video.path.match(/camera[_-]?(\d+)/i)?.[1] || "1")
+      // Используем индекс из массива + 1 как номер камеры
+      const cameraNumber = videos.indexOf(video) + 1
       if (!videoGroups.has(cameraNumber)) {
         videoGroups.set(cameraNumber, [])
       }

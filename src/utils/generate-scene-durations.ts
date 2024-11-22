@@ -32,6 +32,13 @@ export function generateGaussianSceneDurations(
     // Ограничиваем длительность в пределах 1/3 до 3x от средней
     duration = Math.max(averageSceneDuration / 3, Math.min(averageSceneDuration * 3, duration))
 
+    // Проверяем, не выйдем ли за пределы
+    if (currentTime + duration > targetDuration) {
+      duration = targetDuration - currentTime
+    }
+
+    if (duration <= 0) break
+
     segments.push({
       startTime: currentTime,
       duration,
