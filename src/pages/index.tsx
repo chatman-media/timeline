@@ -417,14 +417,14 @@ export default function Home() {
       })
 
       return {
-        video: groupVideos[0], // Используем первое видео для метаданных
+        video: groupVideos[0],
         index: cameraNumber,
         isActive,
-        allVideos: groupVideos, // Сохраняем все видео для этой камеры
+        allVideos: groupVideos,
       }
     })
 
-    setActiveVideos(active)
+    setActiveVideos(active.filter((v) => v.isActive))
   }, [videos, currentTime])
 
   // Добавляем эффект для обновления активных видео
@@ -448,6 +448,37 @@ export default function Home() {
       container.appendChild(clone)
     }
   }, [activeCamera])
+
+  // Добавляем новое состояние для собранных дорожек
+  const [assembledTracks, setAssembledTracks] = useState<ActiveVideoEntry[]>([])
+
+  // Функция для обновления собранных дорожек
+  const updateAssembledTracks = useCallback(() => {
+    // Создаем мапу для группировки видео по их номеру камеры
+    const videoGroups = new Map<number, VideoInfo[]>()
+
+    videos.forEach((video) => {
+      const cameraNumber = parseInt(video.path.match(/camera[_-]?(\d+)/i)?.[1] || "1")
+      if (!videoGroups.has(cameraNumber)) {
+        videoGroups.set(cameraNumber, [])
+      }
+      videoGroups.get(cameraNumber)?.push(video)
+    })
+
+    const tracks = Array.from(videoGroups.entries()).map(([cameraNumber, groupVideos]) => ({
+      video: groupVideos[0],
+      index: cameraNumber,
+      isActive: true, // Всегда true для собранных дорожек
+      allVideos: groupVideos,
+    }))
+
+    setAssembledTracks(tracks)
+  }, [videos])
+
+  // Вызываем updateAssembledTracks при изменении списка видео
+  useEffect(() => {
+    updateAssembledTracks()
+  }, [videos, updateAssembledTracks])
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
@@ -530,8 +561,11 @@ export default function Home() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {activeVideos.map(({ index }) => (
-                          <SelectItem key={index} value={index.toString()}>
+                        {assembledTracks.map(({ index }) => (
+                          <SelectItem
+                            key={index}
+                            value={index.toString()}
+                          >
                             V{index}
                           </SelectItem>
                         ))}
