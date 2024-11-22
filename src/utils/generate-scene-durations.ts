@@ -1,9 +1,5 @@
+import { SceneDuration } from "@/types/scene"
 import { generateGaussianRandom } from "./gaussian-random"
-
-export interface SceneDuration {
-  startTime: number
-  duration: number
-}
 
 /**
  * Генерирует массив сегментов с длительностями, распределенными по нормальному закону

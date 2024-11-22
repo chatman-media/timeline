@@ -1,75 +1,60 @@
-import { VideoSegment } from "@/types/video-segment"
-import { VideoInfo } from "@/types/video"
 import { generateGaussianSceneDurations } from "./generate-scene-durations"
-
-export interface SceneDistributionParams {
-  targetDuration: number
-  mainCamera: number
-  mainCameraProb: number
-  numCameras: number
-  averageSceneDuration: number
-  cameraChangeFrequency: number
-  timeRange: { min: number; max: number }
-  videos: VideoInfo[]
-}
+import { SceneDistributionParams, SceneSegment } from "../types/scene"
 
 /**
- * Создает распределение сцен для мультикамерного монтажа
- * @param targetDuration - Желаемая длительность итогового видео в секундах
- * @param numCameras - Количество активных камер
- * @param averageSceneDuration - Средняя длительность сцены в секундах
- * @param cameraChangeFrequency - Частота смены камеры (от 0 до 1)
- * @param mainCamera - Индекс главной камеры
- * @param mainCameraProb - Вероятность показа главной камеры (от 0 до 1)
- * @returns Массив сцен с указанием камеры, времени начала и длительности
+ * Создает распределение сцен для мультикамерного монтажа.
+ * Генерирует последовательность сцен с разной длительностью,
+ * распределенных по нормальному закону, и назначает каждой сцене камеру
+ * с учетом заданных параметров и ограничений.
+ *
+ * @param params - Параметры распределения сцен
+ * @returns Массив сегментов видео с указанием камеры, времени начала и длительности
  *
  * @example
- * const scenes = distributeScenes(30, 4, 10, 0.5, 0)
- * // Вернет массив сцен для 30-секундного видео из 120 секунд записи с 4 камер
- *
- * const scenesWithCustomSegments = distributeScenes(30, 120, 4, 0.5, 0, 0.6)
- * // Вернет массив из 500 сцен для более частого переключения
+ * const scenes = distributeScenes({
+ *   targetDuration: 300, // 5 минут
+ *   numCameras: 4,
+ *   averageSceneDuration: 6,
+ *   cameraChangeFrequency: 0.5,
+ *   mainCamera: 1,
+ *   mainCameraProb: 0.6,
+ *   timeRange: { min: 1700000000, max: 1700000300 },
+ *   videos: videoArray
+ * })
  */
-export function distributeScenes({
-  targetDuration,
-  numCameras,
-  averageSceneDuration,
-  cameraChangeFrequency,
-  mainCamera,
-  mainCameraProb,
-  timeRange,
-  videos,
-}: SceneDistributionParams): VideoSegment[] {
-  const scenes: VideoSegment[] = []
-  let lastCamera = mainCamera
+export function distributeScenes(params: SceneDistributionParams): SceneSegment[] {
+  const scenes: SceneSegment[] = []
+  let lastCamera = params.mainCamera
 
   // Получаем общий доступный диапазон времени
-  const totalTimeRange = timeRange.max - timeRange.min
+  const totalTimeRange = params.timeRange.max - params.timeRange.min
 
   // Генерируем базовые сегменты с нормальным распределением
   let timeSegments = generateGaussianSceneDurations(
-    targetDuration,
-    averageSceneDuration,
+    params.targetDuration,
+    params.averageSceneDuration,
   )
 
   // Масштабируем длительности, сохраняя пропорции между сегментами
   const currentTotalDuration = timeSegments.reduce((sum, segment) => sum + segment.duration, 0)
-  const durationScaleFactor = targetDuration / currentTotalDuration
+  const durationScaleFactor = params.targetDuration / currentTotalDuration
 
-  // Генерируем случайные точки для распределения сегментов
+  /**
+   * Генерируем точки начала сцен в пределах доступного временного диапазона
+   * Каждая точка соответствует количеству секунд от начала диапазона
+   */
   const availablePoints = Array.from(
     { length: Math.floor(totalTimeRange) },
-    (_, i) => timeRange.min + i,
+    (_, i) => params.timeRange.min + i,
   )
 
-  // Перемешиваем точки случайным образом
+  // Случайное распределение точек начала сцен
   const shuffledPoints = availablePoints.sort(() => Math.random() - 0.5)
-
-  // Выбираем начальные точки для каждого сегмента
   const selectedPoints = shuffledPoints
     .slice(0, timeSegments.length)
     .sort((a, b) => a - b)
 
+  // Масштабируем длительности и назначаем точки начала
   timeSegments = timeSegments.map((segment, index) => {
     const scaledDuration = segment.duration * durationScaleFactor
     return {
@@ -78,40 +63,40 @@ export function distributeScenes({
     }
   })
 
-  // Сортируем сегменты по времени начала
+  // Сортируем и корректируем перекрытия
   timeSegments.sort((a, b) => a.startTime - b.startTime)
-
-  // Проверяем и корректируем перекрытия
   for (let i = 1; i < timeSegments.length; i++) {
     const prevSegment = timeSegments[i - 1]
     const currentSegment = timeSegments[i]
 
     if (prevSegment.startTime + prevSegment.duration > currentSegment.startTime) {
-      // Если есть перекрытие, сдвигаем текущий сегмент
       currentSegment.startTime = prevSegment.startTime + prevSegment.duration
     }
   }
 
-  // Создаем сцены на основе скорректированных сегментов
+  // Создаем сцены на основе сегментов
   for (const segment of timeSegments) {
-    let selectedCamera = mainCamera
+    let selectedCamera = params.mainCamera
 
-    if (Math.random() < cameraChangeFrequency) {
-      if (Math.random() > mainCameraProb) {
+    // Определяем, нужно ли менять камеру для текущей сцены
+    if (Math.random() < params.cameraChangeFrequency) {
+      if (Math.random() > params.mainCameraProb) {
         const availableCameras = Array.from(
-          { length: numCameras },
+          { length: params.numCameras },
           (_, i) => i + 1,
         ).filter((i) => i !== lastCamera)
         selectedCamera = availableCameras[Math.floor(Math.random() * availableCameras.length)]
       }
     }
 
-    const cameraVideos = videos.filter((video) => {
+    // Находим подходящие видео для выбранной камеры
+    const cameraVideos = params.videos.filter((video) => {
       const cameraMatch = video.path.match(/camera[_-]?(\d+)/i)
       const videoCamera = cameraMatch ? parseInt(cameraMatch[1]) : 1
       return videoCamera === selectedCamera
     })
 
+    // Ищем видео, которое содержит текущий временной сегмент
     const videoFile = cameraVideos.find((video) => {
       const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
       const videoEndTime = videoStartTime + video.metadata.format.duration
@@ -119,15 +104,24 @@ export function distributeScenes({
         (segment.startTime + segment.duration) <= videoEndTime
     })
 
+    /**
+     * Добавляем новую сцену в массив, если нашли подходящее видео
+     * Сцена должна:
+     * 1. Находиться в пределах длительности исходного видео
+     * 2. Иметь корректную длительность
+     * 3. Соответствовать выбранной камере
+     */
     if (videoFile) {
-      scenes.push({
-        startTime: segment.startTime,
-        endTime: segment.startTime + segment.duration,
-        duration: segment.duration,
-        cameraIndex: selectedCamera,
-        videoFile: videoFile.path,
-        totalBitrate: videoFile.metadata.format.bit_rate || 0,
-      })
+      scenes.push(
+        {
+          startTime: segment.startTime,
+          endTime: segment.startTime + segment.duration,
+          duration: segment.duration,
+          cameraIndex: selectedCamera,
+          videoFile: videoFile.path,
+          totalBitrate: videoFile.metadata.format.bit_rate || 0,
+        } satisfies SceneSegment,
+      )
       lastCamera = selectedCamera
     }
   }
