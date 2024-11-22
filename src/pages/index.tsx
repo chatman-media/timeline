@@ -55,6 +55,12 @@ export default function Home() {
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()
 
+  const [draftSettings, setDraftSettings] = useState(compilationSettings)
+
+  useEffect(() => {
+    setDraftSettings(compilationSettings)
+  }, [compilationSettings])
+
   const RecordingsList = (
     { recordings, baseTime }: { recordings: RecordEntry[]; baseTime: number },
   ) => {
@@ -92,11 +98,11 @@ export default function Home() {
   }, [activeSegmentEnd, isPlaying])
 
   const handleCreateCompilation = () => {
+    setCompilationSettings(draftSettings)
+
     const scenes = distributeScenes({
-      targetDuration: compilationSettings.targetDuration,
+      ...draftSettings,
       numCameras: videos.length,
-      averageSceneDuration: compilationSettings.averageSceneDuration,
-      cameraChangeFrequency: compilationSettings.cameraChangeFrequency,
       mainCamera,
       mainCameraProb: 0.6,
       timeRange: timeRange,
@@ -125,24 +131,24 @@ export default function Home() {
   }
 
   const handleTargetDurationChange = (value: number) => {
-    setCompilationSettings({
-      ...compilationSettings,
+    setDraftSettings((prev) => ({
+      ...prev,
       targetDuration: value,
-    })
+    }))
   }
 
   const handleSceneDurationChange = (value: number) => {
-    setCompilationSettings({
-      ...compilationSettings,
+    setDraftSettings((prev) => ({
+      ...prev,
       averageSceneDuration: value,
-    })
+    }))
   }
 
   const handleCameraChangeFrequencyChange = (value: number) => {
-    setCompilationSettings({
-      ...compilationSettings,
+    setDraftSettings((prev) => ({
+      ...prev,
       cameraChangeFrequency: Math.round(value * 7) / 7,
-    })
+    }))
   }
 
   const [isLoading, setIsLoading] = useState(true)
@@ -535,10 +541,11 @@ export default function Home() {
 
                   <div className="flex items-center gap-2 flex-1">
                     <span className="text-sm whitespace-nowrap text-gray-900 dark:text-gray-100">
-                      Длительность: {formatDuration(compilationSettings.targetDuration, 0)}
+                      Длительность: {formatDuration(draftSettings.targetDuration, 0)}{" "}
+                      {/* Используем draftSettings вместо compilationSettings */}
                     </span>
                     <Slider
-                      value={[compilationSettings.targetDuration]}
+                      value={[draftSettings.targetDuration]}
                       onValueChange={([value]) => handleTargetDurationChange(value)}
                       min={2}
                       max={maxDuration}
@@ -551,7 +558,7 @@ export default function Home() {
                       <Label>Средняя длительность сцны</Label>
                       <div className="flex items-center gap-2">
                         <Slider
-                          value={[compilationSettings.averageSceneDuration]}
+                          value={[draftSettings.averageSceneDuration]}
                           onValueChange={([value]) => handleSceneDurationChange(value)}
                           min={0.5}
                           max={10}
@@ -559,7 +566,7 @@ export default function Home() {
                           className="flex-1"
                         />
                         <span className="text-sm w-16 text-right text-muted-foreground">
-                          {compilationSettings.averageSceneDuration.toFixed(1)} сек
+                          {draftSettings.averageSceneDuration.toFixed(1)} сек
                         </span>
                       </div>
                     </div>
@@ -567,7 +574,7 @@ export default function Home() {
                       <Label>Частота смены камеры</Label>
                       <div className="flex flex-col gap-1">
                         <Slider
-                          value={[compilationSettings.cameraChangeFrequency]}
+                          value={[draftSettings.cameraChangeFrequency]}
                           onValueChange={([value]) => handleCameraChangeFrequencyChange(value)}
                           min={0}
                           max={1}
@@ -575,7 +582,7 @@ export default function Home() {
                           className="flex-1"
                         />
                         <span className="text-sm text-muted-foreground">
-                          {getCameraChangeLabel(compilationSettings.cameraChangeFrequency)}
+                          {getCameraChangeLabel(draftSettings.cameraChangeFrequency)}
                         </span>
                       </div>
                     </div>
