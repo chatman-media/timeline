@@ -97,14 +97,14 @@ export default function Home() {
       numCameras: videos.length,
       averageSceneDuration: compilationSettings.averageSceneDuration,
       cameraChangeFrequency: compilationSettings.cameraChangeFrequency,
-      mainCamera: mainCamera - 1,
+      mainCamera,
       mainCameraProb: 0.6,
       timeRange: timeRange,
       videos: videos,
     })
 
     setSelectedSegments(scenes.map((scene) => ({
-      cameraIndex: scene.cameraIndex + 1,
+      cameraIndex: scene.cameraIndex,
       startTime: scene.startTime,
       endTime: scene.endTime,
       duration: scene.duration,

@@ -41,56 +41,87 @@ export function distributeScenes({
   const scenes: VideoSegment[] = []
   let lastCamera = mainCamera
 
-  // Генерируем сегменты времени с нормальным распределением
-  const timeSegments = generateGaussianSceneDurations(
+  // Получаем общий доступный диапазон времени
+  const totalTimeRange = timeRange.max - timeRange.min
+
+  // Генерируем базовые сегменты с нормальным распределением
+  let timeSegments = generateGaussianSceneDurations(
     targetDuration,
     averageSceneDuration,
   )
 
-  // Вычисляем общий доступный диапазон времени
-  const totalTimeRange = timeRange.max - timeRange.min
+  // Масштабируем длительности, сохраняя пропорции между сегментами
+  const currentTotalDuration = timeSegments.reduce((sum, segment) => sum + segment.duration, 0)
+  const durationScaleFactor = targetDuration / currentTotalDuration
 
-  // Вычисляем коэффициент масштабирования для распределения по всему диапазону
-  const timeScale = totalTimeRange / targetDuration
+  // Генерируем случайные точки для распределения сегментов
+  const availablePoints = Array.from(
+    { length: Math.floor(totalTimeRange) },
+    (_, i) => timeRange.min + i,
+  )
 
+  // Перемешиваем точки случайным образом
+  const shuffledPoints = availablePoints.sort(() => Math.random() - 0.5)
+
+  // Выбираем начальные точки для каждого сегмента
+  const selectedPoints = shuffledPoints
+    .slice(0, timeSegments.length)
+    .sort((a, b) => a - b)
+
+  timeSegments = timeSegments.map((segment, index) => {
+    const scaledDuration = segment.duration * durationScaleFactor
+    return {
+      duration: scaledDuration,
+      startTime: selectedPoints[index],
+    }
+  })
+
+  // Сортируем сегменты по времени начала
+  timeSegments.sort((a, b) => a.startTime - b.startTime)
+
+  // Проверяем и корректируем перекрытия
+  for (let i = 1; i < timeSegments.length; i++) {
+    const prevSegment = timeSegments[i - 1]
+    const currentSegment = timeSegments[i]
+
+    if (prevSegment.startTime + prevSegment.duration > currentSegment.startTime) {
+      // Если есть перекрытие, сдвигаем текущий сегмент
+      currentSegment.startTime = prevSegment.startTime + prevSegment.duration
+    }
+  }
+
+  // Создаем сцены на основе скорректированных сегментов
   for (const segment of timeSegments) {
-    // Масштабируем время начала к полному диапазону
-    const currentTime = timeRange.min + (segment.startTime * timeScale)
-
-    // Определяем камеру для текущей сцены
     let selectedCamera = mainCamera
 
-    // Если пришло время менять камеру (на основе cameraChangeFrequency)
     if (Math.random() < cameraChangeFrequency) {
       if (Math.random() > mainCameraProb) {
-        const availableCameras = Array.from({ length: numCameras }, (_, i) => i)
-          .filter((i) => i !== lastCamera)
+        const availableCameras = Array.from(
+          { length: numCameras },
+          (_, i) => i + 1,
+        ).filter((i) => i !== lastCamera)
         selectedCamera = availableCameras[Math.floor(Math.random() * availableCameras.length)]
       }
     }
 
-    // Находим подходящее видео для выбранной камеры
     const cameraVideos = videos.filter((video) => {
       const cameraMatch = video.path.match(/camera[_-]?(\d+)/i)
-      const videoCamera = cameraMatch ? parseInt(cameraMatch[1]) - 1 : 0
+      const videoCamera = cameraMatch ? parseInt(cameraMatch[1]) : 1
       return videoCamera === selectedCamera
     })
 
-    // Масштабируем длительность к полному диапазону
-    const duration = segment.duration * timeScale
-
-    // Находим подходящее видео для текущего времени
     const videoFile = cameraVideos.find((video) => {
       const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
       const videoEndTime = videoStartTime + video.metadata.format.duration
-      return currentTime >= videoStartTime && (currentTime + duration) <= videoEndTime
+      return segment.startTime >= videoStartTime &&
+        (segment.startTime + segment.duration) <= videoEndTime
     })
 
     if (videoFile) {
       scenes.push({
-        startTime: currentTime,
-        endTime: currentTime + duration,
-        duration: duration,
+        startTime: segment.startTime,
+        endTime: segment.startTime + segment.duration,
+        duration: segment.duration,
         cameraIndex: selectedCamera,
         videoFile: videoFile.path,
         totalBitrate: videoFile.metadata.format.bit_rate || 0,
