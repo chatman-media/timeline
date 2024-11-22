@@ -131,7 +131,11 @@ export const Timeline: React.FC<TimelineProps> = (
             <div className="absolute h-4 bg-secondary left-8 right-0">
               <div className="absolute inset-0 flex items-center px-2 justify-between">
                 <div className="flex gap-2 text-[11px] text-muted-foreground">
-                  <span>{group.length > 1 ? `${group.length} FILES` : firstVideo.metadata.format?.filename.toUpperCase()}</span>
+                  <span>
+                    {group.length > 1
+                      ? `${group.length} FILES`
+                      : firstVideo.metadata.format?.filename.toUpperCase()}
+                  </span>
                   <span>•</span>
                   <span>{firstVideo.metadata.video_stream?.codec_name.toUpperCase()}</span>
                   <span>•</span>
@@ -154,7 +158,7 @@ export const Timeline: React.FC<TimelineProps> = (
                 </div>
               </div>
 
-              <div 
+              <div
                 className="absolute h-full bg-secondary-foreground/20"
                 style={{ left: `${startOffset}%`, width: `${width}%` }}
               >
@@ -164,9 +168,10 @@ export const Timeline: React.FC<TimelineProps> = (
                     className="absolute h-full bg-yellow-400 hover:bg-yellow-500 transition-colors cursor-pointer"
                     style={{
                       left: `${((segment.startTime - timeRange.min) / totalDuration) * 100}%`,
-                      width: `${((segment.endTime - segment.startTime) / totalDuration) * 100}%`
+                      width: `${((segment.endTime - segment.startTime) / totalDuration) * 100}%`,
                     }}
-                    onClick={() => onPlaySegment(segment.cameraIndex, segment.startTime, segment.endTime)}
+                    onClick={() =>
+                      onPlaySegment(segment.cameraIndex, segment.startTime, segment.endTime)}
                   />
                 ))}
               </div>

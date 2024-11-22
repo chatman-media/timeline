@@ -1,13 +1,14 @@
 import type { NextApiRequest, NextApiResponse } from "next"
+import process from "node:process"
 
 export default function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
-    return res.status(405).json({ 
+    return res.status(405).json({
       success: false,
-      message: "Only POST method is supported" 
+      message: "Only POST method is supported",
     })
   }
 
@@ -17,7 +18,7 @@ export default function handler(
     if (!videoTitle || !sourceUrl) {
       return res.status(400).json({
         success: false,
-        message: "Missing required parameters: videoTitle and sourceUrl"
+        message: "Missing required parameters: videoTitle and sourceUrl",
       })
     }
 
@@ -31,15 +32,15 @@ export default function handler(
         jobId,
         videoTitle,
         estimatedProcessingTime: "2-3 minutes",
-        status: "processing"
-      }
+        status: "processing",
+      },
     })
   } catch (error) {
     console.error("Error creating video:", error)
-    return res.status(500).json({ 
+    return res.status(500).json({
       success: false,
       message: "Internal server error during video creation",
-      error: process.env.NODE_ENV === 'development' ? (error as Error).message : undefined
+      error: process.env.NODE_ENV === "development" ? (error as Error).message : undefined,
     })
   }
 }
