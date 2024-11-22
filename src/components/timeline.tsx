@@ -1,11 +1,11 @@
 import { VideoInfo } from "@/types/video"
 import { formatBitrate, formatDuration } from "@/lib/utils"
-import { getCameraIndex } from "@/utils/camera-utils"
+import { SceneSegment } from "@/types/scene"
 
 interface TimelineProps {
   videos: VideoInfo[]
   timeRange: { min: number; max: number }
-  selectedSegments: Array<{ cameraIndex: number; startTime: number; endTime: number }>
+  selectedSegments: Array<SceneSegment>
   onPlaySegment: (cameraIndex: number, startTime: number, endTime: number) => void
 }
 
@@ -38,16 +38,6 @@ export const Timeline: React.FC<TimelineProps> = (
 
     // Увеличиваем допуск до 5 секунд, так как видим небольшие расхождения в логах
     const isTimeSequential = Math.abs(video1End - video2Start) <= 5
-
-    // console.log("Checking sequence:", {
-    //   video1Path: video1.path,
-    //   video2Path: video2.path,
-    //   video1End,
-    //   video2Start,
-    //   timeDiff: Math.abs(video1End - video2Start),
-    //   isTimeSequential,
-    //   isSameFormat,
-    // })
 
     return isSameFormat && isTimeSequential
   }
@@ -82,6 +72,31 @@ export const Timeline: React.FC<TimelineProps> = (
 
   return (
     <div className="w-full">
+      {/* Трек времени со всеми сегментами */}
+      <div className="relative h-8 mb-2">
+        <div className="w-12 text-sm">Time</div>
+        <div className="absolute inset-0 ml-12">
+          {selectedSegments.map((segment, index) => (
+            <div
+              key={index}
+              className="absolute h-full bg-yellow-500/50"
+              style={{
+                left: `${
+                  ((segment.startTime - timeRange.min) / (timeRange.max - timeRange.min)) * 100
+                }%`,
+                width: `${
+                  ((segment.endTime - segment.startTime) / (timeRange.max - timeRange.min)) * 100
+                }%`,
+              }}
+            >
+              <span className="absolute left-0 w-8 text-xs text-muted-foreground">
+                {/* {index + 1} */}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {groupedVideos.map((group) => {
         const firstVideo = group[0]
 
@@ -109,19 +124,6 @@ export const Timeline: React.FC<TimelineProps> = (
         const width = Math.max(
           0,
           Math.min(100, ((clampedEndTime - clampedStartTime) / totalDuration) * 100),
-        )
-
-        // console.log("Timeline calculations:", {
-        //   videoStartTime,
-        //   videoEndTime,
-        //   timeRange,
-        //   totalDuration,
-        //   startOffset,
-        //   width,
-        // })
-
-        const cameraSegments = selectedSegments.filter(
-          (seg) => seg.cameraIndex === getCameraIndex(firstVideo.path),
         )
 
         return (
@@ -163,7 +165,10 @@ export const Timeline: React.FC<TimelineProps> = (
                 className="absolute h-full bg-secondary-foreground/20"
                 style={{ left: `${startOffset}%`, width: `${width}%` }}
               >
-                {cameraSegments.map((segment, idx) => (
+                {selectedSegments.filter((segment) => segment.videoFile === firstVideo.path).map((
+                  segment,
+                  idx,
+                ) => (
                   <div
                     key={idx}
                     className="absolute h-full bg-yellow-400 hover:bg-yellow-500 transition-colors cursor-pointer"

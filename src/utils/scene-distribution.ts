@@ -149,23 +149,18 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
 
       // Выбираем камеру с учетом вероятности
       let selectedCamera = params.mainCamera
-      console.log("Camera selection:", {
-        mainCamera: params.mainCamera,
-        mainCameraProb: params.mainCameraProb,
-        random: Math.random(),
-        availableCameras,
-        lastCamera,
-      })
 
-      if (Math.random() > params.mainCameraProb) {
-        // Выбираем из всех доступных камер, кроме текущей
-        const otherCameras = availableCameras.filter((c) => c !== lastCamera)
-        if (otherCameras.length > 0) {
+      // Всегда выбираем камеру, отличную от предыдущей
+      const otherCameras = availableCameras.filter((c) => c !== lastCamera)
+
+      if (otherCameras.length > 0) {
+        // Если это основная камера и выпал шанс её использовать
+        if (Math.random() <= params.mainCameraProb && !otherCameras.includes(params.mainCamera)) {
+          selectedCamera = params.mainCamera
+        } else {
+          // Иначе выбираем случайную из других доступных
           selectedCamera = otherCameras[Math.floor(Math.random() * otherCameras.length)]
-          console.log("Selected other camera:", selectedCamera)
         }
-      } else {
-        console.log("Selected main camera:", selectedCamera)
       }
 
       const video = findVideoForSegment(selectedCamera, subSegmentStart, subSegmentEnd)
@@ -174,7 +169,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
           startTime: subSegmentStart,
           endTime: subSegmentEnd,
           duration: subSegmentEnd - subSegmentStart,
-          cameraIndex: selectedCamera, // Используем выбранную камеру как есть
+          cameraIndex: selectedCamera,
           videoFile: video.path,
           totalBitrate: video.metadata.format.bit_rate || 0,
         })
@@ -183,5 +178,28 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
     }
   }
 
-  return scenes
+  // После генерации всех сегментов, объединяем последовательные с одной камеры
+  const mergedScenes: SceneSegment[] = []
+  let currentMergedScene: SceneSegment | null = null
+
+  for (const scene of scenes) {
+    if (!currentMergedScene) {
+      currentMergedScene = { ...scene }
+    } else if (currentMergedScene.cameraIndex === scene.cameraIndex) {
+      // Объединяем последовательные сегменты одной камеры
+      currentMergedScene.endTime = scene.endTime
+      currentMergedScene.duration = currentMergedScene.endTime - currentMergedScene.startTime
+    } else {
+      // Сохраняем предыдущий объединенный сегмент и начинаем новый
+      mergedScenes.push(currentMergedScene)
+      currentMergedScene = { ...scene }
+    }
+  }
+
+  // Добавляем последний сегмент
+  if (currentMergedScene) {
+    mergedScenes.push(currentMergedScene)
+  }
+
+  return mergedScenes
 }
