@@ -26,105 +26,146 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   const scenes: SceneSegment[] = []
   let lastCamera = params.mainCamera
 
-  // Получаем общий доступный диапазон времени
-  const totalTimeRange = params.timeRange.max - params.timeRange.min
+  // Используем assembledTracks вместо группировки видео
+  const videosByCamera = new Map(
+    params.assembledTracks.map((track) => [
+      track.index,
+      track.allVideos,
+    ]),
+  )
 
-  // Генерируем базовые сегменты с нормальным распределением
+  // Находим диапазоны для каждой камеры
+  const cameraRanges = new Map<number, { min: number; max: number }>()
+  params.assembledTracks.forEach((track) => {
+    const ranges = track.allVideos.map((video) => ({
+      start: new Date(video.metadata.creation_time!).getTime() / 1000,
+      end: new Date(video.metadata.creation_time!).getTime() / 1000 +
+        video.metadata.format.duration,
+    }))
+
+    const min = Math.min(...ranges.map((r) => r.start))
+    const max = Math.max(...ranges.map((r) => r.end))
+    cameraRanges.set(track.index, { min, max })
+  })
+
+  console.log("Camera ranges:", Object.fromEntries(cameraRanges))
+
+  // Находим общий диапазон, где есть видео со всех камер
+  const effectiveTimeRange = {
+    min: Math.max(...Array.from(cameraRanges.values()).map((r) => r.min)),
+    max: Math.min(...Array.from(cameraRanges.values()).map((r) => r.max)),
+  }
+
+  console.log("Effective time range:", effectiveTimeRange)
+
+  // Проверяем валидность диапазона
+  if (effectiveTimeRange.max <= effectiveTimeRange.min) {
+    console.error("No common time range found for all cameras")
+    return []
+  }
+
+  // Масштабируем длительности
+  const availableDuration = effectiveTimeRange.max - effectiveTimeRange.min
+  if (availableDuration < params.targetDuration) {
+    console.warn("Available duration is less than target duration", {
+      available: availableDuration,
+      target: params.targetDuration,
+    })
+  }
+
+  // Генерируем базовые сегменты
   let timeSegments = generateGaussianSceneDurations(
-    params.targetDuration,
+    Math.min(availableDuration, params.targetDuration),
     params.averageSceneDuration,
   )
 
-  // Масштабируем длительности, сохраняя пропорции между сегментами
+  // Масштабируем длительности
   const currentTotalDuration = timeSegments.reduce((sum, segment) => sum + segment.duration, 0)
   const durationScaleFactor = params.targetDuration / currentTotalDuration
 
-  /**
-   * Генерируем точки начала сцен в пределах доступного временного диапазона
-   * Каждая точка соответствует количеству секунд от начала диапазона
-   */
-  const availablePoints = Array.from(
-    { length: Math.floor(totalTimeRange) },
-    (_, i) => params.timeRange.min + i,
-  )
+  // Распределяем точки начала равномерно в пределах доступного времени
+  const segmentCount = timeSegments.length
+  const timeStep = availableDuration / (segmentCount + 1)
 
-  // Случайное распределение точек начала сцен
-  const shuffledPoints = availablePoints.sort(() => Math.random() - 0.5)
-  const selectedPoints = shuffledPoints
-    .slice(0, timeSegments.length)
-    .sort((a, b) => a - b)
+  const selectedPoints = Array.from({ length: segmentCount }, (_, i) => {
+    const basePoint = effectiveTimeRange.min + (i + 1) * timeStep
+    const jitter = (Math.random() - 0.5) * timeStep * 0.5 // 50% случайности
+    return Math.min(Math.max(basePoint + jitter, effectiveTimeRange.min), effectiveTimeRange.max)
+  }).sort((a, b) => a - b)
 
   // Масштабируем длительности и назначаем точки начала
-  timeSegments = timeSegments.map((segment, index) => {
-    const scaledDuration = segment.duration * durationScaleFactor
-    return {
-      duration: scaledDuration,
-      startTime: selectedPoints[index],
-    }
-  })
+  timeSegments = timeSegments.map((segment, index) => ({
+    duration: Math.min(
+      segment.duration * durationScaleFactor,
+      effectiveTimeRange.max - selectedPoints[index],
+    ),
+    startTime: selectedPoints[index],
+  }))
 
-  // Сортируем и корректируем перекрытия
-  timeSegments.sort((a, b) => a.startTime - b.startTime)
-  for (let i = 1; i < timeSegments.length; i++) {
-    const prevSegment = timeSegments[i - 1]
-    const currentSegment = timeSegments[i]
-
-    if (prevSegment.startTime + prevSegment.duration > currentSegment.startTime) {
-      currentSegment.startTime = prevSegment.startTime + prevSegment.duration
-    }
-  }
-
-  // Создаем сцены на основе сегментов
+  // Распределение камер внутри сегментов
   for (const segment of timeSegments) {
-    let selectedCamera = params.mainCamera
+    // Пропускаем сегменты за пределами доступного времени
+    if (segment.startTime >= effectiveTimeRange.max) continue
 
-    // Определяем, нужно ли менять камеру для текущей сцены
-    if (Math.random() < params.cameraChangeFrequency) {
-      if (Math.random() > params.mainCameraProb) {
-        const availableCameras = Array.from(
-          { length: params.numCameras },
-          (_, i) => i + 1,
-        ).filter((i) => i !== lastCamera)
+    const numChanges = Math.floor(
+      segment.duration / params.averageSceneDuration * params.cameraChangeFrequency,
+    )
+    const subSegmentDuration = segment.duration / (numChanges + 1)
+
+    for (let i = 0; i <= numChanges; i++) {
+      const subSegmentStart = segment.startTime + (i * subSegmentDuration)
+      const subSegmentEnd = Math.min(
+        subSegmentStart + subSegmentDuration,
+        effectiveTimeRange.max,
+      )
+
+      // Если вышли за пределы доступного времени, прекращаем
+      if (subSegmentStart >= effectiveTimeRange.max) break
+
+      // Находим доступные камеры для текущего временного отрезка
+      const availableCameras = Array.from(videosByCamera.entries())
+        .filter(([_, videos]) =>
+          videos.some((video) => {
+            const videoStart = new Date(video.metadata.creation_time!).getTime() / 1000
+            const videoEnd = videoStart + video.metadata.format.duration
+            return videoStart <= subSegmentStart && videoEnd >= subSegmentEnd
+          })
+        )
+        .map(([camera]) => camera)
+        .filter((camera) => camera !== lastCamera)
+
+      if (availableCameras.length === 0) continue
+
+      let selectedCamera = params.mainCamera
+      if (Math.random() < params.cameraChangeFrequency && Math.random() > params.mainCameraProb) {
         selectedCamera = availableCameras[Math.floor(Math.random() * availableCameras.length)]
       }
-    }
 
-    // Находим подходящие видео для выбранной камеры
-    const cameraVideos = params.videos.filter((video) => {
-      const cameraMatch = video.path.match(/camera[_-]?(\d+)/i)
-      const videoCamera = cameraMatch ? parseInt(cameraMatch[1]) : 1
-      return videoCamera === selectedCamera
-    })
-
-    // Ищем видео, которое содержит текущий временной сегмент
-    const videoFile = cameraVideos.find((video) => {
-      const videoStartTime = new Date(video.metadata.creation_time!).getTime() / 1000
-      const videoEndTime = videoStartTime + video.metadata.format.duration
-      return segment.startTime >= videoStartTime &&
-        (segment.startTime + segment.duration) <= videoEndTime
-    })
-
-    /**
-     * Добавляем новую сцену в массив, если нашли подходящее видео
-     * Сцена должна:
-     * 1. Находиться в пределах длительности исходного видео
-     * 2. Иметь корректную длительность
-     * 3. Соответствовать выбранной камере
-     */
-    if (videoFile) {
-      scenes.push(
-        {
-          startTime: segment.startTime,
-          endTime: segment.startTime + segment.duration,
-          duration: segment.duration,
+      const video = findVideoForSegment(selectedCamera, subSegmentStart, subSegmentEnd)
+      if (video) {
+        scenes.push({
+          startTime: subSegmentStart,
+          endTime: subSegmentEnd,
+          duration: subSegmentEnd - subSegmentStart,
           cameraIndex: selectedCamera,
-          videoFile: videoFile.path,
-          totalBitrate: videoFile.metadata.format.bit_rate || 0,
-        } satisfies SceneSegment,
-      )
-      lastCamera = selectedCamera
+          videoFile: video.path,
+          totalBitrate: video.metadata.format.bit_rate || 0,
+        })
+
+        lastCamera = selectedCamera
+      }
     }
   }
 
   return scenes
+}
+
+// При выборе видео для сегмента
+const findVideoForSegment = (camera: number, startTime: number, endTime: number) => {
+  const trackVideos = videosByCamera.get(camera) || []
+  return trackVideos.find((video) => {
+    const videoStart = new Date(video.metadata.creation_time!).getTime() / 1000
+    const videoEnd = videoStart + video.metadata.format.duration
+    return videoStart <= startTime && videoEnd >= endTime
+  })
 }

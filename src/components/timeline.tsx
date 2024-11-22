@@ -1,5 +1,6 @@
 import { VideoInfo } from "@/types/video"
 import { formatBitrate, formatDuration } from "@/lib/utils"
+import { getCameraIndex } from "@/utils/camera-utils"
 
 interface TimelineProps {
   videos: VideoInfo[]
@@ -38,15 +39,15 @@ export const Timeline: React.FC<TimelineProps> = (
     // Увеличиваем допуск до 5 секунд, так как видим небольшие расхождения в логах
     const isTimeSequential = Math.abs(video1End - video2Start) <= 5
 
-    console.log("Checking sequence:", {
-      video1Path: video1.path,
-      video2Path: video2.path,
-      video1End,
-      video2Start,
-      timeDiff: Math.abs(video1End - video2Start),
-      isTimeSequential,
-      isSameFormat,
-    })
+    // console.log("Checking sequence:", {
+    //   video1Path: video1.path,
+    //   video2Path: video2.path,
+    //   video1End,
+    //   video2Start,
+    //   timeDiff: Math.abs(video1End - video2Start),
+    //   isTimeSequential,
+    //   isSameFormat,
+    // })
 
     return isSameFormat && isTimeSequential
   }
@@ -110,17 +111,17 @@ export const Timeline: React.FC<TimelineProps> = (
           Math.min(100, ((clampedEndTime - clampedStartTime) / totalDuration) * 100),
         )
 
-        console.log("Timeline calculations:", {
-          videoStartTime,
-          videoEndTime,
-          timeRange,
-          totalDuration,
-          startOffset,
-          width,
-        })
+        // console.log("Timeline calculations:", {
+        //   videoStartTime,
+        //   videoEndTime,
+        //   timeRange,
+        //   totalDuration,
+        //   startOffset,
+        //   width,
+        // })
 
         const cameraSegments = selectedSegments.filter(
-          (seg) => seg.cameraIndex === videos.indexOf(firstVideo),
+          (seg) => seg.cameraIndex === getCameraIndex(firstVideo.path),
         )
 
         return (

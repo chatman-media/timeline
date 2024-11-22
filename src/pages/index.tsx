@@ -13,7 +13,6 @@ import { useMemo } from "react"
 import { distributeScenes } from "@/utils/scene-distribution"
 import { ThemeToggle } from "@/components/theme-toggle"
 import type { RecordEntry } from "@/types/record-entry"
-import type { ActiveVideoEntry } from "@/types/active-video-entry"
 import {
   Select,
   SelectContent,
@@ -25,6 +24,7 @@ import { SelectedScenesList } from "@/components/selected-scenes-list"
 import { Label } from "@/components/ui/label"
 import { Timeline } from "@/components/timeline"
 import { VideoSegment } from "@/types/video-segment"
+import type { AssembledTrack } from "@/types/assembled-track"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -40,7 +40,7 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState(false)
   const [recordings, setRecordings] = useState<RecordEntry[]>([])
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
-  const [activeVideos, setActiveVideos] = useState<ActiveVideoEntry[]>([])
+  const [activeVideos, setActiveVideos] = useState<AssembledTrack[]>([])
   const [mainCamera, setMainCamera] = useState(1)
   const [compilationSettings, setCompilationSettings] = useState({
     targetDuration: 900,
@@ -48,18 +48,13 @@ export default function Home() {
     maxSegmentLength: 100,
     averageSceneDuration: 5,
     cameraChangeFrequency: 4 / 7,
+    mainCameraPriority: 60,
   })
   const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
   const [, setBitrateData] = useState<Array<BitrateDataPoint[]>>([])
 
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()
-
-  const [draftSettings, setDraftSettings] = useState(compilationSettings)
-
-  useEffect(() => {
-    setDraftSettings(compilationSettings)
-  }, [compilationSettings])
 
   const RecordingsList = (
     { recordings, baseTime }: { recordings: RecordEntry[]; baseTime: number },
@@ -82,6 +77,37 @@ export default function Home() {
       }), [recordings, baseTime])
   }
 
+  // Добавляем новое состояние для собранных дорожек
+  const [assembledTracks, setAssembledTracks] = useState<AssembledTrack[]>([])
+
+  // Функция для обновления собранных дорожек
+  const updateAssembledTracks = useCallback(() => {
+    const videoGroups = new Map<number, VideoInfo[]>()
+
+    videos.forEach((video) => {
+      const cameraNumber = parseInt(video.path.match(/camera[_-]?(\d+)/i)?.[1] || "1")
+      if (!videoGroups.has(cameraNumber)) {
+        videoGroups.set(cameraNumber, [])
+      }
+      videoGroups.get(cameraNumber)?.push(video)
+    })
+
+    const tracks: AssembledTrack[] = Array.from(videoGroups.entries())
+      .map(([cameraNumber, groupVideos]) => ({
+        video: groupVideos[0],
+        index: cameraNumber,
+        isActive: true,
+        allVideos: groupVideos,
+      }))
+
+    setAssembledTracks(tracks)
+  }, [videos])
+
+  // Вызываем updateAssembledTracks при изменении списка видео
+  useEffect(() => {
+    updateAssembledTracks()
+  }, [videos, updateAssembledTracks])
+
   const [activeSegmentEnd, setActiveSegmentEnd] = useState<number | null>(null)
 
   useEffect(() => {
@@ -97,26 +123,32 @@ export default function Home() {
     }
   }, [activeSegmentEnd, isPlaying])
 
-  const handleCreateCompilation = () => {
-    setCompilationSettings(draftSettings)
+  const handleCreateCompilation = useCallback(() => {
+    if (!assembledTracks.length) return
 
     const scenes = distributeScenes({
-      ...draftSettings,
-      numCameras: videos.length,
+      targetDuration: compilationSettings.targetDuration,
+      numCameras: assembledTracks.length,
+      averageSceneDuration: compilationSettings.averageSceneDuration,
+      cameraChangeFrequency: compilationSettings.cameraChangeFrequency,
       mainCamera,
-      mainCameraProb: 0.6,
-      timeRange: timeRange,
-      videos: videos,
+      mainCameraProb: compilationSettings.mainCameraPriority / 100,
+      timeRange,
+      videos,
+      assembledTracks,
     })
 
-    setSelectedSegments(scenes.map((scene) => ({
-      cameraIndex: scene.cameraIndex,
-      startTime: scene.startTime,
-      endTime: scene.endTime,
-      duration: scene.duration,
-      videoFile: scene.videoFile,
-    })))
-  }
+    setSelectedSegments(scenes)
+  }, [
+    assembledTracks,
+    compilationSettings.targetDuration,
+    compilationSettings.averageSceneDuration,
+    compilationSettings.cameraChangeFrequency,
+    compilationSettings.mainCameraPriority,
+    mainCamera,
+    timeRange,
+    videos,
+  ])
 
   const maxDuration = timeRange.max - timeRange.min
 
@@ -131,21 +163,21 @@ export default function Home() {
   }
 
   const handleTargetDurationChange = (value: number) => {
-    setDraftSettings((prev) => ({
+    setCompilationSettings((prev) => ({
       ...prev,
       targetDuration: value,
     }))
   }
 
   const handleSceneDurationChange = (value: number) => {
-    setDraftSettings((prev) => ({
+    setCompilationSettings((prev) => ({
       ...prev,
       averageSceneDuration: value,
     }))
   }
 
   const handleCameraChangeFrequencyChange = (value: number) => {
-    setDraftSettings((prev) => ({
+    setCompilationSettings((prev) => ({
       ...prev,
       cameraChangeFrequency: Math.round(value * 7) / 7,
     }))
@@ -449,36 +481,12 @@ export default function Home() {
     }
   }, [activeCamera])
 
-  // Добавляем новое состояние для собранных дорожек
-  const [assembledTracks, setAssembledTracks] = useState<ActiveVideoEntry[]>([])
-
-  // Функция для обновления собранных дорожек
-  const updateAssembledTracks = useCallback(() => {
-    // Создаем мапу для группировки видео по их номеру камеры
-    const videoGroups = new Map<number, VideoInfo[]>()
-
-    videos.forEach((video) => {
-      const cameraNumber = parseInt(video.path.match(/camera[_-]?(\d+)/i)?.[1] || "1")
-      if (!videoGroups.has(cameraNumber)) {
-        videoGroups.set(cameraNumber, [])
-      }
-      videoGroups.get(cameraNumber)?.push(video)
-    })
-
-    const tracks = Array.from(videoGroups.entries()).map(([cameraNumber, groupVideos]) => ({
-      video: groupVideos[0],
-      index: cameraNumber,
-      isActive: true, // Всегда true для собранных дорожек
-      allVideos: groupVideos,
+  const handleMainCameraPriorityChange = (value: number) => {
+    setCompilationSettings((prev) => ({
+      ...prev,
+      mainCameraPriority: value,
     }))
-
-    setAssembledTracks(tracks)
-  }, [videos])
-
-  // Вызываем updateAssembledTracks при изменении списка видео
-  useEffect(() => {
-    updateAssembledTracks()
-  }, [videos, updateAssembledTracks])
+  }
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
@@ -575,11 +583,11 @@ export default function Home() {
 
                   <div className="flex items-center gap-2 flex-1">
                     <span className="text-sm whitespace-nowrap text-gray-900 dark:text-gray-100">
-                      Длительность: {formatDuration(draftSettings.targetDuration, 0)}{" "}
-                      {/* Используем draftSettings вместо compilationSettings */}
+                      Длительность: {formatDuration(compilationSettings.targetDuration, 0)}
+                      {" "}
                     </span>
                     <Slider
-                      value={[draftSettings.targetDuration]}
+                      value={[compilationSettings.targetDuration]}
                       onValueChange={([value]) => handleTargetDurationChange(value)}
                       min={2}
                       max={maxDuration}
@@ -592,7 +600,7 @@ export default function Home() {
                       <Label>Средняя длительность сцны</Label>
                       <div className="flex items-center gap-2">
                         <Slider
-                          value={[draftSettings.averageSceneDuration]}
+                          value={[compilationSettings.averageSceneDuration]}
                           onValueChange={([value]) => handleSceneDurationChange(value)}
                           min={0.5}
                           max={10}
@@ -600,7 +608,7 @@ export default function Home() {
                           className="flex-1"
                         />
                         <span className="text-sm w-16 text-right text-muted-foreground">
-                          {draftSettings.averageSceneDuration.toFixed(1)} сек
+                          {compilationSettings.averageSceneDuration.toFixed(1)} сек
                         </span>
                       </div>
                     </div>
@@ -608,7 +616,7 @@ export default function Home() {
                       <Label>Частота смены камеры</Label>
                       <div className="flex flex-col gap-1">
                         <Slider
-                          value={[draftSettings.cameraChangeFrequency]}
+                          value={[compilationSettings.cameraChangeFrequency]}
                           onValueChange={([value]) => handleCameraChangeFrequencyChange(value)}
                           min={0}
                           max={1}
@@ -616,10 +624,23 @@ export default function Home() {
                           className="flex-1"
                         />
                         <span className="text-sm text-muted-foreground">
-                          {getCameraChangeLabel(draftSettings.cameraChangeFrequency)}
+                          {getCameraChangeLabel(compilationSettings.cameraChangeFrequency)}
                         </span>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label>
+                      Приоритет главной камеры ({compilationSettings.mainCameraPriority}%)
+                    </Label>
+                    <Slider
+                      value={[compilationSettings.mainCameraPriority]}
+                      min={0}
+                      max={100}
+                      step={5}
+                      onValueChange={(value) => handleMainCameraPriorityChange(value[0])}
+                    />
                   </div>
 
                   <Button
