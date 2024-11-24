@@ -56,5 +56,13 @@ export default {
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [function ({ addBase }) {
+		addBase({
+			'body': {
+				width: '100%',
+				WebkitFontSmoothing: 'antialiased',
+				MozOsxFontSmoothing: 'grayscale',
+			},
+		})
+	},require("tailwindcss-animate")],
 } satisfies Config;

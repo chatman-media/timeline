@@ -1,4 +1,4 @@
-import { VideoInfo } from "@/types/video"
+import { MediaFile } from "@/types/video"
 
 interface SelectedScenesListProps {
   segments: Array<{
@@ -8,8 +8,8 @@ interface SelectedScenesListProps {
     duration: number
     videoFile?: string
   }>
-  videos: VideoInfo[]
-  onSegmentClick: (startTime: number) => void
+  videos: MediaFile[]
+  onSegmentClick: (cameraIndex: number, startTime: number, endTime: number) => void
 }
 
 function formatTimeForDisplay(timestamp: number): string {
@@ -49,7 +49,8 @@ export function SelectedScenesList({ segments, onSegmentClick }: SelectedScenesL
               <tr
                 key={index}
                 className="hover:bg-muted/50 cursor-pointer"
-                onClick={() => onSegmentClick(segment.startTime)}
+                onClick={() =>
+                  onSegmentClick(segment.cameraIndex, segment.startTime, segment.endTime)}
               >
                 <td className="p-1">{index + 1}</td>
                 <td className="p-1">V{segment.cameraIndex}</td>

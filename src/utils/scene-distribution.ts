@@ -1,5 +1,6 @@
 import { generateGaussianSceneDurations } from "./generate-scene-durations"
 import { SceneDistributionParams, SceneSegment } from "../types/scene"
+import { analyzeAudioForSegment } from "./audio-analysis"
 
 /**
  * Создает распределение сцен для мультикамерного монтажа.
@@ -30,7 +31,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   const videosByCamera = new Map(
     params.assembledTracks.map((track) => [
       track.index,
-      track.allVideos,
+      track.allMedia,
     ]),
   )
 
@@ -38,18 +39,18 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   const findVideoForSegment = (camera: number, startTime: number, endTime: number) => {
     const videos = videosByCamera.get(camera) || []
     return videos.find((video) => {
-      const videoStart = new Date(video.metadata.creation_time!).getTime() / 1000
-      const videoEnd = videoStart + video.metadata.format.duration
+      const videoStart = new Date(video.probeData.format.creation_time!).getTime() / 1000
+      const videoEnd = videoStart + video.probeData.format.duration
       return videoStart <= startTime && videoEnd >= endTime
     })
   }
 
   // Находим общий временной диапазон всех видео
   const timeRanges = params.assembledTracks.map((track) => {
-    const trackRanges = track.allVideos.map((video) => ({
-      start: new Date(video.metadata.creation_time!).getTime() / 1000,
-      end: new Date(video.metadata.creation_time!).getTime() / 1000 +
-        video.metadata.format.duration,
+    const trackRanges = track.allMedia.map((video) => ({
+      start: new Date(video.probeData.format.creation_time!).getTime() / 1000,
+      end: new Date(video.probeData.format.creation_time!).getTime() / 1000 +
+        +video.probeData.format.duration,
     }))
     return {
       camera: track.index,
@@ -88,26 +89,28 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   )
 
   // Масштабируем длительности
-  const currentTotalDuration = timeSegments.reduce((sum, segment) => sum + segment.duration, 0)
-  const durationScaleFactor = params.targetDuration / currentTotalDuration
+  // const currentTotalDuration = timeSegments.reduce((sum, segment) => sum + segment.duration, 0)
+  // const durationScaleFactor = params.targetDuration / currentTotalDuration
 
-  // Распределяем точки начала равномерно в пределах доступного времени
-  const segmentCount = timeSegments.length
-  const timeStep = availableDuration / (segmentCount + 1)
+  const segmentCount = Math.floor(params.targetDuration / params.averageSceneDuration)
+  const totalTimeRange = effectiveTimeRange.max - effectiveTimeRange.min
+  const timeStep = totalTimeRange / (params.targetDuration / params.averageSceneDuration)
 
   const selectedPoints = Array.from({ length: segmentCount }, (_, i) => {
-    const basePoint = effectiveTimeRange.min + (i + 1) * timeStep
-    const jitter = (Math.random() - 0.5) * timeStep * 0.5 // 50% случайности
-    return Math.min(Math.max(basePoint + jitter, effectiveTimeRange.min), effectiveTimeRange.max)
+    // Распределяем точки с учетом целевой длительности
+    const basePoint = effectiveTimeRange.min + (i * timeStep)
+    // Добавляем небольшое случайное смещение (±10% от шага)
+    const jitter = (Math.random() - 0.5) * timeStep * 0.2
+    return Math.min(
+      Math.max(basePoint + jitter, effectiveTimeRange.min),
+      effectiveTimeRange.max,
+    )
   }).sort((a, b) => a - b)
 
-  // Масштабируем длительности и назначаем точки начала
-  timeSegments = timeSegments.map((segment, index) => ({
-    duration: Math.min(
-      segment.duration * durationScaleFactor,
-      effectiveTimeRange.max - selectedPoints[index],
-    ),
-    startTime: selectedPoints[index],
+  // Создаем сегменты фиксированной длительности
+  timeSegments = selectedPoints.map((startTime) => ({
+    startTime,
+    duration: params.averageSceneDuration,
   }))
 
   // Распределение камер внутри сегментов
@@ -131,8 +134,8 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
       const availableCameras = Array.from(videosByCamera.entries())
         .filter(([_, videos]) =>
           videos.some((video) => {
-            const videoStart = new Date(video.metadata.creation_time!).getTime() / 1000
-            const videoEnd = videoStart + video.metadata.format.duration
+            const videoStart = new Date(video.probeData.format.creation_time!).getTime() / 1000
+            const videoEnd = videoStart + video.probeData.format.format.duration
             return videoStart <= subSegmentStart && videoEnd >= subSegmentEnd
           })
         )
@@ -147,7 +150,14 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
         continue
       }
 
-      // Выбираем камеру с учетом вероятности
+      // Анализируем аудио для текущего сегмента
+      const audioScores = analyzeAudioForSegment(
+        subSegmentStart,
+        subSegmentEnd,
+        params.assembledTracks,
+      )
+
+      // Выбираем камеру с учетом аудио качества
       let selectedCamera = params.mainCamera
 
       // Всегда выбираем камеру, отличную от предыдущей
@@ -158,8 +168,26 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
         if (Math.random() <= params.mainCameraProb && !otherCameras.includes(params.mainCamera)) {
           selectedCamera = params.mainCamera
         } else {
-          // Иначе выбираем случайную из других доступных
-          selectedCamera = otherCameras[Math.floor(Math.random() * otherCameras.length)]
+          // Учитываем аудио скоры при выборе камеры
+          const weightedCameras = otherCameras.map((camera) => {
+            const audioScore = audioScores.find((s) => s.cameraIndex === camera)?.score || 0
+            return {
+              camera,
+              weight: 1 + audioScore, // Базовый вес + аудио скор
+            }
+          })
+
+          // Выбираем камеру с учетом весов
+          const totalWeight = weightedCameras.reduce((sum, c) => sum + c.weight, 0)
+          let random = Math.random() * totalWeight
+
+          for (const { camera, weight } of weightedCameras) {
+            random -= weight
+            if (random <= 0) {
+              selectedCamera = camera
+              break
+            }
+          }
         }
       }
 
@@ -171,7 +199,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
           duration: subSegmentEnd - subSegmentStart,
           cameraIndex: selectedCamera,
           videoFile: video.path,
-          totalBitrate: video.metadata.format.bit_rate || 0,
+          totalBitrate: video.probeData.format.format.bit_rate || 0,
         })
         lastCamera = selectedCamera
       }
@@ -185,18 +213,32 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   for (const scene of scenes) {
     if (!currentMergedScene) {
       currentMergedScene = { ...scene }
-    } else if (currentMergedScene.cameraIndex === scene.cameraIndex) {
-      // Объединяем последовательные сегменты одной камеры
+      continue
+    }
+
+    const canMerge =
+      // Та же камера
+      currentMergedScene.cameraIndex === scene.cameraIndex &&
+      // Последовательные времена
+      Math.abs(currentMergedScene.endTime - scene.startTime) < 0.1 &&
+      // Тот же файл видео
+      currentMergedScene.videoFile === scene.videoFile &&
+      // Не превышаем максимальную длительность
+      (scene.endTime - currentMergedScene.startTime) <= params.averageSceneDuration * 3
+
+    if (canMerge) {
+      // Объединяем сцены
       currentMergedScene.endTime = scene.endTime
       currentMergedScene.duration = currentMergedScene.endTime - currentMergedScene.startTime
     } else {
-      // Сохраняем предыдущий объединенный сегмент и начинаем новый
+      // Добавляем текущую объединенную сцену в результат
       mergedScenes.push(currentMergedScene)
+      // Начинаем новую сцену
       currentMergedScene = { ...scene }
     }
   }
 
-  // Добавляем последний сегмент
+  // Добавляем последнюю сцену
   if (currentMergedScene) {
     mergedScenes.push(currentMergedScene)
   }

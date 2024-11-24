@@ -90,7 +90,6 @@ const BitrateChart = withTooltip(
       },
       [showTooltip, bitrateScale, timeScale, data, margin.left],
     )
-
     console.log(currentTime ?? 0)
 
     // Обновляем позицию линии текущего времени
