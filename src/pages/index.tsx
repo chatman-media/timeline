@@ -4,7 +4,7 @@ import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
 import { Slider } from "@/components/ui/slider"
-import type { BitrateDataPoint, VideoInfo } from "@/types/video"
+import type { MediaFile } from "@/types/video"
 import { ActiveVideo } from "@/components/active-video"
 import { Button } from "@/components/ui/button"
 import { PauseIcon, PlayIcon } from "lucide-react"
@@ -32,7 +32,7 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 export default function Home() {
-  const [videos, setVideos] = useState<VideoInfo[]>([])
+  const [videos, setVideos] = useState<MediaFile[]>([])
   const [timeRange, setTimeRange] = useState({ min: 0, max: 0 })
   const [currentTime, setCurrentTime] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -51,7 +51,6 @@ export default function Home() {
     mainCameraPriority: 60,
   })
   const [selectedSegments, setSelectedSegments] = useState<VideoSegment[]>([])
-  const [, setBitrateData] = useState<Array<BitrateDataPoint[]>>([])
 
   const lastUpdateTime = useRef<number>(0)
   const animationFrameId = useRef<number>()
@@ -82,7 +81,7 @@ export default function Home() {
 
   // Функция для обновления собранных дорожек
   const updateAssembledTracks = useCallback(() => {
-    const videoGroups = new Map<number, VideoInfo[]>()
+    const videoGroups = new Map<number, MediaFile[]>()
 
     videos.forEach((video) => {
       // Используем индекс из массива + 1 как номер камеры
@@ -193,26 +192,26 @@ export default function Home() {
       .then((data) => {
         console.log("Received video data:", data)
 
-        if (!data.videos || !Array.isArray(data.videos) || data.videos.length === 0) {
+        if (!data.media || !Array.isArray(data.media) || data.media.length === 0) {
           console.error("No videos received from API")
           return
         }
 
-        const bitrateData = data.videos.map((video: VideoInfo) => video.bitrate_data || [])
-        setBitrateData(bitrateData)
-
-        // Сортируем видео по времени создания
-        const sortedVideos = data.videos.sort((a: VideoInfo, b: VideoInfo) => {
-          const timeA = a.metadata.creation_time ? new Date(a.metadata.creation_time).getTime() : 0
-          const timeB = b.metadata.creation_time ? new Date(b.metadata.creation_time).getTime() : 0
+        const sortedVideos = data.media.sort((a: MediaFile, b: MediaFile) => {
+          const timeA = a.probeData.format.creation_time
+            ? new Date(a.probeData.format.creation_time).getTime()
+            : 0
+          const timeB = b.probeData.format.creation_time
+            ? new Date(b.probeData.format.creation_time).getTime()
+            : 0
           return timeA - timeB
         })
 
         // Находим минимальное время начала и максимальное время окончания среди всех видо
-        const times = sortedVideos.flatMap((v: VideoInfo) => {
-          if (!v.metadata.creation_time) return []
-          const startTime = new Date(v.metadata.creation_time).getTime()
-          const endTime = startTime + (v.metadata.format.duration * 1000) // конвертируем длитльност в миллисекунды
+        const times = sortedVideos.flatMap((v: MediaFile) => {
+          if (!v.probeData.format.tags?.creation_time) return []
+          const startTime = new Date(v.probeData.format.tags.creation_time).getTime()
+          const endTime = startTime + (v.probeData.format.duration || 0) * 1000
           return [startTime, endTime]
         }).filter((t: number) => t > 0)
         console.log(times.map((t: number) => new Date(Math.floor(t))))
@@ -385,8 +384,8 @@ export default function Home() {
         const activeVideoElement = videoRefs.current[`active-${video.path}`]
 
         if (videoElement) {
-          const videoTime = new Date(video.metadata.creation_time!).getTime() / 1000
-          const startTime = new Date(videos[0].metadata.creation_time!).getTime() / 1000
+          const videoTime = new Date(video.probeData.format.creation_time!).getTime() / 1000
+          const startTime = new Date(videos[0].probeData.format.creation_time!).getTime() / 1000
           const relativeTime = currentTime - (videoTime - startTime)
 
           // Добавляем более точную инхронизацию
@@ -419,12 +418,12 @@ export default function Home() {
       currentTime,
       videoGroups: videos.map((v) => ({
         path: v.path,
-        creationTime: v.metadata.creation_time,
+        creationTime: v.probeData.format.creation_time,
       })),
     })
 
     // Создаем мапу для группировки видео по их номеру камеры
-    const videoGroups = new Map<number, VideoInfo[]>()
+    const videoGroups = new Map<number, MediaFile[]>()
 
     videos.forEach((video) => {
       // Извлекаем номер камеры из имени файла или другим способом
@@ -439,13 +438,13 @@ export default function Home() {
 
     const active = Array.from(videoGroups.entries()).map(([cameraNumber, groupVideos]) => {
       const isActive = groupVideos.some((video) => {
-        if (!video.metadata.creation_time) return false
-        const videoTime = new Date(video.metadata.creation_time).getTime() / 1000
-        const startTime = videos[0]?.metadata.creation_time
-          ? new Date(videos[0].metadata.creation_time).getTime() / 1000
+        if (!video.probeData.format.creation_time) return false
+        const videoTime = new Date(video.probeData.format.creation_time).getTime() / 1000
+        const startTime = videos[0]?.probeData.format.creation_time
+          ? new Date(videos[0].probeData.format.creation_time).getTime() / 1000
           : 0
         const videoSeconds = videoTime - startTime
-        const videoEndSeconds = videoSeconds + video.metadata.format.duration
+        const videoEndSeconds = videoSeconds + video.probeData.format.format.duration
         return videoSeconds <= currentTime && currentTime <= videoEndSeconds
       })
 
@@ -529,8 +528,8 @@ export default function Home() {
                 </span>
 
                 <span className="text-xl font-medium ml-auto text-gray-900 dark:text-gray-100">
-                  {videos[0]?.metadata.creation_time
-                    ? dayjs(new Date(videos[0].metadata.creation_time))
+                  {videos[0]?.probeData.format.creation_time
+                    ? dayjs(new Date(videos[0].probeData.format.creation_time))
                       .add(currentTime - timeRange.min, "second")
                       .format("D MMMM, HH:mm:ss")
                     : "--:--:--"}
@@ -540,7 +539,7 @@ export default function Home() {
                   <div className="ml-6 text-sm text-gray-600 dark:text-gray-100">
                     <RecordingsList
                       recordings={recordings}
-                      baseTime={videos[0]?.metadata.format.start_time ?? 0}
+                      baseTime={videos[0]?.probeData.format.format.start_time ?? 0}
                     />
                   </div>
                 )}
@@ -700,10 +699,10 @@ export default function Home() {
             <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
               {activeVideos
                 .filter(({ index }) => index === activeCamera)
-                .map(({ video, index }) => (
+                .map(({ video }) => (
                   <ActiveVideo
                     key={`active-${video.path}`}
-                    video={{ ...video, activeIndex: index - 1 }}
+                    video={video}
                     isPlaying={isPlaying}
                     videoRefs={videoRefs}
                   />

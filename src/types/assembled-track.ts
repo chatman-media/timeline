@@ -1,8 +1,8 @@
-import type { VideoInfo } from "./video"
+import type { MediaFile } from "./video"
 
 export interface AssembledTrack {
-  video: VideoInfo // Первое видео трека (для метаданных)
+  video: MediaFile // Первое видео трека (для метаданных)
   index: number // Номер камеры
   isActive: boolean // Флаг активности трека
-  allVideos: VideoInfo[] // Все видео этой камеры
+  allVideos: MediaFile[] // Все видео этой камеры
 }

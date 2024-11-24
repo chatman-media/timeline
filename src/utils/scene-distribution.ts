@@ -38,8 +38,8 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   const findVideoForSegment = (camera: number, startTime: number, endTime: number) => {
     const videos = videosByCamera.get(camera) || []
     return videos.find((video) => {
-      const videoStart = new Date(video.metadata.creation_time!).getTime() / 1000
-      const videoEnd = videoStart + video.metadata.format.duration
+      const videoStart = new Date(video.probeData.format.creation_time).getTime() / 1000
+      const videoEnd = videoStart + video.probeData.format.format.duration
       return videoStart <= startTime && videoEnd >= endTime
     })
   }
@@ -47,9 +47,9 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   // Находим общий временной диапазон всех видео
   const timeRanges = params.assembledTracks.map((track) => {
     const trackRanges = track.allVideos.map((video) => ({
-      start: new Date(video.metadata.creation_time!).getTime() / 1000,
-      end: new Date(video.metadata.creation_time!).getTime() / 1000 +
-        video.metadata.format.duration,
+      start: new Date(video.probeData.format.creation_time).getTime() / 1000,
+      end: new Date(video.probeData.format.creation_time).getTime() / 1000 +
+        video.probeData.format.format.duration,
     }))
     return {
       camera: track.index,
@@ -131,8 +131,8 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
       const availableCameras = Array.from(videosByCamera.entries())
         .filter(([_, videos]) =>
           videos.some((video) => {
-            const videoStart = new Date(video.metadata.creation_time!).getTime() / 1000
-            const videoEnd = videoStart + video.metadata.format.duration
+            const videoStart = new Date(video.probeData.format.creation_time!).getTime() / 1000
+            const videoEnd = videoStart + video.probeData.format.format.duration
             return videoStart <= subSegmentStart && videoEnd >= subSegmentEnd
           })
         )
@@ -171,7 +171,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
           duration: subSegmentEnd - subSegmentStart,
           cameraIndex: selectedCamera,
           videoFile: video.path,
-          totalBitrate: video.metadata.format.bit_rate || 0,
+          totalBitrate: video.probeData.format.format.bit_rate || 0,
         })
         lastCamera = selectedCamera
       }

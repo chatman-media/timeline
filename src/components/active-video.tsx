@@ -1,8 +1,8 @@
 import { memo, useEffect } from "react"
-import type { VideoInfo } from "@/types/video"
+import type { MediaFile } from "@/types/video"
 
 interface ActiveVideoProps {
-  video: VideoInfo
+  video: MediaFile
   isPlaying: boolean
   videoRefs: React.MutableRefObject<{ [key: string]: HTMLVideoElement }>
 }

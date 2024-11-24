@@ -1,4 +1,4 @@
-import { VideoInfo } from "@/types/video"
+import { MediaFile } from "@/types/video"
 
 interface SelectedScenesListProps {
   segments: Array<{
@@ -8,7 +8,7 @@ interface SelectedScenesListProps {
     duration: number
     videoFile?: string
   }>
-  videos: VideoInfo[]
+  videos: MediaFile[]
   onSegmentClick: (startTime: number) => void
 }
 

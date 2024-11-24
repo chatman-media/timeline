@@ -1,9 +1,9 @@
-import { VideoInfo } from "@/types/video"
+import { MediaFile } from "@/types/video"
 import { formatBitrate, formatDuration } from "@/lib/utils"
 import { SceneSegment } from "@/types/scene"
 
 interface TimelineProps {
-  videos: VideoInfo[]
+  videos: MediaFile[]
   timeRange: { min: number; max: number }
   selectedSegments: Array<SceneSegment>
   onPlaySegment: (cameraIndex: number, startTime: number, endTime: number) => void
@@ -20,30 +20,34 @@ export const Timeline: React.FC<TimelineProps> = (
   const totalDuration = normalizedTimeRange.max - normalizedTimeRange.min
 
   // Функция для проверки последовательности видео
-  const isSequentialVideos = (video1: VideoInfo, video2: VideoInfo) => {
-    if (!video1.metadata.creation_time || !video2.metadata.creation_time) return false
+  const isSequentialVideos = (video1: MediaFile, video2: MediaFile) => {
+    if (
+      !video1.probeData.format.tags?.creation_time || !video2.probeData.format.tags?.creation_time
+    ) return false
 
     // Получаем время окончания первого видео
-    const video1End = new Date(video1.metadata.creation_time).getTime() / 1000 +
-      video1.metadata.format.duration
+    const video1End = new Date(video1.probeData.format.tags.creation_time).getTime() / 1000 +
+      (video1.probeData.format.duration || 0)
 
     // Получаем время начала второго видео
-    const video2Start = new Date(video2.metadata.creation_time).getTime() / 1000
+    const video2Start = new Date(video2.probeData.format.tags.creation_time).getTime() / 1000
 
     // Проверяем метаданные видео на совместимость
-    const isSameFormat =
-      video1.metadata.video_stream?.codec_name === video2.metadata.video_stream?.codec_name &&
-      video1.metadata.video_stream?.width === video2.metadata.video_stream?.width &&
-      video1.metadata.video_stream?.height === video2.metadata.video_stream?.height
+    const videoStream1 = video1.probeData.streams.find((s) => s.codec_type === "video")
+    const videoStream2 = video2.probeData.streams.find((s) => s.codec_type === "video")
 
-    // Увеличиваем допуск до 5 секунд, так как видим небольшие расхождения в логах
+    const isSameFormat = videoStream1 && videoStream2 &&
+      videoStream1.codec_name === videoStream2.codec_name &&
+      videoStream1.width === videoStream2.width &&
+      videoStream1.height === videoStream2.height
+
     const isTimeSequential = Math.abs(video1End - video2Start) <= 5
 
     return isSameFormat && isTimeSequential
   }
 
   // Новая логика группировки
-  const groupedVideos = videos.reduce((acc: VideoInfo[][], currentVideo) => {
+  const groupedVideos = videos.reduce((acc: MediaFile[][], currentVideo) => {
     // Проверяем, можно ли добавить текущее видео в существующую группу
     let addedToExisting = false
 
@@ -102,13 +106,13 @@ export const Timeline: React.FC<TimelineProps> = (
 
         // Рассчитываем общую длительность группы как сумму длительностей всех видео
         const groupDuration = group.reduce(
-          (total, video) => total + video.metadata.format.duration,
+          (total, video) => total + (video.probeData.format.duration || 0),
           0,
         )
 
         // Получаем время начала видео с делением на 1000
-        const videoStartTime = firstVideo.metadata.creation_time
-          ? new Date(firstVideo.metadata.creation_time).getTime() / 1000
+        const videoStartTime = firstVideo.probeData.format.tags?.creation_time
+          ? new Date(firstVideo.probeData.format.tags.creation_time).getTime() / 1000
           : timeRange.min
         const videoEndTime = videoStartTime + groupDuration
 
@@ -137,22 +141,32 @@ export const Timeline: React.FC<TimelineProps> = (
                   <span>
                     {group.length > 1
                       ? `${group.length} FILES`
-                      : firstVideo.metadata.format?.filename.toUpperCase()}
+                      : (firstVideo.probeData.format?.filename || "").toUpperCase()}
                   </span>
                   <span>•</span>
-                  <span>{firstVideo.metadata.video_stream?.codec_name.toUpperCase()}</span>
+                  <span>
+                    {(firstVideo.probeData.streams.find((s) => s.codec_type === "video")
+                      ?.codec_name || "").toUpperCase()}
+                  </span>
                   <span>•</span>
                   <span>
-                    {firstVideo.metadata.video_stream?.width}×{firstVideo.metadata.video_stream
+                    {firstVideo.probeData.streams.find((s) => s.codec_type === "video")
+                      ?.width}×{firstVideo.probeData.streams.find((s) => s.codec_type === "video")
                       ?.height}
                   </span>
                   <span>•</span>
-                  <span>{firstVideo.metadata.video_stream?.display_aspect_ratio}</span>
+                  <span>
+                    {firstVideo.probeData.streams.find((s) => s.codec_type === "video")
+                      ?.display_aspect_ratio}
+                  </span>
                   <span>•</span>
                   <span>
                     {formatBitrate(
-                      group.reduce((sum, video) => sum + video.metadata.format.bit_rate, 0) /
-                        group.length,
+                      (group.reduce(
+                        (sum, video) => sum + (video.probeData.format.bit_rate || 0),
+                        0,
+                      ) /
+                        group.length) || 0,
                     )}
                   </span>
                 </div>
