@@ -186,6 +186,98 @@ export default function Home() {
 
   const [isLoading, setIsLoading] = useState(true)
 
+  // Модифицируем функцию handleTimeChange
+  const handleTimeChange = useCallback((value: number) => {
+    setCurrentTime(value)
+  }, [])
+
+  // Добавляем функцию для управления воспроизведением
+  const togglePlayback = useCallback(() => {
+    setIsPlaying((prev) => !prev)
+  }, [])
+
+  // Добавляем функцию дя записи
+  const toggleRecording = useCallback(() => {
+    if (!isRecording) {
+      // Начало записи
+      setIsRecording(true)
+      if (!isPlaying) {
+        setIsPlaying(true)
+      }
+      setRecordings((prev) => [...prev, {
+        camera: activeCamera,
+        startTime: currentTime,
+      }])
+    } else {
+      // Остановка записи
+      setIsRecording(false)
+      setIsPlaying(false)
+
+      setRecordings((prev) => {
+        const updatedRecordings = [...prev]
+        if (updatedRecordings.length > 0) {
+          updatedRecordings[updatedRecordings.length - 1].endTime = currentTime
+        }
+        return updatedRecordings
+      })
+    }
+  }, [isRecording, activeCamera, isPlaying])
+
+  const handleMainCameraPriorityChange = useCallback((value: number) => {
+    setCompilationSettings((prev) => ({
+      ...prev,
+      mainCameraPriority: value,
+    }))
+  }, [])
+
+  // Модифицируем updateActiveVideos для определения активных видео
+  const updateActiveVideos = useCallback(() => {
+    // console.log("Updating active videos:", {
+    //   videosCount: videos.length,
+    //   currentTime,
+    //   videoGroups: videos.map((v) => ({
+    //     path: v.path,
+    //     creationTime: v.probeData.format.start_time,
+    //   })),
+    // })
+
+    // Создаем мапу для группировки видео по их номеру камеры
+    const videoGroups = new Map<number, MediaFile[]>()
+
+    videos.forEach((video) => {
+      // Извлекаем номер камеры из имени файла или другим способом
+      // Предполагаем, что номер камеры содержится в имени файла
+      const cameraNumber = parseInt(video.path.match(/camera[_-]?(\d+)/i)?.[1] || "1")
+
+      if (!videoGroups.has(cameraNumber)) {
+        videoGroups.set(cameraNumber, [])
+      }
+      videoGroups.get(cameraNumber)?.push(video)
+    })
+
+    const active = Array.from(videoGroups.entries()).map(([cameraNumber, groupVideos]) => {
+      const isActive = groupVideos.some((video) => {
+        if (!video.probeData.format.start_time) return false
+        const videoTime = new Date(video.probeData.format.start_time).getTime() / 1000
+        const startTime = videos[0]?.probeData.format.start_time
+          ? new Date(videos[0].probeData.format.creation_time).getTime() / 1000
+          : 0
+        const videoSeconds = videoTime - startTime
+        const videoEndSeconds = videoSeconds + (video.probeData.format.duration || 0)
+        return videoSeconds <= currentTime && currentTime <= videoEndSeconds
+      })
+
+      return {
+        video: groupVideos[0],
+        index: cameraNumber,
+        isActive,
+        allVideos: groupVideos,
+      }
+    })
+
+    setActiveVideos(active.filter((v) => v.isActive))
+  }, [videos, currentTime])
+
   useEffect(() => {
     setIsLoading(true)
     fetch("/api/videos")
@@ -250,43 +342,6 @@ export default function Home() {
       })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-
-  // Модифицируем функцию handleTimeChange
-  const handleTimeChange = useCallback((value: number) => {
-    setCurrentTime(value)
-  }, [])
-
-  // Добавляем функцию для управления воспроизведением
-  const togglePlayback = useCallback(() => {
-    setIsPlaying((prev) => !prev)
-  }, [])
-
-  // Добавляем функцию дя записи
-  const toggleRecording = useCallback(() => {
-    if (!isRecording) {
-      // Начало записи
-      setIsRecording(true)
-      if (!isPlaying) {
-        setIsPlaying(true)
-      }
-      setRecordings((prev) => [...prev, {
-        camera: activeCamera,
-        startTime: currentTime,
-      }])
-    } else {
-      // Остановка записи
-      setIsRecording(false)
-      setIsPlaying(false)
-
-      setRecordings((prev) => {
-        const updatedRecordings = [...prev]
-        if (updatedRecordings.length > 0) {
-          updatedRecordings[updatedRecordings.length - 1].endTime = currentTime
-        }
-        return updatedRecordings
-      })
-    }
-  }, [isRecording, activeCamera, isPlaying])
 
   // Обновляем эффект для обработки клавиш
   useEffect(() => {
@@ -421,54 +476,6 @@ export default function Home() {
     }
   }, [isPlaying, videos, timeRange.max])
 
-  // Модифицируем updateActiveVideos для определения активных видео
-  const updateActiveVideos = useCallback(() => {
-    // console.log("Updating active videos:", {
-    //   videosCount: videos.length,
-    //   currentTime,
-    //   videoGroups: videos.map((v) => ({
-    //     path: v.path,
-    //     creationTime: v.probeData.format.start_time,
-    //   })),
-    // })
-
-    // Создаем мапу для группировки видео по их номеру камеры
-    const videoGroups = new Map<number, MediaFile[]>()
-
-    videos.forEach((video) => {
-      // Извлекаем номер камеры из имени файла или другим способом
-      // Предполагаем, что номер камеры содержится в имени файла
-      const cameraNumber = parseInt(video.path.match(/camera[_-]?(\d+)/i)?.[1] || "1")
-
-      if (!videoGroups.has(cameraNumber)) {
-        videoGroups.set(cameraNumber, [])
-      }
-      videoGroups.get(cameraNumber)?.push(video)
-    })
-
-    const active = Array.from(videoGroups.entries()).map(([cameraNumber, groupVideos]) => {
-      const isActive = groupVideos.some((video) => {
-        if (!video.probeData.format.start_time) return false
-        const videoTime = new Date(video.probeData.format.start_time).getTime() / 1000
-        const startTime = videos[0]?.probeData.format.start_time
-          ? new Date(videos[0].probeData.format.creation_time).getTime() / 1000
-          : 0
-        const videoSeconds = videoTime - startTime
-        const videoEndSeconds = videoSeconds + video.probeData.format.duration
-        return videoSeconds <= currentTime && currentTime <= videoEndSeconds
-      })
-
-      return {
-        video: groupVideos[0],
-        index: cameraNumber,
-        isActive,
-        allVideos: groupVideos,
-      }
-    })
-
-    setActiveVideos(active.filter((v) => v.isActive))
-  }, [videos, currentTime])
-
   // Добавляем эффект для обновления активных видео
   useEffect(() => {
     updateActiveVideos()
@@ -490,15 +497,6 @@ export default function Home() {
       container.appendChild(clone)
     }
   }, [activeCamera])
-
-  const handleMainCameraPriorityChange = (value: number) => {
-    setCompilationSettings((prev) => ({
-      ...prev,
-      mainCameraPriority: value,
-    }))
-  }
-
-  console.log(timeRange)
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
@@ -713,19 +711,21 @@ export default function Home() {
           </main>
         )}
 
-      <div className="flex gap-16 w-full px-12 sm:px-16 py-16">
-        <div className="w-full">
-          <TimeLineEditor
-            t={(currentTime - timeRange.min) / (timeRange.max - timeRange.min) * 100}
-            duration={maxDuration}
-            startTime={timeRange.min}
-            onTimeUpdate={handleTimeChange}
-          />
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            {dayjs.unix(currentTime).format("HH:mm:ss.SSS")}
+      {!isLoading && timeRange.max > timeRange.min && (
+        <div className="flex gap-16 w-full px-12 sm:px-16 py-16">
+          <div className="w-full">
+            <TimeLineEditor
+              t={(currentTime - timeRange.min) / (timeRange.max - timeRange.min) * 100}
+              duration={maxDuration}
+              startTime={timeRange.min}
+              onTimeUpdate={handleTimeChange}
+            />
+            <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {dayjs.unix(currentTime).format("HH:mm:ss.SSS")}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

@@ -69,9 +69,12 @@ const TimelineBar = (
             barRef.current?.resizableElement?.current?.parentElement?.offsetWidth || 1
           const clampedX = Math.max(0, Math.min(dragData.x, parentWidth))
 
+          const percentage = clampedX / parentWidth
+          const time = startTime + (percentage * duration)
           updateSeekbar({
             x: clampedX,
             y: dragData.y,
+            timestamp: time,
           })
         }}
       />

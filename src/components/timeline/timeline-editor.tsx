@@ -21,7 +21,7 @@ const TimeLineEditor = (
   const parentRef = useRef<HTMLDivElement>(null)
 
   // Текущая позиция временной метки в пикселях
-  const [timeStamp] = useState<number>(0)
+  const [timeStamp] = useState<number>(t)
 
   // Массив всех слайсов (клипов) на временной шкале
   const [slices, setSlices] = useState<TimelineSliceType[]>([])

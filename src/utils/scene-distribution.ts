@@ -40,7 +40,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
     const videos = videosByCamera.get(camera) || []
     return videos.find((video: MediaFile) => {
       const videoStart = new Date(video.probeData.format.creation_time).getTime() / 1000
-      const videoEnd = videoStart + video.probeData.format.duration
+      const videoEnd = videoStart + (video.probeData.format.duration || 0)
       return videoStart <= startTime && videoEnd >= endTime
     })
   }
@@ -50,12 +50,12 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
     const trackRanges = track.allVideos.map((video: MediaFile) => ({
       start: new Date(video.probeData.format.creation_time).getTime() / 1000,
       end: new Date(video.probeData.format.creation_time).getTime() / 1000 +
-        video.probeData.format.duration,
+        (video.probeData.format.duration || 0),
     }))
     return {
       camera: track.index,
-      min: Math.min(...trackRanges.map((r) => r.start)),
-      max: Math.max(...trackRanges.map((r) => r.end)),
+      min: Math.min(...trackRanges.map((r: { start: number }) => r.start)),
+      max: Math.max(...trackRanges.map((r: { end: number }) => r.end)),
     }
   })
 
@@ -133,7 +133,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
         .filter(([_, videos]) =>
           videos.some((video: MediaFile) => {
             const videoStart = new Date(video.probeData.format.creation_time).getTime() / 1000
-            const videoEnd = videoStart + video.probeData.format.duration
+            const videoEnd = videoStart + (video.probeData.format.duration || 0)
             return videoStart <= subSegmentStart && videoEnd >= subSegmentEnd
           })
         )
