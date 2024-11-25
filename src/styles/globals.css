@@ -84,3 +84,121 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.slice--parent {
+  background: #eaeaea;
+  height: 50px;
+  top: 10px;
+  position: relative;
+}
+
+.drag--parent {
+  /* background: red; */
+  height: 70px;
+  padding: 0;
+}
+
+.drag--child {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: solid 1px #0000ff;
+  /* background: #00ff00; */
+}
+
+.drag--bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ff0000;
+  cursor: ew-resize !important;
+}
+
+.drag--handle--right {
+  width: 3px !important;
+  background: #000;
+  margin-right: 1px;
+}
+
+.drag--handle--left {
+  width: 3px !important;
+  background: #000;
+  margin-left: 1px;
+}
+
+/* Добавьте эти стили в ваш CSS файл */
+.timeline-editor {
+  width: 100%;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.timeline-scale {
+  position: relative;
+  height: 32px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.timeline-mark {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.timeline-mark-line {
+  height: 8px;
+  width: 1px;
+  background-color: var(--border);
+}
+
+.timeline-mark-text {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+.drag--child--selected {
+  border: 2px solid var(--foreground) !important; /* Используем системный цвет текста для границы */
+  box-shadow: 0 0 0 1px var(--background); /* Добавляем контрастную тень */
+}
+
+.timeline-button {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  margin-right: 0.5rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.timeline-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.timeline-button:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.timeline-button--add {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.timeline-button--remove {
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+}
+
+.drag-handle {
+  cursor: move;
+  width: 100%;
+  height: 100%;
+}

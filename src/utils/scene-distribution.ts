@@ -1,5 +1,6 @@
 import { generateGaussianSceneDurations } from "./generate-scene-durations"
 import { SceneDistributionParams, SceneSegment } from "../types/scene"
+import { MediaFile } from "@/types/videos"
 
 /**
  * Создает распределение сцен для мультикамерного монтажа.
@@ -37,19 +38,19 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   // Вспомогательная функция для поиска видео для сегмента
   const findVideoForSegment = (camera: number, startTime: number, endTime: number) => {
     const videos = videosByCamera.get(camera) || []
-    return videos.find((video) => {
+    return videos.find((video: MediaFile) => {
       const videoStart = new Date(video.probeData.format.creation_time).getTime() / 1000
-      const videoEnd = videoStart + video.probeData.format.format.duration
+      const videoEnd = videoStart + video.probeData.format.duration
       return videoStart <= startTime && videoEnd >= endTime
     })
   }
 
   // Находим общий временной диапазон всех видео
   const timeRanges = params.assembledTracks.map((track) => {
-    const trackRanges = track.allVideos.map((video) => ({
+    const trackRanges = track.allVideos.map((video: MediaFile) => ({
       start: new Date(video.probeData.format.creation_time).getTime() / 1000,
       end: new Date(video.probeData.format.creation_time).getTime() / 1000 +
-        video.probeData.format.format.duration,
+        video.probeData.format.duration,
     }))
     return {
       camera: track.index,
@@ -64,7 +65,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
     max: Math.max(...timeRanges.map((r) => r.max)),
   }
 
-  console.log("Effective time range:", effectiveTimeRange)
+  // console.log("Effective time range:", effectiveTimeRange)
 
   // Проверяем валидность диапазона
   if (effectiveTimeRange.max <= effectiveTimeRange.min) {
@@ -130,9 +131,9 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
       // Находим доступные камеры для текущего временного отрезка
       const availableCameras = Array.from(videosByCamera.entries())
         .filter(([_, videos]) =>
-          videos.some((video) => {
-            const videoStart = new Date(video.probeData.format.creation_time!).getTime() / 1000
-            const videoEnd = videoStart + video.probeData.format.format.duration
+          videos.some((video: MediaFile) => {
+            const videoStart = new Date(video.probeData.format.creation_time).getTime() / 1000
+            const videoEnd = videoStart + video.probeData.format.duration
             return videoStart <= subSegmentStart && videoEnd >= subSegmentEnd
           })
         )
@@ -171,7 +172,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
           duration: subSegmentEnd - subSegmentStart,
           cameraIndex: selectedCamera,
           videoFile: video.path,
-          totalBitrate: video.probeData.format.format.bit_rate || 0,
+          totalBitrate: video.probeData.format.bit_rate || 0,
         })
         lastCamera = selectedCamera
       }

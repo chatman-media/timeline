@@ -1,4 +1,4 @@
-import { MediaFile, VideoWithThumbnail } from "../types/video"
+import { MediaFile, VideoWithThumbnail } from "../types/videos"
 import { useEffect, useState } from "react"
 
 export function useThumbnailGeneration(rawVideos: MediaFile[]) {

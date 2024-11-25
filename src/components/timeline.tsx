@@ -1,4 +1,4 @@
-import { MediaFile } from "@/types/video"
+import { MediaFile } from "@/types/videos"
 import { formatBitrate, formatDuration } from "@/lib/utils"
 import { SceneSegment } from "@/types/scene"
 
@@ -22,15 +22,15 @@ export const Timeline: React.FC<TimelineProps> = (
   // Функция для проверки последовательности видео
   const isSequentialVideos = (video1: MediaFile, video2: MediaFile) => {
     if (
-      !video1.probeData.format.tags?.creation_time || !video2.probeData.format.tags?.creation_time
+      !video1.probeData.format.start_time || !video2.probeData.format.start_time
     ) return false
 
     // Получаем время окончания первого видео
-    const video1End = new Date(video1.probeData.format.tags.creation_time).getTime() / 1000 +
+    const video1End = new Date(video1.probeData.format.start_time).getTime() / 1000 +
       (video1.probeData.format.duration || 0)
 
     // Получаем время начала второго видео
-    const video2Start = new Date(video2.probeData.format.tags.creation_time).getTime() / 1000
+    const video2Start = new Date(video2.probeData.format.start_time).getTime() / 1000
 
     // Проверяем метаданные видео на совместимость
     const videoStream1 = video1.probeData.streams.find((s) => s.codec_type === "video")
@@ -111,8 +111,8 @@ export const Timeline: React.FC<TimelineProps> = (
         )
 
         // Получаем время начала видео с делением на 1000
-        const videoStartTime = firstVideo.probeData.format.tags?.creation_time
-          ? new Date(firstVideo.probeData.format.tags.creation_time).getTime() / 1000
+        const videoStartTime = firstVideo.probeData.format.start_time
+          ? new Date(firstVideo.probeData.format.start_time).getTime() / 1000
           : timeRange.min
         const videoEndTime = videoStartTime + groupDuration
 

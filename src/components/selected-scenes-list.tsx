@@ -1,4 +1,4 @@
-import { MediaFile } from "@/types/video"
+import { MediaFile } from "@/types/videos"
 
 interface SelectedScenesListProps {
   segments: Array<{

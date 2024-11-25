@@ -1,4 +1,4 @@
-import { MediaFile } from "./video"
+import { MediaFile } from "./videos"
 import type { AssembledTrack } from "./assembled-track"
 
 export interface TimeRange {

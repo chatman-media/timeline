@@ -5,7 +5,7 @@ import path from "path"
 import { promisify } from "util"
 import ffmpeg, { ffprobe, FfprobeData } from "fluent-ffmpeg"
 import process from "node:process"
-import { MediaFile } from "@/types/video"
+import { MediaFile } from "@/types/videos"
 
 // Промисифицируем ffprobe
 const ffprobeAsync = promisify(ffprobe)

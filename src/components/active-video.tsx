@@ -1,5 +1,5 @@
 import { memo, useEffect } from "react"
-import type { MediaFile } from "@/types/video"
+import type { MediaFile } from "@/types/videos"
 
 interface ActiveVideoProps {
   video: MediaFile

@@ -4,7 +4,7 @@ import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
 import { Slider } from "@/components/ui/slider"
-import type { MediaFile } from "@/types/video"
+import type { MediaFile } from "@/types/videos"
 import { ActiveVideo } from "@/components/active-video"
 import { Button } from "@/components/ui/button"
 import { PauseIcon, PlayIcon } from "lucide-react"
@@ -12,7 +12,7 @@ import { formatDuration } from "@/lib/utils"
 import { useMemo } from "react"
 import { distributeScenes } from "@/utils/scene-distribution"
 import { ThemeToggle } from "@/components/theme-toggle"
-import type { RecordEntry } from "@/types/record-entry"
+import type { RecordEntry } from "@/types/videos"
 import {
   Select,
   SelectContent,
@@ -23,8 +23,9 @@ import {
 import { SelectedScenesList } from "@/components/selected-scenes-list"
 import { Label } from "@/components/ui/label"
 import { Timeline } from "@/components/timeline"
-import { VideoSegment } from "@/types/video-segment"
-import type { AssembledTrack } from "@/types/assembled-track"
+import { VideoSegment } from "@/types/videos"
+import type { AssembledTrack } from "@/types/videos"
+import TimeLineEditor from "@/components/timeline/timeline-editor"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -197,37 +198,46 @@ export default function Home() {
           return
         }
 
-        const sortedVideos = data.media.sort((a: MediaFile, b: MediaFile) => {
-          const timeA = a.probeData.format.creation_time
-            ? new Date(a.probeData.format.creation_time).getTime()
-            : 0
-          const timeB = b.probeData.format.creation_time
-            ? new Date(b.probeData.format.creation_time).getTime()
-            : 0
+        // Фильтруем только видео файлы с корректным временем создания
+        const validVideos = data.media.filter((v: MediaFile) => {
+          const isVideo = v.probeData.streams.some((s) => s.codec_type === "video")
+          const hasCreationTime = !!v.probeData.format.tags?.creation_time
+          return isVideo && hasCreationTime
+        })
+
+        const sortedVideos = validVideos.sort((a: MediaFile, b: MediaFile) => {
+          const timeA = new Date(a.probeData.format.tags!.creation_time).getTime()
+          const timeB = new Date(b.probeData.format.tags!.creation_time).getTime()
           return timeA - timeB
         })
 
-        // Находим минимальное время начала и максимальное время окончания среди всех видо
+        // Get all valid times
         const times = sortedVideos.flatMap((v: MediaFile) => {
-          if (!v.probeData.format.tags?.creation_time) return []
-          const startTime = new Date(v.probeData.format.tags.creation_time).getTime()
-          const endTime = startTime + (v.probeData.format.duration || 0) * 1000
+          const startTime = new Date(v.probeData.format.tags!.creation_time).getTime()
+          const duration = v.probeData.format.duration || 0
+          const endTime = startTime + duration * 1000
           return [startTime, endTime]
-        }).filter((t: number) => t > 0)
-        console.log(times.map((t: number) => new Date(Math.floor(t))))
-
-        const minTime = Math.min(...times)
-        const maxTime = Math.max(...times)
-
-        // Устанавливаем диапазн в секундах
-        setTimeRange({
-          min: Math.floor(minTime / 1000),
-          max: Math.floor(maxTime / 1000),
         })
 
+        // Only set time range if we have valid times
+        if (times.length > 0) {
+          const minTime = Math.min(...times)
+          const maxTime = Math.max(...times)
+
+          setTimeRange({
+            min: Math.floor(minTime / 1000),
+            max: Math.floor(maxTime / 1000),
+          })
+
+          // Set initial current time to minimum
+          setCurrentTime(Math.floor(minTime / 1000))
+        } else {
+          // Set default values if no valid times found
+          setTimeRange({ min: 0, max: 0 })
+          setCurrentTime(0)
+        }
+
         setVideos(sortedVideos)
-        // Устаавливаем начаьное значение слайдера в максимум
-        setCurrentTime(timeRange.min)
       })
       .catch((error) => {
         console.error("Error fetching videos:", error)
@@ -242,9 +252,9 @@ export default function Home() {
   }, [])
 
   // Модифицируем функцию handleTimeChange
-  const handleTimeChange = (value: number[]) => {
-    setCurrentTime(value[0])
-  }
+  const handleTimeChange = useCallback((value: number) => {
+    setCurrentTime(value)
+  }, [])
 
   // Добавляем функцию для управления воспроизведением
   const togglePlayback = useCallback(() => {
@@ -326,7 +336,7 @@ export default function Home() {
     }
   }, [activeCamera, isRecording])
 
-  // Модифицирум эффект для синхронизации видео
+  // Модифицирум эффект для синхронизации вид��о
   useEffect(() => {
     if (videos.length > 0) {
       const activeVids = videos
@@ -384,8 +394,8 @@ export default function Home() {
         const activeVideoElement = videoRefs.current[`active-${video.path}`]
 
         if (videoElement) {
-          const videoTime = new Date(video.probeData.format.creation_time!).getTime() / 1000
-          const startTime = new Date(videos[0].probeData.format.creation_time!).getTime() / 1000
+          const videoTime = new Date(video.probeData.format.start_time!).getTime() / 1000
+          const startTime = new Date(videos[0].probeData.format.start_time!).getTime() / 1000
           const relativeTime = currentTime - (videoTime - startTime)
 
           // Добавляем более точную инхронизацию
@@ -413,14 +423,14 @@ export default function Home() {
 
   // Модифицируем updateActiveVideos для определения активных видео
   const updateActiveVideos = useCallback(() => {
-    console.log("Updating active videos:", {
-      videosCount: videos.length,
-      currentTime,
-      videoGroups: videos.map((v) => ({
-        path: v.path,
-        creationTime: v.probeData.format.creation_time,
-      })),
-    })
+    // console.log("Updating active videos:", {
+    //   videosCount: videos.length,
+    //   currentTime,
+    //   videoGroups: videos.map((v) => ({
+    //     path: v.path,
+    //     creationTime: v.probeData.format.start_time,
+    //   })),
+    // })
 
     // Создаем мапу для группировки видео по их номеру камеры
     const videoGroups = new Map<number, MediaFile[]>()
@@ -438,13 +448,13 @@ export default function Home() {
 
     const active = Array.from(videoGroups.entries()).map(([cameraNumber, groupVideos]) => {
       const isActive = groupVideos.some((video) => {
-        if (!video.probeData.format.creation_time) return false
-        const videoTime = new Date(video.probeData.format.creation_time).getTime() / 1000
-        const startTime = videos[0]?.probeData.format.creation_time
+        if (!video.probeData.format.start_time) return false
+        const videoTime = new Date(video.probeData.format.start_time).getTime() / 1000
+        const startTime = videos[0]?.probeData.format.start_time
           ? new Date(videos[0].probeData.format.creation_time).getTime() / 1000
           : 0
         const videoSeconds = videoTime - startTime
-        const videoEndSeconds = videoSeconds + video.probeData.format.format.duration
+        const videoEndSeconds = videoSeconds + video.probeData.format.duration
         return videoSeconds <= currentTime && currentTime <= videoEndSeconds
       })
 
@@ -488,18 +498,20 @@ export default function Home() {
     }))
   }
 
+  console.log(timeRange)
+
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
       {isLoading
         ? (
           <div className="flex items-center justify-center h-screen">
-            <div className="text-gray-600 dark:text-gray-400">Загрузка видео...</div>
+            <div className="text-gray-600 dark:text-gray-400">Загрузка медиа...</div>
           </div>
         )
         : videos.length === 0
         ? (
           <div className="flex items-center justify-center h-screen">
-            <div className="text-gray-600 dark:text-gray-400">Видео не найдены</div>
+            <div className="text-gray-600 dark:text-gray-400">Файлы не найдены</div>
           </div>
         )
         : (
@@ -539,7 +551,7 @@ export default function Home() {
                   <div className="ml-6 text-sm text-gray-600 dark:text-gray-100">
                     <RecordingsList
                       recordings={recordings}
-                      baseTime={videos[0]?.probeData.format.format.start_time ?? 0}
+                      baseTime={videos[0]?.probeData.format.start_time ?? 0}
                     />
                   </div>
                 )}
@@ -682,17 +694,6 @@ export default function Home() {
                   onSegmentClick={() => {}}
                 />
               </div>
-
-              <div className="w-full">
-                <Slider
-                  defaultValue={[0]}
-                  max={timeRange.max - timeRange.min}
-                  step={1}
-                  value={[currentTime]}
-                  onValueChange={handleTimeChange}
-                  className="w-full"
-                />
-              </div>
             </div>
 
             {/* Правая часть с активным видео */}
@@ -711,6 +712,20 @@ export default function Home() {
             <ThemeToggle />
           </main>
         )}
+
+      <div className="flex gap-16 w-full px-12 sm:px-16 py-16">
+        <div className="w-full">
+          <TimeLineEditor
+            t={(currentTime - timeRange.min) / (timeRange.max - timeRange.min) * 100}
+            duration={maxDuration}
+            startTime={timeRange.min}
+            onTimeUpdate={handleTimeChange}
+          />
+          <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+            {dayjs.unix(currentTime).format("HH:mm:ss.SSS")}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
