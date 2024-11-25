@@ -711,7 +711,7 @@ export default function Home() {
           </main>
         )}
 
-      {!isLoading && timeRange.max > timeRange.min && (
+      {!isLoading && timeRange && timeRange.max > timeRange.min && currentTime > 0 && (
         <div className="flex gap-16 w-full px-12 sm:px-16 py-16">
           <div className="w-full">
             <TimeLineEditor
@@ -721,7 +721,7 @@ export default function Home() {
               onTimeUpdate={handleTimeChange}
             />
             <div className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              {dayjs.unix(currentTime).format("HH:mm:ss.SSS")}
+              {currentTime && dayjs.unix(currentTime).format("HH:mm:ss.SSS")}
             </div>
           </div>
         </div>

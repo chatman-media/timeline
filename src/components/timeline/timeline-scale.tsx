@@ -31,7 +31,6 @@ const TimeScale = ({ duration, startTime }: TimeScaleProps): JSX.Element => {
   const timeStep = Math.ceil((roundedEndTime - roundedStartTime) / numMarks / timeScale) * timeScale
 
   for (let timestamp = roundedStartTime; timestamp <= roundedEndTime; timestamp += timeStep) {
-    const isFirstMark = timestamp === roundedStartTime
     const position = ((timestamp - startTime) / duration) * 100
 
     marks.push(
@@ -42,7 +41,7 @@ const TimeScale = ({ duration, startTime }: TimeScaleProps): JSX.Element => {
       >
         <div className="h-2 w-0.5 bg-gray-400" />
         <span className="text-xs text-gray-500 mt-1">
-          {formatTimeWithMilliseconds(timestamp, isFirstMark, false)}
+          {formatTimeWithMilliseconds(timestamp, false, false)}
         </span>
       </div>,
     )

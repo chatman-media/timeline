@@ -31,7 +31,7 @@ const TimeLineEditor = (
 
   // Настройки полосы прокрутки (вертикальная линия, показывающая текущее время)
   const [seekbar, setSeekbar] = useState<SeekbarState>({
-    width: 5, // Ширина полосы в пикселях
+    width: 3, // Ширина полосы в пикселях
     height: 70, // Высота полосы в пикселях
     y: -10, // Смещение полосы вверх для перекрытия клипов
     x: 0, // Горизонтальное положение полосы
@@ -60,7 +60,7 @@ const TimeLineEditor = (
         <div className="slice--parent" ref={ref}>
           {props.children}
           <TimelineBar
-            t={timeStamp}
+            t={seekbar.x}
             width={seekbar.width}
             height={seekbar.height}
             y={seekbar.y}
@@ -113,13 +113,9 @@ const TimeLineEditor = (
   const updateSeekbar = (data: Partial<SeekbarState> & { timestamp?: number }) => {
     setSeekbar((prev) => ({ ...prev, ...data }))
 
-    // Вычисляем timestamp только если изменилась позиция x
-    if (data.x !== undefined) {
-      const timelineWidth = parentRef.current?.offsetWidth || 1
-      const percentage = data.x / timelineWidth
-      // Convert percentage to actual time using duration and startTime
-      const actualTime = startTime + (percentage * duration)
-      onTimeUpdate(actualTime)
+    // Вызываем onTimeUpdate при изменении позиции
+    if (data.timestamp !== undefined) {
+      onTimeUpdate(data.timestamp)
     }
   }
 
@@ -143,7 +139,7 @@ const TimeLineEditor = (
           Добавить
         </button>
         <button
-          onClick={() => selectedSliceId && sliceHelpers.removeSlice(selectedSliceId)}
+          onClick={() => (selectedSliceId && sliceHelpers.removeSlice(selectedSliceId)) || sliceHelpers.removeSlice()}
           className="timeline-button timeline-button--remove"
           aria-label={selectedSliceId ? "Удалить выбранный клип" : "Удалить последний клип"}
           disabled={slices.length === 0}

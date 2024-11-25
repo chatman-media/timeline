@@ -1,6 +1,5 @@
 import { SeekbarState } from "@/types/timeline"
-import { useRef, useState } from "react"
-import { Rnd } from "react-rnd"
+import { useRef, useState, useEffect } from "react"
 import { formatTimeWithMilliseconds } from "@/lib/utils"
 
 /**
@@ -23,64 +22,85 @@ interface TimelineBarProps {
 const TimelineBar = (
   { t, width, height, y, duration, startTime, updateSeekbar }: TimelineBarProps,
 ): JSX.Element => {
-  // Локальное состояние полосы с значениями по умолчанию
-  const [bar] = useState({
-    width: width || 2, // Ширина по умолчанию 5px
-    height: height || 70, // Высота по умолчанию 70px
-    x: t, // Горизонтальная позиция соответствует времени
-    y: y || -10, // Вертикальное смещение по умолчанию -10px
-  })
-
+  const [isDragging, setIsDragging] = useState(false)
   const [displayTime, setDisplayTime] = useState(startTime)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [position, setPosition] = useState(t)
 
-  // Ссылка на DOM-элемент полосы
-  const barRef = useRef<Rnd>(null)
+  useEffect(() => {
+    setPosition(t)
+  }, [t])
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    document.body.style.cursor = 'ew-resize'
+    e.preventDefault()
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging || !containerRef.current) return
+
+    const rect = containerRef.current.getBoundingClientRect()
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
+    const percentage = x / rect.width
+    const time = startTime + (percentage * duration)
+    
+    setPosition(x)
+    setDisplayTime(time)
+  }
+
+  const handleMouseUp = (e: MouseEvent) => {
+    if (!isDragging || !containerRef.current) return
+
+    setIsDragging(false)
+    document.body.style.cursor = ''
+
+    const rect = containerRef.current.getBoundingClientRect()
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
+    const percentage = x / rect.width
+    const time = startTime + (percentage * duration)
+
+    updateSeekbar({
+      x,
+      y,
+      timestamp: time,
+    })
+  }
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    }
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging])
 
   return (
-    <div className="relative">
-      <Rnd
-        ref={barRef}
-        className="drag--bar"
-        // Размеры полосы
-        size={{ width: bar.width, height: bar.height }}
-        // Позиция полосы
-        position={{ x: bar.x, y: bar.y }}
-        // Ограничиваем движение границами родительского элемента
-        bounds="parent"
-        // Разрешаем перетаскивание только по горизонтали
-        dragAxis={"x"}
-        // Отключаем изменение размеров полосы
-        enableResizing={{
-          top: false,
-          left: false,
-          right: false,
-          bottom: false,
-        }}
-        // Обработчик окончания перетаскивания
-        onDrag={(_, dragData) => {
-          const parentWidth =
-            barRef.current?.resizableElement?.current?.parentElement?.offsetWidth || 1
-          const percentage = dragData.x / parentWidth
-          const time = startTime + (percentage * duration)
-          setDisplayTime(time)
-        }}
-        onDragStop={(_, dragData) => {
-          const parentWidth =
-            barRef.current?.resizableElement?.current?.parentElement?.offsetWidth || 1
-          const clampedX = Math.max(0, Math.min(dragData.x, parentWidth))
-
-          const percentage = clampedX / parentWidth
-          const time = startTime + (percentage * duration)
-          updateSeekbar({
-            x: clampedX,
-            y: dragData.y,
-            timestamp: time,
-          })
-        }}
-      />
+    <div>
+      <div 
+        ref={containerRef} 
+        className="relative"
+      >
+        <div
+          className="absolute cursor-ew-resize"
+          style={{
+            left: `${position}px`,
+            top: `${y}px`,
+            width: `${width}px`,
+            height: `${height}px`,
+            backgroundColor: 'currentColor',
+            transform: 'translateX(-50%)',
+          }}
+          onMouseDown={handleMouseDown}
+        />
+      </div>
       <div
-        className="absolute bottom-[-20px] left-0 text-xs text-muted-foreground whitespace-nowrap"
-        style={{ transform: `translateX(${bar.x}px)` }}
+        className="absolute top-[56px] left-0 text-sm text-gray-600 dark:text-gray-400 mt-2"
+        style={{ transform: `translateX(${position}px)` }}
       >
         {formatTimeWithMilliseconds(displayTime)}
       </div>

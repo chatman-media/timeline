@@ -110,8 +110,9 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #ff0000;
+  background: #424242;
   cursor: ew-resize !important;
+  width: 3px !important;
 }
 
 .drag--handle--right {
