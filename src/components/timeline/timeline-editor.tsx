@@ -6,6 +6,7 @@ import { useTimelineSliceHelpers } from "./timeline-utils"
 import { TimelineSlice } from "./timeline-slice"
 import { SeekbarState, TimelineSliceType } from "@/types/timeline"
 import TimeScale from "./timeline-scale"
+import { PlusIcon, MinusIcon } from "lucide-react"
 
 interface TimelineEditorProps {
   t: number // Текущее время в процентах (0-100), определяет положение полосы прокрутки
@@ -130,37 +131,42 @@ const TimeLineEditor = (
   return (
     <div className="timeline-editor">
       <TimeScale duration={duration} startTime={startTime} />
-      <div className="flex gap-2 mb-4">
-        <button
-          onClick={addNewSlice}
-          className="timeline-button timeline-button--add"
-          aria-label="Добавить новый клип"
-        >
-          Добавить
-        </button>
-        <button
-          onClick={() => (selectedSliceId && sliceHelpers.removeSlice(selectedSliceId)) || sliceHelpers.removeSlice()}
-          className="timeline-button timeline-button--remove"
-          aria-label={selectedSliceId ? "Удалить выбранный клип" : "Удалить последний клип"}
-          disabled={slices.length === 0}
-        >
-          {selectedSliceId ? "Удалить" : "Удалить последний"}
-        </button>
-      </div>
-      <div className="drag--parent">
-        <SliceWrap ref={parentRef}>
-          {/* Добавляем ref здесь */}
-          {slices.map((slice) => (
-            <TimelineSlice
-              updateSlice={updateSlice}
-              key={slice.id}
-              {...slice}
-              isSelected={selectedSliceId === slice.id}
-              onSelect={handleSliceSelect}
-              onDelete={sliceHelpers.removeSlice}
-            />
-          ))}
-        </SliceWrap>
+      <div className="flex">
+        {/* Кнопки слева */}
+        <div className="flex flex-col gap-2 mr-4">
+          <button
+            onClick={addNewSlice}
+            className="timeline-button timeline-button--add"
+            aria-label="Добавить новый клип"
+          >
+            <PlusIcon className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => (selectedSliceId && sliceHelpers.removeSlice(selectedSliceId)) || sliceHelpers.removeSlice()}
+            className="timeline-button timeline-button--remove"
+            aria-label={selectedSliceId ? "Удалить выбранный клип" : "Удалить последний клип"}
+            disabled={slices.length === 0}
+          >
+            <MinusIcon className="h-4 w-4" />
+          </button>
+        </div>
+        
+        {/* Основной контейнер */}
+        <div className="drag--parent flex-1">
+          <SliceWrap ref={parentRef}>
+            {/* Добавляем ref здесь */}
+            {slices.map((slice) => (
+              <TimelineSlice
+                updateSlice={updateSlice}
+                key={slice.id}
+                {...slice}
+                isSelected={selectedSliceId === slice.id}
+                onSelect={handleSliceSelect}
+                onDelete={sliceHelpers.removeSlice}
+              />
+            ))}
+          </SliceWrap>
+        </div>
       </div>
     </div>
   )
