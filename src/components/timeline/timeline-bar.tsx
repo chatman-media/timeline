@@ -1,18 +1,18 @@
-import { SeekbarState } from "@/types/timeline"
-import { useRef, useState, useEffect } from "react"
+import { useEffect, useRef, useState } from "react"
 import { formatTimeWithMilliseconds } from "@/lib/utils"
+import { useTimeline } from "@/hooks/use-timeline"
 
 /**
  * Пропсы компонента TimelineBar
  */
 interface TimelineBarProps {
-  t: number // Текущая позиция по времени
-  width: number // Ширина полосы
-  height: number // Высота полосы
-  y: number // Начальная позиция по вертикали
-  duration: number // Длительность видео
-  startTime: number // Начальное время
-  updateSeekbar: (data: Partial<SeekbarState> & { timestamp?: number }) => void // Функция обновления состояния полосы
+  width: number
+  height: number
+  y: number
+  duration: number
+  startTime: number
+  isGlobal?: boolean
+  visible?: boolean
 }
 
 /**
@@ -20,92 +20,116 @@ interface TimelineBarProps {
  * Позволяет визуализировать и управлять текущей позицией воспроизведения
  */
 const TimelineBar = (
-  { t, width, height, y, duration, startTime, updateSeekbar }: TimelineBarProps,
+  { width, height, y, duration, startTime, isGlobal = false, visible = true }: TimelineBarProps,
 ): JSX.Element => {
   const [isDragging, setIsDragging] = useState(false)
-  const [displayTime, setDisplayTime] = useState(startTime)
+  const [currentPosition, setCurrentPosition] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  const [position, setPosition] = useState(t)
+  const { currentTime, timeToPercent, percentToTime, updateTime } = useTimeline({
+    startTime,
+    duration,
+  })
 
+  /**
+   * Эффект для синхронизации визуальной позиции ползунка с текущим временем
+   * Срабатывает при изменении currentTime, но игнорируется во время перетаскивания
+   */
   useEffect(() => {
-    setPosition(t)
-  }, [t])
+    if (!containerRef.current || isDragging) return
+    const percent = timeToPercent(currentTime)
+    const newPosition = (containerRef.current.offsetWidth * percent) / 100
+    // Обновляем позицию только если изменение больше порогового значения (0.1px)
+    // Это помогает избежать микро-обновлений и улучшает производительность
+    if (Math.abs(newPosition - currentPosition) > 0.1) {
+      setCurrentPosition(newPosition)
+    }
+  }, [currentTime, isDragging])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true)
-    document.body.style.cursor = 'ew-resize'
+    document.body.style.cursor = "ew-resize"
     e.preventDefault()
   }
 
+  /**
+   * Обработчик перемещения мыши при перетаскивании ползунка
+   * Вычисляет новую позицию и обновляет время воспроизведения
+   * @param e - Событие перемещения мыши
+   */
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging || !containerRef.current) return
 
     const rect = containerRef.current.getBoundingClientRect()
+    // Ограничиваем позицию курсора границами контейнера
     const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
-    const percentage = x / rect.width
-    const time = startTime + (percentage * duration)
-    
-    setPosition(x)
-    setDisplayTime(time)
+
+    // Вычисляем время и проверяем границы timeRange
+    const percentage = (x / rect.width) * 100
+    const time = percentToTime(percentage)
+
+    // Ограничиваем время пределами timeRange
+    const clampedTime = Math.max(startTime, Math.min(startTime + duration, time))
+
+    // Пересчитываем позицию с учетом ограничений
+    const clampedPosition = ((clampedTime - startTime) / duration) * rect.width
+    setCurrentPosition(clampedPosition)
+
+    if (Math.abs(clampedTime - currentTime) > 0.01) {
+      updateTime(clampedTime)
+    }
   }
 
   const handleMouseUp = (e: MouseEvent) => {
-    if (!isDragging || !containerRef.current) return
-
     setIsDragging(false)
-    document.body.style.cursor = ''
-
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
-    const percentage = x / rect.width
-    const time = startTime + (percentage * duration)
-
-    updateSeekbar({
-      x,
-      y,
-      timestamp: time,
-    })
+    document.body.style.cursor = ""
+    handleMouseMove(e)
   }
 
   useEffect(() => {
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
+      globalThis.addEventListener("mousemove", handleMouseMove)
+      globalThis.addEventListener("mouseup", handleMouseUp)
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      window.removeEventListener('mouseup', handleMouseUp)
+      globalThis.removeEventListener("mousemove", handleMouseMove)
+      globalThis.removeEventListener("mouseup", handleMouseUp)
     }
   }, [isDragging])
 
-  return (
-    <div>
-      <div 
-        ref={containerRef} 
-        className="relative"
-      >
+  return (visible
+    ? (
+      <div>
         <div
-          className="absolute cursor-ew-resize"
-          style={{
-            left: `${position}px`,
-            top: `${y}px`,
-            width: `${width}px`,
-            height: `${height}px`,
-            backgroundColor: 'currentColor',
-            transform: 'translateX(-50%)',
-          }}
-          onMouseDown={handleMouseDown}
-        />
+          ref={containerRef}
+          className="relative w-full h-full"
+        >
+          <div
+            className={`absolute cursor-ew-resize ${
+              isGlobal ? "timeline-bar-global" : "timeline-bar-local"
+            }`}
+            style={{
+              left: `${currentPosition}px`,
+              top: isGlobal ? "0" : `${y}px`,
+              width: `${width}px`,
+              height: isGlobal ? "100%" : `${height}px`,
+              backgroundColor: isGlobal ? "var(--primary)" : "red",
+              transform: "translateX(-50%)",
+              opacity: isGlobal ? 0.5 : 1,
+              zIndex: isGlobal ? 50 : 1,
+            }}
+            onMouseDown={handleMouseDown}
+          />
+        </div>
+        <div
+          className="absolute top-[56px] left-0 text-sm text-gray-600 dark:text-gray-400 mt-2"
+          style={{ transform: `translateX(${currentPosition}px)` }}
+        >
+          {formatTimeWithMilliseconds(currentTime)}
+        </div>
       </div>
-      <div
-        className="absolute top-[56px] left-0 text-sm text-gray-600 dark:text-gray-400 mt-2"
-        style={{ transform: `translateX(${position}px)` }}
-      >
-        {formatTimeWithMilliseconds(displayTime)}
-      </div>
-    </div>
-  )
+    )
+    : <></>)
 }
 
 export default TimelineBar

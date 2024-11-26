@@ -5,6 +5,7 @@ export interface TimelineSliceType {
   y: number // Позиция по вертикали
   width: string | number // Ширина (может быть в процентах или пикселях)
   height: number // Высота в пикселях
+  videoPath?: string // Добавляем привязку к конкретному видео
 }
 
 /**
