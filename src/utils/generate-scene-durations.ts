@@ -10,9 +10,6 @@ import { generateGaussianRandom } from "./gaussian-random"
  *
  * @example
  * const segments = generateGaussianSceneDurations(300, 6)
- * // Вернет массив сегментов общей длительностью 5 минут (300 секунд)
- * // со средней длительностью сцены около 6 секунд
- * // и разбросом от 2 до 18 секунд
  */
 export function generateGaussianSceneDurations(
   targetDuration: number,

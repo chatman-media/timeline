@@ -8,7 +8,6 @@
  *
  * @example
  * const random = generateGaussianRandom(10, 2)
- * // Вернет случайное число около 10 с разбросом ±2
  */
 export function generateGaussianRandom(mean: number, standardDeviation: number): number {
   let u = 0, v = 0
@@ -16,6 +15,5 @@ export function generateGaussianRandom(mean: number, standardDeviation: number):
   while (v === 0) v = Math.random()
 
   const normal = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)
-
   return mean + standardDeviation * normal
 }

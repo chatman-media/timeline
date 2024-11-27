@@ -1,15 +1,13 @@
+import { useMedia } from "@/hooks/use-media"
 import { formatTimeWithMilliseconds } from "@/lib/utils"
-
-interface TimeScaleProps {
-  duration: number
-  startTime: number
-}
+import { TimeRange } from "@/types/timeline"
 
 /**
  * Компонент временной шкалы
  * Отображает метки времени с равными интервалами
  */
-const TimeScale = ({ duration, startTime }: TimeScaleProps): JSX.Element => {
+const TimeScale = (): JSX.Element => {
+  const { timeRanges, maxDuration: totalDuration } = useMedia()
   const marks = []
   const numMainMarks = 10 // Основные деления
   const numSubMarks = 5 // Количество мелких делений между основными
@@ -22,11 +20,17 @@ const TimeScale = ({ duration, startTime }: TimeScaleProps): JSX.Element => {
     return 1 // Секунды для коротких записей
   }
 
-  const timeScale = getTimeScale(duration)
+  const timeScale = getTimeScale(totalDuration)
+
+  // Находим минимальное время начала среди всех промежутков
+  const minStartTime = timeRanges.length > 0
+    ? Math.min(...timeRanges.map((range) => range.min))
+    : 0
+
   // Округляем начальное время согласно масштабу
-  const roundedStartTime = Math.floor(startTime / timeScale) * timeScale
+  const roundedStartTime = Math.floor(minStartTime / timeScale) * timeScale
   // Округляем конечное время
-  const endTime = roundedStartTime + duration
+  const endTime = roundedStartTime + totalDuration
   const roundedEndTime = Math.ceil(endTime / timeScale) * timeScale
   // Вычисляем шаг для круглых значений
   const timeStep = Math.ceil((roundedEndTime - roundedStartTime) / numMainMarks / timeScale) *
@@ -36,7 +40,7 @@ const TimeScale = ({ duration, startTime }: TimeScaleProps): JSX.Element => {
 
   // Добавляем основные и промежуточные деления
   for (let timestamp = roundedStartTime; timestamp <= roundedEndTime; timestamp += subStep) {
-    const position = ((timestamp - startTime) / duration) * 100
+    const position = ((timestamp - minStartTime) / totalDuration) * 100
     const isMainMark = Math.abs(timestamp % timeStep) < 0.001
 
     marks.push(
@@ -49,7 +53,10 @@ const TimeScale = ({ duration, startTime }: TimeScaleProps): JSX.Element => {
           className={`${isMainMark ? "h-3" : "h-1.5"} w-0.5 bg-gray-600`}
         />
         {isMainMark && (
-          <span className="text-xs text-gray-900 dark:text-gray-100 drag--parent flex-1">
+          <span
+            className="text-xs text-gray-900 dark:text-gray-100 drag--parent flex-1"
+            style={{ marginLeft: "-50%" }}
+          >
             {formatTimeWithMilliseconds(timestamp, false, false)}
           </span>
         )}
@@ -59,16 +66,19 @@ const TimeScale = ({ duration, startTime }: TimeScaleProps): JSX.Element => {
 
   return (
     <div className="relative w-full flex flex-col">
-      {/* Индикатор доступного видео */}
-      <div className="h-1 w-full">
-        <div
-          className="h-full bg-primary/10"
-          style={{
-            width: "100%",
-            position: "absolute",
-            left: "0",
-          }}
-        />
+      {/* Индикатор доступных промежутков видео */}
+      <div className="h-0.5 w-full">
+        {timeRanges.map((range, index) => (
+          <div
+            key={index}
+            className="h-0.5 absolute"
+            style={{
+              width: `${(range.duration / totalDuration) * 100}%`,
+              left: `${((range.min - minStartTime) / totalDuration) * 100}%`,
+              background: "rgb(25, 102, 107)",
+            }}
+          />
+        ))}
       </div>
       {/* Шкала с делениями */}
       <div className="relative w-full h-8">

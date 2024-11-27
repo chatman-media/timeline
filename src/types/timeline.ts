@@ -1,19 +1,31 @@
-// Создадим общий интерфейс в отдельном файле
-export interface TimelineSliceType {
-  id: string // Используем только string для id
-  x: number // Позиция по горизонтали
-  y: number // Позиция по вертикали
-  width: string | number // Ширина (может быть в процентах или пикселях)
-  height: number // Высота в пикселях
-  videoPath?: string // Добавляем привязку к конкретному видео
+// Базовые типы для временной шкалы
+export interface TimeRange {
+  start: number
+  duration: number
 }
 
-/**
- * Состояние полосы прокрутки
- */
+export interface VideoMetadata {
+  filename: string
+  codecName: string
+  width: number
+  height: number
+  aspectRatio: string
+  bitrate: number
+  duration: number
+}
+
+export interface TimelineSliceType {
+  id: string
+  x: number
+  y: number
+  width: string | number
+  height: number
+  videoPath?: string
+}
+
 export interface SeekbarState {
-  width: number // Ширина полосы в пикселях
-  height: number // Высота полосы в пикселях
-  y: number // Вертикальное положение полосы
-  x: number // Горизонтальное положение полосы
+  width: number
+  height: number
+  y: number
+  x: number
 }

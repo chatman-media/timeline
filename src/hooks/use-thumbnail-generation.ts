@@ -1,8 +1,8 @@
-import { MediaFile, VideoWithThumbnail } from "../types/videos"
+import { MediaFile } from "../types/videos"
 import { useEffect, useState } from "react"
 
 export function useThumbnailGeneration(rawVideos: MediaFile[]) {
-  const [videos, setVideos] = useState<VideoWithThumbnail[]>([])
+  const [videos, setVideos] = useState<any[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
 
   useEffect(() => {
@@ -11,10 +11,10 @@ export function useThumbnailGeneration(rawVideos: MediaFile[]) {
     const generateThumbnails = async () => {
       setIsGenerating(true)
 
-      const videosWithThumbnails: VideoWithThumbnail[] = await Promise.all(
+      const videosWithThumbnails: any[] = await Promise.all(
         rawVideos.map(async (video) => {
           try {
-            const response = await fetch(`/api/thumbnail?video=${video.filename}`)
+            const response = await fetch(`/api/thumbnail?video=${video.name}`)
             const blob = await response.blob()
             const thumbnailUrl = URL.createObjectURL(blob)
 
@@ -23,7 +23,7 @@ export function useThumbnailGeneration(rawVideos: MediaFile[]) {
               thumbnailUrl,
             }
           } catch (error) {
-            console.error(`Error generating thumbnail for ${video.filename}:`, error)
+            console.error(`Error generating thumbnail for ${video.name}:`, error)
             return {
               ...video,
               thumbnailUrl: "",

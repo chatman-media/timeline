@@ -1,44 +1,21 @@
-import { useTimeline } from "@/hooks/use-timeline"
-import { formatTimeWithMilliseconds } from "@/lib/utils"
-
 interface GlobalTimelineBarProps {
   duration: number
   startTime: number
-  height: number // Общая высота всех дорожек
+  height: number
 }
 
 const GlobalTimelineBar = ({ duration, startTime, height }: GlobalTimelineBarProps) => {
-  const { currentTime, timeToPercent } = useTimeline({
-    startTime,
-    duration,
-  })
-
-  const percent = timeToPercent(currentTime)
-  const position = `${percent}%`
-
   return (
-    <>
-      <div
-        className="absolute h-full pointer-events-none"
-        style={{
-          left: position,
-          height: `${height}px`,
-          transform: "translateX(-50%)",
-        }}
-      >
-        <div className="w-[1px] h-full bg-primary/50" />
-      </div>
-      <div
-        className="absolute text-sm text-muted-foreground"
-        style={{
-          left: position,
-          top: "-24px",
-          transform: "translateX(-50%)",
-        }}
-      >
-        {formatTimeWithMilliseconds(currentTime)}
-      </div>
-    </>
+    <div
+      className="absolute w-[2px] bg-white/80 pointer-events-none z-50"
+      style={{
+        left: `${startTime / duration * 100}%`,
+        height: `${height}px`,
+        top: 0,
+      }}
+    >
+      <div className="absolute -top-2 -translate-x-1/2 w-3 h-3 bg-white rounded-full" />
+    </div>
   )
 }
 

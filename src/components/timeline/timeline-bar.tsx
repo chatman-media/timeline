@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { formatTimeWithMilliseconds } from "@/lib/utils"
-import { useTimeline } from "@/hooks/use-timeline"
+import { useMedia } from "@/hooks/use-media"
 
 /**
  * Пропсы компонента TimelineBar
@@ -25,10 +25,7 @@ const TimelineBar = (
   const [isDragging, setIsDragging] = useState(false)
   const [currentPosition, setCurrentPosition] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  const { currentTime, timeToPercent, percentToTime, updateTime } = useTimeline({
-    startTime,
-    duration,
-  })
+  const { currentTime, updateTime, timeToPercent, percentToTime } = useMedia()
 
   /**
    * Эффект для синхронизации визуальной позиции ползунка с текущим временем
