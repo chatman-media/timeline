@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import type { AssembledTrack, MediaFile } from "@/types/videos"
 import { TimeRange } from "@/types/scene"
-import { RefObject } from 'react'
 
 interface VideoState {
   videos: MediaFile[]
@@ -27,7 +26,6 @@ interface VideoState {
   percentToTime: (percent: number) => number
   updateAssembledTracks: () => void
   updateActiveVideos: () => void
-  setMainCamera: (camera: string) => void
 }
 
 export const useVideoStore = create<VideoState>((set, get) => ({
@@ -94,25 +92,29 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         return
       }
 
-      const validVideos = data.media.filter((v: MediaFile) => {
-        const isVideo = v.probeData.streams.some((s) => s.codec_type === "video")
-        const hasCreationTime = !!v.probeData.format.tags?.creation_time
-        return isVideo && hasCreationTime
-      })
+      const validVideos = data.media
+        .filter((v: MediaFile) => {
+          const isVideo = v.probeData.streams.some((s) => s.codec_type === "video")
+          const hasCreationTime = !!v.probeData.format.tags?.creation_time
+          return isVideo && hasCreationTime
+        })
+        .sort((a: MediaFile, b: MediaFile) => {
+          const timeA = new Date(a.probeData.format.tags!.creation_time).getTime()
+          const timeB = new Date(b.probeData.format.tags!.creation_time).getTime()
+          return timeA - timeB
+        })
+        .map((video: MediaFile, index: number) => ({
+          ...video,
+          id: `V${index + 1}`
+        }))
 
       if (validVideos.length === 0) {
         set({ videos: [], isLoading: false })
         return
       }
 
-      const sortedVideos = validVideos.sort((a: MediaFile, b: MediaFile) => {
-        const timeA = new Date(a.probeData.format.tags!.creation_time).getTime()
-        const timeB = new Date(b.probeData.format.tags!.creation_time).getTime()
-        return timeA - timeB
-      })
-
       // Calculate time ranges
-      const times = sortedVideos.flatMap((v: MediaFile) => {
+      const times = validVideos.flatMap((v: MediaFile) => {
         const startTime = new Date(v.probeData.format.tags!.creation_time).getTime()
         const duration = v.probeData.format.duration || 0
         const endTime = startTime + duration * 1000
@@ -148,7 +150,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         set({ 
           timeRanges: ranges,
           currentTime: ranges[0].min,
-          videos: sortedVideos,
+          videos: validVideos,
           hasVideos: true
         })
       }
@@ -258,6 +260,4 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
     set({ activeVideos: active })
   },
-
-  setMainCamera: (camera) => set({ mainCamera: camera }),
 })) 

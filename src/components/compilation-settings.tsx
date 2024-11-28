@@ -14,7 +14,7 @@ import { useEffect } from "react"
 
 export function CompilationSettings() {
   const { videos, activeVideos, maxDuration } = useMedia()
-  const { mainCamera, setMainCamera, settings, updateSettings } = useCompilationSettings()
+  const { settings, updateSettings } = useCompilationSettings()
 
   const getCameraChangeLabel = (value: number): string => {
     const percent = value * 100
@@ -35,28 +35,26 @@ export function CompilationSettings() {
   }
 
   useEffect(() => {
-    if (videos.length > 0) {
-      setMainCamera(videos[0].name)
+    if (videos.length > 0 && !settings.mainCamera) {
+      updateSettings({ mainCamera: videos[0].id })
     }
   }, [videos])
-
-  console.log(mainCamera, videos[0].name)
 
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="flex items-center gap-4 text-gray-900 dark:text-gray-100">
         <span className="text-sm min-w-54">Главная камера:</span>
         <Select
-          value={mainCamera || ""}
-          onValueChange={setMainCamera}
+          value={settings.mainCamera || ""}
+          onValueChange={(value) => updateSettings({ mainCamera: value })}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Выберите камеру" />
           </SelectTrigger>
           <SelectContent>
             {videos.map((video) => (
-              <SelectItem key={video.name} value={video.name}>
-                {video.name}
+              <SelectItem key={video.id} value={video.id}>
+                {video.id} - {video.name}
               </SelectItem>
             ))}
           </SelectContent>

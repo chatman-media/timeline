@@ -143,8 +143,8 @@ export function Timeline(): JSX.Element {
             const width = (videoDuration / maxDuration) * 100
 
             return (
-              <div className="flex" key={video.path}>
-                <div className="w-full" key={video.path}>
+              <div className="flex" key={video.id}>
+                <div className="w-full" key={video.id}>
                   {(() => {
                     const videoStream = video.probeData.streams.find((s) =>
                       s.codec_type === "video"

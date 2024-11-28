@@ -4,6 +4,7 @@ import dayjs, { extend } from "dayjs"
 import duration from "dayjs/plugin/duration"
 import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
+import { MediaFile } from "@/types/videos"
 
 // Инициализируем плагин duration если еще не инициализирован
 if (!dayjs.isDuration) {
@@ -69,4 +70,25 @@ export const formatTime = (seconds: number): string => {
     return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
   return `${minutes}:${secs.toString().padStart(2, "0")}`
+}
+
+export function generateVideoId(videos: MediaFile[]): string {
+  // Сортируем видео по дате создания
+  const sortedVideos = [...videos].sort((a, b) => {
+    const timeA = new Date(a.probeData.format.tags?.creation_time || 0).getTime()
+    const timeB = new Date(b.probeData.format.tags?.creation_time || 0).getTime()
+    return timeA - timeB
+  })
+
+  // Находим максимальный существующий номер
+  const maxNumber = sortedVideos.reduce((max, video) => {
+    const match = video.id.match(/V(\d+)/)
+    if (match) {
+      const num = parseInt(match[1])
+      return num > max ? num : max
+    }
+    return max
+  }, 0)
+
+  return `V${maxNumber + 1}`
 }
