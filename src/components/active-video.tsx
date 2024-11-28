@@ -2,7 +2,7 @@ import { memo, useEffect } from "react"
 import { useMedia } from "@/hooks/use-media"
 
 export const ActiveVideo = memo(() => {
-  const { videoRefs, isPlaying, activeVideo, currentTime } = useMedia()
+  const { videoRefs, isPlaying, activeVideo, currentTime, play, updateTime } = useMedia()
   if (!videoRefs.current) {
     videoRefs.current = {}
   }
@@ -21,13 +21,27 @@ export const ActiveVideo = memo(() => {
       // Update video's current time
       videoElement.currentTime = relativeTime
 
+      // Обработчик обновления времени
+      const handleTimeUpdate = () => {
+        const newTime = videoStartTime + videoElement.currentTime
+        updateTime(newTime)
+      }
+
+      // Добавляем слушатель события timeupdate
+      videoElement.addEventListener('timeupdate', handleTimeUpdate)
+
       if (isPlaying) {
         videoElement.play().catch(console.error)
       } else {
         videoElement.pause()
       }
+
+      // Очищаем слушатель при размонтировании
+      return () => {
+        videoElement.removeEventListener('timeupdate', handleTimeUpdate)
+      }
     }
-  }, [isPlaying, videoRefs, currentTime, activeVideo])
+  }, [isPlaying, videoRefs, activeVideo])
 
   return (
     <div className="sticky top-4 space-y-4">
@@ -44,6 +58,8 @@ export const ActiveVideo = memo(() => {
           className="w-full h-full object-contain"
           playsInline
           muted
+          onClick={play}
+          style={{ cursor: 'pointer' }}
         />
       </div>
     </div>

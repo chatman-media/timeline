@@ -12,6 +12,10 @@ export function useMedia() {
     store.updateActiveVideos()
   }, [store.currentTime])
 
+  const play = () => {
+    store.setIsPlaying(!store.isPlaying)
+  }
+
   return {
     videos: store.videos,
     timeRanges: store.timeRanges,
@@ -31,5 +35,6 @@ export function useMedia() {
     activeVideos: store.activeVideos,
     activeCamera: store.activeCamera,
     activeVideo: store.activeVideo,
+    play,
   }
 }

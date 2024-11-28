@@ -16,7 +16,7 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 export default function Home() {
-  const { isLoading, currentTime, hasVideos } = useMedia()
+  const { isLoading, currentTime, hasVideos, play, isPlaying } = useMedia()
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
@@ -35,7 +35,17 @@ export default function Home() {
         : (
           <>
             <div className="flex gap-16 w-full px-12 sm:px-16 py-8">
-              {formatTimeWithMilliseconds(currentTime, false, false, false)}
+              <div className="flex items-center gap-4">
+                <div className="text-sm text-gray-900 dark:text-gray-100">
+                  {formatTimeWithMilliseconds(currentTime, false, true, true)}
+                </div>
+                <button
+                  onClick={play}
+                  className="px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+                >
+                  {isPlaying ? "Пауза" : "Play"}
+                </button>
+              </div>
               <CompilationSettings />
               <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
                 <ActiveVideo />

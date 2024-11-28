@@ -126,7 +126,7 @@ export function Timeline(): JSX.Element {
   return (
     <div className="timeline">
       <TimeScale />
-      <div className="relative">
+      <div className="relative" style={{ paddingBottom: `37px` }}>
         <div className="flex">
           {/* Видеодорожки */}
           <div className="flex-1 flex flex-col gap-2 relative">
@@ -201,16 +201,6 @@ export function Timeline(): JSX.Element {
               onTimeChange={updateTime}
             />
           )}
-        </div>
-        <div className="flex items-center gap-2 mb-4">
-          <Switch
-            id="timeline-mode"
-            checked={useGlobalBar}
-            onCheckedChange={setUseGlobalBar}
-          />
-          <Label htmlFor="timeline-mode">
-            Использовать общий таймлайн
-          </Label>
         </div>
       </div>
     </div>
