@@ -19,7 +19,6 @@ const TimeScale = (): JSX.Element => {
     return 1 // Секунды для коротких записей
   }
 
-  console.log("maxDuration", maxDuration)
   const timeScale = getTimeScale(maxDuration)
 
   // Находим минимальное время начала среди всех промежутков
@@ -53,9 +52,9 @@ const TimeScale = (): JSX.Element => {
         {isMainMark && (
           <span
             className="text-xs text-gray-900 dark:text-gray-100 drag--parent flex-1"
-            style={{ marginLeft: "-50%", border: "none" }}
+            style={{ marginLeft: "5px", marginTop: '-5px', border: "none" }}
           >
-            {formatTimeWithMilliseconds(timestamp, false, false)}
+            {formatTimeWithMilliseconds(timestamp, false, false, false)}
           </span>
         )}
       </div>,

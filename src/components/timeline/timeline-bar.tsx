@@ -122,7 +122,7 @@ const TimelineBar = (
           className="absolute top-[56px] left-0 text-sm text-gray-600 dark:text-gray-400 mt-2"
           style={{ transform: `translateX(${currentPosition}px)` }}
         >
-          {formatTimeWithMilliseconds(currentTime)}
+          {formatTimeWithMilliseconds(currentTime, false, false, false)}
         </div>
       </div>
     )

@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "../ui/label"
 import GlobalTimelineBar from "./global-timeline-bar"
 import { useMedia } from "@/hooks/use-media"
+import { useAudioStore } from '@/stores/audioStore'
 
 export function Timeline(): JSX.Element {
   const { videos, timeRanges, maxDuration, currentTime, timeToPercent } = useMedia()
@@ -30,6 +31,8 @@ export function Timeline(): JSX.Element {
     x: 0, // Горизонтальное положение полосы
   })
   const [useGlobalBar, setUseGlobalBar] = useState(true)
+
+  const { analyzeAudio } = useAudioStore()
 
   /**
    * Компонент-обертка для слайсов
@@ -121,6 +124,7 @@ export function Timeline(): JSX.Element {
     }))
   }, [currentTime])
 
+
   return (
     <div className="timeline">
       <TimeScale />
@@ -137,10 +141,9 @@ export function Timeline(): JSX.Element {
               x.min
             ))) / maxDuration) * 100
             const width = (videoDuration / maxDuration) * 100
-            console.log(startOffset, width)
 
             return (
-              <div className="flex">
+              <div className="flex" key={video.path}>
                 <div className="w-full" key={video.path}>
                   {(() => {
                     const videoStream = video.probeData.streams.find((s) =>
@@ -150,8 +153,8 @@ export function Timeline(): JSX.Element {
                       <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
                         <div key={video.path} className="drag--parent flex-1">
                           <SliceWrap ref={parentRef}>
-                            <div className="absolute h-full w-full">
-                              <div className="absolute w-full inset-0 flex left-0 px-2 justify-between text-xs text-foreground">
+                            <div className="absolute h-full w-full timline-border">
+                              <div className="absolute w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
                                 <div className="flex flex-row video-metadata truncate mr-2">
                                   <span>{video.path.split("/").pop()}</span>
                                   <span>{videoStream?.codec_name?.toUpperCase()}</span>

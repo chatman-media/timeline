@@ -65,8 +65,6 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
     max: Math.max(...timeRanges.map((r) => r.max)),
   }
 
-  // console.log("Effective time range:", effectiveTimeRange)
-
   // Проверяем валидность диапазона
   if (effectiveTimeRange.max <= effectiveTimeRange.min) {
     console.error("No common time range found for all cameras")

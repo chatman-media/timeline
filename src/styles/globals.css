@@ -148,7 +148,7 @@
 }
 
 .slice--parent {
-  background: var(--background) !important;
+  background: #bddcde;
   border-color: var(--foreground);
   height: 50px;
   position: relative;
@@ -199,6 +199,9 @@
   margin-top: 1rem;
 }
 
+.timline-border{
+  border: 1px solid #4c9397;
+}
 .timeline-scale {
   position: relative;
   height: 32px;
@@ -237,7 +240,7 @@
   font-weight: 500;
   transition: all 0.2s;
   margin-right: 0.5rem;
-  background: var(--foreground);
+  background: var(--background);
   color: var(--foreground);
 }
 
@@ -285,8 +288,8 @@
 
 .timeline-bar-global {
   pointer-events: all;
-  border-left: 1px dashed var(--primary);
-  background-color: transparent !important;
+  border-left: 1px dashed var(--foreground);
+  /* background-color: transparent !important; */
 }
 
 .timeline-bar-local {
@@ -295,5 +298,5 @@
 
 .video-metadata span {
   margin-right: 0.5rem;
-  color: var(--foreground) !important;
+  /* color: var(--foreground) !important; */
 }

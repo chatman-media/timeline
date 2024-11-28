@@ -15,7 +15,7 @@ export function useCompilationSettings() {
     averageSceneDuration: 0.5,
     cameraChangeFrequency: 0.5,
     mainCameraPriority: 60,
-    mainCameraId: '1'
+    mainCameraId: undefined,
   })
 
   const updateSettings = (newSettings: Partial<CompilationSettings>) => {

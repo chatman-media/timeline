@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { formatDuration } from "@/lib/utils"
 import { useMedia } from "@/hooks/use-media"
 import { useCompilationSettings } from "@/hooks/use-compilation-settings"
+import { useEffect } from "react"
 
 export function CompilationSettings() {
   const { videos, activeVideos, maxDuration } = useMedia()
@@ -17,47 +18,45 @@ export function CompilationSettings() {
 
   const getCameraChangeLabel = (value: number): string => {
     const percent = value * 100
-    if (percent <= 10) return "Крайне редко"
     if (percent <= 20) return "Очень редко"
-    if (percent <= 30) return "Редко"
-    if (percent <= 40) return "Умеренно редко"
-    if (percent <= 50) return "Средне"
-    if (percent <= 60) return "Умеренно часто"
-    if (percent <= 70) return "Часто"
-    if (percent <= 80) return "Очень часто"
-    if (percent <= 90) return "Крайне часто"
-    return "Постоянно"
+    if (percent <= 40) return "Редко"
+    if (percent <= 60) return "Средне"
+    if (percent <= 80) return "Часто"
+    return "Очень часто"
   }
 
   const getSceneDurationLabel = (value: number): string => {
     const percent = value * 100
-    if (percent <= 10) return "Минимальные"
-    if (percent <= 20) return "Крайне короткие"
-    if (percent <= 30) return "Очень короткие"
+    if (percent <= 20) return "Очень короткие"
     if (percent <= 40) return "Короткие"
-    if (percent <= 50) return "Умеренно короткие"
     if (percent <= 60) return "Средние"
-    if (percent <= 70) return "Умеренно длинные"
     if (percent <= 80) return "Длинные"
-    if (percent <= 90) return "Очень длинные"
-    return "Максимальные"
+    return "Очень длинные"
   }
+
+  useEffect(() => {
+    if (videos.length > 0) {
+      setMainCamera(videos[0].name)
+    }
+  }, [videos])
+
+  console.log(mainCamera, videos[0].name)
 
   return (
     <div className="flex flex-col gap-6 w-full">
       <div className="flex items-center gap-4 text-gray-900 dark:text-gray-100">
-        <span className="text-sm min-w-32">Главная камера:</span>
+        <span className="text-sm min-w-54">Главная камера:</span>
         <Select
-          value={mainCamera.toString()}
-          onValueChange={(value) => setMainCamera(parseInt(value))}
+          value={mainCamera || ""}
+          onValueChange={setMainCamera}
         >
-          <SelectTrigger className="w-24">
-            <SelectValue />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Выберите камеру" />
           </SelectTrigger>
           <SelectContent>
-            {videos.map((x) => (
-              <SelectItem key={x.name} value={x.name}>
-                V{x.name}
+            {videos.map((video) => (
+              <SelectItem key={video.name} value={video.name}>
+                {video.name}
               </SelectItem>
             ))}
           </SelectContent>
@@ -65,7 +64,7 @@ export function CompilationSettings() {
       </div>
 
       <div className="flex items-center gap-4">
-        <span className="text-sm min-w-32 text-gray-900 dark:text-gray-100">
+        <span className="text-sm  min-w-54 text-gray-900 dark:text-gray-100">
           Длительность: {formatDuration(settings.targetDuration, 0)}
         </span>
         <div className="flex items-center gap-4 flex-1">
@@ -84,7 +83,7 @@ export function CompilationSettings() {
       </div>
 
       <div className="flex items-center gap-4">
-        <span className="text-sm min-w-32 text-gray-900 dark:text-gray-100">
+        <span className="text-sm  min-w-54 text-gray-900 dark:text-gray-100">
           Средняя длительность сцены:
         </span>
         <div className="flex items-center gap-4 flex-1">
@@ -103,7 +102,7 @@ export function CompilationSettings() {
       </div>
 
       <div className="flex items-center gap-4">
-        <span className="text-sm min-w-32 text-gray-900 dark:text-gray-100">
+        <span className="text-sm  min-w-54 text-gray-900 dark:text-gray-100">
           Частота смены камеры:
         </span>
         <div className="flex items-center gap-4 flex-1">
@@ -122,7 +121,7 @@ export function CompilationSettings() {
       </div>
 
       <div className="flex items-center gap-4">
-        <span className="text-sm min-w-32 text-gray-900 dark:text-gray-100">
+        <span className="text-sm  min-w-54 text-gray-900 dark:text-gray-100">
           Приоритет главной:
         </span>
         <div className="flex items-center gap-4 flex-1">

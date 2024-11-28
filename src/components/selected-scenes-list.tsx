@@ -44,7 +44,6 @@ export function SelectedScenesList({ segments, onSegmentClick }: SelectedScenesL
         </thead>
         <tbody className="divide-y divide-muted text-gray-900 dark:text-gray-100">
           {segments.map((segment, index) => {
-            console.log("Segment data:", segment) // Добавляем отладочный вывод
             return (
               <tr
                 key={index}

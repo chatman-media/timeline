@@ -33,6 +33,7 @@ export function formatTimeWithMilliseconds(
   seconds: number,
   showDate = false,
   showMilliseconds = true,
+  showSeconds = true,
 ): string {
   // Конвертируем секунды в миллисекунды и создаем объект dayjs
   const time = dayjs(seconds * 1000)
@@ -44,9 +45,9 @@ export function formatTimeWithMilliseconds(
   const secs = time.second()
   const ms = time.millisecond()
 
-  const timeString = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${
-    secs.toString().padStart(2, "0")
-  }${showMilliseconds ? `.${ms.toString().padStart(3, "0")}` : ""}`
+  const timeString = `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}${
+    showSeconds ? `:${secs.toString().padStart(2, "0")}` : ""
+  }${showMilliseconds ? `:${ms.toString().padStart(3, "0")}` : ""}`
 
   if (showDate) {
     return `${time.format("DD.MM.YY")} ${timeString}`
