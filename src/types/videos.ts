@@ -21,9 +21,12 @@ export interface MediaFile {
 
 export interface AssembledTrack {
   video: MediaFile // Первое видео трека (для метаданных)
+  cameraKey?: string // Ключ камеры
   index: number // Номер камеры
   isActive: boolean // Флаг активности трека
+  combinedDuration: number // Общая длительность видео
   allVideos: MediaFile[] // Все видео этой камеры
+  continuousSegments: MediaFile[][] // Последовательные сегменты видео
 }
 
 export interface VideoSegment {

@@ -20,7 +20,7 @@ export interface TimelineSliceType {
   y: number
   width: string | number
   height: number
-  videoPath?: string
+  videoPath: string
 }
 
 export interface SeekbarState {

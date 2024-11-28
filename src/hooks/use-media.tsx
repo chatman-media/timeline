@@ -1,29 +1,48 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import type { AssembledTrack, MediaFile } from "@/types/videos"
 import { TimeRange } from "@/types/scene"
 
 export function useMedia() {
   const [videos, setVideos] = useState<MediaFile[]>([])
-  const [activeVideos, setActiveVideos] = useState<AssembledTrack[]>([])
-  const [hasVideos, setHasVideos] = useState(false)
-  const [timeRanges, setTimeRanges] = useState<TimeRange[]>([])
-  const [currentTime, setCurrentTime] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
+  const [hasVideos, setHasVideos] = useState(false)
+  const [activeCamera, setActiveCamera] = useState<number>(1)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [timeRanges, setTimeRanges] = useState<{ min: number; max: number }[]>([])
   const [assembledTracks, setAssembledTracks] = useState<AssembledTrack[]>([])
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({})
   const hasFetchedRef = useRef(false)
 
+  // Вычисляем активные видео на основе текущего времени
+  const activeVideos = useMemo(() => {
+    if (!videos.length) return []
+
+    return videos.filter((video) => {
+      const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+      const duration = video.probeData.format.duration || 0
+      const endTime = startTime + duration
+
+      return currentTime >= startTime && currentTime <= endTime
+    })
+  }, [videos, currentTime])
+
+  // Функция для преобразования времени в проценты
   const timeToPercent = useCallback((time: number) => {
-    const range = timeRanges.find((r) => time >= r.min && time <= r.max)
-    if (!range) return 0
-    const duration = range.max - range.min
-    return ((time - range.min) / duration) * 100
+    if (timeRanges.length === 0) return 0
+    const minTime = Math.min(...timeRanges.map((x) => x.min))
+    const maxTime = Math.max(...timeRanges.map((x) => x.max))
+    const duration = maxTime - minTime
+    return ((time - minTime) / duration) * 100
   }, [timeRanges])
 
+  // Функция для преобразования процентов во время
   const percentToTime = useCallback((percent: number) => {
-    const range = timeRanges[0]
-    if (!range) return 0
-    const duration = range.max - range.min
-    return range.min + (duration * percent) / 100
+    if (timeRanges.length === 0) return 0
+    const minTime = Math.min(...timeRanges.map((x) => x.min))
+    const maxTime = Math.max(...timeRanges.map((x) => x.max))
+    const duration = maxTime - minTime
+    return minTime + (duration * percent) / 100
   }, [timeRanges])
 
   useEffect(() => {
@@ -154,30 +173,91 @@ export function useMedia() {
       }
     })
 
-    setActiveVideos(active.filter((v) => v.isActive))
+    setActiveCamera(active.filter((v) => v.isActive)?.[0]?.index || 1)
   }, [videos, currentTime])
 
   // Функция для обновления собранных дорожек
   const updateAssembledTracks = useCallback(() => {
-    const videoGroups = new Map<number, MediaFile[]>()
+    if (!videos.length) return
+    const videoGroups = new Map<string, MediaFile[]>()
 
     videos.forEach((video) => {
-      // Используем индекс из массива + 1 как номер камеры
-      const cameraNumber = videos.indexOf(video) + 1
-      if (!videoGroups.has(cameraNumber)) {
-        videoGroups.set(cameraNumber, [])
+      const videoStream = video.probeData.streams.find((s) => s.codec_type === "video")
+      if (!videoStream) return
+
+      // Create a unique key for each camera type based on resolution and aspect ratio
+      const cameraKey =
+        `${videoStream.width}x${videoStream.height}_${videoStream.display_aspect_ratio}`
+
+      if (!videoGroups.has(cameraKey)) {
+        videoGroups.set(cameraKey, [])
       }
-      videoGroups.get(cameraNumber)?.push(video)
+      videoGroups.get(cameraKey)?.push(video)
     })
 
-    const tracks: AssembledTrack[] = Array.from(videoGroups.entries())
-      .map(([cameraNumber, groupVideos]) => ({
-        video: groupVideos[0],
-        index: cameraNumber,
-        isActive: true,
-        allVideos: groupVideos,
-      }))
+    // Sort videos within each group by creation time
+    videoGroups.forEach((groupVideos) => {
+      groupVideos.sort((a, b) => {
+        const timeA = new Date(a.probeData.format.tags?.creation_time || 0).getTime()
+        const timeB = new Date(b.probeData.format.tags?.creation_time || 0).getTime()
+        return timeA - timeB
+      })
+    })
 
+    // Create assembled tracks
+    const tracks: AssembledTrack[] = Array.from(videoGroups.entries())
+      .map(([cameraKey, groupVideos], index) => {
+        // Check for time continuity
+        const continuousSegments: MediaFile[][] = []
+        let currentSegment: MediaFile[] = []
+
+        if (groupVideos.length === 1) {
+          continuousSegments.push([groupVideos[0]])
+        } else {
+          currentSegment = [groupVideos[0]]
+
+          for (let i = 1; i < groupVideos.length; i++) {
+            const currentVideo = groupVideos[i]
+            const previousVideo = groupVideos[i - 1]
+
+            const currentStartTime =
+              new Date(currentVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
+            const previousEndTime =
+              (new Date(previousVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000) +
+              (previousVideo.probeData.format.duration || 0)
+
+            // Allow for small gaps (e.g., 1 second) between videos
+            const timeGap = currentStartTime - previousEndTime
+            console.log("timeGap", timeGap)
+            console.log(currentStartTime, previousEndTime)
+            if (Math.abs(timeGap) <= 1) {
+              currentSegment.push(currentVideo)
+            } else {
+              continuousSegments.push([...currentSegment])
+              currentSegment = [currentVideo]
+            }
+          }
+          // Add the last segment
+          if (currentSegment.length > 0) {
+            continuousSegments.push([...currentSegment])
+          }
+        }
+
+        return {
+          video: groupVideos[0], // First video for metadata
+          index: index + 1, // Camera index starting from 1
+          isActive: true,
+          cameraKey,
+          allVideos: groupVideos,
+          continuousSegments, // Add this to your AssembledTrack type
+          combinedDuration: groupVideos.reduce(
+            (acc, video) => acc + (video.probeData.format.duration || 0),
+            0,
+          ),
+        }
+      })
+
+    console.log(tracks)
     setAssembledTracks(tracks)
   }, [videos])
 
@@ -187,7 +267,7 @@ export function useMedia() {
 
   // Вызываем updateAssembledTracks при изменении списка видео
   useEffect(() => {
-    hasVideos && updateAssembledTracks()
+    updateAssembledTracks()
   }, [videos])
 
   return {
@@ -196,11 +276,17 @@ export function useMedia() {
     currentTime,
     updateTime: setCurrentTime,
     isLoading,
+    hasVideos,
+    activeVideos,
+    videoRefs,
+    activeCamera,
+    setActiveCamera,
+    isPlaying,
+    setIsPlaying,
     timeToPercent,
     percentToTime,
-    activeVideos,
     assembledTracks,
-    hasVideos,
-    maxDuration: Math.max(...timeRanges.map((x) => x.max)) - Math.min(...timeRanges.map((x) => x.min)),
+    maxDuration: Math.max(...timeRanges.map((x) => x.max)) -
+      Math.min(...timeRanges.map((x) => x.min)),
   }
 }

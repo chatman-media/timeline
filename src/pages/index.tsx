@@ -7,6 +7,7 @@ import { CompilationSettings } from "@/components/compilation-settings"
 import { useMedia } from "@/hooks/use-media"
 import { Timeline } from "@/components/timeline"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { ActiveVideo } from "@/components/active-video"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -14,7 +15,7 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 export default function Home() {
-  const { isLoading, hasVideos } = useMedia()
+  const { isLoading, hasVideos, assembledTracks, videoRefs, activeCamera, isPlaying } = useMedia()
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
@@ -34,22 +35,18 @@ export default function Home() {
           <>
             <div className="flex gap-16 w-full px-12 sm:px-16 py-8">
               <CompilationSettings />
-              {/* Правая часть с активным видео */}
-              {
-                /* <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
-                {activeVideos
+              <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
+                {assembledTracks
                   .filter(({ index }) => index === activeCamera)
                   .map(({ video }) => (
                     <ActiveVideo
-                      key={`active-${video.path}`}
+                      key={`active-${video.name}`}
                       video={video}
                       isPlaying={isPlaying}
                       videoRefs={videoRefs}
                     />
                   ))}
               </div>
-               */
-              }
             </div>
             <div className="flex gap-16 w-full px-12 sm:px-16">
               {<Timeline />}

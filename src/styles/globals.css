@@ -89,14 +89,13 @@ body {
   background: var(--background) !important;
   border-color: var(--foreground);
   height: 50px;
-  top: 10px;
   position: relative;
 }
 
 .drag--parent {
-  /* background: red; */
-  height: 70px;
+  height: 52px;
   padding: 0;
+  border: 1px solid var(--foreground);
 }
 
 .drag--child {
@@ -131,10 +130,10 @@ body {
 /* Добавьте эти стили в ваш CSS файл */
 .timeline {
   width: 100%;
-  background: var(--foreground);
+  background: #ededed;
   border: 1px solid rgb(0, 52, 57);
   border-radius: 1px;
-  padding: 0 1rem;
+  padding: 0 3rem;
   margin-top: 1rem;
 }
 
@@ -176,8 +175,8 @@ body {
   font-weight: 500;
   transition: all 0.2s;
   margin-right: 0.5rem;
-  background: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--foreground);
+  color: var(--foreground);
 }
 
 .timeline-button:disabled {
@@ -234,5 +233,5 @@ body {
 
 .video-metadata span {
   margin-right: 0.5rem;
-  color: #000 !important;
+  color: var(--foreground) !important;
 }
