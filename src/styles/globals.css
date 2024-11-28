@@ -164,8 +164,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: solid 1px #0000ff;
+  border: solid 1px #11b7cd;
   /* background: #00ff00; */
+}
+
+.drag--child--selected {
+  border: 1px solid var(--background) !important; /* Используем системный цвет текста для границы */
+  border-right: 2px solid var(--background) !important;
+  border-left: 2px solid var(--background) !important;
+  box-shadow: none;
 }
 
 .drag--bar {
@@ -226,11 +233,6 @@
   font-size: 12px;
   color: var(--text-secondary);
   margin-top: 4px;
-}
-
-.drag--child--selected {
-  border: 2px solid var(--foreground) !important; /* Используем системный цвет текста для границы */
-  box-shadow: 0 0 0 1px var(--background); /* Добавляем контрастную тень */
 }
 
 .timeline-button {

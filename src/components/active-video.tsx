@@ -28,7 +28,7 @@ export const ActiveVideo = memo(() => {
       }
 
       // Добавляем слушатель события timeupdate
-      videoElement.addEventListener('timeupdate', handleTimeUpdate)
+      videoElement.addEventListener("timeupdate", handleTimeUpdate)
 
       if (isPlaying) {
         videoElement.play().catch(console.error)
@@ -38,7 +38,7 @@ export const ActiveVideo = memo(() => {
 
       // Очищаем слушатель при размонтировании
       return () => {
-        videoElement.removeEventListener('timeupdate', handleTimeUpdate)
+        videoElement.removeEventListener("timeupdate", handleTimeUpdate)
       }
     }
   }, [isPlaying, videoRefs, activeVideo])
@@ -59,7 +59,7 @@ export const ActiveVideo = memo(() => {
           playsInline
           muted
           onClick={play}
-          style={{ cursor: 'pointer' }}
+          style={{ cursor: "pointer" }}
         />
       </div>
     </div>

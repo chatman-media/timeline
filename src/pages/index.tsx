@@ -35,16 +35,18 @@ export default function Home() {
         : (
           <>
             <div className="flex gap-16 w-full px-12 sm:px-16 py-8">
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col gap-4 w-[10%]">
                 <div className="text-sm text-gray-900 dark:text-gray-100">
                   {formatTimeWithMilliseconds(currentTime, false, true, true)}
                 </div>
-                <button
-                  onClick={play}
-                  className="px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
-                >
-                  {isPlaying ? "Пауза" : "Play"}
-                </button>
+                <div>
+                  <button
+                    onClick={play}
+                    className="px-3 py-1 text-sm rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    {isPlaying ? "Пауза" : "Play"}
+                  </button>
+                </div>
               </div>
               <CompilationSettings />
               <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
