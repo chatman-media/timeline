@@ -1,9 +1,9 @@
-import { useVideoStore } from '@/stores/videoStore'
-import { useEffect } from 'react'
+import { useVideoStore } from "@/stores/videoStore"
+import { useEffect } from "react"
 
 export function useMedia() {
   const store = useVideoStore()
-  
+
   useEffect(() => {
     store.fetchVideos()
   }, [])

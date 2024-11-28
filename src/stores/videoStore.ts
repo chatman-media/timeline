@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { create } from "zustand"
 import type { AssembledTrack, MediaFile } from "@/types/videos"
 import { TimeRange } from "@/types/scene"
 
@@ -42,16 +42,17 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   activeVideos: [],
 
   setVideos: (videos) => {
-    const firstVideo = videos[0]?.id || ''
-    set({ 
+    const firstVideo = videos[0]?.id || ""
+    set({
       videos,
       activeCamera: firstVideo,
       activeVideo: videos[0],
-      hasVideos: videos.length > 0 
+      hasVideos: videos.length > 0,
     })
     get().updateActiveVideos()
   },
-  setActiveCamera: (cameraId) => set({ activeCamera: cameraId, activeVideo: get().videos.find(v => v.id === cameraId) }),
+  setActiveCamera: (cameraId) =>
+    set({ activeCamera: cameraId, activeVideo: get().videos.find((v) => v.id === cameraId) }),
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentTime: (time) => {
     set({ currentTime: time })
@@ -80,7 +81,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
     if (hasFetched) return
 
     set({ isLoading: true, hasFetched: true })
-    
+
     try {
       const response = await fetch("/api/videos")
       const data = await response.json()
@@ -104,7 +105,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         })
         .map((video: MediaFile, index: number) => ({
           ...video,
-          id: `V${index + 1}`
+          id: `V${index + 1}`,
         }))
 
       if (validVideos.length === 0) {
@@ -146,14 +147,13 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         }
         ranges.push(currentRange)
 
-        set({ 
+        set({
           timeRanges: ranges,
           currentTime: ranges[0].min,
           videos: validVideos,
-          hasVideos: true
+          hasVideos: true,
         })
       }
-
     } catch (error) {
       console.error("Error fetching videos:", error)
     } finally {
@@ -243,7 +243,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
   updateActiveVideos: () => {
     const { videos, currentTime, activeCamera } = get()
-    
+
     if (!videos.length) {
       set({ activeVideos: [], activeVideo: undefined })
       return
@@ -258,11 +258,11 @@ export const useVideoStore = create<VideoState>((set, get) => ({
     })
 
     // Находим активное видео для выбранной камеры
-    const currentActiveVideo = active.find(video => video.id === activeCamera)
+    const currentActiveVideo = active.find((video) => video.id === activeCamera)
 
-    set({ 
+    set({
       activeVideos: active,
-      activeVideo: currentActiveVideo
+      activeVideo: currentActiveVideo,
     })
   },
-})) 
+}))

@@ -35,7 +35,7 @@ export default function Home() {
         : (
           <>
             <div className="flex gap-16 w-full px-12 sm:px-16 py-8">
-            {formatTimeWithMilliseconds(currentTime, false, false, false)}
+              {formatTimeWithMilliseconds(currentTime, false, false, false)}
               <CompilationSettings />
               <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
                 <ActiveVideo />

@@ -1,4 +1,4 @@
-import { create } from 'zustand'
+import { create } from "zustand"
 
 interface AudioPoint {
   timestamp: number
@@ -7,7 +7,7 @@ interface AudioPoint {
 
 interface AudioData {
   data: AudioPoint[]
-  status: 'idle' | 'loading' | 'success' | 'error'
+  status: "idle" | "loading" | "success" | "error"
   error?: string
 }
 
@@ -23,27 +23,27 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
   analyzeAudio: async (trackId: string, filePath: string) => {
     // Проверяем, не анализируется ли уже этот трек
     const currentData = get().audioData[trackId]
-    if (currentData?.status === 'loading') return
+    if (currentData?.status === "loading") return
 
     // Устанавливаем статус загрузки
     set((state) => ({
       audioData: {
         ...state.audioData,
-        [trackId]: { data: [], status: 'loading' }
-      }
+        [trackId]: { data: [], status: "loading" },
+      },
     }))
 
     try {
-      const response = await fetch('/api/analyze-audio', {
-        method: 'POST',
+      const response = await fetch("/api/analyze-audio", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ filePath })
+        body: JSON.stringify({ filePath }),
       })
 
       if (!response.ok) {
-        throw new Error('Failed to analyze audio')
+        throw new Error("Failed to analyze audio")
       }
 
       const data = await response.json()
@@ -51,8 +51,8 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
       set((state) => ({
         audioData: {
           ...state.audioData,
-          [trackId]: { data, status: 'success' }
-        }
+          [trackId]: { data, status: "success" },
+        },
       }))
     } catch (error) {
       set((state) => ({
@@ -60,10 +60,10 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
           ...state.audioData,
           [trackId]: {
             data: [],
-            status: 'error',
-            error: error instanceof Error ? error.message : 'Unknown error'
-          }
-        }
+            status: "error",
+            error: error instanceof Error ? error.message : "Unknown error",
+          },
+        },
       }))
     }
   },
@@ -73,5 +73,5 @@ export const useAudioStore = create<AudioStore>((set, get) => ({
       const { [trackId]: _, ...rest } = state.audioData
       return { audioData: rest }
     })
-  }
-})) 
+  },
+}))

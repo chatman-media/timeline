@@ -104,7 +104,7 @@ export function CompilationSettings() {
           Частота смены камеры:
         </span>
         <div className="flex items-center gap-4 flex-1">
-        <Slider
+          <Slider
             value={[settings.cameraChangeFrequency]}
             onValueChange={([value]) => updateSettings({ cameraChangeFrequency: value })}
             min={0}

@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "../ui/label"
 import GlobalTimelineBar from "./global-timeline-bar"
 import { useMedia } from "@/hooks/use-media"
-import { useAudioStore } from '@/stores/audioStore'
+import { useAudioStore } from "@/stores/audioStore"
 
 export function Timeline(): JSX.Element {
   const { videos, timeRanges, maxDuration, currentTime, timeToPercent, updateTime } = useMedia()
@@ -55,7 +55,7 @@ export function Timeline(): JSX.Element {
           )}
         </div>
       )
-    }
+    },
   ))
 
   // Добавляем displayName для компонента (опционально, но рекомендуется)
@@ -159,7 +159,9 @@ export function Timeline(): JSX.Element {
                                     <span>{videoStream?.codec_name?.toUpperCase()}</span>
                                     <span>{videoStream?.width}×{videoStream?.height}</span>
                                     <span>{videoStream?.display_aspect_ratio}</span>
-                                    <span>{formatBitrate(video.probeData.format.bit_rate || 0)}</span>
+                                    <span>
+                                      {formatBitrate(video.probeData.format.bit_rate || 0)}
+                                    </span>
                                   </div>
                                   <div className="flex flex-col items-end">
                                     <span>
@@ -194,7 +196,7 @@ export function Timeline(): JSX.Element {
             <GlobalTimelineBar
               duration={maxDuration}
               currentTime={currentTime}
-              startTime={Math.min(...timeRanges.map(range => range.min))}
+              startTime={Math.min(...timeRanges.map((range) => range.min))}
               height={videos.length * 70}
               onTimeChange={updateTime}
             />

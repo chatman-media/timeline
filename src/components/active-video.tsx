@@ -9,17 +9,18 @@ export const ActiveVideo = memo(() => {
 
   useEffect(() => {
     console.log(activeVideo)
-    
+
     const videoElement = videoRefs.current[activeVideo?.id]
     if (videoElement) {
       // Get the video's start time
-      const videoStartTime = new Date(activeVideo?.probeData.format.tags?.creation_time || 0).getTime() / 1000
+      const videoStartTime =
+        new Date(activeVideo?.probeData.format.tags?.creation_time || 0).getTime() / 1000
       // Calculate the relative position within the video
       const relativeTime = currentTime - videoStartTime
-      
+
       // Update video's current time
       videoElement.currentTime = relativeTime
-      
+
       if (isPlaying) {
         videoElement.play().catch(console.error)
       } else {

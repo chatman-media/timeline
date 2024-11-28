@@ -1,22 +1,22 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
+import { create } from "zustand"
+import { persist } from "zustand/middleware"
 
 /**
  * Интерфейс для настроек компиляции видео
  */
 interface CompilationSettings {
-  targetDuration: number        // Целевая длительность итогового видео в секундах
-  averageSceneDuration: number  // Средняя длительность сцены (0-1)
+  targetDuration: number // Целевая длительность итогового видео в секундах
+  averageSceneDuration: number // Средняя длительность сцены (0-1)
   cameraChangeFrequency: number // Частота смены камеры (0-1)
-  mainCameraPriority: number    // Приоритет главной камеры (0-100)
-  mainCamera?: string           // ID главной камеры
+  mainCameraPriority: number // Приоритет главной камеры (0-100)
+  mainCamera?: string // ID главной камеры
 }
 
 /**
  * Интерфейс хранилища настроек компиляции
  */
 interface CompilationSettingsStore {
-  settings: CompilationSettings           // Текущие настройки
+  settings: CompilationSettings // Текущие настройки
   updateSettings: (updates: Partial<CompilationSettings>) => void // Метод обновления настроек
 }
 
@@ -24,10 +24,10 @@ interface CompilationSettingsStore {
  * Настройки по умолчанию
  */
 const DEFAULT_SETTINGS: CompilationSettings = {
-  targetDuration: 60,           // 1 минута
-  averageSceneDuration: 0.5,    // Средняя длительность
-  cameraChangeFrequency: 0.5,   // Средняя частота
-  mainCameraPriority: 50,       // 50% приоритет
+  targetDuration: 60, // 1 минута
+  averageSceneDuration: 0.5, // Средняя длительность
+  cameraChangeFrequency: 0.5, // Средняя частота
+  mainCameraPriority: 50, // 50% приоритет
   mainCamera: undefined,
 }
 
@@ -43,11 +43,11 @@ export const useCompilationSettings = create<CompilationSettingsStore>()(
       // Частичное обновление настроек
       updateSettings: (updates) =>
         set((state) => ({
-          settings: { ...state.settings, ...updates }
+          settings: { ...state.settings, ...updates },
         })),
     }),
     {
-      name: 'compilation-settings', // Ключ для localStorage
-    }
-  )
+      name: "compilation-settings", // Ключ для localStorage
+    },
+  ),
 )

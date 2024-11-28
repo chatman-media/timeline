@@ -21,23 +21,35 @@ export default async function handler(
     // Проверяем существование директорий
     await Promise.all([
       fs.mkdir(videosDir, { recursive: true }),
-      fs.mkdir(musicDir, { recursive: true })
+      fs.mkdir(musicDir, { recursive: true }),
     ])
 
     // Получаем список файлов из обеих директорий
     const [videoFiles, musicFiles] = await Promise.all([
       fs.readdir(videosDir),
-      fs.readdir(musicDir)
+      fs.readdir(musicDir),
     ])
 
     // Фильтруем файлы по расширению
     const mediaFiles = [
-      ...videoFiles.map(file => ({ dir: videosDir, file, type: 'videos' })),
+      ...videoFiles.map((file) => ({ dir: videosDir, file, type: "videos" })),
       // ...musicFiles.map(file => ({ dir: musicDir, file, type: 'music' }))
     ].filter(({ file }) => {
       const ext = path.extname(file).toLowerCase()
-      return ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.insv', '.mp3', '.wav', '.aac', '.ogg', '.flac']
-        .includes(ext) && !file.startsWith('.')
+      return [
+        ".mp4",
+        ".mov",
+        ".avi",
+        ".mkv",
+        ".webm",
+        ".insv",
+        ".mp3",
+        ".wav",
+        ".aac",
+        ".ogg",
+        ".flac",
+      ]
+        .includes(ext) && !file.startsWith(".")
     })
 
     // const thumbnailsDir = path.join(process.cwd(), "public", "thumbnails")
