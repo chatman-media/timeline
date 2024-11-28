@@ -22,7 +22,7 @@ export const formatDuration = (seconds: number, afterComa = 3): string => {
   }
   const ms = Math.floor((seconds % 1) * 1000)
 
-  return `${duration.format("mm:ss")}.${ms.toString().padStart(afterComa, "0")}`
+  return `${duration.format("mm:ss")}:${ms.toString().padStart(afterComa, "0").substring(0, afterComa)}`
 }
 
 export function cn(...inputs: ClassValue[]) {

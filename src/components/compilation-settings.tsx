@@ -30,7 +30,7 @@ export function CompilationSettings() {
   }
 
   const getSceneDurationLabel = (value: number): string => {
-    const percent = ((value - 0.5) / 9.5) * 100
+    const percent = value * 100
     if (percent <= 10) return "Минимальные"
     if (percent <= 20) return "Крайне короткие"
     if (percent <= 30) return "Очень короткие"

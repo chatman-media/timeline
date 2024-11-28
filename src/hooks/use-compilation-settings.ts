@@ -12,8 +12,8 @@ export function useCompilationSettings() {
   const [mainCamera, setMainCamera] = useState(1)
   const [settings, setSettings] = useState<CompilationSettings>({
     targetDuration: 900,
-    averageSceneDuration: 0.8,
-    cameraChangeFrequency: 0.2,
+    averageSceneDuration: 0.5,
+    cameraChangeFrequency: 0.5,
     mainCameraPriority: 60,
     mainCameraId: '1'
   })

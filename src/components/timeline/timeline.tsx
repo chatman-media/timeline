@@ -161,7 +161,7 @@ export function Timeline(): JSX.Element {
                                 </div>
                                 <div className="flex flex-col items-end">
                                   <span>
-                                    {formatDuration(video.probeData.format.duration || 0, 0)}
+                                    {formatDuration(video.probeData.format.duration || 0, 2)}
                                   </span>
                                 </div>
                               </div>
