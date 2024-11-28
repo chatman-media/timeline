@@ -5,7 +5,10 @@ git clone git@github.com:chatman-media/timeline.git
 cd timeline
 ```
 
-Пока ожидается, что в папке /public/videos/ будут видео, коорые он анализирует. Если нет, то создайте папку и загрузите видео в нее.
+В папку /public/videos/ поместите видео и аудио с миркофонов для монтажа.
+В папку /public/music/ поместите аудиотреки
+
+Можно на выбор использовать pnpm/yarn/deno/bun
 
 Install ffmpeg ([brew](https://formulae.brew.sh/formula/ffmpeg))
 
