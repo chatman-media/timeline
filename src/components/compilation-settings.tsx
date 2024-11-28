@@ -63,7 +63,7 @@ export function CompilationSettings() {
 
       <div className="flex items-center gap-4">
         <span className="text-sm  min-w-54 text-gray-900 dark:text-gray-100">
-          Длительность: {formatDuration(settings.targetDuration, 0)}
+          Длительность:
         </span>
         <div className="flex items-center gap-4 flex-1">
           <Slider

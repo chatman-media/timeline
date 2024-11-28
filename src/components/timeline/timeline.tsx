@@ -1,4 +1,4 @@
-import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react"
+import React, { forwardRef, memo, useCallback, useEffect, useRef, useState } from "react"
 import TimelineBar from "./timeline-bar"
 import { nanoid } from "nanoid"
 import { TimelineSlice } from "./timeline-slice"
@@ -38,8 +38,8 @@ export function Timeline(): JSX.Element {
    * Компонент-обертка для слайсов
    * Содержит все слайсы и полосу прокрутки
    */
-  const SliceWrap = forwardRef<HTMLDivElement, { children: React.ReactNode }>(
-    (props, ref) => { // добавляем параметр ref
+  const SliceWrap = memo(forwardRef<HTMLDivElement, { children: React.ReactNode }>(
+    (props, ref) => {
       return (
         <div className="slice--parent" ref={ref}>
           {props.children}
@@ -55,8 +55,8 @@ export function Timeline(): JSX.Element {
           )}
         </div>
       )
-    },
-  )
+    }
+  ))
 
   // Добавляем displayName для компонента (опционально, но рекомендуется)
   SliceWrap.displayName = "SliceWrap"
@@ -112,7 +112,6 @@ export function Timeline(): JSX.Element {
     }
   }, [])
 
-  // Обновляем позицию временной метки при изменении входного времени
   useEffect(() => {
     const timelineWidth = parentRef.current?.offsetWidth || 0
     const percent = timeToPercent(currentTime)
@@ -124,11 +123,10 @@ export function Timeline(): JSX.Element {
     }))
   }, [currentTime])
 
-
   return (
     <div className="timeline">
       <TimeScale />
-      <div className="flex">
+      <div className="flex relative">
         {/* Видеодорожки */}
         <div className="flex-1 flex flex-col gap-2 relative">
           {videos.map((video) => {
@@ -191,6 +189,14 @@ export function Timeline(): JSX.Element {
             )
           })}
         </div>
+        {useGlobalBar && (
+        <GlobalTimelineBar
+          duration={maxDuration}
+          currentTime={currentTime}
+          startTime={Math.min(...timeRanges.map(range => range.min))}
+          height={videos.length * 70}
+        />
+      )}
       </div>
       <div className="flex items-center gap-2 mb-4">
         <Switch
@@ -202,13 +208,6 @@ export function Timeline(): JSX.Element {
           Использовать общий таймлайн
         </Label>
       </div>
-      {useGlobalBar && (
-        <GlobalTimelineBar
-          duration={maxDuration}
-          startTime={Math.min(...timeRanges.map((x) => x.min))}
-          height={videos.length * 70} // Высота всех дорожек
-        />
-      )}
     </div>
   )
 }

@@ -8,6 +8,7 @@ import { useMedia } from "@/hooks/use-media"
 import { Timeline } from "@/components/timeline"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { ActiveVideo } from "@/components/active-video"
+import { formatTimeWithMilliseconds } from "@/lib/utils"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -15,7 +16,7 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 export default function Home() {
-  const { isLoading, hasVideos, assembledTracks, videoRefs, activeCamera, isPlaying } = useMedia()
+  const { isLoading, currentTime, hasVideos, assembledTracks, videoRefs, activeCamera, isPlaying } = useMedia()
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
@@ -34,6 +35,7 @@ export default function Home() {
         : (
           <>
             <div className="flex gap-16 w-full px-12 sm:px-16 py-8">
+            {formatTimeWithMilliseconds(currentTime, false, false, false)}
               <CompilationSettings />
               <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
                 {assembledTracks
