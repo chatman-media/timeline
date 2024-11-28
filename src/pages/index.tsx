@@ -16,7 +16,7 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 export default function Home() {
-  const { isLoading, currentTime, hasVideos, assembledTracks, videoRefs, activeCamera, isPlaying } = useMedia()
+  const { isLoading, currentTime, hasVideos } = useMedia()
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
@@ -38,20 +38,11 @@ export default function Home() {
             {formatTimeWithMilliseconds(currentTime, false, false, false)}
               <CompilationSettings />
               <div className="w-[40%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
-                {assembledTracks
-                  .filter(({ index }) => index === activeCamera)
-                  .map(({ video }) => (
-                    <ActiveVideo
-                      key={`active-${video.name}`}
-                      video={video}
-                      isPlaying={isPlaying}
-                      videoRefs={videoRefs}
-                    />
-                  ))}
+                <ActiveVideo />
               </div>
             </div>
             <div className="flex gap-16 w-full px-12 sm:px-16">
-              {<Timeline />}
+              <Timeline />
             </div>
             <ThemeToggle />
           </>

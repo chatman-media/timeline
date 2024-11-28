@@ -54,7 +54,7 @@ export function CompilationSettings() {
           <SelectContent>
             {videos.map((video) => (
               <SelectItem key={video.id} value={video.id}>
-                {video.id} - {video.name}
+                {video.id}
               </SelectItem>
             ))}
           </SelectContent>

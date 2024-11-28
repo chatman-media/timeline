@@ -19,7 +19,6 @@ export function useMedia() {
     updateTime: store.setCurrentTime,
     isLoading: store.isLoading,
     hasVideos: store.hasVideos,
-    activeCamera: store.activeCamera,
     setActiveCamera: store.setActiveCamera,
     isPlaying: store.isPlaying,
     setIsPlaying: store.setIsPlaying,
@@ -30,5 +29,7 @@ export function useMedia() {
     maxDuration: Math.max(...store.timeRanges.map((x) => x.max)) -
       Math.min(...store.timeRanges.map((x) => x.min)),
     activeVideos: store.activeVideos,
+    activeCamera: store.activeCamera,
+    activeVideo: store.activeVideo,
   }
 }

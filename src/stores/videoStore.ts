@@ -6,7 +6,6 @@ interface VideoState {
   videos: MediaFile[]
   isLoading: boolean
   hasVideos: boolean
-  activeCamera: number
   isPlaying: boolean
   currentTime: number
   timeRanges: TimeRange[]
@@ -14,11 +13,12 @@ interface VideoState {
   videoRefs: { [key: string]: HTMLVideoElement }
   hasFetched: boolean
   activeVideos: MediaFile[]
-  mainCamera: string
+  activeVideo?: MediaFile
+  activeCamera: string
 
   // Actions
   setVideos: (videos: MediaFile[]) => void
-  setActiveCamera: (camera: number) => void
+  setActiveCamera: (cameraId: string) => void
   setIsPlaying: (isPlaying: boolean) => void
   setCurrentTime: (time: number) => void
   fetchVideos: () => Promise<void>
@@ -32,7 +32,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   videos: [],
   isLoading: true,
   hasVideos: false,
-  activeCamera: 1,
+  activeCamera: "V1",
   isPlaying: false,
   currentTime: 0,
   timeRanges: [],
@@ -40,22 +40,21 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   videoRefs: {},
   hasFetched: false,
   activeVideos: [],
-  mainCamera: '',
 
   setVideos: (videos) => {
-    const firstVideo = videos[0]?.name || ''
+    const firstVideo = videos[0]?.id || ''
     set({ 
       videos,
-      mainCamera: firstVideo,
+      activeCamera: firstVideo,
+      activeVideo: videos[0],
       hasVideos: videos.length > 0 
     })
     get().updateActiveVideos()
   },
-  setActiveCamera: (camera) => set({ activeCamera: camera }),
+  setActiveCamera: (cameraId) => set({ activeCamera: cameraId, activeVideo: get().videos.find(v => v.id === cameraId) }),
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentTime: (time) => {
     set({ currentTime: time })
-    get().updateActiveVideos()
   },
 
   timeToPercent: (time) => {
@@ -243,10 +242,10 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   },
 
   updateActiveVideos: () => {
-    const { videos, currentTime } = get()
+    const { videos, currentTime, activeCamera } = get()
     
     if (!videos.length) {
-      set({ activeVideos: [] })
+      set({ activeVideos: [], activeVideo: undefined })
       return
     }
 
@@ -258,6 +257,12 @@ export const useVideoStore = create<VideoState>((set, get) => ({
       return currentTime >= startTime && currentTime <= endTime
     })
 
-    set({ activeVideos: active })
+    // Находим активное видео для выбранной камеры
+    const currentActiveVideo = active.find(video => video.id === activeCamera)
+
+    set({ 
+      activeVideos: active,
+      activeVideo: currentActiveVideo
+    })
   },
 })) 

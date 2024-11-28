@@ -148,7 +148,7 @@
 }
 
 .slice--parent {
-  background: #bddcde;
+  /* background: #bddcde; */
   border-color: var(--foreground);
   height: 50px;
   position: relative;
@@ -192,7 +192,7 @@
 /* Добавьте эти стили в ваш CSS файл */
 .timeline {
   width: 100%;
-  background: #ededed;
+  /* background: var(--background); */
   border: 1px solid rgb(0, 52, 57);
   border-radius: 1px;
   padding: 0 3rem;

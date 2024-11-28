@@ -1,27 +1,32 @@
 import { memo, useEffect } from "react"
-import type { MediaFile } from "@/types/videos"
+import { useMedia } from "@/hooks/use-media"
 
-interface ActiveVideoProps {
-  video: MediaFile
-  isPlaying: boolean
-  videoRefs: React.MutableRefObject<{ [key: string]: HTMLVideoElement }>
-}
+export const ActiveVideo = memo(() => {
+  const { videoRefs, isPlaying, activeVideo, currentTime } = useMedia()
+  if (!videoRefs.current) {
+    videoRefs.current = {}
+  }
 
-export const ActiveVideo = memo(({
-  video,
-  isPlaying,
-  videoRefs,
-}: ActiveVideoProps) => {
   useEffect(() => {
-    const videoElement = videoRefs.current[video.path]
+    console.log(activeVideo)
+    
+    const videoElement = videoRefs.current[activeVideo?.id]
     if (videoElement) {
+      // Get the video's start time
+      const videoStartTime = new Date(activeVideo?.probeData.format.tags?.creation_time || 0).getTime() / 1000
+      // Calculate the relative position within the video
+      const relativeTime = currentTime - videoStartTime
+      
+      // Update video's current time
+      videoElement.currentTime = relativeTime
+      
       if (isPlaying) {
         videoElement.play().catch(console.error)
       } else {
         videoElement.pause()
       }
     }
-  }, [isPlaying, video.path, videoRefs])
+  }, [isPlaying, videoRefs, currentTime, activeVideo])
 
   return (
     <div className="sticky top-4 space-y-4">
@@ -29,10 +34,12 @@ export const ActiveVideo = memo(({
         <video
           ref={(el) => {
             if (el) {
-              videoRefs.current[video.path] = el
+              videoRefs.current[activeVideo?.id] = el
+            } else {
+              delete videoRefs.current[activeVideo?.id]
             }
           }}
-          src={video.path}
+          src={activeVideo?.path}
           className="w-full h-full object-contain"
           playsInline
           muted

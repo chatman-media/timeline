@@ -12,7 +12,7 @@ import { useMedia } from "@/hooks/use-media"
 import { useAudioStore } from '@/stores/audioStore'
 
 export function Timeline(): JSX.Element {
-  const { videos, timeRanges, maxDuration, currentTime, timeToPercent } = useMedia()
+  const { videos, timeRanges, maxDuration, currentTime, timeToPercent, updateTime } = useMedia()
 
   // Ссылка на DOM-элемент контейнера для определения его размеров
   const parentRef = useRef<HTMLDivElement>(null)
@@ -41,7 +41,7 @@ export function Timeline(): JSX.Element {
   const SliceWrap = memo(forwardRef<HTMLDivElement, { children: React.ReactNode }>(
     (props, ref) => {
       return (
-        <div className="slice--parent" ref={ref}>
+        <div className="slice--parent bg-secondary/80  dark:bg-secondary/80" ref={ref}>
           {props.children}
           {!useGlobalBar && (
             <TimelineBar
@@ -126,87 +126,90 @@ export function Timeline(): JSX.Element {
   return (
     <div className="timeline">
       <TimeScale />
-      <div className="flex relative">
-        {/* Видеодорожки */}
-        <div className="flex-1 flex flex-col gap-2 relative">
-          {videos.map((video) => {
-            const videoStartTime =
-              new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
-            const videoDuration = video.probeData.format.duration || 0
+      <div className="relative">
+        <div className="flex">
+          {/* Видеодорожки */}
+          <div className="flex-1 flex flex-col gap-2 relative">
+            {videos.map((video) => {
+              const videoStartTime =
+                new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+              const videoDuration = video.probeData.format.duration || 0
 
-            // Вычисляем позицию и ширину видео на шкале напрямую
-            const startOffset = ((videoStartTime - Math.min(...timeRanges.map((x) =>
-              x.min
-            ))) / maxDuration) * 100
-            const width = (videoDuration / maxDuration) * 100
+              // Вычисляем позицию и ширину видео на шкале напрямую
+              const startOffset = ((videoStartTime - Math.min(...timeRanges.map((x) =>
+                x.min
+              ))) / maxDuration) * 100
+              const width = (videoDuration / maxDuration) * 100
 
-            return (
-              <div className="flex" key={video.id}>
-                <div className="w-full" key={video.id}>
-                  {(() => {
-                    const videoStream = video.probeData.streams.find((s) =>
-                      s.codec_type === "video"
-                    )
-                    return (
-                      <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
-                        <div key={video.path} className="drag--parent flex-1">
-                          <SliceWrap ref={parentRef}>
-                            <div className="absolute h-full w-full timline-border">
-                              <div className="absolute w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
-                                <div className="flex flex-row video-metadata truncate mr-2">
-                                  <span>{video.path.split("/").pop()}</span>
-                                  <span>{videoStream?.codec_name?.toUpperCase()}</span>
-                                  <span>{videoStream?.width}×{videoStream?.height}</span>
-                                  <span>{videoStream?.display_aspect_ratio}</span>
-                                  <span>{formatBitrate(video.probeData.format.bit_rate || 0)}</span>
-                                </div>
-                                <div className="flex flex-col items-end">
-                                  <span>
-                                    {formatDuration(video.probeData.format.duration || 0, 2)}
-                                  </span>
+              return (
+                <div className="flex" key={video.id}>
+                  <div className="w-full" key={video.id}>
+                    {(() => {
+                      const videoStream = video.probeData.streams.find((s) =>
+                        s.codec_type === "video"
+                      )
+                      return (
+                        <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
+                          <div key={video.path} className="drag--parent flex-1">
+                            <SliceWrap ref={parentRef}>
+                              <div className="absolute h-full w-full timline-border">
+                                <div className="absolute w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
+                                  <div className="flex flex-row video-metadata truncate mr-2">
+                                    <span>{video.path.split("/").pop()}</span>
+                                    <span>{videoStream?.codec_name?.toUpperCase()}</span>
+                                    <span>{videoStream?.width}×{videoStream?.height}</span>
+                                    <span>{videoStream?.display_aspect_ratio}</span>
+                                    <span>{formatBitrate(video.probeData.format.bit_rate || 0)}</span>
+                                  </div>
+                                  <div className="flex flex-col items-end">
+                                    <span>
+                                      {formatDuration(video.probeData.format.duration || 0, 2)}
+                                    </span>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                            {/* Слайсы для этой видеодорожки */}
-                            {slices
-                              .filter((slice) => slice.videoPath === video.path)
-                              .map((slice) => (
-                                <TimelineSlice
-                                  key={slice.id}
-                                  updateSlice={updateSlice}
-                                  {...slice}
-                                  isSelected={selectedSliceId === slice.id}
-                                  onSelect={handleSliceSelect}
-                                />
-                              ))}
-                          </SliceWrap>
+                              {/* Слайсы для этой видеодорожки */}
+                              {slices
+                                .filter((slice) => slice.videoPath === video.path)
+                                .map((slice) => (
+                                  <TimelineSlice
+                                    key={slice.id}
+                                    updateSlice={updateSlice}
+                                    {...slice}
+                                    isSelected={selectedSliceId === slice.id}
+                                    onSelect={handleSliceSelect}
+                                  />
+                                ))}
+                            </SliceWrap>
+                          </div>
                         </div>
-                      </div>
-                    )
-                  })()}
+                      )
+                    })()}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
+          {useGlobalBar && (
+            <GlobalTimelineBar
+              duration={maxDuration}
+              currentTime={currentTime}
+              startTime={Math.min(...timeRanges.map(range => range.min))}
+              height={videos.length * 70}
+              onTimeChange={updateTime}
+            />
+          )}
         </div>
-        {useGlobalBar && (
-        <GlobalTimelineBar
-          duration={maxDuration}
-          currentTime={currentTime}
-          startTime={Math.min(...timeRanges.map(range => range.min))}
-          height={videos.length * 70}
-        />
-      )}
-      </div>
-      <div className="flex items-center gap-2 mb-4">
-        <Switch
-          checked={useGlobalBar}
-          onCheckedChange={setUseGlobalBar}
-          id="timeline-mode"
-        />
-        <Label htmlFor="timeline-mode">
-          Использовать общий таймлайн
-        </Label>
+        <div className="flex items-center gap-2 mb-4">
+          <Switch
+            id="timeline-mode"
+            checked={useGlobalBar}
+            onCheckedChange={setUseGlobalBar}
+          />
+          <Label htmlFor="timeline-mode">
+            Использовать общий таймлайн
+          </Label>
+        </div>
       </div>
     </div>
   )
