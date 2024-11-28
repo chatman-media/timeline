@@ -33,21 +33,21 @@ export default async function handler(
     // Фильтруем файлы по расширению
     const mediaFiles = [
       ...videoFiles.map(file => ({ dir: videosDir, file, type: 'videos' })),
-      ...musicFiles.map(file => ({ dir: musicDir, file, type: 'music' }))
+      // ...musicFiles.map(file => ({ dir: musicDir, file, type: 'music' }))
     ].filter(({ file }) => {
       const ext = path.extname(file).toLowerCase()
       return ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.insv', '.mp3', '.wav', '.aac', '.ogg', '.flac']
         .includes(ext) && !file.startsWith('.')
     })
 
-    const thumbnailsDir = path.join(process.cwd(), "public", "thumbnails")
-    await fs.mkdir(thumbnailsDir, { recursive: true })
+    // const thumbnailsDir = path.join(process.cwd(), "public", "thumbnails")
+    // await fs.mkdir(thumbnailsDir, { recursive: true })
 
     // Обрабатываем все файлы параллельно
     const mediaPromises = mediaFiles.map(async ({ dir, file, type }) => {
       try {
         const filePath = path.join(dir, file)
-        const thumbnailName = `${path.parse(file).name}.jpg`
+        // const thumbnailName = `${path.parse(file).name}.jpg`
         const fileStats = await fs.stat(filePath)
 
         if (fileStats.isDirectory()) return null
@@ -56,24 +56,24 @@ export default async function handler(
         const isVideo = probeData.streams.some((stream) => stream.codec_type === "video")
 
         // Генерируем превью только для видео файлов
-        if (isVideo) {
-          await new Promise((resolve, reject) => {
-            ffmpeg(filePath)
-              .screenshots({
-                timestamps: [0],
-                filename: thumbnailName,
-                folder: thumbnailsDir,
-                size: "320x?",
-              })
-              .on("end", resolve)
-              .on("error", reject)
-          })
-        }
+        // if (isVideo) {
+        //   await new Promise((resolve, reject) => {
+        //     ffmpeg(filePath)
+        //       .screenshots({
+        //         timestamps: [0],
+        //         filename: thumbnailName,
+        //         folder: thumbnailsDir,
+        //         size: "320x?",
+        //       })
+        //       .on("end", resolve)
+        //       .on("error", reject)
+        //   })
+        // }
 
         return {
           name: file,
           path: `/${type}/${file}`,
-          thumbnail: isVideo ? `/thumbnails/${thumbnailName}` : null,
+          // thumbnail: isVideo ? `/thumbnails/${thumbnailName}` : null,
           probeData,
           isVideo,
         }

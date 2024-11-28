@@ -14,7 +14,7 @@ export interface RecordEntry {
 export interface MediaFile {
   name: string
   path: string
-  thumbnail: string | null
+  thumbnail?: string
   probeData: FfprobeData
   isVideo: boolean
 }
