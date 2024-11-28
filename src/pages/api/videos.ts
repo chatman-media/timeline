@@ -16,50 +16,43 @@ export default async function handler(
 ) {
   try {
     const videosDir = path.join(process.cwd(), "public", "videos")
+    const musicDir = path.join(process.cwd(), "public", "music")
 
-    // Проверяем существование директории
-    await fs.mkdir(videosDir, { recursive: true })
+    // Проверяем существование директорий
+    await Promise.all([
+      fs.mkdir(videosDir, { recursive: true }),
+      fs.mkdir(musicDir, { recursive: true })
+    ])
 
-    // Получаем список файлов
-    const files = await fs.readdir(videosDir)
+    // Получаем список файлов из обеих директорий
+    const [videoFiles, musicFiles] = await Promise.all([
+      fs.readdir(videosDir),
+      fs.readdir(musicDir)
+    ])
 
     // Фильтруем файлы по расширению
-    const mediaFiles = files.filter((file) => {
+    const mediaFiles = [
+      ...videoFiles.map(file => ({ dir: videosDir, file, type: 'videos' })),
+      ...musicFiles.map(file => ({ dir: musicDir, file, type: 'music' }))
+    ].filter(({ file }) => {
       const ext = path.extname(file).toLowerCase()
-      return (
-        [
-          ".mp4",
-          ".mov",
-          ".avi",
-          ".mkv",
-          ".webm",
-          ".insv", // видео форматы
-          ".mp3",
-          ".wav",
-          ".aac",
-          ".ogg",
-          ".flac",
-        ] // аудио форматы
-      ).includes(ext) &&
-        !file.startsWith(".") // Пропускаем скрытые файлы
+      return ['.mp4', '.mov', '.avi', '.mkv', '.webm', '.insv', '.mp3', '.wav', '.aac', '.ogg', '.flac']
+        .includes(ext) && !file.startsWith('.')
     })
 
     const thumbnailsDir = path.join(process.cwd(), "public", "thumbnails")
     await fs.mkdir(thumbnailsDir, { recursive: true })
 
     // Обрабатываем все файлы параллельно
-    const mediaPromises = mediaFiles.map(async (filename) => {
+    const mediaPromises = mediaFiles.map(async ({ dir, file, type }) => {
       try {
-        const filePath = path.join(videosDir, filename)
-        const thumbnailName = `${path.parse(filename).name}.jpg`
+        const filePath = path.join(dir, file)
+        const thumbnailName = `${path.parse(file).name}.jpg`
         const fileStats = await fs.stat(filePath)
 
         if (fileStats.isDirectory()) return null
 
-        // Получаем метаданные через ffprobe
         const probeData = await ffprobeAsync(filePath) as FfprobeData
-
-        // Проверяем тип медиа
         const isVideo = probeData.streams.some((stream) => stream.codec_type === "video")
 
         // Генерируем превью только для видео файлов
@@ -78,14 +71,14 @@ export default async function handler(
         }
 
         return {
-          name: filename,
-          path: `/videos/${filename}`,
+          name: file,
+          path: `/${type}/${file}`,
           thumbnail: isVideo ? `/thumbnails/${thumbnailName}` : null,
           probeData,
           isVideo,
         }
       } catch (error) {
-        console.error(`Error processing file ${filename}:`, error)
+        console.error(`Error processing file ${file}:`, error)
         return null
       }
     })

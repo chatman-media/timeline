@@ -10,4 +10,4 @@ repos:
         name: Deno Lint
         entry: deno lint --fix
         language: system
-        pass_filenames: false 
+        pass_filenames: false

@@ -11,7 +11,7 @@ import GlobalTimelineBar from "./global-timeline-bar"
 import { useMedia } from "@/hooks/use-media"
 
 export function Timeline(): JSX.Element {
-  const { videos, timeRanges, maxDuration, currentTime, timeToPercent, assembledTracks } = useMedia()
+  const { videos, timeRanges, maxDuration, currentTime, timeToPercent } = useMedia()
 
   // Ссылка на DOM-элемент контейнера для определения его размеров
   const parentRef = useRef<HTMLDivElement>(null)

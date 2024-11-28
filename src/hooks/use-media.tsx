@@ -135,7 +135,7 @@ export function useMedia() {
       currentTime,
       videoGroups: videos.map((v) => ({
         path: v.path,
-        creationTime: v.probeData.format.start_time,
+        creationTime: v.probeData.format.tags?.creation_time,
       })),
     })
 
@@ -155,9 +155,9 @@ export function useMedia() {
 
     const active = Array.from(videoGroups.entries()).map(([cameraNumber, groupVideos]) => {
       const isActive = groupVideos.some((video) => {
-        if (!video.probeData.format.start_time) return false
-        const videoTime = new Date(video.probeData.format.start_time).getTime() / 1000
-        const startTime = videos[0]?.probeData.format.start_time
+        if (!video.probeData.format.tags?.creation_time) return false
+        const videoTime = new Date(video.probeData.format.tags?.creation_time).getTime() / 1000
+        const startTime = videos[0]?.probeData.format.tags?.creation_time
           ? new Date(videos[0].probeData.format.creation_time).getTime() / 1000
           : 0
         const videoSeconds = videoTime - startTime
@@ -187,7 +187,7 @@ export function useMedia() {
 
       // Create a unique key for each camera type based on resolution and aspect ratio
       const cameraKey =
-        `${videoStream.width}x${videoStream.height}_${videoStream.display_aspect_ratio}`
+        `${videoStream.width}x${videoStream.height}_${videoStream.profile}_${videoStream.codec_name}`
 
       if (!videoGroups.has(cameraKey)) {
         videoGroups.set(cameraKey, [])
@@ -230,7 +230,7 @@ export function useMedia() {
             const timeGap = currentStartTime - previousEndTime
             console.log("timeGap", timeGap)
             console.log(currentStartTime, previousEndTime)
-            if (Math.abs(timeGap) <= 1) {
+            if (Math.abs(timeGap) <= 0.5) {
               currentSegment.push(currentVideo)
             } else {
               continuousSegments.push([...currentSegment])

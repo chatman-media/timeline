@@ -2,22 +2,20 @@ import { useState } from "react"
 
 interface CompilationSettings {
   targetDuration: number
-  minSegmentLength: number
-  maxSegmentLength: number
   averageSceneDuration: number
   cameraChangeFrequency: number
   mainCameraPriority: number
+  mainCameraId?: string
 }
 
 export function useCompilationSettings() {
   const [mainCamera, setMainCamera] = useState(1)
   const [settings, setSettings] = useState<CompilationSettings>({
     targetDuration: 900,
-    minSegmentLength: 0.2,
-    maxSegmentLength: 100,
-    averageSceneDuration: 5,
-    cameraChangeFrequency: 4 / 7,
+    averageSceneDuration: 0.8,
+    cameraChangeFrequency: 0.2,
     mainCameraPriority: 60,
+    mainCameraId: '1'
   })
 
   const updateSettings = (newSettings: Partial<CompilationSettings>) => {

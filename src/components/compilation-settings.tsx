@@ -16,23 +16,31 @@ export function CompilationSettings() {
   const { mainCamera, setMainCamera, settings, updateSettings } = useCompilationSettings()
 
   const getCameraChangeLabel = (value: number): string => {
-    if (value <= 1 / 7) return "Очень редко"
-    if (value <= 2 / 7) return "Редко"
-    if (value <= 3 / 7) return "Умеренно редко"
-    if (value <= 4 / 7) return "Средне"
-    if (value <= 5 / 7) return "Умеренно часто"
-    if (value <= 6 / 7) return "Часто"
-    return "Очень часто"
+    const percent = value * 100
+    if (percent <= 10) return "Крайне редко"
+    if (percent <= 20) return "Очень редко"
+    if (percent <= 30) return "Редко"
+    if (percent <= 40) return "Умеренно редко"
+    if (percent <= 50) return "Средне"
+    if (percent <= 60) return "Умеренно часто"
+    if (percent <= 70) return "Часто"
+    if (percent <= 80) return "Очень часто"
+    if (percent <= 90) return "Крайне часто"
+    return "Постоянно"
   }
 
   const getSceneDurationLabel = (value: number): string => {
-    if (value <= 1) return "Очень короткие"
-    if (value <= 2) return "Короткие"
-    if (value <= 3.5) return "Умеренно короткие"
-    if (value <= 5) return "Средние"
-    if (value <= 6.5) return "Умеренно длинные"
-    if (value <= 8) return "Длинные"
-    return "Очень длинные"
+    const percent = ((value - 0.5) / 9.5) * 100
+    if (percent <= 10) return "Минимальные"
+    if (percent <= 20) return "Крайне короткие"
+    if (percent <= 30) return "Очень короткие"
+    if (percent <= 40) return "Короткие"
+    if (percent <= 50) return "Умеренно короткие"
+    if (percent <= 60) return "Средние"
+    if (percent <= 70) return "Умеренно длинные"
+    if (percent <= 80) return "Длинные"
+    if (percent <= 90) return "Очень длинные"
+    return "Максимальные"
   }
 
   return (
@@ -77,14 +85,14 @@ export function CompilationSettings() {
 
       <div className="flex items-center gap-4">
         <span className="text-sm min-w-32 text-gray-900 dark:text-gray-100">
-          Длина сцены:
+          Средняя длительность сцены:
         </span>
         <div className="flex items-center gap-4 flex-1">
           <Slider
             value={[settings.averageSceneDuration]}
             onValueChange={([value]) => updateSettings({ averageSceneDuration: value })}
-            min={0.5}
-            max={10}
+            min={0}
+            max={1}
             step={0.1}
             className="flex-1"
           />
@@ -96,15 +104,15 @@ export function CompilationSettings() {
 
       <div className="flex items-center gap-4">
         <span className="text-sm min-w-32 text-gray-900 dark:text-gray-100">
-          Смена камеры:
+          Частота смены камеры:
         </span>
         <div className="flex items-center gap-4 flex-1">
-          <Slider
+        <Slider
             value={[settings.cameraChangeFrequency]}
             onValueChange={([value]) => updateSettings({ cameraChangeFrequency: value })}
             min={0}
             max={1}
-            step={1 / 7}
+            step={0.1}
             className="flex-1"
           />
           <span className="text-sm w-32 text-right text-muted-foreground">

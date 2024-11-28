@@ -5,6 +5,8 @@ interface GlobalTimelineBarProps {
 }
 
 const GlobalTimelineBar = ({ duration, startTime, height }: GlobalTimelineBarProps) => {
+  console.log(duration, startTime, height)
+  
   return (
     <div
       className="absolute w-[2px] bg-white/80 pointer-events-none z-50"
