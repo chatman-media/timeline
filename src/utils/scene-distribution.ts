@@ -39,7 +39,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   const findVideoForSegment = (camera: number, startTime: number, endTime: number) => {
     const videos = videosByCamera.get(camera) || []
     return videos.find((video: MediaFile) => {
-      const videoStart = new Date(video.probeData.format.creation_time).getTime() / 1000
+      const videoStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
       const videoEnd = videoStart + (video.probeData.format.duration || 0)
       return videoStart <= startTime && videoEnd >= endTime
     })
@@ -48,14 +48,14 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   // Находим общий временной диапазон всех видео
   const timeRanges = params.assembledTracks.map((track) => {
     const trackRanges = track.allVideos.map((video: MediaFile) => ({
-      start: new Date(video.probeData.format.creation_time).getTime() / 1000,
-      end: new Date(video.probeData.format.creation_time).getTime() / 1000 +
+      start: new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000,
+      end: new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
         (video.probeData.format.duration || 0),
     }))
     return {
       camera: track.index,
-      min: Math.min(...trackRanges.map((r: { start: number }) => r.start)),
-      max: Math.max(...trackRanges.map((r: { end: number }) => r.end)),
+      min: Math.min(...trackRanges.map((r) => r.start)),
+      max: Math.max(...trackRanges.map((r) => r.end)),
     }
   })
 
@@ -123,28 +123,21 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
         effectiveTimeRange.max,
       )
 
-      // Если вышли за пределы доступного времени, прекращаем
       if (subSegmentStart >= effectiveTimeRange.max) break
 
       // Находим доступные камеры для текущего временного отрезка
       const availableCameras = Array.from(videosByCamera.entries())
         .filter(([_, videos]) =>
           videos.some((video: MediaFile) => {
-            const videoStart = new Date(video.probeData.format.creation_time).getTime() / 1000
+            const videoStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
+              1000
             const videoEnd = videoStart + (video.probeData.format.duration || 0)
             return videoStart <= subSegmentStart && videoEnd >= subSegmentEnd
           })
         )
         .map(([camera]) => camera)
 
-      if (availableCameras.length === 0) {
-        console.warn("No available cameras for segment:", {
-          subSegmentStart,
-          subSegmentEnd,
-          lastCamera,
-        })
-        continue
-      }
+      if (availableCameras.length === 0) continue
 
       // Выбираем камеру с учетом вероятности
       let selectedCamera = params.mainCamera
@@ -153,11 +146,9 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
       const otherCameras = availableCameras.filter((c) => c !== lastCamera)
 
       if (otherCameras.length > 0) {
-        // Если это основная камера и выпал шанс её использовать
         if (Math.random() <= params.mainCameraProb && !otherCameras.includes(params.mainCamera)) {
           selectedCamera = params.mainCamera
         } else {
-          // Иначе выбираем случайную из других доступных
           selectedCamera = otherCameras[Math.floor(Math.random() * otherCameras.length)]
         }
       }
@@ -177,28 +168,5 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
     }
   }
 
-  // После генерации всех сегментов, объединяем последовательные с одной камеры
-  const mergedScenes: SceneSegment[] = []
-  let currentMergedScene: SceneSegment | null = null
-
-  for (const scene of scenes) {
-    if (!currentMergedScene) {
-      currentMergedScene = { ...scene }
-    } else if (currentMergedScene.cameraIndex === scene.cameraIndex) {
-      // Объединяем последовательные сегменты одной камеры
-      currentMergedScene.endTime = scene.endTime
-      currentMergedScene.duration = currentMergedScene.endTime - currentMergedScene.startTime
-    } else {
-      // Сохраняем предыдущий объединенный сегмент и начинаем новый
-      mergedScenes.push(currentMergedScene)
-      currentMergedScene = { ...scene }
-    }
-  }
-
-  // Добавляем последний сегмент
-  if (currentMergedScene) {
-    mergedScenes.push(currentMergedScene)
-  }
-
-  return mergedScenes
+  return scenes
 }

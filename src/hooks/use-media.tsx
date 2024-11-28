@@ -26,6 +26,7 @@ export function useMedia() {
     setActiveCamera: store.setActiveCamera,
     isPlaying: store.isPlaying,
     setIsPlaying: store.setIsPlaying,
+    play,
     timeToPercent: store.timeToPercent,
     percentToTime: store.percentToTime,
     assembledTracks: store.assembledTracks,
@@ -35,6 +36,7 @@ export function useMedia() {
     activeVideos: store.activeVideos,
     activeCamera: store.activeCamera,
     activeVideo: store.activeVideo,
-    play,
+    scenes: store.scenes,
+    setScenes: store.setScenes,
   }
 }

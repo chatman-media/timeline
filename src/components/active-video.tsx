@@ -41,7 +41,7 @@ export const ActiveVideo = memo(() => {
         videoElement.removeEventListener("timeupdate", handleTimeUpdate)
       }
     }
-  }, [isPlaying, videoRefs, activeVideo])
+  }, [isPlaying, videoRefs, activeVideo, !isPlaying && currentTime])
 
   return (
     <div className="sticky top-4 space-y-4">

@@ -1,6 +1,6 @@
 import { create } from "zustand"
 import type { AssembledTrack, MediaFile } from "@/types/videos"
-import { TimeRange } from "@/types/scene"
+import { SceneSegment, TimeRange } from "@/types/scene"
 
 interface VideoState {
   videos: MediaFile[]
@@ -15,6 +15,7 @@ interface VideoState {
   activeVideos: MediaFile[]
   activeVideo?: MediaFile
   activeCamera: string
+  scenes: SceneSegment[]
 
   // Actions
   setVideos: (videos: MediaFile[]) => void
@@ -26,6 +27,7 @@ interface VideoState {
   percentToTime: (percent: number) => number
   updateAssembledTracks: () => void
   updateActiveVideos: () => void
+  setScenes: (scenes: SceneSegment[]) => void
 }
 
 export const useVideoStore = create<VideoState>((set, get) => ({
@@ -40,6 +42,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   videoRefs: {},
   hasFetched: false,
   activeVideos: [],
+  scenes: [],
 
   setVideos: (videos) => {
     const firstVideo = videos[0]?.id || ""
@@ -265,4 +268,5 @@ export const useVideoStore = create<VideoState>((set, get) => ({
       activeVideo: currentActiveVideo,
     })
   },
+  setScenes: (scenes) => set({ scenes }),
 }))

@@ -11,9 +11,19 @@ import { formatDuration } from "@/lib/utils"
 import { useMedia } from "@/hooks/use-media"
 import { useCompilationSettings } from "@/hooks/use-compilation-settings"
 import { useEffect } from "react"
+import { distributeScenes } from "@/utils/scene-distribution"
 
 export function CompilationSettings() {
-  const { videos, activeVideos, maxDuration } = useMedia()
+  const {
+    videos,
+    hasVideos,
+    maxDuration,
+    assembledTracks,
+    updateTime,
+    setActiveCamera,
+    play,
+    setScenes,
+  } = useMedia()
   const { settings, updateSettings } = useCompilationSettings()
 
   const getCameraChangeLabel = (value: number): string => {
@@ -39,6 +49,42 @@ export function CompilationSettings() {
       updateSettings({ mainCamera: videos[0].id })
     }
   }, [videos])
+
+  const handleAutoEdit = () => {
+    if (!assembledTracks.length) return
+
+    const scenes = distributeScenes({
+      targetDuration: settings.targetDuration,
+      numCameras: assembledTracks.length,
+      averageSceneDuration: settings.averageSceneDuration * 10, // конвертируем в секунды
+      cameraChangeFrequency: settings.cameraChangeFrequency,
+      mainCamera: parseInt(settings.mainCamera || "1"),
+      mainCameraProb: settings.mainCameraPriority / 100, // конвертируем в вероятность
+      timeRange: {
+        min: Math.min(
+          ...assembledTracks.flatMap((track) =>
+            track.allVideos.map((v) =>
+              new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000
+            )
+          ),
+        ),
+        max: Math.max(...assembledTracks.flatMap((track) =>
+          track.allVideos.map((v) => {
+            const start = new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000
+            return start + (v.probeData.format.duration || 0)
+          })
+        )),
+      },
+      assembledTracks,
+    })
+
+    if (scenes.length > 0) {
+      setScenes(scenes)
+      updateTime(scenes[0].startTime)
+      setActiveCamera(scenes[0].cameraIndex.toString())
+      play()
+    }
+  }
 
   return (
     <div className="flex flex-col gap-6 w-full">
@@ -139,7 +185,8 @@ export function CompilationSettings() {
 
       <div className="flex gap-4 mt-4">
         <Button
-          disabled={activeVideos.length === 0}
+          disabled={!hasVideos}
+          onClick={handleAutoEdit}
           className="flex-1"
         >
           Авто-монтаж
@@ -147,6 +194,7 @@ export function CompilationSettings() {
         <Button
           onClick={() => {}}
           variant="default"
+          disabled={!hasVideos}
           className="flex-1"
         >
           Сохранить
