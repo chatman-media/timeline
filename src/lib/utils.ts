@@ -35,8 +35,8 @@ export function cn(...inputs: ClassValue[]) {
 export function formatTimeWithMilliseconds(
   seconds: number,
   showDate = false,
-  showMilliseconds = true,
   showSeconds = true,
+  showMilliseconds = true,
 ): string {
   // Конвертируем секунды в миллисекунды и создаем объект dayjs
   const time = dayjs(seconds * 1000)

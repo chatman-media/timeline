@@ -37,7 +37,7 @@ export default function Home() {
             <div className="flex gap-16 w-full px-12 sm:px-16 py-8">
               <div className="flex flex-col gap-4 w-[10%]">
                 <div className="text-sm text-gray-900 dark:text-gray-100">
-                  {formatTimeWithMilliseconds(currentTime, false, true, true)}
+                  {formatTimeWithMilliseconds(currentTime, true, true, true)}
                 </div>
                 <div>
                   <button
