@@ -25,7 +25,7 @@ export default async function handler(
     ])
 
     // Получаем список файлов из обеих директорий
-    const [videoFiles, musicFiles] = await Promise.all([
+    const [videoFiles] = await Promise.all([
       fs.readdir(videosDir),
       fs.readdir(musicDir),
     ])

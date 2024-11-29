@@ -2,7 +2,7 @@ import { MediaFile } from "../types/videos"
 import { useEffect, useState } from "react"
 
 export function useThumbnailGeneration(rawVideos: MediaFile[]) {
-  const [videos, setVideos] = useState<any[]>([])
+  const [videos, setVideos] = useState<MediaFile[]>([])
   const [isGenerating, setIsGenerating] = useState(false)
 
   useEffect(() => {
@@ -11,7 +11,7 @@ export function useThumbnailGeneration(rawVideos: MediaFile[]) {
     const generateThumbnails = async () => {
       setIsGenerating(true)
 
-      const videosWithThumbnails: any[] = await Promise.all(
+      const videosWithThumbnails: MediaFile[] = await Promise.all(
         rawVideos.map(async (video) => {
           try {
             const response = await fetch(`/api/thumbnail?video=${video.name}`)

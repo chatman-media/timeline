@@ -183,7 +183,16 @@ export function Timeline(): JSX.Element {
                                   <span>{videoStream?.width}×{videoStream?.height}</span>
                                   <span>{videoStream?.display_aspect_ratio}</span>
                                   <span>
-                                    {formatBitrate(firstVideo.probeData.format.bit_rate || 0)}
+                                    {formatBitrate(
+                                      Math.round(
+                                        track.allVideos.reduce(
+                                          (sum, video) =>
+                                            sum + (video.probeData.format.bit_rate || 0),
+                                          0,
+                                        ) /
+                                          track.allVideos.length,
+                                      ),
+                                    )}
                                   </span>
                                 </div>
                                 <div className="flex flex-col items-end">

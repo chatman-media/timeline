@@ -16,7 +16,7 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 export default function Home() {
-  const { isLoading, currentTime, hasVideos, play, isPlaying, updateTime } = useMedia()
+  const { isLoading, currentTime, hasVideos, play, isPlaying } = useMedia()
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
