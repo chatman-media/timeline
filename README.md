@@ -8,7 +8,7 @@ cd timeline
 В папку /public/videos/ поместите видео и аудио с миркофонов для монтажа.
 В папку /public/music/ поместите аудиотреки
 
-Можно на выбор использовать pnpm/yarn/deno/bun
+Можно на выбор использовать pnpm/bun/deno
 
 Install ffmpeg ([brew](https://formulae.brew.sh/formula/ffmpeg))
 
@@ -20,17 +20,17 @@ ffmpeg -version
 Install deps and run server
 
 ```bash
-deno i # to install deps
+pnpm i # to install deps
 
-deno task dev # to start dev server
+pnpm task dev # to start dev server
 
-deno lint --fix # to lint code
+pnpm lint --fix # to lint code
 
-deno fmt # to format code
+pnpm fmt # to format code
 
-deno test # to run tests
+pnpm test # to run tests
 
-deno outdated --recursive --update --latest # to update deps to latest versions (if needed)
+pnpm outdated --recursive --update --latest # to update deps to latest versions (if needed)
 ```
 
 ## Development
