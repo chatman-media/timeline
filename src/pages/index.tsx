@@ -92,7 +92,7 @@ export default function Home() {
                 </div>
               </div>
               <CompilationSettings />
-              <div className="w-[50%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
+              <div className="w-[60%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
                 <ActiveVideo />
               </div>
             </div>

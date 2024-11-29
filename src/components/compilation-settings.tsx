@@ -87,7 +87,7 @@ export function CompilationSettings() {
   }
 
   return (
-    <div className="flex flex-col gap-6 w-[35%]">
+    <div className="flex flex-col gap-6 w-[25%]">
       <div className="flex items-center gap-4 text-gray-900 dark:text-gray-100">
         <span className="text-sm min-w-54">Главная камера:</span>
         <Select
