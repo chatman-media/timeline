@@ -59,7 +59,7 @@ export function Timeline(): JSX.Element {
   const SliceWrap = memo(forwardRef<HTMLDivElement, { children: React.ReactNode }>(
     (props, ref) => {
       return (
-        <div className="slice--parent bg-[#e6f0f1]/80 dark:bg-[#014d52]/80" ref={ref}>
+        <div className="slice--parent bg-[#014d52]/80" ref={ref}>
           {props.children}
           {!useGlobalBar && (
             <TimelineBar
@@ -200,15 +200,15 @@ export function Timeline(): JSX.Element {
                                     )}
                                   </span>
                                 </div>
-                                <div className="flex flex-col items-end">
+                                <div className="flex flex-col items-end time">
                                   <div>{formatDuration(track.combinedDuration, 2)}</div>
                                 </div>
                               </div>
                               <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
-                                <div>
+                                <div className="time">
                                   {formatTimeWithMilliseconds(trackStartTime, false, true, true)}
                                 </div>
-                                <div>
+                                <div className="time">
                                   {formatTimeWithMilliseconds(trackEndTime, false, true, true)}
                                 </div>
                               </div>
