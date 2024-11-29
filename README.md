@@ -1,5 +1,7 @@
 ## Getting Started
 
+![Timeline Interface](/public/timeline.png)
+
 ```bash
 git clone git@github.com:chatman-media/timeline.git
 cd timeline
