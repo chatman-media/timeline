@@ -23,6 +23,7 @@ const GlobalTimelineBar = ({
     document.addEventListener("mousemove", handleMouseMove)
     document.addEventListener("mouseup", handleMouseUp)
     document.body.style.cursor = "ew-resize"
+    document.body.style.userSelect = "none"
   }
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -44,6 +45,7 @@ const GlobalTimelineBar = ({
     document.removeEventListener("mousemove", handleMouseMove)
     document.removeEventListener("mouseup", handleMouseUp)
     document.body.style.cursor = ""
+    document.body.style.userSelect = ""
   }, [handleMouseMove])
 
   useEffect(() => {
@@ -51,6 +53,7 @@ const GlobalTimelineBar = ({
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseup", handleMouseUp)
       document.body.style.cursor = ""
+      document.body.style.userSelect = ""
     }
   }, [handleMouseMove, handleMouseUp])
 
