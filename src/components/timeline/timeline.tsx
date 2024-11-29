@@ -20,6 +20,7 @@ export function Timeline(): JSX.Element {
     timeToPercent,
     updateTime,
     assembledTracks,
+    activeCamera,
   } = useMedia()
 
   useEffect(() => {
@@ -58,7 +59,7 @@ export function Timeline(): JSX.Element {
   const SliceWrap = memo(forwardRef<HTMLDivElement, { children: React.ReactNode }>(
     (props, ref) => {
       return (
-        <div className="slice--parent bg-secondary/80  dark:bg-secondary/80" ref={ref}>
+        <div className="slice--parent bg-[#e6f0f1]/80 dark:bg-[#014d52]/80" ref={ref}>
           {props.children}
           {!useGlobalBar && (
             <TimelineBar
@@ -166,11 +167,15 @@ export function Timeline(): JSX.Element {
 
               const videoStream = firstVideo.probeData.streams.find((s) => s.codec_type === "video")
 
+              const isActive = track.allVideos.some((v) => v.id === activeCamera)
+
               return (
                 <div className="flex" key={track.cameraKey}>
                   <div className="w-full">
                     <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
-                      <div className="drag--parent flex-1">
+                      <div
+                        className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
+                      >
                         <SliceWrap ref={parentRef}>
                           <div className="absolute h-full w-full timline-border">
                             <div className="flex h-full w-full flex-col justify-between">

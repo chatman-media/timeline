@@ -148,7 +148,7 @@
 }
 
 .slice--parent {
-  /* background: #bddcde; */
+  /* background: #014d52; */
   border-color: var(--foreground);
   height: 50px;
   position: relative;
@@ -157,6 +157,10 @@
 .drag--parent {
   height: 52px;
   padding: 0;
+  border: 1px solid #014d52;
+}
+
+.drag--parent--bordered {
   border: 1px solid var(--foreground);
 }
 
@@ -207,7 +211,7 @@
 }
 
 .timline-border {
-  border: 1px solid #4c9397;
+  /* border: 1px solid #4c9397; */
   padding: 2px 0;
 }
 .timeline-scale {
