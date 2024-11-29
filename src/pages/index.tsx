@@ -17,7 +17,16 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 export default function Home() {
-  const { isLoading, currentTime, hasVideos, play, isPlaying, activeCamera, setActiveCamera, activeVideos } = useMedia()
+  const {
+    isLoading,
+    currentTime,
+    hasVideos,
+    play,
+    isPlaying,
+    activeCamera,
+    setActiveCamera,
+    activeVideos,
+  } = useMedia()
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -26,21 +35,21 @@ export default function Home() {
       if (!isNaN(cameraNumber) && cameraNumber >= 1 && cameraNumber <= 9) {
         const targetCamera = `V${cameraNumber}`
         // Check if the camera is available at current time
-        const isAvailable = activeVideos.some(video => video.id === targetCamera)
+        const isAvailable = activeVideos.some((video) => video.id === targetCamera)
         if (isAvailable) {
           setActiveCamera(targetCamera)
         }
       }
-      
+
       // Handle play/pause (P key)
-      if (e.key.toLowerCase() === 'p') {
+      if (e.key.toLowerCase() === "p") {
         play()
       }
     }
 
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [setActiveCamera, activeVideos, play])
+    window.addEventListener("keydown", handleKeyPress)
+    return () => window.removeEventListener("keydown", handleKeyPress)
+  }, [activeVideos, play, activeCamera])
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">

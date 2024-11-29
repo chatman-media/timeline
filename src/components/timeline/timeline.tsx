@@ -141,8 +141,6 @@ export function Timeline(): JSX.Element {
     }))
   }, [currentTime])
 
-  console.log(assembledTracks)
-
   return (
     <div className="timeline">
       <TimeScale />
@@ -150,7 +148,7 @@ export function Timeline(): JSX.Element {
         <div className="flex">
           {/* Видеодорожки */}
           <div className="flex-1 flex flex-col gap-2 relative">
-            {assembledTracks.map((track) => {
+            {assembledTracks.map((track, index) => {
               const firstVideo = track.allVideos[0]
               const lastVideo = track.allVideos[track.allVideos.length - 1]
 
@@ -169,12 +167,17 @@ export function Timeline(): JSX.Element {
 
               const isActive = track.allVideos.some((v) => v.id === activeCamera)
 
+              // Use a combination of index and cameraKey to ensure uniqueness
+              const trackKey = `track-${track.cameraKey || index}-${index}`
+
               return (
-                <div className="flex" key={track.cameraKey}>
+                <div className="flex" key={trackKey}>
                   <div className="w-full">
                     <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
                       <div
-                        className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
+                        className={`drag--parent flex-1 ${
+                          isActive ? "drag--parent--bordered" : ""
+                        }`}
                       >
                         <SliceWrap ref={parentRef}>
                           <div className="absolute h-full w-full timline-border">

@@ -56,29 +56,29 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   },
   setActiveCamera: (cameraId) => {
     const { videos, currentTime, activeVideos } = get()
-    
+
     // Check if the requested camera is available
-    const isAvailable = activeVideos.some(video => video.id === cameraId)
-    
+    const isAvailable = activeVideos.some((video) => video.id === cameraId)
+
     if (isAvailable) {
       // If camera is available, switch to it
-      set({ 
-        activeCamera: cameraId, 
-        activeVideo: videos.find((v) => v.id === cameraId) 
+      set({
+        activeCamera: cameraId,
+        activeVideo: videos.find((v) => v.id === cameraId),
       })
     } else {
       // If camera is not available, try to find any available camera
       if (activeVideos.length > 0) {
         const firstAvailable = activeVideos[0]
-        set({ 
-          activeCamera: firstAvailable.id, 
-          activeVideo: firstAvailable 
+        set({
+          activeCamera: firstAvailable.id,
+          activeVideo: firstAvailable,
         })
       } else {
         // If no cameras are available, stop playback
-        set({ 
+        set({
           isPlaying: false,
-          activeVideo: undefined
+          activeVideo: undefined,
         })
       }
     }
