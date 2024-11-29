@@ -54,6 +54,8 @@
     "zustand": "^5.0.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^19.6.0",
+    "@commitlint/config-conventional": "^19.6.0",
     "@tailwindcss/postcss": "4.0.0-beta.3",
     "@types/d3-array": "^3.2.1",
     "@types/d3-scale": "^4.0.8",
