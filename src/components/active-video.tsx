@@ -1,4 +1,4 @@
-import { memo, useEffect } from "react"
+import { memo, useEffect, useRef } from "react"
 import { useMedia } from "@/hooks/use-media"
 
 export const ActiveVideo = memo(() => {
@@ -7,30 +7,32 @@ export const ActiveVideo = memo(() => {
     videoRefs.current = {}
   }
 
+  const isTimeUpdateFromVideo = useRef(false)
+
   useEffect(() => {
     const videoElement = videoRefs.current[activeVideo?.id]
     if (videoElement && activeVideo) {
-      // Get the video's start time
       const videoStartTime =
         new Date(activeVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
-      // Calculate the relative position within the video
-      const relativeTime = currentTime - videoStartTime
 
-      // Only set currentTime if it's within valid range
-      if (relativeTime >= 0 && relativeTime <= (activeVideo.probeData.format.duration || 0)) {
-        videoElement.currentTime = relativeTime
+      if (!isTimeUpdateFromVideo.current) {
+        const relativeTime = currentTime - videoStartTime
+        if (relativeTime >= 0 && relativeTime <= (activeVideo.probeData.format.duration || 0)) {
+          videoElement.currentTime = relativeTime
+        }
       }
+      isTimeUpdateFromVideo.current = false
 
-      // Обработчик обновления времени
       const handleTimeUpdate = () => {
-        const newTime = videoStartTime + videoElement.currentTime
-        updateTime(newTime)
+        if (!videoElement.seeking) {
+          isTimeUpdateFromVideo.current = true
+          const newTime = videoStartTime + videoElement.currentTime
+          updateTime(newTime)
+        }
       }
 
-      // Добавляем слушатели событий
       videoElement.addEventListener("timeupdate", handleTimeUpdate)
 
-      // Управляем воспроизведением
       if (isPlaying) {
         videoElement.play().catch(console.error)
       } else {

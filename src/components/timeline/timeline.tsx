@@ -10,6 +10,7 @@ import { Label } from "../ui/label"
 import GlobalTimelineBar from "./global-timeline-bar"
 import { useMedia } from "@/hooks/use-media"
 import { useAudioStore } from "@/stores/audioStore"
+import { Badge } from "../ui/badge"
 
 export function Timeline(): JSX.Element {
   const {
@@ -184,9 +185,10 @@ export function Timeline(): JSX.Element {
                             <div className="flex h-full w-full flex-col justify-between">
                               <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
                                 <div className="flex flex-row video-metadata truncate mr-2">
-                                  <span>
-                                    {track.allVideos.map((v) => v.path.split("/").pop()).join(", ")}
-                                  </span>
+                                  <span>{track.index}</span>
+                                  {track.allVideos.map((v) => (
+                                    <span key={v.id}>{v.path.split("/").pop()}</span>
+                                    ))}
                                   <span>{videoStream?.codec_name?.toUpperCase()}</span>
                                   <span>{videoStream?.width}×{videoStream?.height}</span>
                                   <span>{videoStream?.display_aspect_ratio}</span>

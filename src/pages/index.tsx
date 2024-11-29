@@ -36,7 +36,7 @@ export default function Home() {
       if (!isNaN(cameraNumber) && cameraNumber >= 1 && cameraNumber <= 9) {
         const targetCamera = `V${cameraNumber}`
         // Проверяем наличие трека для этой камеры
-        const trackExists = assembledTracks.some(track => track.index === cameraNumber)
+        const trackExists = assembledTracks.some((track) => track.index === cameraNumber)
         if (trackExists) {
           setActiveCamera(targetCamera)
         }
