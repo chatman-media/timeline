@@ -2,7 +2,7 @@ import { memo, useEffect, useRef } from "react"
 import { useMedia } from "@/hooks/use-media"
 
 export const ActiveVideo = memo(() => {
-  const { videoRefs, isPlaying, activeVideo, currentTime, play, updateTime } = useMedia()
+  const { videoRefs, isPlaying, activeVideo, currentTime, play, updateTime, setIsPlaying } = useMedia()
   if (!videoRefs.current) {
     videoRefs.current = {}
   }
@@ -31,7 +31,12 @@ export const ActiveVideo = memo(() => {
         }
       }
 
+      const handleVideoEnded = () => {
+        setIsPlaying(false)
+      }
+
       videoElement.addEventListener("timeupdate", handleTimeUpdate)
+      videoElement.addEventListener("ended", handleVideoEnded)
 
       if (isPlaying) {
         videoElement.play().catch(console.error)
@@ -41,6 +46,7 @@ export const ActiveVideo = memo(() => {
 
       return () => {
         videoElement.removeEventListener("timeupdate", handleTimeUpdate)
+        videoElement.removeEventListener("ended", handleVideoEnded)
       }
     }
   }, [activeVideo, isPlaying, currentTime])
