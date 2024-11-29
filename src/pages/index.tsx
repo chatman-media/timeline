@@ -26,6 +26,7 @@ export default function Home() {
     activeCamera,
     setActiveCamera,
     activeVideos,
+    assembledTracks,
   } = useMedia()
 
   useEffect(() => {
@@ -34,9 +35,9 @@ export default function Home() {
       const cameraNumber = parseInt(e.key)
       if (!isNaN(cameraNumber) && cameraNumber >= 1 && cameraNumber <= 9) {
         const targetCamera = `V${cameraNumber}`
-        // Check if the camera is available at current time
-        const isAvailable = activeVideos.some((video) => video.id === targetCamera)
-        if (isAvailable) {
+        // Проверяем наличие трека для этой камеры
+        const trackExists = assembledTracks.some(track => track.index === cameraNumber)
+        if (trackExists) {
           setActiveCamera(targetCamera)
         }
       }
@@ -49,7 +50,7 @@ export default function Home() {
 
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
-  }, [activeVideos, play, activeCamera])
+  }, [assembledTracks, play])
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">

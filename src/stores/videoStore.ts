@@ -55,32 +55,60 @@ export const useVideoStore = create<VideoState>((set, get) => ({
     get().updateActiveVideos()
   },
   setActiveCamera: (cameraId) => {
-    const { videos, currentTime, activeVideos } = get()
+    const { videos, currentTime, activeVideos, assembledTracks } = get()
 
-    // Check if the requested camera is available
-    const isAvailable = activeVideos.some((video) => video.id === cameraId)
+    // Находим трек по номеру камеры (V1, V2, etc)
+    const targetTrack = assembledTracks.find(track => {
+      const trackNumber = parseInt(cameraId.replace('V', ''))
+      return track.index === trackNumber
+    })
 
-    if (isAvailable) {
-      // If camera is available, switch to it
-      set({
-        activeCamera: cameraId,
-        activeVideo: videos.find((v) => v.id === cameraId),
+    if (targetTrack) {
+      // Проверяем, есть ли в треке видео, которое содержит текущее время
+      const availableVideo = targetTrack.allVideos.find(video => {
+        const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+        const endTime = startTime + (video.probeData.format.duration || 0)
+        return currentTime >= startTime && currentTime <= endTime
       })
-    } else {
-      // If camera is not available, try to find any available camera
-      if (activeVideos.length > 0) {
-        const firstAvailable = activeVideos[0]
+
+      if (availableVideo) {
+        // Если нашли подходящее видео, переключаемся на него
         set({
-          activeCamera: firstAvailable.id,
-          activeVideo: firstAvailable,
+          activeCamera: cameraId,
+          activeVideo: availableVideo
         })
       } else {
-        // If no cameras are available, stop playback
-        set({
-          isPlaying: false,
-          activeVideo: undefined,
-        })
+        // Если в текущий момент видео недоступно, находим ближайшее по времени
+        const nearestVideo = targetTrack.allVideos.reduce((nearest, video) => {
+          const videoStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+          const videoEnd = videoStart + (video.probeData.format.duration || 0)
+          const currentDiff = Math.min(
+            Math.abs(currentTime - videoStart),
+            Math.abs(currentTime - videoEnd)
+          )
+          
+          if (!nearest || currentDiff < nearest.diff) {
+            return { video, diff: currentDiff }
+          }
+          return nearest
+        }, null as { video: MediaFile, diff: number } | null)
+
+        if (nearestVideo) {
+          const videoStart = new Date(nearestVideo.video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+          set({
+            activeCamera: cameraId,
+            activeVideo: nearestVideo.video,
+            currentTime: videoStart
+          })
+        }
       }
+    } else if (activeVideos.length > 0) {
+      // Fallback на первое доступное видео, если трек не найден
+      const firstAvailable = activeVideos[0]
+      set({
+        activeCamera: firstAvailable.id,
+        activeVideo: firstAvailable
+      })
     }
   },
   setIsPlaying: (isPlaying) => set({ isPlaying }),
