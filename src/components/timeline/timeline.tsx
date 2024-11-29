@@ -22,6 +22,7 @@ export function Timeline(): JSX.Element {
     updateTime,
     assembledTracks,
     activeCamera,
+    setActiveCamera,
   } = useMedia()
 
   useEffect(() => {
@@ -177,18 +178,70 @@ export function Timeline(): JSX.Element {
                     <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
                       <div
                         className={`drag--parent flex-1 ${
-                          isActive ? "drag--parent--bordered" : ""
+                          track.index === parseInt(activeCamera?.replace("V", "") || "0")
+                            ? "drag--parent--bordered"
+                            : ""
                         }`}
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          // Проверяем, попадает ли текущее время в диапазон этого видео
+                          const videoStartTime =
+                            new Date(track.video.probeData.format.tags?.creation_time || 0)
+                              .getTime() / 1000
+                          const videoEndTime = videoStartTime +
+                            (track.video.probeData.format.duration || 0)
+
+                          if (currentTime >= videoStartTime && currentTime <= videoEndTime) {
+                            // Если текущее время в диапазоне видео, просто переключаем камеру
+                            setActiveCamera(track.video.id)
+                          } else {
+                            // Если текущее время вне диапазона, находим ближайшую точку в видео
+                            const newTime = Math.min(
+                              Math.max(currentTime, videoStartTime),
+                              videoEndTime,
+                            )
+                            updateTime(newTime)
+                            setActiveCamera(track.video.id)
+                          }
+                        }}
+                        style={{ cursor: "pointer" }}
                       >
                         <SliceWrap ref={parentRef}>
                           <div className="absolute h-full w-full timline-border">
                             <div className="flex h-full w-full flex-col justify-between">
+                              {track.allVideos.map((video, videoIndex) => {
+                                if (videoIndex === 0) return null
+
+                                const prevVideo = track.allVideos[videoIndex - 1]
+                                const prevEndTime =
+                                  new Date(prevVideo.probeData.format.tags?.creation_time || 0)
+                                      .getTime() / 1000 +
+                                  (prevVideo.probeData.format.duration || 0)
+                                const currentStartTime =
+                                  new Date(video.probeData.format.tags?.creation_time || 0)
+                                    .getTime() / 1000
+
+                                const separatorPosition = ((prevEndTime - trackStartTime) /
+                                  (trackEndTime - trackStartTime)) * 100
+
+                                return (
+                                  <div
+                                    key={`separator-${video.id}`}
+                                    className="absolute h-full w-[1px] bg-white"
+                                    style={{
+                                      left: `${separatorPosition}%`,
+                                      top: 0,
+                                    }}
+                                  />
+                                )
+                              })}
+
                               <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
                                 <div className="flex flex-row video-metadata truncate mr-2">
                                   <span>{track.index}</span>
                                   {track.allVideos.map((v) => (
                                     <span key={v.id}>{v.path.split("/").pop()}</span>
-                                    ))}
+                                  ))}
                                   <span>{videoStream?.codec_name?.toUpperCase()}</span>
                                   <span>{videoStream?.width}×{videoStream?.height}</span>
                                   <span>{videoStream?.display_aspect_ratio}</span>

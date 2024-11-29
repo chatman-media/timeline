@@ -2,7 +2,17 @@ import { memo, useEffect, useRef } from "react"
 import { useMedia } from "@/hooks/use-media"
 
 export const ActiveVideo = memo(() => {
-  const { videoRefs, isPlaying, activeVideo, currentTime, play, updateTime, setIsPlaying } = useMedia()
+  const {
+    videoRefs,
+    isPlaying,
+    activeVideo,
+    currentTime,
+    play,
+    updateTime,
+    setIsPlaying,
+    assembledTracks,
+    setActiveCamera,
+  } = useMedia()
   if (!videoRefs.current) {
     videoRefs.current = {}
   }
@@ -32,7 +42,24 @@ export const ActiveVideo = memo(() => {
       }
 
       const handleVideoEnded = () => {
-        setIsPlaying(false)
+        const currentTrackIndex = assembledTracks.findIndex((track) =>
+          track.allVideos.some((v) => v.id === activeVideo.id)
+        )
+
+        if (currentTrackIndex !== -1) {
+          const currentTrack = assembledTracks[currentTrackIndex]
+          const currentVideoIndex = currentTrack.allVideos.findIndex((v) => v.id === activeVideo.id)
+
+          if (currentVideoIndex < currentTrack.allVideos.length - 1) {
+            setActiveCamera(currentTrack.allVideos[currentVideoIndex + 1].id)
+          } else {
+            const nextTrackIndex = (currentTrackIndex + 1) % assembledTracks.length
+            const nextTrack = assembledTracks[nextTrackIndex]
+            if (nextTrack && nextTrack.allVideos.length > 0) {
+              setActiveCamera(nextTrack.allVideos[0].id)
+            }
+          }
+        }
       }
 
       videoElement.addEventListener("timeupdate", handleTimeUpdate)
@@ -49,7 +76,7 @@ export const ActiveVideo = memo(() => {
         videoElement.removeEventListener("ended", handleVideoEnded)
       }
     }
-  }, [activeVideo, isPlaying, currentTime])
+  }, [activeVideo, isPlaying, currentTime, assembledTracks, setActiveCamera])
 
   return (
     <div className="sticky top-4 space-y-4">
