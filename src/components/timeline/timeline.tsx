@@ -4,7 +4,7 @@ import { nanoid } from "nanoid"
 import { TimelineSlice } from "./timeline-slice"
 import { SeekbarState, TimelineSliceType } from "@/types/timeline"
 import TimeScale from "./timeline-scale"
-import { formatBitrate, formatDuration } from "@/lib/utils"
+import { formatBitrate, formatDuration, formatTime, formatTimeWithMilliseconds } from "@/lib/utils"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "../ui/label"
 import GlobalTimelineBar from "./global-timeline-bar"
@@ -12,7 +12,24 @@ import { useMedia } from "@/hooks/use-media"
 import { useAudioStore } from "@/stores/audioStore"
 
 export function Timeline(): JSX.Element {
-  const { videos, timeRanges, maxDuration, currentTime, timeToPercent, updateTime } = useMedia()
+  const {
+    videos,
+    timeRanges,
+    maxDuration,
+    currentTime,
+    timeToPercent,
+    updateTime,
+    assembledTracks,
+  } = useMedia()
+
+  useEffect(() => {
+    console.log("Media hook state:", {
+      videosLength: videos.length,
+      timeRangesLength: timeRanges.length,
+      maxDuration,
+      assembledTracks,
+    })
+  }, [videos, timeRanges, maxDuration, assembledTracks])
 
   // Ссылка на DOM-элемент контейнера для определения его размеров
   const parentRef = useRef<HTMLDivElement>(null)
@@ -123,6 +140,8 @@ export function Timeline(): JSX.Element {
     }))
   }, [currentTime])
 
+  console.log(assembledTracks)
+
   return (
     <div className="timeline">
       <TimeScale />
@@ -130,63 +149,60 @@ export function Timeline(): JSX.Element {
         <div className="flex">
           {/* Видеодорожки */}
           <div className="flex-1 flex flex-col gap-2 relative">
-            {videos.map((video) => {
-              const videoStartTime =
-                new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
-              const videoDuration = video.probeData.format.duration || 0
+            {assembledTracks.map((track) => {
+              const firstVideo = track.allVideos[0]
+              const lastVideo = track.allVideos[track.allVideos.length - 1]
 
-              // Вычисляем позицию и ширину видео на шкале напрямую
-              const startOffset = ((videoStartTime - Math.min(...timeRanges.map((x) =>
+              const trackStartTime =
+                new Date(firstVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
+              const trackEndTime =
+                new Date(lastVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
+                (lastVideo.probeData.format.duration || 0)
+
+              const startOffset = ((trackStartTime - Math.min(...timeRanges.map((x) =>
                 x.min
               ))) / maxDuration) * 100
-              const width = (videoDuration / maxDuration) * 100
+              const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
+
+              const videoStream = firstVideo.probeData.streams.find((s) => s.codec_type === "video")
 
               return (
-                <div className="flex" key={video.id}>
-                  <div className="w-full" key={video.id}>
-                    {(() => {
-                      const videoStream = video.probeData.streams.find((s) =>
-                        s.codec_type === "video"
-                      )
-                      return (
-                        <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
-                          <div key={video.path} className="drag--parent flex-1">
-                            <SliceWrap ref={parentRef}>
-                              <div className="absolute h-full w-full timline-border">
-                                <div className="absolute w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
-                                  <div className="flex flex-row video-metadata truncate mr-2">
-                                    <span>{video.path.split("/").pop()}</span>
-                                    <span>{videoStream?.codec_name?.toUpperCase()}</span>
-                                    <span>{videoStream?.width}×{videoStream?.height}</span>
-                                    <span>{videoStream?.display_aspect_ratio}</span>
-                                    <span>
-                                      {formatBitrate(video.probeData.format.bit_rate || 0)}
-                                    </span>
-                                  </div>
-                                  <div className="flex flex-col items-end">
-                                    <span>
-                                      {formatDuration(video.probeData.format.duration || 0, 2)}
-                                    </span>
-                                  </div>
+                <div className="flex" key={track.cameraKey}>
+                  <div className="w-full">
+                    <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
+                      <div className="drag--parent flex-1">
+                        <SliceWrap ref={parentRef}>
+                          <div className="absolute h-full w-full timline-border">
+                            <div className="flex h-full w-full flex-col justify-between">
+                              <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
+                                <div className="flex flex-row video-metadata truncate mr-2">
+                                  <span>
+                                    {track.allVideos.map((v) => v.path.split("/").pop()).join(", ")}
+                                  </span>
+                                  <span>{videoStream?.codec_name?.toUpperCase()}</span>
+                                  <span>{videoStream?.width}×{videoStream?.height}</span>
+                                  <span>{videoStream?.display_aspect_ratio}</span>
+                                  <span>
+                                    {formatBitrate(firstVideo.probeData.format.bit_rate || 0)}
+                                  </span>
+                                </div>
+                                <div className="flex flex-col items-end">
+                                  <div>{formatDuration(track.combinedDuration, 2)}</div>
                                 </div>
                               </div>
-                              {/* Слайсы для этой видеодорожки */}
-                              {slices
-                                .filter((slice) => slice.videoPath === video.path)
-                                .map((slice) => (
-                                  <TimelineSlice
-                                    key={slice.id}
-                                    updateSlice={updateSlice}
-                                    {...slice}
-                                    isSelected={selectedSliceId === slice.id}
-                                    onSelect={handleSliceSelect}
-                                  />
-                                ))}
-                            </SliceWrap>
+                              <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
+                                <div>
+                                  {formatTimeWithMilliseconds(trackStartTime, false, true, true)}
+                                </div>
+                                <div>
+                                  {formatTimeWithMilliseconds(trackEndTime, false, true, true)}
+                                </div>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      )
-                    })()}
+                        </SliceWrap>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )
@@ -197,7 +213,7 @@ export function Timeline(): JSX.Element {
               duration={maxDuration}
               currentTime={currentTime}
               startTime={Math.min(...timeRanges.map((range) => range.min))}
-              height={videos.length * 70}
+              height={assembledTracks.length * 70}
               onTimeChange={updateTime}
             />
           )}

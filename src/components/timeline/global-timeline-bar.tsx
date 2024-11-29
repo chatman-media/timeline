@@ -64,7 +64,7 @@ const GlobalTimelineBar = ({
       className="absolute w-[2px] bg-black dark:bg-white cursor-ew-resize z-50"
       style={{
         left: `${position}%`,
-        height: `${height - 6}px`,
+        height: `${height + 35}px`,
         top: "-45px",
       }}
       onMouseDown={handleMouseDown}

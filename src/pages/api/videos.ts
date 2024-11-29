@@ -65,6 +65,7 @@ export default async function handler(
         if (fileStats.isDirectory()) return null
 
         const probeData = await ffprobeAsync(filePath) as FfprobeData
+        // console.log(probeData)
         const isVideo = probeData.streams.some((stream) => stream.codec_type === "video")
 
         // Генерируем превью только для видео файлов

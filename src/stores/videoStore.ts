@@ -167,81 +167,97 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   updateAssembledTracks: () => {
     const { videos } = get()
     if (!videos.length) return
-    const videoGroups = new Map<string, MediaFile[]>()
 
-    videos.forEach((video) => {
+    // Sort all videos by start time first
+    const sortedVideos = [...videos].sort((a, b) => {
+      const aTime = new Date(a.probeData.format.tags?.creation_time || 0).getTime()
+      const bTime = new Date(b.probeData.format.tags?.creation_time || 0).getTime()
+      return aTime - bTime
+    })
+
+    const assembledTracks: AssembledTrack[] = []
+
+    const getVideoSignature = (video: MediaFile) => {
       const videoStream = video.probeData.streams.find((s) => s.codec_type === "video")
-      if (!videoStream) return
-
-      // Create a unique key for each camera type based on resolution and aspect ratio
-      const cameraKey =
-        `${videoStream.width}x${videoStream.height}_${videoStream.profile}_${videoStream.codec_name}`
-
-      if (!videoGroups.has(cameraKey)) {
-        videoGroups.set(cameraKey, [])
+      return {
+        codec: videoStream?.codec_name,
+        width: videoStream?.width,
+        height: videoStream?.height,
+        aspectRatio: videoStream?.display_aspect_ratio,
+        frameRate: videoStream?.r_frame_rate,
+        rotation: videoStream?.rotation || 0,
       }
-      videoGroups.get(cameraKey)?.push(video)
-    })
+    }
 
-    // Sort videos within each group by creation time
-    videoGroups.forEach((groupVideos) => {
-      groupVideos.sort((a, b) => {
-        const timeA = new Date(a.probeData.format.tags?.creation_time || 0).getTime()
-        const timeB = new Date(b.probeData.format.tags?.creation_time || 0).getTime()
-        return timeA - timeB
-      })
-    })
+    const isSameVideoType = (video1: MediaFile, video2: MediaFile) => {
+      const sig1 = getVideoSignature(video1)
+      const sig2 = getVideoSignature(video2)
 
-    // Create assembled tracks
-    const tracks: AssembledTrack[] = Array.from(videoGroups.entries())
-      .map(([cameraKey, groupVideos], index) => {
-        // Check for time continuity
-        const continuousSegments: MediaFile[][] = []
-        let currentSegment: MediaFile[] = []
+      return sig1.codec === sig2.codec &&
+        sig1.width === sig2.width &&
+        sig1.height === sig2.height &&
+        sig1.aspectRatio === sig2.aspectRatio &&
+        sig1.frameRate === sig2.frameRate &&
+        sig1.rotation === sig2.rotation
+    }
 
-        if (groupVideos.length === 1) {
-          continuousSegments.push([groupVideos[0]])
+    // Find existing track for video or create new one
+    const findOrCreateTrack = (video: MediaFile) => {
+      // Try to find matching track
+      for (const track of assembledTracks) {
+        if (isSameVideoType(track.video, video)) {
+          return track
+        }
+      }
+
+      // Create new track if no match found
+      const newTrack: AssembledTrack = {
+        video,
+        cameraKey: video.probeData.streams.find((s) => s.codec_type === "video")?.key || "",
+        index: assembledTracks.length + 1,
+        isActive: true,
+        combinedDuration: 0,
+        allVideos: [],
+        continuousSegments: [],
+      }
+      assembledTracks.push(newTrack)
+      return newTrack
+    }
+
+    // Process each video
+    sortedVideos.forEach((video, i) => {
+      const prevVideo = i > 0 ? sortedVideos[i - 1] : null
+      const track = findOrCreateTrack(video)
+
+      if (prevVideo && isSameVideoType(prevVideo, video)) {
+        const prevStart = new Date(prevVideo.probeData.format.tags?.creation_time || 0).getTime() /
+          1000
+        const prevDuration = prevVideo.probeData.format.duration || 0
+        const currentStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
+          1000
+        const timeDiff = currentStart - (prevStart + prevDuration)
+
+        // If time gap is small enough, add to current segment
+        if (timeDiff < 0.5) {
+          if (track.continuousSegments.length === 0) {
+            track.continuousSegments.push([video])
+          } else {
+            track.continuousSegments[track.continuousSegments.length - 1].push(video)
+          }
         } else {
-          currentSegment = [groupVideos[0]]
-
-          for (let i = 1; i < groupVideos.length; i++) {
-            const currentVideo = groupVideos[i]
-            const previousVideo = groupVideos[i - 1]
-
-            const currentStartTime =
-              new Date(currentVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
-            const previousEndTime =
-              (new Date(previousVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000) +
-              (previousVideo.probeData.format.duration || 0)
-
-            // Allow for small gaps (e.g., 1 second) between videos
-            const timeGap = currentStartTime - previousEndTime
-            if (Math.abs(timeGap) <= 0.5) {
-              currentSegment.push(currentVideo)
-            } else {
-              continuousSegments.push([...currentSegment])
-              currentSegment = [currentVideo]
-            }
-          }
-          // Add the last segment
-          if (currentSegment.length > 0) {
-            continuousSegments.push([...currentSegment])
-          }
+          // Start new segment
+          track.continuousSegments.push([video])
         }
+      } else {
+        // First video in track or different type
+        track.continuousSegments.push([video])
+      }
 
-        return {
-          video: groupVideos[0], // First video for metadata
-          index: index + 1, // Camera index starting from 1
-          isActive: true,
-          cameraKey,
-          allVideos: groupVideos,
-          continuousSegments, // Add this to your AssembledTrack type
-          combinedDuration: groupVideos.reduce(
-            (acc, video) => acc + (video.probeData.format.duration || 0),
-            0,
-          ),
-        }
-      })
+      track.allVideos.push(video)
+      track.combinedDuration += video.probeData.format.duration || 0
+    })
+
+    set({ assembledTracks })
   },
 
   updateActiveVideos: () => {

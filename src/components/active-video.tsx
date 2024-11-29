@@ -57,7 +57,8 @@ export const ActiveVideo = memo(() => {
           src={activeVideo?.path}
           className="w-full h-full object-contain"
           playsInline
-          muted
+          muted={false}
+          // controls
           onClick={play}
           style={{ cursor: "pointer" }}
         />

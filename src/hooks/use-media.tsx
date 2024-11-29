@@ -6,6 +6,7 @@ export function useMedia() {
 
   useEffect(() => {
     store.fetchVideos()
+    store.updateAssembledTracks()
   }, [])
 
   useEffect(() => {

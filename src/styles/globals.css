@@ -208,6 +208,7 @@
 
 .timline-border {
   border: 1px solid #4c9397;
+  padding: 2px 0;
 }
 .timeline-scale {
   position: relative;
