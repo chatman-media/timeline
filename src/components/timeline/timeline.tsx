@@ -238,7 +238,7 @@ export function Timeline(): JSX.Element {
 
                               <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
                                 <div className="flex flex-row video-metadata truncate mr-2">
-                                  <span>{track.index}</span>
+                                  <span>V{track.index}</span>
                                   {track.allVideos.map((v) => (
                                     <span key={v.id}>{v.path.split("/").pop()}</span>
                                   ))}
