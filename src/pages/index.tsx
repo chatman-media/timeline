@@ -25,7 +25,7 @@ export default function Home() {
     isPlaying,
     activeCamera,
     setActiveCamera,
-    activeVideos,
+    isChangingCamera,
     assembledTracks,
   } = useMedia()
 
@@ -50,7 +50,7 @@ export default function Home() {
 
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
-  }, [assembledTracks, play])
+  }, [assembledTracks, play, isChangingCamera])
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">

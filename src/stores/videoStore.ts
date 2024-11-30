@@ -16,10 +16,12 @@ interface VideoState {
   activeVideo?: MediaFile
   activeCamera: string
   scenes: SceneSegment[]
+  isChangingCamera: boolean
 
   // Actions
   setVideos: (videos: MediaFile[]) => void
   setActiveCamera: (cameraId: string) => void
+  setActiveVideo: (videoId: string) => void
   setIsPlaying: (isPlaying: boolean) => void
   setCurrentTime: (time: number) => void
   fetchVideos: () => Promise<void>
@@ -43,19 +45,33 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   hasFetched: false,
   activeVideos: [],
   scenes: [],
+  isChangingCamera: false,
 
   setVideos: (videos) => {
+    set({ isChangingCamera: true })
     const firstVideo = videos[0]?.id || ""
     set({
       videos,
-      activeCamera: firstVideo,
-      activeVideo: videos[0],
+      activeCamera: "V1",
+      activeVideo: videos.find(v => v.id === "V1") || videos[0],
       hasVideos: videos.length > 0,
+      isChangingCamera: false
     })
     get().updateActiveVideos()
   },
+  setActiveVideo: (videoId) => {
+    const { videos } = get()
+    const targetVideo = videos.find(v => v.id === videoId)
+    if (targetVideo) {
+      set({
+        activeVideo: targetVideo,
+      })
+    }
+  },
   setActiveCamera: (cameraId) => {
-    const { videos, currentTime, activeVideos, assembledTracks } = get()
+    const { currentTime, assembledTracks } = get()
+
+    set({ isChangingCamera: true })
 
     // Находим трек по номеру камеры (V1, V2, etc)
     const targetTrack = assembledTracks.find((track) => {
@@ -68,50 +84,22 @@ export const useVideoStore = create<VideoState>((set, get) => ({
       const availableVideo = targetTrack.allVideos.find((video) => {
         const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
         const endTime = startTime + (video.probeData.format.duration || 0)
-        return currentTime >= startTime && currentTime <= endTime
+        // Добавляем небольшой допуск для времени
+        const tolerance = 0.3 // 300ms tolerance
+        return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
       })
 
       if (availableVideo) {
-        // Если нашли подходящее видео, переключаемся на него
-        set({
+        // Если нашли подходящее видео, переключаемся на него, сохраняя текущее время
+        set((state) => ({
+          ...state,
           activeCamera: cameraId,
           activeVideo: availableVideo,
-        })
-      } else {
-        // Если в текущий момент видео недоступно, находим ближайшее по времени
-        const nearestVideo = targetTrack.allVideos.reduce((nearest, video) => {
-          const videoStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
-            1000
-          const videoEnd = videoStart + (video.probeData.format.duration || 0)
-          const currentDiff = Math.min(
-            Math.abs(currentTime - videoStart),
-            Math.abs(currentTime - videoEnd),
-          )
-
-          if (!nearest || currentDiff < nearest.diff) {
-            return { video, diff: currentDiff }
-          }
-          return nearest
-        }, null as { video: MediaFile; diff: number } | null)
-
-        if (nearestVideo) {
-          const videoStart =
-            new Date(nearestVideo.video.probeData.format.tags?.creation_time || 0).getTime() / 1000
-          set({
-            activeCamera: cameraId,
-            activeVideo: nearestVideo.video,
-            currentTime: videoStart,
-          })
-        }
+        }))
       }
-    } else if (activeVideos.length > 0) {
-      // Fallback на первое доступное видео, если трек не найден
-      const firstAvailable = activeVideos[0]
-      set({
-        activeCamera: firstAvailable.id,
-        activeVideo: firstAvailable,
-      })
     }
+
+    set({ isChangingCamera: false })
   },
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentTime: (time) => {
@@ -318,6 +306,8 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   },
 
   updateActiveVideos: () => {
+    if (get().isChangingCamera) return
+    
     const { videos, currentTime, activeCamera } = get()
 
     if (!videos.length) {
@@ -329,11 +319,9 @@ export const useVideoStore = create<VideoState>((set, get) => ({
       const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
       const duration = video.probeData.format.duration || 0
       const endTime = startTime + duration
-
       return currentTime >= startTime && currentTime <= endTime
     })
 
-    // Находим активное видео для выбранной камеры
     const currentActiveVideo = active.find((video) => video.id === activeCamera)
 
     set({

@@ -11,6 +11,7 @@ import GlobalTimelineBar from "./global-timeline-bar"
 import { useMedia } from "@/hooks/use-media"
 import { useAudioStore } from "@/stores/audioStore"
 import { Badge } from "../ui/badge"
+import { AssembledTrack } from "@/types/videos"
 
 export function Timeline(): JSX.Element {
   const {
@@ -143,6 +144,28 @@ export function Timeline(): JSX.Element {
     }))
   }, [currentTime])
 
+  // Изменяем обработчик клика на дорожке
+  const handleTrackClick = (e: React.MouseEvent, track: AssembledTrack) => {
+    e.stopPropagation()
+    
+    // Находим видео в треке, которое содержит текущее время
+    const availableVideo = track.allVideos.find(video => {
+      const videoStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+      const videoEnd = videoStart + (video.probeData.format.duration || 0)
+      // Добавляем небольшой допуск для времени
+      const tolerance = 0.3 // 300ms tolerance
+      return currentTime >= (videoStart - tolerance) && currentTime <= (videoEnd + tolerance)
+    })
+
+    if (availableVideo) {
+      // Если нашли подходящее видео, просто переключаем камеру
+      setActiveCamera(`V${track.index}`)
+    }
+  }
+
+  console.log(currentTime);
+  
+
   return (
     <div className="timeline">
       <TimeScale />
@@ -182,28 +205,7 @@ export function Timeline(): JSX.Element {
                             ? "drag--parent--bordered"
                             : ""
                         }`}
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          // Проверяем, попадает ли текущее время в диапазон этого видео
-                          const videoStartTime =
-                            new Date(track.video.probeData.format.tags?.creation_time || 0)
-                              .getTime() / 1000
-                          const videoEndTime = videoStartTime +
-                            (track.video.probeData.format.duration || 0)
-
-                          if (currentTime >= videoStartTime && currentTime <= videoEndTime) {
-                            // Если текущее время в диапазоне видео, просто переключаем камеру
-                            setActiveCamera(track.video.id)
-                          } else {
-                            // Если текущее время вне диапазона, находим ближайшую точку в видео
-                            const newTime = Math.min(
-                              Math.max(currentTime, videoStartTime),
-                              videoEndTime,
-                            )
-                            updateTime(newTime)
-                            setActiveCamera(track.video.id)
-                          }
-                        }}
+                        onClick={(e) => handleTrackClick(e, track)}
                         style={{ cursor: "pointer" }}
                       >
                         <SliceWrap ref={parentRef}>

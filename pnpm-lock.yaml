@@ -131,6 +131,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.0.0-beta.3)
+      wavesurfer.js:
+        specifier: ^7.8.9
+        version: 7.8.9
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -3410,6 +3413,9 @@ packages:
 
   victory-vendor@36.9.2:
     resolution: {integrity: sha512-PnpQQMuxlwYdocC8fIJqVXvkeViHYzotI+NJrCuav0ZYFoq912ZHBk3mCeuj+5/VpodOjPe1z0Fk2ihgzlXqjQ==}
+
+  wavesurfer.js@7.8.9:
+    resolution: {integrity: sha512-d7jDSrzNp3UErXWEKFlIYRdvzaMlxCoM6Or4qR8uURFp9smcxLXS81uatcs6aPX1OSJgEyyBuffMR5Io3Ft2FQ==}
 
   wcwidth@1.0.1:
     resolution: {integrity: sha512-XHPEwS0q6TaxcvG85+8EYkbiCux2XtWG2mkc47Ng2A77BQu9+DqIOJldST4HgPkuea7dvKSj5VgX3P1d4rW8Tg==}
@@ -6984,6 +6990,8 @@ snapshots:
       d3-shape: 3.2.0
       d3-time: 3.1.0
       d3-timer: 3.0.1
+
+  wavesurfer.js@7.8.9: {}
 
   wcwidth@1.0.1:
     dependencies:

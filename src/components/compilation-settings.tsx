@@ -81,7 +81,7 @@ export function CompilationSettings() {
     if (scenes.length > 0) {
       setScenes(scenes)
       updateTime(scenes[0].startTime)
-      setActiveCamera(scenes[0].cameraIndex.toString())
+      // setActiveCamera(scenes[0].cameraIndex)
       play()
     }
   }

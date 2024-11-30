@@ -12,6 +12,7 @@ export const ActiveVideo = memo(() => {
     setIsPlaying,
     assembledTracks,
     setActiveCamera,
+    isChangingCamera,
   } = useMedia()
   if (!videoRefs.current) {
     videoRefs.current = {}
@@ -21,7 +22,7 @@ export const ActiveVideo = memo(() => {
 
   useEffect(() => {
     const videoElement = videoRefs.current[activeVideo?.id]
-    if (videoElement && activeVideo) {
+    if (videoElement && activeVideo && !isChangingCamera) {
       const videoStartTime =
         new Date(activeVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
 
@@ -50,8 +51,9 @@ export const ActiveVideo = memo(() => {
           const currentTrack = assembledTracks[currentTrackIndex]
           const currentVideoIndex = currentTrack.allVideos.findIndex((v) => v.id === activeVideo.id)
 
-          if (currentVideoIndex < currentTrack.allVideos.length - 1) {
+          if (currentVideoIndex >= 0) {
             setActiveCamera(currentTrack.allVideos[currentVideoIndex + 1].id)
+            // setActiveCamera(currentTrack.allVideos[currentVideoIndex + 1].id)
           } else {
             const nextTrackIndex = (currentTrackIndex + 1) % assembledTracks.length
             const nextTrack = assembledTracks[nextTrackIndex]
@@ -76,7 +78,7 @@ export const ActiveVideo = memo(() => {
         videoElement.removeEventListener("ended", handleVideoEnded)
       }
     }
-  }, [activeVideo, isPlaying, currentTime, assembledTracks, setActiveCamera])
+  }, [activeVideo, isPlaying, currentTime, isChangingCamera])
 
   return (
     <div className="sticky top-4 space-y-4">
