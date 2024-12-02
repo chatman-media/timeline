@@ -3,12 +3,14 @@ import TimelineBar from "./timeline-bar"
 import { nanoid } from "nanoid"
 import { SeekbarState, TimelineSliceType } from "@/types/timeline"
 import TimeScale from "./timeline-scale"
-import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import GlobalTimelineBar from "./global-timeline-bar"
 import { useMedia } from "@/hooks/use-media"
 import { AssembledTrack } from "@/types/videos"
 import { usePreloadVideos } from "@/hooks/use-preload-videos"
 import { isVideoAvailable } from "@/lib/utils"
+import { TrackMetadata } from "./track-metadata"
+import { TrackSeparators } from "./track-separators"
+import { TrackTimestamps } from "./track-timestamps"
 
 export function Timeline(): JSX.Element {
   usePreloadVideos()
@@ -59,7 +61,7 @@ export function Timeline(): JSX.Element {
   const SliceWrap = memo(forwardRef<HTMLDivElement, { children: React.ReactNode }>(
     (props, ref) => {
       return (
-        <div className="slice--parent bg-[#014d52]/80" ref={ref}>
+        <div className="slice--parent bg-[#014a4f]" ref={ref}>
           {props.children}
           {!useGlobalBar && (
             <TimelineBar
@@ -141,6 +143,14 @@ export function Timeline(): JSX.Element {
     }))
   }, [currentTime])
 
+  useEffect(() => {
+    if (videos && videos.length > 0) {
+      // Выбираем первое видео при монтировании компонента
+      setActiveCamera(videos[0].id)
+      updateTime(currentTime) // Устанавливаем время в начало
+    }
+  }, [videos]) // Зависимость от массива videos
+
   // Изменяем обработчик клика на дорожке
   const handleTrackClick = (e: React.MouseEvent, track: AssembledTrack) => {
     e.stopPropagation()
@@ -150,118 +160,74 @@ export function Timeline(): JSX.Element {
 
     if (availableVideo) {
       // Если нашли подходящее видео, просто переключаем камеру
-      setActiveCamera(`V${track.index}`)
+      setActiveCamera(availableVideo.id)
     }
   }
+
+  const renderTrack = useCallback((track: AssembledTrack, index: number) => {
+    const firstVideo = track.allVideos[0]
+    const lastVideo = track.allVideos[track.allVideos.length - 1]
+
+    const trackStartTime =
+      new Date(firstVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
+    const trackEndTime =
+      new Date(lastVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
+      (lastVideo.probeData.format.duration || 0)
+
+    const startOffset = ((trackStartTime - Math.min(...timeRanges.map((x) =>
+      x.min
+    ))) / maxDuration) * 100
+    const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
+
+    const videoStream = firstVideo.probeData.streams.find((s) => s.codec_type === "video")
+    const trackKey = `track-${track.cameraKey || index}-${index}`
+
+    return (
+      <div className="flex" key={trackKey}>
+        <div className="w-full">
+          <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
+            <div
+              className={`drag--parent flex-1 ${
+                track.index === parseInt(activeCamera?.replace("V", "") || "0")
+                  ? "drag--parent--bordered"
+                  : ""
+              }`}
+              onClick={(e) => handleTrackClick(e, track)}
+              style={{ cursor: "pointer" }}
+            >
+              <SliceWrap ref={parentRef}>
+                <div className="absolute h-full w-full timline-border">
+                  <div className="flex h-full w-full flex-col justify-between">
+                    <TrackSeparators
+                      videos={track.allVideos}
+                      trackStartTime={trackStartTime}
+                      trackEndTime={trackEndTime}
+                    />
+                    <TrackMetadata
+                      track={track}
+                      videoStream={videoStream}
+                    />
+                    <TrackTimestamps
+                      trackStartTime={trackStartTime}
+                      trackEndTime={trackEndTime}
+                    />
+                  </div>
+                </div>
+              </SliceWrap>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }, [activeCamera, handleTrackClick, maxDuration, parentRef, timeRanges])
 
   return (
     <div className="timeline">
       <TimeScale />
       <div className="relative" style={{ paddingBottom: `37px` }}>
         <div className="flex">
-          {/* Видеодорожки */}
           <div className="flex-1 flex flex-col gap-2 relative">
-            {assembledTracks.map((track, index) => {
-              const firstVideo = track.allVideos[0]
-              const lastVideo = track.allVideos[track.allVideos.length - 1]
-
-              const trackStartTime =
-                new Date(firstVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
-              const trackEndTime =
-                new Date(lastVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
-                (lastVideo.probeData.format.duration || 0)
-
-              const startOffset = ((trackStartTime - Math.min(...timeRanges.map((x) =>
-                x.min
-              ))) / maxDuration) * 100
-              const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
-
-              const videoStream = firstVideo.probeData.streams.find((s) => s.codec_type === "video")
-              // Use a combination of index and cameraKey to ensure uniqueness
-              const trackKey = `track-${track.cameraKey || index}-${index}`
-
-              return (
-                <div className="flex" key={trackKey}>
-                  <div className="w-full">
-                    <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
-                      <div
-                        className={`drag--parent flex-1 ${
-                          track.index === parseInt(activeCamera?.replace("V", "") || "0")
-                            ? "drag--parent--bordered"
-                            : ""
-                        }`}
-                        onClick={(e) => handleTrackClick(e, track)}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <SliceWrap ref={parentRef}>
-                          <div className="absolute h-full w-full timline-border">
-                            <div className="flex h-full w-full flex-col justify-between">
-                              {track.allVideos.map((video, videoIndex) => {
-                                if (videoIndex === 0) return null
-
-                                const prevVideo = track.allVideos[videoIndex - 1]
-                                const prevEndTime =
-                                  new Date(prevVideo.probeData.format.tags?.creation_time || 0)
-                                      .getTime() / 1000 +
-                                  (prevVideo.probeData.format.duration || 0)
-                                const separatorPosition = ((prevEndTime - trackStartTime) /
-                                  (trackEndTime - trackStartTime)) * 100
-
-                                return (
-                                  <div
-                                    key={`separator-${video.id}`}
-                                    className="absolute h-full w-[1px] bg-white"
-                                    style={{
-                                      left: `${separatorPosition}%`,
-                                      top: 0,
-                                    }}
-                                  />
-                                )
-                              })}
-
-                              <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-100">
-                                <div className="flex flex-row video-metadata truncate mr-2">
-                                  <span>V{track.index}</span>
-                                  {track.allVideos.map((v) => (
-                                    <span key={v.id}>{v.path.split("/").pop()}</span>
-                                  ))}
-                                  <span>{videoStream?.codec_name?.toUpperCase()}</span>
-                                  <span>{videoStream?.width}×{videoStream?.height}</span>
-                                  <span>{videoStream?.display_aspect_ratio}</span>
-                                  <span>
-                                    {formatBitrate(
-                                      Math.round(
-                                        track.allVideos.reduce(
-                                          (sum, video) =>
-                                            sum + (video.probeData.format.bit_rate || 0),
-                                          0,
-                                        ) /
-                                          track.allVideos.length,
-                                      ),
-                                    )}
-                                  </span>
-                                </div>
-                                <div className="flex flex-col items-end time">
-                                  <div>{formatDuration(track.combinedDuration, 2)}</div>
-                                </div>
-                              </div>
-                              <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-100">
-                                <div className="time">
-                                  {formatTimeWithMilliseconds(trackStartTime, false, true, true)}
-                                </div>
-                                <div className="time">
-                                  {formatTimeWithMilliseconds(trackEndTime, false, true, true)}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </SliceWrap>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
+            {assembledTracks.map(renderTrack)}
           </div>
           {useGlobalBar && (
             <GlobalTimelineBar

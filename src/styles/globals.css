@@ -303,14 +303,21 @@
   background-color: var(--primary);
 }
 
-.video-metadata span {
+.video-metadata span,
+.timeline div.time {
   margin-right: 0.5rem;
-  background-color: #00777e;
-  padding: 0 2px;
+  background-color: rgb(2, 111, 116);
+  font-size: 11px;
+  line-height: 1.1;
+  padding: 0 3px;
   border-radius: 3px;
+  height: 12px;
   color: var(--foreground) !important;
+  &:last-child {
+    margin-right: 0;
+  }
 }
 
-.timeline div.time {
-  background-color: #014d52;
-}
+/* .timeline div.time {
+  background-color: rgb(2, 111, 116);
+} */
