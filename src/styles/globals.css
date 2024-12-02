@@ -205,7 +205,7 @@
 /* Добавьте эти стили в ваш CSS файл */
 .timeline {
   width: 100%;
-  /* background: var(--background); */
+  background: var(--background);
   border: 1px solid rgb(0, 52, 57);
   border-radius: 1px;
   padding: 0 3rem;
@@ -319,7 +319,3 @@
     margin-right: 0;
   }
 }
-
-/* .timeline div.time {
-  background-color: rgb(2, 111, 116);
-} */

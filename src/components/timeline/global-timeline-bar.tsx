@@ -64,7 +64,7 @@ const GlobalTimelineBar = ({
   return (
     <div
       ref={barRef}
-      className="absolute w-[2px] bg-black dark:bg-white cursor-ew-resize z-50"
+      className="absolute w-[1px] bg-white cursor-ew-resize z-80"
       style={{
         left: `${position}%`,
         height: `${height + 35}px`,

@@ -1,48 +1,63 @@
-## Getting Started
+## Начало работы
 
-![Timeline Interface](/public/timeline.png)
+![Интерфейс таймлайна](/public/timeline.png)
 
 ```bash
 git clone git@github.com:chatman-media/timeline.git
 cd timeline
 ```
 
-В папку /public/videos/ поместите видео и аудио с миркофонов для монтажа.
-В папку /public/music/ поместите аудиотреки
+### Добавление медиафайлов
 
-Можно на выбор использовать pnpm/bun/deno
+Для корректной работы и синхронизации следуйте этим рекомендациям:
 
-Install ffmpeg ([brew](https://formulae.brew.sh/formula/ffmpeg))
+#### Папка /public/videos/
+Сюда добавляйте:
+- Видеофайлы (MP4, MOV, AVI, MKV, WEBM)
+- 360-градусные видео (INSV)
+- Аудиозаписи с микрофонов, которые должны быть синхронизированы с видео
 
-```
+#### Папка /public/music/
+Сюда добавляйте:
+- Музыкальные треки
+- Аудиофайлы, не требующие синхронизации с видео
+- Поддерживаемые форматы: MP3, WAV, AAC, OGG, FLAC
+
+### Установка и запуск
+
+Можно использовать на выбор pnpm/bun/deno
+
+Установите ffmpeg ([через brew](https://formulae.brew.sh/formula/ffmpeg)):
+
+```bash
 brew install ffmpeg
 ffmpeg -version
 ```
 
-Install deps and run server
+Установка зависимостей и запуск:
 
 ```bash
-pnpm i # to install deps
+pnpm i # установка зависимостей
 
-pnpm task dev # to start dev server
+pnpm task dev # запуск сервера разработки
 
-pnpm lint --fix # to lint code
+pnpm lint --fix # проверка кода
 
-pnpm fmt # to format code
+pnpm fmt # форматирование кода
 
-pnpm test # to run tests
+pnpm test # запуск тестов
 
-pnpm outdated --recursive --update --latest # to update deps to latest versions (if needed)
+pnpm outdated --recursive --update --latest # обновление зависимостей до последних версий (при необходимости)
 ```
 
-## Development
+## Разработка
 
-This project uses pre-commit hooks to ensure code quality. To set up:
+Проект использует pre-commit хуки для контроля качества кода. Для настройки:
 
 ```bash
-# Install pre-commit
+# Установка pre-commit
 brew install pre-commit
 
-# Install the pre-commit hooks
+# Установка хуков
 pre-commit install
 ```

@@ -51,7 +51,7 @@ const TimeScale = (): JSX.Element => {
         />
         {isMainMark && (
           <span
-            className="text-xs text-gray-900 dark:text-gray-100 drag--parent flex-1"
+            className="text-xs text-gray-100 drag--parent flex-1"
             style={{ marginLeft: "5px", marginTop: "-5px", border: "none" }}
           >
             {formatTimeWithMilliseconds(timestamp, false, false, false)}
