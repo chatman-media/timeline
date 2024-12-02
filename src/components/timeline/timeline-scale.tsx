@@ -5,7 +5,7 @@ import { formatTimeWithMilliseconds } from "@/lib/utils"
  * Компонент временной шкалы
  * Отображает метки времени с равными интервалами
  */
-const TimeScale = (): JSX.Element => {
+const TimeScale = ({ scale = 1 }: { scale?: number }): JSX.Element => {
   const { timeRanges, maxDuration } = useMedia()
   const marks = []
   const numMainMarks = 10 // Основные деления
@@ -30,8 +30,8 @@ const TimeScale = (): JSX.Element => {
   const endTime = roundedStartTime + maxDuration
   const roundedEndTime = Math.ceil(endTime / timeScale) * timeScale
   // Вычисляем шаг для круглых значений
-  const timeStep = Math.ceil((roundedEndTime - roundedStartTime) / numMainMarks / timeScale) *
-    timeScale
+  const timeStep =
+    Math.ceil((roundedEndTime - roundedStartTime) / (numMainMarks * scale) / timeScale) * timeScale
   // Шаг для мелких делений
   const subStep = timeStep / numSubMarks
 

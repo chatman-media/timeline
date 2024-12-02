@@ -1,52 +1,54 @@
-import { NextApiRequest, NextApiResponse } from "next"
-import { join } from "path"
-import fs from "fs"
-import { exec } from "child_process"
-import util from "util"
+import type { NextApiRequest, NextApiResponse } from "next"
+import path from "path"
+import fs from "fs/promises"
+import ffmpeg from "fluent-ffmpeg"
 import process from "node:process"
-
-const execAsync = util.promisify(exec)
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
 ) {
+  const { video, timestamp } = req.query
+
+  if (!video || !timestamp) {
+    return res.status(400).json({ error: "Video and timestamp parameters are required" })
+  }
+
   try {
-    const { video, scale = "1min" } = req.query
-    if (!video || typeof video !== "string") {
-      return res.status(400).json({ error: "Video parameter is required" })
+    const videoPath = path.join(process.cwd(), "public", "videos", video as string)
+    const thumbnailName = `${path.parse(video as string).name}_${timestamp}.jpg`
+    const thumbnailPath = path.join(process.cwd(), "public", "videos", thumbnailName)
+    const publicPath = `/videos/${thumbnailName}`
+
+    // Проверяем существование видео файла
+    try {
+      await fs.access(videoPath)
+    } catch {
+      return res.status(404).json({ error: "Video file not found" })
     }
 
-    const videoNameWithoutExt = video.split(".").slice(0, -1).join(".")
-    const inputPath = join(process.cwd(), "public/videos", video)
-    const videoThumbDir = join(
-      process.cwd(),
-      "public/thumbnails",
-      videoNameWithoutExt,
-      scale as string,
-    )
+    // Проверяем существование превью
+    try {
+      await fs.access(thumbnailPath)
+      return res.json({ thumbnail: publicPath })
+    } catch {
+      // Если файл не существует, генерируем новый
+      await new Promise((resolve, reject) => {
+        ffmpeg(videoPath)
+          .screenshots({
+            timestamps: [Number(timestamp)],
+            filename: thumbnailName,
+            folder: path.join(process.cwd(), "public", "videos"),
+            size: "320x?",
+          })
+          .on("end", resolve)
+          .on("error", reject)
+      })
 
-    if (!fs.existsSync(inputPath)) {
-      return res.status(404).json({ error: `Video file not found: ${video}` })
+      res.json({ thumbnail: publicPath })
     }
-
-    if (!fs.existsSync(videoThumbDir)) {
-      fs.mkdirSync(videoThumbDir, { recursive: true })
-    }
-
-    const outputPath = join(videoThumbDir, "thumb_0.jpg")
-    const command = `ffmpeg -ss 0 -i "${inputPath}" -vframes 1 -vf "scale=320:-1" "${outputPath}"`
-    await execAsync(command)
-
-    res.json({
-      success: true,
-      thumbnail: `/thumbnails/${videoNameWithoutExt}/${scale}/thumb_0.jpg`,
-    })
   } catch (error) {
-    console.error("Detailed error:", error)
-    res.status(500).json({
-      error: String(error),
-      details: error instanceof Error ? error.stack : undefined,
-    })
+    console.error("Error generating thumbnail:", error)
+    res.status(500).json({ error: "Failed to generate thumbnail" })
   }
 }

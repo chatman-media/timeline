@@ -150,12 +150,12 @@
 .slice--parent {
   /* background: #014d52; */
   border-color: var(--foreground);
-  height: 50px;
+  height: 90px;
   position: relative;
 }
 
 .drag--parent {
-  height: 52px;
+  height: 92px;
   padding: 0;
   border: 1px solid #014d52;
   border-radius: 1px;
@@ -204,12 +204,15 @@
 
 /* Добавьте эти стили в ваш CSS файл */
 .timeline {
+  position: relative;
   width: 100%;
-  background-color: #0a0a0a;
-  border: 1px solid rgb(0, 52, 57);
-  border-radius: 1px;
-  padding: 0 3rem;
-  margin-top: 1rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.timeline-content {
+  min-width: 100%;
+  width: fit-content;
 }
 
 .timline-border {
@@ -318,4 +321,29 @@
   &:last-child {
     margin-right: 0;
   }
+}
+
+/* Add these styles */
+.scale-control {
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: rgb(25, 102, 107);
+}
+
+.scale-control::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(25, 102, 107);
+  cursor: pointer;
+}
+
+.scale-control::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgb(25, 102, 107);
+  cursor: pointer;
 }

@@ -11,8 +11,9 @@ import { isVideoAvailable } from "@/lib/utils"
 import { TrackMetadata } from "./track-metadata"
 import { TrackSeparators } from "./track-separators"
 import { TrackTimestamps } from "./track-timestamps"
+import { TrackThumbnails } from "./track-thumbnails"
 
-export function Timeline(): JSX.Element {
+export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
   usePreloadVideos()
 
   const {
@@ -103,7 +104,7 @@ export function Timeline(): JSX.Element {
   }, [slices])
 
   /**
-   * Обновляет данные существующего слайса
+   * Об��овляет данные существующего слайса
    * Используется при перетаскивании или изменении размера слайса
    */
   const updateSlice = useCallback((data: Partial<TimelineSliceType> & { id: string }) => {
@@ -164,7 +165,7 @@ export function Timeline(): JSX.Element {
     }
   }
 
-  const renderTrack = useCallback((track: AssembledTrack, index: number) => {
+  const renderTrack = useCallback((track: AssembledTrack, index: number, scale: number) => {
     const firstVideo = track.allVideos[0]
     const lastVideo = track.allVideos[track.allVideos.length - 1]
 
@@ -207,6 +208,11 @@ export function Timeline(): JSX.Element {
                       track={track}
                       videoStream={videoStream}
                     />
+                    <TrackThumbnails
+                      track={track}
+                      trackStartTime={trackStartTime}
+                      trackEndTime={trackEndTime}
+                    />
                     <TrackTimestamps
                       trackStartTime={trackStartTime}
                       trackEndTime={trackEndTime}
@@ -219,22 +225,22 @@ export function Timeline(): JSX.Element {
         </div>
       </div>
     )
-  }, [activeCamera, handleTrackClick, maxDuration, parentRef, timeRanges])
+  }, [activeCamera, maxDuration, parentRef, timeRanges])
 
   return (
     <div className="timeline">
-      <TimeScale />
+      <TimeScale scale={scale} />
       <div className="relative" style={{ paddingBottom: `37px` }}>
         <div className="flex">
           <div className="flex-1 flex flex-col gap-2 relative">
-            {assembledTracks.map(renderTrack)}
+            {assembledTracks.map((track, index) => renderTrack(track, index, scale))}
           </div>
           {useGlobalBar && (
             <GlobalTimelineBar
               duration={maxDuration}
               currentTime={currentTime}
               startTime={Math.min(...timeRanges.map((range) => range.min))}
-              height={assembledTracks.length * 70}
+              height={assembledTracks.length * 110}
               onTimeChange={updateTime}
             />
           )}

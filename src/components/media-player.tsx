@@ -3,6 +3,8 @@ import { Timeline } from "./timeline"
 import { ThemeToggle } from "./theme-toggle"
 import { ActiveVideo } from "./active-video"
 import { formatTimeWithMilliseconds } from "@/lib/utils"
+import { useState } from "react"
+import { useTimelineScale } from "@/hooks/use-timeline-scale"
 
 interface MediaPlayerProps {
   currentTime: number
@@ -12,6 +14,15 @@ interface MediaPlayerProps {
 }
 
 export function MediaPlayer({ currentTime, play, isPlaying, activeCamera }: MediaPlayerProps) {
+  const {
+    scale,
+    setScale,
+    increaseScale,
+    decreaseScale,
+    scalePercentage,
+    scaleStyle,
+  } = useTimelineScale()
+
   return (
     <>
       <div className="flex gap-8 w-full px-3 sm:px-13 py-2">
@@ -40,10 +51,46 @@ export function MediaPlayer({ currentTime, play, isPlaying, activeCamera }: Medi
         <CompilationSettings />
         <div className="w-[60%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
           <ActiveVideo />
+
+          <div className="mt-4 flex items-center gap-2">
+            <button
+              onClick={decreaseScale}
+              className="p-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              -
+            </button>
+
+            <div className="flex-1 h-1 bg-gray-200 dark:bg-gray-800 rounded relative">
+              <div
+                className="absolute h-full bg-primary rounded"
+                style={scaleStyle}
+              />
+              <input
+                type="range"
+                min="0.1"
+                max="2"
+                step="0.1"
+                value={scale}
+                onChange={(e) => setScale(Number(e.target.value))}
+                className="absolute w-full h-full opacity-0 cursor-pointer"
+              />
+            </div>
+
+            <button
+              onClick={increaseScale}
+              className="p-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+            >
+              +
+            </button>
+
+            <span className="text-sm text-gray-500 dark:text-gray-400 w-16 text-right">
+              {scalePercentage}
+            </span>
+          </div>
         </div>
       </div>
       <div className="flex gap-16 w-full px-1 sm:px-1">
-        <Timeline />
+        <Timeline scale={scale} />
       </div>
       <ThemeToggle />
     </>

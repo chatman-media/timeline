@@ -2,7 +2,7 @@ import { formatBitrate, formatDuration } from "@/lib/utils"
 
 export function TrackMetadata({ track, videoStream }: { track: any; videoStream: any }) {
   return (
-    <div className="w-full inset-0 flex left-0 px-1 justify-between text-xs text-gray-100">
+    <div className="w-full inset-0 flex left-0 px-1 mb-1 justify-between text-xs text-gray-100">
       <div className="flex flex-row video-metadata truncate mr-2">
         <span>V{track.index}</span>
         {track.allVideos.map((v: any) => <span key={v.id}>{v.path.split("/").pop()}</span>)}
