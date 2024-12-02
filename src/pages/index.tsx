@@ -52,7 +52,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
-      {isLoading ? <LoadingState /> : hasVideos ? <NoFiles /> : (
+      {isLoading ? <LoadingState /> : !hasVideos ? <NoFiles /> : (
         <MediaPlayer
           currentTime={currentTime}
           play={play}
