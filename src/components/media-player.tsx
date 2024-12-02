@@ -24,7 +24,7 @@ export function MediaPlayer({ currentTime, play, isPlaying, activeCamera }: Medi
 
   return (
     <>
-      <div className="flex gap-8 w-full px-3 sm:px-13 py-2">
+      <div className="flex gap-8 w-full px-2 sm:px-13 py-2">
         <div className="flex flex-col gap-4 w-[15%]">
           <div className="text-sm text-secondary-foreground bg-secondary px-3 py-1.5 rounded-md font-mono shadow-sm">
             {formatTimeWithMilliseconds(currentTime, true, true, true)}
@@ -52,7 +52,7 @@ export function MediaPlayer({ currentTime, play, isPlaying, activeCamera }: Medi
           <ActiveVideo />
         </div>
       </div>
-      <div className="flex flex-col gap-16 w-full px-1 sm:px-1">
+      <div className="flex flex-col gap-16 w-full px-3 sm:px-5">
         <div className="flex flex-row gap-2 justify-end">
           <div className="mt-4 flex items-center w-80">
             <button
