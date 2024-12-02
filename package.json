@@ -29,7 +29,7 @@
     "@visx/scale": "^3.12.0",
     "@visx/shape": "^3.12.0",
     "@visx/tooltip": "^3.12.0",
-    "class-variance-authority": "^0.7.0",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.4",
     "d3-array": "^3.2.4",
@@ -63,17 +63,17 @@
     "@types/fluent-ffmpeg": "^2.1.27",
     "@types/formidable": "^3.4.5",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^22.10.0",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/node": "^22.10.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
     "babel-plugin-react-compiler": "19.0.0-beta-df7b47d-20241124",
     "cz-customizable": "^7.2.1",
-    "eslint": "^9.15",
+    "eslint": "^9.16.0",
     "eslint-config-next": "15.0.3",
     "eslint-plugin-react-compiler": "19.0.0-beta-df7b47d-20241124",
     "eslint-plugin-react-hooks": "^5.0.0",
     "postcss": "^8.4.49",
     "tailwindcss": "4.0.0-beta.3",
-    "typescript": "^5.7"
+    "typescript": "^5.7.2"
   }
 }
