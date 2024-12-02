@@ -49,19 +49,18 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
   setVideos: (videos) => {
     set({ isChangingCamera: true })
-    const firstVideo = videos[0]?.id || ""
     set({
       videos,
       activeCamera: "V1",
-      activeVideo: videos.find(v => v.id === "V1") || videos[0],
+      activeVideo: videos.find((v) => v.id === "V1") || videos[0],
       hasVideos: videos.length > 0,
-      isChangingCamera: false
+      isChangingCamera: false,
     })
     get().updateActiveVideos()
   },
   setActiveVideo: (videoId) => {
     const { videos } = get()
-    const targetVideo = videos.find(v => v.id === videoId)
+    const targetVideo = videos.find((v) => v.id === videoId)
     if (targetVideo) {
       set({
         activeVideo: targetVideo,
@@ -74,22 +73,36 @@ export const useVideoStore = create<VideoState>((set, get) => ({
     set({ isChangingCamera: true })
 
     try {
-      // Находим трек по номеру камеры (V1, V2, etc)
       const targetTrack = assembledTracks.find((track) => {
         const trackNumber = parseInt(cameraId.replace("V", ""))
         return track.index === trackNumber
       })
 
       if (targetTrack) {
-        // Проверяем, есть ли в треке видео, которое содержит текущее время
         const availableVideo = targetTrack.allVideos.find((video) => {
-          const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+          const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
+            1000
           const endTime = startTime + (video.probeData.format.duration || 0)
           const tolerance = 0.3
           return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
         })
 
         if (availableVideo && get().videoRefs.current) {
+          const preloadNearbyVideos = () => {
+            const currentIndex = targetTrack.allVideos.indexOf(availableVideo)
+            const nearbyVideos = [
+              targetTrack.allVideos[currentIndex - 1],
+              targetTrack.allVideos[currentIndex + 1],
+            ].filter(Boolean)
+
+            nearbyVideos.forEach((video) => {
+              const preloadVideo = document.createElement("video")
+              preloadVideo.src = video.path
+              preloadVideo.preload = "auto"
+              preloadVideo.load()
+            })
+          }
+
           set({
             activeCamera: cameraId,
             activeVideo: availableVideo,
@@ -97,14 +110,20 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
           const videoElement = get().videoRefs.current[availableVideo.id]
           if (videoElement) {
-            const videoStartTime = new Date(availableVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
+            videoElement.preload = "auto"
+            videoElement.load()
+
+            const videoStartTime =
+              new Date(availableVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
             const relativeTime = currentTime - videoStartTime
             videoElement.currentTime = relativeTime
+
+            requestIdleCallback(() => preloadNearbyVideos())
           }
         }
       }
     } catch (error) {
-      console.error('Error while changing camera:', error)
+      console.error("Error while changing camera:", error)
     } finally {
       set({ isChangingCamera: false })
     }
@@ -315,7 +334,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
   updateActiveVideos: () => {
     if (get().isChangingCamera) return
-    
+
     const { videos, currentTime, activeCamera } = get()
 
     if (!videos.length) {

@@ -94,3 +94,13 @@ export function generateVideoId(videos: MediaFile[]): string {
 
   return `V${maxNumber + 1}`
 }
+
+export function isVideoAvailable(
+  video: MediaFile,
+  currentTime: number,
+  tolerance: number = 0.1,
+): boolean {
+  const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+  const endTime = startTime + (video.probeData.format.duration || 0)
+  return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
+}

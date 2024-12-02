@@ -3,7 +3,7 @@ import type { NextApiRequest, NextApiResponse } from "next"
 import { promises as fs } from "fs"
 import path from "path"
 import { promisify } from "util"
-import ffmpeg, { ffprobe, FfprobeData } from "fluent-ffmpeg"
+import { ffprobe, FfprobeData } from "fluent-ffmpeg"
 import process from "node:process"
 import { MediaFile } from "@/types/videos"
 

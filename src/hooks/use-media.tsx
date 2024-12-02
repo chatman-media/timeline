@@ -1,5 +1,6 @@
 import { useVideoStore } from "@/stores/videoStore"
 import { useEffect } from "react"
+import { isVideoAvailable } from "@/lib/utils"
 
 export function useMedia() {
   const store = useVideoStore()
@@ -15,34 +16,25 @@ export function useMedia() {
         track.allVideos.some((video) => video.id === store.activeVideo?.id)
       )
 
-      let availableVideo = currentTrack?.allVideos.find((video) => {
-        const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
-        const endTime = startTime + (video.probeData.format.duration || 0)
-        const tolerance = 0.3
-        return store.currentTime >= (startTime - tolerance) && store.currentTime <= (endTime + tolerance)
-      })
+      const availableVideo = currentTrack?.allVideos.find((video) =>
+        isVideoAvailable(video, store.currentTime)
+      )
 
       if (availableVideo) {
         store.setActiveCamera(availableVideo.id)
       }
     } else {
       const currentVideoIsValid = store.activeVideo &&
-        store.currentTime >=
-          new Date(store.activeVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 &&
-        store.currentTime <=
-          (new Date(store.activeVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
-            (store.activeVideo.probeData.format.duration || 0))
+        isVideoAvailable(store.activeVideo, store.currentTime, 0) // No tolerance for current video
 
       if (!currentVideoIsValid) {
         const currentTrack = store.assembledTracks.find((track) =>
           track.allVideos.some((video) => video.id === store.activeVideo?.id)
         )
 
-        let availableVideo = currentTrack?.allVideos.find((video) => {
-          const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
-          const endTime = startTime + (video.probeData.format.duration || 0)
-          return store.currentTime >= startTime && store.currentTime <= endTime
-        })
+        const availableVideo = currentTrack?.allVideos.find((video) =>
+          isVideoAvailable(video, store.currentTime)
+        )
 
         if (availableVideo) {
           store.setActiveCamera(availableVideo.id)

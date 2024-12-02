@@ -48,8 +48,8 @@ export default function Home() {
       }
     }
 
-    window.addEventListener("keydown", handleKeyPress)
-    return () => window.removeEventListener("keydown", handleKeyPress)
+    globalThis.addEventListener("keydown", handleKeyPress)
+    return () => globalThis.removeEventListener("keydown", handleKeyPress)
   }, [assembledTracks, play, isChangingCamera])
 
   return (

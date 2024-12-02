@@ -20,7 +20,6 @@ export function CompilationSettings() {
     maxDuration,
     assembledTracks,
     updateTime,
-    setActiveCamera,
     play,
     setScenes,
   } = useMedia()

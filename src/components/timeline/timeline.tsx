@@ -1,19 +1,18 @@
 import React, { forwardRef, memo, useCallback, useEffect, useRef, useState } from "react"
 import TimelineBar from "./timeline-bar"
 import { nanoid } from "nanoid"
-import { TimelineSlice } from "./timeline-slice"
 import { SeekbarState, TimelineSliceType } from "@/types/timeline"
 import TimeScale from "./timeline-scale"
-import { formatBitrate, formatDuration, formatTime, formatTimeWithMilliseconds } from "@/lib/utils"
-import { Switch } from "@/components/ui/switch"
-import { Label } from "../ui/label"
+import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import GlobalTimelineBar from "./global-timeline-bar"
 import { useMedia } from "@/hooks/use-media"
-import { useAudioStore } from "@/stores/audioStore"
-import { Badge } from "../ui/badge"
 import { AssembledTrack } from "@/types/videos"
+import { usePreloadVideos } from "@/hooks/use-preload-videos"
+import { isVideoAvailable } from "@/lib/utils"
 
 export function Timeline(): JSX.Element {
+  usePreloadVideos()
+
   const {
     videos,
     timeRanges,
@@ -51,9 +50,7 @@ export function Timeline(): JSX.Element {
     y: -10, // Смещение полосы вверх для перекрытия клипов
     x: 0, // Горизонтальное положение полосы
   })
-  const [useGlobalBar, setUseGlobalBar] = useState(true)
-
-  const { analyzeAudio } = useAudioStore()
+  const [useGlobalBar] = useState(true)
 
   /**
    * Компонент-обертка для слайсов
@@ -147,24 +144,15 @@ export function Timeline(): JSX.Element {
   // Изменяем обработчик клика на дорожке
   const handleTrackClick = (e: React.MouseEvent, track: AssembledTrack) => {
     e.stopPropagation()
-    
+
     // Находим видео в треке, которое содержит текущее время
-    const availableVideo = track.allVideos.find(video => {
-      const videoStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
-      const videoEnd = videoStart + (video.probeData.format.duration || 0)
-      // Добавляем небольшой допуск для времени
-      const tolerance = 0.3 // 300ms tolerance
-      return currentTime >= (videoStart - tolerance) && currentTime <= (videoEnd + tolerance)
-    })
+    const availableVideo = track.allVideos.find((video) => isVideoAvailable(video, currentTime))
 
     if (availableVideo) {
       // Если нашли подходящее видео, просто переключаем камеру
       setActiveCamera(`V${track.index}`)
     }
   }
-
-  console.log(currentTime);
-  
 
   return (
     <div className="timeline">
@@ -189,9 +177,6 @@ export function Timeline(): JSX.Element {
               const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
 
               const videoStream = firstVideo.probeData.streams.find((s) => s.codec_type === "video")
-
-              const isActive = track.allVideos.some((v) => v.id === activeCamera)
-
               // Use a combination of index and cameraKey to ensure uniqueness
               const trackKey = `track-${track.cameraKey || index}-${index}`
 
@@ -219,10 +204,6 @@ export function Timeline(): JSX.Element {
                                   new Date(prevVideo.probeData.format.tags?.creation_time || 0)
                                       .getTime() / 1000 +
                                   (prevVideo.probeData.format.duration || 0)
-                                const currentStartTime =
-                                  new Date(video.probeData.format.tags?.creation_time || 0)
-                                    .getTime() / 1000
-
                                 const separatorPosition = ((prevEndTime - trackStartTime) /
                                   (trackEndTime - trackStartTime)) * 100
 

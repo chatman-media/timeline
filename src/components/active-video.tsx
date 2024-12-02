@@ -7,11 +7,8 @@ export const ActiveVideo = memo(() => {
     isPlaying,
     activeVideo,
     currentTime,
-    play,
     updateTime,
     setIsPlaying,
-    assembledTracks,
-    setActiveCamera,
     isChangingCamera,
   } = useMedia()
   if (!videoRefs.current) {
@@ -43,7 +40,7 @@ export const ActiveVideo = memo(() => {
       }
 
       const handleError = (e: ErrorEvent) => {
-        console.error('Video playback error:', e)
+        console.error("Video playback error:", e)
         setIsPlaying(false)
       }
 
@@ -51,8 +48,8 @@ export const ActiveVideo = memo(() => {
       videoElement.addEventListener("error", handleError)
 
       if (isPlaying && !isChangingCamera) {
-        videoElement.play().catch(error => {
-          console.error('Failed to play video:', error)
+        videoElement.play().catch((error) => {
+          console.error("Failed to play video:", error)
           setIsPlaying(false)
         })
       } else {
@@ -73,26 +70,18 @@ export const ActiveVideo = memo(() => {
           ? (
             <video
               ref={(el) => {
-                if (el) {
-                  videoRefs.current[activeVideo.id] = el
-                } else {
-                  delete videoRefs.current[activeVideo.id]
-                }
+                if (el) videoRefs.current[activeVideo.id] = el
               }}
               src={activeVideo.path}
               className="w-full h-full object-contain"
               playsInline
-              muted={false}
-              // controls
-              onClick={play}
-              style={{ cursor: "pointer" }}
+              preload="auto"
+              disablePictureInPicture
+              disableRemotePlayback
+              controlsList="nodownload noplaybackrate"
             />
           )
-          : (
-            <div className="flex items-center justify-center h-full">
-              <p className="text-gray-500">No active video</p>
-            </div>
-          )}
+          : null}
       </div>
     </div>
   )
