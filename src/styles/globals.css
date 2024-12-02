@@ -308,7 +308,7 @@
   background-color: #00777e;
   padding: 0 2px;
   border-radius: 3px;
-  /* color: var(--foreground) !important; */
+  color: var(--foreground) !important;
 }
 
 .timeline div.time {

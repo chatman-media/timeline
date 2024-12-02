@@ -238,7 +238,7 @@ export function Timeline(): JSX.Element {
                                 )
                               })}
 
-                              <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
+                              <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-100">
                                 <div className="flex flex-row video-metadata truncate mr-2">
                                   <span>V{track.index}</span>
                                   {track.allVideos.map((v) => (
@@ -264,7 +264,7 @@ export function Timeline(): JSX.Element {
                                   <div>{formatDuration(track.combinedDuration, 2)}</div>
                                 </div>
                               </div>
-                              <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-900 dark:text-gray-100">
+                              <div className="w-full inset-0 flex left-0 px-2 justify-between text-xs text-gray-100">
                                 <div className="time">
                                   {formatTimeWithMilliseconds(trackStartTime, false, true, true)}
                                 </div>
