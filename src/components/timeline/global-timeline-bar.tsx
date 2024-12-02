@@ -64,15 +64,17 @@ const GlobalTimelineBar = ({
   return (
     <div
       ref={barRef}
-      className="absolute w-[1px] bg-white cursor-ew-resize z-80"
+      className="absolute cursor-ew-resize z-80 flex items-center justify-center"
       style={{
         left: `${position}%`,
         height: `${height + 35}px`,
         top: "-45px",
+        width: "16px",
+        transform: "translateX(-50%)",
       }}
       onMouseDown={handleMouseDown}
     >
-      {/* <div className="absolute -top-2 -translate-x-1/2 w-3 h-3 bg-black rounded-full" /> */}
+      <div className="w-[1px] h-full bg-white" />
     </div>
   )
 }
