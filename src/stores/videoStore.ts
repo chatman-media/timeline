@@ -73,33 +73,41 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
     set({ isChangingCamera: true })
 
-    // Находим трек по номеру камеры (V1, V2, etc)
-    const targetTrack = assembledTracks.find((track) => {
-      const trackNumber = parseInt(cameraId.replace("V", ""))
-      return track.index === trackNumber
-    })
-
-    if (targetTrack) {
-      // Проверяем, есть ли в треке видео, которое содержит текущее время
-      const availableVideo = targetTrack.allVideos.find((video) => {
-        const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
-        const endTime = startTime + (video.probeData.format.duration || 0)
-        // Добавляем небольшой допуск для времени
-        const tolerance = 0.3 // 300ms tolerance
-        return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
+    try {
+      // Находим трек по номеру камеры (V1, V2, etc)
+      const targetTrack = assembledTracks.find((track) => {
+        const trackNumber = parseInt(cameraId.replace("V", ""))
+        return track.index === trackNumber
       })
 
-      if (availableVideo) {
-        // Если нашли подходящее видео, переключаемся на него, сохраняя текущее время
-        set((state) => ({
-          ...state,
-          activeCamera: cameraId,
-          activeVideo: availableVideo,
-        }))
-      }
-    }
+      if (targetTrack) {
+        // Проверяем, есть ли в треке видео, которое содержит текущее время
+        const availableVideo = targetTrack.allVideos.find((video) => {
+          const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+          const endTime = startTime + (video.probeData.format.duration || 0)
+          const tolerance = 0.3
+          return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
+        })
 
-    set({ isChangingCamera: false })
+        if (availableVideo && get().videoRefs.current) {
+          set({
+            activeCamera: cameraId,
+            activeVideo: availableVideo,
+          })
+
+          const videoElement = get().videoRefs.current[availableVideo.id]
+          if (videoElement) {
+            const videoStartTime = new Date(availableVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
+            const relativeTime = currentTime - videoStartTime
+            videoElement.currentTime = relativeTime
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error while changing camera:', error)
+    } finally {
+      set({ isChangingCamera: false })
+    }
   },
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentTime: (time) => {

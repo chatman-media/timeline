@@ -10,14 +10,7 @@ export function useMedia() {
   }, [])
 
   useEffect(() => {
-    const currentVideoIsValid = store.activeVideo &&
-      store.currentTime >=
-        new Date(store.activeVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 &&
-      store.currentTime <=
-        (new Date(store.activeVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
-          (store.activeVideo.probeData.format.duration || 0))
-
-    if (!currentVideoIsValid && !store.isChangingCamera) {
+    if (store.isChangingCamera) {
       const currentTrack = store.assembledTracks.find((track) =>
         track.allVideos.some((video) => video.id === store.activeVideo?.id)
       )
@@ -25,11 +18,35 @@ export function useMedia() {
       let availableVideo = currentTrack?.allVideos.find((video) => {
         const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
         const endTime = startTime + (video.probeData.format.duration || 0)
-        return store.currentTime >= startTime && store.currentTime <= endTime
+        const tolerance = 0.3
+        return store.currentTime >= (startTime - tolerance) && store.currentTime <= (endTime + tolerance)
       })
 
       if (availableVideo) {
         store.setActiveCamera(availableVideo.id)
+      }
+    } else {
+      const currentVideoIsValid = store.activeVideo &&
+        store.currentTime >=
+          new Date(store.activeVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 &&
+        store.currentTime <=
+          (new Date(store.activeVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
+            (store.activeVideo.probeData.format.duration || 0))
+
+      if (!currentVideoIsValid) {
+        const currentTrack = store.assembledTracks.find((track) =>
+          track.allVideos.some((video) => video.id === store.activeVideo?.id)
+        )
+
+        let availableVideo = currentTrack?.allVideos.find((video) => {
+          const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
+          const endTime = startTime + (video.probeData.format.duration || 0)
+          return store.currentTime >= startTime && store.currentTime <= endTime
+        })
+
+        if (availableVideo) {
+          store.setActiveCamera(availableVideo.id)
+        }
       }
     }
   }, [store.currentTime, store.activeVideo, store.isChangingCamera])

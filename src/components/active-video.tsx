@@ -22,11 +22,11 @@ export const ActiveVideo = memo(() => {
 
   useEffect(() => {
     const videoElement = videoRefs.current[activeVideo?.id]
-    if (videoElement && activeVideo && !isChangingCamera) {
+    if (videoElement && activeVideo) {
       const videoStartTime =
         new Date(activeVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
 
-      if (!isTimeUpdateFromVideo.current) {
+      if (!isTimeUpdateFromVideo.current && !isChangingCamera) {
         const relativeTime = currentTime - videoStartTime
         if (relativeTime >= 0 && relativeTime <= (activeVideo.probeData.format.duration || 0)) {
           videoElement.currentTime = relativeTime
@@ -35,47 +35,33 @@ export const ActiveVideo = memo(() => {
       isTimeUpdateFromVideo.current = false
 
       const handleTimeUpdate = () => {
-        if (!videoElement.seeking) {
+        if (!videoElement.seeking && !isChangingCamera) {
           isTimeUpdateFromVideo.current = true
           const newTime = videoStartTime + videoElement.currentTime
           updateTime(newTime)
         }
       }
 
-      const handleVideoEnded = () => {
-        const currentTrackIndex = assembledTracks.findIndex((track) =>
-          track.allVideos.some((v) => v.id === activeVideo.id)
-        )
-
-        if (currentTrackIndex !== -1) {
-          const currentTrack = assembledTracks[currentTrackIndex]
-          const currentVideoIndex = currentTrack.allVideos.findIndex((v) => v.id === activeVideo.id)
-
-          if (currentVideoIndex >= 0) {
-            setActiveCamera(currentTrack.allVideos[currentVideoIndex + 1].id)
-            // setActiveCamera(currentTrack.allVideos[currentVideoIndex + 1].id)
-          } else {
-            const nextTrackIndex = (currentTrackIndex + 1) % assembledTracks.length
-            const nextTrack = assembledTracks[nextTrackIndex]
-            if (nextTrack && nextTrack.allVideos.length > 0) {
-              setActiveCamera(nextTrack.allVideos[0].id)
-            }
-          }
-        }
+      const handleError = (e: ErrorEvent) => {
+        console.error('Video playback error:', e)
+        setIsPlaying(false)
       }
 
       videoElement.addEventListener("timeupdate", handleTimeUpdate)
-      videoElement.addEventListener("ended", handleVideoEnded)
+      videoElement.addEventListener("error", handleError)
 
-      if (isPlaying) {
-        videoElement.play().catch(console.error)
+      if (isPlaying && !isChangingCamera) {
+        videoElement.play().catch(error => {
+          console.error('Failed to play video:', error)
+          setIsPlaying(false)
+        })
       } else {
         videoElement.pause()
       }
 
       return () => {
         videoElement.removeEventListener("timeupdate", handleTimeUpdate)
-        videoElement.removeEventListener("ended", handleVideoEnded)
+        videoElement.removeEventListener("error", handleError)
       }
     }
   }, [activeVideo, isPlaying, currentTime, isChangingCamera])
