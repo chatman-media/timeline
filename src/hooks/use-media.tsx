@@ -1,6 +1,8 @@
-import { useVideoStore } from "@/stores/videoStore"
 import { useEffect } from "react"
+
+import { STORAGE_KEYS } from "@/lib/constants"
 import { isVideoAvailable } from "@/lib/utils"
+import { useVideoStore } from "@/stores/videoStore"
 
 export function useMedia() {
   const store = useVideoStore()
@@ -42,6 +44,21 @@ export function useMedia() {
       }
     }
   }, [store.currentTime, store.activeVideo, store.isChangingCamera])
+
+  useEffect(() => {
+    // Вариант 1: Использовать sessionStorage вместо localStorage
+    sessionStorage.setItem(STORAGE_KEYS.CURRENT_TIME, store.currentTime.toString())
+  }, [store.currentTime])
+
+  // Вариант 2: Сохранять только при важных событиях
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      localStorage.setItem(STORAGE_KEYS.CURRENT_TIME, store.currentTime.toString())
+    }
+
+    globalThis.addEventListener("beforeunload", handleBeforeUnload)
+    return () => globalThis.removeEventListener("beforeunload", handleBeforeUnload)
+  }, [store.currentTime])
 
   const play = () => {
     store.setIsPlaying(!store.isPlaying)

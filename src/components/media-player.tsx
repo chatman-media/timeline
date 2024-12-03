@@ -1,18 +1,20 @@
-import { CompilationSettings } from "./compilation-settings"
-import { Timeline } from "./timeline"
-import { ThemeToggle } from "./theme-toggle"
-import { ActiveVideo } from "./active-video"
-import { formatTimeWithMilliseconds } from "@/lib/utils"
+import { useMedia } from "@/hooks/use-media"
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
+import { formatTimeWithMilliseconds } from "@/lib/utils"
 
-interface MediaPlayerProps {
-  currentTime: number
-  play: () => void
-  isPlaying: boolean
-  activeCamera: string
-}
+import { ActiveVideo } from "./active-video"
+import { CompilationSettings } from "./compilation-settings"
+import { ThemeToggle } from "./theme-toggle"
+import { Timeline } from "./timeline"
 
-export function MediaPlayer({ currentTime, play, isPlaying, activeCamera }: MediaPlayerProps) {
+export function MediaPlayer() {
+  const {
+    currentTime,
+    play,
+    isPlaying,
+    activeCamera,
+  } = useMedia()
+
   const {
     scale,
     setScale,
@@ -57,7 +59,7 @@ export function MediaPlayer({ currentTime, play, isPlaying, activeCamera }: Medi
           <div className="mt-4 flex items-center w-80">
             <button
               onClick={decreaseScale}
-              className="p-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="p-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 mr-1"
             >
               -
             </button>
@@ -70,17 +72,17 @@ export function MediaPlayer({ currentTime, play, isPlaying, activeCamera }: Medi
               <input
                 type="range"
                 min="0.1"
-                max="2"
+                max="1"
                 step="0.1"
                 value={scale}
                 onChange={(e) => setScale(Number(e.target.value))}
-                className="absolute w-full h-full opacity-0 cursor-pointer"
+                className="absolute w-full h-full cursor-pointer"
               />
             </div>
 
             <button
               onClick={increaseScale}
-              className="p-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+              className="p-1 rounded bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100 ml-1"
             >
               +
             </button>

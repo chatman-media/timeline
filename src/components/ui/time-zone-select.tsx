@@ -1,9 +1,8 @@
 "use client"
 
-import * as React from "react"
 import { Check, Globe } from "lucide-react"
+import * as React from "react"
 
-import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
   Command,
@@ -13,6 +12,7 @@ import {
   CommandItem,
 } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 
 const timezones = [
   { value: "UTC", label: "UTC" },

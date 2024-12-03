@@ -1,17 +1,17 @@
-import React, { forwardRef, memo, useCallback, useEffect, useRef, useState } from "react"
-import TimelineBar from "./timeline-bar"
 import { nanoid } from "nanoid"
-import { SeekbarState, TimelineSliceType } from "@/types/timeline"
-import TimeScale from "./timeline-scale"
-import GlobalTimelineBar from "./global-timeline-bar"
+import React, { forwardRef, memo, useCallback, useEffect, useRef, useState } from "react"
+
 import { useMedia } from "@/hooks/use-media"
-import { AssembledTrack } from "@/types/videos"
 import { usePreloadVideos } from "@/hooks/use-preload-videos"
-import { isVideoAvailable } from "@/lib/utils"
+import { SeekbarState, TimelineSliceType } from "@/types/timeline"
+import { AssembledTrack } from "@/types/videos"
+
+import GlobalTimelineBar from "./global-timeline-bar"
+import TimelineBar from "./timeline-bar"
+import TimeScale from "./timeline-scale"
 import { TrackMetadata } from "./track-metadata"
-import { TrackSeparators } from "./track-separators"
-import { TrackTimestamps } from "./track-timestamps"
 import { TrackThumbnails } from "./track-thumbnails"
+import { TrackTimestamps } from "./track-timestamps"
 
 export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
   usePreloadVideos()
@@ -21,8 +21,8 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
     timeRanges,
     maxDuration,
     currentTime,
-    timeToPercent,
     updateTime,
+    timeToPercent,
     assembledTracks,
     activeCamera,
     setActiveCamera,
@@ -104,7 +104,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
   }, [slices])
 
   /**
-   * Об��овляет данные существующего слайса
+   * Обвляет данные существующего слайса
    * Используется при перетаскивании или изменении размера слайса
    */
   const updateSlice = useCallback((data: Partial<TimelineSliceType> & { id: string }) => {
@@ -153,57 +153,145 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
   }, [videos]) // Зависимость от массива videos
 
   // Изменяем обработчик клика на дорожке
-  const handleTrackClick = (e: React.MouseEvent, track: AssembledTrack) => {
+  const handleTrackClick = useCallback((e: React.MouseEvent, track: AssembledTrack) => {
     e.stopPropagation()
 
     // Находим видео в треке, которое содержит текущее время
-    const availableVideo = track.allVideos.find((video) => isVideoAvailable(video, currentTime))
+    const availableVideo = track.allVideos.find((video) => {
+      const videoStartTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
+        1000
+      const videoDuration = video.probeData.format.duration || 0
+      const videoEndTime = videoStartTime + videoDuration
+
+      // Увеличиваем допуск для более плавного переключения
+      const tolerance = 0.3
+      return currentTime >= (videoStartTime - tolerance) &&
+        currentTime <= (videoEndTime + tolerance)
+    })
 
     if (availableVideo) {
-      // Если нашли подходящее видео, просто переключаем камеру
+      // Если нашли подходящее видео, переключаем камеру без изменения времени
       setActiveCamera(availableVideo.id)
-    }
-  }
+    } else {
+      // Если не нашли видео на текущем времени, ищем ближайшее
+      let nearestVideo = track.allVideos[0]
+      let minTimeDiff = Infinity
 
-  const renderTrack = useCallback((track: AssembledTrack, index: number, scale: number) => {
+      track.allVideos.forEach((video) => {
+        const videoStartTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
+          1000
+        const videoEndTime = videoStartTime + (video.probeData.format.duration || 0)
+
+        // Находим ближайшую точку во времени для этого видео
+        const nearestTime = videoStartTime > currentTime
+          ? videoStartTime
+          : videoEndTime < currentTime
+          ? videoEndTime
+          : currentTime
+
+        const timeDiff = Math.abs(nearestTime - currentTime)
+        if (timeDiff < minTimeDiff) {
+          minTimeDiff = timeDiff
+          nearestVideo = video
+        }
+      })
+
+      // Переключаем на найденное видео и устанавливаем соответствующее время
+      if (nearestVideo) {
+        const videoStartTime =
+          new Date(nearestVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
+        const videoDuration = nearestVideo.probeData.format.duration || 0
+        const videoEndTime = videoStartTime + videoDuration
+
+        setActiveCamera(nearestVideo.id)
+
+        // Если текущее время выходит за пределы видео, корректируем его
+        if (currentTime < videoStartTime || currentTime > videoEndTime) {
+          const newTime = Math.min(Math.max(currentTime, videoStartTime), videoEndTime)
+          updateTime(newTime)
+        }
+      }
+    }
+  }, [currentTime, activeCamera])
+
+  // Новый компонент TrackWrapper
+  const TrackWrapper = memo(({
+    track,
+    isActive,
+    onClick,
+    children,
+  }: {
+    track: AssembledTrack
+    isActive: boolean
+    onClick: (e: React.MouseEvent) => void
+    children: React.ReactNode
+  }) => {
+    return (
+      <div
+        className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
+        onClick={onClick}
+        style={{ cursor: "pointer" }}
+      >
+        {children}
+      </div>
+    )
+  }, (prev, next) => {
+    // More specific comparison
+    return prev.isActive === next.isActive &&
+      prev.track.index === next.track.index &&
+      prev.track.cameraKey === next.track.cameraKey
+  })
+
+  TrackWrapper.displayName = "TrackWrapper"
+
+  // Новый компонент Track
+  const Track = ({
+    track,
+    index,
+    scale,
+    timeRanges,
+    maxDuration,
+    activeCamera,
+    handleTrackClick,
+    parentRef,
+  }: {
+    track: AssembledTrack
+    index: number
+    scale: number
+    timeRanges: { min: number }[]
+    maxDuration: number
+    activeCamera: string | null
+    handleTrackClick: (e: React.MouseEvent, track: AssembledTrack) => void
+    parentRef: React.RefObject<HTMLDivElement>
+  }) => {
     const firstVideo = track.allVideos[0]
     const lastVideo = track.allVideos[track.allVideos.length - 1]
-
     const trackStartTime =
       new Date(firstVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
     const trackEndTime =
       new Date(lastVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
       (lastVideo.probeData.format.duration || 0)
 
-    const startOffset = ((trackStartTime - Math.min(...timeRanges.map((x) =>
-      x.min
-    ))) / maxDuration) * 100
+    const startOffset =
+      ((trackStartTime - Math.min(...timeRanges.map((x) => x.min))) / maxDuration) * 100
     const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
 
     const videoStream = firstVideo.probeData.streams.find((s) => s.codec_type === "video")
     const trackKey = `track-${track.cameraKey || index}-${index}`
+    const isActive = track.index === parseInt(activeCamera?.replace("V", "") || "0")
 
     return (
       <div className="flex" key={trackKey}>
         <div className="w-full">
           <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
-            <div
-              className={`drag--parent flex-1 ${
-                track.index === parseInt(activeCamera?.replace("V", "") || "0")
-                  ? "drag--parent--bordered"
-                  : ""
-              }`}
+            <TrackWrapper
+              track={track}
+              isActive={isActive}
               onClick={(e) => handleTrackClick(e, track)}
-              style={{ cursor: "pointer" }}
             >
               <SliceWrap ref={parentRef}>
                 <div className="absolute h-full w-full timline-border">
                   <div className="flex h-full w-full flex-col justify-between">
-                    <TrackSeparators
-                      videos={track.allVideos}
-                      trackStartTime={trackStartTime}
-                      trackEndTime={trackEndTime}
-                    />
                     <TrackMetadata
                       track={track}
                       videoStream={videoStream}
@@ -212,6 +300,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
                       track={track}
                       trackStartTime={trackStartTime}
                       trackEndTime={trackEndTime}
+                      scale={scale}
                     />
                     <TrackTimestamps
                       trackStartTime={trackStartTime}
@@ -220,12 +309,12 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
                   </div>
                 </div>
               </SliceWrap>
-            </div>
+            </TrackWrapper>
           </div>
         </div>
       </div>
     )
-  }, [activeCamera, maxDuration, parentRef, timeRanges])
+  }
 
   return (
     <div className="timeline">
@@ -233,7 +322,19 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
       <div className="relative" style={{ paddingBottom: `37px` }}>
         <div className="flex">
           <div className="flex-1 flex flex-col gap-2 relative">
-            {assembledTracks.map((track, index) => renderTrack(track, index, scale))}
+            {assembledTracks.map((track, index) => (
+              <Track
+                key={`track-${track.cameraKey || index}-${index}`}
+                track={track}
+                index={index}
+                scale={scale}
+                timeRanges={timeRanges}
+                maxDuration={maxDuration}
+                activeCamera={activeCamera}
+                handleTrackClick={handleTrackClick}
+                parentRef={parentRef}
+              />
+            ))}
           </div>
           {useGlobalBar && (
             <GlobalTimelineBar

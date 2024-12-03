@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import debounce from "lodash/debounce"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+
 import { AssembledTrack } from "@/types/videos"
 
 interface TrackThumbnailsProps {
@@ -11,7 +13,7 @@ interface TrackThumbnailsProps {
 // Глобальный кэш для хранения миниатюр между ре-рендерами
 const thumbnailCache: Record<string, string> = {}
 
-export function TrackThumbnails({
+export const TrackThumbnails = memo(function TrackThumbnails({
   track,
   trackStartTime,
   trackEndTime,
@@ -19,6 +21,7 @@ export function TrackThumbnails({
 }: TrackThumbnailsProps) {
   const [thumbnails, setThumbnails] = useState<Record<string, string[]>>({})
   const requestsInProgress = useRef<boolean>(false)
+  const abortController = useRef<AbortController | null>(null)
 
   const thumbnailRequests = useMemo(() => {
     const THUMBNAIL_HEIGHT = 90
@@ -44,70 +47,84 @@ export function TrackThumbnails({
       return Array.from({ length: thumbnailCount }, (_, i) => ({
         video: video.name,
         timestamp: (duration / thumbnailCount) * i,
+        cacheKey: `${video.name}-${(duration / thumbnailCount) * i}`,
       }))
     }).flat()
-  }, [scale]) // Зависим только от scale
+  }, [track.allVideos, scale])
 
-  useEffect(() => {
-    const generateThumbnails = async () => {
-      if (requestsInProgress.current) return
+  const generateThumbnails = useCallback(
+    debounce(async () => {
+      if (requestsInProgress.current) {
+        // Отменяем предыдущие запросы
+        abortController.current?.abort()
+      }
+
+      abortController.current = new AbortController()
       requestsInProgress.current = true
 
       const thumbnailMap: Record<string, string[]> = {}
+      const newRequests: Array<{ video: string; timestamp: number; cacheKey: string }> = []
 
-      for (const { video, timestamp } of thumbnailRequests) {
-        // Создаем уникальный ключ для кэша
-        const cacheKey = `${video}-${timestamp}`
-
+      // Сначала используем кэшированные миниатюры
+      thumbnailRequests.forEach(({ video, timestamp, cacheKey }) => {
         if (!thumbnailMap[video]) {
           thumbnailMap[video] = []
         }
 
-        // Проверяем кэш перед запросом
         if (thumbnailCache[cacheKey]) {
           thumbnailMap[video].push(thumbnailCache[cacheKey])
-          continue
+        } else {
+          newRequests.push({ video, timestamp, cacheKey })
         }
+      })
 
-        try {
-          const response = await fetch(
-            `/api/thumbnail?video=${encodeURIComponent(video)}&timestamp=${timestamp}`,
-          )
-          if (!response.ok) continue
-          const data = await response.json()
-
-          // Сохраняем в кэш
-          thumbnailCache[cacheKey] = data.thumbnail
-          thumbnailMap[video].push(data.thumbnail)
-        } catch (error) {
-          console.error("Error generating thumbnail:", error)
-        }
-      }
-
+      // Обновляем состояние с кэшированными миниатюрами
       setThumbnails(thumbnailMap)
-      requestsInProgress.current = false
-    }
 
+      // Затем делаем запросы для новых миниатюр
+      try {
+        await Promise.all(
+          newRequests.map(async ({ video, timestamp, cacheKey }) => {
+            try {
+              const response = await fetch(
+                `/api/thumbnail?video=${encodeURIComponent(video)}&timestamp=${timestamp}`,
+                { signal: abortController.current?.signal },
+              )
+              if (!response.ok) return
+
+              const data = await response.json()
+              thumbnailCache[cacheKey] = data.thumbnail
+
+              setThumbnails((prev) => ({
+                ...prev,
+                [video]: [...(prev[video] || []), data.thumbnail],
+              }))
+            } catch (error) {
+              if (error instanceof Error && error.name === "AbortError") {
+                console.log("Thumbnail request aborted")
+              } else {
+                console.error("Error generating thumbnail:", error)
+              }
+            }
+          }),
+        )
+      } finally {
+        requestsInProgress.current = false
+      }
+    }, 300),
+    [],
+  )
+
+  useEffect(() => {
     generateThumbnails()
-  }, [thumbnailRequests])
 
-  const getVideoPosition = useCallback((video: any) => {
-    const videoStartTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
-      1000
-    const videoDuration = video.probeData.format.duration || 0
-
-    // Базовые проценты без масштаба
-    const startPercent = ((videoStartTime - trackStartTime) / (trackEndTime - trackStartTime)) * 100
-    const widthPercent = (videoDuration / (trackEndTime - trackStartTime)) * 100
-
-    // Применяем масштаб только к ширине
-    const scaledWidth = widthPercent * scale
-
-    return {
-      left: `${startPercent}%`,
-      width: `${scaledWidth}%`,
+    return () => {
+      generateThumbnails.cancel()
+      abortController.current?.abort()
     }
-  }, [trackStartTime, trackEndTime, scale])
+  }, [])
+
+  console.log(track.allVideos, scale)
 
   return (
     <div className="flex-1 relative">
@@ -146,4 +163,13 @@ export function TrackThumbnails({
       })}
     </div>
   )
-}
+}, (prevProps, nextProps) => {
+  // Сравниваем только те пропсы, которые влияют на отображение миниатюр
+  return (
+    prevProps.scale === nextProps.scale &&
+    prevProps.trackStartTime === nextProps.trackStartTime &&
+    prevProps.trackEndTime === nextProps.trackEndTime &&
+    prevProps.track.cameraKey === nextProps.track.cameraKey &&
+    prevProps.track.index === nextProps.track.index
+  )
+})

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { formatTimeWithMilliseconds } from "@/lib/utils"
+
 import { useMedia } from "@/hooks/use-media"
+import { formatTimeWithMilliseconds } from "@/lib/utils"
 
 /**
  * Пропсы компонента TimelineBar

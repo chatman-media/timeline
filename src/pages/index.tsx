@@ -1,13 +1,13 @@
 import dayjs from "dayjs"
 import duration from "dayjs/plugin/duration"
-import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
+import utc from "dayjs/plugin/utc"
 import { useEffect } from "react"
 
-import { useMedia } from "@/hooks/use-media"
 import { LoadingState } from "@/components/loading-state"
-import { NoFiles } from "@/components/no-files"
 import { MediaPlayer } from "@/components/media-player"
+import { NoFiles } from "@/components/no-files"
+import { useMedia } from "@/hooks/use-media"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)
@@ -17,11 +17,8 @@ dayjs.extend(timezone)
 export default function Home() {
   const {
     isLoading,
-    currentTime,
     hasVideos,
     play,
-    isPlaying,
-    activeCamera,
     setActiveCamera,
     isChangingCamera,
     assembledTracks,
@@ -52,14 +49,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#0A0A0A]">
-      {isLoading ? <LoadingState /> : !hasVideos ? <NoFiles /> : (
-        <MediaPlayer
-          currentTime={currentTime}
-          play={play}
-          isPlaying={isPlaying}
-          activeCamera={activeCamera}
-        />
-      )}
+      {isLoading ? <LoadingState /> : !hasVideos ? <NoFiles /> : <MediaPlayer />}
     </div>
   )
 }

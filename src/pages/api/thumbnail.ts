@@ -1,8 +1,9 @@
+import process from "node:process"
+
+import ffmpeg from "fluent-ffmpeg"
+import fs from "fs/promises"
 import type { NextApiRequest, NextApiResponse } from "next"
 import path from "path"
-import fs from "fs/promises"
-import ffmpeg from "fluent-ffmpeg"
-import process from "node:process"
 
 export default async function handler(
   req: NextApiRequest,
@@ -10,13 +11,13 @@ export default async function handler(
 ) {
   const { video, timestamp } = req.query
 
-  if (!video || !timestamp) {
-    return res.status(400).json({ error: "Video and timestamp parameters are required" })
+  if (!video || typeof video !== "string" || !timestamp || typeof timestamp !== "string") {
+    return res.status(400).json({ error: "Invalid video or timestamp parameters" })
   }
 
   try {
-    const videoPath = path.join(process.cwd(), "public", "videos", video as string)
-    const thumbnailName = `${path.parse(video as string).name}_${timestamp}.jpg`
+    const videoPath = path.join(process.cwd(), "public", "videos", video)
+    const thumbnailName = `${path.parse(video).name}_${timestamp}.jpg`
     const thumbnailPath = path.join(process.cwd(), "public", "videos", thumbnailName)
     const publicPath = `/videos/${thumbnailName}`
 
@@ -42,13 +43,25 @@ export default async function handler(
             size: "320x?",
           })
           .on("end", resolve)
-          .on("error", reject)
+          .on("error", (err) => {
+            console.error("FFmpeg error:", err)
+            reject(err)
+          })
       })
 
-      res.json({ thumbnail: publicPath })
+      // Проверяем, что файл действительно создался
+      try {
+        await fs.access(thumbnailPath)
+        return res.json({ thumbnail: publicPath })
+      } catch {
+        throw new Error("Failed to generate thumbnail")
+      }
     }
   } catch (error) {
     console.error("Error generating thumbnail:", error)
-    res.status(500).json({ error: "Failed to generate thumbnail" })
+    res.status(500).json({
+      error: "Failed to generate thumbnail",
+      details: error instanceof Error ? error.message : "Unknown error",
+    })
   }
 }

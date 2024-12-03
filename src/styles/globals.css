@@ -155,14 +155,23 @@
 }
 
 .drag--parent {
+  cursor: pointer !important;
+  transition: opacity 0.2s;
   height: 92px;
   padding: 0;
   border: 1px solid #014d52;
   border-radius: 1px;
 }
 
+.drag--parent:hover {
+  opacity: 0.9;
+}
+
 .drag--parent--bordered {
-  border: 1px solid var(--foreground);
+  outline: 2px solid white;
+  outline-offset: -2px;
+  z-index: 10;
+  border: 1px solid white;
   border-radius: 1px;
 }
 

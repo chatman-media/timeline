@@ -1,10 +1,10 @@
-import { AreaClosed, Bar, Line } from "@visx/shape"
 import { curveMonotoneX } from "@visx/curve"
+import { localPoint } from "@visx/event"
 import { GridColumns, GridRows } from "@visx/grid"
 import { scaleLinear, scaleTime } from "@visx/scale"
+import { AreaClosed, Bar, Line } from "@visx/shape"
 import { TooltipWithBounds, withTooltip } from "@visx/tooltip"
 import { WithTooltipProvidedProps } from "@visx/tooltip/lib/enhancers/withTooltip"
-import { localPoint } from "@visx/event"
 import { bisector } from "d3-array"
 import { useCallback, useMemo } from "react"
 

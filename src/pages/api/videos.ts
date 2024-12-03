@@ -1,10 +1,12 @@
 // pages/api/videos.ts
-import type { NextApiRequest, NextApiResponse } from "next"
+import process from "node:process"
+
+import { ffprobe, FfprobeData } from "fluent-ffmpeg"
 import { promises as fs } from "fs"
+import type { NextApiRequest, NextApiResponse } from "next"
 import path from "path"
 import { promisify } from "util"
-import { ffprobe, FfprobeData } from "fluent-ffmpeg"
-import process from "node:process"
+
 import { MediaFile } from "@/types/videos"
 
 // Промисифицируем ffprobe

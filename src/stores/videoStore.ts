@@ -1,6 +1,7 @@
 import { create } from "zustand"
-import type { AssembledTrack, MediaFile } from "@/types/videos"
+
 import { SceneSegment, TimeRange } from "@/types/scene"
+import type { AssembledTrack, MediaFile } from "@/types/videos"
 
 interface VideoState {
   videos: MediaFile[]
@@ -17,6 +18,7 @@ interface VideoState {
   activeCamera: string
   scenes: SceneSegment[]
   isChangingCamera: boolean
+  thumbnailCache: Record<string, string>
 
   // Actions
   setVideos: (videos: MediaFile[]) => void
@@ -30,6 +32,8 @@ interface VideoState {
   updateAssembledTracks: () => void
   updateActiveVideos: () => void
   setScenes: (scenes: SceneSegment[]) => void
+  addThumbnailToCache: (key: string, thumbnail: string) => void
+  getThumbnail: (videoId: string, timestamp: number) => Promise<string>
 }
 
 export const useVideoStore = create<VideoState>((set, get) => ({
@@ -46,7 +50,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   activeVideos: [],
   scenes: [],
   isChangingCamera: false,
-
+  thumbnailCache: {},
   setVideos: (videos) => {
     set({ isChangingCamera: true })
     set({
@@ -257,11 +261,10 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         height: videoStream?.height,
         aspectRatio: videoStream?.display_aspect_ratio,
         frameRate: videoStream?.r_frame_rate,
-        rotation: videoStream?.rotation || 0,
       }
     }
 
-    const isSameVideoType = (video1: MediaFile, video2: MediaFile) => {
+    const isSameVideoType = (video1: MediaFile, video2: MediaFile): boolean => {
       const sig1 = getVideoSignature(video1)
       const sig2 = getVideoSignature(video2)
 
@@ -269,8 +272,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         sig1.width === sig2.width &&
         sig1.height === sig2.height &&
         sig1.aspectRatio === sig2.aspectRatio &&
-        sig1.frameRate === sig2.frameRate &&
-        sig1.rotation === sig2.rotation
+        sig1.frameRate === sig2.frameRate
     }
 
     // Find existing track for video or create new one
@@ -357,4 +359,37 @@ export const useVideoStore = create<VideoState>((set, get) => ({
     })
   },
   setScenes: (scenes) => set({ scenes }),
+  addThumbnailToCache: (key, thumbnail) =>
+    set((state) => ({
+      thumbnailCache: {
+        ...state.thumbnailCache,
+        [key]: thumbnail,
+      },
+    })),
+  getThumbnail: async (videoId, timestamp) => {
+    const { thumbnailCache } = get()
+    const cacheKey = `${videoId}-${timestamp}`
+
+    // Check cache first
+    if (thumbnailCache[cacheKey]) {
+      return thumbnailCache[cacheKey]
+    }
+
+    try {
+      const video = get().videos.find((v) => v.id === videoId)
+      if (!video) throw new Error("Video not found")
+
+      const response = await fetch(
+        `/api/thumbnail?video=${encodeURIComponent(video.name)}&timestamp=${timestamp}`,
+      )
+      if (!response.ok) throw new Error("Failed to fetch thumbnail")
+
+      const data = await response.json()
+      get().addThumbnailToCache(cacheKey, data.thumbnail)
+      return data.thumbnail
+    } catch (error) {
+      console.error("Error getting thumbnail:", error)
+      throw error
+    }
+  },
 }))

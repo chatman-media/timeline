@@ -1,6 +1,7 @@
-import { Rnd } from "react-rnd"
-import { useState } from "react"
 import { nanoid } from "nanoid"
+import { useState } from "react"
+import { Rnd } from "react-rnd"
+
 import { TimelineSliceType } from "@/types/timeline"
 
 interface TimelineSliceProps extends Partial<TimelineSliceType> {

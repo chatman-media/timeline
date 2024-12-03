@@ -1,4 +1,5 @@
 import { SceneDuration } from "@/types/scene"
+
 import { generateGaussianRandom } from "./gaussian-random"
 
 /**

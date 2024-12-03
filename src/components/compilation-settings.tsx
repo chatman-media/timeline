@@ -1,4 +1,6 @@
-import { Slider } from "@/components/ui/slider"
+import { useEffect } from "react"
+
+import { Button } from "@/components/ui/button"
 import {
   Select,
   SelectContent,
@@ -6,11 +8,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
-import { formatDuration } from "@/lib/utils"
-import { useMedia } from "@/hooks/use-media"
+import { Slider } from "@/components/ui/slider"
 import { useCompilationSettings } from "@/hooks/use-compilation-settings"
-import { useEffect } from "react"
+import { useMedia } from "@/hooks/use-media"
+import { formatDuration } from "@/lib/utils"
 import { distributeScenes } from "@/utils/scene-distribution"
 
 export function CompilationSettings() {

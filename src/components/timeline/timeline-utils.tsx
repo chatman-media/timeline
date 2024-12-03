@@ -1,4 +1,5 @@
 import { Dispatch, SetStateAction } from "react"
+
 import { TimelineSliceType } from "@/types/timeline"
 
 interface TimelineHelpers {

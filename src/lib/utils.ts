@@ -1,9 +1,10 @@
 import { type ClassValue, clsx } from "clsx"
-import { twMerge } from "tailwind-merge"
 import dayjs, { extend } from "dayjs"
 import duration from "dayjs/plugin/duration"
-import utc from "dayjs/plugin/utc"
 import timezone from "dayjs/plugin/timezone"
+import utc from "dayjs/plugin/utc"
+import { twMerge } from "tailwind-merge"
+
 import { MediaFile } from "@/types/videos"
 
 // Инициализируем плагин duration если еще не инициализирован

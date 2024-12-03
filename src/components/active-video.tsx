@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef } from "react"
+
 import { useMedia } from "@/hooks/use-media"
 
 export const ActiveVideo = memo(() => {

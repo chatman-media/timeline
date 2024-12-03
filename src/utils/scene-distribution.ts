@@ -1,6 +1,7 @@
-import { generateGaussianSceneDurations } from "./generate-scene-durations"
-import { SceneDistributionParams, SceneSegment } from "../types/scene"
 import { MediaFile } from "@/types/videos"
+
+import { SceneDistributionParams, SceneSegment } from "../types/scene"
+import { generateGaussianSceneDurations } from "./generate-scene-durations"
 
 /**
  * Создает распределение сцен для мультикамерного монтажа.
@@ -36,7 +37,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   )
 
   // Вспомогательная функция для поиска видео для сегмента
-  const findVideoForSegment = (camera: number, startTime: number, endTime: number) => {
+  const findVideoForSegment = (camera: number, startTime: number, endTime: number): MediaFile | undefined => {
     const videos = videosByCamera.get(camera) || []
     return videos.find((video: MediaFile) => {
       const videoStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
@@ -127,7 +128,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
 
       // Находим доступные камеры для текущего временного отрезка
       const availableCameras = Array.from(videosByCamera.entries())
-        .filter(([_, videos]) =>
+        .filter(([, videos]) =>
           videos.some((video: MediaFile) => {
             const videoStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
               1000
