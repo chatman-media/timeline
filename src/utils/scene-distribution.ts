@@ -28,9 +28,9 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   const scenes: SceneSegment[] = []
   let lastCamera = params.mainCamera
 
-  // Используем assembledTracks для группировки видео
+  // Используем tracks для группировки видео
   const videosByCamera = new Map(
-    params.assembledTracks.map((track) => [
+    params.tracks.map((track) => [
       track.index,
       track.allVideos,
     ]),
@@ -51,7 +51,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   }
 
   // Находим общий временной диапазон всех видео
-  const timeRanges = params.assembledTracks.map((track) => {
+  const timeRanges = params.tracks.map((track) => {
     const trackRanges = track.allVideos.map((video: MediaFile) => ({
       start: new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000,
       end: new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000 +

@@ -19,7 +19,7 @@ export function CompilationSettings() {
     videos,
     hasMedia,
     maxDuration,
-    assembledTracks,
+    tracks,
     updateTime,
     play,
     setScenes,
@@ -51,31 +51,31 @@ export function CompilationSettings() {
   }, [videos])
 
   const handleAutoEdit = () => {
-    if (!assembledTracks.length) return
+    if (!tracks.length) return
 
     const scenes = distributeScenes({
       targetDuration: settings.targetDuration,
-      numCameras: assembledTracks.length,
+      numCameras: tracks.length,
       averageSceneDuration: settings.averageSceneDuration * 10, // конвертируем в секунды
       cameraChangeFrequency: settings.cameraChangeFrequency,
       mainCamera: parseInt(settings.mainCamera || "1"),
       mainCameraProb: settings.mainCameraPriority / 100, // конвертируем в вероятность
       timeRange: {
         min: Math.min(
-          ...assembledTracks.flatMap((track) =>
+          ...tracks.flatMap((track) =>
             track.allVideos.map((v) =>
               new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000
             )
           ),
         ),
-        max: Math.max(...assembledTracks.flatMap((track) =>
+        max: Math.max(...tracks.flatMap((track) =>
           track.allVideos.map((v) => {
             const start = new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000
             return start + (v.probeData.format.duration || 0)
           })
         )),
       },
-      assembledTracks,
+      tracks,
     })
 
     if (scenes.length > 0) {

@@ -1,17 +1,19 @@
 import debounce from "lodash/debounce"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { AssembledTrack } from "@/types/videos"
+import { Track } from "@/types/videos"
+import { calculateThumbnailRequirements, ThumbnailParams } from "@/utils/thumbnail-utils"
+import useThumbnailStore from "@/stores/thumbnailStore"
 
 interface TrackThumbnailsProps {
-  track: AssembledTrack
+  track: Track
   trackStartTime: number
   trackEndTime: number
   scale?: number
 }
 
 // Глобальный кэш для хранения миниатюр между ре-рендерами
-const thumbnailCache: Record<string, string> = {}
+const thumbnailCache: Record<string, string[]> = {}
 
 const TrackThumbnails = memo(function TrackThumbnails({
   track,
@@ -28,6 +30,8 @@ const TrackThumbnails = memo(function TrackThumbnails({
   const [thumbnails, setThumbnails] = useState<Record<string, string[]>>({})
   const requestsInProgress = useRef<boolean>(false)
   const abortController = useRef<AbortController | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const thumbnailStore = useThumbnailStore()
 
   // Генерируем запросы миниатюр только если изменился масштаб
   const thumbnailRequests = useMemo(() => {
@@ -39,31 +43,54 @@ const TrackThumbnails = memo(function TrackThumbnails({
     const THUMBNAIL_HEIGHT = 90
     const MIN_THUMBNAIL_WIDTH = THUMBNAIL_HEIGHT
     const MAX_THUMBNAILS_PER_VIDEO = 20
+  // Добавляем эффект для инициализации containerRef
+  useEffect(() => {
+    // Форсируем перерасчет после монтирования компонента
+    if (containerRef.current) {
+      generateThumbnails()
+    }
+  }, []) // Пустой массив зависимостей для выполнения только при монтировании
+
+  
+  const thumbnailRequests = useMemo(() => {
+    if (!containerRef.current) return []
 
     return track.allVideos.map((video) => {
       const duration = video.probeData.format.duration || 0
-      const videoDurationPercent = duration / (trackEndTime - trackStartTime)
+      const containerWidth = containerRef.current?.clientWidth || 0
+      
+      const segmentWidth = (duration / (trackEndTime - trackStartTime)) * containerWidth * scale
 
-      const containerWidth = document.querySelector(".timeline")?.clientWidth || 1000
-      const videoWidth = containerWidth * videoDurationPercent * scale
+      const params = {
+        videoDuration: duration,
+        containerWidth,
+        scale,
+        trackHeight: 52,
+        segmentWidth,
+      }
 
-      const maxPossibleThumbnails = Math.floor(videoWidth / MIN_THUMBNAIL_WIDTH)
-      const optimalThumbnailCount = Math.min(
-        maxPossibleThumbnails,
-        MAX_THUMBNAILS_PER_VIDEO,
-        Math.ceil(duration),
-      )
+      const { count } = calculateThumbnailRequirements(params)
 
-      const thumbnailCount = Math.max(1, optimalThumbnailCount)
+      // Проверяем хранилище
+      if (thumbnailStore.hasThumbnails(video.name, scale, count)) {
+        return {
+          video: video.name,
+          cached: true,
+          thumbnails: thumbnailStore.getThumbnails(video.name, scale, count)!,
+        }
+      }
 
-      return Array.from({ length: thumbnailCount }, (_, i) => ({
+      return {
         video: video.name,
-        timestamp: (duration / thumbnailCount) * i,
-        cacheKey: `${video.name}-${(duration / thumbnailCount) * i}`,
-      }))
-    }).flat()
-  }, [track.allVideos, scale])
-
+        cached: false,
+        params: {
+          start: 0,
+          end: duration,
+          count,
+        },
+      }
+    })
+  }, [track.allVideos, scale, trackEndTime, trackStartTime, thumbnailStore])
   const generateThumbnails = useCallback(
     debounce(async () => {
       if (thumbnailRequests.length === 0) return
@@ -76,20 +103,15 @@ const TrackThumbnails = memo(function TrackThumbnails({
       requestsInProgress.current = true
 
       const thumbnailMap: Record<string, string[]> = {}
-      const newRequests: Array<{ video: string; timestamp: number; cacheKey: string }> = []
 
-      // Сначала используем кэшированные миниатюры
-      thumbnailRequests.forEach(({ video, timestamp, cacheKey }) => {
-        if (!thumbnailMap[video]) {
-          thumbnailMap[video] = []
-        }
-
-        if (thumbnailCache[cacheKey]) {
-          thumbnailMap[video].push(thumbnailCache[cacheKey])
-        } else {
-          newRequests.push({ video, timestamp, cacheKey })
-        }
-      })
+      // Сначала добавляем кэшированные миниатюры
+      thumbnailRequests
+        .filter((req) => req.cached)
+        .forEach((req) => {
+          if ("thumbnails" in req) {
+            thumbnailMap[req.video] = req.thumbnails
+          }
+        })
 
       // Обновляем состояние с кэшированными миниатюрами
       setThumbnails(thumbnailMap)
@@ -97,43 +119,49 @@ const TrackThumbnails = memo(function TrackThumbnails({
       // Затем делаем запросы для новых миниатюр
       try {
         await Promise.all(
-          newRequests.map(async ({ video, timestamp, cacheKey }) => {
-            try {
-              const response = await fetch(
-                `/api/thumbnail?video=${encodeURIComponent(video)}&timestamp=${timestamp}`,
-                { signal: abortController.current?.signal },
-              )
-              if (!response.ok) {
-                console.error("Thumbnail fetch failed:", response.status, response.statusText)
-                return
-              }
+          thumbnailRequests
+            .filter((req) => !req.cached)
+            .map(async (req) => {
+              if (!("params" in req)) return
 
-              const data = await response.json()
-              if (!data.thumbnail) {
-                console.error("No thumbnail data received")
-                return
-              }
+              try {
+                const response = await fetch(
+                  `/api/thumbnails?video=${
+                    encodeURIComponent(req.video)
+                  }&start=${req.params.start}&end=${req.params.end}&count=${req.params.count}`,
+                  { signal: abortController.current?.signal },
+                )
 
-              thumbnailCache[cacheKey] = data.thumbnail
+                if (!response.ok) return
 
-              setThumbnails((prev) => ({
-                ...prev,
-                [video]: [...(prev[video] || []), data.thumbnail],
-              }))
-            } catch (error) {
-              if (error instanceof Error && error.name === "AbortError") {
-                console.log("Thumbnail request aborted")
-              } else {
-                console.error("Error generating thumbnail:", error)
+                const data = await response.json()
+                const cacheKey = `${req.video}-${scale}-${req.params.count}`
+                thumbnailCache[cacheKey] = data.thumbnails
+                thumbnailStore.addThumbnails(
+                  req.video,
+                  scale,
+                  req.params.count,
+                  data.thumbnails
+                )
+
+                setThumbnails((prev) => ({
+                  ...prev,
+                  [req.video]: data.thumbnails,
+                }))
+              } catch (error) {
+                if (error instanceof Error && error.name === "AbortError") {
+                  console.log("Thumbnail request aborted")
+                } else {
+                  console.error("Error generating thumbnails:", error)
+                }
               }
-            }
-          }),
+            }),
         )
       } finally {
         requestsInProgress.current = false
       }
     }, 300),
-    [thumbnailRequests],
+    [thumbnailRequests, scale],
   )
 
   useEffect(() => {
@@ -168,6 +196,14 @@ const TrackThumbnails = memo(function TrackThumbnails({
           100
         const widthPercent = (videoDuration / (trackEndTime - trackStartTime)) * 100
 
+        // Получаем размеры видео из probeData
+        const videoStream = video.probeData.streams.find(
+          (stream) => stream.codec_type === "video",
+        )
+        const aspectRatio = videoStream
+          ? Number(videoStream.width) / Number(videoStream.height)
+          : 16 / 9 // Значение по умолчанию
+
         return (
           <div
             key={video.id}
@@ -181,8 +217,10 @@ const TrackThumbnails = memo(function TrackThumbnails({
               {thumbnails[video.name]?.map((thumbnail, idx) => (
                 <div
                   key={idx}
-                  className="h-full flex-1"
+                  className="h-full"
                   style={{
+                    flex: `${aspectRatio}`,
+                    minWidth: 0,
                     backgroundImage: `url(${thumbnail})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",

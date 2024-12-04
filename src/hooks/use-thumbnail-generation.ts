@@ -21,7 +21,7 @@ export function useThumbnailGeneration(rawVideos: MediaFile[]) {
 
             return {
               ...video,
-              thumbnailUrl,
+              thumbnail: thumbnailUrl,
             }
           } catch (error) {
             console.error(`Error generating thumbnail for ${video.name}:`, error)

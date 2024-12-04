@@ -1,4 +1,4 @@
-import { AssembledTrack, MediaFile } from "./videos"
+import { Track, MediaFile } from "./videos"
 
 export interface TimeRange {
   min: number /** Минимальное время в секундах (unix timestamp) */
@@ -20,7 +20,7 @@ export interface SceneDistributionParams {
   mainCameraProb: number /** Вероятность использования основной камеры (от 0 до 1) */
   timeRange: TimeRange /** Временной диапазон для распределения сцен */
   videos: MediaFile[] /** Массив доступных видео */
-  assembledTracks: AssembledTrack[]
+  tracks: Track[]
 }
 
 export interface SceneSegment {

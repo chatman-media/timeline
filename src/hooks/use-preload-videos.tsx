@@ -3,12 +3,12 @@ import { useEffect } from "react"
 import { useVideoStore } from "@/stores/videoStore"
 
 export function usePreloadVideos() {
-  const { assembledTracks, activeVideo } = useVideoStore()
+  const { tracks, activeVideo } = useVideoStore()
 
   useEffect(() => {
-    if (!activeVideo || !assembledTracks.length) return
+    if (!activeVideo || !tracks.length) return
 
-    const currentTrack = assembledTracks.find((track) =>
+    const currentTrack = tracks.find((track) =>
       track.allVideos.some((video) => video.id === activeVideo.id)
     )
 
@@ -27,5 +27,5 @@ export function usePreloadVideos() {
         document.head.appendChild(link)
       })
     }
-  }, [activeVideo, assembledTracks])
+  }, [activeVideo, tracks])
 }
