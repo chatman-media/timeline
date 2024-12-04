@@ -14,7 +14,7 @@ export interface VideoMetadata {
   duration: number
 }
 
-export interface TimelineSliceType {
+export interface TrackSliceData {
   id: string
   x: number
   y: number

@@ -1,10 +1,5 @@
 import { FfprobeData } from "fluent-ffmpeg"
 
-export interface BitrateDataPoint {
-  timestamp: number
-  bitrate: number
-}
-
 export interface RecordEntry {
   camera: number /** Индекс камеры, начиная с 1 */
   startTime: number /** Время начала записи в секундах (unix timestamp) */
@@ -12,15 +7,14 @@ export interface RecordEntry {
 }
 
 export interface MediaFile {
-  id: string
   name: string
   path: string
+  isVideo?: boolean
+  probeData?: FfprobeData
   thumbnail?: string
-  probeData: FfprobeData
-  isVideo: boolean
 }
 
-export interface AssembledTrack {
+export interface Track {
   video: MediaFile // Первое видео трека (для метаданных)
   cameraKey?: string // Ключ камеры
   index: number // Номер камеры

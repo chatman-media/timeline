@@ -1,32 +1,57 @@
 import { useMedia } from "@/hooks/use-media"
-import { useTimelineScale } from "@/hooks/use-timeline-scale"
-import { formatTimeWithMilliseconds } from "@/lib/utils"
 
 import { ActiveVideo } from "./active-video"
-import { CompilationSettings } from "./compilation-settings"
-import { ThemeToggle } from "./theme-toggle"
-import { Timeline } from "./timeline"
+import { MediaFilesList } from "./files-list"
+import { ThemeToggle } from "./layout/theme-toggle"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
+import { VideoMetadata } from "./video-metadata"
 
-export function MediaPlayer() {
+export function MediaEditor() {
   const {
-    currentTime,
-    play,
-    isPlaying,
-    activeCamera,
+    activeVideo,
   } = useMedia()
 
-  const {
-    scale,
-    setScale,
-    increaseScale,
-    decreaseScale,
-    scalePercentage,
-    scaleStyle,
-  } = useTimelineScale()
-
   return (
-    <>
-      <div className="flex gap-8 w-full px-2 sm:px-13 py-2">
+    <div data-testid="media-player" className="media-editor flex flex-row ml-[40px] px-1 py-1">
+      <ThemeToggle />
+      <div className="basis-1/4">
+        <Tabs defaultValue="video" className="w-full">
+          <TabsList>
+            <TabsTrigger value="media">Медиатека</TabsTrigger>
+            <TabsTrigger value="text">Текст</TabsTrigger>
+            <TabsTrigger value="effects">Эффекты</TabsTrigger>
+            <TabsTrigger value="transitions">Переходы</TabsTrigger>
+            {/* <TabsTrigger value="subtitles">Субтитры</TabsTrigger> */}
+          </TabsList>
+          <TabsContent value="media">
+            <MediaFilesList />
+          </TabsContent>
+          <TabsContent value="text">
+            Тут будет редактор текста.
+          </TabsContent>
+          <TabsContent value="effects">
+            Тут будут видео эффекты.
+          </TabsContent>
+          <TabsContent value="transitions">
+            Тут будут переходы между клипами.
+          </TabsContent>
+          {
+            /* <TabsContent value="subtitles">
+            Тут будет редактор субтитров.
+          </TabsContent> */
+          }
+        </Tabs>
+      </div>
+      <div className="basis-1/2">
+        <div className="bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
+          <ActiveVideo />
+        </div>
+      </div>
+      <div className="basis-1/4">
+        <VideoMetadata probeData={activeVideo?.probeData} />
+      </div>
+      {
+        /* <div className="flex gap-8 w-full px-2 sm:px-13 py-2">
         <div className="flex flex-col gap-4 w-[15%]">
           <div className="text-sm text-secondary-foreground bg-secondary px-3 py-1.5 rounded-md font-mono shadow-sm">
             {formatTimeWithMilliseconds(currentTime, true, true, true)}
@@ -48,10 +73,6 @@ export function MediaPlayer() {
               <span>Нажмите номер нужной камеры</span>
             </div>
           </div>
-        </div>
-        <CompilationSettings />
-        <div className="w-[60%] sticky top-4 bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
-          <ActiveVideo />
         </div>
       </div>
       <div className="flex flex-col gap-16 w-full px-3 sm:px-5">
@@ -93,8 +114,8 @@ export function MediaPlayer() {
           </div>
         </div>
         <Timeline scale={scale} />
-      </div>
-      <ThemeToggle />
-    </>
+      </div> */
+      }
+    </div>
   )
 }

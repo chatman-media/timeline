@@ -13,17 +13,29 @@ interface TrackThumbnailsProps {
 // Глобальный кэш для хранения миниатюр между ре-рендерами
 const thumbnailCache: Record<string, string> = {}
 
-export const TrackThumbnails = memo(function TrackThumbnails({
+const TrackThumbnails = memo(function TrackThumbnails({
   track,
   trackStartTime,
   trackEndTime,
-  scale = 1,
+  scale: initialScale = 1,
 }: TrackThumbnailsProps) {
+  const prevScaleRef = useRef(initialScale)
+  const [scale] = useState(() => {
+    const savedScale = localStorage.getItem("timeline_scale")
+    return savedScale ? parseFloat(savedScale) : initialScale
+  })
+
   const [thumbnails, setThumbnails] = useState<Record<string, string[]>>({})
   const requestsInProgress = useRef<boolean>(false)
   const abortController = useRef<AbortController | null>(null)
 
+  // Генерируем запросы миниатюр только если изменился масштаб
   const thumbnailRequests = useMemo(() => {
+    if (prevScaleRef.current === scale) {
+      return []
+    }
+    prevScaleRef.current = scale
+
     const THUMBNAIL_HEIGHT = 90
     const MIN_THUMBNAIL_WIDTH = THUMBNAIL_HEIGHT
     const MAX_THUMBNAILS_PER_VIDEO = 20
@@ -54,8 +66,9 @@ export const TrackThumbnails = memo(function TrackThumbnails({
 
   const generateThumbnails = useCallback(
     debounce(async () => {
+      if (thumbnailRequests.length === 0) return
+
       if (requestsInProgress.current) {
-        // Отменяем предыдущие запросы
         abortController.current?.abort()
       }
 
@@ -90,9 +103,17 @@ export const TrackThumbnails = memo(function TrackThumbnails({
                 `/api/thumbnail?video=${encodeURIComponent(video)}&timestamp=${timestamp}`,
                 { signal: abortController.current?.signal },
               )
-              if (!response.ok) return
+              if (!response.ok) {
+                console.error("Thumbnail fetch failed:", response.status, response.statusText)
+                return
+              }
 
               const data = await response.json()
+              if (!data.thumbnail) {
+                console.error("No thumbnail data received")
+                return
+              }
+
               thumbnailCache[cacheKey] = data.thumbnail
 
               setThumbnails((prev) => ({
@@ -112,22 +133,33 @@ export const TrackThumbnails = memo(function TrackThumbnails({
         requestsInProgress.current = false
       }
     }, 300),
-    [],
+    [thumbnailRequests],
   )
 
   useEffect(() => {
-    generateThumbnails()
+    if (thumbnailRequests.length > 0) {
+      generateThumbnails()
+    }
 
     return () => {
       generateThumbnails.cancel()
       abortController.current?.abort()
     }
-  }, [])
+  }, [thumbnailRequests])
 
-  console.log(track.allVideos, scale)
+  // In TrackThumbnails component
+  useEffect(() => {
+    console.log("Thumbnails state:", {
+      thumbnailRequests: thumbnailRequests.length,
+      currentThumbnails: thumbnails,
+      scale,
+      trackStartTime,
+      trackEndTime,
+    })
+  }, [thumbnailRequests, thumbnails, scale, trackStartTime, trackEndTime])
 
   return (
-    <div className="flex-1 relative">
+    <div className="flex-1 relative" style={{ minHeight: "90px" }}>
       {track.allVideos.map((video) => {
         const videoStartTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
           1000
@@ -141,8 +173,8 @@ export const TrackThumbnails = memo(function TrackThumbnails({
             key={video.id}
             className="absolute h-full"
             style={{
-              left: `${startPercent}%`,
-              width: `${widthPercent}%`,
+              left: `${Math.max(0, startPercent)}%`,
+              width: `${Math.min(100, widthPercent)}%`,
             }}
           >
             <div className="h-full w-full flex">
@@ -154,6 +186,9 @@ export const TrackThumbnails = memo(function TrackThumbnails({
                     backgroundImage: `url(${thumbnail})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                    minHeight: "90px",
+                    border: "1px solid rgba(1, 77, 82, 0.2)",
                   }}
                 />
               ))}
@@ -164,12 +199,14 @@ export const TrackThumbnails = memo(function TrackThumbnails({
     </div>
   )
 }, (prevProps, nextProps) => {
-  // Сравниваем только те пропсы, которые влияют на отображение миниатюр
+  // Строгое сравнение пропсов
   return (
     prevProps.scale === nextProps.scale &&
-    prevProps.trackStartTime === nextProps.trackStartTime &&
-    prevProps.trackEndTime === nextProps.trackEndTime &&
-    prevProps.track.cameraKey === nextProps.track.cameraKey &&
-    prevProps.track.index === nextProps.track.index
+    prevProps.track.allVideos.length === nextProps.track.allVideos.length &&
+    prevProps.track.allVideos.every((video, index) =>
+      video.id === nextProps.track.allVideos[index].id
+    )
   )
 })
+
+export { TrackThumbnails }

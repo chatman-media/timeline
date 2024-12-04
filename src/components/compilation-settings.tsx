@@ -17,7 +17,7 @@ import { distributeScenes } from "@/utils/scene-distribution"
 export function CompilationSettings() {
   const {
     videos,
-    hasVideos,
+    hasMedia,
     maxDuration,
     assembledTracks,
     updateTime,
@@ -185,7 +185,7 @@ export function CompilationSettings() {
 
       <div className="flex gap-4 mt-4">
         <Button
-          disabled={!hasVideos}
+          disabled={!hasMedia}
           onClick={handleAutoEdit}
           className="flex-1"
         >
@@ -194,7 +194,7 @@ export function CompilationSettings() {
         <Button
           onClick={() => {}}
           variant="default"
-          disabled={!hasVideos}
+          disabled={!hasMedia}
           className="flex-1"
         >
           Сохранить

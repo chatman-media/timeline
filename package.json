@@ -6,12 +6,14 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "vitest"
   },
   "dependencies": {
     "@ffmpeg/core": "^0.12.6",
     "@ffmpeg/ffmpeg": "^0.12.10",
     "@ffmpeg/util": "^0.12.1",
+    "@heroicons/react": "^2.2.0",
     "@radix-ui/react-context-menu": "^2.2.2",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-label": "^2.1.0",
@@ -21,6 +23,7 @@
     "@radix-ui/react-slider": "^1.2.1",
     "@radix-ui/react-slot": "^1.1.0",
     "@radix-ui/react-switch": "^1.1.1",
+    "@radix-ui/react-tabs": "^1.1.1",
     "@visx/curve": "^3.12.0",
     "@visx/event": "^3.12.0",
     "@visx/grid": "^3.12.0",
@@ -57,7 +60,9 @@
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
-    "@tailwindcss/postcss": "4.0.0-beta.3",
+    "@tailwindcss/postcss": "4.0.0-beta.4",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
     "@types/d3-array": "^3.2.1",
     "@types/d3-scale": "^4.0.8",
     "@types/fluent-ffmpeg": "^2.1.27",
@@ -68,6 +73,7 @@
     "@types/react-dom": "^18.3.1",
     "@typescript-eslint/eslint-plugin": "^8.17.0",
     "@typescript-eslint/parser": "^8.17.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "babel-plugin-react-compiler": "19.0.0-beta-df7b47d-20241124",
     "cz-customizable": "^7.2.1",
     "eslint": "^9.16.0",
@@ -75,8 +81,11 @@
     "eslint-plugin-react-compiler": "19.0.0-beta-df7b47d-20241124",
     "eslint-plugin-react-hooks": "^5.0.0",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "jsdom": "^25.0.1",
+    "node-mocks-http": "^1.16.1",
     "postcss": "^8.4.49",
-    "tailwindcss": "4.0.0-beta.3",
-    "typescript": "^5.7.2"
+    "tailwindcss": "4.0.0-beta.4",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }

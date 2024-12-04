@@ -8,37 +8,43 @@ import { formatTimeWithMilliseconds } from "@/lib/utils"
 const TimeScale = ({ scale = 1 }: { scale?: number }): JSX.Element => {
   const { timeRanges, maxDuration } = useMedia()
   const marks = []
-  const numMainMarks = 10 // Основные деления
+
+  // Адаптируем количество делений под масштаб
+  const baseMainMarks = 10 // Базовое количество основных делений
+  const numMainMarks = Math.ceil(baseMainMarks * scale) // Увеличиваем количество делений при увеличении масштаба
   const numSubMarks = 5 // Количество мелких делений между основными
 
-  // Определяем масштаб округления в зависимости от длительности
-  const getTimeScale = (duration: number) => {
-    if (duration >= 3600) return 3600 // Часы для записей от 1 часа
-    if (duration >= 300) return 60 // Минуты для записей от 5 минут
-    if (duration >= 60) return 30 // Полминуты для записей от 1 минуты
-    return 1 // Секунды для коротких записей
+  // Определяем масштаб округления в зависимости от длительности и текущего масштаба
+  const getTimeScale = (duration: number, currentScale: number) => {
+    const scaledDuration = duration / currentScale
+    if (scaledDuration >= 3600) return 3600 // Часы
+    if (scaledDuration >= 300) return 60 // Минуты
+    if (scaledDuration >= 60) return 30 // Полминуты
+    if (scaledDuration >= 10) return 5 // 5 секунд
+    return 1 // Секунды
   }
 
-  const timeScale = getTimeScale(maxDuration)
+  const timeScale = getTimeScale(maxDuration, scale)
 
   // Находим минимальное время начала среди всех промежутков
   const minStartTime = timeRanges.length > 0 ? Math.min(...timeRanges.map((range) => range.min)) : 0
 
-  // Округляем начальное время согласно масштабу
+  // Округляем начальное и конечное время
   const roundedStartTime = Math.floor(minStartTime / timeScale) * timeScale
-  // Округляем конечное время
   const endTime = roundedStartTime + maxDuration
   const roundedEndTime = Math.ceil(endTime / timeScale) * timeScale
-  // Вычисляем шаг для круглых значений
-  const timeStep =
-    Math.ceil((roundedEndTime - roundedStartTime) / (numMainMarks * scale) / timeScale) * timeScale
-  // Шаг для мелких делений
+
+  // Вычисляем шаг с учетом масштаба
+  const timeStep = Math.ceil((roundedEndTime - roundedStartTime) / numMainMarks) * timeScale
   const subStep = timeStep / numSubMarks
 
   // Добавляем основные и промежуточные деления
   for (let timestamp = roundedStartTime; timestamp <= roundedEndTime; timestamp += subStep) {
     const position = ((timestamp - minStartTime) / maxDuration) * 100
     const isMainMark = Math.abs(timestamp % timeStep) < 0.001
+
+    // Пропускаем метки, которые выходят за пределы видимой области
+    if (position < 0 || position > 100) continue
 
     marks.push(
       <div

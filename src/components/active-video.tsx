@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef } from "react"
 
+import { VideoMetadata } from "@/components/video-metadata"
 import { useMedia } from "@/hooks/use-media"
 
 export const ActiveVideo = memo(() => {
@@ -66,23 +67,25 @@ export const ActiveVideo = memo(() => {
 
   return (
     <div className="sticky top-4 space-y-4">
-      <div className="relative aspect-video overflow-hidden bg-gray-100 dark:bg-gray-800">
-        {activeVideo
-          ? (
-            <video
-              ref={(el) => {
-                if (el) videoRefs.current[activeVideo.id] = el
-              }}
-              src={activeVideo.path}
-              className="w-full h-full object-contain"
-              playsInline
-              preload="auto"
-              disablePictureInPicture
-              disableRemotePlayback
-              controlsList="nodownload noplaybackrate"
-            />
-          )
-          : null}
+      <div className="flex gap-4">
+        <div className="relative aspect-video w-[70%] overflow-hidden bg-gray-100 dark:bg-gray-800">
+          {activeVideo
+            ? (
+              <video
+                ref={(el) => {
+                  if (el) videoRefs.current[activeVideo.id] = el
+                }}
+                src={activeVideo.path}
+                className="w-full h-full object-contain"
+                playsInline
+                preload="auto"
+                disablePictureInPicture
+                disableRemotePlayback
+                controlsList="nodownload noplaybackrate"
+              />
+            )
+            : null}
+        </div>
       </div>
     </div>
   )

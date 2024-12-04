@@ -6,7 +6,7 @@ import type { AssembledTrack, MediaFile } from "@/types/videos"
 interface VideoState {
   videos: MediaFile[]
   isLoading: boolean
-  hasVideos: boolean
+  hasMedia: boolean
   isPlaying: boolean
   currentTime: number
   timeRanges: TimeRange[]
@@ -39,7 +39,7 @@ interface VideoState {
 export const useVideoStore = create<VideoState>((set, get) => ({
   videos: [],
   isLoading: true,
-  hasVideos: false,
+  hasMedia: false,
   activeCamera: "V1",
   isPlaying: false,
   currentTime: 0,
@@ -57,7 +57,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
       videos,
       activeCamera: "V1",
       activeVideo: videos.find((v) => v.id === "V1") || videos[0],
-      hasVideos: videos.length > 0,
+      hasMedia: videos.length > 0,
       isChangingCamera: false,
     })
     get().updateActiveVideos()
@@ -230,7 +230,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
           timeRanges: ranges,
           currentTime: ranges[0].min,
           videos: validVideos,
-          hasVideos: true,
+          hasMedia: true,
         })
       }
     } catch (error) {

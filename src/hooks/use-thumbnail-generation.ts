@@ -27,7 +27,7 @@ export function useThumbnailGeneration(rawVideos: MediaFile[]) {
             console.error(`Error generating thumbnail for ${video.name}:`, error)
             return {
               ...video,
-              thumbnailUrl: "",
+              thumbnail: "",
             }
           }
         }),
@@ -41,8 +41,8 @@ export function useThumbnailGeneration(rawVideos: MediaFile[]) {
 
     return () => {
       videos.forEach((video) => {
-        if (video.thumbnailUrl) {
-          URL.revokeObjectURL(video.thumbnailUrl)
+        if (video.thumbnail) {
+          URL.revokeObjectURL(video.thumbnail)
         }
       })
     }

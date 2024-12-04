@@ -3,7 +3,9 @@ import { FfprobeStream } from "fluent-ffmpeg"
 import { formatBitrate, formatDuration } from "@/lib/utils"
 import { AssembledTrack, MediaFile } from "@/types/videos"
 
-export function TrackMetadata({ track, videoStream }: { track: AssembledTrack; videoStream: FfprobeStream }) {
+export function TrackMetadata(
+  { track, videoStream }: { track: AssembledTrack; videoStream?: FfprobeStream },
+) {
   return (
     <div className="w-full inset-0 flex left-0 px-1 mb-1 justify-between text-xs text-gray-100">
       <div className="flex flex-row video-metadata truncate mr-2">

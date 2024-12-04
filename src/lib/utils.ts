@@ -105,3 +105,19 @@ export function isVideoAvailable(
   const endTime = startTime + (video.probeData.format.duration || 0)
   return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
 }
+
+// Функция для генерации превью
+export async function generateThumbnail(videoPath: string, thumbnailPath: string): Promise<void> {
+  const ffmpeg = require("fluent-ffmpeg")
+  return new Promise((resolve, reject) => {
+    ffmpeg(videoPath)
+      .screenshots({
+        timestamps: ["00:00:01"],
+        filename: path.basename(thumbnailPath),
+        folder: path.dirname(thumbnailPath),
+        size: "320x240",
+      })
+      .on("end", resolve)
+      .on("error", reject)
+  })
+}

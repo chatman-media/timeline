@@ -70,7 +70,7 @@ export function useMedia() {
     currentTime: store.currentTime,
     updateTime: store.setCurrentTime,
     isLoading: store.isLoading,
-    hasVideos: store.hasVideos,
+    hasMedia: store.hasMedia,
     setActiveCamera: store.setActiveCamera,
     setActiveVideo: store.setActiveVideo,
     isPlaying: store.isPlaying,

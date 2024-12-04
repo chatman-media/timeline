@@ -37,7 +37,11 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   )
 
   // Вспомогательная функция для поиска видео для сегмента
-  const findVideoForSegment = (camera: number, startTime: number, endTime: number): MediaFile | undefined => {
+  const findVideoForSegment = (
+    camera: number,
+    startTime: number,
+    endTime: number,
+  ): MediaFile | undefined => {
     const videos = videosByCamera.get(camera) || []
     return videos.find((video: MediaFile) => {
       const videoStart = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000

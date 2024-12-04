@@ -2,36 +2,39 @@ import { nanoid } from "nanoid"
 import { useState } from "react"
 import { Rnd } from "react-rnd"
 
-import { TimelineSliceType } from "@/types/timeline"
+import { TrackSliceData } from "@/types/timeline"
 
-interface TimelineSliceProps extends Partial<TimelineSliceType> {
-  updateSlice: (data: Partial<TimelineSliceType> & { id: string }) => void
-  isSelected?: boolean // Добавляем флаг выбранного состояния
-  onSelect?: (id: string) => void // Добавляем обработчик выбора
-  onDelete?: (id: string) => void // Добавляем обработчик удаления
+interface TrackSliceProps extends Partial<TrackSliceData> {
+  updateSlice: (data: Partial<TrackSliceData> & { id: string }) => void
+  isSelected?: boolean
+  onSelect?: (id: string) => void
+  onDelete?: (id: string) => void
+  videoPath?: string
 }
 
 /**
  * Компонент отдельного слайса на временной шкале
  * Представляет собой перетаскиваемый и изменяемый по размеру элемент
  */
-const TimelineSlice = ({
+const TrackSlice = ({
   width = "100%",
   height = 50,
   x = 0,
   y = 0,
   id = nanoid(10),
+  videoPath = "",
   updateSlice,
-  isSelected = false, // Добавляем новый проп
-  onSelect, // Добавляем новый проп
-}: TimelineSliceProps): JSX.Element => {
+  isSelected = false,
+  onSelect,
+}: TrackSliceProps): JSX.Element => {
   // Локальное состояние слайса
-  const [slice, setSlice] = useState<TimelineSliceType>({
+  const [slice, setSlice] = useState<TrackSliceData>({
     width,
     height,
     x,
     y,
     id,
+    videoPath,
   })
 
   return (
@@ -68,7 +71,7 @@ const TimelineSlice = ({
       }}
       // Обработчик окончания перетаскивания
       onDragStop={(_, dragData) => {
-        const updatedSlice: Partial<TimelineSliceType> = {
+        const updatedSlice: Partial<TrackSliceProps> = {
           x: dragData.x,
           y: dragData.y,
         }
@@ -77,7 +80,7 @@ const TimelineSlice = ({
       }}
       // Обработчик окончания изменения размера
       onResizeStop={(_, __, ref, ___, position) => {
-        const updatedSlice: Partial<TimelineSliceType> = {
+        const updatedSlice: Partial<TrackSliceProps> = {
           width: ref.style.width,
           // Убеждаемся, что высота не меньше минимальной
           height: Math.max(+ref.style.height, 50),
@@ -90,4 +93,4 @@ const TimelineSlice = ({
   )
 }
 
-export { TimelineSlice }
+export { TrackSlice }

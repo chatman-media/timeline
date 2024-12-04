@@ -1,17 +1,14 @@
 import { nanoid } from "nanoid"
-import React, { forwardRef, memo, useCallback, useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import { usePreloadVideos } from "@/hooks/use-preload-videos"
-import { SeekbarState, TimelineSliceType } from "@/types/timeline"
+import { SeekbarState, TrackSliceData } from "@/types/timeline"
 import { AssembledTrack } from "@/types/videos"
 
-import GlobalTimelineBar from "./global-timeline-bar"
-import TimelineBar from "./timeline-bar"
+import { Track } from "../track"
+import { GlobalTimelineBar } from "./global-timeline-bar"
 import TimeScale from "./timeline-scale"
-import { TrackMetadata } from "./track-metadata"
-import { TrackThumbnails } from "./track-thumbnails"
-import { TrackTimestamps } from "./track-timestamps"
 
 export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
   usePreloadVideos()
@@ -41,7 +38,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
   const parentRef = useRef<HTMLDivElement>(null)
 
   // Массив всех слайсов (клипов) на временной шкале
-  const [slices, setSlices] = useState<TimelineSliceType[]>([])
+  const [slices, setSlices] = useState<TrackSliceData[]>([])
 
   // Состояние для хранения ID выбранного слайса
   const [selectedSliceId, setSelectedSliceId] = useState<string | null>(null)
@@ -54,33 +51,6 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
     x: 0, // Горизонтальное положение полосы
   })
   const [useGlobalBar] = useState(true)
-
-  /**
-   * Компонент-обертка для слайсов
-   * Содержит все слайсы и полосу прокрутки
-   */
-  const SliceWrap = memo(forwardRef<HTMLDivElement, { children: React.ReactNode }>(
-    (props, ref) => {
-      return (
-        <div className="slice--parent bg-[#014a4f]" ref={ref}>
-          {props.children}
-          {!useGlobalBar && (
-            <TimelineBar
-              width={seekbar.width}
-              height={seekbar.height}
-              y={seekbar.y}
-              duration={maxDuration}
-              startTime={Math.min(...timeRanges.map((x) => x.min))}
-              visible={true}
-            />
-          )}
-        </div>
-      )
-    },
-  ))
-
-  // Добавляем displayName для компонента (опционально, но рекомендуется)
-  SliceWrap.displayName = "SliceWrap"
 
   /**
    * Добавляет новый слайс на временную шкалу
@@ -107,7 +77,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
    * Обвляет данные существующего слайса
    * Используется при перетаскивании или изменении размера слайса
    */
-  const updateSlice = useCallback((data: Partial<TimelineSliceType> & { id: string }) => {
+  const updateSlice = useCallback((data: Partial<TrackSliceData> & { id: string }) => {
     const _current = [...slices]
     const idx = _current.findIndex((slice) => slice.id === data.id)
 
@@ -214,108 +184,6 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
     }
   }, [currentTime, activeCamera])
 
-  // Новый компонент TrackWrapper
-  const TrackWrapper = memo(({
-    track,
-    isActive,
-    onClick,
-    children,
-  }: {
-    track: AssembledTrack
-    isActive: boolean
-    onClick: (e: React.MouseEvent) => void
-    children: React.ReactNode
-  }) => {
-    return (
-      <div
-        className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
-        onClick={onClick}
-        style={{ cursor: "pointer" }}
-      >
-        {children}
-      </div>
-    )
-  }, (prev, next) => {
-    // More specific comparison
-    return prev.isActive === next.isActive &&
-      prev.track.index === next.track.index &&
-      prev.track.cameraKey === next.track.cameraKey
-  })
-
-  TrackWrapper.displayName = "TrackWrapper"
-
-  // Новый компонент Track
-  const Track = ({
-    track,
-    index,
-    scale,
-    timeRanges,
-    maxDuration,
-    activeCamera,
-    handleTrackClick,
-    parentRef,
-  }: {
-    track: AssembledTrack
-    index: number
-    scale: number
-    timeRanges: { min: number }[]
-    maxDuration: number
-    activeCamera: string | null
-    handleTrackClick: (e: React.MouseEvent, track: AssembledTrack) => void
-    parentRef: React.RefObject<HTMLDivElement>
-  }) => {
-    const firstVideo = track.allVideos[0]
-    const lastVideo = track.allVideos[track.allVideos.length - 1]
-    const trackStartTime =
-      new Date(firstVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000
-    const trackEndTime =
-      new Date(lastVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
-      (lastVideo.probeData.format.duration || 0)
-
-    const startOffset =
-      ((trackStartTime - Math.min(...timeRanges.map((x) => x.min))) / maxDuration) * 100
-    const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
-
-    const videoStream = firstVideo.probeData.streams.find((s) => s.codec_type === "video")
-    const trackKey = `track-${track.cameraKey || index}-${index}`
-    const isActive = track.index === parseInt(activeCamera?.replace("V", "") || "0")
-
-    return (
-      <div className="flex" key={trackKey}>
-        <div className="w-full">
-          <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
-            <TrackWrapper
-              track={track}
-              isActive={isActive}
-              onClick={(e) => handleTrackClick(e, track)}
-            >
-              <SliceWrap ref={parentRef}>
-                <div className="absolute h-full w-full timline-border">
-                  <div className="flex h-full w-full flex-col justify-between">
-                    <TrackMetadata
-                      track={track}
-                      videoStream={videoStream}
-                    />
-                    <TrackThumbnails
-                      track={track}
-                      trackStartTime={trackStartTime}
-                      trackEndTime={trackEndTime}
-                      scale={scale}
-                    />
-                    <TrackTimestamps
-                      trackStartTime={trackStartTime}
-                      trackEndTime={trackEndTime}
-                    />
-                  </div>
-                </div>
-              </SliceWrap>
-            </TrackWrapper>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="timeline">
       <TimeScale scale={scale} />
@@ -333,6 +201,12 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
                 activeCamera={activeCamera}
                 handleTrackClick={handleTrackClick}
                 parentRef={parentRef}
+                currentTime={currentTime}
+                TrackSliceWrap={({ children }) => (
+                  <div className="relative h-full">
+                    {children}
+                  </div>
+                )}
               />
             ))}
           </div>

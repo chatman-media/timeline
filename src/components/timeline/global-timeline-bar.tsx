@@ -79,4 +79,4 @@ const GlobalTimelineBar = ({
   )
 }
 
-export default GlobalTimelineBar
+export { GlobalTimelineBar }

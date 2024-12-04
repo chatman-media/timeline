@@ -356,3 +356,28 @@
   background: rgb(25, 102, 107);
   cursor: pointer;
 }
+
+.timeline {
+  .track-thumbnails {
+    position: relative;
+    height: 90px;
+    overflow: hidden;
+    background: rgba(1, 77, 82, 0.1);
+
+    &:empty {
+      background: rgba(1, 77, 82, 0.05);
+    }
+  }
+
+  .thumbnail-container {
+    position: absolute;
+    height: 100%;
+    display: flex;
+
+    img {
+      height: 100%;
+      width: auto;
+      object-fit: cover;
+    }
+  }
+}
