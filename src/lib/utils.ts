@@ -105,3 +105,31 @@ export function isVideoAvailable(
   const endTime = startTime + (video.probeData?.format.duration || 0)
   return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
 }
+
+export function parseFileNameDateTime(fileName: string): Date | null {
+  const match = fileName.match(/\d{8}_\d{6}/)
+  if (!match) return null
+
+  const dateTimeStr = match[0] // "20240910_170942"
+  const year = dateTimeStr.slice(0, 4)
+  const month = dateTimeStr.slice(4, 6)
+  const day = dateTimeStr.slice(6, 8)
+  const hour = dateTimeStr.slice(9, 11)
+  const minute = dateTimeStr.slice(11, 13)
+  const second = dateTimeStr.slice(13, 15)
+
+  return new Date(`${year}-${month}-${day}T${hour}:${minute}:${second}`)
+}
+
+export function formatFileSize(bytes: number): string {
+  const units = ["B", "KB", "MB", "GB", "TB"]
+  let size = bytes
+  let unitIndex = 0
+
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024
+    unitIndex++
+  }
+
+  return `${size.toFixed(1)} ${units[unitIndex]}`
+}

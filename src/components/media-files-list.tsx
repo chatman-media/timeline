@@ -1,8 +1,24 @@
 import { useMedia } from "@/hooks/use-media"
-import { formatDuration, formatTime } from "@/lib/utils"
+import { formatTime, formatTimeWithMilliseconds, parseFileNameDateTime, formatFileSize } from "@/lib/utils"
+import { MediaFile } from "@/types/videos"
+import { Play, Pause } from "lucide-react"
 
 export function MediaFilesList() {
-  const { videos, isLoading } = useMedia()
+  const { media, isLoading, setActiveVideo, isPlaying, setIsPlaying, activeVideo } = useMedia()
+
+  const handleFileClick = (file: MediaFile) => {
+    file.id && setActiveVideo(file.id)
+  }
+
+  const handlePlayPause = (e: React.MouseEvent, file: MediaFile) => {
+    e.stopPropagation()
+    if (activeVideo?.id === file.id) {
+      setIsPlaying(!isPlaying)
+    } else {
+      file.id && setActiveVideo(file.id)
+      setIsPlaying(true)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -12,7 +28,7 @@ export function MediaFilesList() {
     )
   }
 
-  if (!videos?.length) {
+  if (!media?.length) {
     return (
       <div className="p-4">
         <p className="text-sm text-gray-500">Нет доступных файлов</p>
@@ -21,34 +37,109 @@ export function MediaFilesList() {
   }
 
   return (
-    <div className="px-1 h-[calc(50vh-10rem)] overflow-y-auto border border-gray-200 dark:border-gray-700 border-t-0">
+    <div className="px-1 h-[calc(50vh-10rem)] overflow-y-auto">
       <div className="space-y-2">
-        {videos.map((file) => (
+        {media.map((file) => (
           <div
-            key={file.id}
-            className="flex items-center gap-3 p-0 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+            key={file.name}
+            className="flex items-center gap-3 p-0 pr-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 group"
+            onClick={() => handleFileClick(file)}
           >
-            {file.thumbnail && (
-              <div className="w-12 h-12 flex-shrink-0">
-                <img
-                  src={file.thumbnail}
-                  alt={file.name}
-                  className="w-full h-full object-cover rounded"
-                />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate text-gray-800 dark:text-gray-100">
-                {file.name}
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-100">
-                {file.isVideo ? "Видео" : "Аудио"}
-                {file.probeData?.format.duration && (
-                  <span className="ml-2">
-                    {formatTime(file.probeData.format.duration)}
-                  </span>
+            <div className="relative">
+              {file.thumbnail ? (
+                <div className="w-12 h-12 flex-shrink-0">
+                  <img
+                    src={file.thumbnail}
+                    alt={file.name}
+                    className="w-full h-full object-cover rounded"
+                  />
+                </div>
+              ) : (
+                <div className="w-12 h-12 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-gray-500 dark:text-gray-400"
+                  >
+                    <path d="M9 18V5l12-2v13" />
+                    <circle cx="6" cy="18" r="3" />
+                    <circle cx="18" cy="16" r="3" />
+                  </svg>
+                </div>
+              )}
+              <button
+                onClick={(e) => handlePlayPause(e, file)}
+                className={`absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded cursor-pointer ${
+                  activeVideo?.id === file.id ? 'opacity-100' : ''
+                }`}
+              >
+                {activeVideo?.id === file.id && isPlaying ? (
+                  <Pause className="w-4 h-4 text-white" />
+                ) : (
+                  <Play className="w-4 h-4 text-white" />
                 )}
-              </p>
+              </button>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex justify-between items-center">
+                <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
+                  {file.name}
+                </p>
+                <p className="text-xs text-gray-900 dark:text-gray-100">
+                  {file.probeData?.format.size && (
+                    <span className="text-gray-500 dark:text-gray-400">
+                      {formatFileSize(file.probeData.format.size)}
+                    </span>
+                  )}
+                </p>
+              </div>
+              <div className="flex justify-between items-center">
+              <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                  {(() => {
+                    const fileDate = parseFileNameDateTime(file.name)
+                    return fileDate
+                      ? formatTimeWithMilliseconds(fileDate.getTime() / 1000, true, true, false)
+                      : formatTimeWithMilliseconds(
+                        file.probeData?.format.creation_time || 0,
+                        true,
+                        true,
+                        false,
+                      )
+                  })()}
+                </span>
+
+                <p className="text-xs">
+                  {file.isVideo && file.probeData?.streams?.[0] && (
+                    <span className="ml-2 text-gray-500 dark:text-gray-400">
+                      {file.probeData.streams[0].width}x{file.probeData.streams[0].height}
+                    </span>
+                  )}
+                  {file.probeData?.format.duration && (
+                    <span className="text-gray-500 dark:text-gray-400 ml-3">
+                      {formatTime(file.probeData.format.duration)}
+                    </span>
+                  )}
+                </p>
+
+                  {/* {file.probeData?.streams[0].codec_name && (
+                    <span className="ml-2 text-gray-500 dark:text-gray-400">
+                      {file.probeData.streams[0].codec_name}
+                    </span>
+                  )} */}
+                  {/* {file.probeData?.streams[0].display_aspect_ratio && (
+                    <span className="ml-2 text-gray-500 dark:text-gray-400">
+                      {file.probeData.streams[0].display_aspect_ratio}
+                    </span>
+                  )} */}
+              </div>
             </div>
           </div>
         ))}

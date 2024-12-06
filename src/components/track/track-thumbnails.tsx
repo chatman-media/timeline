@@ -1,7 +1,7 @@
 import debounce from "lodash/debounce"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { Track } from "@/types/videos"
+import { MediaFile, Track } from "@/types/videos"
 import { calculateThumbnailRequirements } from "@/utils/thumbnail-utils"
 import useThumbnailStore from "@/stores/thumbnailStore"
 
@@ -15,7 +15,7 @@ interface TrackThumbnailsProps {
 // Глобальный кэш для хранения миниатюр между ре-рендерами
 const thumbnailCache: Record<string, string[]> = {}
 
-const TrackThumbnails = memo(function TrackThumbnails({
+export function TrackThumbnails({
   track,
   trackStartTime,
   trackEndTime,
@@ -90,7 +90,7 @@ const TrackThumbnails = memo(function TrackThumbnails({
         },
       }
     })
-  }, [track.allVideos, scale, trackEndTime, trackStartTime, thumbnailStore])
+  }, [track.videos, scale, trackEndTime, trackStartTime, thumbnailStore])
   const generateThumbnails = useCallback(
     debounce(async () => {
       if (thumbnailRequests.length === 0) return
@@ -188,16 +188,16 @@ const TrackThumbnails = memo(function TrackThumbnails({
 
   return (
     <div className="flex-1 relative" style={{ minHeight: "90px" }}>
-      {track.allVideos.map((video) => {
-        const videoStartTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() /
+      {track.videos.map((video) => {
+        const videoStartTime = new Date(video.probeData?.format.tags?.creation_time || 0).getTime() /
           1000
-        const videoDuration = video.probeData.format.duration || 0
+        const videoDuration = video.probeData?.format.duration || 0
         const startPercent = ((videoStartTime - trackStartTime) / (trackEndTime - trackStartTime)) *
           100
         const widthPercent = (videoDuration / (trackEndTime - trackStartTime)) * 100
 
         // Получаем размеры видео из probeData
-        const videoStream = video.probeData.streams.find(
+        const videoStream = video.probeData?.streams.find(
           (stream) => stream.codec_type === "video",
         )
         const aspectRatio = videoStream
@@ -236,15 +236,4 @@ const TrackThumbnails = memo(function TrackThumbnails({
       })}
     </div>
   )
-}, (prevProps, nextProps) => {
-  // Строгое сравнение пропсов
-  return (
-    prevProps.scale === nextProps.scale &&
-    prevProps.track.allVideos.length === nextProps.track.allVideos.length &&
-    prevProps.track.allVideos.every((video, index) =>
-      video.id === nextProps.track.allVideos[index].id
-    )
-  )
-})
-
-export { TrackThumbnails }
+}

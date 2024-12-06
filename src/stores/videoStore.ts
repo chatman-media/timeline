@@ -5,6 +5,7 @@ import { calculateTimeRanges } from "@/utils/videoUtils"
 
 interface VideoState {
   videos: MediaFile[]
+  media: MediaFile[]
   isLoading: boolean
   hasMedia: boolean
   isPlaying: boolean
@@ -22,6 +23,7 @@ interface VideoState {
 
   // Actions
   setVideos: (videos: MediaFile[]) => void
+  setMedia: (media: MediaFile[]) => void
   setActiveTrack: (trackId: string) => void
   setActiveVideo: (videoId: string) => void
   setIsPlaying: (isPlaying: boolean) => void
@@ -37,6 +39,7 @@ interface VideoState {
 
 export const useVideoStore = create<VideoState>((set, get) => ({
   videos: [],
+  media: [],
   isLoading: true,
   hasMedia: false,
   isPlaying: false,
@@ -61,6 +64,97 @@ export const useVideoStore = create<VideoState>((set, get) => ({
       isChangingCamera: false,
     })
   },
+  setMedia: (media) => {
+    set({ media })
+  },
+
+  fetchVideos: async () => {
+    const { hasFetched } = get()
+    if (hasFetched) return
+
+    set({ isLoading: true, hasFetched: true })
+
+    try {
+      const response = await fetch("/api/media")
+      const data = await response.json()
+
+      if (!data.media || !Array.isArray(data.media) || data.media.length === 0) {
+        console.error("No media received from API")
+        set({ isLoading: false })
+        return
+      }
+      set({ media: data.media })
+      console.log(data.media)
+
+      const validMedia = data.media
+        .filter((v: MediaFile) => {
+          const isVideo = v.probeData?.streams.some((s) =>
+            s.codec_type === "video" || s.codec_type === "audio"
+          )
+          const hasCreationTime = !!v.probeData?.format.tags?.creation_time
+          return isVideo && hasCreationTime
+        })
+        .sort((a: MediaFile, b: MediaFile) => {
+          const timeA = new Date(a.probeData?.format.tags?.creation_time || 0).getTime()
+          const timeB = new Date(b.probeData?.format.tags?.creation_time || 0).getTime()
+          return timeA - timeB
+        })
+        .map((video: MediaFile, index: number) => ({
+          ...video,
+          id: video.probeData?.streams[0].codec_type === "audio"
+            ? `A${index + 1}`
+            : `V${index + 1}`,
+        }))
+
+      if (validMedia.length === 0) {
+        set({ videos: [], isLoading: false })
+        return
+      }
+      const videos = validMedia.filter((v: MediaFile) =>
+        v.probeData?.streams[0].codec_type !== "video"
+      )
+
+      // Создаем и заполняем треки
+      const tracks: Track[] = []
+      videos.forEach((video: MediaFile) => {
+        const trackId = video.id
+        let track = tracks.find((t) => t.id === trackId)
+        if (!track) {
+          track = {
+            id: trackId,
+            videos: [video], // Сразу добавляем видео в массив
+            timeRanges: [],
+            index: tracks.length,
+            isActive: false,
+            combinedDuration: video.probeData?.format.duration || 0,
+          }
+          tracks.push(track)
+        } else {
+          track.videos.push(video)
+          track.combinedDuration += video.probeData?.format.duration || 0
+        }
+      })
+
+      // Рассчитываем timeRanges для каждого трека
+      const timeRanges: Record<string, TimeRange[]> = {}
+      tracks.forEach((track) => {
+        track.timeRanges = calculateTimeRanges(track.videos)
+        if (track.id) timeRanges[track.id] = track.timeRanges
+      })
+
+      set({
+        videos,
+        tracks,
+        timeRanges,
+        hasMedia: true,
+      })
+    } catch (error) {
+      console.error("Error fetching videos:", error)
+    } finally {
+      set({ isLoading: false })
+    }
+  },
+
   setActiveVideo: (videoId) => {
     const { videos } = get()
     const targetVideo = videos.find((v) => v.id === videoId)
@@ -136,81 +230,6 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentTime: (time) => {
     set({ currentTime: time })
-  },
-
-  fetchVideos: async () => {
-    const { hasFetched } = get()
-    if (hasFetched) return
-
-    set({ isLoading: true, hasFetched: true })
-
-    try {
-      const response = await fetch("/api/media")
-      const data = await response.json()
-
-      if (!data.media || !Array.isArray(data.media) || data.media.length === 0) {
-        console.error("No videos received from API")
-        set({ videos: [], isLoading: false })
-        return
-      }
-
-      const validVideos = data.media
-        .filter((v: MediaFile) => {
-          const isVideo = v.probeData?.streams.some((s) => s.codec_type === "video")
-          const hasCreationTime = !!v.probeData?.format.tags?.creation_time
-          return isVideo && hasCreationTime
-        })
-        .sort((a: MediaFile, b: MediaFile) => {
-          const timeA = new Date(a.probeData?.format.tags?.creation_time || 0).getTime()
-          const timeB = new Date(b.probeData?.format.tags?.creation_time || 0).getTime()
-          return timeA - timeB
-        })
-        .map((video: MediaFile, index: number) => ({
-          ...video,
-          id: `V${index + 1}`,
-        }))
-
-      if (validVideos.length === 0) {
-        set({ videos: [], isLoading: false })
-        return
-      }
-
-      // Group videos into tracks
-      const tracks: Track[] = []
-      validVideos.forEach((video: MediaFile) => {
-        const trackId = video.id
-        let track = tracks.find((t) => t.id === trackId)
-        if (!track) {
-          tracks.push({
-            id: trackId,
-            videos: [],
-            timeRanges: [],
-            index: 0,
-            isActive: false,
-            combinedDuration: 0,
-          })
-        }
-      })
-
-      // Calculate time ranges for each track
-      tracks.forEach((track) => {
-        track.timeRanges = calculateTimeRanges(track.videos)
-      })
-
-      // Calculate overall time ranges
-      // const overallTimeRanges = calculateTimeRanges(validVideos)
-
-      set({
-        videos: validVideos,
-        tracks,
-        // timeRanges: overallTimeRanges
-        hasMedia: true,
-      })
-    } catch (error) {
-      console.error("Error fetching videos:", error)
-    } finally {
-      set({ isLoading: false })
-    }
   },
 
   addToMetadataCache: (key, data) => {
