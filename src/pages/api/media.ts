@@ -36,7 +36,9 @@ export default async function handler(
 
     const mediaFiles = videoFiles
       .map((file) => ({ dir: mediaDir, file }))
-      .filter(({ file }) => !file.startsWith(".") && videoExtensions.includes(path.extname(file).toLowerCase()))
+      .filter(({ file }) =>
+        !file.startsWith(".") && videoExtensions.includes(path.extname(file).toLowerCase())
+      )
 
     const thumbnailsDir = path.join(process.cwd(), "public", "thumbnails")
     await fs.mkdir(thumbnailsDir, { recursive: true })

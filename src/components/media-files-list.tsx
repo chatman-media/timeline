@@ -38,7 +38,9 @@ export function MediaFilesList() {
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate text-gray-800 dark:text-gray-100">{file.name}</p>
+              <p className="text-sm font-medium truncate text-gray-800 dark:text-gray-100">
+                {file.name}
+              </p>
               <p className="text-xs text-gray-500 dark:text-gray-100">
                 {file.isVideo ? "Видео" : "Аудио"}
                 {file.probeData?.format.duration && (

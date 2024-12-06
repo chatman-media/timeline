@@ -5,7 +5,7 @@ import { MediaFilesList } from "./media-files-list"
 import { ThemeToggle } from "./layout/theme-toggle"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
 import { VideoMetadata } from "./video-metadata"
-import { MusicFilesList } from  "./music-files-list"
+import { MusicFilesList } from "./music-files-list"
 
 export function MediaEditor() {
   const {
@@ -13,10 +13,13 @@ export function MediaEditor() {
   } = useMedia()
 
   return (
-    <div data-testid="media-player" className="media-editor flex flex-row ml-[40px] px-1 py-1 h-[50%]">
+    <div
+      data-testid="media-player"
+      className="media-editor flex flex-row ml-[40px] px-1 py-1 h-[50%]"
+    >
       <ThemeToggle />
       <div className="basis-1/4">
-        <Tabs  defaultValue="media" className="w-full">
+        <Tabs defaultValue="media" className="w-full">
           <TabsList>
             <TabsTrigger value="media">Медиатека</TabsTrigger>
             <TabsTrigger value="music">Музыка</TabsTrigger>

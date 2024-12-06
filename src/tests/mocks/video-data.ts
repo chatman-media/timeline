@@ -331,8 +331,7 @@ export const mockVideoData = [
       },
     ],
     format: {
-      filename:
-        "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123612_00_015.insv",
+      filename: "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123612_00_015.insv",
       nb_streams: 3,
       nb_programs: 0,
       nb_stream_groups: 0,
@@ -480,8 +479,7 @@ export const mockVideoData = [
       },
     ],
     format: {
-      filename:
-        "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123612_00_014.insv",
+      filename: "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123612_00_014.insv",
       nb_streams: 3,
       nb_programs: 0,
       nb_stream_groups: 0,
