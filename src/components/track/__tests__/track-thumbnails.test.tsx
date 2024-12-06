@@ -22,7 +22,7 @@ describe("TrackThumbnails", () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.useFakeTimers()
-    global.fetch = vi.fn()
+    globalThis.fetch = vi.fn()
   })
 
   afterEach(() => {

@@ -15,18 +15,33 @@ export default async function handler(
   res: NextApiResponse<{ media: MediaFile[] }>,
 ) {
   try {
-    const videosDir = path.join(process.cwd(), "public", "videos")
-    await fs.mkdir(videosDir, { recursive: true })
+    const mediaDir = path.join(process.cwd(), "public", "media")
+    await fs.mkdir(mediaDir, { recursive: true })
 
-    const videoFiles = await fs.readdir(videosDir)
+    const videoFiles = await fs.readdir(mediaDir)
+
+    const videoExtensions = [
+      ".mp4",
+      ".mov",
+      ".avi",
+      ".mkv",
+      ".webm",
+      ".insv",
+      ".mp3",
+      ".wav",
+      ".aac",
+      ".ogg",
+      ".flac",
+    ]
+
     const mediaFiles = videoFiles
-      .map((file) => ({ dir: videosDir, file, type: "videos" }))
-      .filter(({ file }) => !file.startsWith("."))
+      .map((file) => ({ dir: mediaDir, file }))
+      .filter(({ file }) => !file.startsWith(".") && videoExtensions.includes(path.extname(file).toLowerCase()))
 
     const thumbnailsDir = path.join(process.cwd(), "public", "thumbnails")
     await fs.mkdir(thumbnailsDir, { recursive: true })
 
-    const mediaPromises = mediaFiles.map(async ({ dir, file, type }) => {
+    const mediaPromises = mediaFiles.map(async ({ dir, file }) => {
       try {
         const filePath = path.join(dir, file)
         const thumbnailName = `${path.parse(file).name}.jpg`
@@ -35,7 +50,7 @@ export default async function handler(
 
         return {
           name: file,
-          path: `/${type}/${file}`,
+          path: `/media/${file}`,
           thumbnail: isVideo ? `/thumbnails/${thumbnailName}` : undefined,
           probeData,
           isVideo,
@@ -50,6 +65,7 @@ export default async function handler(
       (item) => item !== null,
     )
 
+    console.log(media)
     res.status(200).json({ media })
   } catch (error) {
     console.error("Error processing media:", error)

@@ -134,7 +134,8 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
       const availableCameras = Array.from(videosByCamera.entries())
         .filter(([, videos]) =>
           videos.some((video: MediaFile) => {
-            const videoStart = new Date(video.probeData?.format.tags?.creation_time || 0).getTime() /
+            const videoStart =
+              new Date(video.probeData?.format.tags?.creation_time || 0).getTime() /
               1000
             const videoEnd = videoStart + (video.probeData?.format.duration || 0)
             return videoStart <= subSegmentStart && videoEnd >= subSegmentEnd

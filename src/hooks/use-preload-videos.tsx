@@ -9,14 +9,14 @@ export function usePreloadVideos() {
     if (!activeVideo || !tracks.length) return
 
     const currentTrack = tracks.find((track) =>
-      track.allVideos.some((video) => video.id === activeVideo.id)
+      track.videos.some((video) => video.id === activeVideo.id)
     )
 
     if (currentTrack) {
-      const currentIndex = currentTrack.allVideos.findIndex((video) => video.id === activeVideo.id)
+      const currentIndex = currentTrack.videos.findIndex((video) => video.id === activeVideo.id)
       const videosToPreload = [
-        currentTrack.allVideos[currentIndex - 1],
-        currentTrack.allVideos[currentIndex + 1],
+        currentTrack.videos[currentIndex - 1],
+        currentTrack.videos[currentIndex + 1],
       ].filter(Boolean)
 
       videosToPreload.forEach((video) => {

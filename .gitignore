@@ -45,4 +45,5 @@ next-env.d.ts
 public/tmp/*
 public/music/*
 public/videos/*
+public/media/*
 public/thumbnails/*

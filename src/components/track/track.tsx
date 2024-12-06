@@ -1,6 +1,6 @@
 import { memo } from "react"
 
-import { Track as AssembledTrack, TimeRange } from "@/types/videos"
+import { TimeRange, Track as AssembledTrack } from "@/types/videos"
 
 import { TrackMetadata } from "./track-metadata"
 import { TrackTimestamps } from "./track-timestamps"
@@ -36,7 +36,9 @@ const Track = memo(({
     new Date(lastVideo.probeData?.format.tags?.creation_time || 0).getTime() / 1000 +
     (lastVideo.probeData?.format.duration || 0)
 
-  const startOffset = ((trackStartTime - Math.min(...timeRanges.map((x) => x.start))) / maxDuration) *
+  const startOffset = ((trackStartTime - Math.min(...timeRanges.map((x) =>
+    x.start
+  ))) / maxDuration) *
     100
   const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
 
@@ -59,12 +61,14 @@ const Track = memo(({
                     track={track}
                     videoStream={videoStream}
                   />
-                  {/* <TrackThumbnails
+                  {
+                    /* <TrackThumbnails
                     track={track}
                     trackStartTime={trackStartTime}
                     trackEndTime={trackEndTime}
                     scale={scale}
-                  /> */}
+                  /> */
+                  }
                   <TrackTimestamps
                     trackStartTime={trackStartTime}
                     trackEndTime={trackEndTime}

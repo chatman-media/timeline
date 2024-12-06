@@ -14,7 +14,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "Video name is required" })
   }
 
-  const videoPath = join(process.cwd(), "public/videos", name)
+  const videoPath = join(process.cwd(), "public/media", name)
   const audioPath = join(process.cwd(), "public/audio", `${name}.mp3`)
 
   // Create audio directory if it doesn't exist

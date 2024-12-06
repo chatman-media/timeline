@@ -169,13 +169,14 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
 
   const synchronizeTracks = useCallback(() => {
     const { tracks, currentTime } = useMedia()
-    
-    tracks.forEach(track => {
-      const videoElement = track.videoRefs?.[track.activeVideo?.id || '']
+
+    tracks.forEach((track) => {
+      const videoElement = track.videoRefs?.[track.activeVideo?.id || ""]
       if (videoElement) {
-        const videoStartTime = new Date(track.activeVideo?.probeData?.format.tags?.creation_time || 0).getTime() / 1000
+        const videoStartTime =
+          new Date(track.activeVideo?.probeData?.format.tags?.creation_time || 0).getTime() / 1000
         const relativeTime = currentTime - videoStartTime
-        
+
         // Synchronize with tolerance
         const tolerance = 0.1
         if (Math.abs(videoElement.currentTime - relativeTime) > tolerance) {

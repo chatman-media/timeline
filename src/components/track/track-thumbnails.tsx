@@ -2,7 +2,7 @@ import debounce from "lodash/debounce"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { Track } from "@/types/videos"
-import { calculateThumbnailRequirements, ThumbnailParams } from "@/utils/thumbnail-utils"
+import { calculateThumbnailRequirements } from "@/utils/thumbnail-utils"
 import useThumbnailStore from "@/stores/thumbnailStore"
 
 interface TrackThumbnailsProps {

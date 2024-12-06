@@ -61,4 +61,4 @@ export const calculateTimeRanges = (videos: MediaFile[]): TimeRange[] => {
   ranges.push(currentRange)
 
   return ranges
-} 
+}

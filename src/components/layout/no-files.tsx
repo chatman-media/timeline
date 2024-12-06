@@ -8,7 +8,7 @@ export function NoFiles() {
       <div className="flex flex-col gap-2 text-sm">
         <div className="text-gray-500 dark:text-gray-400">
           <code className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">
-            /public/videos/
+            /public/media/
           </code>
           <span className="ml-2">- видео и синхронизированные аудиозаписи с микрофонов</span>
         </div>

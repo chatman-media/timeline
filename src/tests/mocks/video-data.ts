@@ -81,7 +81,7 @@ export const mockVideoData = [
       },
     ],
     format: {
-      filename: "/Users/aleksandrkireev/Apps/timeline/public/videos/VID_20241106_123621_010.mp4",
+      filename: "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123621_010.mp4",
       nb_streams: 2,
       nb_programs: 0,
       nb_stream_groups: 0,
@@ -183,7 +183,7 @@ export const mockVideoData = [
       },
     ],
     format: {
-      filename: "/Users/aleksandrkireev/Apps/timeline/public/videos/VID_20241106_123559_008.mp4",
+      filename: "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123559_008.mp4",
       nb_streams: 2,
       nb_programs: 0,
       nb_stream_groups: 0,
@@ -332,7 +332,7 @@ export const mockVideoData = [
     ],
     format: {
       filename:
-        "/Users/aleksandrkireev/Apps/timeline/public/videos/VID_20241106_123612_00_015.insv",
+        "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123612_00_015.insv",
       nb_streams: 3,
       nb_programs: 0,
       nb_stream_groups: 0,
@@ -481,7 +481,7 @@ export const mockVideoData = [
     ],
     format: {
       filename:
-        "/Users/aleksandrkireev/Apps/timeline/public/videos/VID_20241106_123612_00_014.insv",
+        "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123612_00_014.insv",
       nb_streams: 3,
       nb_programs: 0,
       nb_stream_groups: 0,
@@ -583,7 +583,7 @@ export const mockVideoData = [
       },
     ],
     format: {
-      filename: "/Users/aleksandrkireev/Apps/timeline/public/videos/VID_20241106_123559_009.mp4",
+      filename: "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123559_009.mp4",
       nb_streams: 2,
       nb_programs: 0,
       nb_stream_groups: 0,
@@ -685,7 +685,7 @@ export const mockVideoData = [
       },
     ],
     format: {
-      filename: "/Users/aleksandrkireev/Apps/timeline/public/videos/VID_20241106_123621_009.mp4",
+      filename: "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123621_009.mp4",
       nb_streams: 2,
       nb_programs: 0,
       nb_stream_groups: 0,
@@ -790,7 +790,7 @@ export const mockVideoData = [
       },
     ],
     format: {
-      filename: "/Users/aleksandrkireev/Apps/timeline/public/videos/VID_20241106_123521_00_013.mp4",
+      filename: "/Users/aleksandrkireev/Apps/timeline/public/media/VID_20241106_123521_00_013.mp4",
       nb_streams: 2,
       nb_programs: 0,
       nb_stream_groups: 0,
@@ -815,7 +815,7 @@ export const mockVideoData = [
 export const mockMediaFiles = mockVideoData.map((data) => ({
   id: `V${Math.floor(Math.random() * 1000)}`,
   name: data.format.filename.split("/").pop() || "",
-  path: `/videos/${data.format.filename.split("/").pop()}`,
+  path: `/media/${data.format.filename.split("/").pop()}`,
   thumbnail: null,
   probeData: data,
   isVideo: data.streams.some((stream) => stream.codec_type === "video"),

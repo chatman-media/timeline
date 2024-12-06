@@ -66,6 +66,6 @@ export function useMedia() {
 
   return {
     ...store,
-    play
+    play,
   }
 }

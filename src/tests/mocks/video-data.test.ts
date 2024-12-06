@@ -3,7 +3,7 @@ import { createMocks } from "node-mocks-http"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { useMedia } from "@/hooks/use-media"
-import handler from "@/pages/api/videos"
+import handler from "@/pages/api/media"
 import { mockVideoData } from "@/tests/mocks/video-data"
 
 // Мокаем fs и ffprobe
@@ -39,7 +39,7 @@ describe("Video API Integration", () => {
 
   it("should integrate with useMedia hook", async () => {
     // Мокаем fetch для useMedia
-    global.fetch = vi.fn().mockImplementation(() =>
+    globalThis.fetch = vi.fn().mockImplementation(() =>
       Promise.resolve({
         ok: true,
         json: () =>
@@ -47,7 +47,7 @@ describe("Video API Integration", () => {
             media: mockVideoData.map((data) => ({
               id: `V${Math.floor(Math.random() * 1000)}`,
               name: data.format.filename.split("/").pop() || "",
-              path: `/videos/${data.format.filename.split("/").pop()}`,
+              path: `/media/${data.format.filename.split("/").pop()}`,
               thumbnail: null,
               probeData: data,
               isVideo: data.streams.some((stream) => stream.codec_type === "video"),

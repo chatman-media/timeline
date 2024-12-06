@@ -1,6 +1,6 @@
 import { create } from "zustand"
 
-import type { MediaFile, Track, TimeRange, ScreenLayout } from "@/types/videos"
+import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { calculateTimeRanges } from "@/utils/videoUtils"
 
 interface VideoState {
@@ -77,7 +77,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
     try {
       const targetTrack = tracks.find((track) => track.id === trackId)
-      
+
       if (!targetTrack) {
         console.warn(`Track ${trackId} not found`)
         return
@@ -145,7 +145,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
     set({ isLoading: true, hasFetched: true })
 
     try {
-      const response = await fetch("/api/videos")
+      const response = await fetch("/api/media")
       const data = await response.json()
 
       if (!data.media || !Array.isArray(data.media) || data.media.length === 0) {
@@ -181,7 +181,14 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         const trackId = video.id
         let track = tracks.find((t) => t.id === trackId)
         if (!track) {
-          tracks.push({ id: trackId, videos: [], timeRanges: [], index: 0, isActive: false, combinedDuration: 0 })
+          tracks.push({
+            id: trackId,
+            videos: [],
+            timeRanges: [],
+            index: 0,
+            isActive: false,
+            combinedDuration: 0,
+          })
         }
       })
 
@@ -207,20 +214,20 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   },
 
   addToMetadataCache: (key, data) => {
-    set(state => ({
+    set((state) => ({
       metadataCache: {
         ...state.metadataCache,
-        [key]: data
-      }
+        [key]: data,
+      },
     }))
   },
 
   addToThumbnailCache: (key, data) => {
-    set(state => ({
+    set((state) => ({
       thumbnailCache: {
         ...state.thumbnailCache,
-        [key]: data
-      }
+        [key]: data,
+      },
     }))
-  }
+  },
 }))

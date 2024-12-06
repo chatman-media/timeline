@@ -85,7 +85,7 @@ export function generateVideoId(videos: MediaFile[]): string {
 
   // Находим максимальный существующий номер
   const maxNumber = sortedVideos.reduce((max, video) => {
-    const match = video.id.match(/V(\d+)/)
+    const match = video.id?.match(/V(\d+)/)
     if (match) {
       const num = parseInt(match[1])
       return num > max ? num : max

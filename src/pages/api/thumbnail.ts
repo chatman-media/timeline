@@ -19,7 +19,7 @@ export default async function handler(
     const videoPath = path.join(process.cwd(), "public", "videos", video)
     const thumbnailName = `${path.parse(video).name}_${timestamp}.jpg`
     const thumbnailPath = path.join(process.cwd(), "public", "videos", thumbnailName)
-    const publicPath = `/videos/${thumbnailName}`
+    const publicPath = `/media/${thumbnailName}`
 
     // Проверяем существование видео файла
     try {
