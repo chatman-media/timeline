@@ -1,6 +1,6 @@
 import process from "node:process"
 import { ffprobe, FfprobeData } from "fluent-ffmpeg"
-import * as fs from 'node:fs/promises';
+import * as fs from "node:fs/promises"
 import type { NextApiRequest, NextApiResponse } from "next"
 import path from "path"
 import { promisify } from "util"
@@ -51,7 +51,6 @@ export default async function handler(
     )
 
     res.status(200).json({ media })
-
   } catch (error) {
     console.error("Error processing media:", error)
     res.status(500).json({ media: [] })

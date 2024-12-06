@@ -78,8 +78,8 @@ export const formatTime = (seconds: number): string => {
 export function generateVideoId(videos: MediaFile[]): string {
   // Сортируем видео по дате создания
   const sortedVideos = [...videos].sort((a, b) => {
-    const timeA = new Date(a.probeData.format.tags?.creation_time || 0).getTime()
-    const timeB = new Date(b.probeData.format.tags?.creation_time || 0).getTime()
+    const timeA = new Date(a.probeData?.format.tags?.creation_time || 0).getTime()
+    const timeB = new Date(b.probeData?.format.tags?.creation_time || 0).getTime()
     return timeA - timeB
   })
 
@@ -101,23 +101,7 @@ export function isVideoAvailable(
   currentTime: number,
   tolerance: number = 0.1,
 ): boolean {
-  const startTime = new Date(video.probeData.format.tags?.creation_time || 0).getTime() / 1000
-  const endTime = startTime + (video.probeData.format.duration || 0)
+  const startTime = new Date(video.probeData?.format.tags?.creation_time || 0).getTime() / 1000
+  const endTime = startTime + (video.probeData?.format.duration || 0)
   return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
-}
-
-// Функция для генерации превью
-export async function generateThumbnail(videoPath: string, thumbnailPath: string): Promise<void> {
-  const ffmpeg = require("fluent-ffmpeg")
-  return new Promise((resolve, reject) => {
-    ffmpeg(videoPath)
-      .screenshots({
-        timestamps: ["00:00:01"],
-        filename: path.basename(thumbnailPath),
-        folder: path.dirname(thumbnailPath),
-        size: "320x240",
-      })
-      .on("end", resolve)
-      .on("error", reject)
-  })
 }

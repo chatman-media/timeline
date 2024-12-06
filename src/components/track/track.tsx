@@ -1,16 +1,15 @@
 import { memo } from "react"
 
-import { AssembledTrack } from "@/types/videos"
+import { Track as AssembledTrack, TimeRange } from "@/types/videos"
 
 import { TrackMetadata } from "./track-metadata"
-import { TrackThumbnails } from "./track-thumbnails"
 import { TrackTimestamps } from "./track-timestamps"
 
 interface TrackProps {
   track: AssembledTrack
   index: number
   scale: number
-  timeRanges: { min: number }[]
+  timeRanges: TimeRange[]
   maxDuration: number
   activeCamera: string | null
   handleTrackClick: (e: React.MouseEvent, track: AssembledTrack) => void
@@ -29,19 +28,19 @@ const Track = memo(({
   parentRef,
   TrackSliceWrap,
 }: TrackProps) => {
-  const firstVideo = track.allVideos[0]
-  const lastVideo = track.allVideos[track.allVideos.length - 1]
-  const trackStartTime = new Date(firstVideo.probeData.format.tags?.creation_time || 0).getTime() /
+  const firstVideo = track.videos[0]
+  const lastVideo = track.videos[track.videos.length - 1]
+  const trackStartTime = new Date(firstVideo.probeData?.format.tags?.creation_time || 0).getTime() /
     1000
   const trackEndTime =
-    new Date(lastVideo.probeData.format.tags?.creation_time || 0).getTime() / 1000 +
-    (lastVideo.probeData.format.duration || 0)
+    new Date(lastVideo.probeData?.format.tags?.creation_time || 0).getTime() / 1000 +
+    (lastVideo.probeData?.format.duration || 0)
 
-  const startOffset = ((trackStartTime - Math.min(...timeRanges.map((x) => x.min))) / maxDuration) *
+  const startOffset = ((trackStartTime - Math.min(...timeRanges.map((x) => x.start))) / maxDuration) *
     100
   const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
 
-  const videoStream = firstVideo.probeData.streams.find((s) => s.codec_type === "video")
+  const videoStream = firstVideo.probeData?.streams.find((s) => s.codec_type === "video")
   const isActive = track.index === parseInt(activeCamera?.replace("V", "") || "0")
 
   return (
@@ -60,12 +59,12 @@ const Track = memo(({
                     track={track}
                     videoStream={videoStream}
                   />
-                  <TrackThumbnails
+                  {/* <TrackThumbnails
                     track={track}
                     trackStartTime={trackStartTime}
                     trackEndTime={trackEndTime}
                     scale={scale}
-                  />
+                  /> */}
                   <TrackTimestamps
                     trackStartTime={trackStartTime}
                     trackEndTime={trackEndTime}

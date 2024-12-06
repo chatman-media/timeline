@@ -1,9 +1,4 @@
 // Базовые типы для временной шкалы
-export interface TimeRange {
-  start: number
-  duration: number
-}
-
 export interface VideoMetadata {
   filename: string
   codecName: string
@@ -20,7 +15,9 @@ export interface TrackSliceData {
   y: number
   width: string | number
   height: number
-  videoPath: string
+  trackIndex: number
+  startTime?: number
+  duration?: number
 }
 
 export interface SeekbarState {

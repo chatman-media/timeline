@@ -37,7 +37,7 @@ const useThumbnailStore = create<ThumbnailState>((set, get) => ({
   },
 }))
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.store = useThumbnailStore
 }
 

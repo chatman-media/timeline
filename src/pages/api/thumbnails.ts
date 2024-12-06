@@ -69,33 +69,33 @@ export default async function handler(
       }),
     )
 
-        // Определяем какие миниатюры нужно сгенерировать
-        const missingIndexes = existingThumbnails
-        .map((thumb, index) => (thumb === null ? index : -1))
-        .filter((index) => index !== -1)
-  
-      // Генерируем недостающие миниатюры
-      if (missingIndexes.length > 0) {
-        await Promise.all(
-          missingIndexes.map((index) =>
-            new Promise<void>((resolve, reject) => {
-              ffmpeg(videoPath)
-                .screenshots({
-                  timestamps: [timestamps[index]],
-                  filename: thumbnailNames[index],
-                  folder: thumbnailDir,
-                  size: "320x180",
-                })
-                .outputOptions(["-c:v libwebp", "-quality 80"]) // Используем WebP для лучшего сжатия
-                .on("end", () => resolve())
-                .on("error", (err) => {
-                  console.error("FFmpeg error:", err)
-                  reject(err)
-                })
-            })
-          ),
-        )
-      }
+    // Определяем какие миниатюры нужно сгенерировать
+    const missingIndexes = existingThumbnails
+      .map((thumb, index) => (thumb === null ? index : -1))
+      .filter((index) => index !== -1)
+
+    // Генерируем недостающие миниатюры
+    if (missingIndexes.length > 0) {
+      await Promise.all(
+        missingIndexes.map((index) =>
+          new Promise<void>((resolve, reject) => {
+            ffmpeg(videoPath)
+              .screenshots({
+                timestamps: [timestamps[index]],
+                filename: thumbnailNames[index],
+                folder: thumbnailDir,
+                size: "320x180",
+              })
+              .outputOptions(["-c:v libwebp", "-quality 80"]) // Используем WebP для лучшего сжатия
+              .on("end", () => resolve())
+              .on("error", (err) => {
+                console.error("FFmpeg error:", err)
+                reject(err)
+              })
+          })
+        ),
+      )
+    }
 
     // Формируем итоговый массив путей к миниатюрам
     const thumbnails = thumbnailNames.map((name) => `/thumbnails/${name}`)

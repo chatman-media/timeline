@@ -1,10 +1,10 @@
-import { Track, MediaFile } from "./videos"
+import { MediaFile, TimeRange, Track } from "./videos"
 
-export interface TimeRange {
-  min: number /** Минимальное время в секундах (unix timestamp) */
-  max: number /** Максимальное время в секундах (unix timestamp) */
-  duration: number /** Длительность временного промежутка в секундах */
-}
+// export interface SceneTimeRange {
+//   min: number /** Минимальное время в секундах (unix timestamp) */
+//   max: number /** Максимальное время в секундах (unix timestamp) */
+//   duration: number /** Длительность временного промежутка в секундах */
+// }
 
 export interface SceneDuration {
   startTime: number /** Время начала сцены в секундах от начала временного диапазона */

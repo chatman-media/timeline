@@ -56,7 +56,7 @@ const TrackThumbnails = memo(function TrackThumbnails({
     if (!containerRef.current) return []
 
     return track.allVideos.map((video) => {
-      const duration = video.probeData.format.duration || 0
+      const duration = video.probeData?.format.duration || 0
       const containerWidth = containerRef.current?.clientWidth || 0
       
       const segmentWidth = (duration / (trackEndTime - trackStartTime)) * containerWidth * scale

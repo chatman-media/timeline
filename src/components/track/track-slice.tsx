@@ -22,7 +22,7 @@ const TrackSlice = ({
   x = 0,
   y = 0,
   id = nanoid(10),
-  videoPath = "",
+  trackIndex,
   updateSlice,
   isSelected = false,
   onSelect,
@@ -34,7 +34,7 @@ const TrackSlice = ({
     x,
     y,
     id,
-    videoPath,
+    trackIndex,
   })
 
   return (

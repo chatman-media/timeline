@@ -1,6 +1,5 @@
-import { FfprobeData, FfprobeStream } from "fluent-ffmpeg"
-
-import { formatBitrate, formatDuration } from "@/lib/utils"
+import { formatDuration } from "@/lib/utils"
+import { FfprobeData } from "@/types/ffprobe"
 
 interface VideoMetadataProps {
   probeData?: FfprobeData
@@ -69,7 +68,7 @@ export function VideoMetadata({ probeData }: VideoMetadataProps) {
             </tr>
             <tr>
               <td className="py-1.5 text-gray-400">Футаж</td>
-              <td className="py-1.5">{probeData.format.filename.split("/").pop()}</td>
+              <td className="py-1.5">{probeData.format.filename?.split("/").pop()}</td>
             </tr>
             <tr>
               <td className="py-1.5 text-gray-400">Имя клипа в EDL</td>

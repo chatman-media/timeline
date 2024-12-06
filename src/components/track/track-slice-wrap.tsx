@@ -11,7 +11,7 @@ interface TrackSliceWrapProps {
     y: number
   }
   maxDuration?: number
-  timeRanges?: { min: number }[]
+  timeRanges?: { start: number }[]
 }
 
 const TrackSliceWrap = memo(forwardRef<HTMLDivElement, TrackSliceWrapProps>(
@@ -25,7 +25,7 @@ const TrackSliceWrap = memo(forwardRef<HTMLDivElement, TrackSliceWrapProps>(
             height={seekbar.height}
             y={seekbar.y}
             duration={maxDuration || 0}
-            startTime={Math.min(...timeRanges.map((x) => x.min))}
+            startTime={Math.min(...timeRanges.map((x) => x.start))}
             visible={true}
           />
         )}

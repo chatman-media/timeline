@@ -50,7 +50,7 @@ export default async function handler(
     })
 
     const media = (await Promise.all(mediaPromises)).filter(
-      (item): item is MediaFile => item !== null,
+      (item) => item !== null,
     )
 
     res.status(200).json({ media })

@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 import { useMedia } from "@/hooks/use-media"
 import { usePreloadVideos } from "@/hooks/use-preload-videos"
 import { SeekbarState, TrackSliceData } from "@/types/timeline"
-import { AssembledTrack } from "@/types/videos"
 
 import { Track } from "../track"
 import { GlobalTimelineBar } from "./global-timeline-bar"
@@ -16,23 +15,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
   const {
     videos,
     timeRanges,
-    maxDuration,
-    currentTime,
-    updateTime,
-    timeToPercent,
-    assembledTracks,
-    activeCamera,
-    setActiveCamera,
   } = useMedia()
-
-  useEffect(() => {
-    console.log("Media hook state:", {
-      videosLength: videos.length,
-      timeRangesLength: timeRanges.length,
-      maxDuration,
-      assembledTracks,
-    })
-  }, [videos, timeRanges, maxDuration, assembledTracks])
 
   // Ссылка на DOM-элемент контейнера для определения его размеров
   const parentRef = useRef<HTMLDivElement>(null)
@@ -68,7 +51,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
         videoPath,
       },
     ]
-    setSlices(newSlices)
+    setSlices(newSlices as TrackSliceData[])
     // Save to localStorage
     localStorage.setItem("timelineSlices", JSON.stringify(newSlices))
   }, [slices])
@@ -183,6 +166,28 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
       }
     }
   }, [currentTime, activeCamera])
+
+  const synchronizeTracks = useCallback(() => {
+    const { tracks, currentTime } = useMedia()
+    
+    tracks.forEach(track => {
+      const videoElement = track.videoRefs?.[track.activeVideo?.id || '']
+      if (videoElement) {
+        const videoStartTime = new Date(track.activeVideo?.probeData?.format.tags?.creation_time || 0).getTime() / 1000
+        const relativeTime = currentTime - videoStartTime
+        
+        // Synchronize with tolerance
+        const tolerance = 0.1
+        if (Math.abs(videoElement.currentTime - relativeTime) > tolerance) {
+          videoElement.currentTime = relativeTime
+        }
+      }
+    })
+  }, [currentTime])
+
+  useEffect(() => {
+    synchronizeTracks()
+  }, [currentTime, synchronizeTracks])
 
   return (
     <div className="timeline">

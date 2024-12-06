@@ -1,5 +1,11 @@
 import { FfprobeData } from "fluent-ffmpeg"
 
+export interface TimeRange {
+  start: number
+  end?: number
+  duration: number
+}
+
 export interface RecordEntry {
   camera: number /** Индекс камеры, начиная с 1 */
   startTime: number /** Время начала записи в секундах (unix timestamp) */
@@ -7,21 +13,21 @@ export interface RecordEntry {
 }
 
 export interface MediaFile {
+  id?: string
   name: string
   path: string
   isVideo?: boolean
   probeData?: FfprobeData
-  thumbnail?: string
+  thumbnail?: string | null
 }
 
 export interface Track {
-  video: MediaFile // Первое видео трека (для метаданных)
-  cameraKey?: string // Ключ камеры
+  id?: string // Ключ камеры
   index: number // Номер камеры
   isActive: boolean // Флаг активности трека
   combinedDuration: number // Общая длительность видео
-  allVideos: MediaFile[] // Все видео этой камеры
-  continuousSegments: MediaFile[][] // Последовательные сегменты видео
+  videos: MediaFile[] // Все видео этой камеры
+  timeRanges: TimeRange[] // Массив временных диапазонов
 }
 
 export interface VideoSegment {
@@ -33,4 +39,9 @@ export interface VideoSegment {
   totalBitrate?: number /** Общий битрейт видео в bits/s */
   is360?: boolean /** Флаг, указывающий что видео панорамное (360°) */
   isCombined?: boolean /** Флаг, указывающий что сегмент состоит из нескольких видео */
+}
+
+export interface ScreenLayout {
+  type: "1x1" | "2x2" | "3x3" | "4x4"
+  activeTracks: string[] // Track IDs that are currently visible
 }

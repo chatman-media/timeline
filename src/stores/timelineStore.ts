@@ -27,7 +27,7 @@ export const useRootStore = create<TimelineState & VideoState>((set, get) => ({
       id: nanoid(10),
       x: 0,
       y: 0,
-      width: "5%",
+      width: "1%",
       height: 50,
       trackIndex,
       startTime,
