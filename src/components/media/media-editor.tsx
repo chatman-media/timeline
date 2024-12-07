@@ -1,21 +1,10 @@
-import { PlusSquare } from "lucide-react"
-
-import { useMedia } from "@/hooks/use-media"
-
 import { ThemeToggle } from "../layout/theme-toggle"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { VideoMetadata } from "../video-metadata"
 import { ActiveVideo } from "./active-video"
 import { MediaFilesList } from "./media-files-list"
 import { MusicFilesList } from "./music-files-list"
 
 export function MediaEditor() {
-  const {
-    activeVideo,
-    media,
-    videos,
-  } = useMedia()
-
   return (
     <div
       data-testid="media-player"
@@ -64,7 +53,7 @@ export function MediaEditor() {
         </div>
       </div>
       <div className="basis-1/4">
-        <VideoMetadata probeData={activeVideo?.probeData} />
+        {/* <VideoMetadata probeData={activeVideo?.probeData} /> */}
       </div>
       {
         /* <div className="flex gap-8 w-full px-2 sm:px-13 py-2">

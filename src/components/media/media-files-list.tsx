@@ -37,6 +37,7 @@ export function MediaFilesList() {
     )
   }
 
+  console.log(media)
   return (
     <>
       <div className="px-0 h-[calc(40vh-35px)] overflow-y-auto">
@@ -166,8 +167,8 @@ export function MediaFilesList() {
       {/* строка состояния и кнопка добавления всех файлов в трек */}
       <div className="flex justify-between items-center p-0 text-sm m-1">
         <span className="text-xs text-gray-500 dark:text-gray-400">
-          Видео: {videos.length} | Аудио:{" "}
-          {media.filter((file) => file.probeData?.format.codec_type === "audio").length}
+          Видео: {media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "video").length} | Аудио:{" "}
+          {media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "audio").length}
         </span>
         <div className="flex items-center gap-2 group">
           <span className="text-xs text-gray-500 dark:text-gray-400 opacity-50 group-hover:opacity-100 transition-opacity">
@@ -176,7 +177,7 @@ export function MediaFilesList() {
           <Button
             variant="secondary"
             size="icon"
-            className="w-4 h-4 hover:bg-background/90 border-0 bg-transparent rounded flex items-center cursor-pointer group inset-0 text-sm text-gray-500 dark:hover:text-gray-100"
+            className="w-4 h-4 hover:bg-background/90 border-0 bg-transparent rounded flex items-center cursor-pointer group inset-0 text-sm text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
             onClick={() => {/* TODO: implement add all files */}}
           >
             <PlusSquare />
