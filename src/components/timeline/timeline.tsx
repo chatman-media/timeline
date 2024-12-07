@@ -12,10 +12,7 @@ import TimeScale from "./timeline-scale"
 export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
   usePreloadVideos()
 
-  const {
-    videos,
-    timeRanges,
-  } = useMedia()
+  const media = useMedia()
 
   // Ссылка на DOM-элемент контейнера для определения его размеров
   const parentRef = useRef<HTMLDivElement>(null)
@@ -88,22 +85,22 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
 
   useEffect(() => {
     const timelineWidth = parentRef.current?.offsetWidth || 0
-    const percent = timeToPercent(currentTime)
+    const percent = timeToPercent(media.currentTime)
     const newPosition = (percent / 100) * timelineWidth
 
     setSeekbar((prev) => ({
       ...prev,
       x: newPosition,
     }))
-  }, [currentTime])
+  }, [media.currentTime])
 
   useEffect(() => {
-    if (videos && videos.length > 0) {
+    if (media.videos && media.videos.length > 0) {
       // Выбираем первое видео при монтировании компонента
-      setActiveCamera(videos[0].id)
+      setActiveCamera(media.videos[0].id)
       updateTime(currentTime) // Устанавливаем время в начало
     }
-  }, [videos]) // Зависимость от массива videos
+  }, [media.videos]) // Зависимость от массива videos
 
   // Изменяем обработчик клика на дорожке
   const handleTrackClick = useCallback((e: React.MouseEvent, track: AssembledTrack) => {
@@ -168,7 +165,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
   }, [currentTime, activeCamera])
 
   const synchronizeTracks = useCallback(() => {
-    const { tracks, currentTime } = useMedia()
+    const { tracks, currentTime } = media
 
     tracks.forEach((track) => {
       const videoElement = track.videoRefs?.[track.activeVideo?.id || ""]
@@ -184,7 +181,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
         }
       }
     })
-  }, [currentTime])
+  }, [media])
 
   useEffect(() => {
     synchronizeTracks()
@@ -202,7 +199,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
                 track={track}
                 index={index}
                 scale={scale}
-                timeRanges={timeRanges}
+                timeRanges={media.timeRanges}
                 maxDuration={maxDuration}
                 activeCamera={activeCamera}
                 handleTrackClick={handleTrackClick}
@@ -220,7 +217,7 @@ export function Timeline({ scale = 1 }: { scale?: number }): JSX.Element {
             <GlobalTimelineBar
               duration={maxDuration}
               currentTime={currentTime}
-              startTime={Math.min(...timeRanges.map((range) => range.min))}
+              startTime={Math.min(...media.timeRanges.map((range) => range.min))}
               height={assembledTracks.length * 110}
               onTimeChange={updateTime}
             />

@@ -1,4 +1,5 @@
 import ffmpeg from "fluent-ffmpeg"
+
 import { ScreenshotsConfig } from "../types/screenshots"
 
 export async function generateThumbnails(

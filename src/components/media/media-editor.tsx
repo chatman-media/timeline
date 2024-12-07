@@ -1,30 +1,36 @@
+import { PlusSquare } from "lucide-react"
+
 import { useMedia } from "@/hooks/use-media"
 
+import { ThemeToggle } from "../layout/theme-toggle"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { VideoMetadata } from "../video-metadata"
 import { ActiveVideo } from "./active-video"
 import { MediaFilesList } from "./media-files-list"
-import { ThemeToggle } from "./layout/theme-toggle"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs"
-import { VideoMetadata } from "./video-metadata"
 import { MusicFilesList } from "./music-files-list"
 
 export function MediaEditor() {
   const {
     activeVideo,
+    media,
+    videos,
   } = useMedia()
 
   return (
     <div
       data-testid="media-player"
-      className="media-editor flex flex-row ml-[40px] px-1 py-1 h-[50%]"
+      className="media-editor flex flex-row px-1 py-1 h-[50%]"
     >
-      <ThemeToggle />
       <div className="basis-1/4">
+        <ThemeToggle />
         <Tabs defaultValue="media" className="w-full">
-          <TabsList>
+          <TabsList className="ml-10">
             <TabsTrigger value="media">Медиатека</TabsTrigger>
             <TabsTrigger value="music">Музыка</TabsTrigger>
-            {/* <TabsTrigger value="text">Текст</TabsTrigger>
-            <TabsTrigger value="effects">Эффекты</TabsTrigger> */}
+            {
+              /* <TabsTrigger value="text">Текст</TabsTrigger>
+            <TabsTrigger value="effects">Эффекты</TabsTrigger> */
+            }
             <TabsTrigger value="transitions">Переходы</TabsTrigger>
             {/* <TabsTrigger value="subtitles">Субтитры</TabsTrigger> */}
           </TabsList>
@@ -34,12 +40,14 @@ export function MediaEditor() {
           <TabsContent value="music">
             <MusicFilesList />
           </TabsContent>
-          {/* <TabsContent value="text">
+          {
+            /* <TabsContent value="text">
             Тут будет редактор текста.
           </TabsContent>
           <TabsContent value="effects">
             Тут будут видео эффекты.
-          </TabsContent> */}
+          </TabsContent> */
+          }
           <TabsContent value="transitions" className="text-sm text-gray-400 dark:text-gray-500 p-2">
             Тут будут переходы между клипами.
           </TabsContent>
@@ -51,7 +59,7 @@ export function MediaEditor() {
         </Tabs>
       </div>
       <div className="basis-1/2">
-        <div className="bg-gray-50 dark:bg-[#111111] p-4 border border-gray-200 dark:border-gray-800">
+        <div className="bg-gray-50 dark:bg-[#111111] m-2 border border-gray-200 dark:border-gray-800">
           <ActiveVideo />
         </div>
       </div>

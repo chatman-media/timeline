@@ -1,8 +1,10 @@
+import { Pause, Play } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Play, Pause } from "lucide-react"
 
+import { formatFileSize, formatTime, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
-import { formatTime, formatFileSize } from "@/lib/utils"
+
+import { TrackControls } from "./track-controls"
 
 export function MusicFilesList() {
   const [musicFiles, setMusicFiles] = useState<MediaFile[]>([])
@@ -29,7 +31,7 @@ export function MusicFilesList() {
 
   const handlePlayPause = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
-    
+
     if (activeFile === file.path) {
       setIsPlaying(!isPlaying)
       if (audioRef[0]) {
@@ -64,13 +66,24 @@ export function MusicFilesList() {
   }
 
   return (
-    <div className="p-0">
-      <div className="space-y-1 max-h-[calc(100vh-200px)] overflow-y-auto pr-2">
+    <div className="px-0  overflow-y-auto">
+      <div className="space-y-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
         {musicFiles.map((file) => (
           <div
             key={file.path}
             className="flex items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer group"
           >
+            <TrackControls
+              iconSize={2}
+              onAddToTrack={(e) => {
+                e.stopPropagation()
+                // TODO: Добавить обработчик добавления аудио в трек
+              }}
+              onRemoveFromTrack={(e) => {
+                e.stopPropagation()
+                // TODO: Добавить обработчик удаления аудио из трека
+              }}
+            />
             <div className="relative">
               <div className="w-8 h-8 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center cursor-pointer">
                 <svg
@@ -93,42 +106,40 @@ export function MusicFilesList() {
               <button
                 onClick={(e) => handlePlayPause(e, file)}
                 className={`absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded cursor-pointer ${
-                  activeFile === file.path ? 'opacity-100' : ''
+                  activeFile === file.path ? "opacity-100" : ""
                 }`}
               >
-                {activeFile === file.path && isPlaying ? (
-                  <Pause className="w-4 h-4 text-white" />
-                ) : (
-                  <Play className="w-4 h-4 text-white" />
-                )}
+                {activeFile === file.path && isPlaying
+                  ? <Pause className="w-4 h-4 text-white" />
+                  : <Play className="w-4 h-4 text-white" />}
               </button>
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 p-1">
               <div className="flex justify-between items-center">
                 <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100 max-w-[300px]">
                   {file.name}
                 </p>
-                <p className="text-xs text-gray-900 dark:text-gray-100">
+                <p className="text-xs text-gray-900 dark:text-gray-100 min-w-12 text-right">
                   {file.probeData?.format.size && (
-                    <span className="text-gray-500 dark:text-gray-400 pr-2">
+                    <span className="text-gray-500 dark:text-gray-400">
                       {formatFileSize(file.probeData.format.size)}
                     </span>
                   )}
                 </p>
               </div>
-              <div className="flex justify-between items-center">
-                <p className="text-xs text-gray-500">
+              <div className="flex justify-between items-center truncate">
+                <div className="text-xs text-gray-500 w-[330px] truncate">
                   {file.probeData?.format.duration && (
                     <span>
                       {formatTime(file.probeData.format.duration)}
                     </span>
                   )}
                   {file.probeData?.format.tags?.title && (
-                    <span className="ml-2 text-gray-500 dark:text-gray-400">
+                    <span className="ml-4 text-gray-500 dark:text-gray-400">
                       {file.probeData.format.tags.title}
                     </span>
                   )}
-                </p>
+                </div>
               </div>
             </div>
           </div>

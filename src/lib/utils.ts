@@ -73,7 +73,9 @@ export const formatTime = (seconds: number): string => {
   if (hours > 0) {
     return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
-  return `${minutes}:${secs.toString().padStart(2, "0")}${ms > 0 ? `:${ms.toString().padStart(3, "0")}` : ""}`
+  return `${minutes}:${secs.toString().padStart(2, "0")}${
+    ms > 0 ? `:${ms.toString().padStart(3, "0")}` : ""
+  }`
 }
 
 export function generateVideoId(videos: MediaFile[]): string {

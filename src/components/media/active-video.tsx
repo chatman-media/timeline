@@ -1,5 +1,5 @@
-import { memo, useEffect, useRef, useState } from "react"
 import { Pause, Play } from "lucide-react"
+import { memo, useEffect, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 
@@ -32,7 +32,8 @@ export const ActiveVideo = memo(() => {
     const videoElement = videoRefs.current[activeVideo?.id]
     if (!videoElement || !activeVideo) return
 
-    const videoStartTime = new Date(activeVideo.probeData?.format.tags?.creation_time || 0).getTime() / 1000
+    const videoStartTime =
+      new Date(activeVideo.probeData?.format.tags?.creation_time || 0).getTime() / 1000
 
     // Синхронизация времени
     if (!isTimeUpdateFromVideo.current && !isChangingCamera) {
@@ -90,10 +91,10 @@ export const ActiveVideo = memo(() => {
       setIsLoading(false)
     }
 
-    videoElement.addEventListener('loadeddata', handleLoadedData)
-    
+    videoElement.addEventListener("loadeddata", handleLoadedData)
+
     return () => {
-      videoElement.removeEventListener('loadeddata', handleLoadedData)
+      videoElement.removeEventListener("loadeddata", handleLoadedData)
     }
   }, [activeVideo])
 
@@ -134,7 +135,9 @@ export const ActiveVideo = memo(() => {
                   className="p-4 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
                   aria-label={isPlaying ? "Pause" : "Play"}
                 >
-                  {isPlaying ? <Pause className="w-12 h-12 text-white" /> : <Play className="w-12 h-12 text-white" />}
+                  {isPlaying
+                    ? <Pause className="w-12 h-12 text-white" />
+                    : <Play className="w-12 h-12 text-white" />}
                 </button>
               </div>
             </div>
