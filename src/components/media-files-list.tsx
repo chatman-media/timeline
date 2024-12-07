@@ -2,22 +2,16 @@ import { useMedia } from "@/hooks/use-media"
 import { formatTime, formatTimeWithMilliseconds, parseFileNameDateTime, formatFileSize } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
 import { Play, Pause } from "lucide-react"
+import { useState } from "react"
 
 export function MediaFilesList() {
-  const { media, isLoading, setActiveVideo, isPlaying, setIsPlaying, activeVideo } = useMedia()
+  const { media, isLoading } = useMedia()
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [playingFileId, setPlayingFileId] = useState<string | null>(null)
 
-  const handleFileClick = (file: MediaFile) => {
-    file.id && setActiveVideo(file.id)
-  }
-
-  const handlePlayPause = (e: React.MouseEvent, file: MediaFile) => {
+  const handlePlayPause = (e: React.MouseEvent, fileName: string) => {
     e.stopPropagation()
-    if (activeVideo?.id === file.id) {
-      setIsPlaying(!isPlaying)
-    } else {
-      file.id && setActiveVideo(file.id)
-      setIsPlaying(true)
-    }
+    setPlayingFileId(current => current === fileName ? null : fileName)
   }
 
   if (isLoading) {
@@ -43,15 +37,18 @@ export function MediaFilesList() {
           <div
             key={file.name}
             className="flex items-center gap-3 p-0 pr-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 group"
-            onClick={() => handleFileClick(file)}
           >
             <div className="relative">
               {file.thumbnail ? (
                 <div className="w-12 h-12 flex-shrink-0">
-                  <img
-                    src={file.thumbnail}
-                    alt={file.name}
+                  <video
+                    src={file.path}
                     className="w-full h-full object-cover rounded"
+                    // muted
+                    loop
+                    playsInline
+                    autoPlay={playingFileId === file.name}
+                    key={playingFileId === file.name ? 'playing' : 'stopped'}
                   />
                 </div>
               ) : (
@@ -75,12 +72,10 @@ export function MediaFilesList() {
                 </div>
               )}
               <button
-                onClick={(e) => handlePlayPause(e, file)}
-                className={`absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded cursor-pointer ${
-                  activeVideo?.id === file.id ? 'opacity-100' : ''
-                }`}
+                onClick={(e) => handlePlayPause(e, file.name)}
+                className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded cursor-pointer"
               >
-                {activeVideo?.id === file.id && isPlaying ? (
+                {playingFileId === file.name ? (
                   <Pause className="w-4 h-4 text-white" />
                 ) : (
                   <Play className="w-4 h-4 text-white" />

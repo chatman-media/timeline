@@ -23,8 +23,8 @@ export function MediaEditor() {
           <TabsList>
             <TabsTrigger value="media">Медиатека</TabsTrigger>
             <TabsTrigger value="music">Музыка</TabsTrigger>
-            <TabsTrigger value="text">Текст</TabsTrigger>
-            <TabsTrigger value="effects">Эффекты</TabsTrigger>
+            {/* <TabsTrigger value="text">Текст</TabsTrigger>
+            <TabsTrigger value="effects">Эффекты</TabsTrigger> */}
             <TabsTrigger value="transitions">Переходы</TabsTrigger>
             {/* <TabsTrigger value="subtitles">Субтитры</TabsTrigger> */}
           </TabsList>
@@ -34,13 +34,13 @@ export function MediaEditor() {
           <TabsContent value="music">
             <MusicFilesList />
           </TabsContent>
-          <TabsContent value="text">
+          {/* <TabsContent value="text">
             Тут будет редактор текста.
           </TabsContent>
           <TabsContent value="effects">
             Тут будут видео эффекты.
-          </TabsContent>
-          <TabsContent value="transitions">
+          </TabsContent> */}
+          <TabsContent value="transitions" className="text-sm text-gray-400 dark:text-gray-500 p-2">
             Тут будут переходы между клипами.
           </TabsContent>
           {

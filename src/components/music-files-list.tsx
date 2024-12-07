@@ -105,7 +105,7 @@ export function MusicFilesList() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
+                <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100 max-w-[300px]">
                   {file.name}
                 </p>
                 <p className="text-xs text-gray-900 dark:text-gray-100">
