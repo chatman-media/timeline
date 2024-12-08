@@ -98,10 +98,19 @@ const getSequentialGroups = (files: MediaFile[]) => {
     .join(", ")
 }
 
+// Add this helper function near the top of the file
+const isHorizontalVideo = (width: number, height: number, rotation?: number) => {
+  // If rotation is 90 or 270 degrees, swap width and height
+  if (rotation && (Math.abs(rotation) === 90 || Math.abs(rotation) === 270)) {
+    return height > width
+  }
+  return width > height
+}
+
 export function MediaFilesList() {
   const { media, isLoading, setTracks, tracks } = useMedia()
   const [playingFileId, setPlayingFileId] = useState<string | null>(null)
-  const [hoverTimes, setHoverTimes] = useState<Record<string, number | null>>({})
+  const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>({})
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
 
   const handlePlayPause = async (e: React.MouseEvent, fileId: string) => {
@@ -161,19 +170,21 @@ export function MediaFilesList() {
     e: React.MouseEvent<HTMLDivElement>,
     fileId: string,
     duration: number,
+    streamIndex: number
   ) => {
-    // Сначала пробуем найти видео/аудио элемент
-    const mediaElement = e.currentTarget.querySelector("video, audio")?.parentElement ||
-      e.currentTarget.querySelector(".w-15.h-15") // для аудио используем контейнер
+    const mediaElement = e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)?.parentElement
     if (!mediaElement) return
 
     const rect = mediaElement.getBoundingClientRect()
 
     if (e.clientX < rect.left || e.clientX > rect.right) {
-      setHoverTimes((prev) => {
-        const { [fileId]: _, ...rest } = prev
-        return rest
-      })
+      setHoverTimes((prev) => ({
+        ...prev,
+        [fileId]: {
+          ...(prev[fileId] || {}),
+          [streamIndex]: null as any
+        }
+      }))
       return
     }
 
@@ -182,8 +193,14 @@ export function MediaFilesList() {
     const time = percentage * duration
 
     if (Number.isFinite(time)) {
-      setHoverTimes((prev) => ({ ...prev, [fileId]: time }))
-      const videoElement = videoRefs.current[fileId]
+      setHoverTimes((prev) => ({
+        ...prev,
+        [fileId]: {
+          ...(prev[fileId] || {}),
+          [streamIndex]: time
+        }
+      }))
+      const videoElement = videoRefs.current[`${fileId}-${streamIndex}`]
       if (videoElement) {
         videoElement.currentTime = time
       }
@@ -238,119 +255,11 @@ export function MediaFilesList() {
               <div
                 key={file.name}
                 className="flex items-center gap-3 p-0 pr-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 group"
-                onMouseMove={(e) => handleMouseMove(e, fileId, duration)}
               >
-                <div className="relative">
-                  {isAudio
-                    ? (
-                      <div className="w-15 h-15 flex-shrink-0 relative">
-                        <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-gray-500 dark:text-gray-400"
-                          >
-                            <path d="M9 18V5l12-2v13" />
-                            <circle cx="6" cy="18" r="3" />
-                            <circle cx="18" cy="16" r="3" />
-                          </svg>
-                        </div>
-                        <audio
-                          ref={(el) => videoRefs.current[fileId] = el}
-                          src={file.path}
-                          preload="auto"
-                          loop
-                          onPlay={(e) => {
-                            const audio = e.currentTarget
-                            const currentTime = hoverTimes[fileId]
-                            if (currentTime !== undefined && currentTime !== null) {
-                              audio.currentTime = currentTime
-                            }
-                          }}
-                        />
-                        {hoverTimes[fileId] !== undefined &&
-                          hoverTimes[fileId] !== null &&
-                          Number.isFinite(hoverTimes[fileId]) && (
-                          <Timeline
-                            time={hoverTimes[fileId] as number}
-                            duration={duration}
-                          />
-                        )}
-                      </div>
-                    )
-                    : file.thumbnail
-                    ? (
-                      <div
-                        className="h-15 flex-shrink-0 relative"
-                        style={{
-                          width: file.probeData?.streams?.[0]
-                            ? (() => {
-                              const dimensions = calculateRealDimensions(file.probeData.streams[0])
-                              return `${60 * (dimensions.width / dimensions.height)}px`
-                            })()
-                            : "60px",
-                        }}
-                      >
-                        <div className="relative w-full h-full">
-                          <video
-                            onClick={(e) => handlePlayPause(e, fileId)}
-                            ref={(el) => videoRefs.current[fileId] = el}
-                            src={file.path}
-                            className="w-full h-full object-cover rounded"
-                            loop
-                            playsInline
-                            preload="metadata"
-                            onPlay={(e) => {
-                              const video = e.currentTarget
-                              const currentTime = hoverTimes[fileId]
-                              if (currentTime !== undefined && currentTime !== null) {
-                                video.currentTime = currentTime
-                              }
-                            }}
-                            onError={(e) => {
-                              console.error("Video error:", e)
-                              setPlayingFileId(null)
-                            }}
-                          />
-                          {file.probeData?.streams?.some(stream => stream.codec_type === "audio") && (
-                            <div className="absolute left-1 bottom-1 text-white bg-black/50 rounded p-[3px]">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="12"
-                                height="12"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              >
-                                <path d="M9 18V5l12-2v13" />
-                                <circle cx="6" cy="18" r="3" />
-                                <circle cx="18" cy="16" r="3" />
-                              </svg>
-                            </div>
-                          )}
-                          {hoverTimes[fileId] !== undefined &&
-                            hoverTimes[fileId] !== null &&
-                            Number.isFinite(hoverTimes[fileId]) && (
-                            <Timeline
-                              time={hoverTimes[fileId] as number}
-                              duration={duration}
-                            />
-                          )}
-                        </div>
-                      </div>
-                    )
-                    : (
-                      <div className="w-15 h-15 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                <div className="relative flex gap-1">
+                  {isAudio ? (
+                    <div className="w-15 h-15 flex-shrink-0 relative">
+                      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           width="16"
@@ -368,7 +277,109 @@ export function MediaFilesList() {
                           <circle cx="18" cy="16" r="3" />
                         </svg>
                       </div>
-                    )}
+                      <audio
+                        ref={(el) => videoRefs.current[fileId] = el}
+                        src={file.path}
+                        preload="auto"
+                        loop
+                        onPlay={(e) => {
+                          const audio = e.currentTarget
+                          const currentTime = hoverTimes[fileId]
+                          if (currentTime !== undefined && currentTime !== null) {
+                            audio.currentTime = currentTime
+                          }
+                        }}
+                      />
+                      {hoverTimes[fileId] !== undefined &&
+                        hoverTimes[fileId] !== null &&
+                        Number.isFinite(hoverTimes[fileId]) && (
+                        <Timeline
+                          time={hoverTimes[fileId] as number}
+                          duration={duration}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    file.probeData?.streams
+                      ?.filter(stream => stream.codec_type === "video")
+                      .map((stream, index) => (
+                        <div
+                          key={index}
+                          className="h-15 flex-shrink-0 relative"
+                          style={{
+                            width: (() => {
+                              const dimensions = calculateRealDimensions(stream)
+                              return `${60 * (dimensions.width / dimensions.height)}px`
+                            })(),
+                          }}
+                          onMouseMove={(e) => handleMouseMove(e, fileId, duration, index)}
+                        >
+                          <div className="relative w-full h-full">
+                            <video
+                              data-stream={index}
+                              onClick={(e) => handlePlayPause(e, `${fileId}-${index}`)}
+                              ref={(el) => videoRefs.current[`${fileId}-${index}`] = el}
+                              src={file.path}
+                              className="w-full h-full object-cover rounded"
+                              loop
+                              playsInline
+                              preload="metadata"
+                              onPlay={(e) => {
+                                const video = e.currentTarget
+                                const currentTime = hoverTimes[fileId]?.[index]
+                                if (currentTime !== undefined && currentTime !== null) {
+                                  video.currentTime = currentTime
+                                }
+                              }}
+                              onError={(e) => {
+                                console.error("Video error:", e)
+                                setPlayingFileId(null)
+                              }}
+                            />
+                            {file.probeData?.streams.filter(s => s.codec_type === "video").length > 1 && (
+                              <div className={`absolute ${
+                                isHorizontalVideo(stream.width, stream.height, parseInt(stream.rotation || '0'))
+                                  ? 'left-[calc(50%-8px)] top-[2px]'
+                                  : 'left-1/2 top-[2px] -translate-x-1/2'
+                              } text-white bg-black/50 rounded-full w-4 h-4 flex items-center justify-center text-xs`}>
+                                {index + 1}
+                              </div>
+                            )}
+                            {file.probeData?.streams?.some(stream => stream.codec_type === "audio") && (
+                              <div className={`absolute ${
+                                isHorizontalVideo(stream.width, stream.height, parseInt(stream.rotation || '0')) 
+                                  ? 'left-1 bottom-1' 
+                                  : 'left-1/2 bottom-1 -translate-x-1/2'
+                              } text-white bg-black/50 rounded p-[3px]`}>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="12"
+                                  height="12"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                >
+                                  <path d="M9 18V5l12-2v13" />
+                                  <circle cx="6" cy="18" r="3" />
+                                  <circle cx="18" cy="16" r="3" />
+                                </svg>
+                              </div>
+                            )}
+                            {hoverTimes[fileId]?.[index] !== undefined &&
+                              hoverTimes[fileId]?.[index] !== null &&
+                              Number.isFinite(hoverTimes[fileId]?.[index]) && (
+                              <Timeline
+                                time={hoverTimes[fileId][index]}
+                                duration={duration}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      ))
+                  )}
                 </div>
 
                 <div className="flex-1 min-w-0">
