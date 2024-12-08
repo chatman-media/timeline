@@ -121,7 +121,7 @@ export function MediaFilesList() {
 
   const handlePlayPause = useCallback(async (e: React.MouseEvent, fileId: string) => {
     e.stopPropagation()
-    const baseFileId = fileId.split('-')[0]
+    const baseFileId = fileId.split("-")[0]
     const mediaElement = videoRefs.current[fileId]
 
     if (mediaElement) {
@@ -181,10 +181,10 @@ export function MediaFilesList() {
     e: React.MouseEvent<HTMLDivElement>,
     fileId: string,
     duration: number,
-    streamIndex: number = 0  // По умолчанию 0 для аудио
+    streamIndex: number = 0, // По умолчанию 0 для аудио
   ) => {
     const mediaElement = e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)
-      ?.parentElement || e.currentTarget  // Fallback для аудио
+      ?.parentElement || e.currentTarget // Fallback для аудио
     if (!mediaElement) return
 
     const rect = mediaElement.getBoundingClientRect()
@@ -220,7 +220,7 @@ export function MediaFilesList() {
   }, [])
 
   const handleMouseLeave = useCallback(async (fileId: string) => {
-    const baseFileId = fileId.split('-')[0]
+    const baseFileId = fileId.split("-")[0]
     if (playingFileId === baseFileId) {
       // Находим и останавливаем все активные плееры для файла
       Object.entries(videoRefs.current).forEach(([key, player]) => {
@@ -458,18 +458,29 @@ export function MediaFilesList() {
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       {(() => {
-                        const creationTime = file.probeData?.format.creation_time || file.probeData?.format.tags?.creation_time;
-                        
+                        const creationTime = file.probeData?.format.creation_time ||
+                          file.probeData?.format.tags?.creation_time
+
                         if (!creationTime) {
-                          const parsedTime = parseFileNameDateTime(file.name);
-                          return parsedTime 
-                            ? formatTimeWithMilliseconds(parsedTime.getTime() / 1000, true, true, false)
-                            : "";
+                          const parsedTime = parseFileNameDateTime(file.name)
+                          return parsedTime
+                            ? formatTimeWithMilliseconds(
+                              parsedTime.getTime() / 1000,
+                              true,
+                              true,
+                              false,
+                            )
+                            : ""
                         }
-                        
+
                         // Преобразуем строку в Date объект
-                        const dateObj = new Date(creationTime);
-                        return formatTimeWithMilliseconds(dateObj.getTime() / 1000, true, true, false);
+                        const dateObj = new Date(creationTime)
+                        return formatTimeWithMilliseconds(
+                          dateObj.getTime() / 1000,
+                          true,
+                          true,
+                          false,
+                        )
                       })()}
                     </span>
 
