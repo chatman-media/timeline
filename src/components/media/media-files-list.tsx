@@ -13,6 +13,7 @@ import { MediaFile } from "@/types/videos"
 import { calculateTimeRanges } from "@/utils/videoUtils"
 
 import { Button } from "../ui/button"
+import { Skeleton } from "../ui/skeleton"
 
 interface TimelineProps {
   time: number
@@ -112,6 +113,7 @@ export function MediaFilesList() {
   const [playingFileId, setPlayingFileId] = useState<string | null>(null)
   const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>({})
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
+  const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
 
   const groupedSequences = useMemo(() => getSequentialGroups(media), [media])
 
@@ -317,18 +319,25 @@ export function MediaFilesList() {
                           onMouseMove={(e) => handleMouseMove(e, fileId, duration, index)}
                         >
                           <div className="relative w-full h-full">
+                            {!loadedVideos[`${fileId}-${index}`] && (
+                              <Skeleton className="absolute inset-0 rounded" />
+                            )}
                             <video
                               data-stream={index}
                               onClick={(e) => handlePlayPause(e, `${fileId}-${index}`)}
                               ref={(el) => videoRefs.current[`${fileId}-${index}`] = el}
                               src={file.path}
-                              className="w-full h-full object-cover rounded"
+                              className={`w-full h-full object-cover rounded ${
+                                !loadedVideos[`${fileId}-${index}`] ? 'invisible' : ''
+                              }`}
                               loop
                               playsInline
                               preload="metadata"
-                              onLoadedMetadata={(e) => {
-                                const video = e.currentTarget;
-                                video.currentTime = 0;
+                              onLoadedData={() => {
+                                setLoadedVideos(prev => ({
+                                  ...prev,
+                                  [`${fileId}-${index}`]: true
+                                }))
                               }}
                               onPlay={(e) => {
                                 const video = e.currentTarget
