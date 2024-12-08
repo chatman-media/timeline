@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useState } from "react"
 
+import { Track } from "@/types/videos"
+
 interface UseTimelineScaleReturn {
   scale: number
   setScale: (value: number) => void
@@ -7,6 +9,8 @@ interface UseTimelineScaleReturn {
   decreaseScale: () => void
   scalePercentage: string
   scaleStyle: { width: string }
+  maxDuration: number
+  calculateMaxDuration: (tracks: Track[]) => number
 }
 
 export function useTimelineScale(
@@ -15,6 +19,13 @@ export function useTimelineScale(
   maxScale: number = 2,
 ): UseTimelineScaleReturn {
   const [scale, setScale] = useState(initialScale)
+  const [maxDuration, setMaxDuration] = useState(0)
+
+  const calculateMaxDuration = useCallback((tracks: Track[]) => {
+    const duration = Math.max(...tracks.map((track) => track.combinedDuration))
+    setMaxDuration(duration)
+    return duration
+  }, [])
 
   const increaseScale = useCallback(() => {
     setScale((s) => Math.min(maxScale, s + 0.1))
@@ -40,5 +51,7 @@ export function useTimelineScale(
     decreaseScale,
     scalePercentage,
     scaleStyle,
+    maxDuration,
+    calculateMaxDuration,
   }
 }

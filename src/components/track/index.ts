@@ -1,6 +1,6 @@
-export * from "./track"
 export * from "./track-metadata"
 export * from "./track-slice"
 export * from "./track-slice-wrap"
+export * from "./video-track"
 // export * from "./track-thumbnails"
 export * from "./track-timestamps"

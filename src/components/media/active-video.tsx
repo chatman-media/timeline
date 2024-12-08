@@ -99,10 +99,10 @@ export const ActiveVideo = memo(() => {
   }, [activeVideo])
 
   return (
-    <div className="sticky top-4 space-y-4">
-      <div className="flex gap-4">
+    <div className="">
+      <div className="flex gap-2">
         <div
-          className="relative aspect-video w-[70%] overflow-hidden bg-gray-100 dark:bg-gray-800 group"
+          className="relative aspect-video w-full overflow-hidden bg-gray-100 dark:bg-gray-800 group h-[calc(50vh)]"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >

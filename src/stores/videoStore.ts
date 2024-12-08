@@ -29,6 +29,7 @@ interface VideoState {
   setIsPlaying: (isPlaying: boolean) => void
   setCurrentTime: (time: number) => void
   fetchVideos: () => Promise<void>
+  setTracks: (tracks: Track[]) => void
   setScreenLayout: (layout: ScreenLayout) => void
 
   // timeToPercent: (time: number) => number
@@ -114,32 +115,32 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         v.probeData?.streams[0].codec_type !== "video"
       )
 
-      // Создаем и заполняем треки
+      // Calculate timeRanges for each track
       const tracks: Track[] = []
+      const timeRanges: Record<string, TimeRange[]> = {}
+
       videos.forEach((video: MediaFile) => {
         const trackId = video.id
         let track = tracks.find((t) => t.id === trackId)
+
         if (!track) {
+          const newTimeRanges = calculateTimeRanges([video])
           track = {
             id: trackId,
-            videos: [video], // Сразу добавляем видео в массив
-            timeRanges: [],
+            videos: [video],
+            timeRanges: newTimeRanges,
             index: tracks.length,
             isActive: false,
             combinedDuration: video.probeData?.format.duration || 0,
           }
           tracks.push(track)
+          trackId && (timeRanges[trackId] = newTimeRanges)
         } else {
           track.videos.push(video)
           track.combinedDuration += video.probeData?.format.duration || 0
+          track.timeRanges = calculateTimeRanges(track.videos)
+          track.id && (timeRanges[track.id] = track.timeRanges)
         }
-      })
-
-      // Рассчитываем timeRanges для каждого трека
-      const timeRanges: Record<string, TimeRange[]> = {}
-      tracks.forEach((track) => {
-        track.timeRanges = calculateTimeRanges(track.videos)
-        if (track.id) timeRanges[track.id] = track.timeRanges
       })
 
       set({
@@ -147,6 +148,8 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         tracks,
         timeRanges,
         hasMedia: true,
+        activeTrackId: "T1",
+        activeVideo: videos.find((v: MediaFile) => v.id === "V1") || videos[0],
       })
     } catch (error) {
       console.error("Error fetching videos:", error)
@@ -231,6 +234,8 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   setCurrentTime: (time) => {
     set({ currentTime: time })
   },
+
+  setTracks: (tracks: Track[]) => set({ tracks }),
 
   addToMetadataCache: (key, data) => {
     set((state) => ({

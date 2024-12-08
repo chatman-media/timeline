@@ -51,6 +51,7 @@ export default async function handler(
         const probeData = await ffprobeAsync(filePath) as FfprobeData
         const isVideo = probeData.streams.some((stream) => stream.codec_type === "video")
 
+        console.log(probeData)
         return {
           name: file,
           path: `/media/${file}`,

@@ -1,33 +1,31 @@
 import { memo } from "react"
 
-import { TimeRange, Track as AssembledTrack } from "@/types/videos"
+import { TimeRange, type Track } from "@/types/videos"
 
 import { TrackMetadata } from "./track-metadata"
 import { TrackTimestamps } from "./track-timestamps"
 
-interface TrackProps {
-  track: AssembledTrack
+interface VideoTrackProps {
+  track: Track
   index: number
-  scale: number
   timeRanges: TimeRange[]
   maxDuration: number
-  activeCamera: string | null
-  handleTrackClick: (e: React.MouseEvent, track: AssembledTrack) => void
-  parentRef: React.RefObject<HTMLDivElement>
+  activeVideo: string | null | undefined
+  handleTrackClick: (e: React.MouseEvent, track: Track) => void
+  parentRef: React.RefObject<HTMLDivElement> | null
   currentTime: number
   TrackSliceWrap?: React.FC<{ children: React.ReactNode }>
 }
 
-const Track = memo(({
+const VideoTrack = memo(({
   track,
-  scale,
   timeRanges,
   maxDuration,
-  activeCamera,
+  activeVideo,
   handleTrackClick,
   parentRef,
   TrackSliceWrap,
-}: TrackProps) => {
+}: VideoTrackProps) => {
   const firstVideo = track.videos[0]
   const lastVideo = track.videos[track.videos.length - 1]
   const trackStartTime = new Date(firstVideo.probeData?.format.tags?.creation_time || 0).getTime() /
@@ -36,14 +34,16 @@ const Track = memo(({
     new Date(lastVideo.probeData?.format.tags?.creation_time || 0).getTime() / 1000 +
     (lastVideo.probeData?.format.duration || 0)
 
-  const startOffset = ((trackStartTime - Math.min(...timeRanges.map((x) =>
-    x.start
-  ))) / maxDuration) *
+  const minStartTime = timeRanges && timeRanges.length > 0
+    ? Math.min(...timeRanges.map((x) => x.start))
+    : trackStartTime
+
+  const startOffset = ((trackStartTime - minStartTime) / maxDuration) *
     100
   const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
 
   const videoStream = firstVideo.probeData?.streams.find((s) => s.codec_type === "video")
-  const isActive = track.index === parseInt(activeCamera?.replace("V", "") || "0")
+  const isActive = track.index === parseInt(activeVideo?.replace("V", "") || "0")
 
   return (
     <div className="flex">
@@ -83,6 +83,6 @@ const Track = memo(({
   )
 })
 
-Track.displayName = "Track"
+VideoTrack.displayName = "VideoTrack"
 
-export { Track }
+export { VideoTrack }

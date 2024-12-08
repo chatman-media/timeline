@@ -22,7 +22,7 @@ export interface MediaFile {
 }
 
 export interface Track {
-  id?: string // Ключ камеры
+  id: string // Ключ камеры
   index: number // Номер камеры
   isActive: boolean // Флаг активности трека
   combinedDuration: number // Общая длительность видео

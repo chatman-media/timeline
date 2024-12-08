@@ -6,7 +6,13 @@ import { formatTimeWithMilliseconds } from "@/lib/utils"
  * Отображает метки времени с равными интервалами
  */
 const TimeScale = ({ scale = 1 }: { scale?: number }): JSX.Element => {
-  const { timeRanges, maxDuration } = useMedia()
+  const { timeRanges } = useMedia()
+
+  // Находим максимальную длительность как разницу между максимальным и минимальным временем
+  const maxDuration = Object.keys(timeRanges).flat().length > 0
+    ? Math.max(...Object.values(timeRanges).flat().map((range) => range.start + range.duration)) -
+      Math.min(...Object.values(timeRanges).flat().map((range) => range.start))
+    : 0
   const marks = []
 
   // Адаптируем количество делений под масштаб
@@ -27,7 +33,9 @@ const TimeScale = ({ scale = 1 }: { scale?: number }): JSX.Element => {
   const timeScale = getTimeScale(maxDuration, scale)
 
   // Находим минимальное время начала среди всех промежутков
-  const minStartTime = timeRanges.length > 0 ? Math.min(...timeRanges.map((range) => range.min)) : 0
+  const minStartTime = Object.keys(timeRanges).flat().length > 0
+    ? Math.min(...Object.values(timeRanges).flat().map((range) => range.start))
+    : 0
 
   // Округляем начальное и конечное время
   const roundedStartTime = Math.floor(minStartTime / timeScale) * timeScale
@@ -71,9 +79,9 @@ const TimeScale = ({ scale = 1 }: { scale?: number }): JSX.Element => {
     <div className="relative w-full flex flex-col" style={{ marginBottom: "12px" }}>
       {/* Индикатор доступных промежутков видео */}
       <div className="h-0.5 w-full">
-        {timeRanges.map((range, index) => {
-          const rangeWidth = ((range.max - range.min) / maxDuration) * 100
-          const rangePosition = ((range.min - minStartTime) / maxDuration) * 100
+        {Object.values(timeRanges).flat().map((range, index) => {
+          const rangeWidth = ((range.duration) / maxDuration) * 100
+          const rangePosition = ((range.start - minStartTime) / maxDuration) * 100
 
           return (
             <div

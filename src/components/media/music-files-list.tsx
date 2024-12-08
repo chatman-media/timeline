@@ -1,33 +1,66 @@
-import { Pause, Play } from "lucide-react"
-import { useEffect, useState } from "react"
+import { Pause, Play, Plus } from "lucide-react"
+import { MouseEvent, useEffect, useRef, useState } from "react"
 
-import { formatFileSize, formatTime, formatTimeWithMilliseconds } from "@/lib/utils"
+import { formatFileSize, formatTime } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
-
-import { TrackControls } from "./track-controls"
 
 export function MusicFilesList() {
   const [musicFiles, setMusicFiles] = useState<MediaFile[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeFile, setActiveFile] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(true)
   const audioRef = useState<HTMLAudioElement | null>(null)
+  const loaderRef = useRef<HTMLDivElement>(null)
+  const [isLoadingMore, setIsLoadingMore] = useState(false)
+
+  const fetchMusicFiles = async (pageNum: number) => {
+    try {
+      setIsLoadingMore(true)
+      const response = await fetch(`/api/music?page=${pageNum}&limit=20`)
+      const data = await response.json()
+
+      if (pageNum === 1) {
+        setMusicFiles(data.media)
+      } else {
+        setMusicFiles((prev) => [...prev, ...data.media])
+      }
+
+      setHasMore(musicFiles.length + data.media.length < data.total)
+    } catch (error) {
+      console.error("Error fetching music files:", error)
+    } finally {
+      setIsLoading(false)
+      setIsLoadingMore(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchMusicFiles = async () => {
-      try {
-        const response = await fetch("/api/music")
-        const data = await response.json()
-        setMusicFiles(data.media)
-      } catch (error) {
-        console.error("Error fetching music files:", error)
-      } finally {
-        setIsLoading(false)
-      }
+    fetchMusicFiles(1)
+  }, [])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const target = entries[0]
+        if (target.isIntersecting && hasMore && !isLoadingMore) {
+          setPage((prev) => prev + 1)
+          fetchMusicFiles(page + 1)
+        }
+      },
+      {
+        threshold: 0.5,
+        rootMargin: "100px",
+      },
+    )
+
+    if (loaderRef.current) {
+      observer.observe(loaderRef.current)
     }
 
-    fetchMusicFiles()
-  }, [])
+    return () => observer.disconnect()
+  }, [hasMore, isLoadingMore, page])
 
   const handlePlayPause = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
@@ -49,14 +82,6 @@ export function MusicFilesList() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="p-4">
-        <p className="text-sm text-gray-500">Загрузка аудиофайлов...</p>
-      </div>
-    )
-  }
-
   if (!musicFiles?.length) {
     return (
       <div className="p-4">
@@ -65,25 +90,18 @@ export function MusicFilesList() {
     )
   }
 
+  const handleAdd = (e: MouseEvent<HTMLButtonElement>, file: MediaFile) => {
+    console.log(e, file)
+  }
+
   return (
-    <div className="px-0  overflow-y-auto">
-      <div className="space-y-1 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+    <div className="px-0 h-[calc(50vh+10px)] overflow-y-auto">
+      <div className="space-y-1 bg-gray-50 dark:bg-gray-900">
         {musicFiles.map((file) => (
           <div
             key={file.path}
             className="flex items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer group"
           >
-            <TrackControls
-              iconSize={2}
-              onAddToTrack={(e) => {
-                e.stopPropagation()
-                // TODO: Добавить обработчик добавления аудио в трек
-              }}
-              onRemoveFromTrack={(e) => {
-                e.stopPropagation()
-                // TODO: Добавить обработчик удаления аудио из трека
-              }}
-            />
             <div className="relative">
               <div className="w-8 h-8 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center cursor-pointer">
                 <svg
@@ -142,8 +160,22 @@ export function MusicFilesList() {
                 </div>
               </div>
             </div>
+            <button
+              className="p-1 mr-4 rounded bg-gray-500 hover:bg-gray-800 border border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800 dark:border-gray-600 hover:dark:border-gray-300 transition-all duration-200 cursor-pointer text-white hover:text-white dark:text-gray-500 dark:hover:text-gray-200"
+              title="Добавить"
+              onClick={(e) => handleAdd(e, file)}
+            >
+              <Plus className="w-5 h-5" />
+            </button>
           </div>
         ))}
+
+        <div ref={loaderRef} className="p-4 text-center">
+          {isLoadingMore && <p className="text-sm text-gray-500">Загрузка...</p>}
+          {!hasMore && musicFiles.length > 0 && (
+            <p className="text-sm text-gray-500">Больше файлов нет</p>
+          )}
+        </div>
       </div>
     </div>
   )
