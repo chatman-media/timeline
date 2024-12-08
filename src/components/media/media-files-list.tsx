@@ -479,7 +479,7 @@ export function MediaFilesList() {
             {" "}
             видео
             {groupedSequences && (
-              ` [есть ${groupedSequences} ]`
+              ` [есть ${groupedSequences}]`
             )}
           </span>
           <span className="px-0">
