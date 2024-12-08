@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { ActiveVideo } from "./active-video"
 import { MediaFilesList } from "./media-files-list"
 import { MusicFilesList } from "./music-files-list"
-import { ScaleControl } from "./scale-control"
+import { ScaleControl } from "../layout/scale-control"
 
 export function MediaEditor() {
   return (
