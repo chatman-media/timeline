@@ -121,20 +121,25 @@ export function MediaFilesList() {
 
   const handlePlayPause = useCallback(async (e: React.MouseEvent, fileId: string) => {
     e.stopPropagation()
+    const baseFileId = fileId.split('-')[0]
     const mediaElement = videoRefs.current[fileId]
 
     if (mediaElement) {
       try {
-        if (playingFileId === fileId) {
+        if (playingFileId === baseFileId) {
           await mediaElement.pause()
           setPlayingFileId(null)
         } else {
-          if (playingFileId && videoRefs.current[playingFileId]) {
-            await videoRefs.current[playingFileId]?.pause()
+          if (playingFileId) {
+            Object.entries(videoRefs.current).forEach(([key, player]) => {
+              if (key.startsWith(playingFileId) && player) {
+                player.pause()
+              }
+            })
           }
 
           await mediaElement.play()
-          setPlayingFileId(fileId)
+          setPlayingFileId(baseFileId)
         }
       } catch (error) {
         console.error("Playback error:", error)
@@ -176,10 +181,10 @@ export function MediaFilesList() {
     e: React.MouseEvent<HTMLDivElement>,
     fileId: string,
     duration: number,
-    streamIndex: number,
+    streamIndex: number = 0  // По умолчанию 0 для аудио
   ) => {
     const mediaElement = e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)
-      ?.parentElement
+      ?.parentElement || e.currentTarget  // Fallback для аудио
     if (!mediaElement) return
 
     const rect = mediaElement.getBoundingClientRect()
@@ -213,6 +218,19 @@ export function MediaFilesList() {
       }
     }
   }, [])
+
+  const handleMouseLeave = useCallback(async (fileId: string) => {
+    const baseFileId = fileId.split('-')[0]
+    if (playingFileId === baseFileId) {
+      // Находим и останавливаем все активные плееры для файла
+      Object.entries(videoRefs.current).forEach(([key, player]) => {
+        if (key.startsWith(baseFileId) && player) {
+          player.pause()
+        }
+      })
+      setPlayingFileId(null)
+    }
+  }, [playingFileId])
 
   if (isLoading) {
     return (
@@ -266,7 +284,12 @@ export function MediaFilesList() {
                 <div className="relative flex gap-1">
                   {isAudio
                     ? (
-                      <div className="w-15 h-15 flex-shrink-0 relative">
+                      <div
+                        className="w-15 h-15 flex-shrink-0 relative"
+                        onMouseMove={(e) => handleMouseMove(e, fileId, duration, 0)}
+                        onClick={(e) => handlePlayPause(e, `${fileId}-0`)}
+                        onMouseLeave={() => handleMouseLeave(`${fileId}-0`)}
+                      >
                         <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -286,23 +309,24 @@ export function MediaFilesList() {
                           </svg>
                         </div>
                         <audio
-                          ref={(el) => videoRefs.current[fileId] = el}
+                          data-stream="0"
+                          ref={(el) => videoRefs.current[`${fileId}-0`] = el}
                           src={file.path}
                           preload="auto"
                           loop
                           onPlay={(e) => {
                             const audio = e.currentTarget
-                            const currentTime = hoverTimes[fileId]
+                            const currentTime = hoverTimes[fileId]?.[0]
                             if (currentTime !== undefined && currentTime !== null) {
                               audio.currentTime = currentTime
                             }
                           }}
                         />
-                        {hoverTimes[fileId] !== undefined &&
-                          hoverTimes[fileId] !== null &&
-                          Number.isFinite(hoverTimes[fileId]) && (
+                        {hoverTimes[fileId]?.[0] !== undefined &&
+                          hoverTimes[fileId]?.[0] !== null &&
+                          Number.isFinite(hoverTimes[fileId]?.[0]) && (
                           <Timeline
-                            time={hoverTimes[fileId] as number}
+                            time={hoverTimes[fileId][0]}
                             duration={duration}
                           />
                         )}
@@ -322,6 +346,7 @@ export function MediaFilesList() {
                               })(),
                             }}
                             onMouseMove={(e) => handleMouseMove(e, fileId, duration, index)}
+                            onMouseLeave={() => handleMouseLeave(`${fileId}-${index}`)}
                           >
                             <div className="relative w-full h-full">
                               {!loadedVideos[`${fileId}-${index}`] && (
@@ -432,21 +457,20 @@ export function MediaFilesList() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {!file.probeData?.format.creation_time
-                        ? (parseFileNameDateTime(file.name)
-                          ? formatTimeWithMilliseconds(
-                            (parseFileNameDateTime(file.name) as Date).getTime() / 1000,
-                            true,
-                            true,
-                            false,
-                          )
-                          : "-")
-                        : formatTimeWithMilliseconds(
-                          (file.probeData.format.creation_time as Date).getTime() / 1000,
-                          true,
-                          true,
-                          false,
-                        )}
+                      {(() => {
+                        const creationTime = file.probeData?.format.creation_time || file.probeData?.format.tags?.creation_time;
+                        
+                        if (!creationTime) {
+                          const parsedTime = parseFileNameDateTime(file.name);
+                          return parsedTime 
+                            ? formatTimeWithMilliseconds(parsedTime.getTime() / 1000, true, true, false)
+                            : "";
+                        }
+                        
+                        // Преобразуем строку в Date объект
+                        const dateObj = new Date(creationTime);
+                        return formatTimeWithMilliseconds(dateObj.getTime() / 1000, true, true, false);
+                      })()}
                     </span>
 
                     <p className="text-xs">
