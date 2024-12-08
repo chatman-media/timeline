@@ -38,7 +38,7 @@ const Timeline = ({ time, duration }: TimelineProps) => {
           zIndex: 21,
         }}
       >
-        {formatTime(time)}
+        {formatTime(time, true)}
       </div>
     </>
   )
@@ -372,8 +372,8 @@ export function MediaFilesList() {
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-center">
-                    <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">
+                  <div className="flex justify-between items-start">
+                    <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100 mb-3">
                       {file.name}
                     </p>
                     <p className="text-xs text-gray-900 dark:text-gray-100 min-w-12 text-right">
@@ -386,17 +386,21 @@ export function MediaFilesList() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {(() => {
-                        const fileDate = parseFileNameDateTime(file.name)
-                        return fileDate
-                          ? formatTimeWithMilliseconds(fileDate.getTime() / 1000, true, true, false)
-                          : formatTimeWithMilliseconds(
-                            file.probeData?.format.creation_time || 0,
+                      {!file.probeData?.format.creation_time
+                        ? (parseFileNameDateTime(file.name)
+                          ? formatTimeWithMilliseconds(
+                              (parseFileNameDateTime(file.name) as Date).getTime() / 1000,
                             true,
                             true,
                             false,
                           )
-                      })()}
+                          : "-")
+                        : formatTimeWithMilliseconds(
+                          (file.probeData.format.creation_time as Date).getTime() / 1000,
+                          true,
+                          true,
+                          false,
+                        )}
                     </span>
 
                     <p className="text-xs">
@@ -414,7 +418,7 @@ export function MediaFilesList() {
                       )}
                       {file.probeData?.format.duration && (
                         <span className="text-gray-500 dark:text-gray-400 ml-4">
-                          {formatTime(file.probeData.format.duration)}
+                          {formatTime(file.probeData.format.duration, false)}
                         </span>
                       )}
                     </p>

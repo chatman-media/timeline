@@ -64,7 +64,7 @@ export function formatBitrate(bitrate: number | undefined): string {
   return `${(bitrate / 1_000_000).toFixed(1)} Mbps`
 }
 
-export const formatTime = (seconds: number): string => {
+export const formatTime = (seconds: number, showMilliseconds = false): string => {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   const secs = Math.floor(seconds % 60)
@@ -74,7 +74,7 @@ export const formatTime = (seconds: number): string => {
     return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
   return `${minutes}:${secs.toString().padStart(2, "0")}${
-    ms > 0 ? `:${ms.toString().padStart(3, "0")}` : ""
+    (ms > 0 && showMilliseconds) ? `:${ms.toString().padStart(3, "0")}` : ""
   }`
 }
 
