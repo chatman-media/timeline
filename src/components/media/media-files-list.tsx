@@ -1,6 +1,6 @@
 import { Plus, PlusSquare } from "lucide-react"
 import { nanoid } from "nanoid"
-import { useRef, useState } from "react"
+import { useRef, useState, useMemo, useCallback } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import {
@@ -113,7 +113,9 @@ export function MediaFilesList() {
   const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>({})
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
 
-  const handlePlayPause = async (e: React.MouseEvent, fileId: string) => {
+  const groupedSequences = useMemo(() => getSequentialGroups(media), [media])
+
+  const handlePlayPause = useCallback(async (e: React.MouseEvent, fileId: string) => {
     e.stopPropagation()
     const mediaElement = videoRefs.current[fileId]
 
@@ -135,7 +137,7 @@ export function MediaFilesList() {
         setPlayingFileId(null)
       }
     }
-  }
+  }, [playingFileId])
 
   const handleAddAllFiles = () => {
     // Group files by camera/track
@@ -166,7 +168,7 @@ export function MediaFilesList() {
     setTracks(tracks)
   }
 
-  const handleMouseMove = (
+  const handleMouseMove = useCallback((
     e: React.MouseEvent<HTMLDivElement>,
     fileId: string,
     duration: number,
@@ -205,7 +207,7 @@ export function MediaFilesList() {
         videoElement.currentTime = time
       }
     }
-  }
+  }, [])
 
   if (isLoading) {
     return (
@@ -324,6 +326,10 @@ export function MediaFilesList() {
                               loop
                               playsInline
                               preload="metadata"
+                              onLoadedMetadata={(e) => {
+                                const video = e.currentTarget;
+                                video.currentTime = 0;
+                              }}
                               onPlay={(e) => {
                                 const video = e.currentTarget
                                 const currentTime = hoverTimes[fileId]?.[index]
@@ -454,8 +460,8 @@ export function MediaFilesList() {
             {media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "video").length}
             {" "}
             видео
-            {getSequentialGroups(media) && (
-              ` [ ${getSequentialGroups(media)} ]`
+            {groupedSequences && (
+              ` [ ${groupedSequences} ]`
             )}
           </span>
           <span className="px-1">
