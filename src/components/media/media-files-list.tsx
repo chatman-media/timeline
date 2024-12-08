@@ -10,6 +10,7 @@ import {
   parseFileNameDateTime,
 } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
+import { calculateRealDimensions, getSequentialGroups, isHorizontalVideo } from "@/utils/mediaUtils"
 import { calculateTimeRanges } from "@/utils/videoUtils"
 
 import { Button } from "../ui/button"
@@ -43,69 +44,6 @@ const Timeline = ({ time, duration }: TimelineProps) => {
       </div>
     </>
   )
-}
-
-// Обновляем функцию для расчета реальных размеров
-const calculateRealDimensions = (stream: any) => {
-  const rotation = stream.rotation ? parseInt(stream.rotation) : 0
-  const width = stream.width
-  const height = stream.height
-
-  // Если поворот на 90 или 270 градусов, меняем местами ширину и высоту
-  // и не применяем поворот, чтобы видео всегда было горизонтальным
-  if (Math.abs(rotation) === 90 || Math.abs(rotation) === 270) {
-    return {
-      width: height,
-      height: width,
-      style: "", // Убираем поворот
-    }
-  }
-
-  // Для остальных случаев оставляем как есть
-  return {
-    width: width,
-    height: height,
-    style: "",
-  }
-}
-
-// Функция для определения последовательных записей
-const getSequentialGroups = (files: MediaFile[]) => {
-  const groups: { [key: string]: MediaFile[] } = {}
-
-  files.forEach((file) => {
-    const match = file.name.match(/(.+?)(?:_(\d+))?\.([^.]+)$/)
-    if (match) {
-      const baseName = match[1]
-      if (!groups[baseName]) {
-        groups[baseName] = []
-      }
-      groups[baseName].push(file)
-    }
-  })
-
-  // Группируем по количеству файлов в последовательности
-  const groupsBySize = Object.values(groups)
-    .filter((files) => files.length > 1)
-    .reduce((acc, files) => {
-      const count = files.length
-      acc[count] = (acc[count] || 0) + 1
-      return acc
-    }, {} as Record<number, number>)
-
-  // Формируем строку описания
-  return Object.entries(groupsBySize)
-    .map(([size, count]) => `${count} серии по ${size} видео`)
-    .join(", ")
-}
-
-// Add this helper function near the top of the file
-const isHorizontalVideo = (width: number, height: number, rotation?: number) => {
-  // If rotation is 90 or 270 degrees, swap width and height
-  if (rotation && (Math.abs(rotation) === 90 || Math.abs(rotation) === 270)) {
-    return height > width
-  }
-  return width > height
 }
 
 export function MediaFilesList() {
@@ -234,8 +172,21 @@ export function MediaFilesList() {
 
   if (isLoading) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-gray-500">Загрузка файлов...</p>
+      <div className="px-0 h-[calc(50vh-10px)] overflow-y-auto">
+        <div className="space-y-2 bg-gray-50 dark:bg-gray-900">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
+            <div key={index} className="flex items-center gap-3 p-0 pr-2 rounded-md">
+              <div className="h-[60px] w-[80px]">
+                <Skeleton className="h-full w-full rounded" />
+              </div>
+              <div className="flex-1">
+                <Skeleton className="h-4 w-3/4 mb-3" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <Skeleton className="h-7 w-7 rounded" />
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
@@ -362,9 +313,9 @@ export function MediaFilesList() {
                                 playsInline
                                 loading="lazy"
                                 preload="metadata"
-                                style={{ 
+                                style={{
                                   opacity: loadedVideos[`${fileId}-${index}`] ? 1 : 0,
-                                  transition: 'opacity 0.2s ease-in-out'
+                                  transition: "opacity 0.2s ease-in-out",
                                 }}
                                 onLoadedMetadata={() => {
                                   setLoadedVideos((prev) => ({
@@ -523,16 +474,16 @@ export function MediaFilesList() {
       {/* строка состояния и кнопка добавления всех файлов в трек */}
       <div className="flex justify-between items-center p-0 text-sm m-1">
         <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-          <span className="px-2">
+          <span className="px-1">
             {media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "video").length}
             {" "}
             видео
             {groupedSequences && (
-              ` [ ${groupedSequences} ]`
+              ` [есть ${groupedSequences} ]`
             )}
           </span>
-          <span className="px-1">
-            {media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "audio").length}
+          <span className="px-0">
+            и {media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "audio").length}
             {" "}
             аудио
           </span>

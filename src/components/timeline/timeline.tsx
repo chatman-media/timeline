@@ -183,7 +183,7 @@ export function Timeline() {
   // }, [currentTime, synchronizeTracks])
 
   return (
-    <div className="timeline">
+    <div className="timeline w-full min-h-[calc(50vh-70px)]">
       {/* <TimeScale scale={scale} /> */}
       <div className="relative" style={{ paddingBottom: `37px` }}>
         <div className="flex">
