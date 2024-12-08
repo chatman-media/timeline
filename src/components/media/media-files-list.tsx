@@ -357,13 +357,16 @@ export function MediaFilesList() {
                                 onClick={(e) => handlePlayPause(e, `${fileId}-${index}`)}
                                 ref={(el) => videoRefs.current[`${fileId}-${index}`] = el}
                                 src={file.path}
-                                className={`w-full h-full object-cover rounded ${
-                                  !loadedVideos[`${fileId}-${index}`] ? "invisible" : ""
-                                }`}
+                                className={`w-full h-full object-cover rounded`}
                                 loop
                                 playsInline
+                                loading="lazy"
                                 preload="metadata"
-                                onLoadedData={() => {
+                                style={{ 
+                                  opacity: loadedVideos[`${fileId}-${index}`] ? 1 : 0,
+                                  transition: 'opacity 0.2s ease-in-out'
+                                }}
+                                onLoadedMetadata={() => {
                                   setLoadedVideos((prev) => ({
                                     ...prev,
                                     [`${fileId}-${index}`]: true,
