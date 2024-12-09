@@ -168,11 +168,10 @@
 }
 
 .drag--parent--bordered {
-  outline: 2px solid white;
   outline-offset: -2px;
   z-index: 10;
   border: 1px solid white;
-  border-radius: 1px;
+  border-radius: 2px;
 }
 
 .drag--child {
@@ -320,9 +319,9 @@
   font-size: 11px;
   line-height: 1.1;
   padding: 0 3px;
-  border-radius: 3px;
+  /* border-radius: 3px; */
   height: 12px;
-  color: var(--color-gray-100) !important;
+  /* color: var(--color-gray-100) !important; */
   &:last-child {
     margin-right: 0;
   }
@@ -391,10 +390,11 @@
 }
 
 .drag--parent--bordered {
-  border: 1px solid rgba(59, 130, 246, 0.5);
+  /* border: 1px solid rgba(59, 130, 246, 0.5); */
 }
 
 .video-metadata > span {
+  color: #fff;
   margin-right: 0.5rem;
 }
 

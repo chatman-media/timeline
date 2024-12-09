@@ -83,8 +83,8 @@ const VideoTrack = memo(({
                               >
                                 {video.path.split("/").pop()}
 
-                                <div className="w-full px-1 m-0 flex space-x-2 justify-end text-xs text-gray-100">
-                                  <div className="flex flex-row video-metadata truncate mr-1">
+                                <div className="w-full px-1 m-0 flex space-x-2 justify-end text-xs text-white">
+                                  <div className="flex flex-row video-metadata truncate mr-1 text-xs text-white">
                                     <span>V{track.index}</span>
                                     <span>{videoStream?.codec_name?.toUpperCase()}</span>
                                     <span>{videoStream?.width}×{videoStream?.height}</span>
