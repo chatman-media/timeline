@@ -34,7 +34,7 @@ interface VideoState {
 
   timeToPercent: (time: number) => number
   percentToTime: (percent: number) => number
-  addToMetadataCache: (key: string, data: any) => void
+  addToMetadataCache: (key: string, data: string) => void
   addToThumbnailCache: (key: string, data: string) => void
 }
 
@@ -85,7 +85,6 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         return
       }
       set({ media: data.media })
-      console.log(data.media)
 
       const validMedia = data.media
         .filter((v: MediaFile) => {

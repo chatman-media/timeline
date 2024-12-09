@@ -1,6 +1,5 @@
 import { useEffect } from "react"
 
-import { STORAGE_KEYS } from "@/lib/constants"
 import { isVideoAvailable } from "@/lib/utils"
 import { useVideoStore } from "@/stores/videoStore"
 import { MediaFile } from "@/types/videos"

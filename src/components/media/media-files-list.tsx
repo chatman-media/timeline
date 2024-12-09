@@ -15,6 +15,7 @@ import { calculateTimeRanges } from "@/utils/videoUtils"
 
 import { Button } from "../ui/button"
 import { Skeleton } from "../ui/skeleton"
+import { MediaPreview } from "./media-preview"
 
 interface TimelineProps {
   time: number
@@ -44,15 +45,6 @@ const Timeline = ({ time, duration }: TimelineProps) => {
       </div>
     </>
   )
-}
-
-// Добавим вспомогательную функцию для форматирования разрешения
-const formatResolution = (width: number, height: number) => {
-  if (width >= 3840 || height >= 2160) return "4K"
-  if (width >= 2688 || height >= 1512) return "2.7K"
-  if (width >= 1920 || height >= 1080) return "1080p"
-  if (width >= 1280 || height >= 720) return "720p"
-  return "SD"
 }
 
 export function MediaFilesList() {
@@ -263,176 +255,20 @@ export function MediaFilesList() {
                 className="flex items-center gap-3 p-0 pr-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 group"
               >
                 <div className="relative flex gap-1">
-                  {isAudio
-                    ? (
-                      <div
-                        className="w-15 h-15 flex-shrink-0 relative"
-                        onMouseMove={(e) => handleMouseMove(e, fileId, duration, 0)}
-                        onClick={(e) => handlePlayPause(e, `${fileId}-0`)}
-                        onMouseLeave={() => handleMouseLeave(`${fileId}-0`)}
-                      >
-                        <div className="w-full h-full bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-gray-500 dark:text-gray-400"
-                          >
-                            <path d="M9 18V5l12-2v13" />
-                            <circle cx="6" cy="18" r="3" />
-                            <circle cx="18" cy="16" r="3" />
-                          </svg>
-                        </div>
-                        <audio
-                          data-stream="0"
-                          ref={(el) => videoRefs.current[`${fileId}-0`] = el as HTMLVideoElement}
-                          src={file.path}
-                          preload="auto"
-                          loop
-                          onPlay={(e) => {
-                            const audio = e.currentTarget
-                            const currentTime = hoverTimes[fileId]?.[0]
-                            if (currentTime !== undefined && currentTime !== null) {
-                              audio.currentTime = currentTime
-                            }
-                          }}
-                        />
-                        {hoverTimes[fileId]?.[0] !== undefined &&
-                          hoverTimes[fileId]?.[0] !== null &&
-                          Number.isFinite(hoverTimes[fileId]?.[0]) && (
-                          <Timeline
-                            time={hoverTimes[fileId][0]}
-                            duration={duration}
-                          />
-                        )}
-                      </div>
-                    )
-                    : (
-                      file.probeData?.streams
-                        ?.filter((stream) => stream.codec_type === "video")
-                        .map((stream, index) => (
-                          <div
-                            key={index}
-                            className="h-15 flex-shrink-0 relative"
-                            style={{
-                              width: (() => {
-                                const dimensions = calculateRealDimensions(stream)
-                                return `${60 * (dimensions.width / dimensions.height)}px`
-                              })(),
-                            }}
-                            onMouseMove={(e) => handleMouseMove(e, fileId, duration, index)}
-                            onMouseLeave={() => handleMouseLeave(`${fileId}-${index}`)}
-                          >
-                            <div className="relative w-full h-full">
-                              {!loadedVideos[`${fileId}-${index}`] && (
-                                <Skeleton className="absolute inset-0 rounded" />
-                              )}
-                              <video
-                                data-stream={index}
-                                onClick={(e) => handlePlayPause(e, file, index)}
-                                ref={(el) => videoRefs.current[`${fileId}-${index}`] = el}
-                                src={file.path}
-                                className={`w-full h-full object-cover rounded`}
-                                loop
-                                playsInline
-                                loading="lazy"
-                                preload="metadata"
-                                style={{
-                                  opacity: loadedVideos[`${fileId}-${index}`] ? 1 : 0,
-                                  transition: "opacity 0.2s ease-in-out",
-                                }}
-                                onLoadedMetadata={() => {
-                                  setLoadedVideos((prev) => ({
-                                    ...prev,
-                                    [`${fileId}-${index}`]: true,
-                                  }))
-                                }}
-                                onPlay={(e) => {
-                                  const video = e.currentTarget
-                                  const currentTime = hoverTimes[fileId]?.[index]
-                                  if (currentTime !== undefined && currentTime !== null) {
-                                    video.currentTime = currentTime
-                                  }
-                                }}
-                                onError={(e) => {
-                                  console.error("Video error:", e)
-                                  setPlayingFileId(null)
-                                }}
-                              />
-                              {file.probeData?.streams.filter((s) => s.codec_type === "video")
-                                    .length > 1 && (
-                                <div
-                                  style={{ fontSize: "10px" }}
-                                  className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
-                                >
-                                  {index + 1}
-                                </div>
-                              )}
-                              {file.probeData?.streams?.some((stream) =>
-                                stream.codec_type === "audio"
-                              ) && (
-                                <div
-                                  className={`absolute ${
-                                    isHorizontalVideo(
-                                        stream.width,
-                                        stream.height,
-                                        parseInt(stream.rotation || "0"),
-                                      )
-                                      ? "left-[2px] bottom-[2px]"
-                                      : "left-1/2 bottom-[2px] -translate-x-1/2"
-                                  } text-white bg-black/50 rounded p-[2px]`}
-                                >
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="12"
-                                    height="12"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                  >
-                                    <path d="M9 18V5l12-2v13" />
-                                    <circle cx="6" cy="18" r="3" />
-                                    <circle cx="18" cy="16" r="3" />
-                                  </svg>
-                                </div>
-                              )}
-                              {hoverTimes[fileId]?.[index] !== undefined &&
-                                hoverTimes[fileId]?.[index] !== null &&
-                                Number.isFinite(hoverTimes[fileId]?.[index]) && (
-                                <Timeline
-                                  time={hoverTimes[fileId][index]}
-                                  duration={duration}
-                                />
-                              )}
-                              {loadedVideos[`${fileId}-${index}`] && (
-                                <div
-                                  style={{ fontSize: "10px" }}
-                                  className={`absolute ${
-                                    isHorizontalVideo(
-                                        stream.width,
-                                        stream.height,
-                                        parseInt(stream.rotation || "0"),
-                                      )
-                                      ? "left-[2px] top-[2px]"
-                                      : "left-[calc(50%-8px)] top-[2px]"
-                                  } text-white bg-black/50 rounded px-[2px] py-0`}
-                                >
-                                  {formatResolution(stream.width, stream.height)}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ))
-                    )}
+                  <MediaPreview
+                    file={file}
+                    fileId={fileId}
+                    duration={duration}
+                    isAudio={isAudio}
+                    videoRefs={videoRefs}
+                    loadedVideos={loadedVideos}
+                    setLoadedVideos={setLoadedVideos}
+                    hoverTimes={hoverTimes}
+                    handleMouseMove={handleMouseMove}
+                    handlePlayPause={handlePlayPause}
+                    handleMouseLeave={handleMouseLeave}
+                    setPlayingFileId={setPlayingFileId}
+                  />
                 </div>
 
                 <div className="flex-1 min-w-0">

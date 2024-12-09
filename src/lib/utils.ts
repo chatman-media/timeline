@@ -29,6 +29,15 @@ export const formatDuration = (seconds: number, afterComa = 3): string => {
   }`
 }
 
+// Добавим вспомогательную функцию для форматирования разрешения
+export const formatResolution = (width: number, height: number) => {
+  if (width >= 3840 || height >= 2160) return "4K"
+  if (width >= 2688 || height >= 1512) return "2.7K"
+  if (width >= 1920 || height >= 1080) return "1080p"
+  if (width >= 1280 || height >= 720) return "720p"
+  return "SD"
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }

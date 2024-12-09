@@ -51,7 +51,7 @@ export default async function handler(
         const probeData = await ffprobeAsync(filePath) as FfprobeData
         const isVideo = probeData.streams.some((stream) => stream.codec_type === "video")
 
-        console.log(probeData)
+        // console.log(probeData)
         return {
           name: file,
           path: `/media/${file}`,
@@ -69,7 +69,6 @@ export default async function handler(
       (item) => item !== null,
     )
 
-    console.log(media)
     res.status(200).json({ media })
   } catch (error) {
     console.error("Error processing media:", error)

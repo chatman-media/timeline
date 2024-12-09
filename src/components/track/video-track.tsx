@@ -12,7 +12,7 @@ interface VideoTrackProps {
   maxDuration: number
   activeVideo: string | null | undefined
   handleTrackClick: (e: React.MouseEvent, track: Track) => void
-  parentRef: React.RefObject<HTMLDivElement> | null
+  parentRef?: React.RefObject<HTMLDivElement> | null
   currentTime: number
   TrackSliceWrap?: React.FC<{ children: React.ReactNode }>
 }
