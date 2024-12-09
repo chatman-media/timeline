@@ -5,7 +5,7 @@ import { useCallback, useMemo, useRef, useState } from "react"
 import { useMedia } from "@/hooks/use-media"
 import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
-import { getGroupedFiles, getSequentialGroups } from "@/utils/mediaUtils"
+import { createTracksFromFiles, getGroupedFiles, getSequentialGroups } from "@/utils/mediaUtils"
 import { calculateTimeRanges } from "@/utils/videoUtils"
 
 import { Skeleton } from "../ui/skeleton"
@@ -59,28 +59,8 @@ export function MediaFilesList() {
   )
 
   const handleAddAllFiles = useCallback(() => {
-    // Фильтруем только видео файлы
     const videoFiles = media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "video")
-
-    const newTracks = Object.entries(getGroupedFiles(videoFiles)).map(
-      ([groupKey, groupFiles], index) => {
-        return {
-          id: nanoid(),
-          index: tracks.length + index + 1,
-          isActive: false,
-          videos: groupFiles,
-          startTime: groupFiles[0].startTime || 0,
-          endTime: (groupFiles[groupFiles.length - 1].startTime || 0) +
-            (groupFiles[groupFiles.length - 1].duration || 0),
-          combinedDuration: groupFiles.reduce(
-            (total, file) => total + (file.probeData?.format.duration || 0),
-            0,
-          ),
-          timeRanges: calculateTimeRanges(groupFiles),
-        }
-      },
-    )
-
+    const newTracks = createTracksFromFiles(videoFiles, tracks.length)
     setTracks([
       ...tracks,
       ...(newTracks.filter((t) => !(new Set(tracks.map((t) => t.id))).has(t.id))),
@@ -150,26 +130,15 @@ export function MediaFilesList() {
         month: "long",
         year: "numeric",
       })
-      return fileDate === targetDate
+      return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
     })
 
-    const newTrack = {
-      id: nanoid(),
-      index: tracks.length + 1,
-      isActive: false,
-      videos: dateFiles,
-      startTime: dateFiles[0]?.startTime || 0,
-      endTime: (dateFiles[dateFiles.length - 1]?.startTime || 0) +
-        (dateFiles[dateFiles.length - 1]?.duration || 0),
-      combinedDuration: dateFiles.reduce(
-        (total, file) => total + (file.probeData?.format.duration || 0),
-        0,
-      ),
-      timeRanges: calculateTimeRanges(dateFiles),
-    }
-
-    setTracks([...tracks, newTrack])
-  }, [media])
+    const newTracks = createTracksFromFiles(dateFiles, tracks.length)
+    setTracks([
+      ...tracks,
+      ...(newTracks.filter((t) => !(new Set(tracks.map((t) => t.id))).has(t.id))),
+    ])
+  }, [media, tracks, setTracks])
 
   if (isLoading) {
     return (
