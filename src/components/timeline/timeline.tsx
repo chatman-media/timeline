@@ -9,7 +9,7 @@ import { TrackSliceWrap } from "../track/track-slice-wrap"
 import { MediaFile, Track } from "@/types/videos"
 
 export function Timeline() {
-  const { tracks, activeVideo, currentTime, timeToPercent, setActiveVideo } = useMedia()
+  const { tracks, activeVideo, currentTime, setActiveVideo } = useMedia()
   const { scale, maxDuration, minStartTime } = useTimelineScale()
   const parentRef = useRef<HTMLDivElement>(null)
 

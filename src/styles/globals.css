@@ -381,3 +381,21 @@
     }
   }
 }
+
+.timline-border {
+  border: 1px solid rgba(75, 85, 99, 0.4);
+}
+
+.drag--parent--bordered {
+  border: 1px solid rgba(59, 130, 246, 0.5);
+}
+
+.video-metadata > span {
+  margin-right: 0.5rem;
+}
+
+.video-metadata > span:not(:first-child)::before {
+  content: "•";
+  margin-right: 0.5rem;
+  opacity: 0.5;
+}
