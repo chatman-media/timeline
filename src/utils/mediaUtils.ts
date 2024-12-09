@@ -56,3 +56,28 @@ export const isHorizontalVideo = (width: number, height: number, rotation?: numb
   }
   return width > height
 }
+
+// Функция для получения сгруппированных файлов
+export const getGroupedFiles = (files: MediaFile[]) => {
+  const groups: { [key: string]: MediaFile[] } = {}
+
+  files.forEach((file) => {
+    const match = file.name.match(/(.+?)(?:_(\d+))?\.([^.]+)$/)
+    if (match) {
+      const baseName = match[1]
+      if (!groups[baseName]) {
+        groups[baseName] = []
+      }
+      groups[baseName].push(file)
+    }
+  })
+
+  // Фильтруем группы, оставляя только те, где больше одного файла
+  // и сортируем файлы внутри групп по имени
+  return Object.entries(groups)
+    .filter(([_, files]) => files.length > 1)
+    .reduce((acc, [key, files]) => {
+      acc[key] = files.sort((a, b) => a.name.localeCompare(b.name))
+      return acc
+    }, {} as { [key: string]: MediaFile[] })
+}
