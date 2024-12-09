@@ -1,18 +1,14 @@
-import { nanoid } from "nanoid"
-import React, { useCallback, useEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
-import { SeekbarState, TrackSliceData } from "@/types/timeline"
-import { MediaFile, Track } from "@/types/videos"
+import { SeekbarState } from "@/types/timeline"
 
 import { VideoTrack } from "../track"
 import { TrackSliceWrap } from "../track/track-slice-wrap"
-import TimeScale from "./timeline-scale"
 
 export function Timeline() {
-  const { tracks, activeVideo, currentTime, timeToPercent, setActiveVideo, setCurrentTime } =
-    useMedia()
+  const { tracks, activeVideo, currentTime, timeToPercent } = useMedia()
   const { scale } = useTimelineScale()
   const maxDuration = Math.max(...tracks.map((track) => track.combinedDuration))
 

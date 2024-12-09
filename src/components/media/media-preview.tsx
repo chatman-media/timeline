@@ -162,7 +162,12 @@ export function MediaPreview({
   )
 }
 
-function renderStreamIndicators(file: MediaFile, stream: FfprobeStream, index: number, isLoaded: boolean) {
+function renderStreamIndicators(
+  file: MediaFile,
+  stream: FfprobeStream,
+  index: number,
+  isLoaded: boolean,
+) {
   return (
     <>
       {file.probeData?.streams.filter((s) => s.codec_type === "video").length > 1 && (
