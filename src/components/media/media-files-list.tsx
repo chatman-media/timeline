@@ -8,7 +8,6 @@ import { MediaFile } from "@/types/videos"
 import { getGroupedFiles, getSequentialGroups } from "@/utils/mediaUtils"
 import { calculateTimeRanges } from "@/utils/videoUtils"
 
-import { Button } from "../ui/button"
 import { Skeleton } from "../ui/skeleton"
 import { MediaPreview } from "./media-preview"
 
@@ -60,53 +59,28 @@ export function MediaFilesList() {
   )
 
   const handleAddAllFiles = useCallback(() => {
-    // Группируем видео по первым символам имени файла
-    const groupedVideos = media.reduce((groups: Record<string, MediaFile[]>, file) => {
-      if (file.probeData?.streams?.[0]?.codec_type !== "video") return groups
+    // Фильтруем только видео файлы
+    const videoFiles = media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "video")
 
-      const groupKey = file.name.slice(0, 2) // Используем первые 2 символа как ключ группы
-      if (!groups[groupKey]) groups[groupKey] = []
-      groups[groupKey].push(file)
-      return groups
-    }, {})
-    // Create tracks for each sequence group
-    const newTracks = Object.entries(groupedVideos).map(([groupKey, groupFiles], index) => {
-      // Check if this sequence already has a track
-      const existingTrack = tracks.find((track) =>
-        track.videos.some((video) => video.name.startsWith(groupKey))
-      )
-
-      if (existingTrack) {
-        // Update existing track with new videos
+    const newTracks = Object.entries(getGroupedFiles(videoFiles)).map(
+      ([groupKey, groupFiles], index) => {
         return {
-          ...existingTrack,
-          videos: [...new Set([...existingTrack.videos, ...groupFiles])],
+          id: nanoid(),
+          index: tracks.length + index + 1,
+          isActive: false,
+          videos: groupFiles,
+          startTime: groupFiles[0].startTime || 0,
+          endTime: (groupFiles[groupFiles.length - 1].startTime || 0) +
+            (groupFiles[groupFiles.length - 1].duration || 0),
           combinedDuration: groupFiles.reduce(
             (total, file) => total + (file.probeData?.format.duration || 0),
             0,
           ),
           timeRanges: calculateTimeRanges(groupFiles),
         }
-      }
+      },
+    )
 
-      // Create new track
-      return {
-        id: nanoid(),
-        index: tracks.length + index + 1,
-        isActive: false,
-        videos: groupFiles,
-        startTime: groupFiles[0].startTime || 0,
-        endTime: (groupFiles[groupFiles.length - 1].startTime || 0) +
-          (groupFiles[groupFiles.length - 1].duration || 0),
-        combinedDuration: groupFiles.reduce(
-          (total, file) => total + (file.probeData?.format.duration || 0),
-          0,
-        ),
-        timeRanges: calculateTimeRanges(groupFiles),
-      }
-    })
-
-    // Update tracks state, filtering out duplicates
     setTracks([
       ...tracks,
       ...(newTracks.filter((t) => !(new Set(tracks.map((t) => t.id))).has(t.id))),
@@ -228,11 +202,14 @@ export function MediaFilesList() {
 
   const handleAddMedia = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
-    // Создаем новый трек с одним видео
+    // Проверяем, что файл является видео
+    if (file.probeData?.streams?.[0]?.codec_type !== "video") return
+
     const newTrack = {
-      id: nanoid(), // Используем уникальный ID
-      index: tracks.length + 1, // Увеличиваем индекс
-      isActive: false, // По умолчанию не активный
+      id: nanoid(),
+      index: tracks.length + 1,
+      isActive: false,
+      isVideo: true,
       combinedDuration: file.probeData?.format.duration || 0,
       videos: [file],
       timeRanges: calculateTimeRanges([file]),
@@ -240,7 +217,6 @@ export function MediaFilesList() {
       endTime: file.endTime || 0,
     }
 
-    // Проверяем существование трека
     const trackExists = tracks.some((t) => t.videos.some((v) => v.id === file.id))
     if (!trackExists) {
       setTracks([...tracks, newTrack])

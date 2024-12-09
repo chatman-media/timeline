@@ -72,12 +72,9 @@ export const getGroupedFiles = (files: MediaFile[]) => {
     }
   })
 
-  // Фильтруем группы, оставляя только те, где больше одного файла
-  // и сортируем файлы внутри групп по имени
   return Object.entries(groups)
-    .filter(([_, files]) => files.length > 1)
     .reduce((acc, [key, files]) => {
-      acc[key] = files.sort((a, b) => a.name.localeCompare(b.name))
+      acc[key] = files.sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
       return acc
     }, {} as { [key: string]: MediaFile[] })
 }
