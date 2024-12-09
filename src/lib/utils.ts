@@ -36,17 +36,33 @@ export const formatResolution = (width: number, height: number) => {
     const k = pixels / (2000 * 1000)
     // Комбинация стандартных значений и кратных 0.2
     const kValues = [
-      1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7,  // стандартные малые значения
-      3.0, 3.2, 3.4, 3.6, 3.8, 4.0,            // средние значения
-      4.5, 5.0, 5.5, 6.0, 8.0                   // высокие значения
+      1.2,
+      1.4,
+      1.6,
+      1.8,
+      2.0,
+      2.2,
+      2.4,
+      2.7, // стандартные малые значения
+      3.0,
+      3.2,
+      3.4,
+      3.6,
+      3.8,
+      4.0, // средние значения
+      4.5,
+      5.0,
+      5.5,
+      6.0,
+      8.0, // высокие значения
     ]
-    const closestK = kValues.reduce((prev, curr) => 
+    const closestK = kValues.reduce((prev, curr) =>
       Math.abs(curr - k) < Math.abs(prev - k) ? curr : prev
     )
     return `${closestK}K`
   }
-  if (pixels >= 2073600) return "1080p"   // 1920x1080 = 2,073,600 pixels
-  if (pixels >= 921600) return "720p"     // 1280x720 = 921,600 pixels
+  if (pixels >= 2073600) return "1080p" // 1920x1080 = 2,073,600 pixels
+  if (pixels >= 921600) return "720p" // 1280x720 = 921,600 pixels
   return "SD"
 }
 
