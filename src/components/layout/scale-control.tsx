@@ -34,7 +34,7 @@ export function ScaleControl() {
               max="1"
               step="0.1"
               value={scale}
-              onChange={(e) => decreaseScale(+e.target.value)}
+              onChange={() => decreaseScale()}
               className="absolute w-full h-full opacity-0 cursor-pointer"
             />
           </div>

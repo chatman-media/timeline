@@ -1,52 +1,24 @@
 import { useMedia } from "@/hooks/use-media"
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
 import { formatTimeWithMilliseconds } from "@/lib/utils"
+import { Track } from "@/types/videos"
 
 /**
  * Компонент временной шкалы
  * Отображает метки времени с равными интервалами
  */
 const TimelineScale = (): JSX.Element => {
-  const { scale } = useTimelineScale()
-  const { timeRanges } = useMedia()
+  const { tracks } = useMedia()
+  const {
+    maxDuration,
+    minStartTime,
+    roundedStartTime,
+    roundedEndTime,
+    timeStep,
+    subStep,
+  } = useTimelineScale()
 
-  // Находим максимальную длительность как разницу между максимальным и минимальным временем
-  const maxDuration = Object.keys(timeRanges).flat().length > 0
-    ? Math.max(...Object.values(timeRanges).flat().map((range) => range.start + range.duration)) -
-      Math.min(...Object.values(timeRanges).flat().map((range) => range.start))
-    : 0
   const marks = []
-
-  // Адаптируем количество делений под масштаб
-  const baseMainMarks = 10 // Базовое количество основных делений
-  const numMainMarks = Math.ceil(baseMainMarks * scale) // Увеличиваем количество делений при увеличении масштаба
-  const numSubMarks = 5 // Количество мелких делений между основными
-
-  // Определяем масштаб округления в зависимости от длительности и текущего масштаба
-  const getTimeScale = (duration: number, currentScale: number) => {
-    const scaledDuration = duration / currentScale
-    if (scaledDuration >= 3600) return 3600 // Часы
-    if (scaledDuration >= 300) return 60 // Минуты
-    if (scaledDuration >= 60) return 30 // Полминуты
-    if (scaledDuration >= 10) return 5 // 5 секунд
-    return 1 // Секунды
-  }
-
-  const timeScale = getTimeScale(maxDuration, scale)
-
-  // Находим минимальное время начала среди всех промежутков
-  const minStartTime = Object.keys(timeRanges).flat().length > 0
-    ? Math.min(...Object.values(timeRanges).flat().map((range) => range.start))
-    : 0
-
-  // Округляем начальное и конечное время
-  const roundedStartTime = Math.floor(minStartTime / timeScale) * timeScale
-  const endTime = roundedStartTime + maxDuration
-  const roundedEndTime = Math.ceil(endTime / timeScale) * timeScale
-
-  // Вычисляем шаг с учетом масштаба
-  const timeStep = Math.ceil((roundedEndTime - roundedStartTime) / numMainMarks) * timeScale
-  const subStep = timeStep / numSubMarks
 
   // Добавляем основные и промежуточные деления
   for (let timestamp = roundedStartTime; timestamp <= roundedEndTime; timestamp += subStep) {
@@ -81,9 +53,9 @@ const TimelineScale = (): JSX.Element => {
     <div className="relative w-full flex flex-col" style={{ marginBottom: "12px" }}>
       {/* Индикатор доступных промежутков видео */}
       <div className="h-0.5 w-full">
-        {Object.values(timeRanges).flat().map((range, index) => {
-          const rangeWidth = ((range.duration) / maxDuration) * 100
-          const rangePosition = ((range.start - minStartTime) / maxDuration) * 100
+        {tracks.map((track: Track, index: number) => {
+          const rangeWidth = ((track.combinedDuration) / maxDuration) * 100
+          const rangePosition = ((track.startTime - minStartTime) / maxDuration) * 100
 
           return (
             <div

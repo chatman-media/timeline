@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
@@ -6,59 +6,69 @@ import { SeekbarState } from "@/types/timeline"
 
 import { VideoTrack } from "../track"
 import { TrackSliceWrap } from "../track/track-slice-wrap"
-import { TimelineScale } from "./timeline-scale"
+import { MediaFile, Track } from "@/types/videos"
 
 export function Timeline() {
-  const { tracks, activeVideo, currentTime, timeToPercent } = useMedia()
-  const { scale } = useTimelineScale()
-  const maxDuration = Math.max(...tracks.map((track) => track.combinedDuration))
-
-  // Ссылка на DOM-элемент контейнера для определения его размеров
+  const { tracks, activeVideo, currentTime, timeToPercent, setActiveVideo } = useMedia()
+  const { scale, maxDuration, minStartTime } = useTimelineScale()
   const parentRef = useRef<HTMLDivElement>(null)
 
-  // Настройки полосы прокрутки (вертикальная линия, показывающая текущее время)
-  const [seekbar, setSeekbar] = useState<SeekbarState>({
-    width: 3, // Ширина полосы в пикселях
-    height: 70, // Высота полосы в пикселях
-    y: -10, // Смещение полосы вверх для перекрытия клипов
-    x: 0, // Горизонтальное положение полосы
-  })
+  const TRACK_HEIGHT = 100 // Высота одного трека
 
-  useEffect(() => {
-    const timelineWidth = parentRef.current?.offsetWidth || 0
-    const percent = timeToPercent(currentTime)
-    const newPosition = (percent / 100) * timelineWidth
-
-    setSeekbar((prev) => ({
-      ...prev,
-      x: newPosition,
-    }))
-  }, [currentTime])
+  const handleTrackClick = useCallback((e: React.MouseEvent, track: Track, video?: MediaFile) => {
+    if (video && video.id) {
+      setActiveVideo(video.id)
+    } else {
+      setActiveVideo(`V${track.index}`)
+    }
+  }, [setActiveVideo])
 
   return (
     <div className="timeline w-full min-h-[calc(50vh-70px)]">
-      {/* <TimelineScale /> */}
       <div className="relative" style={{ paddingBottom: `37px` }}>
         <div className="flex">
-          <div className="flex-1 flex flex-col gap-2 relative">
-            {tracks.map((track, index) => (
-              <VideoTrack
-                key={`track-${track.id}`}
-                style={{
-                  position: "absolute",
-                  left: `${(track.startTime / maxDuration) * 100}%`,
-                  width: `${(track.endTime / maxDuration) * 100}%`,
-                }}
-                track={track}
-                index={index}
-                timeRanges={track.timeRanges}
-                maxDuration={maxDuration}
-                activeVideo={activeVideo?.id}
-                parentRef={parentRef}
-                currentTime={currentTime}
-                TrackSliceWrap={TrackSliceWrap}
-              />
-            ))}
+          <div
+            className="w-full flex flex-col gap-2"
+            style={{ width: `${scale * 100}%` }}
+          >
+            {tracks.map((track, index) => {
+              const firstVideo = track.videos[0]
+              const lastVideo = track.videos[track.videos.length - 1]
+
+              const trackStartTime = firstVideo.startTime || 0
+              const trackEndTime = (lastVideo.startTime || 0) + (lastVideo.duration || 0)
+
+              const startOffset = ((trackStartTime - minStartTime) / maxDuration) * 100
+              const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
+
+              return (
+                <div
+                  key={`track-${track.id}`}
+                  className="relative"
+                  style={{ height: TRACK_HEIGHT }}
+                >
+                  <div
+                    className="absolute h-full"
+                    style={{
+                      left: `${startOffset}%`,
+                      width: `${width}%`,
+                    }}
+                  >
+                    <VideoTrack
+                      track={track}
+                      index={index}
+                      timeRanges={track.timeRanges}
+                      maxDuration={maxDuration}
+                      activeVideo={activeVideo?.id}
+                      handleTrackClick={handleTrackClick}
+                      parentRef={parentRef}
+                      currentTime={currentTime}
+                      TrackSliceWrap={TrackSliceWrap}
+                    />
+                  </div>
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
