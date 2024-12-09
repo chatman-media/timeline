@@ -365,24 +365,15 @@ export function MediaFilesList() {
                                   setPlayingFileId(null)
                                 }}
                               />
-                              {
-                                /* {file.probeData?.streams.filter((s) => s.codec_type === "video")
+                              {file.probeData?.streams.filter((s) => s.codec_type === "video")
                                     .length > 1 && (
                                 <div
-                                  className={`absolute ${
-                                    isHorizontalVideo(
-                                        stream.width,
-                                        stream.height,
-                                        parseInt(stream.rotation || "0"),
-                                      )
-                                      ? "left-[calc(50%-8px)] top-[2px]"
-                                      : "left-1/2 top-[2px] -translate-x-1/2"
-                                  } text-white bg-black/50 rounded-full w-4 h-4 flex items-center justify-center text-xs`}
+                                  style={{ fontSize: "10px" }}
+                                  className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
                                 >
                                   {index + 1}
                                 </div>
-                              )} */
-                              }
+                              )}
                               {file.probeData?.streams?.some((stream) =>
                                 stream.codec_type === "audio"
                               ) && (
