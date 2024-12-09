@@ -1,11 +1,13 @@
 import { useMedia } from "@/hooks/use-media"
+import { useTimelineScale } from "@/hooks/use-timeline-scale"
 import { formatTimeWithMilliseconds } from "@/lib/utils"
 
 /**
  * Компонент временной шкалы
  * Отображает метки времени с равными интервалами
  */
-const TimeScale = ({ scale = 1 }: { scale?: number }): JSX.Element => {
+const TimelineScale = (): JSX.Element => {
+  const { scale } = useTimelineScale()
   const { timeRanges } = useMedia()
 
   // Находим максимальную длительность как разницу между максимальным и минимальным временем
@@ -103,5 +105,4 @@ const TimeScale = ({ scale = 1 }: { scale?: number }): JSX.Element => {
     </div>
   )
 }
-
-export default TimeScale
+export { TimelineScale }

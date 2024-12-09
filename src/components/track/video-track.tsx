@@ -4,6 +4,7 @@ import { TimeRange, type Track } from "@/types/videos"
 
 import { TrackMetadata } from "./track-metadata"
 import { TrackTimestamps } from "./track-timestamps"
+import { useMedia } from "@/hooks/use-media"
 
 interface VideoTrackProps {
   track: Track
@@ -25,22 +26,19 @@ const VideoTrack = memo(({
   handleTrackClick,
   parentRef,
   TrackSliceWrap,
+  currentTime,
 }: VideoTrackProps) => {
+  const { timeToPercent } = useMedia()
   const firstVideo = track.videos[0]
   const lastVideo = track.videos[track.videos.length - 1]
-  const trackStartTime = new Date(firstVideo.probeData?.format.tags?.creation_time || 0).getTime() /
-    1000
-  const trackEndTime =
-    new Date(lastVideo.probeData?.format.tags?.creation_time || 0).getTime() / 1000 +
-    (lastVideo.probeData?.format.duration || 0)
 
-  const minStartTime = timeRanges && timeRanges.length > 0
-    ? Math.min(...timeRanges.map((x) => x.start))
-    : trackStartTime
+  // Получаем временные метки для первого и последнего видео
+  const trackStartTime = firstVideo.startTime || 0
+  const trackEndTime = (lastVideo.startTime || 0) + (lastVideo.duration || 0)
 
-  const startOffset = ((trackStartTime - minStartTime) / maxDuration) *
-    100
-  const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
+  // Используем timeToPercent для корректного расчета позиции
+  const startOffset = timeToPercent(trackStartTime)
+  const width = timeToPercent(trackEndTime) - startOffset
 
   const videoStream = firstVideo.probeData?.streams.find((s) => s.codec_type === "video")
   const isActive = track.index === parseInt(activeVideo?.replace("V", "") || "0")
@@ -51,7 +49,7 @@ const VideoTrack = memo(({
         <div style={{ marginLeft: `${startOffset}%`, width: `${width}%` }}>
           <div
             className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
-            onClick={(e) => handleTrackClick(e, track)}
+            onClick={(e) => handleTrackClick?.(e, track)}
             style={{ cursor: "pointer" }}
           >
             <TrackSliceWrap ref={parentRef}>
@@ -61,14 +59,6 @@ const VideoTrack = memo(({
                     track={track}
                     videoStream={videoStream}
                   />
-                  {
-                    /* <TrackThumbnails
-                    track={track}
-                    trackStartTime={trackStartTime}
-                    trackEndTime={trackEndTime}
-                    scale={scale}
-                  /> */
-                  }
                   <TrackTimestamps
                     trackStartTime={trackStartTime}
                     trackEndTime={trackEndTime}

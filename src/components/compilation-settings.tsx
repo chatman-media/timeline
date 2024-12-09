@@ -61,15 +61,15 @@ export function CompilationSettings() {
       mainCamera: parseInt(settings.mainCamera || "1"),
       mainCameraProb: settings.mainCameraPriority / 100, // конвертируем в вероятность
       timeRange: {
-        min: Math.min(
+        start: Math.min(
           ...tracks.flatMap((track) =>
-            track.allVideos.map((v) =>
+            track.videos.map((v) =>
               new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000
             )
           ),
         ),
-        max: Math.max(...tracks.flatMap((track) =>
-          track.allVideos.map((v) => {
+        end: Math.max(...tracks.flatMap((track) =>
+          track.videos.map((v) => {
             const start = new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000
             return start + (v.probeData.format.duration || 0)
           })

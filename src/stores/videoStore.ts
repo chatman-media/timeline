@@ -2,6 +2,7 @@ import { create } from "zustand"
 
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { calculateTimeRanges } from "@/utils/videoUtils"
+import { generateVideoId } from "@/lib/utils"
 
 interface VideoState {
   videos: MediaFile[]
@@ -87,24 +88,12 @@ export const useVideoStore = create<VideoState>((set, get) => ({
       set({ media: data.media })
 
       const validMedia = data.media
-        .filter((v: MediaFile) => {
-          const isVideo = v.probeData?.streams.some((s) =>
-            s.codec_type === "video" || s.codec_type === "audio"
-          )
-          const hasCreationTime = !!v.probeData?.format.tags?.creation_time
-          return isVideo && hasCreationTime
-        })
-        .sort((a: MediaFile, b: MediaFile) => {
-          const timeA = new Date(a.probeData?.format.tags?.creation_time || 0).getTime()
-          const timeB = new Date(b.probeData?.format.tags?.creation_time || 0).getTime()
-          return timeA - timeB
-        })
-        .map((video: MediaFile, index: number) => ({
-          ...video,
-          id: video.probeData?.streams[0].codec_type === "audio"
-            ? `A${index + 1}`
-            : `V${index + 1}`,
+        .map((file: MediaFile) => ({
+          ...file,
+          id: file.id || generateVideoId(data.media),
         }))
+        .filter((file: MediaFile) => file.duration)
+        .sort((a: MediaFile, b: MediaFile) => (a.startTime || 0) - (b.startTime || 0))
 
       if (validMedia.length === 0) {
         set({ videos: [], isLoading: false })
@@ -119,7 +108,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
       const timeRanges: Record<string, TimeRange[]> = {}
 
       videos.forEach((video: MediaFile) => {
-        const trackId = video.id
+        const trackId = video.id ?? generateVideoId(videos)
         let track = tracks.find((t) => t.id === trackId)
 
         if (!track) {
@@ -130,9 +119,11 @@ export const useVideoStore = create<VideoState>((set, get) => ({
             timeRanges: newTimeRanges,
             index: tracks.length,
             isActive: false,
-            combinedDuration: video.probeData?.format.duration || 0,
+            combinedDuration: video.duration || 0,
+            startTime: video.startTime || 0,
+            endTime: video.endTime || 0,
           }
-          tracks.push(track)
+          track && tracks.push(track)
           trackId && (timeRanges[trackId] = newTimeRanges)
         } else {
           track.videos.push(video)

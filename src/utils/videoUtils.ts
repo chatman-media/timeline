@@ -27,8 +27,8 @@ export const isSameVideoType = (video1: MediaFile, video2: MediaFile): boolean =
 // Вычисляет временные диапазоны для массива видео, основываясь на времени создания и продолжительности каждого видео
 export const calculateTimeRanges = (videos: MediaFile[]): TimeRange[] => {
   const times = videos.flatMap((v: MediaFile) => {
-    const startTime = new Date(v.probeData?.format.tags?.creation_time || 0).getTime()
-    const duration = v.probeData?.format.duration || 0
+    const startTime = (v.startTime || 0) * 1000
+    const duration = v.duration || 0
     const endTime = startTime + duration * 1000
     return [startTime, endTime]
   })

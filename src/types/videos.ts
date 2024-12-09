@@ -19,6 +19,9 @@ export interface MediaFile {
   isVideo?: boolean
   probeData?: FfprobeData
   thumbnail?: string | null
+  duration?: number
+  startTime?: number
+  endTime?: number
 }
 
 export interface Track {
@@ -28,6 +31,8 @@ export interface Track {
   combinedDuration: number // Общая длительность видео
   videos: MediaFile[] // Все видео этой камеры
   timeRanges: TimeRange[] // Массив временных диапазонов
+  startTime: number // Время начала трека в секундах (unix timestamp)
+  endTime: number // Время окончания трека в секундах (unix timestamp)
 }
 
 export interface VideoSegment {

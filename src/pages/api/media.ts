@@ -7,6 +7,7 @@ import path from "path"
 import { promisify } from "util"
 
 import { MediaFile } from "@/types/videos"
+import { getMediaCreationTime } from "@/lib/utils"
 
 // Промисифицируем ffprobe
 const ffprobeAsync = promisify(ffprobe)
@@ -51,12 +52,17 @@ export default async function handler(
         const probeData = await ffprobeAsync(filePath) as FfprobeData
         const isVideo = probeData.streams.some((stream) => stream.codec_type === "video")
 
-        // console.log(probeData)
+        const startTime = getMediaCreationTime(probeData)
+        const duration = probeData.format.duration || 0
+
         return {
           name: file,
           path: `/media/${file}`,
           thumbnail: isVideo ? `/thumbnails/${thumbnailName}` : undefined,
           probeData,
+          startTime,
+          endTime: startTime + duration,
+          duration,
           isVideo,
         }
       } catch (error) {

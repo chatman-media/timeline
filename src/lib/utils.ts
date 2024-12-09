@@ -6,6 +6,7 @@ import utc from "dayjs/plugin/utc"
 import { twMerge } from "tailwind-merge"
 
 import { MediaFile } from "@/types/videos"
+import { FfprobeData } from "@/types/ffprobe"
 
 // Инициализируем плагин duration если еще не инициализирован
 if (!dayjs.isDuration) {
@@ -118,8 +119,8 @@ export const formatTime = (seconds: number, showMilliseconds = false): string =>
 export function generateVideoId(videos: MediaFile[]): string {
   // Сортируем видео по дате создания
   const sortedVideos = [...videos].sort((a, b) => {
-    const timeA = new Date(a.probeData?.format.tags?.creation_time || 0).getTime()
-    const timeB = new Date(b.probeData?.format.tags?.creation_time || 0).getTime()
+    const timeA = new Date(a.startTime || 0).getTime()
+    const timeB = new Date(b.startTime || 0).getTime()
     return timeA - timeB
   })
 
@@ -139,10 +140,10 @@ export function generateVideoId(videos: MediaFile[]): string {
 export function isVideoAvailable(
   video: MediaFile,
   currentTime: number,
-  tolerance: number = 0.1,
+  tolerance: number = 0.3,
 ): boolean {
-  const startTime = new Date(video.probeData?.format.tags?.creation_time || 0).getTime() / 1000
-  const endTime = startTime + (video.probeData?.format.duration || 0)
+  const startTime = video.startTime || 0
+  const endTime = startTime + (video.duration || 0)
   return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
 }
 
@@ -172,4 +173,27 @@ export function formatFileSize(bytes: number): string {
   }
 
   return `${size.toFixed(1)} ${units[unitIndex]}`
+}
+
+export function getMediaCreationTime(probeData: FfprobeData): number {
+  // 1. Try to get from probeData metadata
+  if (probeData?.format?.tags?.creation_time) {
+    return new Date(probeData.format.tags.creation_time).getTime() / 1000
+  }
+
+  // 2. Try to parse from filename (e.g. "20240910_170942")
+  const parsedDate = probeData?.format.filename
+    ? parseFileNameDateTime(probeData.format.filename)
+    : null
+  if (parsedDate) {
+    return parsedDate.getTime() / 1000
+  }
+
+  // 3. Try to get from probeData start_time
+  const startTime = probeData?.format.start_time
+  if (startTime) {
+    return startTime
+  }
+
+  return 0
 }

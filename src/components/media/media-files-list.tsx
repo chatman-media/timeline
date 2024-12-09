@@ -3,50 +3,14 @@ import { nanoid } from "nanoid"
 import { useCallback, useMemo, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
-import {
-  formatDuration,
-  formatFileSize,
-  formatTime,
-  formatTimeWithMilliseconds,
-  parseFileNameDateTime,
-} from "@/lib/utils"
+import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
-import { calculateRealDimensions, getSequentialGroups, isHorizontalVideo } from "@/utils/mediaUtils"
+import { getSequentialGroups } from "@/utils/mediaUtils"
 import { calculateTimeRanges } from "@/utils/videoUtils"
 
 import { Button } from "../ui/button"
 import { Skeleton } from "../ui/skeleton"
 import { MediaPreview } from "./media-preview"
-
-interface TimelineProps {
-  time: number
-  duration: number
-}
-
-const Timeline = ({ time, duration }: TimelineProps) => {
-  return (
-    <>
-      <div
-        className="absolute top-0 bottom-0 w-[2px] bg-red-500 pointer-events-none"
-        style={{
-          left: `${(time / duration) * 100}%`,
-          zIndex: 20,
-        }}
-      />
-      <div
-        className="absolute bottom-0 text-xs bg-black/75 text-white px-1 rounded pointer-events-none"
-        style={{
-          left: `${(time / duration) * 100}%`,
-          fontSize: "10px",
-          transform: "translateX(-50%)",
-          zIndex: 21,
-        }}
-      >
-        {formatTime(time, true)}
-      </div>
-    </>
-  )
-}
 
 export function MediaFilesList() {
   const { media, isLoading, setTracks, tracks } = useMedia()
@@ -99,7 +63,7 @@ export function MediaFilesList() {
     // Группируем видео по первым символам имени файла
     const groupedVideos = media.reduce((groups: Record<string, MediaFile[]>, file) => {
       if (file.probeData?.streams?.[0]?.codec_type !== "video") return groups
-      
+
       const groupKey = file.name.slice(0, 2) // Используем первые 2 символа как ключ группы
       if (!groups[groupKey]) groups[groupKey] = []
       groups[groupKey].push(file)
@@ -108,10 +72,10 @@ export function MediaFilesList() {
     // Create tracks for each sequence group
     const newTracks = Object.entries(groupedVideos).map(([groupKey, groupFiles], index) => {
       // Check if this sequence already has a track
-      const existingTrack = tracks.find(track => 
-        track.videos.some(video => video.name.startsWith(groupKey))
+      const existingTrack = tracks.find((track) =>
+        track.videos.some((video) => video.name.startsWith(groupKey))
       )
-  
+
       if (existingTrack) {
         // Update existing track with new videos
         return {
@@ -119,30 +83,35 @@ export function MediaFilesList() {
           videos: [...new Set([...existingTrack.videos, ...groupFiles])],
           combinedDuration: groupFiles.reduce(
             (total, file) => total + (file.probeData?.format.duration || 0),
-            0
+            0,
           ),
-          timeRanges: calculateTimeRanges(groupFiles)
+          timeRanges: calculateTimeRanges(groupFiles),
         }
       }
-  
+
       // Create new track
       return {
         id: nanoid(),
         index: tracks.length + index + 1,
         isActive: false,
         videos: groupFiles,
+        startTime: groupFiles[0].startTime || 0,
+        endTime: (groupFiles[groupFiles.length - 1].startTime || 0) +
+          (groupFiles[groupFiles.length - 1].duration || 0),
         combinedDuration: groupFiles.reduce(
           (total, file) => total + (file.probeData?.format.duration || 0),
-          0
+          0,
         ),
-        timeRanges: calculateTimeRanges(groupFiles)
+        timeRanges: calculateTimeRanges(groupFiles),
       }
     })
-  
-    // Update tracks state, filtering out duplicates
-    setTracks([...tracks, ...(newTracks.filter(t => !(new Set(tracks.map(t => t.id))).has(t.id)))]);
-  }, [media, tracks, setTracks])
 
+    // Update tracks state, filtering out duplicates
+    setTracks([
+      ...tracks,
+      ...(newTracks.filter((t) => !(new Set(tracks.map((t) => t.id))).has(t.id))),
+    ])
+  }, [media, tracks, setTracks])
 
   const handleMouseMove = useCallback((
     e: React.MouseEvent<HTMLDivElement>,
@@ -238,6 +207,8 @@ export function MediaFilesList() {
       combinedDuration: file.probeData?.format.duration || 0,
       videos: [file],
       timeRanges: calculateTimeRanges([file]),
+      startTime: file.startTime || 0,
+      endTime: file.endTime || 0,
     }
 
     // Проверяем существование трека
@@ -293,31 +264,12 @@ export function MediaFilesList() {
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {(() => {
-                        const creationTime = file.probeData?.format.creation_time ||
-                          file.probeData?.format.tags?.creation_time
-
-                        if (!creationTime) {
-                          const parsedTime = parseFileNameDateTime(file.name)
-                          return parsedTime
-                            ? formatTimeWithMilliseconds(
-                              parsedTime.getTime() / 1000,
-                              true,
-                              true,
-                              false,
-                            )
-                            : ""
-                        }
-
-                        // Преобразуем строку в Date объект
-                        const dateObj = new Date(creationTime)
-                        return formatTimeWithMilliseconds(
-                          dateObj.getTime() / 1000,
-                          true,
-                          true,
-                          false,
-                        )
-                      })()}
+                      {formatTimeWithMilliseconds(
+                        file.startTime || 0,
+                        true,
+                        true,
+                        false,
+                      )}
                     </span>
 
                     <p className="text-xs">

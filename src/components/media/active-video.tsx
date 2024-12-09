@@ -32,13 +32,12 @@ export const ActiveVideo = memo(() => {
     const videoElement = videoRefs.current[activeVideo?.id]
     if (!videoElement || !activeVideo) return
 
-    const videoStartTime =
-      new Date(activeVideo.probeData?.format.tags?.creation_time || 0).getTime() / 1000
+    const videoStartTime = new Date(activeVideo.startTime || 0).getTime() / 1000
 
     // Синхронизация времени
     if (!isTimeUpdateFromVideo.current && !isChangingCamera) {
       const relativeTime = currentTime - videoStartTime
-      if (relativeTime >= 0 && relativeTime <= (activeVideo.probeData?.format.duration || 0)) {
+      if (relativeTime >= 0 && relativeTime <= (activeVideo.duration || 0)) {
         videoElement.currentTime = relativeTime
       }
     }
