@@ -168,6 +168,35 @@ export function MediaFilesList() {
     }
   }, [playingFileId])
 
+  const handleAddDateFiles = useCallback((targetDate: string) => {
+    const dateFiles = media.filter((file) => {
+      if (!file.startTime) return false
+      const fileDate = new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })
+      return fileDate === targetDate
+    })
+
+    const newTrack = {
+      id: nanoid(),
+      index: tracks.length + 1,
+      isActive: false,
+      videos: dateFiles,
+      startTime: dateFiles[0]?.startTime || 0,
+      endTime: (dateFiles[dateFiles.length - 1]?.startTime || 0) +
+        (dateFiles[dateFiles.length - 1]?.duration || 0),
+      combinedDuration: dateFiles.reduce(
+        (total, file) => total + (file.probeData?.format.duration || 0),
+        0,
+      ),
+      timeRanges: calculateTimeRanges(dateFiles),
+    }
+
+    setTracks([...tracks, newTrack])
+  }, [media])
+
   if (isLoading) {
     return (
       <div className="px-0 h-[calc(50vh-10px)] overflow-y-auto">
@@ -218,23 +247,31 @@ export function MediaFilesList() {
     }
   }
 
-  const maxLengthDay = media.reduce((groups: Record<string, MediaFile[]>, file: MediaFile) => {
-    if (!file.startTime) return groups
+  const { maxFiles, maxDate } = media.reduce((acc, file) => {
+    if (!file.startTime) return acc
+
     const date = new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
       day: "2-digit",
       month: "long",
       year: "numeric",
     })
-    if (!groups[date]) groups[date] = []
-    groups[date].push(file)
-    return groups
-  }, {})
 
-  const maxGroupDate = Object.entries(maxLengthDay)
-    .reduce(
-      (max, [date, files]) => files.length > max.length ? { date, length: files.length } : max,
-      { date: "", length: 0 },
-    )
+    // Count files per date and track maximum
+    const currentCount = (acc.filesPerDate[date] || 0) + 1
+    acc.filesPerDate[date] = currentCount
+
+    // Update max if current count is higher
+    if (currentCount > acc.maxFiles) {
+      acc.maxFiles = currentCount
+      acc.maxDate = date
+    }
+
+    return acc
+  }, {
+    filesPerDate: {} as Record<string, number>,
+    maxFiles: 0,
+    maxDate: "",
+  })
 
   return (
     <>
@@ -312,11 +349,11 @@ export function MediaFilesList() {
                   </div>
                 </div>
                 <button
-                  className="p-1 mr-2 ml-2 rounded bg-gray-500 hover:bg-gray-800 border border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800 dark:border-gray-600 hover:dark:border-gray-300 transition-all duration-200 cursor-pointer text-white hover:text-white dark:text-gray-500 dark:hover:text-gray-200"
+                  className="p-1 mr-1 rounded bg-gray-500 hover:bg-gray-800 border border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800 dark:border-gray-600 hover:dark:border-gray-300 transition-all duration-200 cursor-pointer text-white hover:text-white dark:text-gray-500 dark:hover:text-gray-200"
                   title="Добавить"
                   onClick={(e) => handleAddMedia(e, file)}
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className="w-6 h-6" />
                 </button>
               </div>
             )
@@ -325,7 +362,7 @@ export function MediaFilesList() {
       </div>
       {/* строка состояния и кнопка добавления всех файлов в трек */}
       <div className="flex justify-between items-start p-0 text-sm m-1">
-        <div className="flex flex-col items-start gap-0 text-xs text-gray-500 dark:text-gray-400">
+        <div className="flex flex-col items-start gap-0 text-xs text-gray-500 dark:text-gray-500">
           <span className="px-1">
             {media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "video").length} видео и
             {"  "}{media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "audio").length}
@@ -336,25 +373,23 @@ export function MediaFilesList() {
             {groupedSequences && `${groupedSequences}`}
           </span>
         </div>
-        <div className="flex flex-col items-start gap-0 text-xs text-gray-500 dark:text-gray-400">
-          <span className="px-1">
-            {maxGroupDate && maxGroupDate.length > 1
-              ? `${maxGroupDate.length} файлов ${maxGroupDate.date}`
-              : ""}
+        <div className="flex flex-col items-start gap-0 text-xs text-gray-400 dark:text-gray-400">
+          <span
+            className="px-1 relative group cursor-pointer text-gray-500 hover:text-gray-800 dark:hover:text-gray-100 flex items-center gap-1"
+            onClick={() => maxFiles > 1 && handleAddDateFiles(maxDate)}
+            title={maxFiles > 1 ? "Добавить файлы за эту дату" : ""}
+          >
+            {maxFiles > 1 ? `${maxFiles} файлов ${maxDate}` : ""}
+            {maxFiles > 1 && (
+              <PlusSquare className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 group-hover:text-gray-800 dark:group-hover:text-gray-100" />
+            )}
           </span>
         </div>
         <div className="flex items-center gap-2 group cursor-pointer" onClick={handleAddAllFiles}>
-          <span className="text-xs text-gray-500 dark:text-gray-400 opacity-50 group-hover:opacity-100 transition-opacity">
+          <span className="text-xs text-gray-900 dark:text-gray-400 opacity-50 group-hover:opacity-100 hover:text-gray-800 dark:hover:text-gray-100 transition-opacity flex items-center gap-1">
             Добавить все
+            <PlusSquare className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
           </span>
-          <Button
-            variant="secondary"
-            size="icon"
-            className="w-4 h-4 hover:bg-background/90 border-0 bg-transparent rounded flex items-center cursor-pointer group inset-0 text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-100"
-            onClick={handleAddAllFiles}
-          >
-            <PlusSquare />
-          </Button>
         </div>
       </div>
     </>
