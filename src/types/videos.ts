@@ -1,4 +1,4 @@
-import { FfprobeData } from "fluent-ffmpeg"
+import { FfprobeData } from "./ffprobe"
 
 export interface TimeRange {
   start: number

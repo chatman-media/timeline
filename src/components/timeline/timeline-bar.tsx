@@ -26,7 +26,7 @@ const TimelineBar = (
   const [isDragging, setIsDragging] = useState(false)
   const [currentPosition, setCurrentPosition] = useState(0)
   const containerRef = useRef<HTMLDivElement>(null)
-  const { currentTime, timeRanges } = useMedia()
+  const { currentTime, timeToPercent, percentToTime, setCurrentTime } = useMedia()
 
   /**
    * Эффект для синхронизации визуальной позиции ползунка с текущим временем
@@ -34,7 +34,7 @@ const TimelineBar = (
    */
   useEffect(() => {
     if (!containerRef.current || isDragging) return
-    const percent = timeToPercent(timeRanges, currentTime)
+    const percent = timeToPercent(currentTime)
     const newPosition = (containerRef.current.offsetWidth * percent) / 100
     // Обновляем позицию только если изменение больше порогового значения (0.1px)
     // Это помогает избежать микро-обновлений и улучшает производительность
@@ -73,7 +73,7 @@ const TimelineBar = (
     setCurrentPosition(clampedPosition)
 
     if (Math.abs(clampedTime - currentTime) > 0.01) {
-      updateTime(clampedTime)
+      setCurrentTime(clampedTime)
     }
   }
 

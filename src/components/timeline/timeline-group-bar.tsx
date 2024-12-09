@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react"
 
-interface GlobalTimelineBarProps {
+interface TimelineGroupBarProps {
   duration: number
   currentTime: number
   startTime: number
@@ -8,13 +8,13 @@ interface GlobalTimelineBarProps {
   onTimeChange: (newTime: number) => void
 }
 
-const GlobalTimelineBar = ({
+const TimelineGroupBar = ({
   duration,
   currentTime,
   startTime,
   height,
   onTimeChange,
-}: GlobalTimelineBarProps) => {
+}: TimelineGroupBarProps) => {
   const barRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
 
@@ -79,4 +79,4 @@ const GlobalTimelineBar = ({
   )
 }
 
-export { GlobalTimelineBar }
+export { TimelineGroupBar }

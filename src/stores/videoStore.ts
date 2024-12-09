@@ -32,8 +32,8 @@ interface VideoState {
   setTracks: (tracks: Track[]) => void
   setScreenLayout: (layout: ScreenLayout) => void
 
-  // timeToPercent: (time: number) => number
-  // percentToTime: (percent: number) => number
+  timeToPercent: (time: number) => number
+  percentToTime: (percent: number) => number
   addToMetadataCache: (key: string, data: any) => void
   addToThumbnailCache: (key: string, data: string) => void
 }
@@ -145,7 +145,7 @@ export const useVideoStore = create<VideoState>((set, get) => ({
 
       set({
         videos,
-        tracks,
+        // tracks,
         timeRanges,
         hasMedia: true,
         activeTrackId: "T1",
@@ -253,5 +253,17 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         [key]: data,
       },
     }))
+  },
+
+  timeToPercent: (time: number) => {
+    const { tracks } = get()
+    const track = tracks.find((t) => t.id === get().activeTrackId)
+    return (time / (track?.combinedDuration || 0)) * 100
+  },
+
+  percentToTime: (percent: number) => {
+    const { tracks } = get()
+    const track = tracks.find((t) => t.id === get().activeTrackId)
+    return (percent / 100) * (track?.combinedDuration || 0)
   },
 }))

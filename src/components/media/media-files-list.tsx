@@ -46,6 +46,15 @@ const Timeline = ({ time, duration }: TimelineProps) => {
   )
 }
 
+// Добавим вспомогательную функцию для форматирования разрешения
+const formatResolution = (width: number, height: number) => {
+  if (width >= 3840 || height >= 2160) return "4K"
+  if (width >= 2688 || height >= 1512) return "2.7K"
+  if (width >= 1920 || height >= 1080) return "1080p"
+  if (width >= 1280 || height >= 720) return "720p"
+  return "SD"
+}
+
 export function MediaFilesList() {
   const { media, isLoading, setTracks, tracks } = useMedia()
   const [playingFileId, setPlayingFileId] = useState<string | null>(null)
@@ -56,64 +65,85 @@ export function MediaFilesList() {
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
 
   const groupedSequences = useMemo(() => getSequentialGroups(media), [media])
+  const getFileId = useCallback((file: MediaFile) => {
+    return file.id || file.path || file.name // Используем более надежную цепочку идентификаторов
+  }, [])
 
-  const handlePlayPause = useCallback(async (e: React.MouseEvent, fileId: string) => {
-    e.stopPropagation()
-    const baseFileId = fileId.split("-")[0]
-    const mediaElement = videoRefs.current[fileId]
+  const handlePlayPause = useCallback(
+    async (e: React.MouseEvent, file: MediaFile, streamIndex: number) => {
+      e.stopPropagation()
+      const fileId = getFileId(file)
+      const videoKey = `${fileId}-${streamIndex}`
+      const mediaElement = videoRefs.current[videoKey]
 
-    if (mediaElement) {
-      try {
-        if (playingFileId === baseFileId) {
-          await mediaElement.pause()
-          setPlayingFileId(null)
-        } else {
-          if (playingFileId) {
-            Object.entries(videoRefs.current).forEach(([key, player]) => {
-              if (key.startsWith(playingFileId) && player) {
-                player.pause()
-              }
-            })
+      if (mediaElement) {
+        try {
+          if (playingFileId === fileId) {
+            await mediaElement.pause()
+            setPlayingFileId(null)
+          } else {
+            if (playingFileId) {
+              Object.entries(videoRefs.current).forEach(([key, player]) => {
+                if (key.startsWith(playingFileId) && player) {
+                  player.pause()
+                }
+              })
+            }
+
+            await mediaElement.play()
+            setPlayingFileId(fileId)
           }
-
-          await mediaElement.play()
-          setPlayingFileId(baseFileId)
+        } catch (error) {
+          console.error("Playback error:", error)
+          setPlayingFileId(null)
         }
-      } catch (error) {
-        console.error("Playback error:", error)
-        setPlayingFileId(null)
       }
-    }
-  }, [playingFileId])
+    },
+    [playingFileId, getFileId],
+  )
 
-  const handleAddAllFiles = () => {
-    // Group files by camera/track
-    const groupedFiles = media.reduce((acc, file) => {
-      const trackId = file.id || file.name
-
-      if (!acc[trackId]) {
-        acc[trackId] = []
+  const handleAddAllFiles = useCallback(() => {
+    // Group videos by their sequence
+    const groupedVideos = media.reduce((groups: { [key: string]: MediaFile[] }, file) => {
+      // Extract sequence identifier from filename (assuming format like "V1_001.mp4")
+      const match = file.name.match(/^([A-Z]\d+)/)
+      if (match) {
+        const groupKey = match[1]
+        if (!groups[groupKey]) {
+          groups[groupKey] = []
+        }
+        groups[groupKey].push(file)
       }
-      acc[trackId].push(file)
-      return acc
-    }, {} as Record<string, typeof media>)
+      return groups
+    }, {})
+
+    // Sort videos within each group by creation time
+    Object.values(groupedVideos).forEach((group) => {
+      group.sort((a, b) => {
+        const timeA = new Date(a.probeData?.format.tags?.creation_time || 0).getTime()
+        const timeB = new Date(b.probeData?.format.tags?.creation_time || 0).getTime()
+        return timeA - timeB
+      })
+    })
 
     // Create tracks for each group
-    const tracks = Object.entries(groupedFiles).map(([trackId, files], index) => ({
-      id: trackId,
-      index: index + 1,
-      isActive: false,
-      combinedDuration: files.reduce(
-        (sum, file) => sum + (file.probeData?.format.duration || 0),
-        0,
-      ),
-      videos: files,
-      timeRanges: calculateTimeRanges(files),
-    }))
+    Object.entries(groupedVideos).forEach(([groupKey, groupFiles], index) => {
+      const newTrack = {
+        id: nanoid(),
+        index: index + 1,
+        isActive: false,
+        videos: groupFiles,
+        combinedDuration: groupFiles.reduce(
+          (total, file) => total + (file.probeData?.format.duration || 0),
+          0,
+        ),
+        timeRanges: calculateTimeRanges(groupFiles),
+      }
 
-    // Update the store with new tracks
-    setTracks(tracks)
-  }
+      // Update the store with new tracks
+      setTracks((tracks) => [...tracks, newTrack])
+    })
+  }, [media])
 
   const handleMouseMove = useCallback((
     e: React.MouseEvent<HTMLDivElement>,
@@ -223,13 +253,13 @@ export function MediaFilesList() {
       <div className="px-0 h-[calc(50vh-10px)] overflow-y-auto">
         <div className="space-y-2 bg-gray-50 dark:bg-gray-900">
           {media.map((file) => {
-            const fileId = file.id || file.name
+            const fileId = getFileId(file)
             const duration = file.probeData?.format.duration || 1
             const isAudio = file.probeData?.streams?.[0]?.codec_type === "audio"
 
             return (
               <div
-                key={file.name}
+                key={fileId}
                 className="flex items-center gap-3 p-0 pr-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 group"
               >
                 <div className="relative flex gap-1">
@@ -261,7 +291,7 @@ export function MediaFilesList() {
                         </div>
                         <audio
                           data-stream="0"
-                          ref={(el) => videoRefs.current[`${fileId}-0`] = el}
+                          ref={(el) => videoRefs.current[`${fileId}-0`] = el as HTMLVideoElement}
                           src={file.path}
                           preload="auto"
                           loop
@@ -305,7 +335,7 @@ export function MediaFilesList() {
                               )}
                               <video
                                 data-stream={index}
-                                onClick={(e) => handlePlayPause(e, `${fileId}-${index}`)}
+                                onClick={(e) => handlePlayPause(e, file, index)}
                                 ref={(el) => videoRefs.current[`${fileId}-${index}`] = el}
                                 src={file.path}
                                 className={`w-full h-full object-cover rounded`}
@@ -335,7 +365,8 @@ export function MediaFilesList() {
                                   setPlayingFileId(null)
                                 }}
                               />
-                              {file.probeData?.streams.filter((s) => s.codec_type === "video")
+                              {
+                                /* {file.probeData?.streams.filter((s) => s.codec_type === "video")
                                     .length > 1 && (
                                 <div
                                   className={`absolute ${
@@ -350,7 +381,8 @@ export function MediaFilesList() {
                                 >
                                   {index + 1}
                                 </div>
-                              )}
+                              )} */
+                              }
                               {file.probeData?.streams?.some((stream) =>
                                 stream.codec_type === "audio"
                               ) && (
@@ -361,9 +393,9 @@ export function MediaFilesList() {
                                         stream.height,
                                         parseInt(stream.rotation || "0"),
                                       )
-                                      ? "left-1 bottom-1"
-                                      : "left-1/2 bottom-1 -translate-x-1/2"
-                                  } text-white bg-black/50 rounded p-[3px]`}
+                                      ? "left-[2px] bottom-[2px]"
+                                      : "left-1/2 bottom-[2px] -translate-x-1/2"
+                                  } text-white bg-black/50 rounded p-[2px]`}
                                 >
                                   <svg
                                     xmlns="http://www.w3.org/2000/svg"
@@ -389,6 +421,22 @@ export function MediaFilesList() {
                                   time={hoverTimes[fileId][index]}
                                   duration={duration}
                                 />
+                              )}
+                              {loadedVideos[`${fileId}-${index}`] && (
+                                <div
+                                  style={{ fontSize: "10px" }}
+                                  className={`absolute ${
+                                    isHorizontalVideo(
+                                        stream.width,
+                                        stream.height,
+                                        parseInt(stream.rotation || "0"),
+                                      )
+                                      ? "left-[2px] top-[2px]"
+                                      : "left-[calc(50%-8px)] top-[2px]"
+                                  } text-white bg-black/50 rounded px-[2px] py-0`}
+                                >
+                                  {formatResolution(stream.width, stream.height)}
+                                </div>
                               )}
                             </div>
                           </div>
