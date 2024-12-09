@@ -150,14 +150,14 @@
 .slice--parent {
   /* background: #014d52; */
   border-color: var(--foreground);
-  height: 90px;
+  height: 70px;
   position: relative;
 }
 
 .drag--parent {
   cursor: pointer !important;
   transition: opacity 0.2s;
-  height: 92px;
+  height: 72px;
   padding: 0;
   border: 1px solid #014d52;
   border-radius: 1px;
@@ -224,10 +224,6 @@
   width: fit-content;
 }
 
-.timline-border {
-  /* border: 1px solid #4c9397; */
-  padding: 3px 0;
-}
 .timeline-scale {
   position: relative;
   height: 32px;
@@ -320,7 +316,7 @@
 .video-metadata span,
 .timeline div.time {
   margin-right: 0.5rem;
-  background-color: rgb(2, 111, 116);
+  background-color: #026f74;
   font-size: 11px;
   line-height: 1.1;
   padding: 0 3px;
@@ -384,6 +380,14 @@
 
 .timline-border {
   border: 1px solid rgba(75, 85, 99, 0.4);
+  /* padding: 2px 0; */
+  border-top: 0;
+  &:first-child {
+    border-left: none;
+  }
+  &:last-child {
+    border-right: none;
+  }
 }
 
 .drag--parent--bordered {
@@ -394,8 +398,8 @@
   margin-right: 0.5rem;
 }
 
-.video-metadata > span:not(:first-child)::before {
+/* .video-metadata > span:not(:first-child)::before {
   content: "•";
   margin-right: 0.5rem;
   opacity: 0.5;
-}
+} */

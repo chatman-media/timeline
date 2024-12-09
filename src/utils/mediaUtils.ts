@@ -1,9 +1,11 @@
-import { MediaFile } from "@/types/videos"
+import { MediaFile, Track } from "@/types/videos"
 import { nanoid } from "nanoid"
 import { calculateTimeRanges } from "./videoUtils"
 
 // Функция для расчета реальных размеров
-export const calculateRealDimensions = (stream: any) => {
+export const calculateRealDimensions = (
+  stream: any,
+): { width: number; height: number; style: string } => {
   const rotation = stream.rotation ? parseInt(stream.rotation) : 0
   const width = stream.width
   const height = stream.height
@@ -24,7 +26,7 @@ export const calculateRealDimensions = (stream: any) => {
 }
 
 // Функция для определения последовательных записей
-export const getSequentialGroups = (files: MediaFile[]) => {
+export const getSequentialGroups = (files: MediaFile[]): { [key: string]: MediaFile[] } => {
   const groups: { [key: string]: MediaFile[] } = {}
 
   files.forEach((file) => {
@@ -52,7 +54,7 @@ export const getSequentialGroups = (files: MediaFile[]) => {
 }
 
 // Функция определения горизонтального видео
-export const isHorizontalVideo = (width: number, height: number, rotation?: number) => {
+export const isHorizontalVideo = (width: number, height: number, rotation?: number): boolean => {
   if (rotation && (Math.abs(rotation) === 90 || Math.abs(rotation) === 270)) {
     return height > width
   }
@@ -60,7 +62,7 @@ export const isHorizontalVideo = (width: number, height: number, rotation?: numb
 }
 
 // Функция для получения сгруппированных файлов
-export const getGroupedFiles = (files: MediaFile[]) => {
+export const getGroupedFiles = (files: MediaFile[]): { [key: string]: MediaFile[] } => {
   const groups: { [key: string]: MediaFile[] } = {}
 
   files.forEach((file) => {
@@ -85,8 +87,25 @@ export const getGroupedFiles = (files: MediaFile[]) => {
 export const createTracksFromFiles = (
   files: MediaFile[],
   currentTracksLength: number,
-) => {
-  return Object.entries(getGroupedFiles(files))
+): Track[] => {
+  const groupedFiles = getGroupedFiles(files)
+
+  // Handle case where there's only one file
+  if (files.length === 1) {
+    const file = files[0]
+    return [{
+      id: nanoid(),
+      index: currentTracksLength + 1,
+      isActive: false,
+      videos: [file], // Explicitly create array with single video
+      startTime: file.startTime || 0,
+      endTime: (file.startTime || 0) + (file.duration || 0),
+      combinedDuration: file.probeData?.format.duration || 0,
+      timeRanges: calculateTimeRanges([file]),
+    }]
+  }
+
+  return Object.entries(groupedFiles)
     .map(([groupKey, groupFiles], index) => ({
       id: nanoid(),
       index: currentTracksLength + index + 1,

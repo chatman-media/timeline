@@ -13,7 +13,7 @@ export function Timeline() {
   const { scale, maxDuration, minStartTime } = useTimelineScale()
   const parentRef = useRef<HTMLDivElement>(null)
 
-  const TRACK_HEIGHT = 100 // Высота одного трека
+  const TRACK_HEIGHT = 80 // Высота одного трека
 
   const handleTrackClick = useCallback((e: React.MouseEvent, track: Track, video?: MediaFile) => {
     if (video && video.id) {
@@ -39,7 +39,7 @@ export function Timeline() {
               const trackEndTime = (lastVideo.startTime || 0) + (lastVideo.duration || 0)
 
               const startOffset = ((trackStartTime - minStartTime) / maxDuration) * 100
-              const width = ((trackEndTime - trackStartTime) / maxDuration) * 100
+              const width = ((trackEndTime - minStartTime) / maxDuration) * 100 - startOffset
 
               return (
                 <div
