@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import {
+  formatDuration,
   formatFileSize,
   formatTime,
   formatTimeWithMilliseconds,
@@ -95,47 +96,53 @@ export function MediaFilesList() {
   )
 
   const handleAddAllFiles = useCallback(() => {
-    // Group videos by their sequence
-    const groupedVideos = media.reduce((groups: { [key: string]: MediaFile[] }, file) => {
-      // Extract sequence identifier from filename (assuming format like "V1_001.mp4")
-      const match = file.name.match(/^([A-Z]\d+)/)
-      if (match) {
-        const groupKey = match[1]
-        if (!groups[groupKey]) {
-          groups[groupKey] = []
-        }
-        groups[groupKey].push(file)
-      }
+    // Группируем видео по первым символам имени файла
+    const groupedVideos = media.reduce((groups: Record<string, MediaFile[]>, file) => {
+      if (file.probeData?.streams?.[0]?.codec_type !== "video") return groups
+      
+      const groupKey = file.name.slice(0, 2) // Используем первые 2 символа как ключ группы
+      if (!groups[groupKey]) groups[groupKey] = []
+      groups[groupKey].push(file)
       return groups
     }, {})
-
-    // Sort videos within each group by creation time
-    Object.values(groupedVideos).forEach((group) => {
-      group.sort((a, b) => {
-        const timeA = new Date(a.probeData?.format.tags?.creation_time || 0).getTime()
-        const timeB = new Date(b.probeData?.format.tags?.creation_time || 0).getTime()
-        return timeA - timeB
-      })
-    })
-
-    // Create tracks for each group
-    Object.entries(groupedVideos).forEach(([groupKey, groupFiles], index) => {
-      const newTrack = {
+    // Create tracks for each sequence group
+    const newTracks = Object.entries(groupedVideos).map(([groupKey, groupFiles], index) => {
+      // Check if this sequence already has a track
+      const existingTrack = tracks.find(track => 
+        track.videos.some(video => video.name.startsWith(groupKey))
+      )
+  
+      if (existingTrack) {
+        // Update existing track with new videos
+        return {
+          ...existingTrack,
+          videos: [...new Set([...existingTrack.videos, ...groupFiles])],
+          combinedDuration: groupFiles.reduce(
+            (total, file) => total + (file.probeData?.format.duration || 0),
+            0
+          ),
+          timeRanges: calculateTimeRanges(groupFiles)
+        }
+      }
+  
+      // Create new track
+      return {
         id: nanoid(),
-        index: index + 1,
+        index: tracks.length + index + 1,
         isActive: false,
         videos: groupFiles,
         combinedDuration: groupFiles.reduce(
           (total, file) => total + (file.probeData?.format.duration || 0),
-          0,
+          0
         ),
-        timeRanges: calculateTimeRanges(groupFiles),
+        timeRanges: calculateTimeRanges(groupFiles)
       }
-
-      // Update the store with new tracks
-      setTracks((tracks) => [...tracks, newTrack])
     })
-  }, [media])
+  
+    // Update tracks state, filtering out duplicates
+    setTracks([...tracks, ...(newTracks.filter(t => !(new Set(tracks.map(t => t.id))).has(t.id)))]);
+  }, [media, tracks, setTracks])
+
 
   const handleMouseMove = useCallback((
     e: React.MouseEvent<HTMLDivElement>,
@@ -328,7 +335,7 @@ export function MediaFilesList() {
                       )}
                       {file.probeData?.format.duration && (
                         <span className="text-gray-500 dark:text-gray-400 ml-4">
-                          {formatTime(file.probeData.format.duration, false)}
+                          {formatDuration(file.probeData.format.duration)}
                         </span>
                       )}
                     </p>

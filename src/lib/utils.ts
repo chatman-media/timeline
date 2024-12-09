@@ -24,17 +24,29 @@ export const formatDuration = (seconds: number, afterComa = 3): string => {
   }
   const ms = Math.floor((seconds % 1) * 1000)
 
-  return `${duration.format("mm:ss")}:${
+  return `${duration.format("HH:mm:ss")}:${
     ms.toString().padStart(afterComa, "0").substring(0, afterComa)
   }`
 }
 
 // Добавим вспомогательную функцию для форматирования разрешения
 export const formatResolution = (width: number, height: number) => {
-  if (width >= 3840 || height >= 2160) return "4K"
-  if (width >= 2688 || height >= 1512) return "2.7K"
-  if (width >= 1920 || height >= 1080) return "1080p"
-  if (width >= 1280 || height >= 720) return "720p"
+  const pixels = width * height
+  if (pixels >= 2073600) {
+    const k = pixels / (2000 * 1000)
+    // Комбинация стандартных значений и кратных 0.2
+    const kValues = [
+      1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7,  // стандартные малые значения
+      3.0, 3.2, 3.4, 3.6, 3.8, 4.0,            // средние значения
+      4.5, 5.0, 5.5, 6.0, 8.0                   // высокие значения
+    ]
+    const closestK = kValues.reduce((prev, curr) => 
+      Math.abs(curr - k) < Math.abs(prev - k) ? curr : prev
+    )
+    return `${closestK}K`
+  }
+  if (pixels >= 2073600) return "1080p"   // 1920x1080 = 2,073,600 pixels
+  if (pixels >= 921600) return "720p"     // 1280x720 = 921,600 pixels
   return "SD"
 }
 
