@@ -5,7 +5,7 @@ import { useCallback, useMemo, useRef, useState } from "react"
 import { useMedia } from "@/hooks/use-media"
 import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
-import { getSequentialGroups } from "@/utils/mediaUtils"
+import { getGroupedFiles, getSequentialGroups } from "@/utils/mediaUtils"
 import { calculateTimeRanges } from "@/utils/videoUtils"
 
 import { Button } from "../ui/button"
@@ -218,6 +218,24 @@ export function MediaFilesList() {
     }
   }
 
+  const maxLengthDay = media.reduce((groups: Record<string, MediaFile[]>, file: MediaFile) => {
+    if (!file.startTime) return groups
+    const date = new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    })
+    if (!groups[date]) groups[date] = []
+    groups[date].push(file)
+    return groups
+  }, {})
+
+  const maxGroupDate = Object.entries(maxLengthDay)
+    .reduce(
+      (max, [date, files]) => files.length > max.length ? { date, length: files.length } : max,
+      { date: "", length: 0 },
+    )
+
   return (
     <>
       <div className="px-0 h-[calc(50vh-10px)] overflow-y-auto">
@@ -306,20 +324,23 @@ export function MediaFilesList() {
         </div>
       </div>
       {/* строка состояния и кнопка добавления всех файлов в трек */}
-      <div className="flex justify-between items-center p-0 text-sm m-1">
-        <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex justify-between items-start p-0 text-sm m-1">
+        <div className="flex flex-col items-start gap-0 text-xs text-gray-500 dark:text-gray-400">
           <span className="px-1">
-            {media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "video").length}
-            {" "}
-            видео
-            {groupedSequences && (
-              ` [есть ${groupedSequences}]`
-            )}
-          </span>
-          <span className="px-0">
-            и {media.filter((file) => file.probeData?.streams?.[0]?.codec_type === "audio").length}
+            {media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "video").length} видео и
+            {"  "}{media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "audio").length}
             {" "}
             аудио
+          </span>
+          <span className="px-1">
+            {groupedSequences && `${groupedSequences}`}
+          </span>
+        </div>
+        <div className="flex flex-col items-start gap-0 text-xs text-gray-500 dark:text-gray-400">
+          <span className="px-1">
+            {maxGroupDate && maxGroupDate.length > 1
+              ? `${maxGroupDate.length} файлов ${maxGroupDate.date}`
+              : ""}
           </span>
         </div>
         <div className="flex items-center gap-2 group cursor-pointer" onClick={handleAddAllFiles}>
@@ -329,7 +350,7 @@ export function MediaFilesList() {
           <Button
             variant="secondary"
             size="icon"
-            className="w-4 h-4 hover:bg-background/90 border-0 bg-transparent rounded flex items-center cursor-pointer group inset-0 text-sm text-gray-400 hover:text-gray-800 dark:hover:text-gray-100"
+            className="w-4 h-4 hover:bg-background/90 border-0 bg-transparent rounded flex items-center cursor-pointer group inset-0 text-sm text-gray-500 hover:text-gray-800 dark:hover:text-gray-100"
             onClick={handleAddAllFiles}
           >
             <PlusSquare />
