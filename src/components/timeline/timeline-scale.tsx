@@ -1,14 +1,12 @@
-import { useMedia } from "@/hooks/use-media"
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
-import { formatTimeWithMilliseconds } from "@/lib/utils"
 import { Track } from "@/types/videos"
+import { TimelineMark } from "./timeline-mark"
 
 /**
  * Компонент временной шкалы
  * Отображает метки времени с равными интервалами
  */
-const TimelineScale = (): JSX.Element => {
-  const { tracks } = useMedia()
+export function TimelineScale({ tracks }: { tracks: Track[] }): JSX.Element {
   const {
     maxDuration,
     minStartTime,
@@ -29,23 +27,12 @@ const TimelineScale = (): JSX.Element => {
     if (position < 0 || position > 100) continue
 
     marks.push(
-      <div
+      <TimelineMark
         key={timestamp}
-        className="absolute flex flex-col"
-        style={{ left: `${position}%` }}
-      >
-        <div
-          className={`${isMainMark ? "h-3" : "h-1.5"} w-0.5 bg-gray-600`}
-        />
-        {isMainMark && (
-          <span
-            className="text-xs text-gray-100 drag--parent flex-1"
-            style={{ marginLeft: "5px", marginTop: "-5px", border: "none" }}
-          >
-            {formatTimeWithMilliseconds(timestamp, false, false, false)}
-          </span>
-        )}
-      </div>,
+        timestamp={timestamp}
+        position={position}
+        isMainMark={isMainMark}
+      />,
     )
   }
 
@@ -77,4 +64,3 @@ const TimelineScale = (): JSX.Element => {
     </div>
   )
 }
-export { TimelineScale }

@@ -4,6 +4,7 @@ import { useMedia } from "@/hooks/use-media"
 
 import { VideoTrack } from "../track"
 import { TrackSliceWrap } from "../track/track-slice-wrap"
+import { TimelineScale } from "./timeline-scale"
 
 export function Timeline() {
   const { tracks } = useMedia()
@@ -11,6 +12,7 @@ export function Timeline() {
 
   return (
     <div className="timeline w-full min-h-[calc(50vh-70px)]">
+      {/* <TimelineScale tracks={tracks} /> */}
       <div className="relative" style={{ paddingBottom: `37px` }}>
         <div className="flex">
           <div className="w-full flex flex-col gap-2" // style={{ width: `${scale * 100}%` }}
