@@ -11,38 +11,33 @@ export function useMedia() {
     store.fetchVideos()
   }, [])
 
-  useEffect(() => {
-    if (store.isChangingCamera) {
-      const currentTrack = store.tracks.find((track) =>
-        track.videos.some((video) => video.id === store.activeVideo?.id)
-      )
+  // useEffect(() => {
+  //   if (store.isChangingCamera) {
+  //     const currentTrack = store.tracks.find((track) =>
+  //       track.videos.some((video) => video.id === store.activeVideo?.id)
+  //     )
 
-      const availableVideo = currentTrack?.videos.find((video) =>
-        isVideoAvailable(video, store.currentTime)
-      )
+  //     const availableVideo = currentTrack?.videos.find((video) =>
+  //       isVideoAvailable(video, store.currentTime)
+  //     )
 
-      if (availableVideo?.id) {
-        store.setActiveVideo(availableVideo.id)
-      }
-    } else {
-      const currentVideoIsValid = store.activeVideo &&
-        isVideoAvailable(store.activeVideo, store.currentTime, 0) // No tolerance for current video
+  //     if (availableVideo?.id) {
+  //       store.setActiveVideo(availableVideo.id)
+  //     }
+  //   } else {
+  //     const currentTrack = store.tracks.find((track) =>
+  //       track.videos.some((video) => video.id === store.activeVideo?.id)
+  //     )
 
-      if (!currentVideoIsValid) {
-        const currentTrack = store.tracks.find((track) =>
-          track.videos.some((video) => video.id === store.activeVideo?.id)
-        )
+  //     const availableVideo = currentTrack?.videos.find((video: MediaFile) =>
+  //       isVideoAvailable(video, store.currentTime)
+  //     )
 
-        const availableVideo = currentTrack?.videos.find((video: MediaFile) =>
-          isVideoAvailable(video, store.currentTime)
-        )
-
-        if (availableVideo?.id) {
-          store.setActiveVideo(availableVideo.id)
-        }
-      }
-    }
-  }, [store.currentTime, store.activeVideo, store.isChangingCamera])
+  //     if (availableVideo?.id) {
+  //       store.setActiveVideo(availableVideo.id)
+  //     }
+  //   }
+  // }, [store.currentTime, store.activeVideo, store.isChangingCamera])
 
   // useEffect(() => {
   //   // Вариант 1: Использовать sessionStorage вместо localStorage

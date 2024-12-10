@@ -1,34 +1,24 @@
 import { memo } from "react"
 
-import { TimeRange, type Track } from "@/types/videos"
+import { type Track } from "@/types/videos"
 
-import { TrackMetadata } from "./track-metadata"
-import { TrackTimestamps } from "./track-timestamps"
-import { useMedia } from "@/hooks/use-media"
-import { formatDuration, formatTime, formatTimeWithMilliseconds } from "@/lib/utils"
+import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
+import { useVideoStore } from "@/stores/videoStore"
 
 interface VideoTrackProps {
   track: Track
   index: number
-  timeRanges: TimeRange[]
-  maxDuration: number
-  activeVideo: string | null | undefined
-  handleTrackClick: (e: React.MouseEvent, track: Track) => void
   parentRef?: React.RefObject<HTMLDivElement> | null
-  currentTime: number
   TrackSliceWrap?: React.FC<{ children: React.ReactNode }>
 }
 
 const VideoTrack = memo(({
   track,
-  timeRanges,
-  activeVideo,
-  handleTrackClick,
   parentRef,
   TrackSliceWrap,
-  currentTime,
 }: VideoTrackProps) => {
+  const { activeTrackId, setActiveTrack, setActiveVideo } = useVideoStore()
   const { minStartTime, maxDuration } = useTimelineScale()
   const firstVideo = track.videos[0]
   const lastVideo = track.videos[track.videos.length - 1]
@@ -41,17 +31,29 @@ const VideoTrack = memo(({
   const width = timeToPercent(trackEndTime) - startOffset
 
   const videoStream = firstVideo.probeData?.streams.find((s) => s.codec_type === "video")
-  const isActive = track.index === parseInt(activeVideo?.replace("V", "") || "0")
+  const audioStream = firstVideo.probeData?.streams.find((s) => s.codec_type === "audio")
+  const isActive = track.id === activeTrackId
 
-  console.log("Track videos:", track.videos)
+  const handleClick = (e: React.MouseEvent, track: Track, videoId?: string) => {
+    console.log("handleClick", track, videoId)
+    setActiveTrack(track.id)
+    if (videoId) {
+      setActiveVideo(videoId)
+    }
+  }
 
   return (
     <div className="flex">
       <div className="w-full">
-        <div>
+        <div
+          className="absolute h-full"
+          style={{
+            left: `${startOffset}%`,
+            width: `${width}%`,
+          }}
+        >
           <div
             className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
-            onClick={(e) => handleTrackClick?.(e, track)}
             style={{ cursor: "pointer" }}
           >
             <TrackSliceWrap ref={parentRef}>
@@ -62,13 +64,10 @@ const VideoTrack = memo(({
                       const videoStart = video.startTime || 0
                       const videoDuration = video.duration || 0
 
-                      console.log("track.videos.length", track.videos)
-                      // If there's only one video, use full width
                       if (track.videos.length === 1) {
-                        console.log("fdsafdsafsdafsda")
                         return (
                           <div
-                            key={video.id || video.name}
+                            key={video.id}
                             className="absolute h-full w-full"
                             style={{
                               left: "0%",
@@ -78,21 +77,51 @@ const VideoTrack = memo(({
                           >
                             <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
                               <div
-                                className="h-full w-full flex flex-row justify-between items-start text-xs text-white truncate opacity-80 p-1 rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0"
-                                style={{ backgroundColor: "#004346" }}
+                                className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0"
+                                style={{ backgroundColor: "#004346", lineHeight: "13px" }}
+                                onClick={(e) => handleClick(e, track, video.id)}
                               >
+                                <span className="">V{track.index}</span>
                                 {video.path.split("/").pop()}
-
-                                <div className="w-full px-1 m-0 flex space-x-2 justify-end text-xs text-white">
-                                  <div className="flex flex-row video-metadata truncate mr-1 text-xs text-white">
-                                    <span>V{track.index}</span>
-                                    <span>{videoStream?.codec_name?.toUpperCase()}</span>
-                                    <span>{videoStream?.width}×{videoStream?.height}</span>
-                                    <span>{videoStream?.display_aspect_ratio}</span>
-                                  </div>
-                                  <div className="flex flex-col items-end time ml-4">
-                                    <span>{formatDuration(track.combinedDuration, 2)}</span>
-                                  </div>
+                                <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
+                                  {video.isVideo
+                                    ? (
+                                      <div className="flex flex-row video-metadata truncate text-xs text-white">
+                                        <span>{videoStream?.codec_name?.toUpperCase()}</span>
+                                        <span>{videoStream?.width}×{videoStream?.height}</span>
+                                        <span>{videoStream?.display_aspect_ratio}</span>
+                                        <span>
+                                          {videoStream?.r_frame_rate &&
+                                            ` ${Math.round(eval(videoStream.r_frame_rate))} fps`}
+                                        </span>
+                                        {
+                                          /* <span>
+                                      {videoStream?.bit_rate &&
+                                        formatBitrate(videoStream.bit_rate)}
+                                    </span> */
+                                        }
+                                        <span>{formatDuration(track.combinedDuration, 3)}</span>
+                                      </div>
+                                    )
+                                    : (
+                                      <div className="flex flex-row video-metadata truncate text-xs text-white">
+                                        <span>{audioStream?.codec_name}</span>
+                                        <span>каналов: {audioStream?.channels}</span>
+                                        <span>
+                                          {audioStream?.sample_rate &&
+                                            `${
+                                              Math.round(parseInt(audioStream.sample_rate) / 1000)
+                                            }kHz`}
+                                        </span>
+                                        <span>
+                                          {audioStream?.bit_rate &&
+                                            `${formatBitrate(audioStream.bit_rate)}`}
+                                        </span>
+                                        <span>
+                                          {formatDuration(track.combinedDuration, 3)}
+                                        </span>
+                                      </div>
+                                    )}
                                 </div>
                               </div>
                               <div className="absolute bottom-0 left-0 text-xs text-gray-100 ml-1">
@@ -136,25 +165,38 @@ const VideoTrack = memo(({
                         >
                           <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
                             <div
-                              className="h-full w-full flex flex-row justify-between items-start text-xs text-white truncate opacity-80 p-1 rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0"
-                              style={{ backgroundColor: "#004346" }}
+                              className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0"
+                              style={{ backgroundColor: "#004346", lineHeight: "13px" }}
+                              onClick={(e) => handleClick(e, track, video.id)}
                             >
+                              {idx === 0 && <span>V{track.index}</span>}
                               {video.path.split("/").pop()}
                               {idx === 0
                                 ? (
-                                  <div className="w-full px-0 m-0 flex space-x-2 justify-end text-xs text-gray-100">
-                                    <div className="flex flex-row video-metadata truncate">
-                                      <span>V{track.index}</span>
-                                      <span>{videoStream?.codec_name?.toUpperCase()}</span>
+                                  <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
+                                    <div className="flex flex-row video-metadata truncate text-xs text-white">
+                                      <span>
+                                        {videoStream?.codec_name?.toUpperCase()}
+                                      </span>
                                       <span>{videoStream?.width}×{videoStream?.height}</span>
                                       <span>{videoStream?.display_aspect_ratio}</span>
+                                      <span>
+                                        {videoStream?.r_frame_rate &&
+                                          ` ${Math.round(eval(videoStream.r_frame_rate))} fps`}
+                                      </span>
+                                      {
+                                        /* <span>
+                                      {videoStream?.bit_rate &&
+                                        formatBitrate(videoStream.bit_rate)}
+                                    </span> */
+                                      }
                                     </div>
                                   </div>
                                 )
                                 : (
-                                  <div className="w-full p-0 m-0 flex justify-end text-xs text-gray-100">
-                                    <div className="flex flex-col items-end time">
-                                      <span>{formatDuration(track.combinedDuration, 2)}</span>
+                                  <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
+                                    <div className="flex flex-row video-metadata truncate text-xs text-white">
+                                      <span>{formatDuration(track.combinedDuration, 3)}</span>
                                     </div>
                                   </div>
                                 )}

@@ -8,6 +8,7 @@ import { promisify } from "util"
 
 import { MediaFile } from "@/types/videos"
 import { getMediaCreationTime } from "@/lib/utils"
+import { nanoid } from "nanoid"
 
 // Промисифицируем ffprobe
 const ffprobeAsync = promisify(ffprobe)
@@ -56,6 +57,7 @@ export default async function handler(
         const duration = probeData.format.duration || 0
 
         return {
+          id: nanoid(),
           name: file,
           path: `/media/${file}`,
           thumbnail: isVideo ? `/thumbnails/${thumbnailName}` : undefined,

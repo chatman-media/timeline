@@ -100,7 +100,7 @@ export const createTracksFromFiles = (
       videos: [file], // Explicitly create array with single video
       startTime: file.startTime || 0,
       endTime: (file.startTime || 0) + (file.duration || 0),
-      combinedDuration: file.probeData?.format.duration || 0,
+      combinedDuration: file.duration || 0,
       timeRanges: calculateTimeRanges([file]),
     }]
   }
@@ -115,9 +115,28 @@ export const createTracksFromFiles = (
       endTime: (groupFiles[groupFiles.length - 1].startTime || 0) +
         (groupFiles[groupFiles.length - 1].duration || 0),
       combinedDuration: groupFiles.reduce(
-        (total, file) => total + (file.probeData?.format.duration || 0),
+        (total, file) => total + (file.duration || 0),
         0,
       ),
       timeRanges: calculateTimeRanges(groupFiles),
     }))
+}
+
+export const getSequentialFiles = (files: MediaFile[]): MediaFile[] => {
+  const groups: { [key: string]: MediaFile[] } = {}
+
+  files.forEach((file) => {
+    const match = file.name.match(/(.+?)(?:_(\d+))?\.([^.]+)$/)
+    if (match) {
+      const baseName = match[1]
+      if (!groups[baseName]) {
+        groups[baseName] = []
+      }
+      groups[baseName].push(file)
+    }
+  })
+
+  return Object.values(groups)
+    .filter((group) => group.length > 1)
+    .flat()
 }

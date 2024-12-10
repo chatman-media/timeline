@@ -315,12 +315,13 @@
 .video-metadata span,
 .timeline div.time {
   margin-right: 0.5rem;
-  background-color: #026f74;
+  background-color: #017980;
   font-size: 11px;
-  line-height: 1.1;
+  line-height: 13px;
   padding: 0 3px;
   /* border-radius: 3px; */
   height: 12px;
+  margin-right: 3px;
   /* color: var(--color-gray-100) !important; */
   &:last-child {
     margin-right: 0;

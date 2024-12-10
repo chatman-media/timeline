@@ -11,8 +11,8 @@ export function ScaleControl() {
   }
 
   return (
-    <div className="flex flex-col gap-4 w-full px-3 sm:px-5">
-      <div className="flex flex-row gap-2 justify-end">
+    <div className="flex flex-col gap-4 w-full">
+      <div className="flex flex-row gap-2 justify-end h-[62px]">
         <div className="m-2 flex items-center w-90">
           <Button
             onClick={decreaseScale}

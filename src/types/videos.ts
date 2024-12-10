@@ -13,7 +13,7 @@ export interface RecordEntry {
 }
 
 export interface MediaFile {
-  id?: string
+  id: string
   name: string
   path: string
   isVideo?: boolean

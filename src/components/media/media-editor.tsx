@@ -36,7 +36,7 @@ export function MediaEditor() {
           </Tabs>
         </div>
         <div className="w-full">
-          <div className="bg-gray-50 dark:bg-[#111111] m-1">
+          <div className="bg-gray-50 dark:bg-gray-900 m-1" style={{ backgroundColor: "#1b1a1f" }}>
             <ActiveVideo />
             <ScaleControl />
           </div>
