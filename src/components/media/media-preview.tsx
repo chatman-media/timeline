@@ -71,6 +71,8 @@ export function MediaPreview({
           src={file.path}
           preload="auto"
           loop
+          tabIndex={0}
+          className="focus:outline-none"
           onPlay={(e) => {
             const audio = e.currentTarget
             const currentTime = hoverTimes[fileId]?.[0]
@@ -78,6 +80,13 @@ export function MediaPreview({
               audio.currentTime = currentTime
             }
           }}
+          onKeyDown={(e) => {
+            if (e.code === "Space") {
+              e.preventDefault()
+              handlePlayPause(e as unknown as React.MouseEvent, file, 0)
+            }
+          }}
+          onMouseEnter={(e) => e.currentTarget.focus()}
         />
         {hoverTimes[fileId]?.[0] !== undefined &&
           hoverTimes[fileId]?.[0] !== null &&
@@ -117,7 +126,8 @@ export function MediaPreview({
                 onClick={(e) => handlePlayPause(e, file, index)}
                 ref={(el) => videoRefs.current[`${fileId}-${index}`] = el}
                 src={file.path}
-                className={`w-full h-full object-cover rounded`}
+                className={`w-full h-full object-cover rounded focus:outline-none`}
+                tabIndex={0}
                 loop
                 playsInline
                 loading="lazy"
@@ -143,6 +153,13 @@ export function MediaPreview({
                   console.error("Video error:", e)
                   setPlayingFileId(null)
                 }}
+                onKeyDown={(e) => {
+                  if (e.code === "Space") {
+                    e.preventDefault()
+                    handlePlayPause(e as unknown as React.MouseEvent, file, index)
+                  }
+                }}
+                onMouseEnter={(e) => e.currentTarget.focus()}
               />
               {/* Stream indicators */}
               {renderStreamIndicators(file, stream, index, loadedVideos[`${fileId}-${index}`])}
