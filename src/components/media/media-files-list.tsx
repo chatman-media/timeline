@@ -286,7 +286,7 @@ export function MediaFilesList() {
                   title="Добавить"
                   onClick={(e) => handleAddMedia(e, file)}
                 >
-                  <Plus className="w-6 h-6" />
+                  <Plus className="w-5 h-5" />
                 </button>
               </div>
             )
