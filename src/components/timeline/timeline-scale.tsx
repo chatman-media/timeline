@@ -18,13 +18,22 @@ export function TimelineScale({ tracks }: { tracks: Track[] }): JSX.Element {
 
   const marks = []
 
+  // Защита от некорректных значений
+  if (!maxDuration || !timeStep || !subStep) {
+    console.warn("Missing required values for timeline scale")
+    return <div className="relative w-full flex flex-col" />
+  }
+
   // Добавляем основные и промежуточные деления
   for (let timestamp = roundedStartTime; timestamp <= roundedEndTime; timestamp += subStep) {
     const position = ((timestamp - minStartTime) / maxDuration) * 100
     const isMainMark = Math.abs(timestamp % timeStep) < 0.001
 
     // Пропускаем метки, которые выходят за пределы видимой области
-    if (position < 0 || position > 100) continue
+    if (position < 0 || position > 100) {
+      console.log("Skipping mark at position:", position)
+      continue
+    }
 
     marks.push(
       <TimelineMark
@@ -41,7 +50,9 @@ export function TimelineScale({ tracks }: { tracks: Track[] }): JSX.Element {
       {/* Индикатор доступных промежутков видео */}
       <div className="h-0.5 w-full">
         {tracks.map((track: Track, index: number) => {
-          const rangeWidth = ((track.combinedDuration) / maxDuration) * 100
+          if (!track.combinedDuration) return null
+
+          const rangeWidth = (track.combinedDuration / maxDuration) * 100
           const rangePosition = ((track.startTime - minStartTime) / maxDuration) * 100
 
           return (

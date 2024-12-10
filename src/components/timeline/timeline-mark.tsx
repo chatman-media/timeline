@@ -22,7 +22,7 @@ export const TimelineMark = (
           className="text-xs text-gray-100 drag--parent flex-1"
           style={{ marginLeft: "5px", marginTop: "-5px", border: "none" }}
         >
-          {formatTimeWithMilliseconds(timestamp, false, false, false)}
+          {formatTimeWithMilliseconds(timestamp, false, true, false)}
         </span>
       )}
     </div>

@@ -404,3 +404,29 @@
   margin-right: 0.5rem;
   opacity: 0.5;
 } */
+
+.timeline-mark {
+  position: absolute;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+}
+
+.timeline-mark--main {
+  height: 12px;
+  background-color: rgba(75, 85, 99, 0.4);
+}
+
+.timeline-mark--sub {
+  height: 8px;
+  background-color: rgba(75, 85, 99, 0.3);
+}
+
+.timeline-mark__label {
+  position: absolute;
+  bottom: 16px;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: rgb(156, 163, 175);
+  white-space: nowrap;
+}

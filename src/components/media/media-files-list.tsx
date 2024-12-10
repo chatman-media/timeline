@@ -148,8 +148,8 @@ export function MediaFilesList() {
     return (
       <div className="px-0 h-[calc(50vh-10px)] overflow-y-auto">
         <div
-          className="space-y-2 bg-gray-50 dark:bg-gray-800"
-          style={{ backgroundColor: "1b1a1f" }}
+          className="space-y-2"
+          style={{ backgroundColor: "#1b1a1f" }}
         >
           {[1, 2, 3, 4, 5, 6, 7, 8].map((index) => (
             <div key={index} className="flex items-center gap-3 p-0 pr-2 rounded-md">
@@ -209,7 +209,7 @@ export function MediaFilesList() {
   return (
     <>
       <div className="px-0 h-[calc(50vh-10px)] overflow-y-auto">
-        <div className="space-y-2 bg-gray-50 dark:bg-gray-900">
+        <div className="space-y-2 " style={{ backgroundColor: "##222222" }}>
           {media.map((file) => {
             const fileId = getFileId(file)
             const duration = file.probeData?.format.duration || 1
@@ -349,7 +349,7 @@ export function MediaFilesList() {
         </div>
         <div className="flex items-center gap-2 group cursor-pointer text-xs">
           <span
-            className="text-xs text-gray-900 dark:text-gray-400 opacity-50 group-hover:opacity-100 hover:text-gray-800 dark:hover:text-gray-100 transition-opacity flex items-center gap-1"
+            className=" items-center gap-1 text-xs text-gray-900 dark:text-gray-400 opacity-50 group-hover:opacity-100 hover:text-gray-800 dark:hover:text-gray-100 transition-opacity flex"
             title="Добавить все файлы"
             onClick={handleAddAllFiles}
           >
