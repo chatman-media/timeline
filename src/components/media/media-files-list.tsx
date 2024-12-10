@@ -1,23 +1,16 @@
 import { Plus, PlusSquare } from "lucide-react"
-import { nanoid } from "nanoid"
 import { useCallback, useMemo, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
-import {
-  createTracksFromFiles,
-  getGroupedFiles,
-  getSequentialFiles,
-  getSequentialGroups,
-} from "@/utils/mediaUtils"
-import { calculateTimeRanges } from "@/utils/videoUtils"
+import { getSequentialFiles, getSequentialGroups } from "@/utils/mediaUtils"
 
 import { Skeleton } from "../ui/skeleton"
 import { MediaPreview } from "./media-preview"
 
 export function MediaFilesList() {
-  const { media, isLoading, setTracks, tracks } = useMedia()
+  const { media, isLoading, addNewTracks } = useMedia()
   const [playingFileId, setPlayingFileId] = useState<string | null>(null)
   const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
     {},
@@ -65,13 +58,8 @@ export function MediaFilesList() {
   )
 
   const handleAddAllFiles = useCallback(() => {
-    setTracks([
-      ...tracks,
-      ...(createTracksFromFiles(media, tracks.length).filter((t) =>
-        !(new Set(tracks.map((t) => t.id))).has(t.id)
-      )),
-    ])
-  }, [media, tracks])
+    addNewTracks(media)
+  }, [media])
 
   const handleMouseMove = useCallback((
     e: React.MouseEvent<HTMLDivElement>,
@@ -138,45 +126,23 @@ export function MediaFilesList() {
       })
       return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
     })
-
-    const newTracks = createTracksFromFiles(dateFiles, tracks.length)
-    setTracks([
-      ...tracks,
-      ...(newTracks.filter((t) => !(new Set(tracks.map((t) => t.id))).has(t.id))),
-    ])
-  }, [media, tracks])
+    addNewTracks(dateFiles)
+  }, [media])
 
   const handleAddAllVideoFiles = useCallback(() => {
     const videoFiles = media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "video")
-    console.log(videoFiles)
-    setTracks([
-      ...tracks,
-      ...(createTracksFromFiles(videoFiles, tracks.length).filter((t) =>
-        !(new Set(tracks.map((t) => t.id))).has(t.id)
-      )),
-    ])
-  }, [media, tracks])
+    addNewTracks(videoFiles)
+  }, [media])
 
   const handleAddAllAudioFiles = useCallback(() => {
     const audioFiles = media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "audio")
-    setTracks([
-      ...tracks,
-      ...(createTracksFromFiles(audioFiles, tracks.length).filter((t) =>
-        !(new Set(tracks.map((t) => t.id))).has(t.id)
-      )),
-    ])
-  }, [media, tracks])
+    addNewTracks(audioFiles)
+  }, [media])
 
   const handleAddSequentialFiles = useCallback(() => {
     if (!sequentialFiles) return
-
-    setTracks([
-      ...tracks,
-      ...(createTracksFromFiles(sequentialFiles, tracks.length).filter((t) =>
-        !(new Set(tracks.map((t) => t.id))).has(t.id)
-      )),
-    ])
-  }, [media, tracks, sequentialFiles])
+    addNewTracks(sequentialFiles)
+  }, [sequentialFiles])
 
   if (isLoading) {
     return (
@@ -212,25 +178,8 @@ export function MediaFilesList() {
 
   const handleAddMedia = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
-    // Проверяем, что файл является видео
     if (file.probeData?.streams?.[0]?.codec_type !== "video") return
-
-    const newTrack = {
-      id: nanoid(),
-      index: tracks.length + 1,
-      isActive: false,
-      isVideo: true,
-      combinedDuration: file.probeData?.format.duration || 0,
-      videos: [file],
-      timeRanges: calculateTimeRanges([file]),
-      startTime: file.startTime || 0,
-      endTime: file.endTime || 0,
-    }
-
-    const trackExists = tracks.some((t) => t.videos.some((v) => v.id === file.id))
-    if (!trackExists) {
-      setTracks([...tracks, newTrack])
-    }
+    addNewTracks([file])
   }
 
   const videoFilesByDate = media.reduce((acc, file) => {

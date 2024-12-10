@@ -3,6 +3,7 @@ import { create } from "zustand"
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { calculateTimeRanges } from "@/utils/videoUtils"
 import { generateVideoId } from "@/lib/utils"
+import { createTracksFromFiles } from "@/utils/mediaUtils"
 
 interface VideoState {
   videos: MediaFile[]
@@ -37,6 +38,7 @@ interface VideoState {
   percentToTime: (percent: number) => number
   addToMetadataCache: (key: string, data: string) => void
   addToThumbnailCache: (key: string, data: string) => void
+  addNewTracks: (media: MediaFile[]) => void
 }
 
 export const useVideoStore = create<VideoState>((set, get) => ({
@@ -255,5 +257,15 @@ export const useVideoStore = create<VideoState>((set, get) => ({
     const { tracks } = get()
     const track = tracks.find((t) => t.id === get().activeTrackId)
     return (percent / 100) * (track?.combinedDuration || 0)
+  },
+
+  addNewTracks: (media: MediaFile[]) => {
+    const { tracks } = get()
+    const newTracks = createTracksFromFiles(media, tracks.length)
+    const uniqueNewTracks = newTracks.filter((t) => !(new Set(tracks.map((t) => t.id))).has(t.id))
+
+    set((state) => ({
+      tracks: [...state.tracks, ...uniqueNewTracks],
+    }))
   },
 }))
