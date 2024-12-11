@@ -14,7 +14,9 @@ const ActionButton = ({ title, onClick, children, icon }: ActionButtonProps) => 
     onClick={onClick}
   >
     {children}
-    {icon || <PlusSquare className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />}
+    {icon || (
+      <PlusSquare className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+    )}
   </span>
 )
- export { ActionButton }
+export { ActionButton }

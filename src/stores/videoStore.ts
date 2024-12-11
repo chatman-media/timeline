@@ -239,5 +239,4 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   play: () => {
     set({ isPlaying: !get().isPlaying })
   },
-
 }))

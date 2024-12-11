@@ -70,7 +70,8 @@ export function useTimelineScale(): UseTimelineScaleReturn {
     const roundedEndTime = Math.ceil(endTime / timeScale) * timeScale
 
     // Вычисляем шаг для круглых значений
-    const timeStep = Math.ceil((roundedEndTime - roundedStartTime) / baseMainMarks / timeScale) * timeScale
+    const timeStep = Math.ceil((roundedEndTime - roundedStartTime) / baseMainMarks / timeScale) *
+      timeScale
     const subStep = timeStep / numSubMarks
 
     return {

@@ -1,4 +1,4 @@
-import { formatTimeWithMilliseconds, formatFileSize, formatDuration } from "@/lib/utils"
+import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
 import { Plus } from "lucide-react"
 
@@ -58,4 +58,4 @@ export function FileInfo({ file, onAddMedia }: FileInfoProps) {
       </button>
     </div>
   )
-} 
+}

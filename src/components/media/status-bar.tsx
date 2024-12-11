@@ -4,7 +4,6 @@ import { ActionButton } from "./action-button"
 
 interface StatusBarProps {
   media: MediaFile[]
-  isLoading: boolean
   onAddAllVideoFiles: () => void
   onAddAllAudioFiles: () => void
   onAddSequentialFiles: () => void
@@ -47,16 +46,16 @@ export function StatusBar({
       </div>
       <div className="flex flex-col items-start gap-0 text-xs">
         {maxDateInfo && (
-          <ActionButton 
-            title="Добавить видео за эту дату" 
+          <ActionButton
+            title="Добавить видео за эту дату"
             onClick={() => onAddDateFiles(maxDateInfo.date)}
           >
             {`${maxDateInfo.files.length} видео ${maxDateInfo.date}`}
           </ActionButton>
         )}
         {secondMaxDateInfo && (
-          <ActionButton 
-            title="Добавить видео за эту дату" 
+          <ActionButton
+            title="Добавить видео за эту дату"
             onClick={() => onAddDateFiles(secondMaxDateInfo.date)}
           >
             {`${secondMaxDateInfo.files.length} видео ${secondMaxDateInfo.date}`}
@@ -67,14 +66,16 @@ export function StatusBar({
         <ActionButton title="Добавить все файлы" onClick={onAddAllFiles}>
           Добавить все
         </ActionButton>
-        <ActionButton 
-          title="Обновить" 
+        <ActionButton
+          title="Обновить"
           onClick={onUpdateList}
-          icon={<RefreshCw className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />}
+          icon={
+            <RefreshCw className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+          }
         >
           Обновить
         </ActionButton>
       </div>
     </div>
   )
-} 
+}

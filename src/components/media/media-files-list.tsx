@@ -14,7 +14,9 @@ export function MediaFilesList() {
   const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useMedia()
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
-  const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>({})
+  const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
+    {},
+  )
 
   const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
     videoRefs,

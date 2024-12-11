@@ -1,5 +1,5 @@
 import { MediaFile } from "@/types/videos"
-import { useState, useCallback } from "react"
+import { useCallback, useState } from "react"
 
 interface UseVideoPlayerProps {
   videoRefs: React.MutableRefObject<Record<string, HTMLVideoElement | null>>
@@ -59,4 +59,4 @@ export function useVideoPlayer({ videoRefs }: UseVideoPlayerProps) {
     handlePlayPause,
     handleMouseLeave,
   }
-} 
+}
