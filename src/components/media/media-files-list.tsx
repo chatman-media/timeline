@@ -43,7 +43,7 @@ export function MediaFilesList() {
     const rect = mediaElement.getBoundingClientRect()
 
     if (e.clientX < rect.left || e.clientX > rect.right) {
-      setHoverTimes((prev) => ({
+      setHoverTimes((prev: Record<string, { [streamIndex: number]: number }>) => ({
         ...prev,
         [fileId]: {
           ...(prev[fileId] || {}),
@@ -58,7 +58,7 @@ export function MediaFilesList() {
     const time = percentage * duration
 
     if (Number.isFinite(time)) {
-      setHoverTimes((prev) => ({
+      setHoverTimes((prev: Record<string, { [streamIndex: number]: number }>) => ({
         ...prev,
         [fileId]: {
           ...(prev[fileId] || {}),
