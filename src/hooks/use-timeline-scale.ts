@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useMedia } from "./use-media"
 
 interface UseTimelineScaleReturn {
@@ -50,28 +50,28 @@ export function useTimelineScale(): UseTimelineScaleReturn {
   const maxDuration = initialValues.maxDuration
   const minStartTime = initialValues.minStartTime
 
-  // Определяем масштаб округления в зависимости от длительности
-  const getTimeScale = (duration: number) => {
-    if (duration >= 3600) return 3600 // Часы для записей от 1 часа
-    if (duration >= 300) return 60 // Минуты для записей от 5 минут
-    if (duration >= 60) return 30 // Полминуты для записей от 1 минуты
-    return 1 // Секунды для коротких записей
-  }
-
-  const timeScale = getTimeScale(maxDuration)
-
   // Расчеты для шкалы времени
   const timeScaleCalculations = useMemo(() => {
+    // Определяем масштаб округления в зависимости от длительности
+    const getTimeScale = (duration: number) => {
+      if (duration >= 3600) return 3600 // Часы для записей от 1 часа
+      if (duration >= 300) return 60 // Минуты для записей от 5 минут
+      if (duration >= 60) return 30 // Полминуты для записей от 1 минуты
+      return 1 // Секунды для коротких записей
+    }
+
+    const timeScale = getTimeScale(maxDuration)
     const baseMainMarks = 10 // Базовое количество основных делений
     const numSubMarks = 5 // Количество промежуточных делений между основными
 
-    // Определяем шаг времени в зависимости от масштаба и длительности
-    const timeStep = Math.max(1, Math.ceil(maxDuration / (baseMainMarks * scale)))
-    const subStep = timeStep / numSubMarks
+    // Округляем начальное время согласно масштабу
+    const roundedStartTime = Math.floor(minStartTime / timeScale) * timeScale
+    const endTime = roundedStartTime + maxDuration
+    const roundedEndTime = Math.ceil(endTime / timeScale) * timeScale
 
-    const roundedStartTime = Math.floor(minStartTime / timeStep) * timeStep
-    const endTime = minStartTime + maxDuration
-    const roundedEndTime = Math.ceil(endTime / timeStep) * timeStep
+    // Вычисляем шаг для круглых значений
+    const timeStep = Math.ceil((roundedEndTime - roundedStartTime) / baseMainMarks / timeScale) * timeScale
+    const subStep = timeStep / numSubMarks
 
     return {
       roundedStartTime,

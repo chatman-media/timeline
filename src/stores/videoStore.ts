@@ -1,7 +1,6 @@
 import { create } from "zustand"
 
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
-import { calculateTimeRanges } from "@/utils/videoUtils"
 import { generateVideoId } from "@/lib/utils"
 import { createTracksFromFiles } from "@/utils/mediaUtils"
 
@@ -25,6 +24,7 @@ interface VideoState {
 
   // Actions
   setVideos: (videos: MediaFile[]) => void
+  setHasFetched: (hasFetched: boolean) => void
   setMedia: (media: MediaFile[]) => void
   setActiveTrack: (trackId: string) => void
   setActiveVideo: (videoId: string) => void
@@ -101,53 +101,20 @@ export const useVideoStore = create<VideoState>((set, get) => ({
         set({ videos: [], isLoading: false })
         return
       }
-      const videos = validMedia.filter((v: MediaFile) =>
-        v.probeData?.streams[0].codec_type !== "video"
-      )
-
-      // Calculate timeRanges for each track
-      const tracks: Track[] = []
-      const timeRanges: Record<string, TimeRange[]> = {}
-
-      videos.forEach((video: MediaFile) => {
-        const trackId = video.id ?? generateVideoId(videos)
-        let track = tracks.find((t) => t.id === trackId)
-
-        if (!track) {
-          const newTimeRanges = calculateTimeRanges([video])
-          track = {
-            id: trackId,
-            videos: [video],
-            timeRanges: newTimeRanges,
-            index: tracks.length,
-            isActive: false,
-            combinedDuration: video.duration || 0,
-            startTime: video.startTime || 0,
-            endTime: video.endTime || 0,
-          }
-          track && tracks.push(track)
-          trackId && (timeRanges[trackId] = newTimeRanges)
-        } else {
-          track.videos.push(video)
-          track.combinedDuration += video.probeData?.format.duration || 0
-          track.timeRanges = calculateTimeRanges(track.videos)
-          track.id && (timeRanges[track.id] = track.timeRanges)
-        }
-      })
 
       set({
-        videos,
-        // tracks,
-        timeRanges,
+        videos: validMedia,
         hasMedia: true,
-        activeTrackId: "T1",
-        activeVideo: videos.find((v: MediaFile) => v.id === "V1") || videos[0],
       })
     } catch (error) {
       console.error("Error fetching videos:", error)
     } finally {
       set({ isLoading: false })
     }
+  },
+
+  setHasFetched: (hasFetched: boolean) => {
+    set({ hasFetched })
   },
 
   setActiveVideo: (videoId) => {
@@ -268,4 +235,9 @@ export const useVideoStore = create<VideoState>((set, get) => ({
       tracks: [...state.tracks, ...uniqueNewTracks],
     }))
   },
+
+  play: () => {
+    set({ isPlaying: !get().isPlaying })
+  },
+
 }))

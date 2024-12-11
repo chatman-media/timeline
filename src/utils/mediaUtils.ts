@@ -140,3 +140,26 @@ export const getSequentialFiles = (files: MediaFile[]): MediaFile[] => {
     .filter((group) => group.length > 1)
     .flat()
 }
+
+export function groupFilesByDate(media: MediaFile[]) {
+  const videoFilesByDate = media.reduce((acc, file) => {
+    if (!file.startTime || file.probeData?.streams?.[0]?.codec_type !== "video") return acc
+
+    const date = new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    })
+
+    if (!acc[date]) {
+      acc[date] = []
+    }
+    acc[date].push(file)
+
+    return acc
+  }, {} as Record<string, MediaFile[]>)
+
+  return Object.entries(videoFilesByDate)
+    .sort((a, b) => b[1].length - a[1].length)
+    .map(([date, files]) => ({ date, files }))
+}

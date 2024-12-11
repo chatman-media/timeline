@@ -101,7 +101,7 @@ export const ActiveVideo = memo(() => {
     <div className="">
       <div className="flex gap-2">
         <div
-          className="relative aspect-video w-full overflow-hidden bg-gray-100 dark:bg-gray-800 group h-[calc(50vh)]"
+          className="relative aspect-video w-full overflow-hidden bg-gray-100 dark:bg-gray-800 group h-[calc(50vh+65px)]"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >

@@ -1,4 +1,3 @@
-import { ScaleControl } from "../layout/scale-control"
 import { ThemeToggle } from "../layout/theme-toggle"
 import { Timeline } from "../timeline"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -38,7 +37,6 @@ export function MediaEditor() {
         <div className="w-full">
           <div className="bg-gray-50 dark:bg-gray-900 m-1">
             <ActiveVideo />
-            <ScaleControl />
           </div>
         </div>
       </div>
