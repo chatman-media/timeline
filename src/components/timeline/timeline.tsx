@@ -73,11 +73,7 @@ export function Timeline() {
   return (
     <div className="timeline w-full min-h-[calc(50vh-70px)]">
       {sections.map((section) => (
-        <div key={section.date} className="timeline-section mb-8">
-          <div className="text-lg font-medium mb-4 text-gray-600 dark:text-gray-400 px-4">
-            {formatTimeWithMilliseconds(section.startTime, false, true, true)}
-          </div>
-
+        <div key={section.date} className="timeline-section mb-4">
           <div className="w-full flex flex-col gap-2">
             <TimelineScale
               tracks={section.tracks}

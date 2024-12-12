@@ -57,7 +57,10 @@ export function TimelineScale(
   return (
     <div className="relative w-full flex flex-col mb-[20px]">
       {/* Индикатор доступных промежутков видео */}
-      <div className="h-0.5 w-full">
+      <div
+        className="h-0.5 w-full"
+        style={{ background: "rgb(47, 61, 62)", opacity: 0.5, height: "1px" }}
+      >
         {tracks.map((track: Track) =>
           track.videos.map((video, videoIndex) => {
             const videoStart = video.startTime || 0
@@ -189,8 +192,12 @@ export function TimelineMark(
         className={`w-[1px] bg-[#4a4a4a] ${getMarkHeight()}`}
       />
       {showValue && (
-        <span className="text-[11px] text-[#808080] mt-1 absolute top-7 ml-[50px] mt-[-15px]">
-          {formatTimeWithMilliseconds(timestamp, false, true, false)}
+        <span
+          className={`text-[11px] text-[#808080] mt-1 absolute top-7 ml-[90px] mt-[-15px] whitespace-nowrap ${
+            isFirstMark ? "w-20 text-white opacity-70" : "w-10"
+          }`}
+        >
+          {formatTimeWithMilliseconds(timestamp, isFirstMark, true, false)}
         </span>
       )}
     </div>
