@@ -11,7 +11,7 @@ export function useVideoPlayer({ videoRefs }: UseVideoPlayerProps) {
   const handlePlayPause = useCallback(
     async (e: React.MouseEvent, file: MediaFile, streamIndex: number) => {
       e.stopPropagation()
-      const fileId = getFileId(file)
+      const fileId = file.id
       const videoKey = `${fileId}-${streamIndex}`
       const mediaElement = videoRefs.current[videoKey]
 

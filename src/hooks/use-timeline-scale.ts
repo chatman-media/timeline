@@ -4,10 +4,10 @@ import { useMedia } from "./use-media"
 interface UseTimelineScaleReturn {
   scale: number
   setScale: (value: number) => void
-  increaseScale: () => void
-  decreaseScale: () => void
-  scalePercentage: string
-  scaleStyle: { width: string }
+  // increaseScale: () => void
+  // decreaseScale: () => void
+  // scalePercentage: string
+  // scaleStyle: { width: string }
   maxDuration: number
   minStartTime: number
   roundedStartTime: number

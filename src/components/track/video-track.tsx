@@ -3,26 +3,40 @@ import { memo } from "react"
 import { type Track } from "@/types/videos"
 
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
-import { useTimelineScale } from "@/hooks/use-timeline-scale"
 import { useVideoStore } from "@/stores/videoStore"
 
 interface VideoTrackProps {
   track: Track
   index: number
-  parentRef?: React.RefObject<HTMLDivElement> | null
-  TrackSliceWrap?: React.FC<{ children: React.ReactNode }>
+  parentRef: React.RefObject<HTMLDivElement>
+  TrackSliceWrap: React.ComponentType<any>
+  sectionStartTime: number
+  sectionDuration: number
 }
 
 const VideoTrack = memo(({
   track,
   parentRef,
   TrackSliceWrap,
+  sectionStartTime,
+  sectionDuration,
 }: VideoTrackProps) => {
   const { activeTrackId, setActiveTrack, setActiveVideo } = useVideoStore()
-  const { minStartTime, maxDuration } = useTimelineScale()
+
+  // Проверяем наличие видео в треке
+  if (!track.videos || track.videos.length === 0) {
+    return null
+  }
+
   const firstVideo = track.videos[0]
   const lastVideo = track.videos[track.videos.length - 1]
-  const timeToPercent = (time: number) => ((time - minStartTime) / maxDuration) * 100
+
+  // Защита от undefined
+  if (!firstVideo || !lastVideo) {
+    return null
+  }
+
+  const timeToPercent = (time: number) => ((time - sectionStartTime) / sectionDuration) * 100
 
   // Calculate these values before using them in JSX
   const trackStartTime = firstVideo.startTime || 0
@@ -140,7 +154,6 @@ const VideoTrack = memo(({
                         )
                       }
 
-                      // Используем локальные переменные для расчета процентов
                       const trackStartTime = track.videos[0].startTime || 0
                       const trackEndTime = (track.videos[track.videos.length - 1].startTime || 0) +
                         (track.videos[track.videos.length - 1].duration || 0)
@@ -217,13 +230,6 @@ const VideoTrack = memo(({
                       )
                     })}
                   </div>
-
-                  {
-                    /* <TrackTimestamps
-                    trackStartTime={trackStartTime}
-                    trackEndTime={trackEndTime}
-                  /> */
-                  }
                 </div>
               </div>
             </TrackSliceWrap>
