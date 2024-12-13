@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from "react"
 import { Track } from "@/types/videos"
-import { formatTimeWithMilliseconds } from "@/lib/utils"
+import { formatDate, formatTimeWithMilliseconds } from "@/lib/utils"
 
 interface TimelineScaleProps {
   tracks: Track[]
@@ -51,8 +51,12 @@ export function TimelineScale(
   }, [startTime, endTime])
 
   useEffect(() => {
-    onTimeRangeAdjust?.(adjustedRange)
-  }, [adjustedRange])
+    onTimeRangeAdjust?.({
+      startTime: startTime,
+      endTime: endTime,
+      duration: duration
+    })
+  }, [startTime, endTime, duration, onTimeRangeAdjust])
 
   return (
     <div className="relative w-full flex flex-col mb-[20px]">
@@ -128,11 +132,14 @@ function TimelineMarks({
   const level3Step = subStep / 2
   const level4Step = subStep / 4
 
-  // Начинаем с ближайшего кратного timeStep значения
-  const firstMark = Math.ceil(startTime / level1Step) * level1Step
+  // Start from the first visible mark before startTime
+  const firstMark = Math.floor(startTime / level4Step) * level4Step
 
   for (let timestamp = firstMark; timestamp <= endTime; timestamp += level4Step) {
     const position = ((timestamp - startTime) / duration) * 100
+
+    // Skip marks that would appear before the visible area
+    if (position < 0) continue
 
     let markType: "large" | "medium" | "small" | "smallest"
     let showValue = false
@@ -155,7 +162,7 @@ function TimelineMarks({
         position={position}
         markType={markType}
         showValue={showValue}
-        isFirstMark={timestamp === firstMark}
+        isFirstMark={timestamp === Math.ceil(startTime / level1Step) * level1Step}
       />,
     )
   }
@@ -173,19 +180,26 @@ export function TimelineMark(
   const getMarkHeight = () => {
     switch (markType) {
       case "large":
-        return "h-7 bg-[#aeaeae] opacity-50"
+        return "h-6 bg-[#aeaeae] opacity-50"
       case "medium":
         return "h-3 bg-[#767676] opacity-50"
       case "small":
         return "h-2 opacity-70"
       case "smallest":
-        return "h-[6px] opacity-70"
+        return "h-[4px] opacity-70"
     }
   }
 
   return (
-    <div
-      className="absolute h-full flex flex-col items-center"
+    <>
+      {isFirstMark && (
+        <span className="absolute top-[-20px] left-0 text-[12px] text-white opacity-80">
+          {formatDate(timestamp)}
+        </span>
+      )}
+
+      <div
+        className="absolute h-full flex flex-col items-center"
       style={{ left: `${position}%` }}
     >
       <div
@@ -193,13 +207,14 @@ export function TimelineMark(
       />
       {showValue && (
         <span
-          className={`text-[11px] text-[#808080] mt-1 absolute top-7 ml-[90px] mt-[-15px] whitespace-nowrap ${
-            isFirstMark ? "w-20 text-white opacity-70" : "w-10"
+          className={`w-10 text-[11px] text-[#808080] ml-[90px] absolute top-7 mt-[-16px] whitespace-nowrap w-20 text-white opacity-50 ${
+            isFirstMark ? " text-white opacity-70" : ""
           }`}
         >
-          {formatTimeWithMilliseconds(timestamp, isFirstMark, true, false)}
+          {formatTimeWithMilliseconds(timestamp, false, true, false)}
         </span>
       )}
     </div>
+    </>
   )
 }

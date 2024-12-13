@@ -19,6 +19,7 @@ export function MediaEditor() {
               <TabsTrigger value="media">Медиатека</TabsTrigger>
               <TabsTrigger value="music">Музыка</TabsTrigger>
               <TabsTrigger value="transitions">Переходы</TabsTrigger>
+              <TabsTrigger value="effects">Эффекты</TabsTrigger>
             </TabsList>
             <TabsContent value="media">
               <MediaFilesList />
@@ -31,6 +32,9 @@ export function MediaEditor() {
               className="text-sm text-gray-400 dark:text-gray-500 p-2"
             >
               Переходы
+            </TabsContent>
+            <TabsContent value="effects" className="text-sm text-gray-400 dark:text-gray-500 p-2">
+              Эффекты
             </TabsContent>
           </Tabs>
         </div>

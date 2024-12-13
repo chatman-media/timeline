@@ -71,8 +71,8 @@ export function Timeline() {
   }, [tracks])
 
   return (
-    <div className="timeline w-full min-h-[calc(50vh-70px)]">
-      {sections.map((section) => (
+    <div className="timeline w-full min-h-[calc(50vh-70px)] pt-5">
+      {[...sections].reverse().map((section) => (
         <div key={section.date} className="timeline-section mb-4">
           <div className="w-full flex flex-col gap-2">
             <TimelineScale
