@@ -55,6 +55,9 @@ export const formatResolution = (width: number, height: number) => {
       5.0,
       5.5,
       6.0,
+      6.5,
+      7.0,
+      7.5,
       8.0, // высокие значения
     ]
     const closestK = kValues.reduce((prev, curr) =>
@@ -95,6 +98,14 @@ export function formatTimeWithMilliseconds(
     return `${time.format("DD.MM.YY")} ${timeString}`
   }
   return timeString
+}
+
+export function formatDate(timestamp: number): string {
+  return new Date(timestamp * 1000).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: '2-digit'
+  })
 }
 
 export function formatBitrate(bitrate: number | undefined): string {
