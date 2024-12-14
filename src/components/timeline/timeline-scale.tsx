@@ -29,7 +29,7 @@ export function TimelineScale({
     <div className="relative w-full flex flex-col mb-[20px]">
       <div
         className="h-0.5 w-full"
-        style={{ background: "rgb(47, 61, 62)", opacity: 0.5, height: "1px" }}
+        style={{ background: "rgb(47, 61, 62)", height: "1px" }}
       >
         {tracks.map((track: Track) =>
           track.videos.map((video, videoIndex) => {

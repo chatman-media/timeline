@@ -21,12 +21,12 @@ export function TimelineSection(
   const { timeStep, subStep, adjustedRange } = useTimelineScale(duration, startTime, endTime)
 
   return (
-    <div className="timeline-section mb-4">
+    <div className="timeline-section mb-6" style={{ borderBottom: "1px solid rgb(47, 61, 62)" }}>
       <div className="relative">
         <TimelineSectionBar
           sectionStartTime={adjustedRange.startTime}
           sectionDuration={adjustedRange.duration}
-          height={tracks.length * 90}
+          height={tracks.length * 88}
         />
 
         <div className="w-full flex flex-col gap-2">

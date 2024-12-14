@@ -1,5 +1,4 @@
 import { useRef } from "react"
-import { useMedia } from "@/hooks/use-media"
 import { useSectionTime } from "@/hooks/use-section-time"
 
 interface TimelineSectionBarProps {
@@ -32,7 +31,7 @@ export function TimelineSectionBar({
           left: `${position}%`,
           top: "0",
           transform: "translateX(-50%)",
-          height: `${height + 35}px`,
+          height: `${height + 54}px`,
         }}
         onMouseDown={handleMouseDown}
       >
