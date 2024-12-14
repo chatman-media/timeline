@@ -55,7 +55,7 @@ export function TimelineMarks({
   }
 
   return (
-    <div className="relative w-full h-10 bg-white dark:bg-[#1a1a1a]">
+    <div className="relative w-full h-8 bg-white dark:bg-[#1a1a1a]">
       {marks}
     </div>
   )
