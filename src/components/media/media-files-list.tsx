@@ -26,6 +26,14 @@ export function MediaFilesList() {
   const sequentialFiles = useMemo(() => getSequentialFiles(media), [media])
   const sortedDates = useMemo(() => groupFilesByDate(media), [media])
 
+  const sortedMedia = useMemo(() => {
+    return [...media].sort((a, b) => {
+      const timeA = a.startTime || 0;
+      const timeB = b.startTime || 0;
+      return timeB - timeA;
+    });
+  }, [media]);
+
   const getFileId = useCallback((file: MediaFile) => {
     return file.id || file.path || file.name
   }, [])
@@ -149,7 +157,7 @@ export function MediaFilesList() {
     <>
       <div className="px-0 h-[calc(50vh-10px)] overflow-y-auto">
         <div className="space-y-2">
-          {media.map((file) => {
+          {sortedMedia.map((file) => {
             const fileId = getFileId(file)
             const duration = file.probeData?.format.duration || 1
             const isAudio = file.probeData?.streams?.[0]?.codec_type === "audio"
@@ -182,7 +190,7 @@ export function MediaFilesList() {
         </div>
       </div>
       <StatusBar
-        media={media}
+        media={sortedMedia}
         onAddAllVideoFiles={handleAddAllVideoFiles}
         onAddAllAudioFiles={handleAddAllAudioFiles}
         onAddSequentialFiles={handleAddSequentialFiles}

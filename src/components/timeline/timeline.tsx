@@ -1,10 +1,12 @@
-import React, { useMemo } from "react"
+import React, { useMemo, useState } from "react"
 import { useMedia } from "@/hooks/use-media"
 import { TimelineSection } from "./timeline-section"
 import { MediaFile, Track } from "@/types/videos"
 
 export function Timeline() {
-  const { tracks } = useMedia()
+  const { tracks, activeVideo, setCurrentTime: updateTime } = useMedia()
+  const [activeDate, setActiveDate] = useState<string | null>(null)
+
   const sections = useMemo(() => {
     if (!tracks || tracks.length === 0) return []
 
@@ -59,6 +61,33 @@ export function Timeline() {
       .sort((a, b) => a.startTime - b.startTime)
   }, [tracks])
 
+  // Set initial active section when sections change
+  React.useEffect(() => {
+    if (sections.length > 0 && !activeDate) {
+      const latestSection = sections[sections.length - 1]
+      setActiveDate(latestSection.date)
+
+      // Устанавливаем время на первый кадр первой дорожки
+      if (latestSection.tracks.length > 0) {
+        const firstTrack = latestSection.tracks[0]
+        if (firstTrack.videos.length > 0) {
+          const firstVideo = firstTrack.videos[0]
+          const videoStartTime = firstVideo.startTime || 0
+          updateTime(videoStartTime)
+        }
+      }
+    }
+  }, [sections])
+
+  // Update active section when active video changes
+  React.useEffect(() => {
+    if (activeVideo) {
+      const videoStartTime = activeVideo.startTime || 0
+      const videoDate = new Date(videoStartTime * 1000).toDateString()
+      setActiveDate(videoDate)
+    }
+  }, [activeVideo])
+
   return (
     <div className="timeline w-full min-h-[calc(50vh-70px)] pt-5">
       <div className="relative w-full" style={{ minWidth: "100%" }}>
@@ -70,6 +99,7 @@ export function Timeline() {
             startTime={section.startTime}
             endTime={section.endTime}
             duration={section.duration}
+            isActive={section.date === activeDate}
           />
         ))}
       </div>

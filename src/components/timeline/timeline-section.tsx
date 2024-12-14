@@ -5,6 +5,7 @@ import { VideoTrack } from "../track"
 import { TrackSliceWrap } from "../track/track-slice-wrap"
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
 import { TimelineSectionBar } from "./timeline-section-bar"
+import { useInitialTrackTime } from "@/hooks/use-initial-track-time"
 
 interface TimelineSectionProps {
   date: string
@@ -12,18 +13,28 @@ interface TimelineSectionProps {
   startTime: number
   endTime: number
   duration: number
+  isActive?: boolean
 }
 
 export function TimelineSection(
-  { date, tracks, startTime, endTime, duration }: TimelineSectionProps,
+  { date, tracks, startTime, endTime, duration, isActive = false }: TimelineSectionProps,
 ) {
   const parentRef = useRef<HTMLDivElement>(null)
   const { timeStep, subStep, adjustedRange } = useTimelineScale(duration, startTime, endTime)
 
   return (
-    <div className="timeline-section mb-6" style={{ borderBottom: "1px solid rgb(47, 61, 62)" }}>
+    <div
+      className={`timeline-section mt-6 ${
+        isActive ? "border-l-[1px] border-[#6dbfb8]" : "border-l-[1px] border-transparent"
+      }`}
+      style={{
+        borderBottom: "1px solid rgb(47, 61, 62)",
+      }}
+    >
       <div className="relative">
         <TimelineSectionBar
+          startTime={startTime}
+          endTime={endTime}
           sectionStartTime={adjustedRange.startTime}
           sectionDuration={adjustedRange.duration}
           height={tracks.length * 88}

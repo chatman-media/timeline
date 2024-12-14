@@ -13,7 +13,7 @@ export function TimelineVideoMarker(
   const videoStart = video.startTime || 0
   const videoDuration = video.duration || 0
   const rangeWidth = (videoDuration / adjustedRange.duration) * 100
-  const rangePosition = ((videoStart - adjustedRange.startTime) / adjustedRange.duration) * 100
+  const rangePosition = ((videoStart - adjustedRange.start) / adjustedRange.duration) * 100
 
   return (
     <div
