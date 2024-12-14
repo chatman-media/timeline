@@ -51,7 +51,7 @@ const TabsContent = React.forwardRef<
       className={cn(
         "mt-1 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         "data-[state=inactive]:pointer-events-none data-[state=inactive]:absolute data-[state=inactive]:opacity-0",
-        className
+        className,
       )}
       {...props}
       forceMount={mounted}

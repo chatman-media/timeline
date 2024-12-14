@@ -4,6 +4,7 @@ import { TimelineScale } from "./timeline-scale"
 import { VideoTrack } from "../track"
 import { TrackSliceWrap } from "../track/track-slice-wrap"
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
+import { TimelineSectionBar } from "./timeline-section-bar"
 
 interface TimelineSectionProps {
   date: string
@@ -21,30 +22,38 @@ export function TimelineSection(
 
   return (
     <div className="timeline-section mb-4">
-      <div className="w-full flex flex-col gap-2">
-        <TimelineScale
-          tracks={tracks}
-          timeStep={timeStep}
-          subStep={subStep}
-          adjustedRange={adjustedRange}
+      <div className="relative">
+        <TimelineSectionBar
+          sectionStartTime={adjustedRange.startTime}
+          sectionDuration={adjustedRange.duration}
+          height={tracks.length * 90}
         />
 
-        {tracks.map((track, index) => (
-          <div
-            key={`${track.id}-${date}`}
-            className="relative"
-            style={{ height: 80 }}
-          >
-            <VideoTrack
-              track={track}
-              index={index}
-              parentRef={parentRef}
-              TrackSliceWrap={TrackSliceWrap}
-              sectionStartTime={adjustedRange.startTime}
-              sectionDuration={adjustedRange.duration}
-            />
-          </div>
-        ))}
+        <div className="w-full flex flex-col gap-2">
+          <TimelineScale
+            tracks={tracks}
+            timeStep={timeStep}
+            subStep={subStep}
+            adjustedRange={adjustedRange}
+          />
+
+          {tracks.map((track, index) => (
+            <div
+              key={`${track.id}-${date}`}
+              className="relative"
+              style={{ height: 80 }}
+            >
+              <VideoTrack
+                track={track}
+                index={index}
+                parentRef={parentRef}
+                TrackSliceWrap={TrackSliceWrap}
+                sectionStartTime={adjustedRange.startTime}
+                sectionDuration={adjustedRange.duration}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
