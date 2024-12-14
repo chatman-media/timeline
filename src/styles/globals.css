@@ -430,3 +430,13 @@
   color: rgb(156, 163, 175);
   white-space: nowrap;
 }
+
+.timeline-bar-local,
+.timeline-bar-global {
+  transition: left 0.1s linear;
+}
+
+.timeline-bar {
+  transition: transform 0.1s linear;
+  will-change: transform;
+}

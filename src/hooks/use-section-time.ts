@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { useMedia } from "./use-media"
 
 interface UseSectionTimeProps {
   sectionStartTime: number
@@ -7,22 +8,44 @@ interface UseSectionTimeProps {
   endTime: number
 }
 
-export function useSectionTime({ sectionStartTime, sectionDuration, startTime, endTime }: UseSectionTimeProps) {
+export function useSectionTime(
+  { sectionStartTime, sectionDuration, startTime, endTime }: UseSectionTimeProps,
+) {
   const [position, setPosition] = useState(0)
-  const [trackTime, setTrackTime] = useState(0)
   const isDragging = useRef(false)
   const wasTimeManuallySet = useRef(false)
+  const { activeVideo, videoRefs, setCurrentTime, currentTime } = useMedia()
+  const lastUpdateTime = useRef(0)
+  const animationFrameId = useRef<number>()
 
   useEffect(() => {
-    setTrackTime(startTime)
-  }, [startTime])
+    const updatePosition = () => {
+      if (isDragging.current || wasTimeManuallySet.current) return
 
-  useEffect(() => {
-    if (!isDragging.current && !wasTimeManuallySet.current) {
-      const percentage = ((trackTime - sectionStartTime) / sectionDuration) * 100
-      setPosition(percentage)
+      const now = performance.now()
+      if (now - lastUpdateTime.current >= 16.6) {
+        const percentage = ((currentTime - sectionStartTime) / sectionDuration) * 100
+        setPosition(percentage)
+        lastUpdateTime.current = now
+      }
+      animationFrameId.current = requestAnimationFrame(updatePosition)
     }
-  }, [trackTime, sectionStartTime, sectionDuration])
+
+    animationFrameId.current = requestAnimationFrame(updatePosition)
+
+    return () => {
+      if (animationFrameId.current) {
+        cancelAnimationFrame(animationFrameId.current)
+      }
+    }
+  }, [currentTime, sectionStartTime, sectionDuration])
+
+  const handleVideoClick = (videoStartTime: number) => {
+    wasTimeManuallySet.current = true
+    const percentage = ((videoStartTime - sectionStartTime) / sectionDuration) * 100
+    setPosition(percentage)
+    setCurrentTime(videoStartTime)
+  }
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -39,8 +62,14 @@ export function useSectionTime({ sectionStartTime, sectionDuration, startTime, e
       wasTimeManuallySet.current = true
 
       const clampedTime = Math.max(startTime, Math.min(endTime, newTime))
-      setTrackTime(clampedTime)
       setPosition(percentage)
+
+      if (activeVideo && videoRefs.current[activeVideo.id]) {
+        const videoElement = videoRefs.current[activeVideo.id]
+        const videoStartTime = activeVideo.startTime || 0
+        videoElement.currentTime = clampedTime - videoStartTime
+      }
+      setCurrentTime(clampedTime)
     }
 
     const handleMouseUp = () => {
@@ -58,7 +87,15 @@ export function useSectionTime({ sectionStartTime, sectionDuration, startTime, e
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [sectionStartTime, sectionDuration])
+  }, [
+    sectionStartTime,
+    sectionDuration,
+    startTime,
+    endTime,
+    setCurrentTime,
+    activeVideo,
+    videoRefs,
+  ])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true
@@ -68,9 +105,8 @@ export function useSectionTime({ sectionStartTime, sectionDuration, startTime, e
   }
 
   return {
-    trackTime,
-    setTrackTime,
     position,
     handleMouseDown,
+    handleVideoClick,
   }
 }

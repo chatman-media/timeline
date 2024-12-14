@@ -28,11 +28,11 @@ export function MediaFilesList() {
 
   const sortedMedia = useMemo(() => {
     return [...media].sort((a, b) => {
-      const timeA = a.startTime || 0;
-      const timeB = b.startTime || 0;
-      return timeB - timeA;
-    });
-  }, [media]);
+      const timeA = a.startTime || 0
+      const timeB = b.startTime || 0
+      return timeB - timeA
+    })
+  }, [media])
 
   const getFileId = useCallback((file: MediaFile) => {
     return file.id || file.path || file.name

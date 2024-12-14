@@ -2,10 +2,8 @@ import { useRef } from "react"
 import { Track } from "@/types/videos"
 import { TimelineScale } from "./timeline-scale"
 import { VideoTrack } from "../track"
-import { TrackSliceWrap } from "../track/track-slice-wrap"
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
 import { TimelineSectionBar } from "./timeline-section-bar"
-import { useInitialTrackTime } from "@/hooks/use-initial-track-time"
 
 interface TimelineSectionProps {
   date: string
@@ -58,7 +56,6 @@ export function TimelineSection(
                 track={track}
                 index={index}
                 parentRef={parentRef}
-                TrackSliceWrap={TrackSliceWrap}
                 sectionStartTime={adjustedRange.startTime}
                 sectionDuration={adjustedRange.duration}
               />

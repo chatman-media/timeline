@@ -191,6 +191,12 @@ export const useVideoStore = create<VideoState>((set, get) => ({
   },
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setCurrentTime: (time) => {
+    // const { activeVideo, videoRefs } = get()
+    // if (activeVideo && videoRefs[activeVideo.id]) {
+    //   const videoElement = videoRefs[activeVideo.id]
+    //   const videoStartTime = activeVideo.startTime || 0
+    //   videoElement.currentTime = time - videoStartTime // Adjust for video start time
+    // }
     set({ currentTime: time })
   },
 

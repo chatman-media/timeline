@@ -21,8 +21,6 @@ export const ActiveVideo = memo(() => {
     videoRefs.current = {}
   }
 
-  const isTimeUpdateFromVideo = useRef(false)
-
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation()
     setIsPlaying(!isPlaying)
@@ -32,22 +30,25 @@ export const ActiveVideo = memo(() => {
     const videoElement = videoRefs.current[activeVideo?.id]
     if (!videoElement || !activeVideo) return
 
-    const videoStartTime = new Date(activeVideo.startTime || 0).getTime() / 1000
-
-    // Синхронизация времени
-    if (!isTimeUpdateFromVideo.current && !isChangingCamera) {
-      const relativeTime = currentTime - videoStartTime
-      if (relativeTime >= 0 && relativeTime <= (activeVideo.duration || 0)) {
-        videoElement.currentTime = relativeTime
+    const videoStartTime = activeVideo.startTime || 0
+    const throttledTimeUpdate = () => {
+      if (!videoElement.seeking && !isChangingCamera) {
+        const newTime = videoStartTime + videoElement.currentTime
+        // Используем RAF для синхронизации с отрисовкой
+        requestAnimationFrame(() => {
+          setCurrentTime(newTime)
+        })
       }
     }
-    isTimeUpdateFromVideo.current = false
 
+    // Оптимизированный обработчик timeupdate
+    let lastUpdate = 0
     const handleTimeUpdate = () => {
-      if (!videoElement.seeking && !isChangingCamera) {
-        isTimeUpdateFromVideo.current = true
-        const newTime = videoStartTime + videoElement.currentTime
-        setCurrentTime(newTime)
+      const now = performance.now()
+      // Ограничиваем частоту обновлений до ~60fps
+      if (now - lastUpdate >= 16.6) {
+        throttledTimeUpdate()
+        lastUpdate = now
       }
     }
 
@@ -80,7 +81,7 @@ export const ActiveVideo = memo(() => {
       videoElement.removeEventListener("error", handleError)
       videoElement.pause()
     }
-  }, [activeVideo, isPlaying, currentTime, isChangingCamera])
+  }, [activeVideo, isPlaying, isChangingCamera])
 
   useEffect(() => {
     const videoElement = videoRefs.current[activeVideo?.id]

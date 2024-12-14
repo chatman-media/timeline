@@ -3,13 +3,12 @@ import { memo } from "react"
 import { type Track } from "@/types/videos"
 
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
-import { useVideoStore } from "@/stores/videoStore"
+import { useMedia } from "@/hooks/use-media"
 
 interface VideoTrackProps {
   track: Track
   index: number
   parentRef: React.RefObject<HTMLDivElement>
-  TrackSliceWrap: React.ComponentType<any>
   sectionStartTime: number
   sectionDuration: number
 }
@@ -17,11 +16,10 @@ interface VideoTrackProps {
 const VideoTrack = memo(({
   track,
   parentRef,
-  TrackSliceWrap,
   sectionStartTime,
   sectionDuration,
 }: VideoTrackProps) => {
-  const { activeTrackId, setActiveTrack, setActiveVideo } = useVideoStore()
+  const { setCurrentTime, setActiveVideo, activeTrackId, setActiveTrack } = useMedia()
 
   if (!track.videos || track.videos.length === 0) {
     return null
@@ -53,6 +51,11 @@ const VideoTrack = memo(({
     setActiveTrack(track.id)
     if (videoId) {
       setActiveVideo(videoId)
+      const video = track.videos.find((v) => v.id === videoId)
+      if (video) {
+        const videoStartTime = video.startTime || 0
+        setCurrentTime(videoStartTime)
+      }
     }
   }
 
@@ -70,7 +73,7 @@ const VideoTrack = memo(({
             className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
             style={{ cursor: "pointer" }}
           >
-            <TrackSliceWrap ref={parentRef}>
+            <div className="slice--parent bg-[#014a4f]" ref={parentRef}>
               <div className="absolute h-full w-full timline-border">
                 <div className="flex h-full w-full flex-col justify-start">
                   <div className="flex relative">
@@ -218,7 +221,7 @@ const VideoTrack = memo(({
                   </div>
                 </div>
               </div>
-            </TrackSliceWrap>
+            </div>
           </div>
         </div>
       </div>

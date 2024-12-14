@@ -14,11 +14,6 @@ interface TimeRange {
   duration: number
 }
 
-interface TimeScale {
-  main: number
-  sub: number
-}
-
 export function TimelineScale({
   tracks,
   timeStep,
