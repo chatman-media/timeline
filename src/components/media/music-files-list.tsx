@@ -6,7 +6,7 @@ import { MediaFile } from "@/types/videos"
 
 export function MusicFilesList() {
   const [musicFiles, setMusicFiles] = useState<MediaFile[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [, setIsLoading] = useState(true)
   const [activeFile, setActiveFile] = useState<string | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const [page, setPage] = useState(1)

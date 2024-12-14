@@ -1,3 +1,5 @@
+import { Track } from "./videos"
+
 // Базовые типы для временной шкалы
 export interface VideoMetadata {
   filename: string
@@ -25,4 +27,12 @@ export interface SeekbarState {
   height: number
   y: number
   x: number
+}
+
+export interface TimelineSection {
+  date: string
+  startTime: number
+  endTime: number
+  duration: number
+  tracks: Track[]
 }

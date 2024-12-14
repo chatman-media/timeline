@@ -33,28 +33,39 @@ export const formatDuration = (seconds: number, afterComa = 3): string => {
 // Добавим вспомогательную функцию для форматирования разрешения
 export const formatResolution = (width: number, height: number) => {
   const pixels = width * height
-  
+
   // Определение стандартов разрешения для 6K и 8K
   if (pixels >= 33177600) return "8K" // 7680x4320 = 33,177,600 pixels
   if (pixels >= 19906560) return "6K" // 6144x3240 = 19,906,560 pixels
-  
+
   // Для 4K и ниже используем существующую логику с K-значениями
   if (pixels >= 2073600) {
     const k = pixels / (2000 * 1000)
     // Значения K только до 4K
     const kValues = [
-      1.2, 1.4, 1.6, 1.8, 2.0, 
-      2.2, 2.4, 2.7, 3.0, 3.2, 
-      3.4, 3.6, 3.8, 4.0
+      1.2,
+      1.4,
+      1.6,
+      1.8,
+      2.0,
+      2.2,
+      2.4,
+      2.7,
+      3.0,
+      3.2,
+      3.4,
+      3.6,
+      3.8,
+      4.0,
     ]
     const closestK = kValues.reduce((prev, curr) =>
       Math.abs(curr - k) < Math.abs(prev - k) ? curr : prev
     )
     return `${closestK}K`
   }
-  
+
   if (pixels >= 2073600) return "1080p" // 1920x1080
-  if (pixels >= 921600) return "720p"   // 1280x720
+  if (pixels >= 921600) return "720p" // 1280x720
   return "SD"
 }
 
@@ -89,10 +100,10 @@ export function formatTimeWithMilliseconds(
 }
 
 export function formatDate(timestamp: number): string {
-  return new Date(timestamp * 1000).toLocaleDateString('ru-RU', {
-    day: 'numeric',
-    month: 'long',
-    year: '2-digit'
+  return new Date(timestamp * 1000).toLocaleDateString("ru-RU", {
+    day: "numeric",
+    month: "long",
+    year: "2-digit",
   })
 }
 

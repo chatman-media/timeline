@@ -1,14 +1,11 @@
-import React, { useMemo } from "react"
-import { useMedia } from "@/hooks/use-media"
-import { TimelineSection } from "./timeline-section"
+import { useMemo } from "react"
 import { MediaFile, Track } from "@/types/videos"
+import { TimelineSection } from "@/types/timeline"
 
-export function Timeline() {
-  const { tracks } = useMedia()
-  const sections = useMemo(() => {
+export function useTimelineSections(tracks: Track[] | null) {
+  return useMemo(() => {
     if (!tracks || tracks.length === 0) return []
 
-    // Создаем мапу для группировки видео по дням
     const videosByDay = new Map<string, {
       videos: MediaFile[]
       tracks: Track[]
@@ -41,9 +38,8 @@ export function Timeline() {
       })
     })
 
-    // Преобразуем мапу в массив секций
     return Array.from(videosByDay.entries())
-      .map(([date, data]) => ({
+      .map(([date, data]): TimelineSection => ({
         date,
         startTime: data.startTime,
         endTime: data.endTime,
@@ -58,21 +54,4 @@ export function Timeline() {
       }))
       .sort((a, b) => a.startTime - b.startTime)
   }, [tracks])
-
-  return (
-    <div className="timeline w-full min-h-[calc(50vh-70px)] pt-5">
-      <div className="relative w-full" style={{ minWidth: "100%" }}>
-        {[...sections].reverse().map((section) => (
-          <TimelineSection
-            key={section.date}
-            date={section.date}
-            tracks={section.tracks}
-            startTime={section.startTime}
-            endTime={section.endTime}
-            duration={section.duration}
-          />
-        ))}
-      </div>
-    </div>
-  )
 }

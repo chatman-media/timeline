@@ -106,7 +106,7 @@ export const createTracksFromFiles = (
   }
 
   return Object.entries(groupedFiles)
-    .map(([groupKey, groupFiles], index) => ({
+    .map(([, groupFiles], index) => ({
       id: nanoid(),
       index: currentTracksLength + index + 1,
       isActive: false,

@@ -1,30 +1,55 @@
-import { formatTimeWithMilliseconds } from "@/lib/utils"
+import { formatDate, formatTimeWithMilliseconds } from "@/lib/utils"
 
 interface TimelineMarkProps {
   timestamp: number
   position: number
-  isMainMark: boolean
+  markType: "large" | "medium" | "small" | "smallest"
+  showValue?: boolean
+  formatTime?: (timestamp: number) => string
+  isFirstMark?: boolean
 }
 
-export const TimelineMark = (
-  { timestamp, position, isMainMark }: TimelineMarkProps,
-): JSX.Element => {
+export function TimelineMark({
+  timestamp,
+  position,
+  markType,
+  showValue,
+  isFirstMark,
+}: TimelineMarkProps) {
+  const getMarkHeight = () => {
+    switch (markType) {
+      case "large":
+        return "h-6 bg-[#aeaeae] opacity-50"
+      case "medium":
+        return "h-3 bg-[#767676] opacity-50"
+      case "small":
+        return "h-2 opacity-70"
+      case "smallest":
+        return "h-[4px] opacity-70"
+    }
+  }
+
   return (
-    <div
-      className="absolute flex flex-col"
-      style={{ left: `${position}%` }}
-    >
-      <div
-        className={`${isMainMark ? "h-3" : "h-1.5"} w-0.5 bg-gray-600`}
-      />
-      {isMainMark && (
-        <span
-          className="text-xs text-gray-100 drag--parent flex-1"
-          style={{ marginLeft: "5px", marginTop: "-5px", border: "none" }}
-        >
-          {formatTimeWithMilliseconds(timestamp, false, true, false)}
+    <>
+      {isFirstMark && (
+        <span className="absolute top-[-20px] left-0 text-[12px] dark:text-gray-100 text-gray-900 opacity-80">
+          {formatDate(timestamp)}
         </span>
       )}
-    </div>
+
+      <div
+        className="absolute h-full flex flex-col items-center"
+        style={{ left: `${position}%` }}
+      >
+        <div className={`w-[1px] bg-[#4a4a4a] ${getMarkHeight()}`} />
+        {showValue && (
+          <span
+            className={`w-10 text-[11px] text-[#808080] ml-[90px] absolute top-7 mt-[-16px] whitespace-nowrap w-20 dark:text-gray-100 text-gray-900 opacity-50`}
+          >
+            {formatTimeWithMilliseconds(timestamp, false, true, false)}
+          </span>
+        )}
+      </div>
+    </>
   )
 }

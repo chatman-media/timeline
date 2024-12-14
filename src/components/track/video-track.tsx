@@ -23,7 +23,6 @@ const VideoTrack = memo(({
 }: VideoTrackProps) => {
   const { activeTrackId, setActiveTrack, setActiveVideo } = useVideoStore()
 
-  // Проверяем наличие видео в треке
   if (!track.videos || track.videos.length === 0) {
     return null
   }
@@ -31,14 +30,16 @@ const VideoTrack = memo(({
   const firstVideo = track.videos[0]
   const lastVideo = track.videos[track.videos.length - 1]
 
-  // Защита от undefined
   if (!firstVideo || !lastVideo) {
     return null
   }
 
-  const timeToPercent = (time: number) => ((time - sectionStartTime) / sectionDuration) * 100
+  const timeToPercent = (time: number) => {
+    if (!sectionStartTime || !sectionDuration || sectionDuration === 0) return 0
+    const percent = ((time - sectionStartTime) / sectionDuration) * 100
+    return percent
+  }
 
-  // Calculate these values before using them in JSX
   const trackStartTime = firstVideo.startTime || 0
   const trackEndTime = (lastVideo.startTime || 0) + (lastVideo.duration || 0)
   const startOffset = timeToPercent(trackStartTime)
@@ -48,8 +49,7 @@ const VideoTrack = memo(({
   const audioStream = firstVideo.probeData?.streams.find((s) => s.codec_type === "audio")
   const isActive = track.id === activeTrackId
 
-  const handleClick = (e: React.MouseEvent, track: Track, videoId?: string) => {
-    console.log("handleClick", track, videoId)
+  const handleClick = (_e: React.MouseEvent, track: Track, videoId?: string) => {
     setActiveTrack(track.id)
     if (videoId) {
       setActiveVideo(videoId)
@@ -89,6 +89,7 @@ const VideoTrack = memo(({
                               height: "70px",
                             }}
                           >
+                            {/* Содержимое для одиночного видео */}
                             <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
                               <div
                                 className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0"
@@ -108,12 +109,6 @@ const VideoTrack = memo(({
                                           {videoStream?.r_frame_rate &&
                                             ` ${Math.round(eval(videoStream.r_frame_rate))} fps`}
                                         </span>
-                                        {
-                                          /* <span>
-                                      {videoStream?.bit_rate &&
-                                        formatBitrate(videoStream.bit_rate)}
-                                    </span> */
-                                        }
                                         <span>{formatDuration(track.combinedDuration, 3)}</span>
                                       </div>
                                     )
@@ -131,9 +126,7 @@ const VideoTrack = memo(({
                                           {audioStream?.bit_rate &&
                                             `${formatBitrate(audioStream.bit_rate)}`}
                                         </span>
-                                        <span>
-                                          {formatDuration(track.combinedDuration, 3)}
-                                        </span>
+                                        <span>{formatDuration(track.combinedDuration, 3)}</span>
                                       </div>
                                     )}
                                 </div>
@@ -154,16 +147,18 @@ const VideoTrack = memo(({
                         )
                       }
 
-                      const trackStartTime = track.videos[0].startTime || 0
-                      const trackEndTime = (track.videos[track.videos.length - 1].startTime || 0) +
-                        (track.videos[track.videos.length - 1].duration || 0)
-
                       const segmentStart =
                         ((videoStart - trackStartTime) / (trackEndTime - trackStartTime)) * 100
                       const segmentWidth = (videoDuration / (trackEndTime - trackStartTime)) * 100
 
-                      console.log("Segment Start:", segmentStart)
-                      console.log("Segment Width:", segmentWidth)
+                      console.log("Segment calculations:", {
+                        videoStart,
+                        videoEnd: videoStart + videoDuration,
+                        segmentStart,
+                        segmentWidth,
+                        trackStartTime,
+                        trackEndTime,
+                      })
 
                       return (
                         <div
@@ -173,7 +168,6 @@ const VideoTrack = memo(({
                             left: `${segmentStart}%`,
                             width: `${segmentWidth}%`,
                             height: "70px",
-                            // backgroundColor: "rgba(175, 130, 130, 0.5)"
                           }}
                         >
                           <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
@@ -188,21 +182,13 @@ const VideoTrack = memo(({
                                 ? (
                                   <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
                                     <div className="flex flex-row video-metadata truncate text-xs text-white">
-                                      <span>
-                                        {videoStream?.codec_name?.toUpperCase()}
-                                      </span>
+                                      <span>{videoStream?.codec_name?.toUpperCase()}</span>
                                       <span>{videoStream?.width}×{videoStream?.height}</span>
                                       <span>{videoStream?.display_aspect_ratio}</span>
                                       <span>
                                         {videoStream?.r_frame_rate &&
                                           ` ${Math.round(eval(videoStream.r_frame_rate))} fps`}
                                       </span>
-                                      {
-                                        /* <span>
-                                      {videoStream?.bit_rate &&
-                                        formatBitrate(videoStream.bit_rate)}
-                                    </span> */
-                                      }
                                     </div>
                                   </div>
                                 )

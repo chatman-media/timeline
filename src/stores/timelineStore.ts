@@ -18,7 +18,7 @@ interface VideoState {
   setVideoUrl: (url: string) => void
 }
 
-export const useRootStore = create<TimelineState & VideoState>((set, get) => ({
+export const useRootStore = create<TimelineState & VideoState>((set) => ({
   slices: [],
   selectedSliceId: null,
 

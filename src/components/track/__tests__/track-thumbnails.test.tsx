@@ -29,7 +29,7 @@ describe("TrackThumbnails", () => {
     vi.useRealTimers()
   })
 
-  it("should not regenerate thumbnails when only timeline position changes", async () => {
+  it("should not regenerate thumbnails when only timeline position changes", () => {
     const { rerender } = render(
       <TrackThumbnails
         track={{

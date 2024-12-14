@@ -2,7 +2,7 @@ import ffmpeg from "fluent-ffmpeg"
 
 import { ScreenshotsConfig } from "../types/screenshots"
 
-export async function generateThumbnails(
+export function generateThumbnails(
   videoPath: string,
   config: ScreenshotsConfig,
 ): Promise<string[]> {
@@ -12,7 +12,6 @@ export async function generateThumbnails(
     filename,
     size,
     timestamps,
-    quality = 3,
   } = config
 
   return new Promise((resolve, reject) => {

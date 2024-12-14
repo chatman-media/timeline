@@ -1,13 +1,11 @@
-import { useEffect, useMemo } from "react"
 import { Track } from "@/types/videos"
-import { formatDate, formatTimeWithMilliseconds } from "@/lib/utils"
+import { TimelineMarks } from "./timeline-marks"
 
 interface TimelineScaleProps {
   tracks: Track[]
-  startTime: number
-  endTime: number
-  duration: number
-  onTimeRangeAdjust?: (adjustedRange: TimeRange) => void
+  timeStep: number
+  subStep: number
+  adjustedRange: TimeRange
 }
 
 interface TimeRange {
@@ -20,47 +18,15 @@ interface TimeScale {
   main: number
   sub: number
 }
-export function TimelineScale(
-  { tracks, startTime, endTime, duration, onTimeRangeAdjust }: TimelineScaleProps,
-): JSX.Element {
-  const { timeStep, subStep } = useMemo(() => {
-    const getTimeScale = (duration: number): TimeScale => {
-      if (duration <= 30) return { main: 5, sub: 1 } // Up to 30 sec
-      if (duration <= 60) return { main: 10, sub: 2 } // Up to 1 min
-      if (duration <= 300) return { main: 30, sub: 5 } // Up to 5 min
-      if (duration <= 900) return { main: 60, sub: 15 } // Up to 15 min
-      if (duration <= 3600) return { main: 300, sub: 60 } // Up to 1 hour
-      return { main: 900, sub: 300 } // More than an hour
-    }
 
-    const scale = getTimeScale(duration)
-    return {
-      timeStep: scale.main,
-      subStep: scale.sub,
-    }
-  }, [duration])
-
-  const adjustedRange = useMemo((): TimeRange => {
-    const timeRange = endTime - startTime
-    const padding = timeRange * 0.03
-    return {
-      startTime: startTime - padding,
-      endTime: endTime + padding,
-      duration: (endTime + padding) - (startTime - padding),
-    }
-  }, [startTime, endTime])
-
-  useEffect(() => {
-    onTimeRangeAdjust?.({
-      startTime: startTime,
-      endTime: endTime,
-      duration: duration
-    })
-  }, [startTime, endTime, duration, onTimeRangeAdjust])
-
+export function TimelineScale({
+  tracks,
+  timeStep,
+  subStep,
+  adjustedRange,
+}: TimelineScaleProps) {
   return (
     <div className="relative w-full flex flex-col mb-[20px]">
-      {/* Индикатор доступных промежутков видео */}
       <div
         className="h-0.5 w-full"
         style={{ background: "rgb(47, 61, 62)", opacity: 0.5, height: "1px" }}
@@ -69,7 +35,6 @@ export function TimelineScale(
           track.videos.map((video, videoIndex) => {
             const videoStart = video.startTime || 0
             const videoDuration = video.duration || 0
-            // Используем adjustedDuration вместо duration
             const rangeWidth = (videoDuration / adjustedRange.duration) * 100
             const rangePosition =
               ((videoStart - adjustedRange.startTime) / adjustedRange.duration) * 100
@@ -89,7 +54,6 @@ export function TimelineScale(
         )}
       </div>
 
-      {/* Шкала с делениями */}
       <div className="relative w-full h-8">
         <TimelineMarks
           startTime={adjustedRange.startTime}
@@ -100,121 +64,5 @@ export function TimelineScale(
         />
       </div>
     </div>
-  )
-}
-
-interface TimelineMarkProps {
-  timestamp: number
-  position: number
-  markType: "large" | "medium" | "small" | "smallest"
-  showValue?: boolean
-  formatTime?: (timestamp: number) => string
-  isFirstMark?: boolean
-}
-
-// Вспомогательный компонент для отрисовки делений шкалы
-function TimelineMarks({
-  startTime,
-  endTime,
-  duration,
-  timeStep,
-  subStep,
-}: {
-  startTime: number
-  endTime: number
-  duration: number
-  timeStep: number
-  subStep: number
-}) {
-  const marks = []
-  const level1Step = timeStep
-  const level2Step = subStep
-  const level3Step = subStep / 2
-  const level4Step = subStep / 4
-
-  // Start from the first visible mark before startTime
-  const firstMark = Math.floor(startTime / level4Step) * level4Step
-
-  for (let timestamp = firstMark; timestamp <= endTime; timestamp += level4Step) {
-    const position = ((timestamp - startTime) / duration) * 100
-
-    // Skip marks that would appear before the visible area
-    if (position < 0) continue
-
-    let markType: "large" | "medium" | "small" | "smallest"
-    let showValue = false
-
-    if (timestamp % level1Step === 0) {
-      markType = "large"
-      showValue = true
-    } else if (timestamp % level2Step === 0) {
-      markType = "medium"
-    } else if (timestamp % level3Step === 0) {
-      markType = "small"
-    } else {
-      markType = "smallest"
-    }
-
-    marks.push(
-      <TimelineMark
-        key={timestamp}
-        timestamp={timestamp}
-        position={position}
-        markType={markType}
-        showValue={showValue}
-        isFirstMark={timestamp === Math.ceil(startTime / level1Step) * level1Step}
-      />,
-    )
-  }
-
-  return (
-    <div className="relative w-full h-10 bg-[#1a1a1a]">
-      {marks}
-    </div>
-  )
-}
-
-export function TimelineMark(
-  { timestamp, position, markType, showValue, isFirstMark }: TimelineMarkProps,
-) {
-  const getMarkHeight = () => {
-    switch (markType) {
-      case "large":
-        return "h-6 bg-[#aeaeae] opacity-50"
-      case "medium":
-        return "h-3 bg-[#767676] opacity-50"
-      case "small":
-        return "h-2 opacity-70"
-      case "smallest":
-        return "h-[4px] opacity-70"
-    }
-  }
-
-  return (
-    <>
-      {isFirstMark && (
-        <span className="absolute top-[-20px] left-0 text-[12px] text-white opacity-80">
-          {formatDate(timestamp)}
-        </span>
-      )}
-
-      <div
-        className="absolute h-full flex flex-col items-center"
-      style={{ left: `${position}%` }}
-    >
-      <div
-        className={`w-[1px] bg-[#4a4a4a] ${getMarkHeight()}`}
-      />
-      {showValue && (
-        <span
-          className={`w-10 text-[11px] text-[#808080] ml-[90px] absolute top-7 mt-[-16px] whitespace-nowrap w-20 text-white opacity-50 ${
-            isFirstMark ? " text-white opacity-70" : ""
-          }`}
-        >
-          {formatTimeWithMilliseconds(timestamp, false, true, false)}
-        </span>
-      )}
-    </div>
-    </>
   )
 }
