@@ -1,6 +1,7 @@
 import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
 import { Plus } from "lucide-react"
+import { getAspectRatio, getFps } from "@/utils/videoUtils"
 
 interface FileInfoProps {
   file: MediaFile
@@ -8,6 +9,8 @@ interface FileInfoProps {
 }
 
 export function FileInfo({ file, onAddMedia }: FileInfoProps) {
+  const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
+
   return (
     <div className="flex flex-1 items-center justify-between gap-2">
       <div className="flex-1 min-w-0">
@@ -29,19 +32,14 @@ export function FileInfo({ file, onAddMedia }: FileInfoProps) {
           </span>
 
           <p className="text-xs">
-            {file.isVideo && file.probeData?.streams?.[0] && (
+            {file.isVideo && videoStream && (
               <span>
-                {
-                  /* <span className="ml-2 text-gray-500 dark:text-gray-400">
-                  {file.probeData.streams[0].width}x{file.probeData.streams[0].height}
-                </span> */
-                }
                 <span className="ml-2 text-gray-500 dark:text-gray-400">
-                  {file.probeData.streams[0].display_aspect_ratio}
+                  {getAspectRatio(videoStream)}
                 </span>
-                {file.probeData?.streams[0].r_frame_rate && (
+                {getFps(videoStream) && (
                   <span className="ml-2 text-gray-500 dark:text-gray-400">
-                    {`${Math.round(eval(file.probeData?.streams[0].r_frame_rate))} fps`}
+                    {getFps(videoStream)} fps
                   </span>
                 )}
               </span>

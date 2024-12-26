@@ -62,3 +62,35 @@ export const calculateTimeRanges = (videos: MediaFile[]): TimeRange[] => {
 
   return ranges
 }
+
+export const getAspectRatio = (stream?: {
+  display_aspect_ratio?: string
+  width?: number
+  height?: number
+}): string | null => {
+  if (!stream) return null
+
+  // Если есть display_aspect_ratio и он не "N/A"
+  if (stream.display_aspect_ratio && stream.display_aspect_ratio !== "N/A") {
+    return stream.display_aspect_ratio
+  }
+
+  // Если есть width и height, вычисляем соотношение
+  if (stream.width && stream.height) {
+    const gcd = (a: number, b: number): number => b ? gcd(b, a % b) : a
+    const divisor = gcd(stream.width, stream.height)
+    return `${stream.width / divisor}:${stream.height / divisor}`
+  }
+
+  return null
+}
+
+export const getFps = (stream?: { r_frame_rate?: string }): number | null => {
+  if (!stream?.r_frame_rate) return null
+
+  try {
+    return Math.round(eval(stream.r_frame_rate))
+  } catch {
+    return null
+  }
+}

@@ -4,6 +4,7 @@ import { type Track } from "@/types/videos"
 
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { useMedia } from "@/hooks/use-media"
+import { getAspectRatio, getFps } from "@/utils/videoUtils"
 
 interface VideoTrackProps {
   track: Track
@@ -108,11 +109,8 @@ const VideoTrack = memo(({
                                         <span>{videoStream?.codec_name?.toUpperCase()}</span>
                                         {/* <span>{videoStream?.color_space?.toUpperCase()}</span> */}
                                         <span>{videoStream?.width}×{videoStream?.height}</span>
-                                        <span>{videoStream?.display_aspect_ratio}</span>
-                                        <span>
-                                          {videoStream?.r_frame_rate &&
-                                            ` ${Math.round(eval(videoStream.r_frame_rate))} fps`}
-                                        </span>
+                                        <span>{getAspectRatio(videoStream)}</span>
+                                        <span>{getFps(videoStream)} fps</span>
                                         <span>{formatDuration(track.combinedDuration, 3)}</span>
                                       </div>
                                     )
@@ -204,11 +202,8 @@ const VideoTrack = memo(({
                                       <span>{videoStream?.codec_name?.toUpperCase()}</span>
                                       {/* <span>{videoStream?.color_space?.toUpperCase()}</span> */}
                                       <span>{videoStream?.width}×{videoStream?.height}</span>
-                                      <span>{videoStream?.display_aspect_ratio}</span>
-                                      <span>
-                                        {videoStream?.r_frame_rate &&
-                                          ` ${Math.round(eval(videoStream.r_frame_rate))} fps`}
-                                      </span>
+                                      <span>{getAspectRatio(videoStream)}</span>
+                                      <span>{getFps(videoStream)} fps</span>
                                     </div>
                                   </div>
                                 )

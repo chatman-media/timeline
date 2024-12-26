@@ -1,9 +1,16 @@
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { MediaFile } from "@/types/videos"
-import { getSequentialFiles, getSequentialGroups, groupFilesByDate } from "@/utils/mediaUtils"
+import {
+  FileGroup,
+  getFileType,
+  getSequentialFiles,
+  getSequentialGroups,
+  groupFilesByDate,
+  prepareFileGroups,
+} from "@/utils/mediaUtils"
 
 import { Skeleton } from "../ui/skeleton"
 import { MediaPreview } from "./media-preview"
@@ -12,11 +19,13 @@ import { FileInfo } from "./file-info"
 
 export function MediaFilesList() {
   const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useMedia()
+  console.log(media)
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
   const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
     {},
   )
+  const [fileGroups, setFileGroups] = useState<Record<string, FileGroup>>({})
 
   const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
     videoRefs,
@@ -111,19 +120,28 @@ export function MediaFilesList() {
   }, [media, addNewTracks])
 
   const handleAddAllVideoFiles = useCallback(() => {
-    const videoFiles = media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "video")
-    addNewTracks(videoFiles)
-  }, [media, addNewTracks])
+    handleAddByIds(fileGroups.videos.fileIds)
+  }, [fileGroups])
 
   const handleAddAllAudioFiles = useCallback(() => {
-    const audioFiles = media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "audio")
-    addNewTracks(audioFiles)
-  }, [media, addNewTracks])
+    handleAddByIds(fileGroups.audio.fileIds)
+  }, [fileGroups])
 
   const handleAddSequentialFiles = useCallback(() => {
     if (!sequentialFiles) return
     addNewTracks(sequentialFiles)
   }, [sequentialFiles, addNewTracks])
+
+  useEffect(() => {
+    if (media.length) {
+      setFileGroups(prepareFileGroups(media))
+    }
+  }, [media])
+
+  const handleAddByIds = useCallback((fileIds: string[]) => {
+    const filesToAdd = media.filter((file) => fileIds.includes(file.id))
+    addNewTracks(filesToAdd)
+  }, [media, addNewTracks])
 
   if (isLoading) {
     return (
@@ -161,7 +179,7 @@ export function MediaFilesList() {
           {sortedMedia.map((file) => {
             const fileId = getFileId(file)
             const duration = file.probeData?.format.duration || 1
-            const isAudio = file.probeData?.streams?.[0]?.codec_type === "audio"
+            const isAudio = getFileType(file) === "audio"
 
             return (
               <div

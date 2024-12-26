@@ -163,3 +163,66 @@ export function groupFilesByDate(media: MediaFile[]) {
     .sort((a, b) => b[1].length - a[1].length)
     .map(([date, files]) => ({ date, files }))
 }
+
+export interface FileGroup {
+  id: string
+  fileIds: string[]
+  type: "video" | "audio" | "sequential"
+  count?: number
+  videosPerSeries?: number
+}
+
+export const prepareFileGroups = (files: MediaFile[]): Record<string, FileGroup> => {
+  const groups: Record<string, FileGroup> = {
+    videos: {
+      id: "all-videos",
+      fileIds: files
+        .filter((f) => getFileType(f) === "video")
+        .map((f) => f.id),
+      type: "video",
+    },
+    audio: {
+      id: "all-audio",
+      fileIds: files
+        .filter((f) => getFileType(f) === "audio")
+        .map((f) => f.id),
+      type: "audio",
+    },
+  }
+
+  // Группируем последовательные файлы
+  const sequentialGroups: { [key: string]: MediaFile[] } = {}
+  files.forEach((file) => {
+    const match = file.name.match(/(.+?)(?:_(\d+))?\.([^.]+)$/)
+    if (match) {
+      const baseName = match[1]
+      if (!sequentialGroups[baseName]) {
+        sequentialGroups[baseName] = []
+      }
+      sequentialGroups[baseName].push(file)
+    }
+  })
+
+  // Добавляем последовательные группы с более чем одним файлом
+  Object.entries(sequentialGroups)
+    .filter(([_, groupFiles]) => groupFiles.length > 1)
+    .forEach(([key, groupFiles]) => {
+      groups[`sequential-${key}`] = {
+        id: `sequential-${key}`,
+        fileIds: groupFiles.map((f) => f.id),
+        type: "sequential",
+        count: groupFiles.length,
+        videosPerSeries: groupFiles.length,
+      }
+    })
+
+  return groups
+}
+
+export const getFileType = (file: MediaFile): "video" | "audio" => {
+  // Проверяем все потоки на наличие видео
+  const hasVideoStream = file.probeData?.streams?.some(
+    (stream) => stream.codec_type === "video",
+  )
+  return hasVideoStream ? "video" : "audio"
+}

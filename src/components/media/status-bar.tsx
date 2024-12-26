@@ -1,6 +1,7 @@
 import { RefreshCw } from "lucide-react"
 import { MediaFile } from "@/types/videos"
 import { ActionButton } from "./action-button"
+import { getFileType } from "@/utils/mediaUtils"
 
 interface StatusBarProps {
   media: MediaFile[]
@@ -32,10 +33,10 @@ export function StatusBar({
       <div className="flex flex-col items-end gap-0 text-xs text-gray-500 dark:text-gray-500">
         <span className="px-1 flex items-center whitespace-nowrap gap-1">
           <ActionButton title="Добавить все видео" onClick={onAddAllVideoFiles}>
-            {media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "video").length} видео
+            {media.filter((f) => getFileType(f) === "video").length} видео
           </ActionButton>
           <ActionButton title="Добавить все аудио" onClick={onAddAllAudioFiles}>
-            {media.filter((f) => f.probeData?.streams?.[0]?.codec_type === "audio").length} аудио
+            {media.filter((f) => getFileType(f) === "audio").length} аудио
           </ActionButton>
         </span>
         <span className="px-1">
