@@ -99,13 +99,14 @@ const VideoTrack = memo(({
                                 style={{ backgroundColor: "#004346", lineHeight: "13px" }}
                                 onClick={(e) => handleClick(e, track, video.id)}
                               >
-                                <span className="">V{track.index}</span>
-                                {video.path.split("/").pop()}
+                                <span className="bg-[#033032]">V{track.index}</span>
+                                <span className="bg-[#033032]">{video.path.split("/").pop()}</span>
                                 <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
                                   {video.isVideo
                                     ? (
                                       <div className="flex flex-row video-metadata truncate text-xs text-white">
                                         <span>{videoStream?.codec_name?.toUpperCase()}</span>
+                                        {/* <span>{videoStream?.color_space?.toUpperCase()}</span> */}
                                         <span>{videoStream?.width}×{videoStream?.height}</span>
                                         <span>{videoStream?.display_aspect_ratio}</span>
                                         <span>
@@ -129,15 +130,26 @@ const VideoTrack = memo(({
                                           {audioStream?.bit_rate &&
                                             `${formatBitrate(audioStream.bit_rate)}`}
                                         </span>
-                                        <span>{formatDuration(track.combinedDuration, 3)}</span>
+                                        <span
+                                          className="bg-[#033032] text-[11px] mb-[2px] px-[3px]"
+                                          style={{ display: (width < 16 ? "none" : "block") }}
+                                        >
+                                          {formatDuration(track.combinedDuration, 3)}
+                                        </span>
                                       </div>
                                     )}
                                 </div>
                               </div>
-                              <div className="absolute bottom-0 left-0 text-xs text-gray-100 ml-1">
+                              <div
+                                className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"
+                                style={{ display: (width < 16 ? "none" : "block") }}
+                              >
                                 {formatTimeWithMilliseconds(videoStart, false, true, true)}
                               </div>
-                              <div className="absolute bottom-0 right-0 text-xs text-gray-100 mr-1">
+                              <div
+                                className="absolute bottom-0 right-0 text-xs text-gray-100 mb-[2px] mr-1 bg-[#033032] text-[11px] px-[3px]"
+                                style={{ display: (width < 16 ? "none" : "block") }}
+                              >
                                 {formatTimeWithMilliseconds(
                                   videoStart + videoDuration,
                                   false,
@@ -179,13 +191,18 @@ const VideoTrack = memo(({
                               style={{ backgroundColor: "#004346", lineHeight: "13px" }}
                               onClick={(e) => handleClick(e, track, video.id)}
                             >
-                              {idx === 0 && <span>V{track.index}</span>}
-                              {video.path.split("/").pop()}
+                              {idx === 0 && (
+                                <span className="bg-[#033032] text-[11px]">V{track.index}</span>
+                              )}
+                              <span className="bg-[#033032] text-[11px]">
+                                {video.path.split("/").pop()}
+                              </span>
                               {idx === 0
                                 ? (
                                   <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
                                     <div className="flex flex-row video-metadata truncate text-xs text-white">
                                       <span>{videoStream?.codec_name?.toUpperCase()}</span>
+                                      {/* <span>{videoStream?.color_space?.toUpperCase()}</span> */}
                                       <span>{videoStream?.width}×{videoStream?.height}</span>
                                       <span>{videoStream?.display_aspect_ratio}</span>
                                       <span>
@@ -197,16 +214,24 @@ const VideoTrack = memo(({
                                 )
                                 : (
                                   <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
-                                    <div className="flex flex-row video-metadata truncate text-xs text-white">
-                                      <span>{formatDuration(track.combinedDuration, 3)}</span>
+                                    <div className="flex flex-row video-metadata truncate text-xs text-white mb-[2px]">
+                                      <span className="bg-[#033032] text-[11px]">
+                                        {formatDuration(track.combinedDuration, 3)}
+                                      </span>
                                     </div>
                                   </div>
                                 )}
                             </div>
-                            <div className="absolute bottom-0 left-0 text-xs text-gray-100 ml-1">
+                            <div
+                              className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"
+                              style={{ display: (segmentWidth < 16 ? "none" : "block") }}
+                            >
                               {formatTimeWithMilliseconds(videoStart, false, true, true)}
                             </div>
-                            <div className="absolute bottom-0 right-0 text-xs text-gray-100 mr-1">
+                            <div
+                              className="absolute bottom-0 right-0 text-xs text-gray-100 mb-[2px] mr-1 bg-[#033032] text-[11px] px-[3px]"
+                              style={{ display: (segmentWidth < 16 ? "none" : "block") }}
+                            >
                               {formatTimeWithMilliseconds(
                                 videoStart + videoDuration,
                                 false,

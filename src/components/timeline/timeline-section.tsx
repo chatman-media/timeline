@@ -22,12 +22,9 @@ export function TimelineSection(
 
   return (
     <div
-      className={`timeline-section mt-6 ${
-        isActive ? "border-l-[1px] border-[#6dbfb8]" : "border-l-[1px] border-transparent"
+      className={`timeline-section ${
+        isActive ? "border-l-[1px] border-[#ffffff]" : "border-l-[1px] border-transparent"
       }`}
-      style={{
-        borderBottom: "1px solid rgb(47, 61, 62)",
-      }}
     >
       <div className="relative">
         <TimelineSectionBar
@@ -49,7 +46,7 @@ export function TimelineSection(
           {tracks.map((track, index) => (
             <div
               key={`${track.id}-${date}`}
-              className="relative"
+              className="relative last:mb-6"
               style={{ height: 80 }}
             >
               <VideoTrack

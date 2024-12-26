@@ -55,6 +55,7 @@ export function MediaFilesList() {
         ...prev,
         [fileId]: {
           ...(prev[fileId] || {}),
+          // deno-lint-ignore no-explicit-any
           [streamIndex]: null as any,
         },
       }))

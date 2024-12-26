@@ -314,15 +314,11 @@
 
 .video-metadata span,
 .timeline div.time {
-  margin-right: 0.5rem;
   background-color: #033032;
   font-size: 11px;
   line-height: 14px;
   padding: 0 3px;
-  /* border-radius: 3px; */
-  /* height: 12px; */
-  margin-right: 3px;
-  /* color: var(--color-gray-100) !important; */
+  margin-right: 4px;
   &:last-child {
     margin-right: 0;
   }
@@ -396,14 +392,7 @@
 
 .video-metadata > span {
   color: #fff;
-  margin-right: 0.5rem;
 }
-
-/* .video-metadata > span:not(:first-child)::before {
-  content: "•";
-  margin-right: 0.5rem;
-  opacity: 0.5;
-} */
 
 .timeline-mark {
   position: absolute;

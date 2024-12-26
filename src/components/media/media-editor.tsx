@@ -46,7 +46,7 @@ export function MediaEditor() {
       </div>
       <div
         data-testid="media-player"
-        className="media-editor flex flex-row px-1 py-1 min-h-[50%]"
+        className="media-editor flex flex-row px-[1px] py-1 min-h-[50%]"
       >
         <Timeline />
       </div>

@@ -1,5 +1,5 @@
 import { Pause, Play } from "lucide-react"
-import { memo, useEffect, useRef, useState } from "react"
+import { memo, useEffect, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 
@@ -8,7 +8,6 @@ export const ActiveVideo = memo(() => {
     videoRefs,
     isPlaying,
     activeVideo,
-    currentTime,
     setCurrentTime,
     setIsPlaying,
     isChangingCamera,

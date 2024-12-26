@@ -41,7 +41,7 @@ export function useVideoPlayer({ videoRefs }: UseVideoPlayerProps) {
     [playingFileId],
   )
 
-  const handleMouseLeave = useCallback(async (fileId: string) => {
+  const handleMouseLeave = useCallback((fileId: string) => {
     const baseFileId = fileId.split("-")[0]
     if (playingFileId === baseFileId) {
       Object.entries(videoRefs.current).forEach(([key, player]) => {

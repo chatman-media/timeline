@@ -21,7 +21,7 @@ export function TimelineScale({
   adjustedRange,
 }: TimelineScaleProps) {
   return (
-    <div className="relative w-full flex flex-col mb-[20px]">
+    <div className="relative w-full flex flex-col mb-[13px]">
       <div
         className="h-0.5 w-full"
         style={{ background: "rgb(47, 61, 62)", height: "1px" }}

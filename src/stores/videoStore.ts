@@ -18,6 +18,7 @@ interface VideoState {
   isChangingCamera: boolean
   activeVideo?: MediaFile
   activeTrackId: string | null
+  // deno-lint-ignore no-explicit-any
   metadataCache: Record<string, any>
   thumbnailCache: Record<string, string>
   currentLayout: ScreenLayout

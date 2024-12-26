@@ -4,6 +4,7 @@ import { calculateTimeRanges } from "./videoUtils"
 
 // Функция для расчета реальных размеров
 export const calculateRealDimensions = (
+  // deno-lint-ignore no-explicit-any
   stream: any,
 ): { width: number; height: number; style: string } => {
   const rotation = stream.rotation ? parseInt(stream.rotation) : 0
@@ -49,8 +50,7 @@ export const getSequentialGroups = (files: MediaFile[]): { [key: string]: MediaF
     }, {} as Record<number, number>)
 
   return Object.entries(groupsBySize)
-    .map(([size, count]) => `${count} серии по ${size} видео`)
-    .join(", ")
+    .map(([size, count]) => `${count} серии по ${size} видео`)[0]
 }
 
 // Функция определения горизонтального видео
@@ -137,7 +137,7 @@ export const getSequentialFiles = (files: MediaFile[]): MediaFile[] => {
   })
 
   return Object.values(groups)
-    .filter((group) => group.length > 1)
+    .filter((group) => group.length >= 2)
     .flat()
 }
 

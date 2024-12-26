@@ -4,6 +4,7 @@ export interface FfprobeData {
 }
 
 export interface FfprobeFormat {
+  // deno-lint-ignore no-explicit-any
   [key: string]: any
   filename?: string | undefined
   nb_streams?: number | undefined
@@ -19,6 +20,7 @@ export interface FfprobeFormat {
 }
 
 export interface FfprobeStream {
+  // deno-lint-ignore no-explicit-any
   [key: string]: any
   index: number
   codec_name?: string | undefined
@@ -69,6 +71,7 @@ export interface FfprobeStream {
 }
 
 interface FfprobeStreamDisposition {
+  // deno-lint-ignore no-explicit-any
   [key: string]: any
   default?: number | undefined
   dub?: number | undefined

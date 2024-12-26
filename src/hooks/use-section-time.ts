@@ -14,7 +14,8 @@ export function useSectionTime(
   const [position, setPosition] = useState(0)
   const isDragging = useRef(false)
   const wasTimeManuallySet = useRef(false)
-  const { activeVideo, videoRefs, setCurrentTime, currentTime } = useMedia()
+  const { activeVideo, videoRefs, setCurrentTime, currentTime, setActiveVideo, setActiveTrack } =
+    useMedia()
   const lastUpdateTime = useRef(0)
   const animationFrameId = useRef<number>()
 
@@ -40,10 +41,14 @@ export function useSectionTime(
     }
   }, [currentTime, sectionStartTime, sectionDuration])
 
-  const handleVideoClick = (videoStartTime: number) => {
+  const handleVideoClick = (videoStartTime: number, videoId: string, trackId: string) => {
     wasTimeManuallySet.current = true
     const percentage = ((videoStartTime - sectionStartTime) / sectionDuration) * 100
     setPosition(percentage)
+
+    // Устанавливаем активное видео и дорожку
+    setActiveVideo(videoId)
+    setActiveTrack(trackId)
     setCurrentTime(videoStartTime)
   }
 

@@ -32,7 +32,7 @@ export function TimelineMark({
   return (
     <>
       {isFirstMark && (
-        <span className="absolute top-[-20px] left-0 text-[12px] dark:text-gray-100 text-gray-900 opacity-80">
+        <span className="absolute top-[-20px] left-1 text-[12px] dark:text-gray-100 text-gray-900 opacity-80">
           {formatDate(timestamp)}
         </span>
       )}
