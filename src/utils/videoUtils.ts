@@ -94,3 +94,17 @@ export const getFps = (stream?: { r_frame_rate?: string }): number | null => {
     return null
   }
 }
+
+// Добавим enum для состояний звука
+export enum VolumeState {
+  FULL = 1,
+  HALF = 0.5,
+  MUTED = 0,
+}
+
+// Функция для получения следующего состояния громкости
+export const getNextVolumeState = (currentVolume: number): VolumeState => {
+  if (currentVolume === VolumeState.FULL) return VolumeState.HALF
+  if (currentVolume === VolumeState.HALF) return VolumeState.MUTED
+  return VolumeState.FULL
+}

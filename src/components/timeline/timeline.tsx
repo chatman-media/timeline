@@ -89,7 +89,7 @@ export function Timeline() {
   }, [activeVideo])
 
   return (
-    <div className="timeline w-full min-h-[calc(50vh-70px)] pt-5 bg-[#1a1a1a]">
+    <div className="timeline w-full min-h-[calc(50vh-70px)] pt-5 bg-white dark:bg-[#1a1a1a]">
       <div className="relative w-full" style={{ minWidth: "100%" }}>
         {[...sections].reverse().map((section) => (
           <TimelineSection

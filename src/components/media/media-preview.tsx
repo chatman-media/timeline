@@ -4,6 +4,8 @@ import { calculateRealDimensions, isHorizontalVideo } from "@/utils/mediaUtils"
 import { formatResolution } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
 import { FfprobeStream } from "@/types/ffprobe"
+import { useState } from "react"
+import { getNextVolumeState, VolumeState } from "@/utils/videoUtils"
 
 interface MediaPreviewProps {
   file: MediaFile
@@ -162,7 +164,13 @@ export function MediaPreview({
                 onMouseEnter={(e) => e.currentTarget.focus()}
               />
               {/* Stream indicators */}
-              {renderStreamIndicators(file, stream, index, loadedVideos[`${fileId}-${index}`])}
+              {renderStreamIndicators(
+                file,
+                stream,
+                index,
+                loadedVideos[`${fileId}-${index}`],
+                videoRefs.current[`${fileId}-${index}`],
+              )}
               {/* Timeline */}
               {hoverTimes[fileId]?.[index] !== undefined &&
                 hoverTimes[fileId]?.[index] !== null &&
@@ -184,7 +192,80 @@ function renderStreamIndicators(
   stream: FfprobeStream,
   index: number,
   isLoaded: boolean,
+  videoRef: HTMLVideoElement | null,
 ) {
+  const [volume, setVolume] = useState<VolumeState>(VolumeState.FULL)
+
+  const handleVolumeClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!videoRef) return
+
+    const nextVolume = getNextVolumeState(volume)
+    setVolume(nextVolume)
+    videoRef.volume = nextVolume
+  }
+
+  const VolumeIcon = () => {
+    if (volume === VolumeState.MUTED) {
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 18V5l12-2v13" />
+          <line x1="1" y1="1" x2="23" y2="23" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
+        </svg>
+      )
+    }
+
+    if (volume === VolumeState.HALF) {
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" opacity="0.5" />
+          <circle cx="18" cy="16" r="3" opacity="0.5" />
+        </svg>
+      )
+    }
+
+    return (
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="12"
+        height="12"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M9 18V5l12-2v13" />
+        <circle cx="6" cy="18" r="3" />
+        <circle cx="18" cy="16" r="3" />
+      </svg>
+    )
+  }
+
   return (
     <>
       {file.probeData?.streams.filter((s) => s.codec_type === "video").length > 1 && (
@@ -203,25 +284,17 @@ function renderStreamIndicators(
                 stream.height,
                 parseInt(stream.rotation || "0"),
               )
-              ? "left-[2px] bottom-[2px]"
+              ? "right-[2px] top-[2px]"
               : "left-1/2 bottom-[2px] -translate-x-1/2"
-          } text-white bg-black/50 rounded p-[2px]`}
+          } text-white bg-black/50 rounded p-[2px] cursor-pointer hover:bg-black/70`}
+          onClick={handleVolumeClick}
+          title={volume === VolumeState.FULL
+            ? "Приглушить"
+            : volume === VolumeState.HALF
+            ? "Без звука"
+            : "Включить звук"}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 18V5l12-2v13" />
-            <circle cx="6" cy="18" r="3" />
-            <circle cx="18" cy="16" r="3" />
-          </svg>
+          <VolumeIcon />
         </div>
       )}
       {isLoaded && (
