@@ -96,7 +96,7 @@ export function MusicFilesList() {
 
   return (
     <div className="h-[calc(50vh-41px)] overflow-y-auto">
-      <div className="space-y-1 bg-gray-50 dark:bg-gray-900">
+      <div className="space-y-1 ">
         {musicFiles.map((file) => (
           <div
             key={file.path}
