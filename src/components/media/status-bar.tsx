@@ -29,7 +29,7 @@ export function StatusBar({
   const [maxDateInfo, secondMaxDateInfo] = sortedDates
 
   return (
-    <div className="flex justify-between items-start p-0 text-sm m-1">
+    <div className="flex justify-between items-start p-1 text-sm m-0 w-full">
       <div className="flex flex-col items-end gap-0 text-xs text-gray-500 dark:text-gray-500">
         <span className="px-1 flex items-center whitespace-nowrap gap-1">
           <ActionButton title="Добавить все видео" onClick={onAddAllVideoFiles}>

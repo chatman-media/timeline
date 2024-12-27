@@ -1,74 +1,28 @@
 import { ThemeToggle } from "../layout/theme-toggle"
 import { Timeline } from "../timeline"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { FileBrowser } from "./file-browser"
 import { ActiveVideo } from "./active-video"
-import { MediaFilesList } from "./media-files-list"
-import { MusicFilesList } from "./music-files-list"
+import { Editing } from "./editing"
 
 export function MediaEditor() {
   return (
-    <div>
-      <div
-        data-testid="media-player"
-        className="media-editor flex flex-row px-1 py-1 h-[50%]"
-      >
-        <div className="w-[40%]  max-w-[600px]">
+    <div className="flex h-screen flex-col gap-2 p-1 m-0">
+      <div className="grid auto-rows-min gap-0 md:grid-cols-[30%_70%]">
+        <div className="h-[50vh] bg-muted/50 max-w-[550px] p-0">
           <ThemeToggle />
-          <Tabs defaultValue="media" className="w-full">
-            <TabsList className="ml-10 bg-white dark:bg-gray-800">
-              <TabsTrigger
-                value="media"
-                className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Медиатека
-              </TabsTrigger>
-              <TabsTrigger
-                value="music"
-                className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Музыка
-              </TabsTrigger>
-              <TabsTrigger
-                value="transitions"
-                className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Переходы
-              </TabsTrigger>
-              <TabsTrigger
-                value="effects"
-                className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Эффекты
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="media">
-              <MediaFilesList />
-            </TabsContent>
-            <TabsContent value="music">
-              <MusicFilesList />
-            </TabsContent>
-            <TabsContent
-              value="transitions"
-              className="text-sm text-gray-400 dark:text-gray-500 p-2"
-            >
-              Переходы
-            </TabsContent>
-            <TabsContent value="effects" className="text-sm text-gray-400 dark:text-gray-500 p-2">
-              Эффекты
-            </TabsContent>
-          </Tabs>
+          <FileBrowser />
         </div>
-        <div className="w-full">
-          <div className="bg-gray-50 dark:bg-gray-900 m-1">
-            <ActiveVideo />
-          </div>
+        <div className="h-[50vh] bg-muted/50">
+          <ActiveVideo />
         </div>
       </div>
-      <div
-        data-testid="media-player"
-        className="media-editor flex flex-row px-[1px] py-1 min-h-[50%]"
-      >
-        <Timeline />
+      <div className="media-editor grid grid-cols-[30%_70%] gap-1">
+        <div className="h-[50vh] max-w-[550px]">
+          <Editing />
+        </div>
+        <div className="h-[50vh]">
+          <Timeline />
+        </div>
       </div>
     </div>
   )

@@ -173,8 +173,8 @@ export function MediaFilesList() {
   }
 
   return (
-    <>
-      <div className="px-0 h-[calc(50vh-10px)] overflow-y-auto">
+    <div className="relative h-[calc(50vh-44px)]">
+      <div className="h-[calc(100%-30px)] overflow-y-auto">
         <div className="space-y-2">
           {sortedMedia.map((file) => {
             const fileId = getFileId(file)
@@ -208,17 +208,19 @@ export function MediaFilesList() {
           })}
         </div>
       </div>
-      <StatusBar
-        media={sortedMedia}
-        onAddAllVideoFiles={handleAddAllVideoFiles}
-        onAddAllAudioFiles={handleAddAllAudioFiles}
-        onAddSequentialFiles={handleAddSequentialFiles}
-        onAddDateFiles={handleAddDateFiles}
-        onAddAllFiles={handleAddAllFiles}
-        onUpdateList={handleUpdateList}
-        groupedSequences={groupedSequences}
-        sortedDates={sortedDates}
-      />
-    </>
+      <div className="absolute bottom-[-4px] left-[-4px] right-[-4px] bg-white dark:bg-[#1b1a1f] m-0 p-0">
+        <StatusBar
+          media={sortedMedia}
+          onAddAllVideoFiles={handleAddAllVideoFiles}
+          onAddAllAudioFiles={handleAddAllAudioFiles}
+          onAddSequentialFiles={handleAddSequentialFiles}
+          onAddDateFiles={handleAddDateFiles}
+          onAddAllFiles={handleAddAllFiles}
+          onUpdateList={handleUpdateList}
+          groupedSequences={groupedSequences}
+          sortedDates={sortedDates}
+        />
+      </div>
+    </div>
   )
 }
