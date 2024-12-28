@@ -105,7 +105,8 @@ export function MediaFilesList() {
 
   const handleAddAllFiles = useCallback(() => {
     addNewTracks(media)
-  }, [media, addNewTracks])
+    setAddedFiles((prev) => new Set([...prev, ...media.map((file) => getFileId(file))]))
+  }, [media, addNewTracks, getFileId])
 
   const handleAddDateFiles = useCallback((targetDate: string) => {
     const dateFiles = media.filter((file) => {
@@ -118,7 +119,8 @@ export function MediaFilesList() {
       return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
     })
     addNewTracks(dateFiles)
-  }, [media, addNewTracks])
+    setAddedFiles((prev) => new Set([...prev, ...dateFiles.map((file) => getFileId(file))]))
+  }, [media, addNewTracks, getFileId])
 
   const handleAddAllVideoFiles = useCallback(() => {
     handleAddByIds(fileGroups.videos.fileIds)
@@ -131,7 +133,8 @@ export function MediaFilesList() {
   const handleAddSequentialFiles = useCallback(() => {
     if (!sequentialFiles) return
     addNewTracks(sequentialFiles)
-  }, [sequentialFiles, addNewTracks])
+    setAddedFiles((prev) => new Set([...prev, ...sequentialFiles.map((file) => getFileId(file))]))
+  }, [sequentialFiles, addNewTracks, getFileId])
 
   useEffect(() => {
     if (media.length) {
@@ -142,6 +145,7 @@ export function MediaFilesList() {
   const handleAddByIds = useCallback((fileIds: string[]) => {
     const filesToAdd = media.filter((file) => fileIds.includes(file.id))
     addNewTracks(filesToAdd)
+    setAddedFiles((prev) => new Set([...prev, ...fileIds]))
   }, [media, addNewTracks])
 
   if (isLoading) {
