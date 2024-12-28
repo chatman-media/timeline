@@ -24,6 +24,7 @@ export function MediaFilesList() {
     {},
   )
   const [fileGroups, setFileGroups] = useState<Record<string, FileGroup>>({})
+  const [addedFiles, setAddedFiles] = useState<Set<string>>(new Set())
 
   const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
     videoRefs,
@@ -90,9 +91,11 @@ export function MediaFilesList() {
 
   const handleAddMedia = useCallback((e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
-    if (file.probeData?.streams?.[0]?.codec_type !== "video") return
+    const fileId = getFileId(file)
+    if (addedFiles.has(fileId) || file.probeData?.streams?.[0]?.codec_type !== "video") return
     addNewTracks([file])
-  }, [addNewTracks])
+    setAddedFiles((prev) => new Set([...prev, fileId]))
+  }, [addNewTracks, addedFiles, getFileId])
 
   // Handlers for StatusBar
   const handleUpdateList = useCallback(() => {
@@ -178,11 +181,17 @@ export function MediaFilesList() {
             const fileId = getFileId(file)
             const duration = file.probeData?.format.duration || 1
             const isAudio = getFileType(file) === "audio"
+            const isAdded = addedFiles.has(fileId)
 
             return (
               <div
                 key={fileId}
-                className="flex items-center gap-3 p-0 pr-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 group"
+                className={`flex items-center gap-3 p-0 pr-2 rounded-md group
+                  ${
+                  isAdded
+                    ? "opacity-50 pointer-events-none"
+                    : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
               >
                 <div className="relative flex gap-1">
                   <MediaPreview
