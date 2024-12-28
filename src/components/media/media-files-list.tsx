@@ -143,7 +143,7 @@ export function MediaFilesList() {
 
   if (isLoading) {
     return (
-      <div className="px-0 h-[calc(50vh-10px)] overflow-y-auto">
+      <div className="px-0 h-[calc(50vh-70px)] overflow-y-auto">
         <div className="space-y-2 dark:bg-[#1b1a1f]">
           {[...Array(8)].map((_, index) => (
             <div key={index} className="flex items-center gap-3 p-0 pr-2 rounded-md">
