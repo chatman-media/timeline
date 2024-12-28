@@ -14,8 +14,9 @@ import {
 
 import { Skeleton } from "../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from "."
+import { formatDuration, formatFileSize } from "@/lib/utils"
 
-export function MediaFilesList() {
+export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thumbnails" }) {
   const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useMedia()
   console.log(media)
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
@@ -180,44 +181,132 @@ export function MediaFilesList() {
   return (
     <div className="relative h-[calc(50vh-44px)]">
       <div className="h-[calc(100%-30px)] overflow-y-auto">
-        <div className="space-y-2">
-          {sortedMedia.map((file) => {
-            const fileId = getFileId(file)
-            const duration = file.probeData?.format.duration || 1
-            const isAudio = getFileType(file) === "audio"
-            const isAdded = addedFiles.has(fileId)
+        {viewMode === "list"
+          ? (
+            <table className="w-full border-collapse">
+              <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
+                <tr>
+                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                    Название
+                  </th>
+                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                    Начало
+                  </th>
+                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                    Длительность
+                  </th>
+                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                    Разрешение
+                  </th>
+                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                    Кодек
+                  </th>
+                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                    Битрейт
+                  </th>
+                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                    Размер
+                  </th>
+                  <th className="px-4 py-1"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedMedia.map((file) => {
+                  const fileId = getFileId(file)
+                  const isAdded = addedFiles.has(fileId)
+                  const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
+                  const startTime = file.startTime
+                    ? new Date(file.startTime * 1000).toLocaleString("ru-RU", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })
+                    : "-"
+                  const duration = file.probeData?.format.duration
+                    ? formatDuration(file.probeData.format.duration)
+                    : "-"
+                  const resolution = videoStream
+                    ? `${videoStream.width}x${videoStream.height}`
+                    : "-"
+                  const codec = videoStream?.codec_name?.toUpperCase() || "-"
+                  const bitrate = file.probeData?.format.bit_rate
+                    ? `${Math.round(parseInt(file.probeData.format.bit_rate) / 1000)} Kbps`
+                    : "-"
+                  const fileSize = formatFileSize(file.probeData?.format.size)
 
-            return (
-              <div
-                key={fileId}
-                className={`flex items-center gap-3 p-0 pr-2 rounded-md group
-                  ${
-                  isAdded
-                    ? "opacity-50 pointer-events-none"
-                    : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
-              >
-                <div className="relative flex gap-1">
-                  <MediaPreview
-                    file={file}
-                    fileId={fileId}
-                    duration={duration}
-                    isAudio={isAudio}
-                    videoRefs={videoRefs}
-                    loadedVideos={loadedVideos}
-                    setLoadedVideos={setLoadedVideos}
-                    hoverTimes={hoverTimes}
-                    handleMouseMove={handleMouseMove}
-                    handlePlayPause={handlePlayPause}
-                    handleMouseLeave={handleMouseLeave}
-                    setPlayingFileId={setPlayingFileId}
-                  />
-                </div>
-                <FileInfo file={file} onAddMedia={handleAddMedia} />
-              </div>
-            )
-          })}
-        </div>
+                  return (
+                    <tr
+                      key={fileId}
+                      className={`border-b dark:border-gray-700 ${
+                        isAdded
+                          ? "opacity-50 pointer-events-none"
+                          : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                      }`}
+                    >
+                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{file.name}</td>
+                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{startTime}</td>
+                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{duration}</td>
+                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{resolution}</td>
+                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{codec}</td>
+                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{bitrate}</td>
+                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{fileSize}</td>
+                      <td className="px-3 py-0">
+                        <button
+                          onClick={(e) => handleAddMedia(e, file)}
+                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                        >
+                          +
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )
+          : (
+            <div className="space-y-2">
+              {sortedMedia.map((file) => {
+                const fileId = getFileId(file)
+                const duration = file.probeData?.format.duration || 1
+                const isAudio = getFileType(file) === "audio"
+                const isAdded = addedFiles.has(fileId)
+
+                return (
+                  <div
+                    key={fileId}
+                    className={`flex items-center gap-3 p-0 pr-2 rounded-md group
+                    ${
+                      isAdded
+                        ? "opacity-50 pointer-events-none"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
+                  >
+                    <div className="relative flex gap-1">
+                      <MediaPreview
+                        file={file}
+                        fileId={fileId}
+                        duration={duration}
+                        isAudio={isAudio}
+                        videoRefs={videoRefs}
+                        loadedVideos={loadedVideos}
+                        setLoadedVideos={setLoadedVideos}
+                        hoverTimes={hoverTimes}
+                        handleMouseMove={handleMouseMove}
+                        handlePlayPause={handlePlayPause}
+                        handleMouseLeave={handleMouseLeave}
+                        setPlayingFileId={setPlayingFileId}
+                      />
+                    </div>
+                    <FileInfo file={file} onAddMedia={handleAddMedia} />
+                  </div>
+                )
+              })}
+            </div>
+          )}
       </div>
       <div className="absolute bottom-[-4px] left-[-4px] right-[-4px] bg-white dark:bg-[#1b1a1f] m-0 p-0">
         <StatusBar
