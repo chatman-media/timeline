@@ -3,7 +3,7 @@ import duration from "dayjs/plugin/duration"
 import timezone from "dayjs/plugin/timezone"
 import utc from "dayjs/plugin/utc"
 
-import { MediaEditor } from "@/components/media/media-editor"
+import { MediaEditor } from "@/components/layout/media-editor"
 
 // Инициализируем плагин duration
 dayjs.extend(duration)

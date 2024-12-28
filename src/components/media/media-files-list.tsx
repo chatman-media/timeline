@@ -13,9 +13,7 @@ import {
 } from "@/utils/mediaUtils"
 
 import { Skeleton } from "../ui/skeleton"
-import { MediaPreview } from "./media-preview"
-import { StatusBar } from "./status-bar"
-import { FileInfo } from "./file-info"
+import { FileInfo, MediaPreview, StatusBar } from "."
 
 export function MediaFilesList() {
   const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useMedia()

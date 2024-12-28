@@ -1,8 +1,8 @@
-import { ThemeToggle } from "../layout/theme-toggle"
+import { ThemeToggle } from "./theme-toggle"
 import { Timeline } from "../timeline"
-import { FileBrowser } from "./file-browser"
-import { ActiveVideo } from "./active-video"
-import { Editing } from "./editing"
+import { FileBrowser } from "../media/file-browser"
+import { ActiveVideo } from "../media-player/active-video"
+import { Editing } from "../editing/editing"
 
 export function MediaEditor() {
   return (
