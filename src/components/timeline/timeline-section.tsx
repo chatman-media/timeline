@@ -23,7 +23,9 @@ export function TimelineSection(
   return (
     <div
       className={`timeline-section ${
-        isActive ? "border-l-[1px] border-[#ffffff]" : "border-l-[1px] border-transparent"
+        isActive
+          ? "border-l-[1px] border-[#ffffff] border-[#000]"
+          : "border-l-[1px] border-transparent"
       }`}
     >
       <div className="relative">
