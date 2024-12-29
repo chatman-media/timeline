@@ -22,12 +22,12 @@ export function ThemeToggle() {
   return (
     <Button
       variant="ghost"
-      size="icon"
+      // size="icon"
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="absolute top-0 left-0 hover:bg-transparent cursor-pointer"
+      className="absolute top-[-2px] left-[-7px] hover:bg-transparent cursor-pointer"
     >
-      <Sun className="h-[1.5rem] w-[1.5rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-gray-600 dark:text-gray-100 hover:text-gray-900 dark:hover:text-gray-50" />
-      <Moon className="absolute h-[1.5rem] w-[1.5rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-gray-600 dark:text-gray-100 hover:text-gray-900 dark:hover:text-gray-50" />
+      <Sun className="h-7 w-7 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-gray-600 dark:text-gray-100 hover:text-gray-900 dark:hover:text-gray-50" />
+      <Moon className="absolute h-7 w-7 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-gray-600 dark:text-gray-100 hover:text-gray-900 dark:hover:text-gray-50" />
       {/* <span className="sr-only">Переключить тему</span> */}
     </Button>
   )

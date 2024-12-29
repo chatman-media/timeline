@@ -94,9 +94,17 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
   const handleAddMedia = useCallback((e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
     const fileId = getFileId(file)
-    if (addedFiles.has(fileId) || file.probeData?.streams?.[0]?.codec_type !== "video") return
-    addNewTracks([file])
-    setAddedFiles((prev) => new Set([...prev, fileId]))
+    if (addedFiles.has(fileId)) return
+
+    // Check if file has video or audio stream
+    const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
+    const audioStream = file.probeData?.streams?.find((s) => s.codec_type === "audio")
+
+    // Only add if file has either video or audio
+    if (videoStream || audioStream) {
+      addNewTracks([file])
+      setAddedFiles((prev) => new Set([...prev, fileId]))
+    }
   }, [addNewTracks, addedFiles, getFileId])
 
   // Handlers for StatusBar
@@ -118,7 +126,10 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
         month: "long",
         year: "numeric",
       })
-      return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
+      // Check for either video or audio stream
+      const hasVideo = file.probeData?.streams?.some((s) => s.codec_type === "video")
+      const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
+      return fileDate === targetDate && (hasVideo || hasAudio)
     })
     addNewTracks(dateFiles)
     setAddedFiles((prev) => new Set([...prev, ...dateFiles.map((file) => getFileId(file))]))
@@ -181,8 +192,8 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
   }
 
   return (
-    <div className="relative h-[calc(50vh-40px)]">
-      <div className="h-[calc(100%-40px)] overflow-y-auto">
+    <div className="relative h-[calc(50vh-36px)]">
+      <div className="h-[calc(100%-36px)] overflow-y-auto">
         {viewMode === "list"
           ? (
             <table className="w-full border-collapse">

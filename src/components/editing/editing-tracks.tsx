@@ -1,29 +1,42 @@
 import { useVideoStore } from "@/stores/videoStore"
 import { formatDuration, formatFileSize } from "@/lib/utils"
+import { Track } from "@/types/videos"
 
 export function EditingTracks() {
   const tracks = useVideoStore((state) => state.tracks)
 
+  const getTrackPrefix = (track: Track) => {
+    // Check if track contains any video files
+    const hasVideo = track.videos.some((file) => {
+      const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
+      return !!videoStream
+    })
+
+    return hasVideo ? "V" : "A"
+  }
+
   return (
-    <div className="p-4">
-      <div className="border rounded-md">
-        <table className="w-full text-sm">
+    <div className="p-1">
+      <div className="border">
+        <table className="w-full text-[12px] font-normal text-gray-500 dark:text-gray-400">
           <thead className="bg-muted/50">
-            <tr className="border-b">
-              <th className="text-left">№</th>
-              <th className="text-left">Камера</th>
+            <tr className="border-b border-borde font-normal">
+              <th className="text-left font-normal">№</th>
+              <th className="text-left">Тип</th>
               <th className="text-left">Файлы</th>
               <th className="text-left">Длительность</th>
-              <th className="text-left">Разрешение</th>
+              <th className="text-left">Формат</th>
               <th className="text-left">Размер</th>
             </tr>
           </thead>
           <tbody className="divide-y">
             {tracks?.map((track) => {
-              // Get first video for resolution info
-              const firstVideo = track.videos[0]
-              const videoStream = firstVideo?.probeData?.streams?.find(
+              const firstFile = track.videos[0]
+              const videoStream = firstFile?.probeData?.streams?.find(
                 (s) => s.codec_type === "video",
+              )
+              const audioStream = firstFile?.probeData?.streams?.find(
+                (s) => s.codec_type === "audio",
               )
 
               // Calculate total size
@@ -32,16 +45,26 @@ export function EditingTracks() {
                 0,
               )
 
+              const prefix = getTrackPrefix(track)
+              const trackNumber = `${prefix}${track.displayIndex}`
+
+              // Format info based on track type
+              const formatInfo = videoStream
+                ? `${videoStream.width}x${videoStream.height}`
+                : audioStream
+                ? `${audioStream.codec_name?.toUpperCase()} ${audioStream.channels}ch ${
+                  Math.round(parseInt(audioStream.sample_rate || "0") / 1000)
+                }kHz`
+                : "-"
+
               return (
                 <tr key={track.id} className="hover:bg-muted/50">
-                  <td className="p-2">{track.index}</td>
-                  <td className="p-2">V{track.index}</td>
-                  <td className="p-2">{track.videos.length}</td>
-                  <td className="p-2">{formatDuration(track.combinedDuration)}</td>
-                  <td className="p-2">
-                    {videoStream ? `${videoStream.width}x${videoStream.height}` : "-"}
-                  </td>
-                  <td className="p-2">{formatFileSize(totalSize)}</td>
+                  <td className="p-1">{track.index}</td>
+                  <td className="p-1">{trackNumber}</td>
+                  <td className="p-1">{track.videos.length}</td>
+                  <td className="p-1">{formatDuration(track.combinedDuration)}</td>
+                  <td className="p-1">{formatInfo}</td>
+                  <td className="p-1">{formatFileSize(totalSize)}</td>
                 </tr>
               )
             })}
