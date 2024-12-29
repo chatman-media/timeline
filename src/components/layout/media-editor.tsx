@@ -9,9 +9,9 @@ export function MediaEditor() {
   const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails">("thumbnails")
 
   return (
-    <div className="flex h-screen flex-col gap-1 p-0 m-0">
-      <div className="grid auto-rows-min gap-1 md:grid-cols-[30%_70%]">
-        <div className="h-[calc(50vh-2px)] bg-muted/50 p-0">
+    <div className="flex h-screen flex-col p-0 m-0">
+      <div className="grid auto-rows-min md:grid-cols-[30%_70%]">
+        <div className="h-[50vh] bg-muted/50 p-0">
           <div className="flex-1 relative">
             <ThemeToggle />
             <FileBrowser viewMode={viewMode} />
@@ -25,15 +25,15 @@ export function MediaEditor() {
             }
           </div>
         </div>
-        <div className="h-[calc(50vh-2px)] bg-muted/50">
+        <div className="h-[50vh] bg-muted/50 border-l border-border dark:border-[rgb(47,61,62)]">
           <ActiveVideo />
         </div>
       </div>
-      <div className="media-editor auto-rows-min gap-1 grid grid-cols-[30%_70%]">
-        <div className="h-[calc(50vh-2px)] bg-muted/50">
+      <div className="media-editor auto-rows-min grid grid-cols-[30%_70%]">
+        <div className="h-[50vh] bg-muted/50 border-t border-border dark:border-[rgb(47,61,62)]">
           <Editing />
         </div>
-        <div className="h-[calc(50vh-2px)] bg-muted/50">
+        <div className="h-[50vh] bg-muted/50 border-l border-t border-border dark:border-[rgb(47,61,62)]">
           <Timeline />
         </div>
       </div>

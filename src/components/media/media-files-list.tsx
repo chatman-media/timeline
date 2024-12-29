@@ -26,6 +26,7 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
   )
   const [fileGroups, setFileGroups] = useState<Record<string, FileGroup>>({})
   const [addedFiles, setAddedFiles] = useState<Set<string>>(new Set())
+  const [addedDates, setAddedDates] = useState<Set<string>>(new Set())
 
   const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
     videoRefs,
@@ -121,6 +122,7 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
     })
     addNewTracks(dateFiles)
     setAddedFiles((prev) => new Set([...prev, ...dateFiles.map((file) => getFileId(file))]))
+    setAddedDates((prev) => new Set([...prev, targetDate]))
   }, [media, addNewTracks, getFileId])
 
   const handleAddAllVideoFiles = useCallback(() => {
@@ -179,8 +181,8 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
   }
 
   return (
-    <div className="relative h-[calc(50vh-44px)]">
-      <div className="h-[calc(100%-30px)] overflow-y-auto">
+    <div className="relative h-[calc(50vh-40px)]">
+      <div className="h-[calc(100%-40px)] overflow-y-auto">
         {viewMode === "list"
           ? (
             <table className="w-full border-collapse">
@@ -308,7 +310,7 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
             </div>
           )}
       </div>
-      <div className="absolute bottom-[-4px] left-[-4px] right-[-4px] bg-white dark:bg-[#1b1a1f] m-0 p-0">
+      <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1b1a1f] m-0 p-0 border-t border-border dark:border-[rgb(47,61,62)]">
         <StatusBar
           media={sortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}
@@ -319,6 +321,7 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
           onUpdateList={handleUpdateList}
           groupedSequences={groupedSequences}
           sortedDates={sortedDates}
+          addedDates={addedDates}
         />
       </div>
     </div>

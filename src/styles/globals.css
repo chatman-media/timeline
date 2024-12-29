@@ -189,27 +189,6 @@
   margin-left: 1px;
 }
 
-/* Добавьте эти стили в ваш CSS файл */
-.timeline {
-  position: relative;
-  width: 100%;
-  overflow-x: auto;
-  overflow-y: auto;
-  border-left: 1px solid var(--border);
-}
-
-.timeline-content {
-  min-width: 100%;
-  width: fit-content;
-}
-
-.timeline-scale {
-  position: relative;
-  height: 32px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid var(--border);
-}
-
 .timeline-mark {
   position: absolute;
   display: flex;

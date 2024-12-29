@@ -11,8 +11,9 @@ interface StatusBarProps {
   onAddDateFiles: (date: string) => void
   onAddAllFiles: () => void
   onUpdateList: () => void
-  groupedSequences: string
+  groupedSequences: number | null
   sortedDates: { date: string; files: MediaFile[] }[]
+  addedDates: Set<string>
 }
 
 export function StatusBar({
@@ -25,8 +26,17 @@ export function StatusBar({
   onUpdateList,
   groupedSequences,
   sortedDates,
+  addedDates,
 }: StatusBarProps) {
-  const [maxDateInfo, secondMaxDateInfo] = sortedDates
+  // Фильтруем даты, исключая уже добавленные
+  const availableDates = sortedDates.filter((dateInfo) => !addedDates.has(dateInfo.date))
+
+  // Берем только первые две доступные даты
+  const [firstDate, secondDate] = availableDates
+
+  const handleAddDateFiles = (date: string) => {
+    onAddDateFiles(date)
+  }
 
   return (
     <div className="flex justify-between items-start p-1 text-sm m-0 w-full">
@@ -46,20 +56,20 @@ export function StatusBar({
         </span>
       </div>
       <div className="flex flex-col items-end gap-0 text-xs">
-        {maxDateInfo && (
+        {firstDate && (
           <ActionButton
             title="Добавить видео за эту дату"
-            onClick={() => onAddDateFiles(maxDateInfo.date)}
+            onClick={() => handleAddDateFiles(firstDate.date)}
           >
-            {`${maxDateInfo.files.length} видео ${maxDateInfo.date}`}
+            {`${firstDate.files.length} видео ${firstDate.date}`}
           </ActionButton>
         )}
-        {secondMaxDateInfo && (
+        {secondDate && (
           <ActionButton
             title="Добавить видео за эту дату"
-            onClick={() => onAddDateFiles(secondMaxDateInfo.date)}
+            onClick={() => handleAddDateFiles(secondDate.date)}
           >
-            {`${secondMaxDateInfo.files.length} видео ${secondMaxDateInfo.date}`}
+            {`${secondDate.files.length} видео ${secondDate.date}`}
           </ActionButton>
         )}
       </div>
