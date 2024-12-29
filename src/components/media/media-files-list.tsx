@@ -310,7 +310,7 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
             </div>
           )}
       </div>
-      <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1b1a1f] m-0 p-0 border-t border-border dark:border-[rgb(47,61,62)]">
+      <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1b1a1f] m-0 p-0 border-t border-border">
         <StatusBar
           media={sortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}

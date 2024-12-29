@@ -25,15 +25,15 @@ export function MediaEditor() {
             }
           </div>
         </div>
-        <div className="h-[50vh] bg-muted/50 border-l border-border dark:border-[rgb(47,61,62)]">
+        <div className="h-[50vh] bg-muted/50 border-l border-border">
           <ActiveVideo />
         </div>
       </div>
       <div className="media-editor auto-rows-min grid grid-cols-[30%_70%]">
-        <div className="h-[50vh] bg-muted/50 border-t border-border dark:border-[rgb(47,61,62)]">
+        <div className="h-[50vh] bg-muted/50 border-t border-border">
           <Editing />
         </div>
-        <div className="h-[50vh] bg-muted/50 border-l border-t border-border dark:border-[rgb(47,61,62)]">
+        <div className="h-[50vh] bg-muted/50 border-l border-t border-border">
           <Timeline />
         </div>
       </div>

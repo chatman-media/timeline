@@ -6,6 +6,7 @@ interface TimelineMarksProps {
   duration: number
   timeStep: number
   subStep: number
+  isActive: boolean
 }
 
 export function TimelineMarks({
@@ -14,6 +15,7 @@ export function TimelineMarks({
   duration,
   timeStep,
   subStep,
+  isActive,
 }: TimelineMarksProps) {
   const marks = []
   const level1Step = timeStep
@@ -55,7 +57,7 @@ export function TimelineMarks({
   }
 
   return (
-    <div className="relative w-full h-8 bg-white dark:bg-[#1a1a1a]">
+    <div className={`relative w-full h-8 ${isActive ? "" : "bg-muted/50"}`}>
       {marks}
     </div>
   )

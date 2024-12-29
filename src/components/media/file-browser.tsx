@@ -5,7 +5,7 @@ import { MusicFilesList } from "./music-files-list"
 export function FileBrowser({ viewMode }: { viewMode: "list" | "grid" | "thumbnails" }) {
   return (
     <Tabs defaultValue="media" className="w-full h-full">
-      <TabsList className="ml-8 bg-white dark:bg-gray-800">
+      <TabsList className="ml-9 bg-white dark:bg-gray-800">
         <TabsTrigger
           value="media"
           className="text-gray-500 dark:text-gray-400 data-[state=active]:bg-white dark:data-[state=active]:bg-gray-800 data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700"

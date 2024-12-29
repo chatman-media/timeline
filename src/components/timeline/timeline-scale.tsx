@@ -6,6 +6,7 @@ interface TimelineScaleProps {
   timeStep: number
   subStep: number
   adjustedRange: TimeRange
+  isActive: boolean
 }
 
 interface TimeRange {
@@ -19,9 +20,10 @@ export function TimelineScale({
   timeStep,
   subStep,
   adjustedRange,
+  isActive,
 }: TimelineScaleProps) {
   return (
-    <div className="relative w-full flex flex-col mb-[13px]">
+    <div className={`relative w-full flex flex-col mb-[13px]`}>
       <div
         className="h-0.5 w-full"
         style={{ background: "rgb(47, 61, 62)", height: "1px" }}
@@ -56,6 +58,7 @@ export function TimelineScale({
           duration={adjustedRange.duration}
           timeStep={timeStep}
           subStep={subStep}
+          isActive={isActive}
         />
       </div>
     </div>

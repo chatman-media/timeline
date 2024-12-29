@@ -22,11 +22,8 @@ export function TimelineSection(
 
   return (
     <div
-      className={`timeline-section ${
-        isActive
-          ? "border-l-[1px] border-[#ffffff] border-[#000]"
-          : "border-l-[1px] border-transparent"
-      }`}
+      className={`timeline-section ${isActive ? "" : "bg-muted/50"}`}
+      a
     >
       <div className="relative">
         <TimelineSectionBar
@@ -43,6 +40,7 @@ export function TimelineSection(
             timeStep={timeStep}
             subStep={subStep}
             adjustedRange={adjustedRange}
+            isActive={isActive}
           />
 
           {tracks.map((track, index) => (
