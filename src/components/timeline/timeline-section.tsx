@@ -23,7 +23,6 @@ export function TimelineSection(
   return (
     <div
       className={`timeline-section ${isActive ? "" : "bg-muted/50"}`}
-      a
     >
       <div className="relative">
         <TimelineSectionBar
