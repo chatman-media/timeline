@@ -192,8 +192,8 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
   }
 
   return (
-    <div className="relative h-[calc(50vh-36px)]">
-      <div className="h-[calc(100%-36px)] overflow-y-auto">
+    <div className="relative h-[calc(50vh-32px)]">
+      <div className="h-[calc(100%-32px)] overflow-y-auto">
         {viewMode === "list"
           ? (
             <table className="w-full border-collapse">
