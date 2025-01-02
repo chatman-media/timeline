@@ -13,9 +13,6 @@ export const ActiveVideo = memo(() => {
     isChangingCamera,
   } = useMedia()
 
-  const [isHovering, setIsHovering] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-
   if (!videoRefs.current) {
     videoRefs.current = {}
   }
@@ -82,46 +79,22 @@ export const ActiveVideo = memo(() => {
     }
   }, [activeVideo, isPlaying, isChangingCamera])
 
-  useEffect(() => {
-    const videoElement = videoRefs.current[activeVideo?.id]
-    if (!videoElement) return
-
-    const handleLoadedData = () => {
-      setIsLoading(false)
-    }
-
-    videoElement.addEventListener("loadeddata", handleLoadedData)
-
-    return () => {
-      videoElement.removeEventListener("loadeddata", handleLoadedData)
-    }
-  }, [activeVideo])
-
   return (
-    <div
-      className="relative w-full h-full bg-gray-50 dark:bg-gray-900 group overflow-hidden"
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
-    >
+    <div className="relative w-full h-[calc(50vh-36px)] bg-muted/50">
       {activeVideo && (
-        <div className="relative h-full max-h-[calc(100vh-82px)]">
+        <div className="relative h-full">
           <video
             ref={(el) => {
               if (el) videoRefs.current[activeVideo.id] = el
             }}
             src={activeVideo.path}
-            className="h-full object-contain object-left"
+            className="h-full object-contain object-center"
             playsInline
             preload="auto"
             disablePictureInPicture
             disableRemotePlayback
             controlsList="nodownload noplaybackrate"
           />
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-              <div className="text-white">Загрузка видео...</div>
-            </div>
-          )}
         </div>
       )}
     </div>

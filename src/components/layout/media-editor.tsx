@@ -1,9 +1,10 @@
-import { ThemeToggle } from "./theme-toggle"
-import { Timeline } from "../timeline"
+import { useState } from "react"
+
+import { Editing } from "../editing/editing"
 import { FileBrowser } from "../media/file-browser"
 import { ActiveVideo } from "../media-player/active-video"
-import { Editing } from "../editing/editing"
-import { useState } from "react"
+import { Timeline } from "../timeline"
+import { ThemeToggle } from "./theme-toggle"
 
 export function MediaEditor() {
   const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails">("thumbnails")
@@ -15,14 +16,6 @@ export function MediaEditor() {
           <div className="flex-1 relative">
             <ThemeToggle />
             <FileBrowser viewMode={viewMode} />
-            {
-              /* <div className="absolute top-0 right-2 z-10">
-              <ViewToggle
-                currentView={viewMode}
-                onViewChange={setViewMode}
-              />
-            </div> */
-            }
           </div>
         </div>
         <div className="h-[50vh] bg-muted/50 border-l border-border">

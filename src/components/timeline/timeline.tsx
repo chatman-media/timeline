@@ -1,7 +1,9 @@
 import React, { useMemo, useState } from "react"
+
 import { useMedia } from "@/hooks/use-media"
-import { TimelineSection } from "./timeline-section"
 import { MediaFile, Track } from "@/types/videos"
+
+import { TimelineSection } from "./timeline-section"
 
 export function Timeline() {
   const { tracks, activeVideo, setCurrentTime: updateTime } = useMedia()

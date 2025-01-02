@@ -1,7 +1,9 @@
 import { RefreshCw } from "lucide-react"
+
 import { MediaFile } from "@/types/videos"
-import { ActionButton } from "./action-button"
 import { getFileType } from "@/utils/mediaUtils"
+
+import { ActionButton } from "./action-button"
 
 interface StatusBarProps {
   media: MediaFile[]
@@ -39,7 +41,7 @@ export function StatusBar({
   }
 
   return (
-    <div className="flex justify-between items-start p-1 text-sm m-0 w-full">
+    <div className="flex justify-between items-start p-[2px] text-sm m-0 w-full bg-white dark:bg-[#1b1a1f] z-50">
       <div className="flex flex-col items-end gap-0 text-xs text-gray-500 dark:text-gray-500">
         <span className="px-1 flex items-center whitespace-nowrap gap-1">
           <ActionButton title="Добавить все видео" onClick={onAddAllVideoFiles}>
@@ -55,7 +57,7 @@ export function StatusBar({
           </ActionButton>
         </span>
       </div>
-      <div className="flex flex-col items-end gap-0 text-xs">
+      <div className="flex flex-col items-end gap-0 text-xs ">
         {firstDate && (
           <ActionButton
             title="Добавить видео за эту дату"

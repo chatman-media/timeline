@@ -2,13 +2,13 @@ import * as fs from "node:fs/promises"
 import process from "node:process"
 
 import { ffprobe, FfprobeData } from "fluent-ffmpeg"
+import { nanoid } from "nanoid"
 import type { NextApiRequest, NextApiResponse } from "next"
 import path from "path"
 import { promisify } from "util"
 
-import { MediaFile } from "@/types/videos"
 import { getMediaCreationTime } from "@/lib/utils"
-import { nanoid } from "nanoid"
+import { MediaFile } from "@/types/videos"
 
 // Промисифицируем ffprobe
 const ffprobeAsync = promisify(ffprobe)

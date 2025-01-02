@@ -5,8 +5,8 @@ import timezone from "dayjs/plugin/timezone"
 import utc from "dayjs/plugin/utc"
 import { twMerge } from "tailwind-merge"
 
-import { MediaFile } from "@/types/videos"
 import { FfprobeData } from "@/types/ffprobe"
+import { MediaFile } from "@/types/videos"
 
 // Инициализируем плагин duration если еще не инициализирован
 if (!dayjs.isDuration) {

@@ -1,6 +1,7 @@
 import { useMemo } from "react"
-import { MediaFile, Track } from "@/types/videos"
+
 import { TimelineSection } from "@/types/timeline"
+import { MediaFile, Track } from "@/types/videos"
 
 export function useTimelineSections(tracks: Track[] | null) {
   return useMemo(() => {

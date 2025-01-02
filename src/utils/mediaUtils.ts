@@ -1,5 +1,7 @@
-import { MediaFile, Track } from "@/types/videos"
 import { nanoid } from "nanoid"
+
+import { MediaFile, Track } from "@/types/videos"
+
 import { calculateTimeRanges } from "./videoUtils"
 
 // Функция для расчета реальных размеров

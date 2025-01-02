@@ -1,7 +1,7 @@
 import { create } from "zustand"
 
-import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { generateVideoId } from "@/lib/utils"
+import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { createTracksFromFiles } from "@/utils/mediaUtils"
 
 interface VideoState {

@@ -1,11 +1,13 @@
+import { useState } from "react"
+
+import { formatResolution } from "@/lib/utils"
+import { FfprobeStream } from "@/types/ffprobe"
+import { MediaFile } from "@/types/videos"
+import { calculateRealDimensions, isHorizontalVideo } from "@/utils/mediaUtils"
+import { getNextVolumeState, VolumeState } from "@/utils/videoUtils"
+
 import { Skeleton } from "../ui/skeleton"
 import { PreviewTimeline } from "./preview-timeline"
-import { calculateRealDimensions, isHorizontalVideo } from "@/utils/mediaUtils"
-import { formatResolution } from "@/lib/utils"
-import { MediaFile } from "@/types/videos"
-import { FfprobeStream } from "@/types/ffprobe"
-import { useState } from "react"
-import { getNextVolumeState, VolumeState } from "@/utils/videoUtils"
 
 interface MediaPreviewProps {
   file: MediaFile

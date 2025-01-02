@@ -1,9 +1,8 @@
 import { memo } from "react"
 
-import { type Track } from "@/types/videos"
-
-import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { useMedia } from "@/hooks/use-media"
+import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
+import { type Track } from "@/types/videos"
 import { getAspectRatio, getFps } from "@/utils/videoUtils"
 
 interface VideoTrackProps {

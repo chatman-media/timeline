@@ -1,4 +1,5 @@
 import { useRef } from "react"
+
 import { useSectionTime } from "@/hooks/use-section-time"
 
 interface TimelineSectionBarProps {

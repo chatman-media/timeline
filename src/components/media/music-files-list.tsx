@@ -95,7 +95,7 @@ export function MusicFilesList() {
   }
 
   return (
-    <div className="h-[calc(50vh-41px)] overflow-y-auto">
+    <div className="h-[calc(50vh-28px)] overflow-y-auto">
       <div className="space-y-1 ">
         {musicFiles.map((file) => (
           <div
@@ -170,7 +170,7 @@ export function MusicFilesList() {
           </div>
         ))}
 
-        <div ref={loaderRef} className="p-4 text-center">
+        <div ref={loaderRef} className="p-2 pt-0 text-center">
           {isLoadingMore && <p className="text-sm text-gray-500">Загрузка...</p>}
           {!hasMore && musicFiles.length > 0 && (
             <p className="text-sm text-gray-500">Больше файлов нет</p>

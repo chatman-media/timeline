@@ -1,6 +1,7 @@
+import { Plus } from "lucide-react"
+
 import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
-import { Plus } from "lucide-react"
 import { getAspectRatio, getFps } from "@/utils/videoUtils"
 
 interface FileInfoProps {

@@ -1,4 +1,5 @@
 import { Track } from "@/types/videos"
+
 import { TimelineMarks } from "./timeline-marks"
 
 interface TimelineScaleProps {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import { useVideoPlayer } from "@/hooks/use-video-player"
+import { formatDuration, formatFileSize } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
 import {
   FileGroup,
@@ -14,7 +15,6 @@ import {
 
 import { Skeleton } from "../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from "."
-import { formatDuration, formatFileSize } from "@/lib/utils"
 
 export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thumbnails" }) {
   const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useMedia()
@@ -164,7 +164,7 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
 
   if (isLoading) {
     return (
-      <div className="px-0 h-[calc(50vh-70px)] overflow-y-auto">
+      <div className="px-0 h-[calc(50vh-29px)] overflow-y-auto">
         <div className="space-y-2 dark:bg-[#1b1a1f]">
           {[...Array(8)].map((_, index) => (
             <div key={index} className="flex items-center gap-3 p-0 pr-2 rounded-md">
@@ -192,8 +192,8 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
   }
 
   return (
-    <div className="relative h-[calc(50vh-32px)]">
-      <div className="h-[calc(100%-32px)] overflow-y-auto">
+    <div className="relative h-[calc(50vh-29px)]">
+      <div className="h-full overflow-y-auto">
         {viewMode === "list"
           ? (
             <table className="w-full border-collapse">

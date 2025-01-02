@@ -1,8 +1,10 @@
 import { useRef } from "react"
-import { Track } from "@/types/videos"
-import { TimelineScale } from "./timeline-scale"
-import { VideoTrack } from "../track"
+
 import { useTimelineScale } from "@/hooks/use-timeline-scale"
+import { Track } from "@/types/videos"
+
+import { VideoTrack } from "../track"
+import { TimelineScale } from "./timeline-scale"
 import { TimelineSectionBar } from "./timeline-section-bar"
 
 interface TimelineSectionProps {

@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+
 import { useMedia } from "@/hooks/use-media"
 import { Track } from "@/types/videos"
 

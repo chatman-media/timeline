@@ -1,5 +1,5 @@
-import { useVideoStore } from "@/stores/videoStore"
 import { formatDuration, formatFileSize } from "@/lib/utils"
+import { useVideoStore } from "@/stores/videoStore"
 import { Track } from "@/types/videos"
 
 export function EditingTracks() {
