@@ -46,7 +46,6 @@ export function TimelineSectionBar({
           <div className="w-[10px] h-[6px] bg-red-600" />
           <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-red-600" />
         </div>
-
         <div className="w-[2px] mt-[-2px] bg-red-600 flex-1" />
       </div>
     </div>

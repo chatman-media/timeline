@@ -11,9 +11,15 @@ interface TimeRange {
   duration: number
 }
 
-export function useTimelineScale(duration: number, startTime: number, endTime: number) {
+export function useTimelineScale(
+  duration: number,
+  startTime: number,
+  endTime: number,
+  scale: number = 1,
+) {
   const { timeStep, subStep } = useMemo(() => {
     const getTimeScale = (duration: number): TimeScale => {
+      // Базовые интервалы в зависимости от длительности
       if (duration <= 30) return { main: 5, sub: 1 }
       if (duration <= 60) return { main: 10, sub: 2 }
       if (duration <= 300) return { main: 30, sub: 5 }
@@ -22,22 +28,28 @@ export function useTimelineScale(duration: number, startTime: number, endTime: n
       return { main: 900, sub: 300 }
     }
 
-    const scale = getTimeScale(duration)
+    // Получаем базовую шкалу и применяем масштаб
+    const baseScale = getTimeScale(duration)
     return {
-      timeStep: scale.main,
-      subStep: scale.sub,
+      timeStep: baseScale.main / scale,
+      subStep: baseScale.sub / scale,
     }
-  }, [duration])
+  }, [duration, scale])
 
   const adjustedRange = useMemo((): TimeRange => {
     const timeRange = endTime - startTime
-    const padding = timeRange * 0.03
+    const padding = timeRange * 0.03 // 3% отступ с каждой стороны
+
+    // Применяем масштаб к диапазону
+    const scaledRange = timeRange * scale
+    const scaledPadding = padding * scale
+
     return {
-      startTime: startTime - padding,
-      endTime: endTime + padding,
-      duration: (endTime + padding) - (startTime - padding),
+      startTime: startTime - scaledPadding,
+      endTime: endTime + scaledPadding,
+      duration: scaledRange + (scaledPadding * 2),
     }
-  }, [startTime, endTime])
+  }, [startTime, endTime, scale])
 
   return {
     timeStep,

@@ -1,8 +1,15 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
+import { EffectsList } from "./effects-list"
 import { MediaFilesList } from "./media-files-list"
 import { MusicFilesList } from "./music-files-list"
+import { TransitionsList } from "./transitions-list"
 
 export function FileBrowser({ viewMode }: { viewMode: "list" | "grid" | "thumbnails" }) {
+  const handleTransitionSelect = (transitionId: string) => {
+    // Здесь будет логика применения перехода
+    console.log("Selected transition:", transitionId)
+  }
+
   return (
     <Tabs defaultValue="media" className="w-full h-full">
       <TabsList className="ml-7">
@@ -37,14 +44,11 @@ export function FileBrowser({ viewMode }: { viewMode: "list" | "grid" | "thumbna
       <TabsContent value="music">
         <MusicFilesList />
       </TabsContent>
-      <TabsContent
-        value="transitions"
-        className="text-sm text-gray-400 dark:text-gray-500 p-2"
-      >
-        Переходы
+      <TabsContent value="transitions">
+        <TransitionsList onSelect={handleTransitionSelect} />
       </TabsContent>
-      <TabsContent value="effects" className="text-sm text-gray-400 dark:text-gray-500 p-2">
-        Эффекты
+      <TabsContent value="effects">
+        <EffectsList />
       </TabsContent>
     </Tabs>
   )

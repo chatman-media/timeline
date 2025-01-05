@@ -35,7 +35,7 @@ const VideoTrack = memo(({
   const timeToPercent = (time: number) => {
     if (!sectionStartTime || !sectionDuration || sectionDuration === 0) return 0
     const percent = ((time - sectionStartTime) / sectionDuration) * 100
-    return percent
+    return Math.max(0, Math.min(100, percent))
   }
 
   const trackStartTime = firstVideo.startTime || 0
