@@ -1,3 +1,4 @@
+import { TAB_TRIGGER_STYLES } from "../browser"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { EditingIndex } from "./editing-index"
 import { EditingTracks } from "./editing-tracks"
@@ -8,13 +9,13 @@ export function Editing() {
       <TabsList className="">
         <TabsTrigger
           value="index"
-          className="text-gray-500 dark:bg-[#1b1a1f] bg-gray-200 data-[state=active]:bg-transparent dark:data-[state=active]:bg-transparent data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+          className={TAB_TRIGGER_STYLES}
         >
           Монтаж
         </TabsTrigger>
         <TabsTrigger
           value="tracks"
-          className="text-gray-500 dark:bg-[#1b1a1f] bg-gray-200 data-[state=active]:bg-transparent dark:data-[state=active]:bg-transparent data-[state=active]:text-gray-600 dark:data-[state=active]:text-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100"
+          className={TAB_TRIGGER_STYLES}
         >
           Дорожки
         </TabsTrigger>

@@ -46,14 +46,14 @@ export function EditingTracks() {
               )
 
               const prefix = getTrackPrefix(track)
-              const trackNumber = `${prefix}${track.displayIndex}`
+              const trackNumber = `${prefix}${track.index}`
 
               // Format info based on track type
               const formatInfo = videoStream
                 ? `${videoStream.width}x${videoStream.height}`
                 : audioStream
                 ? `${audioStream.codec_name?.toUpperCase()} ${audioStream.channels}ch ${
-                  Math.round(parseInt(audioStream.sample_rate || "0") / 1000)
+                  Math.round(audioStream.sample_rate || 0 / 1000)
                 }kHz`
                 : "-"
 

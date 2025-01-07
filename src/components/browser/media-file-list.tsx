@@ -1,40 +1,29 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { formatDuration, formatFileSize } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
-import {
-  FileGroup,
-  getFileType,
-  getSequentialFiles,
-  getSequentialGroups,
-  groupFilesByDate,
-  prepareFileGroups,
-} from "@/utils/mediaUtils"
+import { getFileType } from "@/utils/mediaUtils"
 
 import { Skeleton } from "../ui/skeleton"
-import { FileInfo, MediaPreview, StatusBar } from "."
+import { FileInfo, MediaPreview } from "."
 
-export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thumbnails" }) {
-  const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useMedia()
-  console.log(media)
+export function MediaFileList(
+  { viewMode = "thumbnails" }: { viewMode?: "list" | "grid" | "thumbnails" },
+) {
+  const { media, isLoading, addNewTracks } = useMedia()
+
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
   const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
     {},
   )
-  const [fileGroups, setFileGroups] = useState<Record<string, FileGroup>>({})
   const [addedFiles, setAddedFiles] = useState<Set<string>>(new Set())
-  const [addedDates, setAddedDates] = useState<Set<string>>(new Set())
 
   const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
     videoRefs,
   })
-
-  const groupedSequences = useMemo(() => getSequentialGroups(media), [media])
-  const sequentialFiles = useMemo(() => getSequentialFiles(media), [media])
-  const sortedDates = useMemo(() => groupFilesByDate(media), [media])
 
   const sortedMedia = useMemo(() => {
     return [...media].sort((a, b) => {
@@ -106,61 +95,6 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
       setAddedFiles((prev) => new Set([...prev, fileId]))
     }
   }, [addNewTracks, addedFiles, getFileId])
-
-  // Handlers for StatusBar
-  const handleUpdateList = useCallback(() => {
-    setHasFetched(false)
-    fetchVideos()
-  }, [setHasFetched, fetchVideos])
-
-  const handleAddAllFiles = useCallback(() => {
-    addNewTracks(media)
-    setAddedFiles((prev) => new Set([...prev, ...media.map((file) => getFileId(file))]))
-  }, [media, addNewTracks, getFileId])
-
-  const handleAddDateFiles = useCallback((targetDate: string) => {
-    const dateFiles = media.filter((file) => {
-      if (!file.startTime) return false
-      const fileDate = new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      })
-      // Check for either video or audio stream
-      const hasVideo = file.probeData?.streams?.some((s) => s.codec_type === "video")
-      const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
-      return fileDate === targetDate && (hasVideo || hasAudio)
-    })
-    addNewTracks(dateFiles)
-    setAddedFiles((prev) => new Set([...prev, ...dateFiles.map((file) => getFileId(file))]))
-    setAddedDates((prev) => new Set([...prev, targetDate]))
-  }, [media, addNewTracks, getFileId])
-
-  const handleAddAllVideoFiles = useCallback(() => {
-    handleAddByIds(fileGroups.videos.fileIds)
-  }, [fileGroups])
-
-  const handleAddAllAudioFiles = useCallback(() => {
-    handleAddByIds(fileGroups.audio.fileIds)
-  }, [fileGroups])
-
-  const handleAddSequentialFiles = useCallback(() => {
-    if (!sequentialFiles) return
-    addNewTracks(sequentialFiles)
-    setAddedFiles((prev) => new Set([...prev, ...sequentialFiles.map((file) => getFileId(file))]))
-  }, [sequentialFiles, addNewTracks, getFileId])
-
-  useEffect(() => {
-    if (media.length) {
-      setFileGroups(prepareFileGroups(media))
-    }
-  }, [media])
-
-  const handleAddByIds = useCallback((fileIds: string[]) => {
-    const filesToAdd = media.filter((file) => fileIds.includes(file.id))
-    addNewTracks(filesToAdd)
-    setAddedFiles((prev) => new Set([...prev, ...fileIds]))
-  }, [media, addNewTracks])
 
   if (isLoading) {
     return (
@@ -246,9 +180,9 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
                     : "-"
                   const codec = videoStream?.codec_name?.toUpperCase() || "-"
                   const bitrate = file.probeData?.format.bit_rate
-                    ? `${Math.round(parseInt(file.probeData.format.bit_rate) / 1000)} Kbps`
+                    ? `${Math.round(file.probeData.format.bit_rate / 1000)} Kbps`
                     : "-"
-                  const fileSize = formatFileSize(file.probeData?.format.size)
+                  const fileSize = formatFileSize(file.probeData?.format.size || 0)
 
                   return (
                     <tr
@@ -320,20 +254,6 @@ export function MediaFilesList({ viewMode }: { viewMode: "list" | "grid" | "thum
               })}
             </div>
           )}
-      </div>
-      <div className="absolute bottom-0 left-0 right-0 bg-white dark:bg-[#1b1a1f] m-0 p-0 border-t border-border">
-        <StatusBar
-          media={sortedMedia}
-          onAddAllVideoFiles={handleAddAllVideoFiles}
-          onAddAllAudioFiles={handleAddAllAudioFiles}
-          onAddSequentialFiles={handleAddSequentialFiles}
-          onAddDateFiles={handleAddDateFiles}
-          onAddAllFiles={handleAddAllFiles}
-          onUpdateList={handleUpdateList}
-          groupedSequences={groupedSequences}
-          sortedDates={sortedDates}
-          addedDates={addedDates}
-        />
       </div>
     </div>
   )

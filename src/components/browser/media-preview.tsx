@@ -284,7 +284,7 @@ function renderStreamIndicators(
             isHorizontalVideo(
                 stream.width,
                 stream.height,
-                parseInt(stream.rotation || "0"),
+                stream.rotation || "0",
               )
               ? "right-[2px] top-[2px]"
               : "left-1/2 bottom-[2px] -translate-x-1/2"
@@ -304,15 +304,15 @@ function renderStreamIndicators(
           style={{ fontSize: "10px" }}
           className={`absolute ${
             isHorizontalVideo(
-                stream.width,
-                stream.height,
-                parseInt(stream.rotation || "0"),
+                stream.width || 0,
+                stream.height || 0,
+                stream.rotation,
               )
               ? "left-[2px] top-[2px]"
               : "left-[calc(50%-8px)] top-[2px]"
           } text-white bg-black/50 rounded px-[2px] py-0`}
         >
-          {formatResolution(stream.width, stream.height)}
+          {formatResolution(stream.width || 0, stream.height || 0)}
         </div>
       )}
     </>

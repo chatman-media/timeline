@@ -4,7 +4,7 @@ import { MouseEvent, useEffect, useRef, useState } from "react"
 import { formatFileSize, formatTime } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
 
-export function MusicFilesList() {
+export function MusicFileList() {
   const [musicFiles, setMusicFiles] = useState<MediaFile[]>([])
   const [, setIsLoading] = useState(true)
   const [activeFile, setActiveFile] = useState<string | null>(null)

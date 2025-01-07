@@ -141,7 +141,7 @@ const transitions = [
   },
 ]
 
-export function TransitionsList({ onSelect }: { onSelect: (id: string) => void }) {
+export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void }) {
   const demoVideos = {
     source: { path: "/vex1.mp4" } as MediaFile,
     target: { path: "/vex2.mp4" } as MediaFile,
@@ -156,7 +156,7 @@ export function TransitionsList({ onSelect }: { onSelect: (id: string) => void }
             sourceVideo={demoVideos.source}
             targetVideo={demoVideos.target}
             transitionType={transition.type}
-            onClick={() => onSelect(transition.id)}
+            onClick={() => onSelect?.(transition.id)}
           />
         ))}
       </div>
