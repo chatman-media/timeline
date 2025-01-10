@@ -1,0 +1,13 @@
+{
+  "$schema": "https://ui.shadcn.com/schema.json",
+  "style": "new-york",
+  "rsc": true,
+  "tsx": true,
+  "aliases": {
+    "components": "@y/store/components",
+    "utils": "@y/store/lib/utils",
+    "hooks": "@y/store/hooks",
+    "lib": "@y/store/lib",
+    "store": "@y/store"
+  }
+}

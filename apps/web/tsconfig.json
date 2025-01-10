@@ -1,10 +1,11 @@
 {
-  "extends": "@workspace/typescript-config/nextjs.json",
+  "extends": "@y/typescript-config/nextjs.json",
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
-      "@workspace/ui/*": ["../../packages/ui/src/*"]
+      "@y/ui/*": ["../../packages/ui/src/*"],
+      "@y/store/*": ["../../packages/store/src/*"]
     },
     "plugins": [
       {
@@ -18,6 +19,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts"
-  ],
+, "../../packages/ui/src/containers/app-sidebar.tsx"  ],
   "exclude": ["node_modules"]
 }

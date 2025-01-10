@@ -1,0 +1,25 @@
+{
+  "name": "@y/store",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "lint": "eslint . --max-warnings 0"
+  },
+  "dependencies": {
+    "@statelyai/inspect": "^0.4.0",
+    "@xstate/store": "^2.6.2",
+    "immer": "^10.1.1"
+  },
+  "devDependencies": {
+    "@y/eslint-config": "workspace:*",
+    "@y/typescript-config": "workspace:*",
+    "typescript": "latest"
+  },
+  "exports": {
+    "./lib/*": "./src/lib/*.ts",
+    "./components/*": "./src/components/*.tsx",
+    "./hooks/*": "./src/hooks/*.ts",
+    "./store": "./src/store.ts"
+  }
+}
