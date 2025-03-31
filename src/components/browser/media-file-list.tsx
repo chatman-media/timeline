@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { useVideoStore } from "@/hooks/useVideoStore"
 import { useVideoPlayer } from "@/hooks/use-video-player"
+import { useVideoStore } from "@/hooks/useVideoStore"
 import { formatDuration, formatFileSize } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
 import {
@@ -178,7 +178,7 @@ export function MediaFileList(
 
   if (isLoading) {
     return (
-      <div className="px-0 h-[calc(50vh-29px)] overflow-y-auto">
+      <div className="px-0 h-full overflow-y-auto">
         <div className="space-y-2 dark:bg-[#1b1a1f]">
           {[...Array(8)].map((_, index) => (
             <div key={index} className="flex items-center gap-3 p-0 pr-2 rounded-md">
@@ -206,8 +206,8 @@ export function MediaFileList(
   }
 
   return (
-    <div className="relative h-[calc(50vh-29px)]">
-      <div className="h-full overflow-y-auto pl-[3px]">
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto pl-[3px] mb-[24px]">
         {viewMode === "list"
           ? (
             <table className="w-full border-collapse">
@@ -340,7 +340,7 @@ export function MediaFileList(
             </div>
           )}
       </div>
-      <div className="absolute bottom-0 left-0 right-0 m-0 p-0 h-[20px]">
+      <div className="flex-shrink-0 h-[24px] w-full absolute bottom-0 left-0 right-0 z-10">
         <StatusBar
           media={sortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}

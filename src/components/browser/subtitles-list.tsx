@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react"
+
 import { useVideoStore } from "@/hooks/useVideoStore"
 
 export function SubtitlesList() {
@@ -48,7 +49,7 @@ export function SubtitlesList() {
   }, [currentTime])
   
   return (
-    <div className="h-[calc(50vh-28px)] overflow-y-auto">
+    <div className="h-full overflow-y-auto">
       <div className="space-y-1 p-4">
         <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Доступные титры</h3>
         

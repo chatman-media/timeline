@@ -1,5 +1,6 @@
 import { MediaFile } from "@/types/videos"
 import { getFileType } from "@/utils/mediaUtils"
+
 import { ActionButton } from "./action-button"
 
 interface StatusBarProps {
@@ -25,8 +26,8 @@ export function StatusBar({
   const audioCount = media.filter((f) => getFileType(f) === "audio").length
 
   return (
-    <div className="flex justify-between items-center text-sm w-full h-full p-[3px]">
-      <div className="flex flex-col items-end justify-center gap-0 text-xs text-gray-500 dark:text-gray-500">
+    <div className="flex justify-between items-center text-sm w-full h-[24px] bg-background dark:bg-[#1a1a1a] p-[3px] border-t border-border">
+      <div className="flex flex-col items-end justify-center gap-0 text-xs text-gray-700 dark:text-gray-300">
         <span className="px-1 flex items-center whitespace-nowrap gap-1">
           {videoCount > 0 && (
             <ActionButton title="Добавить все видео" onClick={onAddAllVideoFiles}>

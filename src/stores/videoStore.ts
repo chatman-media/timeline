@@ -1,4 +1,5 @@
-import { createStore } from '@xstate/store';
+import { createStore } from '@xstate/store'
+
 import { generateVideoId } from "@/lib/utils"
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { createTracksFromFiles } from "@/utils/mediaUtils"
@@ -21,7 +22,7 @@ const initialContext = {
   metadataCache: {} as Record<string, any>,
   thumbnailCache: {} as Record<string, string>,
   currentLayout: { type: "1x1", activeTracks: ["T1"] } as ScreenLayout
-};
+}
 
 export const videoStore = createStore({
   context: initialContext,
@@ -51,21 +52,21 @@ export const videoStore = createStore({
     }),
     
     fetchVideos: (context, _event, enqueue) => {
-      if (context.hasFetched) return context;
+      if (context.hasFetched) return context
       
       enqueue.effect(async () => {
         try {
-          const response = await fetch("/api/media");
-          const data = await response.json();
+          const response = await fetch("/api/media")
+          const data = await response.json()
           
           if (!data.media || !Array.isArray(data.media) || data.media.length === 0) {
-            console.error("No media received from API");
+            console.error("No media received from API")
             videoStore.send({ 
               type: 'setLoadingState', 
               isLoading: false, 
               hasFetched: true 
-            });
-            return;
+            })
+            return
           }
           
           const validMedia = data.media
@@ -74,7 +75,7 @@ export const videoStore = createStore({
               id: file.id || generateVideoId(data.media),
             }))
             .filter((file: MediaFile) => file.duration)
-            .sort((a: MediaFile, b: MediaFile) => (a.startTime || 0) - (b.startTime || 0));
+            .sort((a: MediaFile, b: MediaFile) => (a.startTime || 0) - (b.startTime || 0))
           
           if (validMedia.length === 0) {
             videoStore.send({ 
@@ -84,8 +85,8 @@ export const videoStore = createStore({
               isLoading: false, 
               hasFetched: true,
               media: data.media 
-            });
-            return;
+            })
+            return
           }
           
           videoStore.send({
@@ -95,22 +96,22 @@ export const videoStore = createStore({
             isLoading: false,
             hasFetched: true,
             media: data.media
-          });
+          })
         } catch (error) {
-          console.error("Error fetching videos:", error);
+          console.error("Error fetching videos:", error)
           videoStore.send({ 
             type: 'setLoadingState', 
             isLoading: false, 
             hasFetched: true 
-          });
+          })
         }
-      });
+      })
       
       return { 
         ...context,
         isLoading: true,
         hasFetched: true
-      };
+      }
     },
     
     setInitialState: (context, event: { 
@@ -140,39 +141,39 @@ export const videoStore = createStore({
     }),
     
     setActiveVideo: (context, event: { videoId: string }) => {
-      const targetVideo = context.videos.find((v) => v.id === event.videoId);
+      const targetVideo = context.videos.find((v) => v.id === event.videoId)
       if (targetVideo) {
         return {
           ...context,
           activeVideo: targetVideo
-        };
+        }
       }
-      return context;
+      return context
     },
     
     setActiveTrack: (context, event: { trackId: string }) => {
-      const { currentTime, tracks } = context;
+      const { currentTime, tracks } = context
       
       try {
-        const targetTrack = tracks.find((track) => track.id === event.trackId);
+        const targetTrack = tracks.find((track) => track.id === event.trackId)
         
         if (!targetTrack) {
-          console.warn(`Track ${event.trackId} not found`);
-          return context;
+          console.warn(`Track ${event.trackId} not found`)
+          return context
         }
         
         // Find available video with better error handling
         const availableVideo = targetTrack.videos.find((video) => {
           if (!video.probeData?.format.tags?.creation_time) {
-            console.warn(`Video ${video.id} missing creation time`);
-            return false;
+            console.warn(`Video ${video.id} missing creation time`)
+            return false
           }
           
-          const startTime = new Date(video.probeData.format.tags.creation_time).getTime() / 1000;
-          const endTime = startTime + (video.probeData.format.duration || 0);
-          const tolerance = 0.3;
-          return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance);
-        });
+          const startTime = new Date(video.probeData.format.tags.creation_time).getTime() / 1000
+          const endTime = startTime + (video.probeData.format.duration || 0)
+          const tolerance = 0.3
+          return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
+        })
         
         if (availableVideo) {
           return {
@@ -180,14 +181,14 @@ export const videoStore = createStore({
             activeTrackId: event.trackId,
             activeVideo: availableVideo,
             isChangingCamera: false
-          };
+          }
         } else {
-          console.warn(`No available video found for time ${currentTime} in track ${event.trackId}`);
-          return { ...context, isChangingCamera: false };
+          console.warn(`No available video found for time ${currentTime} in track ${event.trackId}`)
+          return { ...context, isChangingCamera: false }
         }
       } catch (error) {
-        console.error("Error while changing camera:", error);
-        return { ...context, isChangingCamera: false };
+        console.error("Error while changing camera:", error)
+        return { ...context, isChangingCamera: false }
       }
     },
     
@@ -223,29 +224,29 @@ export const videoStore = createStore({
     }),
     
     addNewTracks: (context, event: { media: MediaFile[] }) => {
-      const { tracks } = context;
-      const newTracks = createTracksFromFiles(event.media, tracks.length);
+      const { tracks } = context
+      const newTracks = createTracksFromFiles(event.media, tracks.length)
       const uniqueNewTracks = newTracks.filter(
         (t) => !(new Set(tracks.map((t) => t.id))).has(t.id)
-      );
+      )
       
       return {
         ...context,
         tracks: [...tracks, ...uniqueNewTracks]
-      };
+      }
     }
   }
-});
+})
 
 // Хелперы для работы с видеохранилищем
 export function timeToPercent(time: number) {
-  const { context } = videoStore.getSnapshot();
-  const track = context.tracks.find((t) => t.id === context.activeTrackId);
-  return (time / (track?.combinedDuration || 0)) * 100;
+  const { context } = videoStore.getSnapshot()
+  const track = context.tracks.find((t) => t.id === context.activeTrackId)
+  return (time / (track?.combinedDuration || 0)) * 100
 }
 
 export function percentToTime(percent: number) {
-  const { context } = videoStore.getSnapshot();
-  const track = context.tracks.find((t) => t.id === context.activeTrackId);
-  return (percent / 100) * (track?.combinedDuration || 0);
+  const { context } = videoStore.getSnapshot()
+  const track = context.tracks.find((t) => t.id === context.activeTrackId)
+  return (percent / 100) * (track?.combinedDuration || 0)
 }

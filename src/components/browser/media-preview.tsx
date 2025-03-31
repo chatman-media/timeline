@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { Plus, Check } from "lucide-react";
+import { Check,Plus } from "lucide-react"
+import { useState } from "react"
 
-import { formatResolution } from "@/lib/utils";
-import { FfprobeStream } from "@/types/ffprobe";
-import { MediaFile } from "@/types/videos";
-import { calculateRealDimensions, isHorizontalVideo } from "@/utils/mediaUtils";
-import { getNextVolumeState, VolumeState } from "@/utils/videoUtils";
+import { formatResolution } from "@/lib/utils"
+import { FfprobeStream } from "@/types/ffprobe"
+import { MediaFile } from "@/types/videos"
+import { calculateRealDimensions, isHorizontalVideo } from "@/utils/mediaUtils"
+import { getNextVolumeState, VolumeState } from "@/utils/videoUtils"
 
-import { Skeleton } from "../ui/skeleton";
-import { PreviewTimeline } from "./preview-timeline";
+import { Skeleton } from "../ui/skeleton"
+import { PreviewTimeline } from "./preview-timeline"
 
 interface MediaPreviewProps {
   file: MediaFile;
@@ -91,16 +91,16 @@ export function MediaPreview({
           tabIndex={0}
           className="focus:outline-none"
           onPlay={(e) => {
-            const audio = e.currentTarget;
-            const currentTime = hoverTimes[fileId]?.[0];
+            const audio = e.currentTarget
+            const currentTime = hoverTimes[fileId]?.[0]
             if (currentTime !== undefined && currentTime !== null) {
-              audio.currentTime = currentTime;
+              audio.currentTime = currentTime
             }
           }}
           onKeyDown={(e) => {
             if (e.code === "Space") {
-              e.preventDefault();
-              handlePlayPause(e as unknown as React.MouseEvent, file, 0);
+              e.preventDefault()
+              handlePlayPause(e as unknown as React.MouseEvent, file, 0)
             }
           }}
           onMouseEnter={(e) => e.currentTarget.focus()}
@@ -119,8 +119,8 @@ export function MediaPreview({
                 : "bg-black/60 hover:bg-black/90"
             }`}
             onClick={(e) => {
-              e.stopPropagation();
-              if (!isAdded) onAddMedia(e, file);
+              e.stopPropagation()
+              if (!isAdded) onAddMedia(e, file)
             }}
             title={isAdded ? "Добавлено" : "Добавить"}
           >
@@ -132,7 +132,7 @@ export function MediaPreview({
           </div>
         )}
       </div>
-    );
+    )
   }
 
   return (
@@ -145,8 +145,8 @@ export function MediaPreview({
             className="h-15 flex-shrink-0 relative"
             style={{
               width: (() => {
-                const dimensions = calculateRealDimensions(stream);
-                return `${60 * (dimensions.width / dimensions.height)}px`;
+                const dimensions = calculateRealDimensions(stream)
+                return `${60 * (dimensions.width / dimensions.height)}px`
               })(),
               maxWidth: "100px",
             }}
@@ -176,27 +176,27 @@ export function MediaPreview({
                   setLoadedVideos((prev) => ({
                     ...prev,
                     [`${fileId}-${index}`]: true,
-                  }));
+                  }))
                 }}
                 onPlay={(e) => {
-                  const video = e.currentTarget;
-                  const currentTime = hoverTimes[fileId]?.[index];
+                  const video = e.currentTarget
+                  const currentTime = hoverTimes[fileId]?.[index]
                   if (currentTime !== undefined && currentTime !== null) {
-                    video.currentTime = currentTime;
+                    video.currentTime = currentTime
                   }
                 }}
                 onError={(e) => {
-                  console.error("Video error:", e);
-                  setPlayingFileId(null);
+                  console.error("Video error:", e)
+                  setPlayingFileId(null)
                 }}
                 onKeyDown={(e) => {
                   if (e.code === "Space") {
-                    e.preventDefault();
+                    e.preventDefault()
                     handlePlayPause(
                       e as unknown as React.MouseEvent,
                       file,
                       index
-                    );
+                    )
                   }
                 }}
                 onMouseEnter={(e) => e.currentTarget.focus()}
@@ -227,8 +227,8 @@ export function MediaPreview({
                       : "bg-black/60 hover:bg-black/90"
                   }`}
                   onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isAdded) onAddMedia(e, file);
+                    e.stopPropagation()
+                    if (!isAdded) onAddMedia(e, file)
                   }}
                   title={isAdded ? "Добавлено" : "Добавить"}
                 >
@@ -243,7 +243,7 @@ export function MediaPreview({
           </div>
         ))}
     </>
-  );
+  )
 }
 
 function renderStreamIndicators(
@@ -253,16 +253,16 @@ function renderStreamIndicators(
   isLoaded: boolean,
   videoRef: HTMLVideoElement | null
 ) {
-  const [volume, setVolume] = useState<VolumeState>(VolumeState.FULL);
+  const [volume, setVolume] = useState<VolumeState>(VolumeState.FULL)
 
   const handleVolumeClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!videoRef) return;
+    e.stopPropagation()
+    if (!videoRef) return
 
-    const nextVolume = getNextVolumeState(volume);
-    setVolume(nextVolume);
-    videoRef.volume = nextVolume;
-  };
+    const nextVolume = getNextVolumeState(volume)
+    setVolume(nextVolume)
+    videoRef.volume = nextVolume
+  }
 
   const VolumeIcon = () => {
     if (volume === VolumeState.MUTED) {
@@ -283,7 +283,7 @@ function renderStreamIndicators(
           <circle cx="6" cy="18" r="3" />
           <circle cx="18" cy="16" r="3" />
         </svg>
-      );
+      )
     }
 
     if (volume === VolumeState.HALF) {
@@ -303,7 +303,7 @@ function renderStreamIndicators(
           <circle cx="6" cy="18" r="3" opacity="0.5" />
           <circle cx="18" cy="16" r="3" opacity="0.5" />
         </svg>
-      );
+      )
     }
 
     return (
@@ -322,8 +322,8 @@ function renderStreamIndicators(
         <circle cx="6" cy="18" r="3" />
         <circle cx="18" cy="16" r="3" />
       </svg>
-    );
-  };
+    )
+  }
 
   return (
     <>
@@ -378,5 +378,5 @@ function renderStreamIndicators(
         </div>
       )}
     </>
-  );
+  )
 }

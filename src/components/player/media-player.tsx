@@ -91,7 +91,7 @@ export const ActiveVideo = memo(() => {
   }, [isPlaying, activeVideo, setIsPlaying])
 
   return (
-    <div className="relative w-full h-[calc(50vh-36px)] bg-muted/50">
+    <div className="relative w-full h-full bg-muted/50">
       {activeVideo && (
         <div className="relative h-full">
           <video
