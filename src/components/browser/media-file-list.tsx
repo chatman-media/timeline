@@ -151,16 +151,6 @@ export function MediaFileList(
     handleAddByIds(fileGroups.audio.fileIds)
   }, [fileGroups])
 
-  const handleAddSequentialFiles = useCallback(() => {
-    if (!sequentialFiles) return
-    
-    // Добавляем последовательные файлы в состояние addedFiles
-    const fileIds = sequentialFiles.map(file => getFileId(file))
-    setAddedFiles(prev => new Set([...prev, ...fileIds]))
-    
-    addNewTracks(sequentialFiles)
-  }, [sequentialFiles, addNewTracks, getFileId])
-
   useEffect(() => {
     if (media.length) {
       setFileGroups(prepareFileGroups(media))
