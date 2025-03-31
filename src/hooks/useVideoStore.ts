@@ -77,6 +77,11 @@ export function useVideoStore() {
     send({ type: 'addNewTracks', media });
   }, [send]);
   
+  // Функция для переключения воспроизведения
+  const play = useCallback(() => {
+    send({ type: 'setIsPlaying', isPlaying: !isPlaying });
+  }, [send, isPlaying]);
+  
   // Функции для работы с временем
   const timeToPercent = useCallback((time: number) => {
     const track = tracks.find((t) => t.id === activeTrackId);
@@ -117,6 +122,7 @@ export function useVideoStore() {
     addToThumbnailCache,
     addNewTracks,
     setHasFetched,
+    play,
     
     // Вспомогательные функции
     timeToPercent,

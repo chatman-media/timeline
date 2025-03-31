@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { useMedia } from "@/hooks/use-media"
+import { useVideoStore } from "@/hooks/useVideoStore"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { formatDuration, formatFileSize } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
@@ -20,7 +20,7 @@ import { StatusBar } from "./status-bar"
 export function MediaFileList(
   { viewMode = "thumbnails" }: { viewMode?: "list" | "grid" | "thumbnails" },
 ) {
-  const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useMedia()
+  const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useVideoStore()
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})

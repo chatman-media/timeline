@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { useMedia } from "./use-media"
+import { useVideoStore } from "./useVideoStore"
 
 interface UseSectionTimeProps {
   sectionStartTime: number
@@ -11,11 +11,11 @@ interface UseSectionTimeProps {
 export function useSectionTime(
   { sectionStartTime, sectionDuration, startTime, endTime }: UseSectionTimeProps,
 ) {
-  const [position, setPosition] = useState(0)
+  const [position, setPosition] = useState(0  )
   const isDragging = useRef(false)
   const wasTimeManuallySet = useRef(false)
   const { activeVideo, videoRefs, setCurrentTime, currentTime, setActiveVideo, setActiveTrack } =
-    useMedia()
+  useVideoStore()
   const lastUpdateTime = useRef(0)
   const animationFrameId = useRef<number | undefined>(undefined)
 

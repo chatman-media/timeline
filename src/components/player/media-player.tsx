@@ -1,17 +1,17 @@
 import { Pause, Play } from "lucide-react"
 import { memo, useEffect, useState } from "react"
 
-import { useMedia } from "@/hooks/use-media"
+import { useVideoStore } from "@/hooks/useVideoStore"
 
 export const ActiveVideo = memo(() => {
   const {
     videoRefs,
     isPlaying,
     activeVideo,
-    setCurrentTime,
+    setCurrentTime, 
     setIsPlaying,
     isChangingCamera,
-  } = useMedia()
+  } = useVideoStore()
 
   if (!videoRefs.current) {
     videoRefs.current = {}
