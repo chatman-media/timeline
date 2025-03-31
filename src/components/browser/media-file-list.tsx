@@ -120,7 +120,10 @@ export function MediaFileList(
   // Handlers for StatusBar
   const handleAddAllFiles = useCallback(() => {
     addNewTracks(media)
-  }, [media, addNewTracks])
+    // Добавляем все файлы в состояние addedFiles
+    const fileIds = media.map(file => getFileId(file))
+    setAddedFiles(new Set(fileIds))
+  }, [media, addNewTracks, getFileId])
 
   const handleAddDateFiles = useCallback((targetDate: string) => {
     const dateFiles = media.filter((file) => {
@@ -132,8 +135,13 @@ export function MediaFileList(
       })
       return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
     })
+    
+    // Добавляем файлы выбранной даты в состояние addedFiles
+    const fileIds = dateFiles.map(file => getFileId(file))
+    setAddedFiles(prev => new Set([...prev, ...fileIds]))
+    
     addNewTracks(dateFiles)
-  }, [media, addNewTracks])
+  }, [media, addNewTracks, getFileId])
 
   const handleAddAllVideoFiles = useCallback(() => {
     handleAddByIds(fileGroups.videos.fileIds)
@@ -145,8 +153,13 @@ export function MediaFileList(
 
   const handleAddSequentialFiles = useCallback(() => {
     if (!sequentialFiles) return
+    
+    // Добавляем последовательные файлы в состояние addedFiles
+    const fileIds = sequentialFiles.map(file => getFileId(file))
+    setAddedFiles(prev => new Set([...prev, ...fileIds]))
+    
     addNewTracks(sequentialFiles)
-  }, [sequentialFiles, addNewTracks])
+  }, [sequentialFiles, addNewTracks, getFileId])
 
   useEffect(() => {
     if (media.length) {
@@ -156,6 +169,10 @@ export function MediaFileList(
 
   const handleAddByIds = useCallback((fileIds: string[]) => {
     const filesToAdd = media.filter((file) => fileIds.includes(file.id))
+    
+    // Добавляем файлы в состояние addedFiles
+    setAddedFiles(prev => new Set([...prev, ...fileIds]))
+    
     addNewTracks(filesToAdd)
   }, [media, addNewTracks])
 
@@ -311,10 +328,11 @@ export function MediaFileList(
                         handleMouseLeave={handleMouseLeave}
                         setPlayingFileId={setPlayingFileId}
                         onAddMedia={handleAddMedia}
+                        isAdded={isAdded}
                       />
                     </div>
                     <div className="flex-1 min-w-0 overflow-hidden">
-                      <FileInfo file={file} onAddMedia={handleAddMedia} />
+                      <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
                     </div>
                   </div>
                 )

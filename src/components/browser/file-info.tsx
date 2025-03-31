@@ -5,9 +5,10 @@ import { getAspectRatio, getFps } from "@/utils/videoUtils"
 interface FileInfoProps {
   file: MediaFile
   onAddMedia: (e: React.MouseEvent, file: MediaFile) => void
+  isAdded?: boolean
 }
 
-export function FileInfo({ file, onAddMedia }: FileInfoProps) {
+export function FileInfo({ file, onAddMedia, isAdded }: FileInfoProps) {
   const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
 
   return (
