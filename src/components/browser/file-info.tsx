@@ -1,5 +1,3 @@
-import { Plus } from "lucide-react"
-
 import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
 import { getAspectRatio, getFps } from "@/utils/videoUtils"
@@ -55,13 +53,6 @@ export function FileInfo({ file, onAddMedia }: FileInfoProps) {
           </div>
         </div>
       </div>
-      <button
-        className="p-1 ml-1 rounded bg-gray-500 hover:bg-gray-800 border border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800 dark:border-gray-600 hover:dark:border-gray-300 transition-all duration-200 cursor-pointer text-white hover:text-white dark:text-gray-500 dark:hover:text-gray-200 flex-shrink-0"
-        title="Добавить"
-        onClick={(e) => onAddMedia(e, file)}
-      >
-        <Plus className="w-5 h-5" />
-      </button>
     </div>
   )
 }

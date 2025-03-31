@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Plus } from "lucide-react"
 
 import { formatResolution } from "@/lib/utils"
 import { FfprobeStream } from "@/types/ffprobe"
@@ -27,6 +28,7 @@ interface MediaPreviewProps {
   handlePlayPause: (e: React.MouseEvent, file: MediaFile, streamIndex: number) => void
   handleMouseLeave: (fileId: string) => void
   setPlayingFileId: (id: string | null) => void
+  onAddMedia?: (e: React.MouseEvent, file: MediaFile) => void
 }
 
 export function MediaPreview({
@@ -42,6 +44,7 @@ export function MediaPreview({
   handlePlayPause,
   handleMouseLeave,
   setPlayingFileId,
+  onAddMedia,
 }: MediaPreviewProps) {
   if (isAudio) {
     return (
@@ -99,6 +102,19 @@ export function MediaPreview({
             time={hoverTimes[fileId][0]}
             duration={duration}
           />
+        )}
+        
+        {onAddMedia && (
+          <div
+            className="absolute left-[2px] bottom-[2px] text-white bg-black/60 rounded-full p-[3px] cursor-pointer hover:bg-black/90 hover:scale-125 transform transition-all duration-200 z-10"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddMedia(e, file);
+            }}
+            title="Добавить"
+          >
+            <Plus className="w-3 h-3" strokeWidth={3} />
+          </div>
         )}
       </div>
     )
@@ -182,6 +198,19 @@ export function MediaPreview({
                   time={hoverTimes[fileId][index]}
                   duration={duration}
                 />
+              )}
+              
+              {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
+                <div
+                  className="absolute right-[2px] bottom-[18px] text-white bg-black/60 rounded-full p-[3px] cursor-pointer hover:bg-black/60 hover:scale-125 transform transition-all duration-50 z-10"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddMedia(e, file);
+                  }}
+                  title="Добавить"
+                >
+                  <Plus className="w-3 h-3" strokeWidth={3} />
+                </div>
               )}
             </div>
           </div>

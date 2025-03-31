@@ -8,7 +8,6 @@ import {
   FileGroup,
   getFileType,
   getSequentialFiles,
-  getSequentialGroups,
   groupFilesByDate,
   prepareFileGroups,
 } from "@/utils/mediaUtils"
@@ -39,7 +38,6 @@ export function MediaFileList(
     videoRefs,
   })
 
-  const groupedSequences = useMemo(() => getSequentialGroups(media), [media])
   const sequentialFiles = useMemo(() => getSequentialFiles(media), [media])
   const sortedDates = useMemo(() => groupFilesByDate(media), [media])
 
@@ -192,7 +190,7 @@ export function MediaFileList(
 
   return (
     <div className="relative h-[calc(50vh-29px)]">
-      <div className="h-full overflow-y-auto">
+      <div className="h-full overflow-y-auto pl-[3px]">
         {viewMode === "list"
           ? (
             <table className="w-full border-collapse">
@@ -312,6 +310,7 @@ export function MediaFileList(
                         handlePlayPause={handlePlayPause}
                         handleMouseLeave={handleMouseLeave}
                         setPlayingFileId={setPlayingFileId}
+                        onAddMedia={handleAddMedia}
                       />
                     </div>
                     <div className="flex-1 min-w-0 overflow-hidden">
@@ -323,16 +322,13 @@ export function MediaFileList(
             </div>
           )}
       </div>
-      <div className="absolute bottom-[-4px] left-[-4px] right-[-4px] bg-white dark:bg-[#1b1a1f] m-0 p-0">
+      <div className="absolute bottom-0 left-0 right-0 m-0 p-0 h-[20px]">
         <StatusBar
           media={sortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}
           onAddAllAudioFiles={handleAddAllAudioFiles}
-          onAddSequentialFiles={handleAddSequentialFiles}
           onAddDateFiles={handleAddDateFiles}
           onAddAllFiles={handleAddAllFiles}
-          onUpdateList={handleUpdateList}
-          groupedSequences={groupedSequences}
           sortedDates={sortedDates}
         />
       </div>
