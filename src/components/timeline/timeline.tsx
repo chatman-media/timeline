@@ -6,7 +6,7 @@ import { MediaFile, Track } from "@/types/videos"
 import { TimelineSection } from "./timeline/timeline-section"
 
 export function Timeline() {
-  const { tracks, activeVideo, setCurrentTime } = useVideoStore()
+  const { tracks, activeVideo, setCurrentTime: updateTime } = useVideoStore()
   const [activeDate, setActiveDate] = useState<string | null>(null)
 
   const sections = useMemo(() => {
@@ -75,11 +75,11 @@ export function Timeline() {
         if (firstTrack.videos.length > 0) {
           const firstVideo = firstTrack.videos[0]
           const videoStartTime = firstVideo.startTime || 0
-          setCurrentTime(videoStartTime)
+          updateTime(videoStartTime)
         }
       }
     }
-  }, [sections, setCurrentTime])
+  }, [sections])
 
   // Update active section when active video changes
   React.useEffect(() => {
