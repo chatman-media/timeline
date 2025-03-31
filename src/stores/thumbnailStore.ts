@@ -1,44 +1,54 @@
-import { create } from "zustand"
+import { createStore } from '@xstate/store';
 
 interface ThumbnailState {
   thumbnails: Record<string, string[]>
-  addThumbnails: (videoName: string, scale: number, count: number, urls: string[]) => void
-  getThumbnails: (videoName: string, scale: number, count: number) => string[] | null
-  hasThumbnails: (videoName: string, scale: number, count: number) => boolean
 }
 
 declare global {
   interface Window {
-    store: typeof useThumbnailStore
+    store: any
   }
 }
 
-const useThumbnailStore = create<ThumbnailState>((set, get) => ({
-  thumbnails: {},
+const initialContext: ThumbnailState = {
+  thumbnails: {}
+};
 
-  addThumbnails: (videoName: string, scale: number, count: number, urls: string[]) => {
-    const key = `${videoName}-${scale}-${count}`
-    set((state) => ({
-      thumbnails: {
-        ...state.thumbnails,
-        [key]: urls,
-      },
-    }))
-  },
+export const thumbnailStore = createStore({
+  context: initialContext,
+  on: {
+    addThumbnails: (context, event: { 
+      videoName: string, 
+      scale: number, 
+      count: number, 
+      urls: string[] 
+    }) => {
+      const key = `${event.videoName}-${event.scale}-${event.count}`;
+      return {
+        ...context,
+        thumbnails: {
+          ...context.thumbnails,
+          [key]: event.urls,
+        }
+      };
+    }
+  }
+});
 
-  getThumbnails: (videoName: string, scale: number, count: number) => {
-    const key = `${videoName}-${scale}-${count}`
-    return get().thumbnails[key] || null
-  },
-
-  hasThumbnails: (videoName: string, scale: number, count: number) => {
-    const key = `${videoName}-${scale}-${count}`
-    return key in get().thumbnails
-  },
-}))
-
-if (typeof window !== "undefined") {
-  globalThis.store = useThumbnailStore
+export function getThumbnails(videoName: string, scale: number, count: number): string[] | null {
+  const key = `${videoName}-${scale}-${count}`;
+  const state = thumbnailStore.getSnapshot();
+  return state.context.thumbnails[key] || null;
 }
 
-export default useThumbnailStore
+export function hasThumbnails(videoName: string, scale: number, count: number): boolean {
+  const key = `${videoName}-${scale}-${count}`;
+  const state = thumbnailStore.getSnapshot();
+  return key in state.context.thumbnails;
+}
+
+if (typeof window !== "undefined") {
+  globalThis.store = thumbnailStore;
+}
+
+export default thumbnailStore;

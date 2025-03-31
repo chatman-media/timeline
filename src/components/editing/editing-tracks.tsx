@@ -1,9 +1,9 @@
 import { formatDuration, formatFileSize } from "@/lib/utils"
-import { useVideoStore } from "@/stores/videoStore"
+import { useVideoStore } from "@/hooks/useVideoStore"
 import { Track } from "@/types/videos"
 
 export function EditingTracks() {
-  const tracks = useVideoStore((state) => state.tracks)
+  const { tracks } = useVideoStore()
 
   const getTrackPrefix = (track: Track) => {
     // Check if track contains any video files
@@ -30,18 +30,18 @@ export function EditingTracks() {
             </tr>
           </thead>
           <tbody className="divide-y">
-            {tracks?.map((track) => {
+            {tracks?.map((track: Track) => {
               const firstFile = track.videos[0]
               const videoStream = firstFile?.probeData?.streams?.find(
-                (s) => s.codec_type === "video",
+                (s: any) => s.codec_type === "video",
               )
               const audioStream = firstFile?.probeData?.streams?.find(
-                (s) => s.codec_type === "audio",
+                (s: any) => s.codec_type === "audio",
               )
 
               // Calculate total size
               const totalSize = track.videos.reduce(
-                (sum, video) => sum + (video.probeData?.format?.size || 0),
+                (sum: number, video: any) => sum + (video.probeData?.format?.size || 0),
                 0,
               )
 

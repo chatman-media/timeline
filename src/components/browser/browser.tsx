@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { EffectsList } from "./effects-list"
 import { MediaFileList } from "./media-file-list"
 import { MusicFileList } from "./music-file-list"
+import { SubtitlesList } from "./subtitles-list"
 import { TransitionsList } from "./transition-list"
 
 export const TAB_TRIGGER_STYLES =
@@ -23,6 +24,9 @@ export function Browser() {
         <TabsTrigger value="effects" className={TAB_TRIGGER_STYLES}>
           Эффекты
         </TabsTrigger>
+        <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
+          Титры
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="media">
         <MediaFileList />
@@ -35,6 +39,9 @@ export function Browser() {
       </TabsContent>
       <TabsContent value="effects">
         <EffectsList />
+      </TabsContent>
+      <TabsContent value="subtitles">
+        <SubtitlesList />
       </TabsContent>
     </Tabs>
   )

@@ -1,249 +1,246 @@
-import { create } from "zustand"
-
+import { createStore } from '@xstate/store';
 import { generateVideoId } from "@/lib/utils"
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { createTracksFromFiles } from "@/utils/mediaUtils"
 
-interface VideoState {
-  videos: MediaFile[]
-  media: MediaFile[]
-  isLoading: boolean
-  hasMedia: boolean
-  isPlaying: boolean
-  currentTime: number
-  timeRanges: Record<string, TimeRange[]>
-  tracks: Track[]
-  videoRefs: { [key: string]: HTMLVideoElement }
-  hasFetched: boolean
-  isChangingCamera: boolean
-  activeVideo?: MediaFile
-  activeTrackId: string | null
-  // deno-lint-ignore no-explicit-any
-  metadataCache: Record<string, any>
-  thumbnailCache: Record<string, string>
-  currentLayout: ScreenLayout
-
-  // Actions
-  setVideos: (videos: MediaFile[]) => void
-  setHasFetched: (hasFetched: boolean) => void
-  setMedia: (media: MediaFile[]) => void
-  setActiveTrack: (trackId: string) => void
-  setActiveVideo: (videoId: string) => void
-  setIsPlaying: (isPlaying: boolean) => void
-  setCurrentTime: (time: number) => void
-  fetchVideos: () => Promise<void>
-  setTracks: (tracks: Track[]) => void
-  setScreenLayout: (layout: ScreenLayout) => void
-
-  timeToPercent: (time: number) => number
-  percentToTime: (percent: number) => number
-  addToMetadataCache: (key: string, data: string) => void
-  addToThumbnailCache: (key: string, data: string) => void
-  addNewTracks: (media: MediaFile[]) => void
-}
-
-export const useVideoStore = create<VideoState>((set, get) => ({
-  videos: [],
-  media: [],
+// Начальное состояние
+const initialContext = {
+  videos: [] as MediaFile[],
+  media: [] as MediaFile[],
   isLoading: true,
   hasMedia: false,
   isPlaying: false,
   currentTime: 0,
-  timeRanges: {},
-  tracks: [],
-  videoRefs: {},
-  activeVideo: undefined,
+  timeRanges: {} as Record<string, TimeRange[]>,
+  tracks: [] as Track[],
+  videoRefs: {} as { [key: string]: HTMLVideoElement },
+  activeVideo: undefined as MediaFile | undefined,
   hasFetched: false,
-  activeTrackId: null,
+  activeTrackId: null as string | null,
   isChangingCamera: false,
-  metadataCache: {},
-  thumbnailCache: {},
-  currentLayout: { type: "1x1", activeTracks: ["T1"] },
-  setScreenLayout: (layout) => set({ currentLayout: layout }),
-  setVideos: (videos) => {
-    set({
-      videos,
+  metadataCache: {} as Record<string, any>,
+  thumbnailCache: {} as Record<string, string>,
+  currentLayout: { type: "1x1", activeTracks: ["T1"] } as ScreenLayout
+};
+
+export const videoStore = createStore({
+  context: initialContext,
+  on: {
+    setScreenLayout: (context, event: { layout: ScreenLayout }) => ({
+      ...context,
+      currentLayout: event.layout
+    }),
+    
+    setVideos: (context, event: { videos: MediaFile[] }) => ({
+      ...context,
+      videos: event.videos,
       activeTrackId: "T1",
-      activeVideo: videos.find((v) => v.id === "V1") || videos[0],
-      hasMedia: videos.length > 0,
-      isChangingCamera: false,
-    })
-  },
-  setMedia: (media) => {
-    set({ media })
-  },
-
-  fetchVideos: async () => {
-    const { hasFetched } = get()
-    if (hasFetched) return
-
-    set({ isLoading: true, hasFetched: true })
-
-    try {
-      const response = await fetch("/api/media")
-      const data = await response.json()
-
-      if (!data.media || !Array.isArray(data.media) || data.media.length === 0) {
-        console.error("No media received from API")
-        set({ isLoading: false })
-        return
-      }
-      set({ media: data.media })
-
-      const validMedia = data.media
-        .map((file: MediaFile) => ({
-          ...file,
-          id: file.id || generateVideoId(data.media),
-        }))
-        .filter((file: MediaFile) => file.duration)
-        .sort((a: MediaFile, b: MediaFile) => (a.startTime || 0) - (b.startTime || 0))
-
-      if (validMedia.length === 0) {
-        set({ videos: [], isLoading: false })
-        return
-      }
-
-      set({
-        videos: validMedia,
-        hasMedia: true,
-      })
-    } catch (error) {
-      console.error("Error fetching videos:", error)
-    } finally {
-      set({ isLoading: false })
-    }
-  },
-
-  setHasFetched: (hasFetched: boolean) => {
-    set({ hasFetched })
-  },
-
-  setActiveVideo: (videoId) => {
-    const { videos } = get()
-    const targetVideo = videos.find((v) => v.id === videoId)
-    if (targetVideo) {
-      set({
-        activeVideo: targetVideo,
-      })
-    }
-  },
-  setActiveTrack: (trackId) => {
-    const { currentTime, tracks } = get()
-
-    set({ isChangingCamera: true })
-
-    try {
-      const targetTrack = tracks.find((track) => track.id === trackId)
-
-      if (!targetTrack) {
-        console.warn(`Track ${trackId} not found`)
-        return
-      }
-
-      // Find available video with better error handling
-      const availableVideo = targetTrack.videos.find((video) => {
-        if (!video.probeData?.format.tags?.creation_time) {
-          console.warn(`Video ${video.id} missing creation time`)
-          return false
+      activeVideo: event.videos.find((v) => v.id === "V1") || event.videos[0],
+      hasMedia: event.videos.length > 0,
+      isChangingCamera: false
+    }),
+    
+    setMedia: (context, event: { media: MediaFile[] }) => ({
+      ...context,
+      media: event.media
+    }),
+    
+    fetchVideos: (context, _event, enqueue) => {
+      if (context.hasFetched) return context;
+      
+      enqueue.effect(async () => {
+        try {
+          const response = await fetch("/api/media");
+          const data = await response.json();
+          
+          if (!data.media || !Array.isArray(data.media) || data.media.length === 0) {
+            console.error("No media received from API");
+            videoStore.send({ 
+              type: 'setLoadingState', 
+              isLoading: false, 
+              hasFetched: true 
+            });
+            return;
+          }
+          
+          const validMedia = data.media
+            .map((file: MediaFile) => ({
+              ...file,
+              id: file.id || generateVideoId(data.media),
+            }))
+            .filter((file: MediaFile) => file.duration)
+            .sort((a: MediaFile, b: MediaFile) => (a.startTime || 0) - (b.startTime || 0));
+          
+          if (validMedia.length === 0) {
+            videoStore.send({ 
+              type: 'setInitialState', 
+              videos: [], 
+              hasMedia: false,
+              isLoading: false, 
+              hasFetched: true,
+              media: data.media 
+            });
+            return;
+          }
+          
+          videoStore.send({
+            type: 'setInitialState',
+            videos: validMedia,
+            hasMedia: true,
+            isLoading: false,
+            hasFetched: true,
+            media: data.media
+          });
+        } catch (error) {
+          console.error("Error fetching videos:", error);
+          videoStore.send({ 
+            type: 'setLoadingState', 
+            isLoading: false, 
+            hasFetched: true 
+          });
         }
-
-        const startTime = new Date(video.probeData.format.tags.creation_time).getTime() / 1000
-        const endTime = startTime + (video.probeData.format.duration || 0)
-        const tolerance = 0.3
-        return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
-      })
-
-      if (availableVideo) {
-        // Preload nearby videos before switching
-        const preloadNearbyVideos = () => {
-          const currentIndex = targetTrack.videos.indexOf(availableVideo)
-          const nearbyVideos = [
-            targetTrack.videos[currentIndex - 1],
-            targetTrack.videos[currentIndex + 1],
-          ].filter(Boolean)
-
-          nearbyVideos.forEach((video) => {
-            if (!video.path) {
-              console.warn(`Missing path for video ${video.id}`)
-              return
-            }
-            const preloadVideo = document.createElement("video")
-            preloadVideo.src = video.path
-            preloadVideo.preload = "auto"
-            preloadVideo.load()
-          })
-        }
-
-        set({
-          activeTrackId: trackId,
-          activeVideo: availableVideo,
-        })
-
-        // Preload videos in background
-        requestIdleCallback(() => preloadNearbyVideos())
-      } else {
-        console.warn(`No available video found for time ${currentTime} in track ${trackId}`)
+      });
+      
+      return { 
+        ...context,
+        isLoading: true,
+        hasFetched: true
+      };
+    },
+    
+    setInitialState: (context, event: { 
+      videos: MediaFile[], 
+      hasMedia: boolean, 
+      isLoading: boolean,
+      hasFetched: boolean,
+      media: MediaFile[]
+    }) => ({
+      ...context,
+      videos: event.videos,
+      hasMedia: event.hasMedia,
+      isLoading: event.isLoading,
+      hasFetched: event.hasFetched,
+      media: event.media
+    }),
+    
+    setLoadingState: (context, event: { isLoading: boolean, hasFetched: boolean }) => ({
+      ...context,
+      isLoading: event.isLoading,
+      hasFetched: event.hasFetched
+    }),
+    
+    setHasFetched: (context, event: { hasFetched: boolean }) => ({
+      ...context,
+      hasFetched: event.hasFetched
+    }),
+    
+    setActiveVideo: (context, event: { videoId: string }) => {
+      const targetVideo = context.videos.find((v) => v.id === event.videoId);
+      if (targetVideo) {
+        return {
+          ...context,
+          activeVideo: targetVideo
+        };
       }
-    } catch (error) {
-      console.error("Error while changing camera:", error)
-    } finally {
-      set({ isChangingCamera: false })
-    }
-  },
-  setIsPlaying: (isPlaying) => set({ isPlaying }),
-  setCurrentTime: (time) => {
-    // const { activeVideo, videoRefs } = get()
-    // if (activeVideo && videoRefs[activeVideo.id]) {
-    //   const videoElement = videoRefs[activeVideo.id]
-    //   const videoStartTime = activeVideo.startTime || 0
-    //   videoElement.currentTime = time - videoStartTime // Adjust for video start time
-    // }
-    set({ currentTime: time })
-  },
-
-  setTracks: (tracks: Track[]) => set({ tracks }),
-
-  addToMetadataCache: (key, data) => {
-    set((state) => ({
+      return context;
+    },
+    
+    setActiveTrack: (context, event: { trackId: string }) => {
+      const { currentTime, tracks } = context;
+      
+      try {
+        const targetTrack = tracks.find((track) => track.id === event.trackId);
+        
+        if (!targetTrack) {
+          console.warn(`Track ${event.trackId} not found`);
+          return context;
+        }
+        
+        // Find available video with better error handling
+        const availableVideo = targetTrack.videos.find((video) => {
+          if (!video.probeData?.format.tags?.creation_time) {
+            console.warn(`Video ${video.id} missing creation time`);
+            return false;
+          }
+          
+          const startTime = new Date(video.probeData.format.tags.creation_time).getTime() / 1000;
+          const endTime = startTime + (video.probeData.format.duration || 0);
+          const tolerance = 0.3;
+          return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance);
+        });
+        
+        if (availableVideo) {
+          return {
+            ...context,
+            activeTrackId: event.trackId,
+            activeVideo: availableVideo,
+            isChangingCamera: false
+          };
+        } else {
+          console.warn(`No available video found for time ${currentTime} in track ${event.trackId}`);
+          return { ...context, isChangingCamera: false };
+        }
+      } catch (error) {
+        console.error("Error while changing camera:", error);
+        return { ...context, isChangingCamera: false };
+      }
+    },
+    
+    setIsPlaying: (context, event: { isPlaying: boolean }) => ({
+      ...context,
+      isPlaying: event.isPlaying
+    }),
+    
+    setCurrentTime: (context, event: { time: number }) => ({
+      ...context,
+      currentTime: event.time
+    }),
+    
+    setTracks: (context, event: { tracks: Track[] }) => ({
+      ...context,
+      tracks: event.tracks
+    }),
+    
+    addToMetadataCache: (context, event: { key: string, data: any }) => ({
+      ...context,
       metadataCache: {
-        ...state.metadataCache,
-        [key]: data,
-      },
-    }))
-  },
-
-  addToThumbnailCache: (key, data) => {
-    set((state) => ({
+        ...context.metadataCache,
+        [event.key]: event.data
+      }
+    }),
+    
+    addToThumbnailCache: (context, event: { key: string, data: string }) => ({
+      ...context,
       thumbnailCache: {
-        ...state.thumbnailCache,
-        [key]: data,
-      },
-    }))
-  },
+        ...context.thumbnailCache,
+        [event.key]: event.data
+      }
+    }),
+    
+    addNewTracks: (context, event: { media: MediaFile[] }) => {
+      const { tracks } = context;
+      const newTracks = createTracksFromFiles(event.media, tracks.length);
+      const uniqueNewTracks = newTracks.filter(
+        (t) => !(new Set(tracks.map((t) => t.id))).has(t.id)
+      );
+      
+      return {
+        ...context,
+        tracks: [...tracks, ...uniqueNewTracks]
+      };
+    }
+  }
+});
 
-  timeToPercent: (time: number) => {
-    const { tracks } = get()
-    const track = tracks.find((t) => t.id === get().activeTrackId)
-    return (time / (track?.combinedDuration || 0)) * 100
-  },
+// Хелперы для работы с видеохранилищем
+export function timeToPercent(time: number) {
+  const { context } = videoStore.getSnapshot();
+  const track = context.tracks.find((t) => t.id === context.activeTrackId);
+  return (time / (track?.combinedDuration || 0)) * 100;
+}
 
-  percentToTime: (percent: number) => {
-    const { tracks } = get()
-    const track = tracks.find((t) => t.id === get().activeTrackId)
-    return (percent / 100) * (track?.combinedDuration || 0)
-  },
-
-  addNewTracks: (media: MediaFile[]) => {
-    const { tracks } = get()
-    const newTracks = createTracksFromFiles(media, tracks.length)
-    const uniqueNewTracks = newTracks.filter((t) => !(new Set(tracks.map((t) => t.id))).has(t.id))
-
-    set((state) => ({
-      tracks: [...state.tracks, ...uniqueNewTracks],
-    }))
-  },
-
-  play: () => {
-    set({ isPlaying: !get().isPlaying })
-  },
-}))
+export function percentToTime(percent: number) {
+  const { context } = videoStore.getSnapshot();
+  const track = context.tracks.find((t) => t.id === context.activeTrackId);
+  return (percent / 100) * (track?.combinedDuration || 0);
+}

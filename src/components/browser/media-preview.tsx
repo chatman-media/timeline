@@ -117,6 +117,7 @@ export function MediaPreview({
                 const dimensions = calculateRealDimensions(stream)
                 return `${60 * (dimensions.width / dimensions.height)}px`
               })(),
+              maxWidth: "100px",
             }}
             onMouseMove={(e) => handleMouseMove(e, fileId, duration, index)}
             onMouseLeave={() => handleMouseLeave(`${fileId}-${index}`)}

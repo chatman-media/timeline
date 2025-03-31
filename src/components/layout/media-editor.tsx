@@ -1,5 +1,3 @@
-import { useState } from "react"
-
 import { Editing } from "../editing/editing"
 import { Browser } from "../browser/browser"
 import { ActiveVideo } from "../player/media-player"

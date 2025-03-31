@@ -79,6 +79,17 @@ export const ActiveVideo = memo(() => {
     }
   }, [activeVideo, isPlaying, isChangingCamera])
 
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key.toLowerCase() === 'p' && activeVideo) {
+        setIsPlaying(!isPlaying)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyPress)
+    return () => window.removeEventListener('keydown', handleKeyPress)
+  }, [isPlaying, activeVideo, setIsPlaying])
+
   return (
     <div className="relative w-full h-[calc(50vh-36px)] bg-muted/50">
       {activeVideo && (

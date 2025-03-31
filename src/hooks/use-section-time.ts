@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react"
-
 import { useMedia } from "./use-media"
 
 interface UseSectionTimeProps {
@@ -18,7 +17,7 @@ export function useSectionTime(
   const { activeVideo, videoRefs, setCurrentTime, currentTime, setActiveVideo, setActiveTrack } =
     useMedia()
   const lastUpdateTime = useRef(0)
-  const animationFrameId = useRef<number>()
+  const animationFrameId = useRef<number | undefined>(undefined)
 
   useEffect(() => {
     const updatePosition = () => {
@@ -70,8 +69,8 @@ export function useSectionTime(
       const clampedTime = Math.max(startTime, Math.min(endTime, newTime))
       setPosition(percentage)
 
-      if (activeVideo && videoRefs.current[activeVideo.id]) {
-        const videoElement = videoRefs.current[activeVideo.id]
+      if (activeVideo && videoRefs && videoRefs[activeVideo.id]) {
+        const videoElement = videoRefs[activeVideo.id]
         const videoStartTime = activeVideo.startTime || 0
         videoElement.currentTime = clampedTime - videoStartTime
       }

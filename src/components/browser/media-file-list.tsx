@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
 import { useVideoPlayer } from "@/hooks/use-video-player"
@@ -12,7 +12,7 @@ import { FileInfo, MediaPreview } from "."
 export function MediaFileList(
   { viewMode = "thumbnails" }: { viewMode?: "list" | "grid" | "thumbnails" },
 ) {
-  const { media, isLoading, addNewTracks } = useMedia()
+  const { media, isLoading, addNewTracks, fetchVideos } = useMedia()
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
@@ -20,6 +20,10 @@ export function MediaFileList(
     {},
   )
   const [addedFiles, setAddedFiles] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    fetchVideos()
+  }, [fetchVideos])
 
   const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
     videoRefs,
@@ -225,14 +229,15 @@ export function MediaFileList(
                 return (
                   <div
                     key={fileId}
-                    className={`flex items-center gap-3 p-0 pr-2 rounded-md group
+                    className={`flex items-center gap-3 p-0 pr-2 rounded-md group w-full overflow-hidden
                     ${
                       isAdded
                         ? "opacity-50 pointer-events-none"
                         : "hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}
+                    style={{ maxWidth: "100%" }}
                   >
-                    <div className="relative flex gap-1">
+                    <div className="relative flex-shrink-0 flex gap-1">
                       <MediaPreview
                         file={file}
                         fileId={fileId}
@@ -248,7 +253,9 @@ export function MediaFileList(
                         setPlayingFileId={setPlayingFileId}
                       />
                     </div>
-                    <FileInfo file={file} onAddMedia={handleAddMedia} />
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <FileInfo file={file} onAddMedia={handleAddMedia} />
+                    </div>
                   </div>
                 )
               })}

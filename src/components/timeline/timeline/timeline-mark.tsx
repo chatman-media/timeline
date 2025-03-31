@@ -32,7 +32,7 @@ export function TimelineMark({
   return (
     <>
       {isFirstMark && (
-        <span className="absolute top-[-20px] left-1 text-[12px] dark:text-gray-100 text-gray-900 opacity-80">
+        <span className="absolute top-[-20px] text-[12px] dark:text-gray-100 text-gray-900 opacity-80 bg-black/10 px-1 rounded left-0 z-10">
           {formatDate(timestamp)}
         </span>
       )}
@@ -44,7 +44,7 @@ export function TimelineMark({
         <div className={`w-[1px] bg-[#4a4a4a] ${getMarkHeight()}`} />
         {showValue && (
           <span
-            className={`w-10 text-[11px] text-[#808080] ml-[90px] absolute top-7 mt-[-16px] whitespace-nowrap w-20 dark:text-gray-100 text-gray-900 opacity-50`}
+            className={`text-[11px] text-[#808080] absolute top-7 mt-[-16px] whitespace-nowrap dark:text-gray-100 text-gray-900 opacity-70 transform translate-x-[-50%]`}
           >
             {formatTimeWithMilliseconds(timestamp, false, true, false)}
           </span>
