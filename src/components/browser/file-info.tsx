@@ -32,7 +32,7 @@ export function FileInfo({ file, onAddMedia, isAdded }: FileInfoProps) {
           </span>
 
           <div className="flex-1 min-w-0 ml-2 overflow-hidden">
-            <p className="text-xs truncate">
+            <p className="text-xs truncate flex justify-between items-center">
               {file.isVideo && videoStream && (
                 <span>
                   <span className="text-gray-500 dark:text-gray-400">
@@ -46,7 +46,7 @@ export function FileInfo({ file, onAddMedia, isAdded }: FileInfoProps) {
                 </span>
               )}
               {file.probeData?.format.duration && (
-                <span className="text-gray-500 dark:text-gray-400 ml-2">
+                <span className="text-gray-500 dark:text-gray-400">
                   {formatDuration(file.probeData.format.duration)}
                 </span>
               )}
