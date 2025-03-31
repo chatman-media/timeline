@@ -14,24 +14,6 @@ export function SubtitlesList() {
       text: "Подзаголовок или описание",
       style: "heading-2"
     },
-    {
-      id: "subtitle-3",
-      title: "Нижний титр",
-      text: "Имя говорящего или локация",
-      style: "lower-third"
-    },
-    {
-      id: "subtitle-4",
-      title: "Субтитры",
-      text: "Текст речи или перевод",
-      style: "subtitle"
-    },
-    {
-      id: "subtitle-5",
-      title: "Финальные титры",
-      text: "Список участников и благодарности",
-      style: "credits"
-    }
   ])
   
   return (
