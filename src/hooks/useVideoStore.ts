@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useSelector } from '@xstate/store/react';
 import { videoStore } from '@/stores/videoStore';
 import type { MediaFile, ScreenLayout, Track } from '@/types/videos';
@@ -60,6 +60,10 @@ export function useVideoStore() {
   const setScreenLayout = useCallback((layout: ScreenLayout) => {
     send({ type: 'setScreenLayout', layout });
   }, [send]);
+
+  const setHasFetched = useCallback((hasFetched: boolean) => {
+    send({ type: 'setHasFetched', hasFetched });
+  }, [send]);
   
   const addToMetadataCache = useCallback((key: string, data: any) => {
     send({ type: 'addToMetadataCache', key, data });
@@ -112,6 +116,7 @@ export function useVideoStore() {
     addToMetadataCache,
     addToThumbnailCache,
     addNewTracks,
+    setHasFetched,
     
     // Вспомогательные функции
     timeToPercent,

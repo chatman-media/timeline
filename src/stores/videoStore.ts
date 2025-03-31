@@ -44,6 +44,11 @@ export const videoStore = createStore({
       ...context,
       media: event.media
     }),
+
+    setHasFetched: (context, event: { hasFetched: boolean }) => ({
+      ...context,
+      hasFetched: event.hasFetched
+    }),
     
     fetchVideos: (context, _event, enqueue) => {
       if (context.hasFetched) return context;

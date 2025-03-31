@@ -24,7 +24,8 @@ export function useMedia() {
     isChangingCamera,
     hasFetched,
     metadataCache,
-    thumbnailCache
+    thumbnailCache,
+    setHasFetched
   } = useVideoStore();
 
   const play = () => {
@@ -55,6 +56,7 @@ export function useMedia() {
     isChangingCamera,
     hasFetched,
     metadataCache,
-    thumbnailCache
+    thumbnailCache,
+    setHasFetched
   };
 } 
