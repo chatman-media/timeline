@@ -17,7 +17,8 @@ export function SubtitlesList() {
   ])
   
   return (
-    <div className="h-full overflow-y-auto bg-gray-50 dark:bg-[#1b1a1f] p-4">
+    <div className="h-[calc(50vh-28px)] overflow-y-auto">
+      <div className="space-y-1 p-4">
       <h3 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">Доступные титры</h3>
       
       <div className="grid gap-4">
@@ -43,6 +44,7 @@ export function SubtitlesList() {
           Вы можете редактировать текст и стиль титров после добавления.
         </p>
       </div>
+      </div>
     </div>
-  )
+    )
 } 
