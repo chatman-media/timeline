@@ -30,8 +30,9 @@ export default async function handler(
       .map((file) => ({ dir: musicDir, file, type: "music" }))
       .filter(({ file }) => {
         const ext = path.extname(file).toLowerCase()
-        return [".mp3", ".wav", ".aac", ".ogg", ".flac", ".aiff"].includes(ext) &&
-          !file.startsWith(".")
+        return (
+          [".mp3", ".wav", ".aac", ".ogg", ".flac", ".aiff"].includes(ext) && !file.startsWith(".")
+        )
       })
 
     const totalFiles = filteredFiles.length
@@ -41,7 +42,7 @@ export default async function handler(
     const mediaPromises = paginatedFiles.map(async ({ dir, file, type }) => {
       try {
         const filePath = path.join(dir, file)
-        const probeData = metadataCache.get(filePath) || await ffprobeAsync(filePath)
+        const probeData = metadataCache.get(filePath) || (await ffprobeAsync(filePath))
         metadataCache.set(filePath, probeData as FfprobeData)
 
         return {
@@ -56,9 +57,7 @@ export default async function handler(
       }
     })
 
-    const media = (await Promise.all(mediaPromises)).filter(
-      (item) => item !== null,
-    ) as MediaFile[]
+    const media = (await Promise.all(mediaPromises)).filter((item) => item !== null) as MediaFile[]
 
     res.status(200).json({ media, total: totalFiles })
   } catch (error) {

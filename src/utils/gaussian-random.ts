@@ -10,7 +10,8 @@
  * const random = generateGaussianRandom(10, 2)
  */
 export function generateGaussianRandom(mean: number, standardDeviation: number): number {
-  let u = 0, v = 0
+  let u = 0,
+    v = 0
   while (u === 0) u = Math.random() // Конвертируем [0,1) в (0,1)
   while (v === 0) v = Math.random()
 

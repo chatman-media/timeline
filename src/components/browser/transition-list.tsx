@@ -9,9 +9,12 @@ interface TransitionPreviewProps {
   onClick: () => void
 }
 
-const TransitionPreview = (
-  { sourceVideo, targetVideo, transitionType, onClick }: TransitionPreviewProps,
-) => {
+const TransitionPreview = ({
+  sourceVideo,
+  targetVideo,
+  transitionType,
+  onClick,
+}: TransitionPreviewProps) => {
   const [isHovering, setIsHovering] = useState(false)
   const sourceVideoRef = useRef<HTMLVideoElement>(null)
   const targetVideoRef = useRef<HTMLVideoElement>(null)

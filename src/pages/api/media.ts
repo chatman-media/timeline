@@ -39,8 +39,9 @@ export default async function handler(
 
     const mediaFiles = videoFiles
       .map((file) => ({ dir: mediaDir, file }))
-      .filter(({ file }) =>
-        !file.startsWith(".") && videoExtensions.includes(path.extname(file).toLowerCase())
+      .filter(
+        ({ file }) =>
+          !file.startsWith(".") && videoExtensions.includes(path.extname(file).toLowerCase()),
       )
 
     const thumbnailsDir = path.join(process.cwd(), "public", "thumbnails")
@@ -50,7 +51,7 @@ export default async function handler(
       try {
         const filePath = path.join(dir, file)
         const thumbnailName = `${path.parse(file).name}.jpg`
-        const probeData = await ffprobeAsync(filePath) as FfprobeData
+        const probeData = (await ffprobeAsync(filePath)) as FfprobeData
         const isVideo = probeData.streams.some((stream) => stream.codec_type === "video")
 
         const startTime = getMediaCreationTime(probeData)
@@ -73,9 +74,7 @@ export default async function handler(
       }
     })
 
-    const media = (await Promise.all(mediaPromises)).filter(
-      (item) => item !== null,
-    )
+    const media = (await Promise.all(mediaPromises)).filter((item) => item !== null)
 
     res.status(200).json({ media })
   } catch (error) {

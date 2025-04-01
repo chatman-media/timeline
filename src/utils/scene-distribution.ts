@@ -29,12 +29,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   let lastCamera = params.mainCamera
 
   // Используем tracks для группировки видео
-  const videosByCamera = new Map(
-    params.tracks.map((track) => [
-      track.index,
-      track.videos,
-    ]),
-  )
+  const videosByCamera = new Map(params.tracks.map((track) => [track.index, track.videos]))
 
   // Вспомогательная функция для поиска видео для сегмента
   const findVideoForSegment = (
@@ -85,10 +80,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   }
 
   // Генерируем базовые сегменты
-  let timeSegments = generateGaussianSceneDurations(
-    availableDuration,
-    params.averageSceneDuration,
-  )
+  let timeSegments = generateGaussianSceneDurations(availableDuration, params.averageSceneDuration)
 
   // Масштабируем длительности
   const currentTotalDuration = timeSegments.reduce((sum, segment) => sum + segment.duration, 0)
@@ -116,16 +108,13 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
   // Распределение камер внутри сегментов
   for (const segment of timeSegments) {
     const numChanges = Math.floor(
-      segment.duration / params.averageSceneDuration * params.cameraChangeFrequency,
+      (segment.duration / params.averageSceneDuration) * params.cameraChangeFrequency,
     )
     const subSegmentDuration = segment.duration / (numChanges + 1)
 
     for (let i = 0; i <= numChanges; i++) {
-      const subSegmentStart = segment.startTime + (i * subSegmentDuration)
-      const subSegmentEnd = Math.min(
-        subSegmentStart + subSegmentDuration,
-        effectiveTimeRange.max,
-      )
+      const subSegmentStart = segment.startTime + i * subSegmentDuration
+      const subSegmentEnd = Math.min(subSegmentStart + subSegmentDuration, effectiveTimeRange.max)
 
       if (subSegmentStart >= effectiveTimeRange.max) break
 
@@ -136,7 +125,7 @@ export function distributeScenes(params: SceneDistributionParams): SceneSegment[
             const videoStart = video.startTime || 0
             const videoEnd = videoStart + (video.duration || 0)
             return videoStart <= subSegmentStart && videoEnd >= subSegmentEnd
-          })
+          }),
         )
         .map(([camera]) => camera)
 

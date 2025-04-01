@@ -15,15 +15,7 @@ import { formatDuration } from "@/lib/utils"
 import { distributeScenes } from "@/utils/scene-distribution"
 
 export function CompilationSettings() {
-  const {
-    videos,
-    hasMedia,
-    maxDuration,
-    tracks,
-    updateTime,
-    play,
-    setScenes,
-  } = useMedia()
+  const { videos, hasMedia, maxDuration, tracks, updateTime, play, setScenes } = useMedia()
   const { settings, updateSettings } = useCompilationSettings()
 
   const getCameraChangeLabel = (value: number): string => {
@@ -63,17 +55,19 @@ export function CompilationSettings() {
       timeRange: {
         start: Math.min(
           ...tracks.flatMap((track) =>
-            track.videos.map((v) =>
-              new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000
-            )
+            track.videos.map(
+              (v) => new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000,
+            ),
           ),
         ),
-        end: Math.max(...tracks.flatMap((track) =>
-          track.videos.map((v) => {
-            const start = new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000
-            return start + (v.probeData.format.duration || 0)
-          })
-        )),
+        end: Math.max(
+          ...tracks.flatMap((track) =>
+            track.videos.map((v) => {
+              const start = new Date(v.probeData.format.tags?.creation_time || 0).getTime() / 1000
+              return start + (v.probeData.format.duration || 0)
+            }),
+          ),
+        ),
       },
       tracks,
     })
@@ -108,9 +102,7 @@ export function CompilationSettings() {
       </div>
 
       <div className="flex items-center gap-4">
-        <span className="text-sm  min-w-54 text-gray-900 dark:text-gray-100">
-          Длительность:
-        </span>
+        <span className="text-sm  min-w-54 text-gray-900 dark:text-gray-100">Длительность:</span>
         <div className="flex items-center gap-4 flex-1">
           <Slider
             value={[settings.targetDuration]}
@@ -184,19 +176,10 @@ export function CompilationSettings() {
       </div>
 
       <div className="flex gap-4 mt-4">
-        <Button
-          disabled={!hasMedia}
-          onClick={handleAutoEdit}
-          className="flex-1"
-        >
+        <Button disabled={!hasMedia} onClick={handleAutoEdit} className="flex-1">
           Авто-монтаж
         </Button>
-        <Button
-          onClick={() => {}}
-          variant="default"
-          disabled={!hasMedia}
-          className="flex-1"
-        >
+        <Button onClick={() => {}} variant="default" disabled={!hasMedia} className="flex-1">
           Сохранить
         </Button>
       </div>

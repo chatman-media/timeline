@@ -25,9 +25,10 @@ export const formatDuration = (seconds: number, afterComa = 3): string => {
   }
   const ms = Math.floor((seconds % 1) * 1000)
 
-  return `${duration.format("HH:mm:ss")}:${
-    ms.toString().padStart(afterComa, "0").substring(0, afterComa)
-  }`
+  return `${duration.format("HH:mm:ss")}:${ms
+    .toString()
+    .padStart(afterComa, "0")
+    .substring(0, afterComa)}`
 }
 
 // Добавим вспомогательную функцию для форматирования разрешения
@@ -42,24 +43,9 @@ export const formatResolution = (width: number, height: number) => {
   if (pixels >= 2073600) {
     const k = pixels / (2000 * 1000)
     // Значения K только до 4K
-    const kValues = [
-      1.2,
-      1.4,
-      1.6,
-      1.8,
-      2.0,
-      2.2,
-      2.4,
-      2.7,
-      3.0,
-      3.2,
-      3.4,
-      3.6,
-      3.8,
-      4.0,
-    ]
+    const kValues = [1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0]
     const closestK = kValues.reduce((prev, curr) =>
-      Math.abs(curr - k) < Math.abs(prev - k) ? curr : prev
+      Math.abs(curr - k) < Math.abs(prev - k) ? curr : prev,
     )
     return `${closestK}K`
   }
@@ -122,7 +108,7 @@ export const formatTime = (seconds: number, showMilliseconds = false): string =>
     return `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
   return `${minutes}:${secs.toString().padStart(2, "0")}${
-    (ms > 0 && showMilliseconds) ? `:${ms.toString().padStart(3, "0")}` : ""
+    ms > 0 && showMilliseconds ? `:${ms.toString().padStart(3, "0")}` : ""
   }`
 }
 
@@ -154,7 +140,7 @@ export function isVideoAvailable(
 ): boolean {
   const startTime = video.startTime || 0
   const endTime = startTime + (video.duration || 0)
-  return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
+  return currentTime >= startTime - tolerance && currentTime <= endTime + tolerance
 }
 
 export function parseFileNameDateTime(fileName: string): Date | null {

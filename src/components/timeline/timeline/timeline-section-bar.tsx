@@ -28,10 +28,7 @@ export function TimelineSectionBar({
   if (position < 0) return null
 
   return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 pointer-events-none"
-    >
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none">
       <div
         className="absolute z-50 flex flex-col items-center pointer-events-auto cursor-ew-resize hover:opacity-90"
         style={{

@@ -5,16 +5,18 @@ import { TrackThumbnails } from "../track-thumbnails"
 
 describe("TrackThumbnails", () => {
   const mockTrack = {
-    allVideos: [{
-      id: "video1",
-      name: "test.mp4",
-      probeData: {
-        format: {
-          duration: 60,
-          tags: { creation_time: "2024-01-01T00:00:00Z" },
+    allVideos: [
+      {
+        id: "video1",
+        name: "test.mp4",
+        probeData: {
+          format: {
+            duration: 60,
+            tags: { creation_time: "2024-01-01T00:00:00Z" },
+          },
         },
       },
-    }],
+    ],
     cameraKey: "V1",
     index: 1,
   }
@@ -69,12 +71,7 @@ describe("TrackThumbnails", () => {
     // Имитируем движение временной линии без изменения масштаба
     act(() => {
       rerender(
-        <TrackThumbnails
-          track={mockTrack}
-          trackStartTime={10}
-          trackEndTime={70}
-          scale={1}
-        />,
+        <TrackThumbnails track={mockTrack} trackStartTime={10} trackEndTime={70} scale={1} />,
       )
       vi.advanceTimersByTime(300)
     })

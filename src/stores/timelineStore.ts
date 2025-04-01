@@ -44,7 +44,7 @@ export const useRootStore = create<TimelineState & VideoState>((set) => ({
   updateSlice: (data) => {
     set((state) => {
       const newSlices = state.slices.map((slice) =>
-        slice.id === data.id ? { ...slice, ...data } : slice
+        slice.id === data.id ? { ...slice, ...data } : slice,
       )
       localStorage.setItem("timelineSlices", JSON.stringify(newSlices))
       return { slices: newSlices }

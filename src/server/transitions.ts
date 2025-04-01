@@ -11,7 +11,7 @@ export async function generateTransition(
   const outputPath = `output_${Date.now()}.mp4`
 
   // Получаем информацию о видео через ffprobe
-  const videoInfo = await getVideoInfo(sourceVideo) as any
+  const videoInfo = (await getVideoInfo(sourceVideo)) as any
   const fps = videoInfo.streams[0].r_frame_rate ? eval(videoInfo.streams[0].r_frame_rate) : 30
 
   // Генерируем команду с актуальными параметрами
@@ -28,11 +28,7 @@ export async function generateTransition(
       .input(sourceVideo)
       .input(targetVideo)
       .complexFilter(command)
-      .outputOptions([
-        "-c:v libx264",
-        "-preset fast",
-        "-crf 22",
-      ])
+      .outputOptions(["-c:v libx264", "-preset fast", "-crf 22"])
       .output(outputPath)
       .on("end", () => resolve({ status: "success", outputPath }))
       .on("error", (err) => reject({ status: "error", error: err.message }))

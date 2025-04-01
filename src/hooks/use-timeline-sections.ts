@@ -7,12 +7,15 @@ export function useTimelineSections(tracks: Track[] | null) {
   return useMemo(() => {
     if (!tracks || tracks.length === 0) return []
 
-    const videosByDay = new Map<string, {
-      videos: MediaFile[]
-      tracks: Track[]
-      startTime: number
-      endTime: number
-    }>()
+    const videosByDay = new Map<
+      string,
+      {
+        videos: MediaFile[]
+        tracks: Track[]
+        startTime: number
+        endTime: number
+      }
+    >()
 
     tracks.forEach((track) => {
       track.videos.forEach((video) => {
@@ -40,19 +43,21 @@ export function useTimelineSections(tracks: Track[] | null) {
     })
 
     return Array.from(videosByDay.entries())
-      .map(([date, data]): TimelineSection => ({
-        date,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        duration: data.endTime - data.startTime,
-        tracks: data.tracks.map((track) => ({
-          ...track,
-          videos: track.videos.filter((video) => {
-            const videoStart = video.startTime || 0
-            return new Date(videoStart * 1000).toDateString() === date
-          }),
-        })),
-      }))
+      .map(
+        ([date, data]): TimelineSection => ({
+          date,
+          startTime: data.startTime,
+          endTime: data.endTime,
+          duration: data.endTime - data.startTime,
+          tracks: data.tracks.map((track) => ({
+            ...track,
+            videos: track.videos.filter((video) => {
+              const videoStart = video.startTime || 0
+              return new Date(videoStart * 1000).toDateString() === date
+            }),
+          })),
+        }),
+      )
       .sort((a, b) => a.startTime - b.startTime)
   }, [tracks])
 }

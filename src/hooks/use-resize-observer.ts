@@ -5,10 +5,7 @@ interface Size {
   height?: number
 }
 
-export function useResizeObserver<T extends HTMLElement>(): [
-  (element: T | null) => void,
-  Size,
-] {
+export function useResizeObserver<T extends HTMLElement>(): [(element: T | null) => void, Size] {
   const [ref, setRef] = useState<T | null>(null)
   const [size, setSize] = useState<Size>({
     width: undefined,

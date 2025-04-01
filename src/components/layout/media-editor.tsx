@@ -1,18 +1,19 @@
 import {
   ChevronDown,
   Cloud,
+  HelpCircle,
+  Import,
+  Keyboard,
   Layout,
   LayoutGrid,
   ListTodo,
+  Play,
   Save,
   Send,
+  Settings,
+  Share,
   Upload,
   User,
-  Settings,
-  Import,
-  Share,
-  HelpCircle,
-  Keyboard,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -24,17 +25,54 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
 import { Browser } from "../browser/browser"
 import { Editing } from "../editing/editing"
 import { ActiveVideo } from "../player/media-player"
 import { Timeline } from "../timeline"
 import { ThemeToggle } from "./theme-toggle"
+
+// Компонент для генерации случайных дорожек
+function TrackLines() {
+  const [tracks, setTracks] = useState<{ width: number; left: number }[]>([])
+
+  useEffect(() => {
+    // Генерируем случайные длины дорожек при создании компонента
+    const randomTracks = [
+      {
+        width: 0.8,
+        left: 0.1,
+      },
+      {
+        width: 0.5,
+        left: 0.2,
+      },
+      {
+        width: 0.8,
+        left: 0.15,
+      },
+    ]
+    setTracks(randomTracks)
+  }, [])
+
+  return (
+    <div className="flex flex-col items-start pt-[1px]">
+      {tracks.map((track, index) => (
+        <div
+          key={index}
+          className="h-[4px] bg-primary/70 rounded-sm mb-[1px]"
+          style={{
+            width: `${track.width * 100}%`,
+            marginLeft: `${track.left * 100}%`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
 
 // Функция для получения сохраненных размеров панелей
 function getSavedLayout(id: string): number[] | null {
@@ -59,7 +97,7 @@ function TopNavBar() {
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       setIsEditing(false)
     }
   }
@@ -67,10 +105,12 @@ function TopNavBar() {
   return (
     <div className="flex items-center justify-between w-full h-6 px-1 bg-background border-b border-border">
       <div className="flex-1"></div>
-      <div 
+      <div
         className="text-xs font-medium relative group flex items-center gap-1"
         onMouseEnter={() => !isEditing && setIsEditing(true)}
-        onMouseLeave={() => !document.activeElement?.id?.includes('project-name') && setIsEditing(false)}
+        onMouseLeave={() =>
+          !document.activeElement?.id?.includes("project-name") && setIsEditing(false)
+        }
       >
         {isEditing ? (
           <input
@@ -84,21 +124,128 @@ function TopNavBar() {
             autoFocus
           />
         ) : (
-          <span className="group-hover:border-b group-hover:border-dashed group-hover:border-gray-400 pb-0.5">{projectName}</span>
+          <span className="group-hover:border-b group-hover:border-dashed group-hover:border-gray-400 pb-0.5">
+            {projectName}
+          </span>
         )}
       </div>
       <div className="flex items-center space-x-0 flex-1 justify-end">
-        <Button className="cursor-pointer" variant="ghost" size="icon" title="Опубликовать">
-          <Send className="h-3 w-3" />
-        </Button>
-        <Button className="cursor-pointer" variant="ghost" size="icon" title="Список задач">
-          <ListTodo className="h-3 w-3" />
-        </Button>
-        <Button className="cursor-pointer" variant="ghost" size="icon" title="Макет">
-          <Layout className="h-3 w-3" />
-        </Button>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button className="cursor-pointer" variant="ghost" size="icon" title="Опубликовать">
+              <Send className="h-3 w-3" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64" sideOffset={0}>
+            <div className="">
+              <h4 className="text-sm font-semibold">Задачи Публикации</h4>
+              <div className="h-10"></div>
+            </div>
+          </PopoverContent>
+        </Popover>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button className="cursor-pointer" variant="ghost" size="icon" title="Список задач">
+              <ListTodo className="h-3 w-3" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64" sideOffset={0}>
+            <div className="">
+              <h4 className="text-sm font-semibold">Задачи Проекта</h4>
+              <div className="h-10"></div>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button className="cursor-pointer" variant="ghost" size="icon" title="Макет">
+              <Layout className="h-3 w-3" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-1" sideOffset={0}>
+            <div className="flex justify-around gap-2">
+              <div className="flex flex-col items-center cursor-pointer hover:bg-muted p-2 pb-1">
+                <div className="w-16 h-12 border-2 border-gray-700 bg-muted flex flex-col mb-1">
+                  <div
+                    className="h-6 w-full flex"
+                    style={{ borderBottom: "2px solid rgb(55, 65, 81)" }}
+                  >
+                    <div
+                      className="w-[30%] h-full"
+                      style={{ borderRight: "2px solid rgb(55, 65, 81)" }}
+                    ></div>
+                    <div
+                      className="w-[50%] h-full flex items-center justify-center"
+                      style={{ borderRight: "2px solid rgb(55, 65, 81)" }}
+                    >
+                      <Play className="w-3 h-3 text-primary" />
+                    </div>
+                    <div className="w-[20%] h-full"></div>
+                  </div>
+                  <div className="h-6 w-full flex">
+                    <div
+                      className="w-[30%] h-full"
+                      style={{ borderRight: "2px solid rgb(55, 65, 81)" }}
+                    ></div>
+                    <div className="w-[70%] h-full relative px-1 py-1">
+                      <TrackLines />
+                    </div>
+                  </div>
+                </div>
+                <span className="text-[8px]">Классический</span>
+              </div>
+
+              <div className="flex flex-col items-center cursor-pointer hover:bg-muted p-2 pb-1">
+                <div className="w-16 h-12 border-2 border-gray-700 bg-muted flex flex-row mb-1">
+                  <div className="w-[67%] h-full flex flex-col">
+                    <div
+                      className="h-[50%] w-full flex"
+                      style={{ borderBottom: "2px solid rgb(55, 65, 81)" }}
+                    >
+                      <div className="w-[70%] h-full"></div>
+                      <div
+                        className="w-[30%] h-full"
+                        style={{ borderLeft: "2px solid rgb(55, 65, 81)" }}
+                      ></div>
+                    </div>
+                    <div className="h-[50%] w-full flex">
+                      <div
+                        className="w-[30%] h-full"
+                        style={{ borderRight: "2px solid rgb(55, 65, 81)" }}
+                      ></div>
+                      <div className="w-[70%] h-full relative px-1 py-1">
+                        <TrackLines />
+                      </div>
+                    </div>
+                  </div>
+                  <div
+                    className="w-[33%] h-full flex items-center justify-center"
+                    style={{ borderLeft: "2px solid rgb(55, 65, 81)" }}
+                  >
+                    <Play className="w-3 h-3 text-primary" />
+                  </div>
+                </div>
+                <span className="text-[8px]">Вертикальное</span>
+              </div>
+
+              <div className="flex flex-col items-center cursor-pointer hover:bg-muted p-2 pb-1">
+                <div className="w-16 h-12 border border-border bg-muted flex items-center justify-center mb-1">
+                  <div className="flex gap-1">
+                    <div className="w-3 h-4 bg-primary"></div>
+                    <div className="w-3 h-4 bg-primary"></div>
+                  </div>
+                </div>
+                <span className="text-[8px]">Двойной</span>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
         <Button className="cursor-pointer" variant="ghost" size="icon" title="Сохранить">
           <Save className="h-3 w-3" />
+        </Button>
+        <Button className="cursor-pointer" variant="ghost" size="icon" title="Быстрые клавиши">
+          <Keyboard className="h-3 w-3" />
         </Button>
         <Button className="cursor-pointer" variant="ghost" size="icon" title="Профиль пользователя">
           <Cloud className="h-3 w-3" />
@@ -106,9 +253,6 @@ function TopNavBar() {
         <ThemeToggle />
         <Button className="cursor-pointer" variant="ghost" size="icon" title="Настройки">
           <Settings className="h-3 w-3" />
-        </Button>
-        <Button className="cursor-pointer" variant="ghost" size="icon" title="<Быстрые клавиши>">
-          <Keyboard className="h-3 w-3" />
         </Button>
         <div className="flex items-center space-x-0">
           <DropdownMenu>
@@ -150,7 +294,6 @@ function TopNavBar() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-
       </div>
     </div>
   )
@@ -188,11 +331,7 @@ export function MediaEditor() {
   }, [])
 
   if (!isLoaded) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        Загрузка...
-      </div>
-    )
+    return <div className="flex h-screen items-center justify-center">Загрузка...</div>
   }
 
   return (
@@ -206,11 +345,7 @@ export function MediaEditor() {
         {/* Верхняя половина экрана */}
         <ResizablePanel defaultSize={mainLayout[0]} minSize={20} maxSize={80}>
           <ResizablePanelGroup direction="horizontal" autoSaveId="top-layout">
-            <ResizablePanel
-              defaultSize={topLayout[0]}
-              minSize={30}
-              maxSize={60}
-            >
+            <ResizablePanel defaultSize={topLayout[0]} minSize={30} maxSize={60}>
               <div className="h-full bg-muted/50 p-0 overflow-hidden">
                 <div className="flex-1 relative h-full">
                   <Browser />
@@ -231,15 +366,8 @@ export function MediaEditor() {
 
         {/* Нижняя половина экрана */}
         <ResizablePanel defaultSize={mainLayout[1]}>
-          <ResizablePanelGroup
-            direction="horizontal"
-            autoSaveId="bottom-layout"
-          >
-            <ResizablePanel
-              defaultSize={bottomLayout[0]}
-              minSize={10}
-              maxSize={50}
-            >
+          <ResizablePanelGroup direction="horizontal" autoSaveId="bottom-layout">
+            <ResizablePanel defaultSize={bottomLayout[0]} minSize={10} maxSize={50}>
               <div className="h-full bg-muted/50 border-t border-border">
                 <Editing />
               </div>

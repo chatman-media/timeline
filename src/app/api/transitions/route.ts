@@ -10,10 +10,13 @@ export async function POST(request: Request) {
     // Находим переход по ID
     const transition = transitions.find((t) => t.id === transitionId)
     if (!transition) {
-      return NextResponse.json({
-        status: "error",
-        error: "Transition not found",
-      }, { status: 404 })
+      return NextResponse.json(
+        {
+          status: "error",
+          error: "Transition not found",
+        },
+        { status: 404 },
+      )
     }
 
     // Генерируем переход
@@ -26,9 +29,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json(result)
   } catch (error) {
-    return NextResponse.json({
-      status: "error",
-      error: error?.message,
-    }, { status: 500 })
+    return NextResponse.json(
+      {
+        status: "error",
+        error: error?.message,
+      },
+      { status: 500 },
+    )
   }
 }

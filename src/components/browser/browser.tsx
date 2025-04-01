@@ -6,7 +6,7 @@ import { SubtitlesList } from "./subtitles-list"
 import { TransitionsList } from "./transition-list"
 
 export const TAB_TRIGGER_STYLES =
-    "text-gray-800 dark:bg-[#1b1a1f] bg-gray-200 data-[state=active]:bg-muted/50 dark:data-[state=active]:bg-transparent data-[state=active]:text-gray-800 dark:data-[state=active]:text-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100 border-2 border-transparent"
+  "text-gray-800 dark:bg-[#1b1a1f] bg-gray-200 data-[state=active]:bg-muted/50 dark:data-[state=active]:bg-transparent data-[state=active]:text-gray-800 dark:data-[state=active]:text-gray-100 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-100 border-2 border-transparent"
 
 export function Browser() {
   return (

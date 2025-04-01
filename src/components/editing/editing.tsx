@@ -7,16 +7,10 @@ export function Editing() {
   return (
     <Tabs defaultValue="index" className="w-full h-full">
       <TabsList className="">
-        <TabsTrigger
-          value="index"
-          className={TAB_TRIGGER_STYLES}
-        >
+        <TabsTrigger value="index" className={TAB_TRIGGER_STYLES}>
           Монтаж
         </TabsTrigger>
-        <TabsTrigger
-          value="tracks"
-          className={TAB_TRIGGER_STYLES}
-        >
+        <TabsTrigger value="tracks" className={TAB_TRIGGER_STYLES}>
           Дорожки
         </TabsTrigger>
       </TabsList>

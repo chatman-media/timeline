@@ -65,7 +65,7 @@ describe("Video API Integration", () => {
               isVideo: data.streams.some((stream) => stream.codec_type === "video"),
             })),
           }),
-      })
+      }),
     )
 
     const { result } = renderHook(() => useMedia())

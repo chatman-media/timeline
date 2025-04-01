@@ -127,9 +127,11 @@ export function MusicFileList() {
                   activeFile === file.path ? "opacity-100" : ""
                 }`}
               >
-                {activeFile === file.path && isPlaying
-                  ? <Pause className="w-4 h-4 text-white" />
-                  : <Play className="w-4 h-4 text-white" />}
+                {activeFile === file.path && isPlaying ? (
+                  <Pause className="w-4 h-4 text-white" />
+                ) : (
+                  <Play className="w-4 h-4 text-white" />
+                )}
               </button>
             </div>
             <div className="flex-1 min-w-0 p-1">
@@ -148,9 +150,7 @@ export function MusicFileList() {
               <div className="flex justify-between items-center truncate">
                 <div className="text-xs text-gray-500 w-[330px] truncate">
                   {file.probeData?.format.duration && (
-                    <span>
-                      {formatTime(file.probeData.format.duration)}
-                    </span>
+                    <span>{formatTime(file.probeData.format.duration)}</span>
                   )}
                   {file.probeData?.format.tags?.title && (
                     <span className="ml-4 text-gray-500 dark:text-gray-400">

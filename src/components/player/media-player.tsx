@@ -4,14 +4,8 @@ import { memo, useEffect, useState } from "react"
 import { useVideoStore } from "@/hooks/useVideoStore"
 
 export const ActiveVideo = memo(() => {
-  const {
-    videoRefs,
-    isPlaying,
-    activeVideo,
-    setCurrentTime, 
-    setIsPlaying,
-    isChangingCamera,
-  } = useVideoStore()
+  const { videoRefs, isPlaying, activeVideo, setCurrentTime, setIsPlaying, isChangingCamera } =
+    useVideoStore()
 
   if (!videoRefs.current) {
     videoRefs.current = {}
@@ -81,13 +75,13 @@ export const ActiveVideo = memo(() => {
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === 'p' && activeVideo) {
+      if (e.key.toLowerCase() === "p" && activeVideo) {
         setIsPlaying(!isPlaying)
       }
     }
 
-    window.addEventListener('keydown', handleKeyPress)
-    return () => window.removeEventListener('keydown', handleKeyPress)
+    window.addEventListener("keydown", handleKeyPress)
+    return () => window.removeEventListener("keydown", handleKeyPress)
   }, [isPlaying, activeVideo, setIsPlaying])
 
   return (

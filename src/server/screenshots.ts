@@ -6,13 +6,7 @@ export function generateThumbnails(
   videoPath: string,
   config: ScreenshotsConfig,
 ): Promise<string[]> {
-  const {
-    count = 1,
-    folder,
-    filename,
-    size,
-    timestamps,
-  } = config
+  const { count = 1, folder, filename, size, timestamps } = config
 
   return new Promise((resolve, reject) => {
     let command = ffmpeg(videoPath)
@@ -37,13 +31,14 @@ export function generateThumbnails(
       })
     }
 
-    command.on("end", () => {
-      const files = Array.from(
-        { length: timestamps ? timestamps.length : count },
-        (_, i) => `${folder}/${filename}-${i + 1}.jpg`,
-      )
-      resolve(files)
-    })
+    command
+      .on("end", () => {
+        const files = Array.from(
+          { length: timestamps ? timestamps.length : count },
+          (_, i) => `${folder}/${filename}-${i + 1}.jpg`,
+        )
+        resolve(files)
+      })
       .on("error", reject)
   })
 }

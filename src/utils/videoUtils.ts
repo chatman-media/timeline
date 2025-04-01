@@ -17,11 +17,13 @@ export const isSameVideoType = (video1: MediaFile, video2: MediaFile): boolean =
   const sig1 = getVideoSignature(video1)
   const sig2 = getVideoSignature(video2)
 
-  return sig1.codec === sig2.codec &&
+  return (
+    sig1.codec === sig2.codec &&
     sig1.width === sig2.width &&
     sig1.height === sig2.height &&
     sig1.aspectRatio === sig2.aspectRatio &&
     sig1.frameRate === sig2.frameRate
+  )
 }
 
 // Вычисляет временные диапазоны для массива видео, основываясь на времени создания и продолжительности каждого видео
@@ -77,7 +79,7 @@ export const getAspectRatio = (stream?: {
 
   // Если есть width и height, вычисляем соотношение
   if (stream.width && stream.height) {
-    const gcd = (a: number, b: number): number => b ? gcd(b, a % b) : a
+    const gcd = (a: number, b: number): number => (b ? gcd(b, a % b) : a)
     const divisor = gcd(stream.width, stream.height)
     return `${stream.width / divisor}:${stream.height / divisor}`
   }

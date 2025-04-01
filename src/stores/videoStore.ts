@@ -1,4 +1,4 @@
-import { createStore } from '@xstate/store'
+import { createStore } from "@xstate/store"
 
 import { generateVideoId } from "@/lib/utils"
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
@@ -21,7 +21,7 @@ const initialContext = {
   isChangingCamera: false,
   metadataCache: {} as Record<string, any>,
   thumbnailCache: {} as Record<string, string>,
-  currentLayout: { type: "1x1", activeTracks: ["T1"] } as ScreenLayout
+  currentLayout: { type: "1x1", activeTracks: ["T1"] } as ScreenLayout,
 }
 
 export const videoStore = createStore({
@@ -29,46 +29,46 @@ export const videoStore = createStore({
   on: {
     setScreenLayout: (context, event: { layout: ScreenLayout }) => ({
       ...context,
-      currentLayout: event.layout
+      currentLayout: event.layout,
     }),
-    
+
     setVideos: (context, event: { videos: MediaFile[] }) => ({
       ...context,
       videos: event.videos,
       activeTrackId: "T1",
       activeVideo: event.videos.find((v) => v.id === "V1") || event.videos[0],
       hasMedia: event.videos.length > 0,
-      isChangingCamera: false
+      isChangingCamera: false,
     }),
-    
+
     setMedia: (context, event: { media: MediaFile[] }) => ({
       ...context,
-      media: event.media
+      media: event.media,
     }),
 
     setHasFetched: (context, event: { hasFetched: boolean }) => ({
       ...context,
-      hasFetched: event.hasFetched
+      hasFetched: event.hasFetched,
     }),
-    
+
     fetchVideos: (context, _event, enqueue) => {
       if (context.hasFetched) return context
-      
+
       enqueue.effect(async () => {
         try {
           const response = await fetch("/api/media")
           const data = await response.json()
-          
+
           if (!data.media || !Array.isArray(data.media) || data.media.length === 0) {
             console.error("No media received from API")
-            videoStore.send({ 
-              type: 'setLoadingState', 
-              isLoading: false, 
-              hasFetched: true 
+            videoStore.send({
+              type: "setLoadingState",
+              isLoading: false,
+              hasFetched: true,
             })
             return
           }
-          
+
           const validMedia = data.media
             .map((file: MediaFile) => ({
               ...file,
@@ -76,111 +76,114 @@ export const videoStore = createStore({
             }))
             .filter((file: MediaFile) => file.duration)
             .sort((a: MediaFile, b: MediaFile) => (a.startTime || 0) - (b.startTime || 0))
-          
+
           if (validMedia.length === 0) {
-            videoStore.send({ 
-              type: 'setInitialState', 
-              videos: [], 
+            videoStore.send({
+              type: "setInitialState",
+              videos: [],
               hasMedia: false,
-              isLoading: false, 
+              isLoading: false,
               hasFetched: true,
-              media: data.media 
+              media: data.media,
             })
             return
           }
-          
+
           videoStore.send({
-            type: 'setInitialState',
+            type: "setInitialState",
             videos: validMedia,
             hasMedia: true,
             isLoading: false,
             hasFetched: true,
-            media: data.media
+            media: data.media,
           })
         } catch (error) {
           console.error("Error fetching videos:", error)
-          videoStore.send({ 
-            type: 'setLoadingState', 
-            isLoading: false, 
-            hasFetched: true 
+          videoStore.send({
+            type: "setLoadingState",
+            isLoading: false,
+            hasFetched: true,
           })
         }
       })
-      
-      return { 
+
+      return {
         ...context,
         isLoading: true,
-        hasFetched: true
+        hasFetched: true,
       }
     },
-    
-    setInitialState: (context, event: { 
-      videos: MediaFile[], 
-      hasMedia: boolean, 
-      isLoading: boolean,
-      hasFetched: boolean,
-      media: MediaFile[]
-    }) => ({
+
+    setInitialState: (
+      context,
+      event: {
+        videos: MediaFile[]
+        hasMedia: boolean
+        isLoading: boolean
+        hasFetched: boolean
+        media: MediaFile[]
+      },
+    ) => ({
       ...context,
       videos: event.videos,
       hasMedia: event.hasMedia,
       isLoading: event.isLoading,
       hasFetched: event.hasFetched,
-      media: event.media
+      media: event.media,
     }),
-    
-    setLoadingState: (context, event: { isLoading: boolean, hasFetched: boolean }) => ({
+
+    setLoadingState: (context, event: { isLoading: boolean; hasFetched: boolean }) => ({
       ...context,
       isLoading: event.isLoading,
-      hasFetched: event.hasFetched
+      hasFetched: event.hasFetched,
     }),
-    
+
     setHasFetched: (context, event: { hasFetched: boolean }) => ({
       ...context,
-      hasFetched: event.hasFetched
+      hasFetched: event.hasFetched,
     }),
-    
+
     setActiveVideo: (context, event: { videoId: string }) => {
       const targetVideo = context.videos.find((v) => v.id === event.videoId)
       if (targetVideo) {
         return {
           ...context,
-          activeVideo: targetVideo
+          activeVideo: targetVideo,
         }
       }
       return context
     },
-    
+
     setActiveTrack: (context, event: { trackId: string }) => {
       const { currentTime, tracks } = context
-      
+
       try {
         const targetTrack = tracks.find((track) => track.id === event.trackId)
-        
+
         if (!targetTrack) {
           console.warn(`Track ${event.trackId} not found`)
           return context
         }
-        
+
         // Find available video with better error handling
         const availableVideo = targetTrack.videos.find((video) => {
           if (!video.probeData?.format.tags?.creation_time) {
             console.warn(`Video ${video.id} missing creation time`)
             return false
           }
-          
+
           const startTime = new Date(video.probeData.format.tags.creation_time).getTime() / 1000
           const endTime = startTime + (video.probeData.format.duration || 0)
           const tolerance = 0.3
-          return currentTime >= (startTime - tolerance) && currentTime <= (endTime + tolerance)
+          return currentTime >= startTime - tolerance && currentTime <= endTime + tolerance
         })
-        
+
         if (availableVideo) {
           return {
             ...context,
             activeTrackId: event.trackId,
             activeVideo: availableVideo,
-            isChangingCamera: false
+            isChangingCamera: false,
           }
         } else {
           console.warn(`No available video found for time ${currentTime} in track ${event.trackId}`)
@@ -191,51 +194,49 @@ export const videoStore = createStore({
         return { ...context, isChangingCamera: false }
       }
     },
-    
+
     setIsPlaying: (context, event: { isPlaying: boolean }) => ({
       ...context,
-      isPlaying: event.isPlaying
+      isPlaying: event.isPlaying,
     }),
-    
+
     setCurrentTime: (context, event: { time: number }) => ({
       ...context,
-      currentTime: event.time
+      currentTime: event.time,
     }),
-    
+
     setTracks: (context, event: { tracks: Track[] }) => ({
       ...context,
-      tracks: event.tracks
+      tracks: event.tracks,
     }),
-    
-    addToMetadataCache: (context, event: { key: string, data: any }) => ({
+
+    addToMetadataCache: (context, event: { key: string; data: any }) => ({
       ...context,
       metadataCache: {
         ...context.metadataCache,
-        [event.key]: event.data
-      }
+        [event.key]: event.data,
+      },
     }),
-    
-    addToThumbnailCache: (context, event: { key: string, data: string }) => ({
+
+    addToThumbnailCache: (context, event: { key: string; data: string }) => ({
       ...context,
       thumbnailCache: {
         ...context.thumbnailCache,
-        [event.key]: event.data
-      }
+        [event.key]: event.data,
+      },
     }),
-    
+
     addNewTracks: (context, event: { media: MediaFile[] }) => {
       const { tracks } = context
       const newTracks = createTracksFromFiles(event.media, tracks.length)
-      const uniqueNewTracks = newTracks.filter(
-        (t) => !(new Set(tracks.map((t) => t.id))).has(t.id)
-      )
-      
+      const uniqueNewTracks = newTracks.filter((t) => !new Set(tracks.map((t) => t.id)).has(t.id))
+
       return {
         ...context,
-        tracks: [...tracks, ...uniqueNewTracks]
+        tracks: [...tracks, ...uniqueNewTracks],
       }
-    }
-  }
+    },
+  },
 })
 
 // Хелперы для работы с видеохранилищем

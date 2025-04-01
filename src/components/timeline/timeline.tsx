@@ -13,12 +13,15 @@ export function Timeline() {
     if (!tracks || tracks.length === 0) return []
 
     // Создаем мапу для группировки видео по дням
-    const videosByDay = new Map<string, {
-      videos: MediaFile[]
-      tracks: Track[]
-      startTime: number
-      endTime: number
-    }>()
+    const videosByDay = new Map<
+      string,
+      {
+        videos: MediaFile[]
+        tracks: Track[]
+        startTime: number
+        endTime: number
+      }
+    >()
 
     tracks.forEach((track) => {
       track.videos.forEach((video) => {

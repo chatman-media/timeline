@@ -9,14 +9,17 @@ interface UseSectionTimeProps {
   endTime: number
 }
 
-export function useSectionTime(
-  { sectionStartTime, sectionDuration, startTime, endTime }: UseSectionTimeProps,
-) {
-  const [position, setPosition] = useState(0  )
+export function useSectionTime({
+  sectionStartTime,
+  sectionDuration,
+  startTime,
+  endTime,
+}: UseSectionTimeProps) {
+  const [position, setPosition] = useState(0)
   const isDragging = useRef(false)
   const wasTimeManuallySet = useRef(false)
   const { activeVideo, videoRefs, setCurrentTime, currentTime, setActiveVideo, setActiveTrack } =
-  useVideoStore()
+    useVideoStore()
   const lastUpdateTime = useRef(0)
   const animationFrameId = useRef<number | undefined>(undefined)
 
@@ -64,7 +67,7 @@ export function useSectionTime(
       const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width))
       const percentage = (x / rect.width) * 100
 
-      const newTime = sectionStartTime + (sectionDuration * (percentage / 100))
+      const newTime = sectionStartTime + sectionDuration * (percentage / 100)
       wasTimeManuallySet.current = true
 
       const clampedTime = Math.max(startTime, Math.min(endTime, newTime))

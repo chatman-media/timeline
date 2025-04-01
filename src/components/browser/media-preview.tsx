@@ -1,4 +1,4 @@
-import { Check,Plus } from "lucide-react"
+import { Check, Plus } from "lucide-react"
 import { useState } from "react"
 
 import { formatResolution } from "@/lib/utils"
@@ -11,31 +11,25 @@ import { Skeleton } from "../ui/skeleton"
 import { PreviewTimeline } from "./preview-timeline"
 
 interface MediaPreviewProps {
-  file: MediaFile;
-  fileId: string;
-  duration: number;
-  isAudio: boolean;
-  videoRefs: React.MutableRefObject<Record<string, HTMLVideoElement | null>>;
-  loadedVideos: Record<string, boolean>;
-  setLoadedVideos: (
-    value: React.SetStateAction<Record<string, boolean>>
-  ) => void;
-  hoverTimes: Record<string, { [streamIndex: number]: number }>;
+  file: MediaFile
+  fileId: string
+  duration: number
+  isAudio: boolean
+  videoRefs: React.MutableRefObject<Record<string, HTMLVideoElement | null>>
+  loadedVideos: Record<string, boolean>
+  setLoadedVideos: (value: React.SetStateAction<Record<string, boolean>>) => void
+  hoverTimes: Record<string, { [streamIndex: number]: number }>
   handleMouseMove: (
     e: React.MouseEvent<HTMLDivElement>,
     fileId: string,
     duration: number,
-    streamIndex: number
-  ) => void;
-  handlePlayPause: (
-    e: React.MouseEvent,
-    file: MediaFile,
-    streamIndex: number
-  ) => void;
-  handleMouseLeave: (fileId: string) => void;
-  setPlayingFileId: (id: string | null) => void;
-  onAddMedia?: (e: React.MouseEvent, file: MediaFile) => void;
-  isAdded?: boolean;
+    streamIndex: number,
+  ) => void
+  handlePlayPause: (e: React.MouseEvent, file: MediaFile, streamIndex: number) => void
+  handleMouseLeave: (fileId: string) => void
+  setPlayingFileId: (id: string | null) => void
+  onAddMedia?: (e: React.MouseEvent, file: MediaFile) => void
+  isAdded?: boolean
 }
 
 export function MediaPreview({
@@ -82,9 +76,7 @@ export function MediaPreview({
         </div>
         <audio
           data-stream="0"
-          ref={(el) =>
-            (videoRefs.current[`${fileId}-0`] = el as HTMLVideoElement)
-          }
+          ref={(el) => (videoRefs.current[`${fileId}-0`] = el as HTMLVideoElement)}
           src={file.path}
           preload="auto"
           loop
@@ -114,9 +106,7 @@ export function MediaPreview({
         {onAddMedia && (
           <div
             className={`absolute right-[2px] bottom-[18px] bg-black/60 hover:bg-black/80 text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
-              isAdded
-                ? "bg-[#4FD1C5]/90 hover:bg-[#4FD1C5]"
-                : "bg-black/60 hover:bg-black/90"
+              isAdded ? "bg-[#4FD1C5]/90 hover:bg-[#4FD1C5]" : "bg-black/60 hover:bg-black/90"
             }`}
             onClick={(e) => {
               e.stopPropagation()
@@ -192,11 +182,7 @@ export function MediaPreview({
                 onKeyDown={(e) => {
                   if (e.code === "Space") {
                     e.preventDefault()
-                    handlePlayPause(
-                      e as unknown as React.MouseEvent,
-                      file,
-                      index
-                    )
+                    handlePlayPause(e as unknown as React.MouseEvent, file, index)
                   }
                 }}
                 onMouseEnter={(e) => e.currentTarget.focus()}
@@ -207,24 +193,19 @@ export function MediaPreview({
                 stream,
                 index,
                 loadedVideos[`${fileId}-${index}`],
-                videoRefs.current[`${fileId}-${index}`]
+                videoRefs.current[`${fileId}-${index}`],
               )}
               {/* Timeline */}
               {hoverTimes[fileId]?.[index] !== undefined &&
                 hoverTimes[fileId]?.[index] !== null &&
                 Number.isFinite(hoverTimes[fileId]?.[index]) && (
-                  <PreviewTimeline
-                    time={hoverTimes[fileId][index]}
-                    duration={duration}
-                  />
+                  <PreviewTimeline time={hoverTimes[fileId][index]} duration={duration} />
                 )}
 
               {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
                 <div
                   className={`absolute right-[2px] bottom-[18px] bg-black/60 hover:bg-black/80 text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
-                    isAdded
-                      ? "bg-[#4FD1C5]/90 hover:bg-[#4FD1C5]"
-                      : "bg-black/60 hover:bg-black/90"
+                    isAdded ? "bg-[#4FD1C5]/90 hover:bg-[#4FD1C5]" : "bg-black/60 hover:bg-black/90"
                   }`}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -251,7 +232,7 @@ function renderStreamIndicators(
   stream: FfprobeStream,
   index: number,
   isLoaded: boolean,
-  videoRef: HTMLVideoElement | null
+  videoRef: HTMLVideoElement | null,
 ) {
   const [volume, setVolume] = useState<VolumeState>(VolumeState.FULL)
 
@@ -327,8 +308,7 @@ function renderStreamIndicators(
 
   return (
     <>
-      {file.probeData?.streams.filter((s) => s.codec_type === "video").length >
-        1 && (
+      {file.probeData?.streams.filter((s) => s.codec_type === "video").length > 1 && (
         <div
           style={{ fontSize: "10px" }}
           className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
@@ -336,16 +316,10 @@ function renderStreamIndicators(
           {index + 1}
         </div>
       )}
-      {file.probeData?.streams?.some(
-        (stream) => stream.codec_type === "audio"
-      ) && (
+      {file.probeData?.streams?.some((stream) => stream.codec_type === "audio") && (
         <div
           className={`absolute ${
-            isHorizontalVideo(
-              stream.width,
-              stream.height,
-              stream.rotation || "0"
-            )
+            isHorizontalVideo(stream.width, stream.height, stream.rotation || "0")
               ? "right-[2px] top-[2px]"
               : "left-1/2 bottom-[2px] -translate-x-1/2"
           } text-white bg-black/50 rounded p-[2px] cursor-pointer hover:bg-black/70`}
@@ -354,8 +328,8 @@ function renderStreamIndicators(
             volume === VolumeState.FULL
               ? "Приглушить"
               : volume === VolumeState.HALF
-              ? "Без звука"
-              : "Включить звук"
+                ? "Без звука"
+                : "Включить звук"
           }
         >
           <VolumeIcon />
@@ -365,11 +339,7 @@ function renderStreamIndicators(
         <div
           style={{ fontSize: "10px" }}
           className={`absolute ${
-            isHorizontalVideo(
-              stream.width || 0,
-              stream.height || 0,
-              stream.rotation
-            )
+            isHorizontalVideo(stream.width || 0, stream.height || 0, stream.rotation)
               ? "left-[2px] top-[2px]"
               : "left-[calc(50%-8px)] top-[2px]"
           } text-white bg-black/50 rounded px-[2px] py-0`}

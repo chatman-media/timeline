@@ -77,22 +77,23 @@ export default async function handler(
     // Генерируем недостающие миниатюры
     if (missingIndexes.length > 0) {
       await Promise.all(
-        missingIndexes.map((index) =>
-          new Promise<void>((resolve, reject) => {
-            ffmpeg(videoPath)
-              .screenshots({
-                timestamps: [timestamps[index]],
-                filename: thumbnailNames[index],
-                folder: thumbnailDir,
-                size: "320x180",
-              })
-              .outputOptions(["-c:v libwebp", "-quality 80"]) // Используем WebP для лучшего сжатия
-              .on("end", () => resolve())
-              .on("error", (err) => {
-                console.error("FFmpeg error:", err)
-                reject(err)
-              })
-          })
+        missingIndexes.map(
+          (index) =>
+            new Promise<void>((resolve, reject) => {
+              ffmpeg(videoPath)
+                .screenshots({
+                  timestamps: [timestamps[index]],
+                  filename: thumbnailNames[index],
+                  folder: thumbnailDir,
+                  size: "320x180",
+                })
+                .outputOptions(["-c:v libwebp", "-quality 80"]) // Используем WebP для лучшего сжатия
+                .on("end", () => resolve())
+                .on("error", (err) => {
+                  console.error("FFmpeg error:", err)
+                  reject(err)
+                })
+            }),
         ),
       )
     }

@@ -52,10 +52,10 @@ export function EditingTracks() {
               const formatInfo = videoStream
                 ? `${videoStream.width}x${videoStream.height}`
                 : audioStream
-                ? `${audioStream.codec_name?.toUpperCase()} ${audioStream.channels}ch ${
-                  Math.round(audioStream.sample_rate || 0 / 1000)
-                }kHz`
-                : "-"
+                  ? `${audioStream.codec_name?.toUpperCase()} ${audioStream.channels}ch ${Math.round(
+                      audioStream.sample_rate || 0 / 1000,
+                    )}kHz`
+                  : "-"
 
               return (
                 <tr key={track.id} className="hover:bg-muted/50">

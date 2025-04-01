@@ -17,9 +17,14 @@ interface TimelineSectionProps {
   isActive?: boolean
 }
 
-export function TimelineSection(
-  { date, tracks, startTime, endTime, duration, isActive = false }: TimelineSectionProps,
-) {
+export function TimelineSection({
+  date,
+  tracks,
+  startTime,
+  endTime,
+  duration,
+  isActive = false,
+}: TimelineSectionProps) {
   const parentRef = useRef<HTMLDivElement>(null)
   const [scale, setScale] = useState(1)
   const { timeStep, subStep, adjustedRange } = useTimelineScale(duration, startTime, endTime, scale)
@@ -29,9 +34,7 @@ export function TimelineSection(
   }
 
   return (
-    <div
-      className={`timeline-section ${isActive ? "" : "bg-muted/50"}`}
-    >
+    <div className={`timeline-section ${isActive ? "" : "bg-muted/50"}`}>
       <div className="relative">
         <div className="absolute right-4 top-[-12px] flex items-center gap-2 z-10 w-[200px]">
           <Slider
@@ -63,11 +66,7 @@ export function TimelineSection(
           />
 
           {tracks.map((track, index) => (
-            <div
-              key={`${track.id}-${date}`}
-              className="relative last:mb-6"
-              style={{ height: 80 }}
-            >
+            <div key={`${track.id}-${date}`} className="relative last:mb-6" style={{ height: 80 }}>
               <VideoTrack
                 track={track}
                 index={index}

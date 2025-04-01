@@ -37,10 +37,7 @@ export function TimelineMark({
         </span>
       )}
 
-      <div
-        className="absolute h-full flex flex-col items-center"
-        style={{ left: `${position}%` }}
-      >
+      <div className="absolute h-full flex flex-col items-center" style={{ left: `${position}%` }}>
         <div className={`w-[1px] bg-[#4a4a4a] ${getMarkHeight()}`} />
         {showValue && (
           <span

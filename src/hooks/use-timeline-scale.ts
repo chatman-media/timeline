@@ -47,7 +47,7 @@ export function useTimelineScale(
     return {
       startTime: startTime - scaledPadding,
       endTime: endTime + scaledPadding,
-      duration: scaledRange + (scaledPadding * 2),
+      duration: scaledRange + scaledPadding * 2,
     }
   }, [startTime, endTime, scale])
 

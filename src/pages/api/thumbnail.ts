@@ -5,10 +5,7 @@ import fs from "fs/promises"
 import type { NextApiRequest, NextApiResponse } from "next"
 import path from "path"
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse,
-) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { video, timestamp } = req.query
 
   if (!video || typeof video !== "string" || !timestamp || typeof timestamp !== "string") {

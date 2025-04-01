@@ -42,17 +42,20 @@ export function useVideoPlayer({ videoRefs }: UseVideoPlayerProps) {
     [playingFileId],
   )
 
-  const handleMouseLeave = useCallback((fileId: string) => {
-    const baseFileId = fileId.split("-")[0]
-    if (playingFileId === baseFileId) {
-      Object.entries(videoRefs.current).forEach(([key, player]) => {
-        if (key.startsWith(baseFileId) && player) {
-          player.pause()
-        }
-      })
-      setPlayingFileId(null)
-    }
-  }, [playingFileId])
+  const handleMouseLeave = useCallback(
+    (fileId: string) => {
+      const baseFileId = fileId.split("-")[0]
+      if (playingFileId === baseFileId) {
+        Object.entries(videoRefs.current).forEach(([key, player]) => {
+          if (key.startsWith(baseFileId) && player) {
+            player.pause()
+          }
+        })
+        setPlayingFileId(null)
+      }
+    },
+    [playingFileId],
+  )
 
   return {
     playingFileId,

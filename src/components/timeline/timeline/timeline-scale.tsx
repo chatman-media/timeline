@@ -25,10 +25,7 @@ export function TimelineScale({
 }: TimelineScaleProps) {
   return (
     <div className={`relative w-full flex flex-col mb-[13px]`}>
-      <div
-        className="h-0.5 w-full"
-        style={{ background: "rgb(47, 61, 62)", height: "1px" }}
-      >
+      <div className="h-0.5 w-full" style={{ background: "rgb(47, 61, 62)", height: "1px" }}>
         {tracks.map((track: Track) =>
           track.videos.map((video, videoIndex) => {
             const videoStart = video.startTime || 0
@@ -48,7 +45,7 @@ export function TimelineScale({
                 }}
               />
             )
-          })
+          }),
         )}
       </div>
 

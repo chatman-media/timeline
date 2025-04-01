@@ -16,9 +16,9 @@ import { Skeleton } from "../ui/skeleton"
 import { FileInfo, MediaPreview } from "."
 import { StatusBar } from "./status-bar"
 
-export function MediaFileList(
-  { viewMode = "thumbnails" }: { viewMode?: "list" | "grid" | "thumbnails" },
-) {
+export function MediaFileList({
+  viewMode = "thumbnails",
+}: { viewMode?: "list" | "grid" | "thumbnails" }) {
   const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useVideoStore()
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
@@ -53,64 +53,71 @@ export function MediaFileList(
     return file.id || file.path || file.name
   }, [])
 
-  const handleMouseMove = useCallback((
-    e: React.MouseEvent<HTMLDivElement>,
-    fileId: string,
-    duration: number,
-    streamIndex: number = 0,
-  ) => {
-    const mediaElement = e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)
-      ?.parentElement || e.currentTarget
-    if (!mediaElement) return
+  const handleMouseMove = useCallback(
+    (
+      e: React.MouseEvent<HTMLDivElement>,
+      fileId: string,
+      duration: number,
+      streamIndex: number = 0,
+    ) => {
+      const mediaElement =
+        e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)?.parentElement ||
+        e.currentTarget
+      if (!mediaElement) return
 
-    const rect = mediaElement.getBoundingClientRect()
+      const rect = mediaElement.getBoundingClientRect()
 
-    if (e.clientX < rect.left || e.clientX > rect.right) {
-      setHoverTimes((prev: Record<string, { [streamIndex: number]: number }>) => ({
-        ...prev,
-        [fileId]: {
-          ...(prev[fileId] || {}),
-          // deno-lint-ignore no-explicit-any
-          [streamIndex]: null as any,
-        },
-      }))
-      return
-    }
-
-    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
-    const percentage = x / rect.width
-    const time = percentage * duration
-
-    if (Number.isFinite(time)) {
-      setHoverTimes((prev: Record<string, { [streamIndex: number]: number }>) => ({
-        ...prev,
-        [fileId]: {
-          ...(prev[fileId] || {}),
-          [streamIndex]: time,
-        },
-      }))
-      const videoElement = videoRefs.current[`${fileId}-${streamIndex}`]
-      if (videoElement) {
-        videoElement.currentTime = time
+      if (e.clientX < rect.left || e.clientX > rect.right) {
+        setHoverTimes((prev: Record<string, { [streamIndex: number]: number }>) => ({
+          ...prev,
+          [fileId]: {
+            ...(prev[fileId] || {}),
+            // deno-lint-ignore no-explicit-any
+            [streamIndex]: null as any,
+          },
+        }))
+        return
       }
-    }
-  }, [])
 
-  const handleAddMedia = useCallback((e: React.MouseEvent, file: MediaFile) => {
-    e.stopPropagation()
-    const fileId = getFileId(file)
-    if (addedFiles.has(fileId)) return
+      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
+      const percentage = x / rect.width
+      const time = percentage * duration
 
-    // Check if file has video or audio stream
-    const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
-    const audioStream = file.probeData?.streams?.find((s) => s.codec_type === "audio")
+      if (Number.isFinite(time)) {
+        setHoverTimes((prev: Record<string, { [streamIndex: number]: number }>) => ({
+          ...prev,
+          [fileId]: {
+            ...(prev[fileId] || {}),
+            [streamIndex]: time,
+          },
+        }))
+        const videoElement = videoRefs.current[`${fileId}-${streamIndex}`]
+        if (videoElement) {
+          videoElement.currentTime = time
+        }
+      }
+    },
+    [],
+  )
 
-    // Only add if file has either video or audio
-    if (videoStream || audioStream) {
-      addNewTracks([file])
-      setAddedFiles((prev) => new Set([...prev, fileId]))
-    }
-  }, [addNewTracks, addedFiles, getFileId])
+  const handleAddMedia = useCallback(
+    (e: React.MouseEvent, file: MediaFile) => {
+      e.stopPropagation()
+      const fileId = getFileId(file)
+      if (addedFiles.has(fileId)) return
+
+      // Check if file has video or audio stream
+      const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
+      const audioStream = file.probeData?.streams?.find((s) => s.codec_type === "audio")
+
+      // Only add if file has either video or audio
+      if (videoStream || audioStream) {
+        addNewTracks([file])
+        setAddedFiles((prev) => new Set([...prev, fileId]))
+      }
+    },
+    [addNewTracks, addedFiles, getFileId],
+  )
 
   const handleUpdateList = useCallback(() => {
     setHasFetched(false)
@@ -121,27 +128,30 @@ export function MediaFileList(
   const handleAddAllFiles = useCallback(() => {
     addNewTracks(media)
     // Добавляем все файлы в состояние addedFiles
-    const fileIds = media.map(file => getFileId(file))
+    const fileIds = media.map((file) => getFileId(file))
     setAddedFiles(new Set(fileIds))
   }, [media, addNewTracks, getFileId])
 
-  const handleAddDateFiles = useCallback((targetDate: string) => {
-    const dateFiles = media.filter((file) => {
-      if (!file.startTime) return false
-      const fileDate = new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
+  const handleAddDateFiles = useCallback(
+    (targetDate: string) => {
+      const dateFiles = media.filter((file) => {
+        if (!file.startTime) return false
+        const fileDate = new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        })
+        return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
       })
-      return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
-    })
-    
-    // Добавляем файлы выбранной даты в состояние addedFiles
-    const fileIds = dateFiles.map(file => getFileId(file))
-    setAddedFiles(prev => new Set([...prev, ...fileIds]))
-    
-    addNewTracks(dateFiles)
-  }, [media, addNewTracks, getFileId])
+
+      // Добавляем файлы выбранной даты в состояние addedFiles
+      const fileIds = dateFiles.map((file) => getFileId(file))
+      setAddedFiles((prev) => new Set([...prev, ...fileIds]))
+
+      addNewTracks(dateFiles)
+    },
+    [media, addNewTracks, getFileId],
+  )
 
   const handleAddAllVideoFiles = useCallback(() => {
     handleAddByIds(fileGroups.videos.fileIds)
@@ -157,14 +167,17 @@ export function MediaFileList(
     }
   }, [media])
 
-  const handleAddByIds = useCallback((fileIds: string[]) => {
-    const filesToAdd = media.filter((file) => fileIds.includes(file.id))
-    
-    // Добавляем файлы в состояние addedFiles
-    setAddedFiles(prev => new Set([...prev, ...fileIds]))
-    
-    addNewTracks(filesToAdd)
-  }, [media, addNewTracks])
+  const handleAddByIds = useCallback(
+    (fileIds: string[]) => {
+      const filesToAdd = media.filter((file) => fileIds.includes(file.id))
+
+      // Добавляем файлы в состояние addedFiles
+      setAddedFiles((prev) => new Set([...prev, ...fileIds]))
+
+      addNewTracks(filesToAdd)
+    },
+    [media, addNewTracks],
+  )
 
   if (isLoading) {
     return (
@@ -198,42 +211,41 @@ export function MediaFileList(
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto pl-[3px] mb-[24px]">
-        {viewMode === "list"
-          ? (
-            <table className="w-full border-collapse">
-              <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
-                <tr>
-                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Название
-                  </th>
-                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Начало
-                  </th>
-                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Длительность
-                  </th>
-                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Разрешение
-                  </th>
-                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Кодек
-                  </th>
-                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Битрейт
-                  </th>
-                  <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                    Размер
-                  </th>
-                  <th className="px-4 py-1"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedMedia.map((file) => {
-                  const fileId = getFileId(file)
-                  const isAdded = addedFiles.has(fileId)
-                  const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
-                  const startTime = file.startTime
-                    ? new Date(file.startTime * 1000).toLocaleString("ru-RU", {
+        {viewMode === "list" ? (
+          <table className="w-full border-collapse">
+            <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
+              <tr>
+                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                  Название
+                </th>
+                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                  Начало
+                </th>
+                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                  Длительность
+                </th>
+                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                  Разрешение
+                </th>
+                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                  Кодек
+                </th>
+                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                  Битрейт
+                </th>
+                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
+                  Размер
+                </th>
+                <th className="px-4 py-1"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedMedia.map((file) => {
+                const fileId = getFileId(file)
+                const isAdded = addedFiles.has(fileId)
+                const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
+                const startTime = file.startTime
+                  ? new Date(file.startTime * 1000).toLocaleString("ru-RU", {
                       day: "2-digit",
                       month: "2-digit",
                       year: "numeric",
@@ -241,94 +253,91 @@ export function MediaFileList(
                       minute: "2-digit",
                       second: "2-digit",
                     })
-                    : "-"
-                  const duration = file.probeData?.format.duration
-                    ? formatDuration(file.probeData.format.duration)
-                    : "-"
-                  const resolution = videoStream
-                    ? `${videoStream.width}x${videoStream.height}`
-                    : "-"
-                  const codec = videoStream?.codec_name?.toUpperCase() || "-"
-                  const bitrate = file.probeData?.format.bit_rate
-                    ? `${Math.round(file.probeData.format.bit_rate / 1000)} Kbps`
-                    : "-"
-                  const fileSize = formatFileSize(file.probeData?.format.size || 0)
-
-                  return (
-                    <tr
-                      key={fileId}
-                      className={`border-b dark:border-gray-700 ${
-                        isAdded
-                          ? "opacity-50 pointer-events-none"
-                          : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                      }`}
-                    >
-                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{file.name}</td>
-                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{startTime}</td>
-                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{duration}</td>
-                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{resolution}</td>
-                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{codec}</td>
-                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{bitrate}</td>
-                      <td className="px-3 py-0 text-[12px] whitespace-nowrap">{fileSize}</td>
-                      <td className="px-3 py-0">
-                        <button
-                          onClick={(e) => handleAddMedia(e, file)}
-                          className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-                        >
-                          +
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          )
-          : (
-            <div className="space-y-2">
-              {sortedMedia.map((file) => {
-                const fileId = getFileId(file)
-                const duration = file.probeData?.format.duration || 1
-                const isAudio = getFileType(file) === "audio"
-                const isAdded = addedFiles.has(fileId)
+                  : "-"
+                const duration = file.probeData?.format.duration
+                  ? formatDuration(file.probeData.format.duration)
+                  : "-"
+                const resolution = videoStream ? `${videoStream.width}x${videoStream.height}` : "-"
+                const codec = videoStream?.codec_name?.toUpperCase() || "-"
+                const bitrate = file.probeData?.format.bit_rate
+                  ? `${Math.round(file.probeData.format.bit_rate / 1000)} Kbps`
+                  : "-"
+                const fileSize = formatFileSize(file.probeData?.format.size || 0)
 
                 return (
-                  <div
+                  <tr
                     key={fileId}
-                    className={`flex items-center gap-3 p-0 pr-2 rounded-md group w-full overflow-hidden
+                    className={`border-b dark:border-gray-700 ${
+                      isAdded
+                        ? "opacity-50 pointer-events-none"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
+                  >
+                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{file.name}</td>
+                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{startTime}</td>
+                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{duration}</td>
+                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{resolution}</td>
+                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{codec}</td>
+                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{bitrate}</td>
+                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{fileSize}</td>
+                    <td className="px-3 py-0">
+                      <button
+                        onClick={(e) => handleAddMedia(e, file)}
+                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+                      >
+                        +
+                      </button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        ) : (
+          <div className="space-y-2">
+            {sortedMedia.map((file) => {
+              const fileId = getFileId(file)
+              const duration = file.probeData?.format.duration || 1
+              const isAudio = getFileType(file) === "audio"
+              const isAdded = addedFiles.has(fileId)
+
+              return (
+                <div
+                  key={fileId}
+                  className={`flex items-center gap-3 p-0 pr-2 rounded-md group w-full overflow-hidden
                     ${
                       isAdded
                         ? "opacity-50 pointer-events-none"
                         : "hover:bg-gray-100 dark:hover:bg-gray-800"
                     }`}
-                    style={{ maxWidth: "100%" }}
-                  >
-                    <div className="relative flex-shrink-0 flex gap-1">
-                      <MediaPreview
-                        file={file}
-                        fileId={fileId}
-                        duration={duration}
-                        isAudio={isAudio}
-                        videoRefs={videoRefs}
-                        loadedVideos={loadedVideos}
-                        setLoadedVideos={setLoadedVideos}
-                        hoverTimes={hoverTimes}
-                        handleMouseMove={handleMouseMove}
-                        handlePlayPause={handlePlayPause}
-                        handleMouseLeave={handleMouseLeave}
-                        setPlayingFileId={setPlayingFileId}
-                        onAddMedia={handleAddMedia}
-                        isAdded={isAdded}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0 overflow-hidden">
-                      <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
-                    </div>
+                  style={{ maxWidth: "100%" }}
+                >
+                  <div className="relative flex-shrink-0 flex gap-1">
+                    <MediaPreview
+                      file={file}
+                      fileId={fileId}
+                      duration={duration}
+                      isAudio={isAudio}
+                      videoRefs={videoRefs}
+                      loadedVideos={loadedVideos}
+                      setLoadedVideos={setLoadedVideos}
+                      hoverTimes={hoverTimes}
+                      handleMouseMove={handleMouseMove}
+                      handlePlayPause={handlePlayPause}
+                      handleMouseLeave={handleMouseLeave}
+                      setPlayingFileId={setPlayingFileId}
+                      onAddMedia={handleAddMedia}
+                      isAdded={isAdded}
+                    />
                   </div>
-                )
-              })}
-            </div>
-          )}
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
       <div className="flex-shrink-0 h-[24px] w-full absolute bottom-0 left-0 right-0 z-10">
         <StatusBar
@@ -338,6 +347,7 @@ export function MediaFileList(
           onAddDateFiles={handleAddDateFiles}
           onAddAllFiles={handleAddAllFiles}
           sortedDates={sortedDates}
+          addedFiles={addedFiles}
         />
       </div>
     </div>

@@ -40,7 +40,9 @@ export function VideoMetadata({ probeData }: VideoMetadataProps) {
           <tbody>
             <tr>
               <td className="py-1.5 text-gray-400">H.264 Main L5.2</td>
-              <td className="py-1.5">{videoStream?.width} × {videoStream?.height}</td>
+              <td className="py-1.5">
+                {videoStream?.width} × {videoStream?.height}
+              </td>
             </tr>
             <tr>
               <td className="py-1.5 text-gray-400">AAC</td>

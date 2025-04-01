@@ -1,4 +1,4 @@
-import { createStore } from '@xstate/store'
+import { createStore } from "@xstate/store"
 
 interface ThumbnailState {
   thumbnails: Record<string, string[]>
@@ -11,28 +11,31 @@ declare global {
 }
 
 const initialContext: ThumbnailState = {
-  thumbnails: {}
+  thumbnails: {},
 }
 
 export const thumbnailStore = createStore({
   context: initialContext,
   on: {
-    addThumbnails: (context, event: { 
-      videoName: string, 
-      scale: number, 
-      count: number, 
-      urls: string[] 
-    }) => {
+    addThumbnails: (
+      context,
+      event: {
+        videoName: string
+        scale: number
+        count: number
+        urls: string[]
+      },
+    ) => {
       const key = `${event.videoName}-${event.scale}-${event.count}`
       return {
         ...context,
         thumbnails: {
           ...context.thumbnails,
           [key]: event.urls,
-        }
+        },
       }
-    }
-  }
+    },
+  },
 })
 
 export function getThumbnails(videoName: string, scale: number, count: number): string[] | null {
