@@ -1,12 +1,18 @@
 import {
   ChevronDown,
   Cloud,
+  Layout,
   LayoutGrid,
   ListTodo,
   Save,
   Send,
   Upload,
   User,
+  Settings,
+  Import,
+  Share,
+  HelpCircle,
+  Keyboard,
 } from "lucide-react"
 import { useEffect, useState } from "react"
 
@@ -45,7 +51,7 @@ function getSavedLayout(id: string): number[] | null {
 
 // Компонент верхней панели навигации
 function TopNavBar() {
-  const [projectName, setProjectName] = useState("Без названия 1")
+  const [projectName, setProjectName] = useState("Без названия #1")
   const [isEditing, setIsEditing] = useState(false)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +68,7 @@ function TopNavBar() {
     <div className="flex items-center justify-between w-full h-6 px-1 bg-background border-b border-border">
       <div className="flex-1"></div>
       <div 
-        className="text-xs font-medium relative group"
+        className="text-xs font-medium relative group flex items-center gap-1"
         onMouseEnter={() => !isEditing && setIsEditing(true)}
         onMouseLeave={() => !document.activeElement?.id?.includes('project-name') && setIsEditing(false)}
       >
@@ -88,8 +94,8 @@ function TopNavBar() {
         <Button className="cursor-pointer" variant="ghost" size="icon" title="Список задач">
           <ListTodo className="h-3 w-3" />
         </Button>
-        <Button className="cursor-pointer" variant="ghost" size="icon" title="Расположение">
-          <LayoutGrid className="h-3 w-3" />
+        <Button className="cursor-pointer" variant="ghost" size="icon" title="Макет">
+          <Layout className="h-3 w-3" />
         </Button>
         <Button className="cursor-pointer" variant="ghost" size="icon" title="Сохранить">
           <Save className="h-3 w-3" />
@@ -98,6 +104,12 @@ function TopNavBar() {
           <Cloud className="h-3 w-3" />
         </Button>
         <ThemeToggle />
+        <Button className="cursor-pointer" variant="ghost" size="icon" title="Настройки">
+          <Settings className="h-3 w-3" />
+        </Button>
+        <Button className="cursor-pointer" variant="ghost" size="icon" title="<Быстрые клавиши>">
+          <Keyboard className="h-3 w-3" />
+        </Button>
         <div className="flex items-center space-x-0">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
