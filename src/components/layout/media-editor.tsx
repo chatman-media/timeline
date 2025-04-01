@@ -224,10 +224,17 @@ function TopNavBar() {
               </div>
 
               <div className="flex flex-col items-center cursor-pointer hover:bg-muted p-2 pb-1">
-                <div className="w-16 h-12 border border-border bg-muted flex items-center justify-center mb-1">
-                  <div className="flex gap-1">
-                    <div className="w-3 h-4 bg-primary"></div>
-                    <div className="w-3 h-4 bg-primary"></div>
+                <div className="w-16 h-12 bg-background flex items-center justify-center mb-1 relative">
+                  <div className="absolute right-2 translate-y-1 w-10 h-7 border-2 border-gray-700 bg-muted">
+                    <div className="w-full h-1/2 border-b border-gray-700"></div>
+                  </div>
+                  <div className="absolute left-2 -translate-y-1 w-10 h-7 border-2 border-gray-700 bg-muted z-10">
+                    <div className="flex h-full">
+                      <div className="w-[70%] border-r border-gray-700 flex items-center justify-center">
+                        <Play className="w-2 h-2 text-muted-foreground" />
+                      </div>
+                      <div className="w-[30%]"></div>
+                    </div>
                   </div>
                 </div>
                 <span className="text-[9px]">Двойной</span>
@@ -311,6 +318,7 @@ function Options() {
 export function MediaEditor() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [layoutMode, setLayoutMode] = useState("classic") // classic, vertical, dual
+  const [hasExternalDisplay, setHasExternalDisplay] = useState(false)
 
   // Значения по умолчанию
   const defaultSizes = {
@@ -324,6 +332,54 @@ export function MediaEditor() {
   const [topLayout, setTopLayout] = useState(defaultSizes.topLayout)
   const [bottomLayout, setBottomLayout] = useState(defaultSizes.bottomLayout)
 
+  // Проверяем наличие дополнительного монитора при загрузке
+  useEffect(() => {
+    // Простая проверка на основе размера экрана (большой экран может указывать на наличие внешнего монитора)
+    const checkExternalDisplay = () => {
+      // Проверка на широкий экран (можно настроить порог)
+      const isWideScreen = window.matchMedia("(min-width: 1920px)").matches;
+      
+      // Проверка на основе отношения размера экрана к devicePixelRatio
+      // Это эвристика, не гарантирующая точность, но может быть полезной
+      const screenWidth = window.screen.width;
+      const screenHeight = window.screen.height;
+      const pixelRatio = window.devicePixelRatio || 1;
+      
+      // Большой экран с нормальным DPI может указывать на внешний монитор
+      const isProbablyExternal = 
+        (screenWidth > 1920 && pixelRatio < 2) || 
+        (screenWidth * pixelRatio > 3000);
+      
+      setHasExternalDisplay(isWideScreen || isProbablyExternal);
+    };
+
+    checkExternalDisplay();
+    
+    // Слушаем изменения в размере экрана
+    const mediaQuery = window.matchMedia("(min-width: 1920px)");
+    const handleChange = (e: MediaQueryListEvent) => {
+      checkExternalDisplay();
+    };
+    
+    // Для современных браузеров
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleChange);
+    }
+    // Для старых браузеров
+    else if (mediaQuery.addListener) {
+      mediaQuery.addListener(handleChange);
+    }
+    
+    return () => {
+      // Очистка слушателя
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", handleChange);
+      } else if (mediaQuery.removeListener) {
+        mediaQuery.removeListener(handleChange);
+      }
+    };
+  }, []);
+
   // Загружаем сохраненные размеры при первом рендере
   useEffect(() => {
     // Загружаем размеры из localStorage
@@ -336,14 +392,19 @@ export function MediaEditor() {
     if (savedMainLayout) setMainLayout(savedMainLayout)
     if (savedTopLayout) setTopLayout(savedTopLayout)
     if (savedBottomLayout) setBottomLayout(savedBottomLayout)
-    if (savedLayout) setLayoutMode(savedLayout)
+    if (savedLayout && (savedLayout !== "dual" || hasExternalDisplay)) setLayoutMode(savedLayout)
 
     // Помечаем, что размеры загружены
     setIsLoaded(true)
-  }, [])
+  }, [hasExternalDisplay])
 
   // Функция для изменения макета
   const changeLayout = (mode: string) => {
+    // Не позволяем выбрать двойной макет, если нет внешнего монитора
+    if (mode === "dual" && !hasExternalDisplay) {
+      return;
+    }
+    
     setLayoutMode(mode)
     localStorage.setItem("editor-layout-mode", mode)
   }
@@ -352,17 +413,17 @@ export function MediaEditor() {
   const CustomTopNavBar = () => {
     const [projectName, setProjectName] = useState("Без названия #1")
     const [isEditing, setIsEditing] = useState(false)
-
+  
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setProjectName(e.target.value)
     }
-
+  
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
         setIsEditing(false)
       }
     }
-
+  
     return (
       <div className="flex items-center justify-between w-full h-6 px-1 bg-background border-b border-border">
         <div className="flex-1"></div>
@@ -404,7 +465,7 @@ export function MediaEditor() {
               </div>
             </PopoverContent>
           </Popover>
-
+  
           <Popover>
             <PopoverTrigger asChild>
               <Button className="cursor-pointer" variant="ghost" size="icon" title="Список задач">
@@ -426,7 +487,7 @@ export function MediaEditor() {
             </PopoverTrigger>
             <PopoverContent className="w-64 p-1" sideOffset={0}>
               <div className="flex justify-around gap-2">
-                <div
+                <div 
                   className={`flex flex-col items-center cursor-pointer ${layoutMode === "classic" ? "bg-muted" : "hover:bg-muted"} p-2 pb-1`}
                   onClick={() => changeLayout("classic")}
                 >
@@ -459,8 +520,8 @@ export function MediaEditor() {
                   </div>
                   <span className="text-[9px]">Классический</span>
                 </div>
-
-                <div
+  
+                <div 
                   className={`flex flex-col items-center cursor-pointer ${layoutMode === "vertical" ? "bg-muted" : "hover:bg-muted"} p-2 pb-1`}
                   onClick={() => changeLayout("vertical")}
                 >
@@ -495,18 +556,30 @@ export function MediaEditor() {
                   </div>
                   <span className="text-[9px]">Вертикальное</span>
                 </div>
-
-                <div
-                  className={`flex flex-col items-center cursor-pointer ${layoutMode === "dual" ? "bg-muted" : "hover:bg-muted"} p-2 pb-1`}
-                  onClick={() => changeLayout("dual")}
+  
+                {/* Опция двойного макета доступна только при наличии внешнего монитора */}
+                <div 
+                  className={`flex flex-col items-center ${hasExternalDisplay ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'} ${layoutMode === "dual" ? "bg-muted" : (hasExternalDisplay ? "hover:bg-muted" : "")} p-2 pb-1`}
+                  onClick={() => hasExternalDisplay && changeLayout("dual")}
+                  title={hasExternalDisplay ? "Двойной вид" : "Требуется внешний монитор"}
                 >
-                  <div className="w-16 h-12 border border-border bg-muted flex items-center justify-center mb-1">
-                    <div className="flex gap-1">
-                      <div className="w-3 h-4 bg-primary"></div>
-                      <div className="w-3 h-4 bg-primary"></div>
+                  <div className="w-16 h-12 bg-background flex items-center justify-center mb-1 relative">
+                    <div className="absolute right-2 translate-y-1 w-10 h-7 border-2 border-gray-700 bg-muted">
+                      <div className="w-full h-1/2 border-b border-gray-700"></div>
+                    </div>
+                    <div className="absolute left-2 -translate-y-1 w-10 h-7 border-2 border-gray-700 bg-muted z-10">
+                      <div className="flex h-full">
+                        <div className="w-[70%] border-r border-gray-700 flex items-center justify-center">
+                          <Play className="w-2 h-2 text-muted-foreground" />
+                        </div>
+                        <div className="w-[30%]"></div>
+                      </div>
                     </div>
                   </div>
                   <span className="text-[9px]">Двойной</span>
+                  {!hasExternalDisplay && (
+                    <span className="text-[8px] text-muted-foreground">Нужен внешний монитор</span>
+                  )}
                 </div>
               </div>
             </PopoverContent>
@@ -582,30 +655,30 @@ export function MediaEditor() {
         className="min-h-0 flex-grow"
         autoSaveId="dual-main-layout"
       >
-        {/* Верхнее окно с видео и контролем */}
-        <ResizablePanel defaultSize={60} minSize={30} maxSize={70}>
+        {/* Верхнее окно */}
+        <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
           <ResizablePanelGroup direction="horizontal" autoSaveId="dual-top-layout">
-            <ResizablePanel defaultSize={30} minSize={20} maxSize={40}>
+            <ResizablePanel defaultSize={70} minSize={50} maxSize={85}>
               <div className="h-full bg-muted/50 p-0 overflow-hidden">
                 <div className="flex-1 relative h-full">
-                  <Options />
+                  <ActiveVideo />
                 </div>
               </div>
             </ResizablePanel>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={70}>
+            <ResizablePanel defaultSize={30} minSize={15} maxSize={50}>
               <div className="h-full bg-muted/50 border-l border-border">
-                <ActiveVideo />
+                <Options />
               </div>
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>
-
+        
         {/* Разделитель */}
         <ResizableHandle withHandle />
-
-        {/* Нижнее окно с браузером и дорожками */}
-        <ResizablePanel defaultSize={40} minSize={30} maxSize={70}>
+        
+        {/* Нижнее окно */}
+        <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
           <ResizablePanelGroup direction="vertical" autoSaveId="dual-bottom-layout">
             <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
               <div className="h-full bg-muted/50 border-t border-border">
@@ -613,7 +686,7 @@ export function MediaEditor() {
               </div>
             </ResizablePanel>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={60}>
+            <ResizablePanel defaultSize={60} minSize={40} maxSize={80}>
               <div className="h-full bg-muted/50 border-t border-border">
                 <Timeline />
               </div>
@@ -748,7 +821,8 @@ export function MediaEditor() {
       <CustomTopNavBar />
       {layoutMode === "classic" && <ClassicMediaEditor />}
       {layoutMode === "vertical" && <VerticalMediaEditor />}
-      {layoutMode === "dual" && <DualMediaEditor />}
+      {layoutMode === "dual" && hasExternalDisplay && <DualMediaEditor />}
     </div>
   )
 }
+
