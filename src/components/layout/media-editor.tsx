@@ -559,7 +559,7 @@ export function MediaEditor() {
   
                 {/* Опция двойного макета доступна только при наличии внешнего монитора */}
                 <div 
-                  className={`flex flex-col items-center ${hasExternalDisplay ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'} ${layoutMode === "dual" ? "bg-muted" : (hasExternalDisplay ? "hover:bg-muted" : "")} p-2 pb-1`}
+                  className={`flex flex-col items-center pr-2  ${hasExternalDisplay ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'} ${layoutMode === "dual" ? "bg-muted" : (hasExternalDisplay ? "hover:bg-muted" : "")} p-2 pb-1`}
                   onClick={() => hasExternalDisplay && changeLayout("dual")}
                   title={hasExternalDisplay ? "Двойной вид" : "Требуется внешний монитор"}
                 >
