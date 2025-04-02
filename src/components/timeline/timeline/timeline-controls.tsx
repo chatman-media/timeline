@@ -10,15 +10,39 @@ interface TimelineControlsProps {
 export function TimelineControls({
   scale,
   setScale,
-  minScale = 0.1,
-  maxScale = 2.0,
+  minScale = 0.001,
+  maxScale = 18,
 }: TimelineControlsProps) {
-  const scaleStep = scale < 0.3 ? 0.1 : scale < 0.8 ? 0.2 : 0.3
+  const logMinScale = Math.log(minScale)
+  const logMaxScale = Math.log(maxScale)
+  const logCurrentScale = Math.log(scale)
+  
+  const logStep = (logMaxScale - logMinScale) / 100
+  
+  const handleScaleDecrease = () => {
+    const newLogScale = logCurrentScale - logStep
+    const newScale = Math.exp(Math.max(newLogScale, logMinScale))
+    setScale(newScale)
+  }
+
+  const handleScaleIncrease = () => {
+    const newLogScale = logCurrentScale + logStep
+    const newScale = Math.exp(Math.min(newLogScale, logMaxScale))
+    setScale(newScale)
+  }
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sliderValue = Number(e.target.value)
+    const logScale = logMinScale + (sliderValue / 100) * (logMaxScale - logMinScale)
+    setScale(Math.exp(logScale))
+  }
+
+  const sliderValue = ((logCurrentScale - logMinScale) / (logMaxScale - logMinScale)) * 100
 
   return (
     <div className="flex items-center gap-2 p-2 z-10">
       <button
-        onClick={() => setScale(Math.max(scale - scaleStep, minScale))}
+        onClick={handleScaleDecrease}
         className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-gray-200"
       >
         <Minus size={14} />
@@ -26,10 +50,10 @@ export function TimelineControls({
       
       <input
         type="range"
-        min={minScale * 100}
-        max={maxScale * 100}
-        value={scale * 100}
-        onChange={(e) => setScale(Number(e.target.value) / 100)}
+        min={0}
+        max={100}
+        value={sliderValue}
+        onChange={handleSliderChange}
         className="w-24 h-1 rounded-full appearance-none cursor-pointer"
         style={{
           background: "linear-gradient(to right, rgb(25, 102, 107), rgb(25, 102, 107))",
@@ -37,7 +61,7 @@ export function TimelineControls({
       />
       
       <button
-        onClick={() => setScale(Math.min(scale + scaleStep, maxScale))}
+        onClick={handleScaleIncrease}
         className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-gray-200"
       >
         <Plus size={14} />

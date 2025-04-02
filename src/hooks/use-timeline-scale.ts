@@ -41,7 +41,8 @@ export function useTimelineScale(
       if (visibleDuration <= 300) return { main: 15, sub: 2.5 }
       if (visibleDuration <= 900) return { main: 30, sub: 7.5 }
       if (visibleDuration <= 3600) return { main: 150, sub: 30 }
-      return { main: 450, sub: 150 }
+      if (visibleDuration <= 3600*3) return { main: 450, sub: 90 }
+      return { main: 1080, sub: 360 }
     }
 
     // Получаем шкалу на основе видимой длительности

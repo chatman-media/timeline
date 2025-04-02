@@ -18,17 +18,20 @@ dayjs.extend(utc)
 dayjs.extend(timezone)
 
 export const formatDuration = (seconds: number, afterComa = 3): string => {
-  const duration = dayjs.duration(seconds, "seconds")
-
-  if (afterComa === 0) {
-    return duration.format("mm:ss")
-  }
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = Math.floor(seconds % 60)
   const ms = Math.floor((seconds % 1) * 1000)
 
-  return `${duration.format("HH:mm:ss")}:${ms
-    .toString()
-    .padStart(afterComa, "0")
-    .substring(0, afterComa)}`
+  const timeString = hours > 0 
+    ? `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+    : `${minutes}:${secs.toString().padStart(2, "0")}`
+
+  if (afterComa === 0) {
+    return timeString
+  }
+
+  return `${timeString}:${ms.toString().padStart(3, "0").substring(0, afterComa)}`
 }
 
 // Добавим вспомогательную функцию для форматирования разрешения
