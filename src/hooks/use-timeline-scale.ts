@@ -19,7 +19,7 @@ export function useTimelineScale(
 ) {
   const adjustedRange = useMemo((): TimeRange => {
     const timeRange = endTime - startTime
-    const padding = timeRange * 0.05 // 3% отступ с каждой стороны
+    const padding = timeRange * 0.05 // 5% отступ с каждой стороны
 
     // Применяем масштаб к диапазону
     const scaledRange = timeRange * scale
