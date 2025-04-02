@@ -43,28 +43,31 @@ export function TimelineControls({
     <div className="flex items-center gap-2 p-2 z-10">
       <button
         onClick={handleScaleDecrease}
-        className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-gray-200"
+        className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-gray-200 border-1 border-white"
       >
-        <Minus size={14} />
+        <Minus size={12} />
       </button>
 
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={sliderValue}
-        onChange={handleSliderChange}
-        className="w-24 h-1 rounded-full appearance-none cursor-pointer"
-        style={{
-          background: "linear-gradient(to right, rgb(25, 102, 107), rgb(25, 102, 107))",
-        }}
-      />
+      <div className="relative w-24 h-1 rounded-full bg-gray-800 border border-white">
+        <div 
+          className="absolute left-0 top-0 h-full bg-white rounded-full"
+          style={{ width: `${sliderValue}%` }}
+        />
+        <input
+          type="range"
+          min={0}
+          max={100}
+          value={sliderValue}
+          onChange={handleSliderChange}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        />
+      </div>
 
       <button
         onClick={handleScaleIncrease}
-        className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-gray-200"
+        className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-gray-200 border-1 border-white"
       >
-        <Plus size={14} />
+        <Plus size={12} />
       </button>
     </div>
   )
