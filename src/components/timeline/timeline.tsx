@@ -95,7 +95,7 @@ export function Timeline() {
 
   return (
     <div className="relative w-full h-[calc(50vh-4px)] min-h-[calc(50vh-4px)] overflow-x-auto overflow-y-auto bg-muted/50 dark:bg-[#1a1a1a]">
-      <div className="relative w-full min-h-full pt-4" style={{ minWidth: "100%" }}>
+      <div className="relative w-full min-h-full pt-[2px]" style={{ minWidth: "100%" }}>
         {[...sections].reverse().map((section) => (
           <TimelineSection
             key={section.date}

@@ -19,31 +19,34 @@ export function TimelineMark({
   const getMarkHeight = () => {
     switch (markType) {
       case "large":
-        return "h-6 bg-[#aeaeae] opacity-50"
+        return "h-6 bg-[#4a4a4a] dark:bg-[#aeaeae]"
       case "medium":
-        return "h-3 bg-[#767676] opacity-50"
+        return "h-4 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-80"
       case "small":
-        return "h-2 opacity-70"
+        return "h-3 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-70"
       case "smallest":
-        return "h-[4px] opacity-70"
+        return "h-2 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-50"
     }
   }
 
   return (
     <>
-      {isFirstMark && (
-        <span className="absolute top-[-20px] text-[12px] dark:text-gray-100 text-gray-900 opacity-80 bg-black/10 px-1 rounded left-0 z-10">
-          {formatDate(timestamp)}
-        </span>
-      )}
-
-      <div className="absolute h-full flex flex-col items-center" style={{ left: `${position}%` }}>
-        <div className={`w-[1px] bg-[#4a4a4a] ${getMarkHeight()}`} />
+      <div className="absolute h-full flex flex-col items-start" style={{ left: `${position}%` }}>
+        <div className={`w-[1px] ${getMarkHeight()}`} />
         {showValue && (
           <span
-            className={`text-[11px] text-[#808080] absolute top-7 mt-[-16px] whitespace-nowrap dark:text-gray-100 text-gray-900 opacity-70 transform translate-x-[-50%]`}
+            className={`text-[11px] absolute top-4 mt-0 whitespace-nowrap text-gray-900 dark:text-gray-100 transform translate-x-[10px]`}
           >
-            {formatTimeWithMilliseconds(timestamp, false, true, false)}
+            {isFirstMark ? (
+              <>
+                {formatDate(timestamp)}
+                <span className="ml-[2px]">
+                  {formatTimeWithMilliseconds(timestamp, false, true, false)}
+                </span>
+              </>
+            ) : (
+              formatTimeWithMilliseconds(timestamp, false, true, false)
+            )}
           </span>
         )}
       </div>

@@ -17,28 +17,9 @@ export function useTimelineScale(
   endTime: number,
   scale: number = 1,
 ) {
-  const { timeStep, subStep } = useMemo(() => {
-    const getTimeScale = (duration: number): TimeScale => {
-      // Базовые интервалы в зависимости от длительности
-      if (duration <= 30) return { main: 5, sub: 1 }
-      if (duration <= 60) return { main: 10, sub: 2 }
-      if (duration <= 300) return { main: 30, sub: 5 }
-      if (duration <= 900) return { main: 60, sub: 15 }
-      if (duration <= 3600) return { main: 300, sub: 60 }
-      return { main: 900, sub: 300 }
-    }
-
-    // Получаем базовую шкалу и применяем масштаб
-    const baseScale = getTimeScale(duration)
-    return {
-      timeStep: baseScale.main / scale,
-      subStep: baseScale.sub / scale,
-    }
-  }, [duration, scale])
-
   const adjustedRange = useMemo((): TimeRange => {
     const timeRange = endTime - startTime
-    const padding = timeRange * 0.03 // 3% отступ с каждой стороны
+    const padding = timeRange * 0.05 // 3% отступ с каждой стороны
 
     // Применяем масштаб к диапазону
     const scaledRange = timeRange * scale
@@ -50,6 +31,28 @@ export function useTimelineScale(
       duration: scaledRange + scaledPadding * 2,
     }
   }, [startTime, endTime, scale])
+
+  const { timeStep, subStep } = useMemo(() => {
+    const getTimeScale = (visibleDuration: number): TimeScale => {
+      // Базовые интервалы в зависимости от видимой длительности
+      if (visibleDuration <= 10) return { main: 1, sub: 0.25 }
+      if (visibleDuration <= 30) return { main: 2.5, sub: 0.5 }
+      if (visibleDuration <= 60) return { main: 5, sub: 1 }
+      if (visibleDuration <= 300) return { main: 15, sub: 2.5 }
+      if (visibleDuration <= 900) return { main: 30, sub: 7.5 }
+      if (visibleDuration <= 3600) return { main: 150, sub: 30 }
+      return { main: 450, sub: 150 }
+    }
+
+    // Получаем шкалу на основе видимой длительности
+    const visibleDuration = adjustedRange.duration
+    const timeScale = getTimeScale(visibleDuration)
+
+    return {
+      timeStep: timeScale.main,
+      subStep: timeScale.sub,
+    }
+  }, [adjustedRange.duration])
 
   return {
     timeStep,
