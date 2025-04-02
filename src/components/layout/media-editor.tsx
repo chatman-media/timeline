@@ -337,48 +337,47 @@ export function MediaEditor() {
     // Простая проверка на основе размера экрана (большой экран может указывать на наличие внешнего монитора)
     const checkExternalDisplay = () => {
       // Проверка на широкий экран (можно настроить порог)
-      const isWideScreen = window.matchMedia("(min-width: 1920px)").matches;
-      
+      const isWideScreen = window.matchMedia("(min-width: 1920px)").matches
+
       // Проверка на основе отношения размера экрана к devicePixelRatio
       // Это эвристика, не гарантирующая точность, но может быть полезной
-      const screenWidth = window.screen.width;
-      const screenHeight = window.screen.height;
-      const pixelRatio = window.devicePixelRatio || 1;
-      
-      // Большой экран с нормальным DPI может указывать на внешний монитор
-      const isProbablyExternal = 
-        (screenWidth > 1920 && pixelRatio < 2) || 
-        (screenWidth * pixelRatio > 3000);
-      
-      setHasExternalDisplay(isWideScreen || isProbablyExternal);
-    };
+      const screenWidth = window.screen.width
+      const screenHeight = window.screen.height
+      const pixelRatio = window.devicePixelRatio || 1
 
-    checkExternalDisplay();
-    
+      // Большой экран с нормальным DPI может указывать на внешний монитор
+      const isProbablyExternal =
+        (screenWidth > 1920 && pixelRatio < 2) || screenWidth * pixelRatio > 3000
+
+      setHasExternalDisplay(isWideScreen || isProbablyExternal)
+    }
+
+    checkExternalDisplay()
+
     // Слушаем изменения в размере экрана
-    const mediaQuery = window.matchMedia("(min-width: 1920px)");
+    const mediaQuery = window.matchMedia("(min-width: 1920px)")
     const handleChange = (e: MediaQueryListEvent) => {
-      checkExternalDisplay();
-    };
-    
+      checkExternalDisplay()
+    }
+
     // Для современных браузеров
     if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handleChange);
+      mediaQuery.addEventListener("change", handleChange)
     }
     // Для старых браузеров
     else if (mediaQuery.addListener) {
-      mediaQuery.addListener(handleChange);
+      mediaQuery.addListener(handleChange)
     }
-    
+
     return () => {
       // Очистка слушателя
       if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener("change", handleChange);
+        mediaQuery.removeEventListener("change", handleChange)
       } else if (mediaQuery.removeListener) {
-        mediaQuery.removeListener(handleChange);
+        mediaQuery.removeListener(handleChange)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   // Загружаем сохраненные размеры при первом рендере
   useEffect(() => {
@@ -402,9 +401,9 @@ export function MediaEditor() {
   const changeLayout = (mode: string) => {
     // Не позволяем выбрать двойной макет, если нет внешнего монитора
     if (mode === "dual" && !hasExternalDisplay) {
-      return;
+      return
     }
-    
+
     setLayoutMode(mode)
     localStorage.setItem("editor-layout-mode", mode)
   }
@@ -413,17 +412,17 @@ export function MediaEditor() {
   const CustomTopNavBar = () => {
     const [projectName, setProjectName] = useState("Без названия #1")
     const [isEditing, setIsEditing] = useState(false)
-  
+
     const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       setProjectName(e.target.value)
     }
-  
+
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "Enter") {
         setIsEditing(false)
       }
     }
-  
+
     return (
       <div className="flex items-center justify-between w-full h-6 px-1 bg-background border-b border-border">
         <div className="flex-1"></div>
@@ -465,7 +464,7 @@ export function MediaEditor() {
               </div>
             </PopoverContent>
           </Popover>
-  
+
           <Popover>
             <PopoverTrigger asChild>
               <Button className="cursor-pointer" variant="ghost" size="icon" title="Список задач">
@@ -487,7 +486,7 @@ export function MediaEditor() {
             </PopoverTrigger>
             <PopoverContent className="w-64 p-1" sideOffset={0}>
               <div className="flex justify-around gap-2">
-                <div 
+                <div
                   className={`flex flex-col items-center cursor-pointer ${layoutMode === "classic" ? "bg-muted" : "hover:bg-muted"} p-2 pb-1`}
                   onClick={() => changeLayout("classic")}
                 >
@@ -520,8 +519,8 @@ export function MediaEditor() {
                   </div>
                   <span className="text-[9px]">Классический</span>
                 </div>
-  
-                <div 
+
+                <div
                   className={`flex flex-col items-center cursor-pointer ${layoutMode === "vertical" ? "bg-muted" : "hover:bg-muted"} p-2 pb-1`}
                   onClick={() => changeLayout("vertical")}
                 >
@@ -556,10 +555,10 @@ export function MediaEditor() {
                   </div>
                   <span className="text-[9px]">Вертикальное</span>
                 </div>
-  
+
                 {/* Опция двойного макета доступна только при наличии внешнего монитора */}
-                <div 
-                  className={`flex flex-col items-center pr-2  ${hasExternalDisplay ? 'cursor-pointer' : 'opacity-50 cursor-not-allowed'} ${layoutMode === "dual" ? "bg-muted" : (hasExternalDisplay ? "hover:bg-muted" : "")} p-2 pb-1`}
+                <div
+                  className={`flex flex-col items-center pr-2  ${hasExternalDisplay ? "cursor-pointer" : "opacity-50 cursor-not-allowed"} ${layoutMode === "dual" ? "bg-muted" : hasExternalDisplay ? "hover:bg-muted" : ""} p-2 pb-1`}
                   onClick={() => hasExternalDisplay && changeLayout("dual")}
                   title={hasExternalDisplay ? "Двойной вид" : "Требуется внешний монитор"}
                 >
@@ -673,10 +672,10 @@ export function MediaEditor() {
             </ResizablePanel>
           </ResizablePanelGroup>
         </ResizablePanel>
-        
+
         {/* Разделитель */}
         <ResizableHandle withHandle />
-        
+
         {/* Нижнее окно */}
         <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
           <ResizablePanelGroup direction="vertical" autoSaveId="dual-bottom-layout">
@@ -825,4 +824,3 @@ export function MediaEditor() {
     </div>
   )
 }
-

@@ -49,16 +49,14 @@ export function TimelineScale({
         )}
       </div>
 
-      <div className="relative w-full h-8">
-        <TimelineMarks
-          startTime={adjustedRange.startTime}
-          endTime={adjustedRange.endTime}
-          duration={adjustedRange.duration}
-          timeStep={timeStep}
-          subStep={subStep}
-          isActive={isActive}
-        />
-      </div>
+      <TimelineMarks
+        startTime={adjustedRange.startTime}
+        endTime={adjustedRange.endTime}
+        duration={adjustedRange.duration}
+        timeStep={timeStep}
+        subStep={subStep}
+        isActive={isActive}
+      />
     </div>
   )
 }

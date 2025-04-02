@@ -24,7 +24,7 @@ export function useTimelineZoom({
 
       const delta = -event.deltaY
       const scaleChange = delta > 0 ? 1.2 : 0.8
-      
+
       setScale((currentScale) => {
         const newScale = currentScale * scaleChange
         return Math.min(Math.max(newScale, minScale), maxScale)
@@ -111,4 +111,4 @@ export function useTimelineZoom({
     setScale,
     containerRef: containerRef as React.RefObject<HTMLDivElement>,
   }
-} 
+}

@@ -31,7 +31,7 @@ export function TimelineSection({
   const { timeStep, subStep, adjustedRange } = useTimelineScale(duration, startTime, endTime, scale)
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className={`timeline-section relative flex flex-col ${isActive ? "" : "bg-muted/50"}`}
       style={{ overflow: "hidden" }}
@@ -39,7 +39,7 @@ export function TimelineSection({
       <div className="h-8 relative flex items-center justify-end px-4">
         <TimelineControls scale={scale} setScale={setScale} />
       </div>
-      
+
       <div className="relative flex-1">
         <div className="w-full flex flex-col gap-2">
           <TimelineScale
@@ -52,12 +52,12 @@ export function TimelineSection({
 
           <div className="flex flex-col gap-2 relative">
             {tracks.map((track, index) => (
-              <div 
-                key={`${track.id}-${date}`} 
-                className="relative" 
-                style={{ 
+              <div
+                key={`${track.id}-${date}`}
+                className="relative"
+                style={{
                   height: 80,
-                  zIndex: tracks.length - index
+                  zIndex: tracks.length - index,
                 }}
               >
                 <VideoTrack

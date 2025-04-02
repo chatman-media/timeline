@@ -39,8 +39,8 @@ export function TrackControls({
   }
 
   // Определяем, является ли трек видео или аудио
-  const isVideoTrack = track.videos.some(video => 
-    video.probeData?.streams?.some(stream => stream.codec_type === "video")
+  const isVideoTrack = track.videos.some((video) =>
+    video.probeData?.streams?.some((stream) => stream.codec_type === "video"),
   )
 
   return (
@@ -56,7 +56,7 @@ export function TrackControls({
           <EyeOff className="w-4 h-4 text-gray-500" />
         )}
       </button>
-      
+
       <button
         onClick={handleLockToggle}
         className="p-1 hover:bg-gray-700 rounded"
@@ -88,4 +88,4 @@ export function TrackControls({
       </div>
     </div>
   )
-} 
+}

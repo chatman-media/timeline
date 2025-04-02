@@ -16,9 +16,9 @@ export function TimelineControls({
   const logMinScale = Math.log(minScale)
   const logMaxScale = Math.log(maxScale)
   const logCurrentScale = Math.log(scale)
-  
+
   const logStep = (logMaxScale - logMinScale) / 100
-  
+
   const handleScaleDecrease = () => {
     const newLogScale = logCurrentScale - logStep
     const newScale = Math.exp(Math.max(newLogScale, logMinScale))
@@ -47,7 +47,7 @@ export function TimelineControls({
       >
         <Minus size={14} />
       </button>
-      
+
       <input
         type="range"
         min={0}
@@ -59,7 +59,7 @@ export function TimelineControls({
           background: "linear-gradient(to right, rgb(25, 102, 107), rgb(25, 102, 107))",
         }}
       />
-      
+
       <button
         onClick={handleScaleIncrease}
         className="w-6 h-6 flex items-center justify-center rounded-full bg-gray-800 hover:bg-gray-700 text-gray-200"
@@ -68,4 +68,4 @@ export function TimelineControls({
       </button>
     </div>
   )
-} 
+}

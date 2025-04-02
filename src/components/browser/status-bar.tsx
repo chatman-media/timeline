@@ -57,7 +57,9 @@ export function StatusBar({
   }
 
   const remainingMaxDateFiles = maxDateInfo ? getRemainingFilesForDate(maxDateInfo) : []
-  const remainingSecondMaxDateFiles = secondMaxDateInfo ? getRemainingFilesForDate(secondMaxDateInfo) : []
+  const remainingSecondMaxDateFiles = secondMaxDateInfo
+    ? getRemainingFilesForDate(secondMaxDateInfo)
+    : []
 
   return (
     <div className="flex justify-between items-center text-sm w-full h-[24px] bg-background dark:bg-[#1a1a1a] p-[3px] border-t border-border">

@@ -23,9 +23,10 @@ export const formatDuration = (seconds: number, afterComa = 3): string => {
   const secs = Math.floor(seconds % 60)
   const ms = Math.floor((seconds % 1) * 1000)
 
-  const timeString = hours > 0 
-    ? `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-    : `${minutes}:${secs.toString().padStart(2, "0")}`
+  const timeString =
+    hours > 0
+      ? `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
+      : `${minutes}:${secs.toString().padStart(2, "0")}`
 
   if (afterComa === 0) {
     return timeString
