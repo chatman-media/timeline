@@ -1,4 +1,3 @@
-import { useState } from "react"
 import {
   ChevronDown,
   Cloud,
@@ -10,6 +9,7 @@ import {
   Send,
   Settings,
 } from "lucide-react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+
 import { ThemeToggle } from "../theme-toggle"
 import { TrackLines } from "./track-lines"
 

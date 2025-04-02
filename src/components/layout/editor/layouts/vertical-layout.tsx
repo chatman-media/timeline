@@ -1,8 +1,9 @@
-import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { Browser } from "@/components/browser/browser"
 import { Editing } from "@/components/editing/editing"
 import { ActiveVideo } from "@/components/player/media-player"
 import { Timeline } from "@/components/timeline"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+
 import { Options } from "../options"
 
 export function VerticalMediaEditor() {

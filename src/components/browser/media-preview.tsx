@@ -100,8 +100,8 @@ export function MediaPreview({
         {hoverTimes[fileId]?.[0] !== undefined &&
           hoverTimes[fileId]?.[0] !== null &&
           Number.isFinite(hoverTimes[fileId]?.[0]) && (
-            <PreviewTimeline time={hoverTimes[fileId][0]} duration={duration} />
-          )}
+          <PreviewTimeline time={hoverTimes[fileId][0]} duration={duration} />
+        )}
 
         {onAddMedia && (
           <div
@@ -199,8 +199,8 @@ export function MediaPreview({
               {hoverTimes[fileId]?.[index] !== undefined &&
                 hoverTimes[fileId]?.[index] !== null &&
                 Number.isFinite(hoverTimes[fileId]?.[index]) && (
-                  <PreviewTimeline time={hoverTimes[fileId][index]} duration={duration} />
-                )}
+                <PreviewTimeline time={hoverTimes[fileId][index]} duration={duration} />
+              )}
 
               {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
                 <div

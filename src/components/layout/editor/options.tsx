@@ -1,5 +1,6 @@
-import { Button } from "@/components/ui/button"
 import { Sliders } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
 
 export function Options() {
   return (

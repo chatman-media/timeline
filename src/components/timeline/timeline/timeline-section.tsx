@@ -5,9 +5,9 @@ import { useTimelineZoom } from "@/hooks/use-timeline-zoom"
 import { Track } from "@/types/videos"
 
 import { VideoTrack } from "../track"
+import { TimelineControls } from "./timeline-controls"
 import { TimelineScale } from "./timeline-scale"
 import { TimelineSectionBar } from "./timeline-section-bar"
-import { TimelineControls } from "./timeline-controls"
 
 interface TimelineSectionProps {
   date: string

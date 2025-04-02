@@ -32,8 +32,8 @@ export const transitions: TransitionEffect[] = [
         fps * 1.5
       }:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${width}x${height}[v0];
               [1:v]scale=2*iw:-1,zoompan=z='if(lte(zoom,1.0),${scale},max(1.001,zoom-${zoomSpeed}))':d=${
-                fps * 1.5
-              }:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${width}x${height}[v1]`
+  fps * 1.5
+}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s=${width}x${height}[v1]`
     },
     params: {
       scale: 1.5,

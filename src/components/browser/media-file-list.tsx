@@ -246,13 +246,13 @@ export function MediaFileList({
                 const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
                 const startTime = file.startTime
                   ? new Date(file.startTime * 1000).toLocaleString("ru-RU", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                  })
                   : "-"
                 const duration = file.probeData?.format.duration
                   ? formatDuration(file.probeData.format.duration)
@@ -306,10 +306,10 @@ export function MediaFileList({
                   key={fileId}
                   className={`flex items-center gap-3 p-0 pr-2 rounded-md group w-full overflow-hidden
                     ${
-                      isAdded
-                        ? "opacity-50 pointer-events-none"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
+                isAdded
+                  ? "opacity-50 pointer-events-none"
+                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                }`}
                   style={{ maxWidth: "100%" }}
                 >
                   <div className="relative flex-shrink-0 flex gap-1">

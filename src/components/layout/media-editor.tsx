@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react"
+
 import { ClassicMediaEditor } from "./editor/layouts/classic-layout"
-import { VerticalMediaEditor } from "./editor/layouts/vertical-layout"
-import { DualMediaEditor } from "./editor/layouts/dual-layout"
 import { DefaultMediaEditor } from "./editor/layouts/default-layout"
+import { DualMediaEditor } from "./editor/layouts/dual-layout"
+import { VerticalMediaEditor } from "./editor/layouts/vertical-layout"
 import { TopNavBar } from "./editor/top-nav-bar"
-import { getSavedLayout, defaultSizes } from "./editor/utils/layout-utils"
+import { defaultSizes,getSavedLayout } from "./editor/utils/layout-utils"
 
 export function MediaEditor() {
   const [isLoaded, setIsLoaded] = useState(false)

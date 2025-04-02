@@ -53,8 +53,8 @@ export function EditingTracks() {
                 ? `${videoStream.width}x${videoStream.height}`
                 : audioStream
                   ? `${audioStream.codec_name?.toUpperCase()} ${audioStream.channels}ch ${Math.round(
-                      audioStream.sample_rate || 0 / 1000,
-                    )}kHz`
+                    audioStream.sample_rate || 0 / 1000,
+                  )}kHz`
                   : "-"
 
               return (
