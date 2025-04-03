@@ -5,7 +5,6 @@ import { DefaultMediaEditor } from "./editor/layouts/default-layout"
 import { DualMediaEditor } from "./editor/layouts/dual-layout"
 import { VerticalMediaEditor } from "./editor/layouts/vertical-layout"
 import { TopNavBar } from "./editor/top-nav-bar"
-import { defaultSizes,getSavedLayout } from "./editor/utils/layout-utils"
 import { useRootStore } from "@/hooks/use-root-store"
 
 export function MediaEditor() {
@@ -13,9 +12,6 @@ export function MediaEditor() {
   const [isLoaded, setIsLoaded] = useState(false)
   const [layoutMode, setLayoutMode] = useState("default")
   const [hasExternalDisplay, setHasExternalDisplay] = useState(false)
-  const [mainLayout, setMainLayout] = useState(defaultSizes.mainLayout)
-  const [topLayout, setTopLayout] = useState(defaultSizes.topLayout)
-  const [bottomLayout, setBottomLayout] = useState(defaultSizes.bottomLayout)
 
   useEffect(() => {
     const checkExternalDisplay = () => {
@@ -51,14 +47,8 @@ export function MediaEditor() {
   }, [])
 
   useEffect(() => {
-    const savedMainLayout = getSavedLayout("main-layout")
-    const savedTopLayout = getSavedLayout("top-layout")
-    const savedBottomLayout = getSavedLayout("bottom-layout")
     const savedLayout = localStorage.getItem("editor-layout-mode")
 
-    if (savedMainLayout) setMainLayout(savedMainLayout)
-    if (savedTopLayout) setTopLayout(savedTopLayout)
-    if (savedBottomLayout) setBottomLayout(savedBottomLayout)
     if (savedLayout && (savedLayout !== "dual" || hasExternalDisplay)) setLayoutMode(savedLayout)
 
     setIsLoaded(true)
