@@ -8,25 +8,25 @@ import {
   Save,
   Send,
   Settings,
-} from "lucide-react";
-import { useState } from "react";
+} from "lucide-react"
+import { useState } from "react"
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@/components/ui/popover"
 
-import { ThemeToggle } from "../theme-toggle";
-import { TrackLines } from "./track-lines";
+import { ThemeToggle } from "../theme-toggle"
+import { TrackLines } from "./track-lines"
 
 interface TopNavBarProps {
   onLayoutChange: (mode: string) => void;
@@ -39,18 +39,18 @@ export function TopNavBar({
   layoutMode,
   hasExternalDisplay,
 }: TopNavBarProps) {
-  const [projectName, setProjectName] = useState("Без названия #1");
-  const [isEditing, setIsEditing] = useState(false);
+  const [projectName, setProjectName] = useState("Без названия #1")
+  const [isEditing, setIsEditing] = useState(false)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProjectName(e.target.value);
-  };
+    setProjectName(e.target.value)
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      setIsEditing(false);
+      setIsEditing(false)
     }
-  };
+  }
 
   return (
     <div className="flex items-center justify-between w-full h-6 px-1 bg-background border-b border-border">
@@ -157,8 +157,8 @@ export function TopNavBar({
                           <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
                         </div>
                         <div className="w-[70%] relative px-2 py-1">
-                        <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
-                        <div className="h-2 w-[75%] bg-primary/70 rounded-sm"></div>
+                          <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
+                          <div className="h-2 w-[75%] bg-primary/70 rounded-sm"></div>
                         </div>
                       </div>
                     </div>
@@ -183,11 +183,11 @@ export function TopNavBar({
                     <div className="h-[50%] w-full flex border-b-2 border-gray-700">
                       <div className="w-[30%] border-r-2 border-gray-700 p-1">
                         <div className="h-2 w-full mb-1 flex items-center gap-1">
-                            <div className="h-2 w-[25%] rounded-full bg-primary/70"></div>
-                            <div className="h-2 w-[75%] rounded-full bg-primary/70"></div>
-                            <div className="h-2 w-3 rounded-full bg-primary/70"></div>
-                            <div className="h-2 w-3 rounded-full bg-primary/70"></div>
-                            <div className="h-2 w-3 rounded-full bg-primary/70"></div>
+                          <div className="h-2 w-[25%] rounded-full bg-primary/70"></div>
+                          <div className="h-2 w-[75%] rounded-full bg-primary/70"></div>
+                          <div className="h-2 w-3 rounded-full bg-primary/70"></div>
+                          <div className="h-2 w-3 rounded-full bg-primary/70"></div>
+                          <div className="h-2 w-3 rounded-full bg-primary/70"></div>
                         </div>
                       </div>
                       <div className="w-[50%] flex items-center justify-center border-r-2 border-gray-700">
@@ -257,8 +257,8 @@ export function TopNavBar({
                     layoutMode === "dual"
                       ? "bg-muted"
                       : hasExternalDisplay
-                      ? "hover:bg-muted"
-                      : ""
+                        ? "hover:bg-muted"
+                        : ""
                   } p-2 pb-1`}
                   onClick={() => hasExternalDisplay && onLayoutChange("dual")}
                   title={
@@ -375,5 +375,5 @@ export function TopNavBar({
         </div>
       </div>
     </div>
-  );
+  )
 }

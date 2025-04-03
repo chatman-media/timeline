@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { useVideoPlayer } from "@/hooks/use-video-player"
 import { useRootStore } from "@/hooks/use-root-store"
+import { useVideoPlayer } from "@/hooks/use-video-player"
 import { formatDuration, formatFileSize } from "@/lib/utils"
-import { MediaFile } from "@/types/videos"
+import { FileGroup,MediaFile } from "@/types/videos"
 import {
-  FileGroup,
   getFileType,
   getSequentialFiles,
   groupFilesByDate,

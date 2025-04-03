@@ -1,5 +1,7 @@
 import { nanoid } from "nanoid"
+
 import type { FileGroup, MediaFile, Track } from "@/types/videos"
+
 import { calculateTimeRanges } from "./video-utils"
 
 // Типы для улучшения типизации

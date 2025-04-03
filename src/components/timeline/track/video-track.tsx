@@ -121,12 +121,12 @@ const VideoTrack = memo(
                                         <span>
                                           {audioStream?.sample_rate &&
                                             `${Math.round(
-                                              parseInt(audioStream.sample_rate) / 1000,
+                                              parseInt(`${audioStream.sample_rate}`) / 1000,
                                             )}kHz`}
                                         </span>
                                         <span>
                                           {audioStream?.bit_rate &&
-                                            `${formatBitrate(audioStream.bit_rate)}`}
+                                            `${formatBitrate(parseInt(audioStream.bit_rate))}`}
                                         </span>
                                         <span
                                           className="bg-[#033032] text-[11px] mb-[2px] px-[3px]"
