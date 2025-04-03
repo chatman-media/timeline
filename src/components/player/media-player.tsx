@@ -1,7 +1,7 @@
-import { Pause, Play } from "lucide-react"
-import { memo, useEffect, useState } from "react"
+import { memo, useEffect } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
+import { PlayerControls } from "@/components/player/player-controls"
 
 export const ActiveVideo = memo(() => {
   const { videoRefs, isPlaying, activeVideo, setCurrentTime, setIsPlaying, isChangingCamera } =
@@ -84,24 +84,25 @@ export const ActiveVideo = memo(() => {
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [isPlaying, activeVideo, setIsPlaying])
 
+  if (!activeVideo) return null
+
   return (
-    <div className="relative w-full h-full bg-muted/50">
-      {activeVideo && (
-        <div className="relative h-full">
-          <video
-            ref={(el) => {
-              if (el) videoRefs.current[activeVideo.id] = el
-            }}
-            src={activeVideo.path}
-            className="h-full object-contain object-center"
-            playsInline
-            preload="auto"
-            disablePictureInPicture
-            disableRemotePlayback
-            controlsList="nodownload noplaybackrate"
-          />
-        </div>
-      )}
+    <div className="relative h-full flex flex-col">
+      <video
+        ref={(el) => {
+          if (el) videoRefs.current[activeVideo.id] = el
+        }}
+        src={activeVideo.path}
+        className="flex-1 object-contain object-center"
+        playsInline
+        preload="auto"
+        disablePictureInPicture
+        disableRemotePlayback
+        controlsList="nodownload noplaybackrate"
+      />
+      <div className="flex items-center justify-between w-full py-[2px] px-1 bg-background border-b border-border">
+        <PlayerControls />
+      </div>
     </div>
   )
 })

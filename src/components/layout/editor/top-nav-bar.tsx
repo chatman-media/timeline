@@ -52,7 +52,7 @@ export function TopNavBar({
   }
 
   return (
-    <div className="flex items-center justify-between w-full h-6 px-1 bg-background border-b border-border">
+    <div className="flex items-center justify-between w-full py-[2px] px-1 bg-background border-b border-border">
       <div className="flex-1"></div>
       <div
         className="text-xs font-medium relative group flex items-center gap-1"
@@ -79,7 +79,7 @@ export function TopNavBar({
           </span>
         )}
       </div>
-      <div className="flex items-center space-x-0 flex-1 justify-end">
+      <div className="flex items-center space-x-0 flex-1 justify-end h-6">
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -102,10 +102,10 @@ export function TopNavBar({
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              className="cursor-pointer"
+              className="cursor-pointer p-1"
               variant="ghost"
               size="icon"
-              title="Список задач"
+              title="Задачи монтажа"
             >
               <ListTodo className="h-3 w-3" />
             </Button>
@@ -156,7 +156,7 @@ export function TopNavBar({
           className="cursor-pointer"
           variant="ghost"
           size="icon"
-          title="Профиль пользователя"
+          title="Облако"
         >
           <Cloud className="h-3 w-3" />
         </Button>
