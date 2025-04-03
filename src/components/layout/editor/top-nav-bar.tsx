@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils"
 
 import { ThemeToggle } from "../theme-toggle"
 import { LayoutPreviews } from "./layouts/layout-previews"
+import { SaveStatus } from "./save-status"
 
 interface TopNavBarProps {
   onLayoutChange: (mode: string) => void;
@@ -63,7 +64,7 @@ export function TopNavBar({
     <div className="flex items-center justify-between w-full py-[2px] px-1 bg-background border-b border-border">
       <div className="flex-1"></div>
       <div
-        className="text-xs font-medium relative group flex items-center gap-1"
+        className="text-xs font-medium relative group flex items-center gap-2"
         onMouseEnter={() => !isEditing && setIsEditing(true)}
         onMouseLeave={() =>
           !document.activeElement?.id?.includes("project-name") &&
@@ -86,6 +87,7 @@ export function TopNavBar({
             {projectName}
           </span>
         )}
+        <SaveStatus />
       </div>
       <div className="flex items-center space-x-0 flex-1 justify-end h-6">
         <Popover>
