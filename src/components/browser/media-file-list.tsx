@@ -145,6 +145,10 @@ export function MediaFileList({
     }
   }, [media])
 
+  useEffect(() => {
+    fetchVideos()
+  }, [fetchVideos])
+
   const handleAddByIds = useCallback(
     (fileIds: string[]) => {
       const filesToAdd = media.filter((file) => fileIds.includes(file.id))
