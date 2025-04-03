@@ -25,7 +25,7 @@ export function ClassicMediaEditor({  }: ClassicLayoutProps) {
               </div>
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
+          <ResizableHandle  />
           <ResizablePanel defaultSize={45} minSize={30} maxSize={65}>
             <div className="h-full bg-muted/50 border-l border-border">
               <ActiveVideo />
@@ -34,7 +34,7 @@ export function ClassicMediaEditor({  }: ClassicLayoutProps) {
         </ResizablePanelGroup>
       </ResizablePanel>
 
-      <ResizableHandle withHandle />
+      <ResizableHandle  />
 
       <ResizablePanel defaultSize={50}>
         <ResizablePanelGroup direction="horizontal" autoSaveId="bottom-layout">
@@ -43,7 +43,7 @@ export function ClassicMediaEditor({  }: ClassicLayoutProps) {
               <Editing />
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
+          <ResizableHandle  />
           <ResizablePanel defaultSize={75}>
             <div className="h-full bg-muted/50 border-l border-t border-border">
               <Timeline />

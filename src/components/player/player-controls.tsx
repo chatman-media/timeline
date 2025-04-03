@@ -12,12 +12,13 @@ import {
 } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
-import { useRootStore } from "@/hooks/use-root-store"
-import { Slider } from "@/components/ui/slider"
-import { cn } from "@/lib/utils"
-import { Button } from "../ui/button"
 import { EntryPointIcon } from "@/components/icons/entry-point"
 import { ExitPointIcon } from "@/components/icons/exit-point"
+import { Slider } from "@/components/ui/slider"
+import { useRootStore } from "@/hooks/use-root-store"
+import { cn } from "@/lib/utils"
+
+import { Button } from "../ui/button"
 
 export function PlayerControls() {
   const { isPlaying, setIsPlaying, currentTime, activeVideo, setCurrentTime } = useRootStore()
@@ -150,7 +151,7 @@ export function PlayerControls() {
             <CircleDot className={cn(
               "w-4 h-4",
               isRecording 
-                              ? "text-red-500 hover:text-red-600" 
+                ? "text-red-500 hover:text-red-600" 
                 : "text-white hover:text-gray-300"
             )} />
           </Button>

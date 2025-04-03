@@ -23,11 +23,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { useRootStore } from "@/hooks/use-root-store"
+import { cn } from "@/lib/utils"
 
 import { ThemeToggle } from "../theme-toggle"
 import { LayoutPreviews } from "./layouts/layout-previews"
-import { useRootStore } from "@/hooks/use-root-store"
-import { cn } from "@/lib/utils"
 
 interface TopNavBarProps {
   onLayoutChange: (mode: string) => void;

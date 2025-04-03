@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
 
+import { useRootStore } from "@/hooks/use-root-store"
+
 import { ClassicMediaEditor } from "./editor/layouts/classic-layout"
 import { DefaultMediaEditor } from "./editor/layouts/default-layout"
 import { DualMediaEditor } from "./editor/layouts/dual-layout"
 import { VerticalMediaEditor } from "./editor/layouts/vertical-layout"
 import { TopNavBar } from "./editor/top-nav-bar"
-import { useRootStore } from "@/hooks/use-root-store"
 
 export function MediaEditor() {
   const { loadState, saveState, activeVideo, videoRefs } = useRootStore()

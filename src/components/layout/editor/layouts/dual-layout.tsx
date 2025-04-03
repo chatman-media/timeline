@@ -21,7 +21,7 @@ export function DualMediaEditor() {
               </div>
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
+          <ResizableHandle  />
           <ResizablePanel defaultSize={30} minSize={15} maxSize={50}>
             <div className="h-full bg-muted/50 border-l border-border">
               <Options />
@@ -30,7 +30,7 @@ export function DualMediaEditor() {
         </ResizablePanelGroup>
       </ResizablePanel>
 
-      <ResizableHandle withHandle />
+      <ResizableHandle  />
 
       <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
         <ResizablePanelGroup direction="vertical" autoSaveId="dual-bottom-layout">
@@ -39,7 +39,7 @@ export function DualMediaEditor() {
               <Browser />
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
+          <ResizableHandle  />
           <ResizablePanel defaultSize={60} minSize={40} maxSize={80}>
             <div className="h-full bg-muted/50 border-t border-border">
               <Timeline />

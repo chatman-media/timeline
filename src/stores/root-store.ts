@@ -1,9 +1,9 @@
 import { createStore } from "@xstate/store"
 
+import { STORAGE_KEYS } from "@/lib/constants"
 import { generateVideoId } from "@/lib/utils"
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { createTracksFromFiles } from "@/utils/media-utils"
-import { STORAGE_KEYS } from "@/lib/constants"
 
 /**
  * Начальное состояние корневого хранилища

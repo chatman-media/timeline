@@ -1,6 +1,6 @@
-import { Play } from "lucide-react";
+import { Play } from "lucide-react"
 
-import { TrackLines } from "../track-lines";
+import { TrackLines } from "../track-lines"
 
 interface LayoutPreviewsProps {
   onLayoutChange: (mode: string) => void;
@@ -67,7 +67,7 @@ function DefaultLayout({ isActive, onClick }: LayoutProps) {
       </div>
       <span className="text-[10px] font-medium">По умолчанию</span>
     </div>
-  );
+  )
 }
 
 function ClassicLayout({ isActive, onClick }: LayoutProps) {
@@ -116,7 +116,7 @@ function ClassicLayout({ isActive, onClick }: LayoutProps) {
       </div>
       <span className="text-[10px] font-medium">Классический</span>
     </div>
-  );
+  )
 }
 
 function VerticalLayout({ isActive, onClick }: LayoutProps) {
@@ -147,9 +147,9 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
               </div>
             </div>
             <div className="w-[50%] border-l-2 border-gray-700 p-1">
-            <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
-            <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
-            <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
+              <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+              <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+              <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
             </div>
           </div>
           <div className="h-[50%] w-full flex">
@@ -158,9 +158,9 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
               <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
             </div>
             <div className="w-[70%] relative px-2 py-1">
-            <div className="h-2 w-[85%] ml-[13%] bg-primary/70 rounded-sm mb-1"></div>
-            <div className="h-2 w-[75%] bg-primary/70 rounded-sm mb-1"></div>
-            <div className="h-2 w-[75%] ml-[10%] bg-primary/70 rounded-sm"></div>
+              <div className="h-2 w-[85%] ml-[13%] bg-primary/70 rounded-sm mb-1"></div>
+              <div className="h-2 w-[75%] bg-primary/70 rounded-sm mb-1"></div>
+              <div className="h-2 w-[75%] ml-[10%] bg-primary/70 rounded-sm"></div>
             </div>
           </div>
         </div>
@@ -170,7 +170,7 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
       </div>
       <span className="text-[10px] font-medium">Вертикальное</span>
     </div>
-  );
+  )
 }
 
 interface DualLayoutProps extends LayoutProps {
@@ -220,7 +220,7 @@ function DualLayout({
         </span>
       )}
     </div>
-  );
+  )
 }
 
 export function LayoutPreviews({
@@ -252,5 +252,5 @@ export function LayoutPreviews({
         />
       </div>
     </div>
-  );
+  )
 }

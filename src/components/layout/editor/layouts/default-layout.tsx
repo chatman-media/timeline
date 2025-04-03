@@ -23,7 +23,7 @@ export function DefaultMediaEditor() {
                     <Browser />
                   </div>
                 </ResizablePanel>
-                <ResizableHandle withHandle />
+                <ResizableHandle  />
                 <ResizablePanel defaultSize={60} minSize={20} maxSize={60}>
                   <div className="h-full border-l border-border">
                     <ActiveVideo />
@@ -32,7 +32,7 @@ export function DefaultMediaEditor() {
               </ResizablePanelGroup>
             </div>
           </ResizablePanel>
-          <ResizableHandle withHandle />
+          <ResizableHandle  />
           <ResizablePanel defaultSize={50}>
             <div className="h-full bg-muted/50 border-t border-border">
               <ResizablePanelGroup direction="horizontal" autoSaveId="vertical-timeline-layout">
@@ -41,7 +41,7 @@ export function DefaultMediaEditor() {
                     <Editing />
                   </div>
                 </ResizablePanel>
-                <ResizableHandle withHandle />
+                <ResizableHandle  />
                 <ResizablePanel defaultSize={75}>
                   <div className="h-full border-l border-border">
                     <Timeline />
@@ -53,7 +53,7 @@ export function DefaultMediaEditor() {
         </ResizablePanelGroup>
       </ResizablePanel>
 
-      <ResizableHandle withHandle />
+      <ResizableHandle  />
 
       <ResizablePanel defaultSize={25}>
         <div className="h-full bg-muted/50 border-l border-border">

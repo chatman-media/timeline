@@ -1,7 +1,7 @@
 import { memo, useEffect } from "react"
 
-import { useRootStore } from "@/hooks/use-root-store"
 import { PlayerControls } from "@/components/player/player-controls"
+import { useRootStore } from "@/hooks/use-root-store"
 
 export const ActiveVideo = memo(() => {
   const { videoRefs, isPlaying, activeVideo, setCurrentTime, setIsPlaying, isChangingCamera } =
