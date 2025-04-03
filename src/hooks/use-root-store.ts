@@ -11,25 +11,25 @@ import type { MediaFile, ScreenLayout, Track } from "@/types/videos"
  */
 export function useRootStore() {
   const { send } = rootStore
-
-  // Селекторы для доступа к состоянию
-  const videos = useSelector(rootStore, (state) => state.context.videos)
-  const media = useSelector(rootStore, (state) => state.context.media)
-  const isLoading = useSelector(rootStore, (state) => state.context.isLoading)
-  const hasMedia = useSelector(rootStore, (state) => state.context.hasMedia)
-  const isPlaying = useSelector(rootStore, (state) => state.context.isPlaying)
-  const currentTime = useSelector(rootStore, (state) => state.context.currentTime)
-  const tracks = useSelector(rootStore, (state) => state.context.tracks)
-  const videoRefs = useSelector(rootStore, (state) => state.context.videoRefs)
-  const activeVideo = useSelector(rootStore, (state) => state.context.activeVideo)
-  const activeTrackId = useSelector(rootStore, (state) => state.context.activeTrackId)
-  const currentLayout = useSelector(rootStore, (state) => state.context.currentLayout)
-  const timeRanges = useSelector(rootStore, (state) => state.context.timeRanges)
-  const hasFetched = useSelector(rootStore, (state) => state.context.hasFetched)
-  const isChangingCamera = useSelector(rootStore, (state) => state.context.isChangingCamera)
-  const metadataCache = useSelector(rootStore, (state) => state.context.metadataCache)
-  const thumbnailCache = useSelector(rootStore, (state) => state.context.thumbnailCache)
-
+  const {
+    videos,
+    media,
+    isLoading,
+    hasMedia,
+    isPlaying,
+    currentTime,
+    tracks,
+    videoRefs,
+    activeVideo,
+    activeTrackId,
+    currentLayout,
+    timeRanges,
+    hasFetched,
+    isChangingCamera,
+    metadataCache,
+    thumbnailCache,
+    addedFiles,
+  } = useSelector(rootStore, (state) => state.context)
 
   // Действия
   const setVideos = useCallback(
@@ -113,6 +113,13 @@ export function useRootStore() {
     [send],
   )
 
+  const addToAddedFiles = useCallback(
+    (fileIds: string[]) => {
+      send({ type: "addToAddedFiles", fileIds })
+    },
+    [send],
+  )
+
   // Функция для переключения воспроизведения
   const play = useCallback(() => {
     send({ type: "setIsPlaying", isPlaying: !isPlaying })
@@ -149,6 +156,7 @@ export function useRootStore() {
     activeVideo,
     activeTrackId,
     currentLayout,
+    addedFiles,
 
     // Действия
     setVideos,
@@ -163,6 +171,7 @@ export function useRootStore() {
     addToMetadataCache,
     addToThumbnailCache,
     addNewTracks,
+    addToAddedFiles,
     play,
 
     // Вспомогательные функции

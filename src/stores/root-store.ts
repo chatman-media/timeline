@@ -24,6 +24,7 @@ const initialContext = {
   metadataCache: {} as Record<string, any>,
   thumbnailCache: {} as Record<string, string>,
   currentLayout: { type: "1x1", activeTracks: ["T1"] } as ScreenLayout,
+  addedFiles: new Set<string>(),
 }
 
 /**
@@ -222,14 +223,23 @@ export const rootStore = createStore({
       },
     }),
 
+    addToAddedFiles: (context, event: { fileIds: string[] }) => ({
+      ...context,
+      addedFiles: new Set([...Array.from(context.addedFiles), ...event.fileIds]),
+    }),
+
     addNewTracks: (context, event: { media: MediaFile[] }) => {
       const { tracks } = context
       const newTracks = createTracksFromFiles(event.media, tracks.length)
       const uniqueNewTracks = newTracks.filter((t) => !new Set(tracks.map((t) => t.id)).has(t.id))
-
+      
+      // Добавляем ID файлов в addedFiles
+      const newFileIds = event.media.map(file => file.id)
+      
       return {
         ...context,
         tracks: [...tracks, ...uniqueNewTracks],
+        addedFiles: new Set([...Array.from(context.addedFiles), ...newFileIds]),
       }
     },
   },

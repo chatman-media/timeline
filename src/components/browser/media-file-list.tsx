@@ -18,18 +18,13 @@ import { StatusBar } from "./status-bar"
 export function MediaFileList({
   viewMode = "thumbnails",
 }: { viewMode?: "list" | "grid" | "thumbnails" }) {
-  const { media, isLoading, addNewTracks, fetchVideos } = useRootStore()
+  const { media, isLoading, addNewTracks, fetchVideos, addedFiles } = useRootStore()
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
   const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
     {},
   )
-  const [addedFiles, setAddedFiles] = useState<Set<string>>(new Set())
-
-  useEffect(() => {
-    fetchVideos()
-  }, [fetchVideos])
 
   const [fileGroups, setFileGroups] = useState<Record<string, FileGroup>>({})
 
@@ -105,26 +100,19 @@ export function MediaFileList({
       const fileId = getFileId(file)
       if (addedFiles.has(fileId)) return
 
-      // Check if file has video or audio stream
       const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
       const audioStream = file.probeData?.streams?.find((s) => s.codec_type === "audio")
 
-      // Only add if file has either video or audio
       if (videoStream || audioStream) {
         addNewTracks([file])
-        setAddedFiles((prev) => new Set([...prev, fileId]))
       }
     },
     [addNewTracks, addedFiles, getFileId],
   )
 
-  // Handlers for StatusBar
   const handleAddAllFiles = useCallback(() => {
     addNewTracks(media)
-    // Добавляем все файлы в состояние addedFiles
-    const fileIds = media.map((file) => getFileId(file))
-    setAddedFiles(new Set(fileIds))
-  }, [media, addNewTracks, getFileId])
+  }, [media, addNewTracks])
 
   const handleAddDateFiles = useCallback(
     (targetDate: string) => {
@@ -138,13 +126,9 @@ export function MediaFileList({
         return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
       })
 
-      // Добавляем файлы выбранной даты в состояние addedFiles
-      const fileIds = dateFiles.map((file) => getFileId(file))
-      setAddedFiles((prev) => new Set([...prev, ...fileIds]))
-
       addNewTracks(dateFiles)
     },
-    [media, addNewTracks, getFileId],
+    [media, addNewTracks],
   )
 
   const handleAddAllVideoFiles = useCallback(() => {
@@ -164,9 +148,6 @@ export function MediaFileList({
   const handleAddByIds = useCallback(
     (fileIds: string[]) => {
       const filesToAdd = media.filter((file) => fileIds.includes(file.id))
-
-      // Добавляем файлы в состояние addedFiles
-      setAddedFiles((prev) => new Set([...prev, ...fileIds]))
 
       addNewTracks(filesToAdd)
     },
