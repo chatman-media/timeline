@@ -4,7 +4,9 @@ import { generateVideoId } from "@/lib/utils"
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { createTracksFromFiles } from "@/utils/media-utils"
 
-// Начальное состояние
+/**
+ * Начальное состояние корневого хранилища
+ */
 const initialContext = {
   videos: [] as MediaFile[],
   media: [] as MediaFile[],
@@ -24,7 +26,11 @@ const initialContext = {
   currentLayout: { type: "1x1", activeTracks: ["T1"] } as ScreenLayout,
 }
 
-export const videoStore = createStore({
+/**
+ * Корневое хранилище приложения
+ * Управляет состоянием видео, треков, метаданных и UI
+ */
+export const rootStore = createStore({
   context: initialContext,
   on: {
     setScreenLayout: (context, event: { layout: ScreenLayout }) => ({
@@ -61,7 +67,7 @@ export const videoStore = createStore({
 
           if (!data.media || !Array.isArray(data.media) || data.media.length === 0) {
             console.error("No media received from API")
-            videoStore.send({
+            rootStore.send({
               type: "setLoadingState",
               isLoading: false,
               hasFetched: true,
@@ -78,7 +84,7 @@ export const videoStore = createStore({
             .sort((a: MediaFile, b: MediaFile) => (a.startTime || 0) - (b.startTime || 0))
 
           if (validMedia.length === 0) {
-            videoStore.send({
+            rootStore.send({
               type: "setInitialState",
               videos: [],
               hasMedia: false,
@@ -89,7 +95,7 @@ export const videoStore = createStore({
             return
           }
 
-          videoStore.send({
+          rootStore.send({
             type: "setInitialState",
             videos: validMedia,
             hasMedia: true,
@@ -99,7 +105,7 @@ export const videoStore = createStore({
           })
         } catch (error) {
           console.error("Error fetching videos:", error)
-          videoStore.send({
+          rootStore.send({
             type: "setLoadingState",
             isLoading: false,
             hasFetched: true,
@@ -239,15 +245,24 @@ export const videoStore = createStore({
   },
 })
 
-// Хелперы для работы с видеохранилищем
+/**
+ * Конвертирует время в процентное значение относительно длительности активного трека
+ * @param time - Время в секундах
+ * @returns Процентное значение (0-100)
+ */
 export function timeToPercent(time: number) {
-  const { context } = videoStore.getSnapshot()
+  const { context } = rootStore.getSnapshot()
   const track = context.tracks.find((t) => t.id === context.activeTrackId)
   return (time / (track?.combinedDuration || 0)) * 100
 }
 
+/**
+ * Конвертирует процентное значение в время относительно длительности активного трека
+ * @param percent - Процентное значение (0-100)
+ * @returns Время в секундах
+ */
 export function percentToTime(percent: number) {
-  const { context } = videoStore.getSnapshot()
+  const { context } = rootStore.getSnapshot()
   const track = context.tracks.find((t) => t.id === context.activeTrackId)
   return (percent / 100) * (track?.combinedDuration || 0)
 }

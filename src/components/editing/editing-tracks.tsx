@@ -1,9 +1,9 @@
-import { useVideoStore } from "@/hooks/useVideoStore"
+import { useRootStore } from "@/hooks/use-root-store"
 import { formatDuration, formatFileSize } from "@/lib/utils"
 import { Track } from "@/types/videos"
 
 export function EditingTracks() {
-  const { tracks } = useVideoStore()
+  const { tracks } = useRootStore()
 
   const getTrackPrefix = (track: Track) => {
     // Check if track contains any video files

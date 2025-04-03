@@ -1,12 +1,12 @@
 import React, { useMemo, useState } from "react"
 
-import { useVideoStore } from "@/hooks/useVideoStore"
+import { useRootStore } from "@/hooks/use-root-store"
 import { MediaFile, Track } from "@/types/videos"
 
 import { TimelineSection } from "./timeline/timeline-section"
 
 export function Timeline() {
-  const { tracks, activeVideo, setCurrentTime: updateTime } = useVideoStore()
+  const { tracks, activeVideo, setCurrentTime: updateTime } = useRootStore()
   const [activeDate, setActiveDate] = useState<string | null>(null)
 
   const sections = useMemo(() => {

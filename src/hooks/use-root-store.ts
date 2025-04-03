@@ -1,29 +1,34 @@
 import { useSelector } from "@xstate/store/react"
 import { useCallback } from "react"
-
-import { videoStore } from "@/stores/videoStore"
+import { rootStore } from "@/stores/root-store"
 import type { MediaFile, ScreenLayout, Track } from "@/types/videos"
 
-export function useVideoStore() {
-  const { send } = videoStore
+/**
+ * Хук для доступа к корневому хранилищу приложения
+ * Предоставляет доступ к состоянию и действиям для управления медиафайлами,
+ * треками, метаданными и UI
+ */
+export function useRootStore() {
+  const { send } = rootStore
 
   // Селекторы для доступа к состоянию
-  const videos = useSelector(videoStore, (state) => state.context.videos)
-  const media = useSelector(videoStore, (state) => state.context.media)
-  const isLoading = useSelector(videoStore, (state) => state.context.isLoading)
-  const hasMedia = useSelector(videoStore, (state) => state.context.hasMedia)
-  const isPlaying = useSelector(videoStore, (state) => state.context.isPlaying)
-  const currentTime = useSelector(videoStore, (state) => state.context.currentTime)
-  const tracks = useSelector(videoStore, (state) => state.context.tracks)
-  const videoRefs = useSelector(videoStore, (state) => state.context.videoRefs)
-  const activeVideo = useSelector(videoStore, (state) => state.context.activeVideo)
-  const activeTrackId = useSelector(videoStore, (state) => state.context.activeTrackId)
-  const currentLayout = useSelector(videoStore, (state) => state.context.currentLayout)
-  const timeRanges = useSelector(videoStore, (state) => state.context.timeRanges)
-  const hasFetched = useSelector(videoStore, (state) => state.context.hasFetched)
-  const isChangingCamera = useSelector(videoStore, (state) => state.context.isChangingCamera)
-  const metadataCache = useSelector(videoStore, (state) => state.context.metadataCache)
-  const thumbnailCache = useSelector(videoStore, (state) => state.context.thumbnailCache)
+  const videos = useSelector(rootStore, (state) => state.context.videos)
+  const media = useSelector(rootStore, (state) => state.context.media)
+  const isLoading = useSelector(rootStore, (state) => state.context.isLoading)
+  const hasMedia = useSelector(rootStore, (state) => state.context.hasMedia)
+  const isPlaying = useSelector(rootStore, (state) => state.context.isPlaying)
+  const currentTime = useSelector(rootStore, (state) => state.context.currentTime)
+  const tracks = useSelector(rootStore, (state) => state.context.tracks)
+  const videoRefs = useSelector(rootStore, (state) => state.context.videoRefs)
+  const activeVideo = useSelector(rootStore, (state) => state.context.activeVideo)
+  const activeTrackId = useSelector(rootStore, (state) => state.context.activeTrackId)
+  const currentLayout = useSelector(rootStore, (state) => state.context.currentLayout)
+  const timeRanges = useSelector(rootStore, (state) => state.context.timeRanges)
+  const hasFetched = useSelector(rootStore, (state) => state.context.hasFetched)
+  const isChangingCamera = useSelector(rootStore, (state) => state.context.isChangingCamera)
+  const metadataCache = useSelector(rootStore, (state) => state.context.metadataCache)
+  const thumbnailCache = useSelector(rootStore, (state) => state.context.thumbnailCache)
+
 
   // Действия
   const setVideos = useCallback(

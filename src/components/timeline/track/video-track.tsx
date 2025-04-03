@@ -1,6 +1,6 @@
 import { memo } from "react"
 
-import { useVideoStore } from "@/hooks/useVideoStore"
+import { useRootStore } from "@/hooks/use-root-store"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { type Track } from "@/types/videos"
 import { getAspectRatio, getFps } from "@/utils/video-utils"
@@ -15,7 +15,7 @@ interface VideoTrackProps {
 
 const VideoTrack = memo(
   ({ track, parentRef, sectionStartTime, sectionDuration }: VideoTrackProps) => {
-    const { setCurrentTime, setActiveVideo, activeTrackId, setActiveTrack } = useVideoStore()
+    const { setCurrentTime, setActiveVideo, activeTrackId, setActiveTrack } = useRootStore()
 
     if (!track.videos || track.videos.length === 0) {
       return null

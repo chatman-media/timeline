@@ -1,9 +1,9 @@
 import { useCallback, useState } from "react"
 
-import { useVideoStore } from "@/hooks/useVideoStore"
+import { useRootStore } from "@/hooks/use-root-store"
 
 export function SubtitlesList() {
-  const { tracks, currentTime, activeTrackId } = useVideoStore()
+  const { tracks, currentTime, activeTrackId } = useRootStore()
   const activeTrack = tracks.find((track) => track.id === activeTrackId)
 
   const [subtitles] = useState([
