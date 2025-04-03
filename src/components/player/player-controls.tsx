@@ -26,6 +26,7 @@ export function PlayerControls() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const volumeControlRef = useRef<HTMLDivElement>(null)
   const [isRecording, setIsRecording] = useState(false)
+  const lastUpdateTime = useRef(0)
 
   const handlePlayPause = useCallback(() => {
     setIsPlaying(!isPlaying)
@@ -56,10 +57,16 @@ export function PlayerControls() {
   }, [isRecording])
 
   const handleTimeChange = useCallback((value: number[]) => {
-    if (activeVideo?.duration) {
-      setCurrentTime(value[0])
+    const now = performance.now()
+    if (now - lastUpdateTime.current < 6.6) return // Ограничиваем до ~60fps
+    
+    if (activeVideo?.startTime !== undefined) {
+      lastUpdateTime.current = now
+      requestAnimationFrame(() => {
+        setCurrentTime(value[0] + activeVideo.startTime!)
+      })
     }
-  }, [activeVideo, setCurrentTime])
+  }, [activeVideo?.startTime])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -86,10 +93,10 @@ export function PlayerControls() {
       {/* Прогресс-бар и время */}
       <div className="px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-white/80">{formatTime(currentTime)}</span>
+          <span className="text-xs text-white/80">{formatTime(currentTime - (activeVideo?.startTime || 0))}</span>
           <div className="flex-1">
             <Slider
-              value={[currentTime]}
+              value={[currentTime - (activeVideo?.startTime || 0)]}
               min={0}
               max={activeVideo?.duration || 100}
               step={0.1}

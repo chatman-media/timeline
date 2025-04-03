@@ -29,12 +29,14 @@ export function useRootStore() {
     metadataCache,
     thumbnailCache,
     addedFiles,
+    isSaved,
   } = useSelector(rootStore, (state) => state.context)
 
   // Действия
   const setVideos = useCallback(
     (videos: MediaFile[]) => {
       send({ type: "setVideos", videos })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -42,6 +44,7 @@ export function useRootStore() {
   const setMedia = useCallback(
     (media: MediaFile[]) => {
       send({ type: "setMedia", media })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -49,6 +52,7 @@ export function useRootStore() {
   const setActiveTrack = useCallback(
     (trackId: string) => {
       send({ type: "setActiveTrack", trackId })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -56,6 +60,7 @@ export function useRootStore() {
   const setActiveVideo = useCallback(
     (videoId: string) => {
       send({ type: "setActiveVideo", videoId })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -63,6 +68,7 @@ export function useRootStore() {
   const setIsPlaying = useCallback(
     (isPlaying: boolean) => {
       send({ type: "setIsPlaying", isPlaying })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -70,6 +76,7 @@ export function useRootStore() {
   const setCurrentTime = useCallback(
     (time: number) => {
       send({ type: "setCurrentTime", time })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -81,6 +88,7 @@ export function useRootStore() {
   const setTracks = useCallback(
     (tracks: Track[]) => {
       send({ type: "setTracks", tracks })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -88,6 +96,7 @@ export function useRootStore() {
   const setScreenLayout = useCallback(
     (layout: ScreenLayout) => {
       send({ type: "setScreenLayout", layout })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -95,6 +104,7 @@ export function useRootStore() {
   const addToMetadataCache = useCallback(
     (key: string, data: any) => {
       send({ type: "addToMetadataCache", key, data })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -102,6 +112,7 @@ export function useRootStore() {
   const addToThumbnailCache = useCallback(
     (key: string, data: string) => {
       send({ type: "addToThumbnailCache", key, data })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -109,6 +120,7 @@ export function useRootStore() {
   const addNewTracks = useCallback(
     (media: MediaFile[]) => {
       send({ type: "addNewTracks", media })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -116,6 +128,7 @@ export function useRootStore() {
   const addToAddedFiles = useCallback(
     (fileIds: string[]) => {
       send({ type: "addToAddedFiles", fileIds })
+      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -123,6 +136,7 @@ export function useRootStore() {
   // Функция для переключения воспроизведения
   const play = useCallback(() => {
     send({ type: "setIsPlaying", isPlaying: !isPlaying })
+    send({ type: "markAsUnsaved" })
   }, [send, isPlaying])
 
   // Функции для работы с временем
@@ -142,6 +156,23 @@ export function useRootStore() {
     [tracks, activeTrackId],
   )
 
+  const saveState = useCallback(() => {
+    send({ type: "saveState" })
+    send({ type: "markAsSaved" })
+  }, [send])
+
+  const loadState = useCallback(() => {
+    send({ type: "loadState" })
+  }, [send])
+
+  const markAsUnsaved = useCallback(() => {
+    send({ type: "markAsUnsaved" })
+  }, [send])
+
+  const markAsSaved = useCallback(() => {
+    send({ type: "markAsSaved" })
+  }, [send])
+
   return {
     // Состояние
     videos,
@@ -157,6 +188,7 @@ export function useRootStore() {
     activeTrackId,
     currentLayout,
     addedFiles,
+    isSaved,
 
     // Действия
     setVideos,
@@ -173,13 +205,15 @@ export function useRootStore() {
     addNewTracks,
     addToAddedFiles,
     play,
-
-    // Вспомогательные функции
     timeToPercent,
     percentToTime,
     hasFetched,
     isChangingCamera,
     metadataCache,
     thumbnailCache,
+    saveState,
+    loadState,
+    markAsUnsaved,
+    markAsSaved,
   }
 }

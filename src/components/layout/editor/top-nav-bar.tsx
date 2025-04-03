@@ -26,6 +26,8 @@ import {
 
 import { ThemeToggle } from "../theme-toggle"
 import { LayoutPreviews } from "./layouts/layout-previews"
+import { useRootStore } from "@/hooks/use-root-store"
+import { cn } from "@/lib/utils"
 
 interface TopNavBarProps {
   onLayoutChange: (mode: string) => void;
@@ -38,6 +40,7 @@ export function TopNavBar({
   layoutMode,
   hasExternalDisplay,
 }: TopNavBarProps) {
+  const { saveState, isSaved, markAsSaved } = useRootStore()
   const [projectName, setProjectName] = useState("Без названия #1")
   const [isEditing, setIsEditing] = useState(false)
 
@@ -49,6 +52,11 @@ export function TopNavBar({
     if (e.key === "Enter") {
       setIsEditing(false)
     }
+  }
+
+  const handleSave = () => {
+    saveState()
+    markAsSaved()
   }
 
   return (
@@ -137,10 +145,19 @@ export function TopNavBar({
           </PopoverContent>
         </Popover>
         <Button
-          className="cursor-pointer"
+          className={cn(
+            "cursor-pointer",
+            "variant-ghost",
+            "size-icon",
+            isSaved 
+              ? "opacity-50 hover:opacity-50 cursor-not-allowed" 
+              : "opacity-100 hover:bg-accent"
+          )}
           variant="ghost"
           size="icon"
-          title="Сохранить"
+          title={isSaved ? "Все изменения сохранены" : "Сохранить изменения"}
+          onClick={handleSave}
+          disabled={isSaved}
         >
           <Save className="h-3 w-3" />
         </Button>

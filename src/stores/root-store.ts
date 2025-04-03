@@ -3,6 +3,7 @@ import { createStore } from "@xstate/store"
 import { generateVideoId } from "@/lib/utils"
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { createTracksFromFiles } from "@/utils/media-utils"
+import { STORAGE_KEYS } from "@/lib/constants"
 
 /**
  * Начальное состояние корневого хранилища
@@ -25,6 +26,7 @@ const initialContext = {
   thumbnailCache: {} as Record<string, string>,
   currentLayout: { type: "1x1", activeTracks: ["T1"] } as ScreenLayout,
   addedFiles: new Set<string>(),
+  isSaved: true,
 }
 
 /**
@@ -242,7 +244,59 @@ export const rootStore = createStore({
         addedFiles: new Set([...Array.from(context.addedFiles), ...newFileIds]),
       }
     },
-  },
+
+    saveState: (context) => {
+      const stateToSave = {
+        currentTime: context.currentTime,
+        activeTrackId: context.activeTrackId,
+        activeVideo: context.activeVideo,
+        tracks: context.tracks,
+        timeRanges: context.timeRanges,
+        currentLayout: context.currentLayout,
+      }
+      
+      localStorage.setItem(STORAGE_KEYS.TIMELINE_SLICES, JSON.stringify(stateToSave))
+      return context
+    },
+
+    loadState: (context) => {
+      try {
+        const savedState = localStorage.getItem(STORAGE_KEYS.TIMELINE_SLICES)
+        if (!savedState) return context
+
+        const parsedState = JSON.parse(savedState)
+        
+        // Если есть сохраненное активное видео, найдем его в текущих видео
+        let activeVideo = context.activeVideo
+        if (parsedState.activeVideo) {
+          activeVideo = context.videos.find(v => v.id === parsedState.activeVideo.id) || context.activeVideo
+        }
+
+        return {
+          ...context,
+          currentTime: parsedState.currentTime || context.currentTime,
+          activeTrackId: parsedState.activeTrackId || context.activeTrackId,
+          activeVideo: activeVideo,
+          tracks: parsedState.tracks || context.tracks,
+          timeRanges: parsedState.timeRanges || context.timeRanges,
+          currentLayout: parsedState.currentLayout || context.currentLayout,
+        }
+      } catch (error) {
+        console.error("Ошибка при загрузке состояния:", error)
+        return context
+      }
+    },
+
+    markAsUnsaved: (context) => ({
+      ...context,
+      isSaved: false,
+    }),
+
+    markAsSaved: (context) => ({
+      ...context,
+      isSaved: true,
+    }),
+  }
 })
 
 /**

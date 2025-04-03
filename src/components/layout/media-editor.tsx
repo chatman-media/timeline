@@ -6,8 +6,10 @@ import { DualMediaEditor } from "./editor/layouts/dual-layout"
 import { VerticalMediaEditor } from "./editor/layouts/vertical-layout"
 import { TopNavBar } from "./editor/top-nav-bar"
 import { defaultSizes,getSavedLayout } from "./editor/utils/layout-utils"
+import { useRootStore } from "@/hooks/use-root-store"
 
 export function MediaEditor() {
+  const { loadState, saveState, activeVideo, videoRefs } = useRootStore()
   const [isLoaded, setIsLoaded] = useState(false)
   const [layoutMode, setLayoutMode] = useState("default")
   const [hasExternalDisplay, setHasExternalDisplay] = useState(false)
@@ -62,6 +64,29 @@ export function MediaEditor() {
     setIsLoaded(true)
   }, [hasExternalDisplay])
 
+  useEffect(() => {
+    // Загружаем состояние при монтировании
+    loadState()
+
+    // Если есть активное видео, убедимся что оно загружено
+    if (activeVideo) {
+      const videoElement = videoRefs[activeVideo.id]
+      if (videoElement) {
+        videoElement.load()
+      }
+    }
+
+    // Сохраняем состояние при закрытии страницы
+    const handleBeforeUnload = () => {
+      saveState()
+    }
+
+    window.addEventListener('beforeunload', handleBeforeUnload)
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload)
+    }
+  }, [loadState, saveState, activeVideo])
+
   const changeLayout = (mode: string) => {
     if (mode === "dual" && !hasExternalDisplay) return
     setLayoutMode(mode)
@@ -76,7 +101,7 @@ export function MediaEditor() {
     <div className="flex h-screen flex-col p-0 m-0">
       <TopNavBar onLayoutChange={changeLayout} layoutMode={layoutMode} hasExternalDisplay={hasExternalDisplay} />
       {layoutMode === "default" && <DefaultMediaEditor />}
-      {layoutMode === "classic" && <ClassicMediaEditor mainLayout={mainLayout} bottomLayout={bottomLayout} />}
+      {layoutMode === "classic" && <ClassicMediaEditor />}
       {layoutMode === "vertical" && <VerticalMediaEditor />}
       {layoutMode === "dual" && hasExternalDisplay && <DualMediaEditor />}
     </div>

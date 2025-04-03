@@ -1,16 +1,16 @@
-import { Play } from "lucide-react"
+import { Play } from "lucide-react";
 
-import { TrackLines } from "../track-lines"
+import { TrackLines } from "../track-lines";
 
 interface LayoutPreviewsProps {
-  onLayoutChange: (mode: string) => void
-  layoutMode: string
-  hasExternalDisplay: boolean
+  onLayoutChange: (mode: string) => void;
+  layoutMode: string;
+  hasExternalDisplay: boolean;
 }
 
 interface LayoutProps {
-  isActive: boolean
-  onClick: () => void
+  isActive: boolean;
+  onClick: () => void;
 }
 
 function DefaultLayout({ isActive, onClick }: LayoutProps) {
@@ -25,8 +25,20 @@ function DefaultLayout({ isActive, onClick }: LayoutProps) {
         <div className="w-[75%] h-full flex flex-col">
           <div className="h-[60%] w-full flex border-b-2 border-gray-700">
             <div className="w-[30%] border-r-2 border-gray-700 p-1">
-              <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
-              <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
+              <div className="w-full">
+                <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
+                  <div className="h-2 w-[25%] bg-primary/70 rounded-xs"></div>
+                  <div className="h-1 w-[75%] bg-primary/70 rounded-xs"></div>
+                </div>
+                <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
+                  <div className="h-2 w-[25%] bg-primary/70 rounded-xs"></div>
+                  <div className="h-1 w-[75%] bg-primary/70 rounded-xs"></div>
+                </div>
+                <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
+                  <div className="h-2 w-[25%] bg-primary/70 rounded-xs"></div>
+                  <div className="h-1 w-[75%] bg-primary/70 rounded-xs"></div>
+                </div>
+              </div>
             </div>
             <div className="w-[70%] flex items-center justify-center border-gray-700">
               <div className="w-[90%] h-[90%] border-2 border-gray-700 bg-muted flex items-center justify-center">
@@ -55,7 +67,7 @@ function DefaultLayout({ isActive, onClick }: LayoutProps) {
       </div>
       <span className="text-[10px] font-medium">По умолчанию</span>
     </div>
-  )
+  );
 }
 
 function ClassicLayout({ isActive, onClick }: LayoutProps) {
@@ -69,35 +81,42 @@ function ClassicLayout({ isActive, onClick }: LayoutProps) {
       <div className="w-40 h-24 border-2 border-gray-700 bg-muted flex flex-col mb-1">
         <div className="h-[50%] w-full flex border-b-2 border-gray-700">
           <div className="w-[30%] border-r-2 border-gray-700 p-1">
-            <div className="h-2 w-full mb-1 flex items-center gap-1">
-              <div className="h-2 w-[25%] rounded-full bg-primary/70"></div>
-              <div className="h-2 w-[75%] rounded-full bg-primary/70"></div>
-              <div className="h-2 w-3 rounded-full bg-primary/70"></div>
-              <div className="h-2 w-3 rounded-full bg-primary/70"></div>
-              <div className="h-2 w-3 rounded-full bg-primary/70"></div>
+            <div className="w-full">
+              <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
+                <div className="h-2 w-[35%] bg-primary/70 rounded-xs"></div>
+                <div className="h-1 w-[65%] bg-primary/70 rounded-xs"></div>
+              </div>
+              <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
+                <div className="h-2 w-[35%] bg-primary/70 rounded-xs"></div>
+                <div className="h-1 w-[65%] bg-primary/70 rounded-xs"></div>
+              </div>
+              <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
+                <div className="h-2 w-[35%] bg-primary/70 rounded-xs"></div>
+                <div className="h-1 w-[65%] bg-primary/70 rounded-xs"></div>
+              </div>
             </div>
           </div>
-          <div className="w-[50%] flex items-center justify-center border-r-2 border-gray-700">
-            <Play className="w-4 h-4 text-primary" />
-          </div>
-          <div className="w-[20%] p-1">
-            <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
-            <div className="h-2 w-full bg-primary/70 rounded-sm"></div>
+          <div className="w-[70%] flex items-center justify-center">
+            <div className="w-[95%] h-[90%] border-2 border-gray-700 bg-muted flex items-center justify-center">
+              <Play className="h-3 w-3 text-primary" />
+            </div>
           </div>
         </div>
         <div className="h-[50%] w-full flex">
           <div className="w-[30%] border-r-2 border-gray-700 p-1">
-            <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
-            <div className="h-2 w-full bg-primary/70 rounded-sm"></div>
+            <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+            <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
           </div>
           <div className="w-[70%] relative px-2 py-1">
-            <TrackLines />
+            <div className="h-2 w-[85%] ml-[13%] bg-primary/70 rounded-sm mb-1"></div>
+            <div className="h-2 w-[75%] bg-primary/70 rounded-sm mb-1"></div>
+            <div className="h-2 w-[75%] ml-[10%] bg-primary/70 rounded-sm"></div>
           </div>
         </div>
       </div>
       <span className="text-[10px] font-medium">Классический</span>
     </div>
-  )
+  );
 }
 
 function VerticalLayout({ isActive, onClick }: LayoutProps) {
@@ -109,41 +128,59 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
       onClick={onClick}
     >
       <div className="w-40 h-24 border-2 border-gray-700 bg-muted flex flex-row mb-1">
-        <div className="w-[67%] h-full flex flex-col">
+        <div className="w-[70%] h-full flex flex-col">
           <div className="h-[50%] w-full flex border-b-2 border-gray-700">
-            <div className="w-[70%] p-1">
-              <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
-              <div className="h-2 w-full bg-primary/70 rounded-sm"></div>
+            <div className="w-[30%] p-1">
+              <div className="w-full">
+                <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
+                  <div className="h-2 w-[35%] bg-primary/70 rounded-xs"></div>
+                  <div className="h-1 w-[65%] bg-primary/70 rounded-xs"></div>
+                </div>
+                <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
+                  <div className="h-2 w-[35%] bg-primary/70 rounded-xs"></div>
+                  <div className="h-1 w-[65%] bg-primary/70 rounded-xs"></div>
+                </div>
+                <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
+                  <div className="h-2 w-[35%] bg-primary/70 rounded-xs"></div>
+                  <div className="h-1 w-[65%] bg-primary/70 rounded-xs"></div>
+                </div>
+              </div>
             </div>
-            <div className="w-[30%] border-l-2 border-gray-700 p-1">
+            <div className="w-[70%] border-l-2 border-gray-700 p-1">
               <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
               <div className="h-2 w-full bg-primary/70 rounded-sm"></div>
             </div>
           </div>
           <div className="h-[50%] w-full flex">
             <div className="w-[30%] border-r-2 border-gray-700 p-1">
-              <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
-              <div className="h-2 w-full bg-primary/70 rounded-sm"></div>
+              <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+              <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
             </div>
             <div className="w-[70%] relative px-2 py-1">
-              <TrackLines />
+            <div className="h-2 w-[85%] ml-[13%] bg-primary/70 rounded-sm mb-1"></div>
+            <div className="h-2 w-[75%] bg-primary/70 rounded-sm mb-1"></div>
+            <div className="h-2 w-[75%] ml-[10%] bg-primary/70 rounded-sm"></div>
             </div>
           </div>
         </div>
-        <div className="w-[33%] border-l-2 border-gray-700 flex items-center justify-center">
+        <div className="w-[30%] border-l-2 border-gray-700 flex items-center justify-center">
           <Play className="w-4 h-4 text-primary" />
         </div>
       </div>
       <span className="text-[10px] font-medium">Вертикальное</span>
     </div>
-  )
+  );
 }
 
 interface DualLayoutProps extends LayoutProps {
-  hasExternalDisplay: boolean
+  hasExternalDisplay: boolean;
 }
 
-function DualLayout({ isActive, onClick, hasExternalDisplay }: DualLayoutProps) {
+function DualLayout({
+  isActive,
+  onClick,
+  hasExternalDisplay,
+}: DualLayoutProps) {
   return (
     <div
       className={`flex flex-col items-center ${
@@ -182,7 +219,7 @@ function DualLayout({ isActive, onClick, hasExternalDisplay }: DualLayoutProps) 
         </span>
       )}
     </div>
-  )
+  );
 }
 
 export function LayoutPreviews({
@@ -193,26 +230,26 @@ export function LayoutPreviews({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-around gap-2">
-        <DefaultLayout 
-          isActive={layoutMode === "default"} 
-          onClick={() => onLayoutChange("default")} 
+        <DefaultLayout
+          isActive={layoutMode === "default"}
+          onClick={() => onLayoutChange("default")}
         />
-        <ClassicLayout 
-          isActive={layoutMode === "classic"} 
-          onClick={() => onLayoutChange("classic")} 
+        <ClassicLayout
+          isActive={layoutMode === "classic"}
+          onClick={() => onLayoutChange("classic")}
         />
       </div>
       <div className="flex justify-around gap-2">
-        <VerticalLayout 
-          isActive={layoutMode === "vertical"} 
-          onClick={() => onLayoutChange("vertical")} 
+        <VerticalLayout
+          isActive={layoutMode === "vertical"}
+          onClick={() => onLayoutChange("vertical")}
         />
-        <DualLayout 
-          isActive={layoutMode === "dual"} 
+        <DualLayout
+          isActive={layoutMode === "dual"}
           hasExternalDisplay={hasExternalDisplay}
-          onClick={() => hasExternalDisplay && onLayoutChange("dual")} 
+          onClick={() => hasExternalDisplay && onLayoutChange("dual")}
         />
       </div>
     </div>
-  )
-} 
+  );
+}
