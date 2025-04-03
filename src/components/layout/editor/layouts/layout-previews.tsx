@@ -130,7 +130,7 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
       <div className="w-40 h-24 border-2 border-gray-700 bg-muted flex flex-row mb-1">
         <div className="w-[70%] h-full flex flex-col">
           <div className="h-[50%] w-full flex border-b-2 border-gray-700">
-            <div className="w-[30%] p-1">
+            <div className="w-[50%] p-1">
               <div className="w-full">
                 <div className="flex flex-row flex-2 items-center m-0 p-0 gap-1 mb-1">
                   <div className="h-2 w-[35%] bg-primary/70 rounded-xs"></div>
@@ -146,9 +146,10 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
                 </div>
               </div>
             </div>
-            <div className="w-[70%] border-l-2 border-gray-700 p-1">
-              <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
-              <div className="h-2 w-full bg-primary/70 rounded-sm"></div>
+            <div className="w-[50%] border-l-2 border-gray-700 p-1">
+            <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+            <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+            <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
             </div>
           </div>
           <div className="h-[50%] w-full flex">
