@@ -10,7 +10,7 @@ import {
   getSequentialFiles,
   groupFilesByDate,
   prepareFileGroups,
-} from "@/utils/mediaUtils"
+} from "@/utils/media-utils"
 
 import { Skeleton } from "../ui/skeleton"
 import { FileInfo, MediaPreview } from "."

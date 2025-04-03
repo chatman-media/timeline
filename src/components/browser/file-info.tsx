@@ -1,6 +1,6 @@
 import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
-import { getAspectRatio, getFps } from "@/utils/videoUtils"
+import { getAspectRatio, getFps } from "@/utils/video-utils"
 
 interface FileInfoProps {
   file: MediaFile

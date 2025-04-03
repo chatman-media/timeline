@@ -1,5 +1,5 @@
 import { MediaFile } from "@/types/videos"
-import { getFileType } from "@/utils/mediaUtils"
+import { getFileType } from "@/utils/media-utils"
 
 import { ActionButton } from "./action-button"
 

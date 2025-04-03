@@ -50,3 +50,11 @@ export interface ScreenLayout {
   type: "1x1" | "2x2" | "3x3" | "4x4"
   activeTracks: string[] // Track IDs that are currently visible
 }
+
+export interface ThumbnailParams {
+  videoDuration: number
+  containerWidth: number
+  scale: number
+  trackHeight: number
+  segmentWidth: number
+}

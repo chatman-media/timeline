@@ -23,25 +23,6 @@ interface ThumbnailParams {
   trackHeight: number;      // Высота дорожки (52px)
 }
 
-function calculateThumbnailRequirements(params: ThumbnailParams) {
-  const { videoDuration, containerWidth, scale, trackHeight } = params;
-  
-  // Количество пикселей на секунду видео
-  const pixelsPerSecond = (containerWidth * scale) / videoDuration;
-  
-  // Оптимальное количество миниатюр
-  const optimalCount = Math.ceil((containerWidth * scale) / trackHeight);
-  
-  // Интервал времени между миниатюрами
-  const timeStep = videoDuration / optimalCount;
-  
-  return {
-    count: optimalCount,
-    timeStep,
-    width: trackHeight, // Квадратные миниатюры
-    pixelsPerSecond
-  };
-}
 ```
 
 ### 3. Изменения в API

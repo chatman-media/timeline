@@ -8,41 +8,49 @@ import {
   Save,
   Send,
   Settings,
-} from "lucide-react"
-import { useState } from "react"
+} from "lucide-react";
+import { useState } from "react";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
-import { ThemeToggle } from "../theme-toggle"
-import { TrackLines } from "./track-lines"
+import { ThemeToggle } from "../theme-toggle";
+import { TrackLines } from "./track-lines";
 
 interface TopNavBarProps {
-  onLayoutChange: (mode: string) => void
-  layoutMode: string
-  hasExternalDisplay: boolean
+  onLayoutChange: (mode: string) => void;
+  layoutMode: string;
+  hasExternalDisplay: boolean;
 }
 
-export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: TopNavBarProps) {
-  const [projectName, setProjectName] = useState("Без названия #1")
-  const [isEditing, setIsEditing] = useState(false)
+export function TopNavBar({
+  onLayoutChange,
+  layoutMode,
+  hasExternalDisplay,
+}: TopNavBarProps) {
+  const [projectName, setProjectName] = useState("Без названия #1");
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProjectName(e.target.value)
-  }
+    setProjectName(e.target.value);
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      setIsEditing(false)
+      setIsEditing(false);
     }
-  }
+  };
 
   return (
     <div className="flex items-center justify-between w-full h-6 px-1 bg-background border-b border-border">
@@ -51,7 +59,8 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         className="text-xs font-medium relative group flex items-center gap-1"
         onMouseEnter={() => !isEditing && setIsEditing(true)}
         onMouseLeave={() =>
-          !document.activeElement?.id?.includes("project-name") && setIsEditing(false)
+          !document.activeElement?.id?.includes("project-name") &&
+          setIsEditing(false)
         }
       >
         {isEditing ? (
@@ -74,7 +83,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
       <div className="flex items-center space-x-0 flex-1 justify-end">
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="cursor-pointer" variant="ghost" size="icon" title="Опубликовать">
+            <Button
+              className="cursor-pointer"
+              variant="ghost"
+              size="icon"
+              title="Опубликовать"
+            >
               <Send className="h-3 w-3" />
             </Button>
           </PopoverTrigger>
@@ -88,7 +102,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="cursor-pointer" variant="ghost" size="icon" title="Список задач">
+            <Button
+              className="cursor-pointer"
+              variant="ghost"
+              size="icon"
+              title="Список задач"
+            >
               <ListTodo className="h-3 w-3" />
             </Button>
           </PopoverTrigger>
@@ -101,7 +120,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         </Popover>
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="cursor-pointer" variant="ghost" size="icon" title="Макет">
+            <Button
+              className="cursor-pointer"
+              variant="ghost"
+              size="icon"
+              title="Макет"
+            >
               <Layout className="h-3 w-3" />
             </Button>
           </PopoverTrigger>
@@ -109,43 +133,62 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
             <div className="flex flex-col gap-2">
               <div className="flex justify-around gap-2">
                 <div
-                  className={`flex flex-col items-center cursor-pointer ${layoutMode === "default" ? "bg-muted" : "hover:bg-muted"} p-2 pb-1`}
+                  className={`flex flex-col items-center cursor-pointer ${
+                    layoutMode === "default" ? "bg-muted" : "hover:bg-muted"
+                  } p-2 pb-1`}
                   onClick={() => onLayoutChange("default")}
                 >
                   <div className="w-40 h-24 border-2 border-gray-700 bg-muted flex flex-row mb-1">
-                    <div className="w-[85%] h-full flex flex-col">
+                    <div className="w-[75%] h-full flex flex-col">
                       <div className="h-[60%] w-full flex border-b-2 border-gray-700">
-                        <div className="w-full flex items-center justify-center">
-                          <Play className="w-4 h-4 text-primary" />
+                        <div className="w-[30%] border-r-2 border-gray-700 p-1">
+                          <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+                          <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
+                        </div>
+                        <div className="w-[70%] flex items-center justify-center border-gray-700">
+                          <div className="w-[90%] h-[90%] border-2 border-gray-700 bg-muted flex items-center justify-center">
+                            <Play className="h-3 w-3 text-primary" />
+                          </div>
                         </div>
                       </div>
                       <div className="h-[40%] w-full flex">
                         <div className="w-[30%] border-r-2 border-gray-700 p-1">
-                          <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
-                          <div className="h-2 w-full bg-primary/70 rounded-sm"></div>
+                          <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+                          <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
                         </div>
                         <div className="w-[70%] relative px-2 py-1">
-                          <TrackLines />
+                        <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
+                        <div className="h-2 w-[75%] bg-primary/70 rounded-sm"></div>
                         </div>
                       </div>
                     </div>
-                    <div className="w-[15%] h-full border-l-2 border-gray-700 p-1">
-                      <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
-                      <div className="h-2 w-full bg-primary/70 rounded-sm"></div>
+                    <div className="w-[25%] h-full border-l-2 border-gray-700 p-1">
+                      <div className="h-1 w-full bg-primary/70 rounded-sm mb-2"></div>
+                      <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+                      <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+                      <div className="h-1 w-full bg-primary/70 rounded-sm mb-1"></div>
+                      <div className="h-1 w-full bg-primary/70 rounded-sm"></div>
                     </div>
                   </div>
                   <span className="text-[10px] font-medium">По умолчанию</span>
                 </div>
 
                 <div
-                  className={`flex flex-col items-center cursor-pointer ${layoutMode === "classic" ? "bg-muted" : "hover:bg-muted"} p-2 pb-1`}
+                  className={`flex flex-col items-center cursor-pointer ${
+                    layoutMode === "classic" ? "bg-muted" : "hover:bg-muted"
+                  } p-2 pb-1`}
                   onClick={() => onLayoutChange("classic")}
                 >
                   <div className="w-40 h-24 border-2 border-gray-700 bg-muted flex flex-col mb-1">
                     <div className="h-[50%] w-full flex border-b-2 border-gray-700">
                       <div className="w-[30%] border-r-2 border-gray-700 p-1">
-                        <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
-                        <div className="h-2 w-full bg-primary/70 rounded-sm"></div>
+                        <div className="h-2 w-full mb-1 flex items-center gap-1">
+                            <div className="h-2 w-[25%] rounded-full bg-primary/70"></div>
+                            <div className="h-2 w-[75%] rounded-full bg-primary/70"></div>
+                            <div className="h-2 w-3 rounded-full bg-primary/70"></div>
+                            <div className="h-2 w-3 rounded-full bg-primary/70"></div>
+                            <div className="h-2 w-3 rounded-full bg-primary/70"></div>
+                        </div>
                       </div>
                       <div className="w-[50%] flex items-center justify-center border-r-2 border-gray-700">
                         <Play className="w-4 h-4 text-primary" />
@@ -171,7 +214,9 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
 
               <div className="flex justify-around gap-2">
                 <div
-                  className={`flex flex-col items-center cursor-pointer ${layoutMode === "vertical" ? "bg-muted" : "hover:bg-muted"} p-2 pb-1`}
+                  className={`flex flex-col items-center cursor-pointer ${
+                    layoutMode === "vertical" ? "bg-muted" : "hover:bg-muted"
+                  } p-2 pb-1`}
                   onClick={() => onLayoutChange("vertical")}
                 >
                   <div className="w-40 h-24 border-2 border-gray-700 bg-muted flex flex-row mb-1">
@@ -204,9 +249,23 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
                 </div>
 
                 <div
-                  className={`flex flex-col items-center ${hasExternalDisplay ? "cursor-pointer" : "opacity-50 cursor-not-allowed"} ${layoutMode === "dual" ? "bg-muted" : hasExternalDisplay ? "hover:bg-muted" : ""} p-2 pb-1`}
+                  className={`flex flex-col items-center ${
+                    hasExternalDisplay
+                      ? "cursor-pointer"
+                      : "opacity-50 cursor-not-allowed"
+                  } ${
+                    layoutMode === "dual"
+                      ? "bg-muted"
+                      : hasExternalDisplay
+                      ? "hover:bg-muted"
+                      : ""
+                  } p-2 pb-1`}
                   onClick={() => hasExternalDisplay && onLayoutChange("dual")}
-                  title={hasExternalDisplay ? "Двойной вид" : "Требуется внешний монитор"}
+                  title={
+                    hasExternalDisplay
+                      ? "Двойной вид"
+                      : "Требуется внешний монитор"
+                  }
                 >
                   <div className="w-40 h-24 bg-background flex items-center justify-center mb-1 relative">
                     <div className="absolute right-4 translate-y-2 w-24 h-14 border-2 border-gray-700 bg-muted">
@@ -231,24 +290,46 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
                   </div>
                   <span className="text-[10px] font-medium">Двойной</span>
                   {!hasExternalDisplay && (
-                    <span className="text-[9px] text-muted-foreground">Нужен внешний монитор</span>
+                    <span className="text-[9px] text-muted-foreground">
+                      Нужен внешний монитор
+                    </span>
                   )}
                 </div>
               </div>
             </div>
           </PopoverContent>
         </Popover>
-        <Button className="cursor-pointer" variant="ghost" size="icon" title="Сохранить">
+        <Button
+          className="cursor-pointer"
+          variant="ghost"
+          size="icon"
+          title="Сохранить"
+        >
           <Save className="h-3 w-3" />
         </Button>
-        <Button className="cursor-pointer" variant="ghost" size="icon" title="Быстрые клавиши">
+        <Button
+          className="cursor-pointer"
+          variant="ghost"
+          size="icon"
+          title="Быстрые клавиши"
+        >
           <Keyboard className="h-3 w-3" />
         </Button>
-        <Button className="cursor-pointer" variant="ghost" size="icon" title="Профиль пользователя">
+        <Button
+          className="cursor-pointer"
+          variant="ghost"
+          size="icon"
+          title="Профиль пользователя"
+        >
           <Cloud className="h-3 w-3" />
         </Button>
         <ThemeToggle />
-        <Button className="cursor-pointer" variant="ghost" size="icon" title="Настройки">
+        <Button
+          className="cursor-pointer"
+          variant="ghost"
+          size="icon"
+          title="Настройки"
+        >
           <Settings className="h-3 w-3" />
         </Button>
         <div className="flex items-center space-x-0">
@@ -259,7 +340,8 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
                 className="px-3 text-xs flex items-center gap-1 h-5 border-border active:border-border rounded-md hover:bg-zinc-800 hover:text-white transition-colors cursor-pointer"
                 title="Экспорт"
               >
-                Экспорт <ChevronDown className="h-3 w-3 p-0 m-0 cursor-pointer" />
+                Экспорт{" "}
+                <ChevronDown className="h-3 w-3 p-0 m-0 cursor-pointer" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -293,5 +375,5 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

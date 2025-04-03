@@ -2,7 +2,7 @@ import { createStore } from "@xstate/store"
 
 import { generateVideoId } from "@/lib/utils"
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
-import { createTracksFromFiles } from "@/utils/mediaUtils"
+import { createTracksFromFiles } from "@/utils/media-utils"
 
 // Начальное состояние
 const initialContext = {

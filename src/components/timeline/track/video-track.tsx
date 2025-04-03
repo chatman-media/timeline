@@ -3,7 +3,7 @@ import { memo } from "react"
 import { useVideoStore } from "@/hooks/useVideoStore"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { type Track } from "@/types/videos"
-import { getAspectRatio, getFps } from "@/utils/videoUtils"
+import { getAspectRatio, getFps } from "@/utils/video-utils"
 
 interface VideoTrackProps {
   track: Track
