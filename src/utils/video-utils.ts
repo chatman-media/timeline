@@ -32,8 +32,9 @@ export const calculateTimeRanges = (videos: MediaFile[]): TimeRange[] => {
   let currentRange = {
     start: Math.floor(sortedTimes[0] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND),
     end: Math.floor(sortedTimes[0] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND),
-    duration: Math.floor(sortedTimes[1] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND) - 
-              Math.floor(sortedTimes[0] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND),
+    duration:
+      Math.floor(sortedTimes[1] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND) -
+      Math.floor(sortedTimes[0] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND),
   }
 
   for (let i = 1; i < sortedTimes.length; i++) {
@@ -106,9 +107,9 @@ export const getFps = (stream?: { r_frame_rate?: string }): number | null => {
  * Состояния громкости звука
  */
 export enum VolumeState {
-  FULL = 1,    // Полная громкость
-  HALF = 0.5,  // Половина громкости
-  MUTED = 0    // Без звука
+  FULL = 1, // Полная громкость
+  HALF = 0.5, // Половина громкости
+  MUTED = 0, // Без звука
 }
 
 /**

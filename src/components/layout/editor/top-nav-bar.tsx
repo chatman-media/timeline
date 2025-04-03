@@ -1,13 +1,4 @@
-import {
-  ChevronDown,
-  Cloud,
-  Keyboard,
-  Layout,
-  ListTodo,
-  Save,
-  Send,
-  Settings,
-} from "lucide-react"
+import { ChevronDown, Cloud, Keyboard, Layout, ListTodo, Save, Send, Settings } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -18,11 +9,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useRootStore } from "@/hooks/use-root-store"
 import { cn } from "@/lib/utils"
 
@@ -31,16 +18,12 @@ import { LayoutPreviews } from "./layouts/layout-previews"
 import { SaveStatus } from "./save-status"
 
 interface TopNavBarProps {
-  onLayoutChange: (mode: string) => void;
-  layoutMode: string;
-  hasExternalDisplay: boolean;
+  onLayoutChange: (mode: string) => void
+  layoutMode: string
+  hasExternalDisplay: boolean
 }
 
-export function TopNavBar({
-  onLayoutChange,
-  layoutMode,
-  hasExternalDisplay,
-}: TopNavBarProps) {
+export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: TopNavBarProps) {
   const { saveState, isSaved, markAsSaved } = useRootStore()
   const [projectName, setProjectName] = useState("Без названия #1")
   const [isEditing, setIsEditing] = useState(false)
@@ -67,8 +50,7 @@ export function TopNavBar({
         className="text-xs font-medium relative group flex items-center gap-2"
         onMouseEnter={() => !isEditing && setIsEditing(true)}
         onMouseLeave={() =>
-          !document.activeElement?.id?.includes("project-name") &&
-          setIsEditing(false)
+          !document.activeElement?.id?.includes("project-name") && setIsEditing(false)
         }
       >
         {isEditing ? (
@@ -92,12 +74,7 @@ export function TopNavBar({
       <div className="flex items-center space-x-0 flex-1 justify-end h-6">
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              className="cursor-pointer"
-              variant="ghost"
-              size="icon"
-              title="Опубликовать"
-            >
+            <Button className="cursor-pointer" variant="ghost" size="icon" title="Опубликовать">
               <Send className="h-3 w-3" />
             </Button>
           </PopoverTrigger>
@@ -129,12 +106,7 @@ export function TopNavBar({
         </Popover>
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              className="cursor-pointer"
-              variant="ghost"
-              size="icon"
-              title="Макет"
-            >
+            <Button className="cursor-pointer" variant="ghost" size="icon" title="Макет">
               <Layout className="h-3 w-3" />
             </Button>
           </PopoverTrigger>
@@ -151,9 +123,9 @@ export function TopNavBar({
             "cursor-pointer",
             "variant-ghost",
             "size-icon",
-            isSaved 
-              ? "opacity-50 hover:opacity-50 cursor-not-allowed" 
-              : "opacity-100 hover:bg-accent"
+            isSaved
+              ? "opacity-50 hover:opacity-50 cursor-not-allowed"
+              : "opacity-100 hover:bg-accent",
           )}
           variant="ghost"
           size="icon"
@@ -163,29 +135,14 @@ export function TopNavBar({
         >
           <Save className="h-3 w-3" />
         </Button>
-        <Button
-          className="cursor-pointer"
-          variant="ghost"
-          size="icon"
-          title="Быстрые клавиши"
-        >
+        <Button className="cursor-pointer" variant="ghost" size="icon" title="Быстрые клавиши">
           <Keyboard className="h-3 w-3" />
         </Button>
-        <Button
-          className="cursor-pointer"
-          variant="ghost"
-          size="icon"
-          title="Облако"
-        >
+        <Button className="cursor-pointer" variant="ghost" size="icon" title="Облако">
           <Cloud className="h-3 w-3" />
         </Button>
         <ThemeToggle />
-        <Button
-          className="cursor-pointer"
-          variant="ghost"
-          size="icon"
-          title="Настройки"
-        >
+        <Button className="cursor-pointer" variant="ghost" size="icon" title="Настройки">
           <Settings className="h-3 w-3" />
         </Button>
         <div className="flex items-center space-x-0">
@@ -196,8 +153,7 @@ export function TopNavBar({
                 className="px-3 text-xs flex items-center gap-1 h-5 border-border active:border-border rounded-md hover:bg-zinc-800 hover:text-white transition-colors cursor-pointer"
                 title="Экспорт"
               >
-                Экспорт{" "}
-                <ChevronDown className="h-3 w-3 p-0 m-0 cursor-pointer" />
+                Экспорт <ChevronDown className="h-3 w-3 p-0 m-0 cursor-pointer" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent

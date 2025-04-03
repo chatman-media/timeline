@@ -49,7 +49,7 @@ export function TimelineControls({
       </button>
 
       <div className="relative w-24 h-1 rounded-full bg-gray-800 border border-white">
-        <div 
+        <div
           className="absolute left-0 top-0 h-full bg-white rounded-full"
           style={{ width: `${sliderValue}%` }}
         />

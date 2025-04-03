@@ -72,9 +72,9 @@ export function MediaEditor() {
       saveState()
     }
 
-    window.addEventListener('beforeunload', handleBeforeUnload)
+    window.addEventListener("beforeunload", handleBeforeUnload)
     return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload)
+      window.removeEventListener("beforeunload", handleBeforeUnload)
     }
   }, [loadState, saveState, activeVideo])
 
@@ -90,7 +90,11 @@ export function MediaEditor() {
 
   return (
     <div className="flex h-screen flex-col p-0 m-0">
-      <TopNavBar onLayoutChange={changeLayout} layoutMode={layoutMode} hasExternalDisplay={hasExternalDisplay} />
+      <TopNavBar
+        onLayoutChange={changeLayout}
+        layoutMode={layoutMode}
+        hasExternalDisplay={hasExternalDisplay}
+      />
       {layoutMode === "default" && <DefaultMediaEditor />}
       {layoutMode === "classic" && <ClassicMediaEditor />}
       {layoutMode === "vertical" && <VerticalMediaEditor />}

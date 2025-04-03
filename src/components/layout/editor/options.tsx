@@ -14,4 +14,4 @@ export function Options() {
       <div className="flex-1 p-2 overflow-y-auto"></div>
     </div>
   )
-} 
+}

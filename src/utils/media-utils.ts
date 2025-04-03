@@ -35,7 +35,7 @@ interface DateGroup {
  * });
  */
 export const calculateRealDimensions = (
-  stream: VideoStream & { width: number; height: number }
+  stream: VideoStream & { width: number; height: number },
 ): Dimensions => {
   const rotation = stream.rotation ? parseInt(stream.rotation) : 0
   const { width, height } = stream
@@ -87,8 +87,8 @@ export const getGroupedFiles = (files: MediaFile[]): Record<string, MediaFile[]>
   return Object.fromEntries(
     Object.entries(groups).map(([key, groupFiles]) => [
       key,
-      groupFiles.sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
-    ])
+      groupFiles.sort((a, b) => (a.startTime || 0) - (b.startTime || 0)),
+    ]),
   )
 }
 
@@ -101,16 +101,18 @@ export const getGroupedFiles = (files: MediaFile[]): Record<string, MediaFile[]>
 export const createTracksFromFiles = (files: MediaFile[], currentTracksLength: number): Track[] => {
   if (files.length === 1) {
     const file = files[0]
-    return [{
-      id: nanoid(),
-      index: currentTracksLength + 1,
-      isActive: false,
-      videos: [file],
-      startTime: file.startTime || 0,
-      endTime: (file.startTime || 0) + (file.duration || 0),
-      combinedDuration: file.duration || 0,
-      timeRanges: calculateTimeRanges([file]),
-    }]
+    return [
+      {
+        id: nanoid(),
+        index: currentTracksLength + 1,
+        isActive: false,
+        videos: [file],
+        startTime: file.startTime || 0,
+        endTime: (file.startTime || 0) + (file.duration || 0),
+        combinedDuration: file.duration || 0,
+        timeRanges: calculateTimeRanges([file]),
+      },
+    ]
   }
 
   const groupedFiles = getGroupedFiles(files)
@@ -120,8 +122,9 @@ export const createTracksFromFiles = (files: MediaFile[], currentTracksLength: n
     isActive: false,
     videos: groupFiles,
     startTime: groupFiles[0].startTime || 0,
-    endTime: (groupFiles[groupFiles.length - 1].startTime || 0) +
-             (groupFiles[groupFiles.length - 1].duration || 0),
+    endTime:
+      (groupFiles[groupFiles.length - 1].startTime || 0) +
+      (groupFiles[groupFiles.length - 1].duration || 0),
     combinedDuration: groupFiles.reduce((total, file) => total + (file.duration || 0), 0),
     timeRanges: calculateTimeRanges(groupFiles),
   }))
@@ -135,7 +138,7 @@ export const createTracksFromFiles = (files: MediaFile[], currentTracksLength: n
 export const getSequentialFiles = (files: MediaFile[]): MediaFile[] => {
   const groups = getGroupedFiles(files)
   return Object.values(groups)
-    .filter(group => group.length >= 2)
+    .filter((group) => group.length >= 2)
     .flat()
 }
 
@@ -172,9 +175,7 @@ export const groupFilesByDate = (media: MediaFile[]): DateGroup[] => {
  * @returns "video" или "audio"
  */
 export const getFileType = (file: MediaFile): "video" | "audio" => {
-  const hasVideoStream = file.probeData?.streams?.some(
-    (stream) => stream.codec_type === "video"
-  )
+  const hasVideoStream = file.probeData?.streams?.some((stream) => stream.codec_type === "video")
   return hasVideoStream ? "video" : "audio"
 }
 
@@ -187,12 +188,12 @@ export const prepareFileGroups = (files: MediaFile[]): Record<string, FileGroup>
   const groups: Record<string, FileGroup> = {
     videos: {
       id: "all-videos",
-      fileIds: files.filter(f => getFileType(f) === "video").map(f => f.id),
+      fileIds: files.filter((f) => getFileType(f) === "video").map((f) => f.id),
       type: "video",
     },
     audio: {
       id: "all-audio",
-      fileIds: files.filter(f => getFileType(f) === "audio").map(f => f.id),
+      fileIds: files.filter((f) => getFileType(f) === "audio").map((f) => f.id),
       type: "audio",
     },
   }
@@ -204,7 +205,7 @@ export const prepareFileGroups = (files: MediaFile[]): Record<string, FileGroup>
     .forEach(([key, groupFiles]) => {
       groups[`sequential-${key}`] = {
         id: `sequential-${key}`,
-        fileIds: groupFiles.map(f => f.id),
+        fileIds: groupFiles.map((f) => f.id),
         type: "sequential",
         count: groupFiles.length,
         videosPerSeries: groupFiles.length,

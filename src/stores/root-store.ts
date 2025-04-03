@@ -234,10 +234,10 @@ export const rootStore = createStore({
       const { tracks } = context
       const newTracks = createTracksFromFiles(event.media, tracks.length)
       const uniqueNewTracks = newTracks.filter((t) => !new Set(tracks.map((t) => t.id)).has(t.id))
-      
+
       // Добавляем ID файлов в addedFiles
-      const newFileIds = event.media.map(file => file.id)
-      
+      const newFileIds = event.media.map((file) => file.id)
+
       return {
         ...context,
         tracks: [...tracks, ...uniqueNewTracks],
@@ -254,7 +254,7 @@ export const rootStore = createStore({
         timeRanges: context.timeRanges,
         currentLayout: context.currentLayout,
       }
-      
+
       localStorage.setItem(STORAGE_KEYS.TIMELINE_SLICES, JSON.stringify(stateToSave))
       return context
     },
@@ -265,11 +265,12 @@ export const rootStore = createStore({
         if (!savedState) return context
 
         const parsedState = JSON.parse(savedState)
-        
+
         // Если есть сохраненное активное видео, найдем его в текущих видео
         let activeVideo = context.activeVideo
         if (parsedState.activeVideo) {
-          activeVideo = context.videos.find(v => v.id === parsedState.activeVideo.id) || context.activeVideo
+          activeVideo =
+            context.videos.find((v) => v.id === parsedState.activeVideo.id) || context.activeVideo
         }
 
         return {
@@ -296,7 +297,7 @@ export const rootStore = createStore({
       ...context,
       isSaved: true,
     }),
-  }
+  },
 })
 
 /**

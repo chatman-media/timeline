@@ -32,15 +32,13 @@ export function SaveStatus() {
       <div
         className={cn(
           "w-4 h-4 rounded-full flex items-center justify-center transition-all duration-200",
-          isSaved 
-            ? "bg-green-500/10" 
-            : "bg-gray-400/10"
+          isSaved ? "bg-green-500/10" : "bg-gray-400/10",
         )}
       >
         <Check
           className={cn(
             "h-3 w-3 transition-all duration-200",
-            isSaved ? "text-green-500" : "text-gray-400"
+            isSaved ? "text-green-500" : "text-gray-400",
           )}
         />
       </div>
@@ -51,4 +49,4 @@ export function SaveStatus() {
       )}
     </div>
   )
-} 
+}

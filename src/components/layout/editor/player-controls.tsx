@@ -1,11 +1,7 @@
-import { Play,SkipBack, SkipForward, Square } from "lucide-react"
+import { Play, SkipBack, SkipForward, Square } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 export function PlayerControls() {
   return (
@@ -31,12 +27,7 @@ export function PlayerControls() {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button
-            className="cursor-pointer h-6"
-            variant="ghost"
-            size="icon"
-            title="Следующий кадр"
-          >
+          <Button className="cursor-pointer h-6" variant="ghost" size="icon" title="Следующий кадр">
             <SkipForward className="h-3 w-3" />
           </Button>
         </PopoverTrigger>
@@ -50,12 +41,7 @@ export function PlayerControls() {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button
-            className="cursor-pointer h-6"
-            variant="ghost"
-            size="icon"
-            title="Воспроизвести"
-          >
+          <Button className="cursor-pointer h-6" variant="ghost" size="icon" title="Воспроизвести">
             <Play className="h-3 w-3" />
           </Button>
         </PopoverTrigger>
@@ -69,12 +55,7 @@ export function PlayerControls() {
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button
-            className="cursor-pointer h-6"
-            variant="ghost"
-            size="icon"
-            title="Стоп"
-          >
+          <Button className="cursor-pointer h-6" variant="ghost" size="icon" title="Стоп">
             <Square className="h-3 w-3" />
           </Button>
         </PopoverTrigger>
@@ -87,4 +68,4 @@ export function PlayerControls() {
       </Popover>
     </div>
   )
-} 
+}

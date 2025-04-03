@@ -57,17 +57,20 @@ export function PlayerControls() {
     setIsRecording(!isRecording)
   }, [isRecording])
 
-  const handleTimeChange = useCallback((value: number[]) => {
-    const now = performance.now()
-    if (now - lastUpdateTime.current < 6.6) return // Ограничиваем до ~60fps
-    
-    if (activeVideo?.startTime !== undefined) {
-      lastUpdateTime.current = now
-      requestAnimationFrame(() => {
-        setCurrentTime(value[0] + activeVideo.startTime!)
-      })
-    }
-  }, [activeVideo?.startTime])
+  const handleTimeChange = useCallback(
+    (value: number[]) => {
+      const now = performance.now()
+      if (now - lastUpdateTime.current < 6.6) return // Ограничиваем до ~60fps
+
+      if (activeVideo?.startTime !== undefined) {
+        lastUpdateTime.current = now
+        requestAnimationFrame(() => {
+          setCurrentTime(value[0] + activeVideo.startTime!)
+        })
+      }
+    },
+    [activeVideo?.startTime],
+  )
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -86,7 +89,7 @@ export function PlayerControls() {
     const minutes = Math.floor((time % 3600) / 60)
     const seconds = Math.floor(time % 60)
     const milliseconds = Math.floor((time % 1) * 1000)
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(3, '0')}`
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`
   }
 
   return (
@@ -94,7 +97,9 @@ export function PlayerControls() {
       {/* Прогресс-бар и время */}
       <div className="px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-white/80">{formatTime(currentTime - (activeVideo?.startTime || 0))}</span>
+          <span className="text-xs text-white/80">
+            {formatTime(currentTime - (activeVideo?.startTime || 0))}
+          </span>
           <div className="flex-1">
             <Slider
               value={[currentTime - (activeVideo?.startTime || 0)]}
@@ -148,12 +153,12 @@ export function PlayerControls() {
             title={isRecording ? "Остановить запись" : "Начать запись"}
             onClick={handleRecordToggle}
           >
-            <CircleDot className={cn(
-              "w-4 h-4",
-              isRecording 
-                ? "text-red-500 hover:text-red-600" 
-                : "text-white hover:text-gray-300"
-            )} />
+            <CircleDot
+              className={cn(
+                "w-4 h-4",
+                isRecording ? "text-red-500 hover:text-red-600" : "text-white hover:text-gray-300",
+              )}
+            />
           </Button>
         </div>
 
@@ -212,7 +217,7 @@ export function PlayerControls() {
             >
               {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </Button>
-            
+
             {showVolumeSlider && (
               <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-24 h-32 bg-black/90 rounded-lg p-4">
                 <Slider
@@ -241,4 +246,4 @@ export function PlayerControls() {
       </div>
     </div>
   )
-} 
+}

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRootStore } from "@/hooks/use-root-store"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { formatDuration, formatFileSize } from "@/lib/utils"
-import { FileGroup,MediaFile } from "@/types/videos"
+import { FileGroup, MediaFile } from "@/types/videos"
 import {
   getFileType,
   getSequentialFiles,

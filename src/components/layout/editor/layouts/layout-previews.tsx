@@ -3,14 +3,14 @@ import { Play } from "lucide-react"
 import { TrackLines } from "../track-lines"
 
 interface LayoutPreviewsProps {
-  onLayoutChange: (mode: string) => void;
-  layoutMode: string;
-  hasExternalDisplay: boolean;
+  onLayoutChange: (mode: string) => void
+  layoutMode: string
+  hasExternalDisplay: boolean
 }
 
 interface LayoutProps {
-  isActive: boolean;
-  onClick: () => void;
+  isActive: boolean
+  onClick: () => void
 }
 
 function DefaultLayout({ isActive, onClick }: LayoutProps) {
@@ -174,21 +174,15 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
 }
 
 interface DualLayoutProps extends LayoutProps {
-  hasExternalDisplay: boolean;
+  hasExternalDisplay: boolean
 }
 
-function DualLayout({
-  isActive,
-  onClick,
-  hasExternalDisplay,
-}: DualLayoutProps) {
+function DualLayout({ isActive, onClick, hasExternalDisplay }: DualLayoutProps) {
   return (
     <div
       className={`flex flex-col items-center ${
         hasExternalDisplay ? "cursor-pointer" : "opacity-50 cursor-not-allowed"
-      } ${
-        isActive ? "bg-muted" : hasExternalDisplay ? "hover:bg-muted" : ""
-      } p-2 pb-1`}
+      } ${isActive ? "bg-muted" : hasExternalDisplay ? "hover:bg-muted" : ""} p-2 pb-1`}
       onClick={onClick}
       title={hasExternalDisplay ? "Двойной вид" : "Требуется внешний монитор"}
     >
@@ -215,9 +209,7 @@ function DualLayout({
       </div>
       <span className="text-[10px] font-medium">Двойной</span>
       {!hasExternalDisplay && (
-        <span className="text-[9px] text-muted-foreground">
-          Нужен внешний монитор
-        </span>
+        <span className="text-[9px] text-muted-foreground">Нужен внешний монитор</span>
       )}
     </div>
   )
