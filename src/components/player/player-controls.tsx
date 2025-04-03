@@ -97,9 +97,6 @@ export function PlayerControls() {
       {/* Прогресс-бар и время */}
       <div className="px-4 py-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-white/80">
-            {formatTime(currentTime - (activeVideo?.startTime || 0))}
-          </span>
           <div className="flex-1">
             <Slider
               value={[currentTime - (activeVideo?.startTime || 0)]}
@@ -110,6 +107,10 @@ export function PlayerControls() {
               className="cursor-pointer"
             />
           </div>
+          <span className="text-xs text-white/80">
+            {formatTime(currentTime - (activeVideo?.startTime || 0))}
+          </span>
+          <span className="mb-1">/</span>
           <span className="text-xs text-white/80">{formatTime(activeVideo?.duration || 0)}</span>
         </div>
       </div>

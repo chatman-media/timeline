@@ -308,28 +308,26 @@
   cursor: pointer;
 }
 
-.timeline {
-  .track-thumbnails {
-    position: relative;
-    height: 90px;
-    overflow: hidden;
-    background: rgba(1, 77, 82, 0.1);
+.timeline .track-thumbnails {
+  position: relative;
+  height: 90px;
+  overflow: hidden;
+  background: rgba(1, 77, 82, 0.1);
 
-    &:empty {
-      background: rgba(1, 77, 82, 0.05);
-    }
+  &:empty {
+    background: rgba(1, 77, 82, 0.05);
   }
+}
 
-  .thumbnail-container {
-    position: absolute;
+.thumbnail-container {
+  position: absolute;
+  height: 100%;
+  display: flex;
+
+  img {
     height: 100%;
-    display: flex;
-
-    img {
-      height: 100%;
-      width: auto;
-      object-fit: cover;
-    }
+    width: auto;
+    object-fit: cover;
   }
 }
 
@@ -343,10 +341,6 @@
   &:last-child {
     border-right: none;
   }
-}
-
-.drag--parent--bordered {
-  /* border: 1px solid rgba(59, 130, 246, 0.5); */
 }
 
 .video-metadata > span {

@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import { EffectsList } from "./effects-list"
 import { MediaFileList } from "./media-file-list"
 import { MusicFileList } from "./music-file-list"
+import { StickersList } from "./stickers-list"
 import { SubtitlesList } from "./subtitles-list"
 import { TransitionsList } from "./transition-list"
 
@@ -27,6 +28,9 @@ export function Browser() {
         <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
           Титры
         </TabsTrigger>
+        <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
+          Стикеры
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="media" className="h-full">
         <MediaFileList />
@@ -42,6 +46,9 @@ export function Browser() {
       </TabsContent>
       <TabsContent value="subtitles" className="h-full">
         <SubtitlesList />
+      </TabsContent>
+      <TabsContent value="stickers" className="h-full">
+        <StickersList />
       </TabsContent>
     </Tabs>
   )
