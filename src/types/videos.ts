@@ -58,3 +58,11 @@ export interface ThumbnailParams {
   trackHeight: number
   segmentWidth: number
 }
+
+export interface FileGroup {
+  id: string
+  fileIds: string[]
+  type: "video" | "audio" | "sequential"
+  count?: number
+  videosPerSeries?: number
+}

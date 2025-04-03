@@ -52,11 +52,6 @@ export const rootStore = createStore({
       media: event.media,
     }),
 
-    setHasFetched: (context, event: { hasFetched: boolean }) => ({
-      ...context,
-      hasFetched: event.hasFetched,
-    }),
-
     fetchVideos: (context, _event, enqueue) => {
       if (context.hasFetched) return context
 
@@ -141,11 +136,6 @@ export const rootStore = createStore({
     setLoadingState: (context, event: { isLoading: boolean; hasFetched: boolean }) => ({
       ...context,
       isLoading: event.isLoading,
-      hasFetched: event.hasFetched,
-    }),
-
-    setHasFetched: (context, event: { hasFetched: boolean }) => ({
-      ...context,
       hasFetched: event.hasFetched,
     }),
 

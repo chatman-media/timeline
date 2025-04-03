@@ -91,13 +91,6 @@ export function useRootStore() {
     [send],
   )
 
-  const setHasFetched = useCallback(
-    (hasFetched: boolean) => {
-      send({ type: "setHasFetched", hasFetched })
-    },
-    [send],
-  )
-
   const addToMetadataCache = useCallback(
     (key: string, data: any) => {
       send({ type: "addToMetadataCache", key, data })
@@ -169,7 +162,6 @@ export function useRootStore() {
     addToMetadataCache,
     addToThumbnailCache,
     addNewTracks,
-    setHasFetched,
     play,
 
     // Вспомогательные функции

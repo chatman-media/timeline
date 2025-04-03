@@ -19,7 +19,7 @@ import { StatusBar } from "./status-bar"
 export function MediaFileList({
   viewMode = "thumbnails",
 }: { viewMode?: "list" | "grid" | "thumbnails" }) {
-  const { media, isLoading, addNewTracks, fetchVideos, setHasFetched } = useRootStore()
+  const { media, isLoading, addNewTracks, fetchVideos } = useRootStore()
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
@@ -118,11 +118,6 @@ export function MediaFileList({
     },
     [addNewTracks, addedFiles, getFileId],
   )
-
-  const handleUpdateList = useCallback(() => {
-    setHasFetched(false)
-    fetchVideos()
-  }, [setHasFetched, fetchVideos])
 
   // Handlers for StatusBar
   const handleAddAllFiles = useCallback(() => {

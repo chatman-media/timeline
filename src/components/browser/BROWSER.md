@@ -19,7 +19,6 @@
 1. Добавление по типу:
    - Все видео файлы
    - Все аудио файлы
-   - Последовательные серии
 
 2. Добавление по дате:
    - Динамический список из 2-х дат
@@ -28,53 +27,6 @@
 
 3. Общие действия:
    - Добавление всех файлов
-   - Обновление списка
-
-### Хранение состояния
-
-- Используется Set для хранения ID добавленных файлов
-- Состояние `addedFiles` хранится в компоненте MediaFilesList
-- При добавлении файлов ID сохраняются в Set для быстрого поиска
-
-### Методы добавления файлов
-
-#### 1. Добавление одного файла
-
-````typescript
-const handleAddMedia = (e: React.MouseEvent, file: MediaFile) => {
-const fileId = getFileId(file)
-if (addedFiles.has(fileId)) return // Проверка на дубликаты
-addNewTracks([file])
-setAddedFiles(prev => new Set([...prev, fileId]))
-}```
-
-
-#### 2. Добавление файлов по дате
-
-```typescript
-const handleAddDateFiles = (targetDate: string) => {
-const dateFiles = media.filter(file => {
-if (!file.startTime) return false
-const fileDate = new Date(file.startTime 1000)
-.toLocaleDateString("ru-RU", {
-day: "2-digit",
-month: "long",
-year: "numeric"
-})
-return fileDate === targetDate
-})
-addNewTracks(dateFiles)
-setAddedFiles(prev => new Set([...prev, ...dateFiles.map(getFileId)]))
-}```
-
-#### 3. Добавление последовательных файлов
-
-```typescript
-const handleAddSequentialFiles = () => {
-if (!sequentialFiles) return
-addNewTracks(sequentialFiles)
-setAddedFiles(prev => new Set([...prev, ...sequentialFiles.map(getFileId)]))
-}```
 
 ### Проверки при добавлении
 
