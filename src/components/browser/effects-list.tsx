@@ -1,3 +1,4 @@
+import { Sliders } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
 import { effects, VideoEffect } from "@/types/effects"
@@ -81,19 +82,37 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
 }
 
 export function EffectsList() {
+  const [searchQuery, setSearchQuery] = useState("")
+
   const handleEffectClick = (effect: VideoEffect) => {
     console.log("Applying effect:", effect.name)
   }
 
   return (
-    <div className="flex flex-wrap gap-4 p-3">
-      {effects.map((effect) => (
-        <EffectPreview
-          key={effect.id}
-          effectType={effect.type}
-          onClick={() => handleEffectClick(effect)}
-        />
-      ))}
+    <div className="h-full overflow-y-auto">
+      <div className="space-y-1 p-3">
+        <div className="flex items-center justify-between mb-4">
+          <div className="relative w-[50%]">
+            <input
+              type="text"
+              placeholder="Поиск..."
+              className="w-full px-3 py-1 text-sm bg-transparent border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-5">
+          {effects.map((effect) => (
+            <EffectPreview
+              key={effect.id}
+              effectType={effect.type}
+              onClick={() => handleEffectClick(effect)}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

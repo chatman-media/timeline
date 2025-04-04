@@ -6,12 +6,9 @@ export function StickersList() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="space-y-1 p-4">
+      <div className="space-y-1 p-3">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
-            Стикеры
-          </h3>
-          <div className="relative">
+          <div className="relative w-[50%]">
             <input
               type="text"
               placeholder="Поиск..."
@@ -31,4 +28,4 @@ export function StickersList() {
       </div>
     </div>
   )
-} 
+}

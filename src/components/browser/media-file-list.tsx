@@ -1,3 +1,4 @@
+import { Sliders } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
@@ -19,6 +20,7 @@ export function MediaFileList({
   viewMode = "thumbnails",
 }: { viewMode?: "list" | "grid" | "thumbnails" }) {
   const { media, isLoading, addNewTracks, fetchVideos, addedFiles } = useRootStore()
+  const [searchQuery, setSearchQuery] = useState("")
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
@@ -189,7 +191,20 @@ export function MediaFileList({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto pl-[3px] mb-[24px]">
+      <div className="space-y-1 p-3">
+        <div className="flex items-center justify-between mb-4">
+          <div className="relative w-[50%]">
+            <input
+              type="text"
+              placeholder="Поиск..."
+              className="w-full px-3 py-1 text-sm bg-transparent border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <Sliders className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          </div>
+        </div>
+
         {viewMode === "list" ? (
           <table className="w-full border-collapse">
             <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">

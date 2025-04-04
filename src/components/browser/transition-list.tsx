@@ -145,14 +145,27 @@ const transitions = [
 ]
 
 export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void }) {
+  const [searchQuery, setSearchQuery] = useState("")
   const demoVideos = {
     source: { path: "/vex1.mp4" } as MediaFile,
     target: { path: "/vex2.mp4" } as MediaFile,
   }
 
   return (
-    <div className="h-full p-3">
-      <div className="flex flex-wrap gap-4">
+    <div className="h-full overflow-y-auto p-3">
+      <div className="flex items-center justify-between mb-4">
+        <div className="relative w-[50%]">
+          <input
+            type="text"
+            placeholder="Поиск..."
+            className="w-full px-3 py-1 text-sm bg-transparent border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-5">
         {transitions.map((transition) => (
           <TransitionPreview
             key={transition.id}
