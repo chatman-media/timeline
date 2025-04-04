@@ -2,14 +2,11 @@ import { memo, useEffect } from "react"
 
 import { PlayerControls } from "@/components/player/player-controls"
 import { useRootStore } from "@/hooks/use-root-store"
+import { MediaFile } from "@/types/videos"
 
 export const ActiveVideo = memo(() => {
   const { videoRefs, isPlaying, activeVideo, setCurrentTime, setIsPlaying, isChangingCamera } =
     useRootStore()
-
-  if (!videoRefs.current) {
-    videoRefs.current = {}
-  }
 
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -17,25 +14,24 @@ export const ActiveVideo = memo(() => {
   }
 
   useEffect(() => {
-    const videoElement = videoRefs.current[activeVideo?.id]
-    if (!videoElement || !activeVideo) return
+    if (!activeVideo) return
+
+    const videoElement = videoRefs.current[activeVideo.id]
+    if (!videoElement) return
 
     const videoStartTime = activeVideo.startTime || 0
     const throttledTimeUpdate = () => {
       if (!videoElement.seeking && !isChangingCamera) {
         const newTime = videoStartTime + videoElement.currentTime
-        // Используем RAF для синхронизации с отрисовкой
         requestAnimationFrame(() => {
           setCurrentTime(newTime)
         })
       }
     }
 
-    // Оптимизированный обработчик timeupdate
     let lastUpdate = 0
     const handleTimeUpdate = () => {
       const now = performance.now()
-      // Ограничиваем частоту обновлений до ~60fps
       if (now - lastUpdate >= 16.6) {
         throttledTimeUpdate()
         lastUpdate = now
@@ -50,7 +46,6 @@ export const ActiveVideo = memo(() => {
     videoElement.addEventListener("timeupdate", handleTimeUpdate)
     videoElement.addEventListener("error", handleError)
 
-    // Управление воспроизведением
     const playVideo = async () => {
       try {
         if (isPlaying && !isChangingCamera) {
@@ -88,19 +83,25 @@ export const ActiveVideo = memo(() => {
 
   return (
     <div className="relative h-full flex flex-col">
-      <video
-        ref={(el) => {
-          if (el) videoRefs.current[activeVideo.id] = el
-        }}
-        src={activeVideo.path}
-        className="flex-1 object-contain object-center"
-        playsInline
-        preload="auto"
-        disablePictureInPicture
-        disableRemotePlayback
-        controlsList="nodownload noplaybackrate"
-      />
-      <div className="flex items-center justify-between w-full py-[2px] px-1 bg-background border-b border-border">
+      <div className="flex-1 relative bg-black">
+        <video
+          ref={(el) => {
+            if (el && activeVideo) {
+              videoRefs.current[activeVideo.id] = el
+            }
+          }}
+          src={activeVideo.path}
+          className="absolute inset-0 w-full h-full object-contain"
+          onClick={handlePlayPause}
+          playsInline
+          muted
+          preload="auto"
+          disablePictureInPicture
+          disableRemotePlayback
+          controlsList="nodownload noplaybackrate"
+        />
+      </div>
+      <div className="flex-shrink-0">
         <PlayerControls />
       </div>
     </div>
