@@ -86,14 +86,6 @@ export function StatusBar({
             {`${remainingMaxDateFiles.length} видео ${maxDateInfo.date}`}
           </ActionButton>
         )}
-        {secondMaxDateInfo && remainingSecondMaxDateFiles.length > 0 && (
-          <ActionButton
-            title="Добавить видео за эту дату"
-            onClick={() => onAddDateFiles(secondMaxDateInfo.date)}
-          >
-            {`${remainingSecondMaxDateFiles.length} видео ${secondMaxDateInfo.date}`}
-          </ActionButton>
-        )}
       </div>
       <div className="flex flex-col gap-0 items-end justify-center text-xs">
         {!allFilesAdded && (
