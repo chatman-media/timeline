@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useRootStore } from "@/hooks/use-root-store"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { formatDuration, formatFileSize } from "@/lib/utils"
-import { FileGroup,MediaFile } from "@/types/videos"
+import { FileGroup, MediaFile } from "@/types/videos"
 import {
   getFileType,
   getSequentialFiles,
@@ -14,11 +14,13 @@ import {
 import { Skeleton } from "../ui/skeleton"
 import { FileInfo, MediaPreview } from "."
 import { StatusBar } from "./status-bar"
+import { MediaToolbar } from "./media-toolbar"
 
-export function MediaFileList({
-  viewMode = "thumbnails",
-}: { viewMode?: "list" | "grid" | "thumbnails" }) {
+export function MediaFileList() {
   const { media, isLoading, addNewTracks, fetchVideos, addedFiles } = useRootStore()
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails">("thumbnails")
+  const [sortBy, setSortBy] = useState<string>("date")
+  const [filterType, setFilterType] = useState<string>("all")
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
@@ -35,13 +37,40 @@ export function MediaFileList({
   const sequentialFiles = useMemo(() => getSequentialFiles(media), [media])
   const sortedDates = useMemo(() => groupFilesByDate(media), [media])
 
-  const sortedMedia = useMemo(() => {
-    return [...media].sort((a, b) => {
-      const timeA = a.startTime || 0
-      const timeB = b.startTime || 0
-      return timeB - timeA
+  const filteredAndSortedMedia = useMemo(() => {
+    const filtered = media.filter((file) => {
+      if (filterType === "all") return true
+
+      const fileType = getFileType(file)
+
+      if (filterType === "video" && fileType === "video") return true
+      if (filterType === "audio" && fileType === "audio") return true
+      if (filterType === "image" && fileType === "image") return true
+      if (filterType === "favorites" && file.isFavorite) return true
+
+      return false
     })
-  }, [media])
+
+    return [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name)
+        case "size":
+          const sizeA = a.probeData?.format?.size || 0
+          const sizeB = b.probeData?.format?.size || 0
+          return sizeB - sizeA
+        case "duration":
+          const durationA = a.probeData?.format?.duration || 0
+          const durationB = b.probeData?.format?.duration || 0
+          return durationB - durationA
+        case "date":
+        default:
+          const timeA = a.startTime || 0
+          const timeB = b.startTime || 0
+          return timeB - timeA
+      }
+    })
+  }, [media, sortBy, filterType])
 
   const getFileId = useCallback((file: MediaFile) => {
     return file.id || file.path || file.name
@@ -132,11 +161,11 @@ export function MediaFileList({
   )
 
   const handleAddAllVideoFiles = useCallback(() => {
-    handleAddByIds(fileGroups.videos.fileIds)
+    handleAddByIds(fileGroups.videos?.fileIds || [])
   }, [fileGroups])
 
   const handleAddAllAudioFiles = useCallback(() => {
-    handleAddByIds(fileGroups.audio.fileIds)
+    handleAddByIds(fileGroups.audio?.fileIds || [])
   }, [fileGroups])
 
   useEffect(() => {
@@ -157,6 +186,25 @@ export function MediaFileList({
     },
     [media, addNewTracks],
   )
+
+  const handleImport = useCallback(() => {
+    const input = document.createElement("input")
+    input.type = "file"
+    input.accept = "video/*, audio/*"
+    input.onchange = (e) => {
+      const files = Array.from(e.target.files || [])
+      addNewTracks(files)
+    }
+    input.click()
+  }, [addNewTracks])
+
+  const handleSort = useCallback((sortBy: string) => {
+    setSortBy(sortBy)
+  }, [])
+
+  const handleFilter = useCallback((filterType: string) => {
+    setFilterType(filterType)
+  }, [])
 
   if (isLoading) {
     return (
@@ -189,6 +237,13 @@ export function MediaFileList({
 
   return (
     <div className="flex flex-col h-full">
+      <MediaToolbar
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onImport={handleImport}
+        onSort={handleSort}
+        onFilter={handleFilter}
+      />
       <div className="flex-1 overflow-y-auto pl-[3px] mb-[24px]">
         {viewMode === "list" ? (
           <table className="w-full border-collapse">
@@ -219,19 +274,19 @@ export function MediaFileList({
               </tr>
             </thead>
             <tbody>
-              {sortedMedia.map((file) => {
+              {filteredAndSortedMedia.map((file) => {
                 const fileId = getFileId(file)
                 const isAdded = addedFiles.has(fileId)
                 const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
                 const startTime = file.startTime
                   ? new Date(file.startTime * 1000).toLocaleString("ru-RU", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  })
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })
                   : "-"
                 const duration = file.probeData?.format.duration
                   ? formatDuration(file.probeData.format.duration)
@@ -274,7 +329,7 @@ export function MediaFileList({
           </table>
         ) : (
           <div className="space-y-2">
-            {sortedMedia.map((file) => {
+            {filteredAndSortedMedia.map((file) => {
               const fileId = getFileId(file)
               const duration = file.probeData?.format.duration || 1
               const isAudio = getFileType(file) === "audio"
@@ -285,10 +340,10 @@ export function MediaFileList({
                   key={fileId}
                   className={`flex items-center gap-3 p-0 pr-2 rounded-md group w-full overflow-hidden
                     ${
-                isAdded
-                  ? "opacity-50 pointer-events-none"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
+                      isAdded
+                        ? "opacity-50 pointer-events-none"
+                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
+                    }`}
                   style={{ maxWidth: "100%" }}
                 >
                   <div className="relative flex-shrink-0 flex gap-1">
@@ -320,7 +375,7 @@ export function MediaFileList({
       </div>
       <div className="flex-shrink-0 h-[24px] w-full absolute bottom-0 left-0 right-0 z-10">
         <StatusBar
-          media={sortedMedia}
+          media={filteredAndSortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}
           onAddAllAudioFiles={handleAddAllAudioFiles}
           onAddDateFiles={handleAddDateFiles}
