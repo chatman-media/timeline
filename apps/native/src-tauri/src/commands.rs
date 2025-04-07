@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use tauri::State;
+use tauri::Manager;
 use crate::media_manager::MediaManager;
 use crate::media::{MediaFile, ProxySettings, ProxyResolution};
 
@@ -61,4 +62,78 @@ pub async fn update_proxy_settings(
 
     // TODO: Обновить настройки прокси
     Ok(())
+}
+
+#[tauri::command]
+pub fn set_theme(theme: String, app_handle: tauri::AppHandle) -> Result<(), String> {
+    match theme.as_str() {
+        "light" => {
+            // Устанавливаем светлую тему
+            #[cfg(target_os = "macos")]
+            app_handle.set_appearance(tauri::theme::MacOsAppearance::Light).map_err(|e| e.to_string())?;
+            
+            #[cfg(target_os = "windows")]
+            {
+                // На Windows можно использовать другой API для темы, если таковой имеется
+                // или использовать настройки приложения
+            }
+            
+            // Отправляем событие в WebView
+            app_handle.emit_all("theme-changed", "light").map_err(|e| e.to_string())?;
+        },
+        "dark" => {
+            // Устанавливаем темную тему
+            #[cfg(target_os = "macos")]
+            app_handle.set_appearance(tauri::theme::MacOsAppearance::Dark).map_err(|e| e.to_string())?;
+            
+            #[cfg(target_os = "windows")]
+            {
+                // На Windows можно использовать другой API для темы
+            }
+            
+            // Отправляем событие в WebView
+            app_handle.emit_all("theme-changed", "dark").map_err(|e| e.to_string())?;
+        },
+        "system" => {
+            // Устанавливаем системную тему
+            #[cfg(target_os = "macos")]
+            app_handle.set_appearance(tauri::theme::MacOsAppearance::Auto).map_err(|e| e.to_string())?;
+            
+            #[cfg(target_os = "windows")]
+            {
+                // На Windows можно использовать системные настройки
+            }
+            
+            // Определяем текущую системную тему и отправляем событие
+            #[cfg(target_os = "macos")]
+            {
+                // Проверяем, какая сейчас тема в macOS
+                if let Ok(is_dark) = app_handle.system_theme() {
+                    let theme_value = if is_dark == tauri::theme::SystemTheme::Dark { "dark" } else { "light" };
+                    app_handle.emit_all("theme-changed", theme_value).map_err(|e| e.to_string())?;
+                }
+            }
+            
+            #[cfg(not(target_os = "macos"))]
+            {
+                // На других ОС можно использовать другие методы определения темы
+            }
+        },
+        _ => return Err("Invalid theme. Supported values: light, dark, system".to_string()),
+    }
+    
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_system_theme(app_handle: tauri::AppHandle) -> Result<String, String> {
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(theme) = app_handle.system_theme() {
+            return Ok(if theme == tauri::theme::SystemTheme::Dark { "dark".to_string() } else { "light".to_string() });
+        }
+    }
+    
+    // Для других ОС или если не удалось определить тему
+    Ok("light".to_string())
 } 
