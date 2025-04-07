@@ -25,10 +25,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${fontSans.variable} ${fontMono.variable} bg-background text-foreground`}>
-        <Providers>
-          {children}
-        </Providers>
+      <body
+        className={`${fontSans.variable} ${fontMono.variable} bg-background text-foreground`}
+      >
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

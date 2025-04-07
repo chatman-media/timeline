@@ -10,22 +10,29 @@ type TauriThemeContextType = {
   isLoaded: boolean;
 };
 
-const TauriThemeContext = createContext<TauriThemeContextType | undefined>(undefined);
+const TauriThemeContext = createContext<TauriThemeContextType | undefined>(
+  undefined,
+);
 
-export function TauriThemeProvider({ children }: { children: React.ReactNode }) {
+export function TauriThemeProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const themeState = useTauriTheme();
-  
+
   // Применяем тему при загрузке
   useEffect(() => {
     if (themeState.isLoaded) {
       const root = document.documentElement;
-      const isDark = themeState.theme === "dark" || 
+      const isDark =
+        themeState.theme === "dark" ||
         (themeState.theme === "system" && themeState.actualTheme === "dark");
-      
+
       root.classList.toggle("dark", isDark);
     }
   }, [themeState.isLoaded, themeState.theme, themeState.actualTheme]);
-  
+
   return (
     <TauriThemeContext.Provider value={themeState}>
       {children}
@@ -36,7 +43,9 @@ export function TauriThemeProvider({ children }: { children: React.ReactNode }) 
 export function useTauriThemeContext() {
   const context = useContext(TauriThemeContext);
   if (context === undefined) {
-    throw new Error("useTauriThemeContext must be used within a TauriThemeProvider");
+    throw new Error(
+      "useTauriThemeContext must be used within a TauriThemeProvider",
+    );
   }
   return context;
-} 
+}

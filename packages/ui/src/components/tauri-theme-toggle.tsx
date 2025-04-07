@@ -30,4 +30,4 @@ export function TauriThemeToggle() {
       <span className="sr-only">Переключить тему</span>
     </Button>
   );
-} 
+}
