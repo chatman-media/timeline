@@ -1,55 +1,45 @@
-<h1 align="center">
-  <a href="https://github.com/Arbarwings/tauri-v2-nextjs-monorepo">
-    <img src="https://raw.githubusercontent.com/Arbarwings/tauri-v2-nextjs-monorepo/main/.github/tauri-nextjs.jpg" alt="Tauri v2 + Next.js Monorepo">
-  </a>
-  <br>Tauri v2 + Next.js Monorepo<br>
-</h1>
+# Видеоредактор с ИИ
 
-This repository contains the source code of the blog post [Tauri v2 with
-Next.js: A Monorepo
-Guide](https://melvinoostendorp.nl/blog/tauri-v2-nextjs-monorepo-guide). It
-demonstrates how to build a cross-platform application using Tauri v2 for
-desktop and mobile apps, and Next.js for web services.
+Мощный видеоредактор с возможностью обнаружения объектов через YOLO v10 и работой через ИИ с материалом.
 
-## Features
+## Особенности
+- Обработка видео на Rust для максимальной производительности
+- Интеграция с YOLO v10 для автоматического обнаружения объектов
+- Облачное хранение и синхронизация файлов
+- Современный веб-интерфейс на Next.js
 
-- **Next.js** for web and API services.
-- **Tauri v2** for building lightweight and performant native desktop and mobile
-  apps.
-- **Monorepo setup** powered by [TurboRepo](https://turbo.build/repo).
-- **Shared components** built with TailwindCSS, Shadcn, and Lucide for a
-  consistent UI across platforms.
-- **Reusable backend API** using Next.js API routes.
-- **Cross-platform deployment** for Web, iOS, Android, Windows, macOS, and
-  Linux.
+## Структура проекта
 
-## Getting Started
+apps/
+├── web/ # Next.js веб-приложение
+└── native/ # Tauri + Rust приложение
+packages/
+├── ui/ # Общие UI компоненты
+├── video-core/ # Rust библиотека для обработки видео
+└── yolo/ # Интеграция с YOLO v10
 
-### Prerequisites
 
-Ensure the following tools are installed:
+## Разработка
+1. Установка зависимостей:
+```bash
+pnpm install
+```
 
-- **Node.js** (v22+)
-- **pnpm** (v8+)
-- **Rust** ([Install Rust](https://www.rust-lang.org/tools/install))
-- **Xcode** (for iOS development) _(Optional)_
-- **Android Studio** (for Android development) _(Optional)_
+2. Запуск веб-части:
+```bash
+pnpm dev --filter=web
+```
 
-### Installation
+3. Запуск нативной части:
+```bash
+pnpm dev --filter=native
+```
 
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/Arbarwings/tauri-v2-nextjs-monorepo.git
-   cd tauri-v2-nextjs-monorepo
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   pnpm install
-   ```
-
+## Документация
+Документация доступна в директории `docs/`. Для запуска:
+```bash
+pnpm dev --filter=docs
+```
 ### Running the Apps
 
 #### Web (Next.js):
@@ -150,3 +140,39 @@ This project is licensed under the [MIT License](LICENSE).
 - [Tauri Documentation](https://tauri.app/start/)
 - [Next.js Documentation](https://nextjs.org/docs/)
 - [TurboRepo Documentation](https://turbo.build/repo/docs)
+
+
+# Cursor Rules для видеоредактора
+
+## Архитектура проекта
+### Rust часть
+- Обработка видео и работа с файлами
+- Интеграция с YOLO v10
+- Нативная производительность
+
+### Web часть (Next.js)
+- Облачное хранение файлов
+- UI/UX компоненты
+- API для взаимодействия с Rust
+
+## Соглашения по коду
+### Rust
+- Использование async/await для операций с файлами
+- Безопасная работа с памятью
+- Модульная структура для обработки видео
+
+### TypeScript/Next.js
+- React Server Components для статического контента
+- Client Components для интерактивных элементов
+- Оптимизация загрузки видео
+
+## Именование
+### Rust
+- snake_case для функций и переменных
+- PascalCase для типов и трейтов
+- Префикс `ffmpeg_` для FFmpeg-связанных модулей
+
+### TypeScript
+- PascalCase для компонентов
+- camelCase для функций и переменных
+- Префикс `use` для хуков

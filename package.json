@@ -9,15 +9,18 @@
     "clean": "turbo clean",
     "check-types": "turbo check-types",
     "shadcn": "pnpm --filter @repo/ui shadcn",
-    "tauri": "pnpm --filter native tauri"
+    "tauri": "pnpm --filter native tauri",
+    "docs:generate:rust": "cargo doc --no-deps --document-private-items",
+    "docs:generate:typescript": "typedoc --out docs/src/pages/api-reference",
+    "docs:generate": "pnpm docs:generate:rust && pnpm docs:generate:typescript"
   },
   "devDependencies": {
-    "prettier": "^3.2.5",
-    "turbo": "^2.3.3",
-    "typescript": "5.5.4"
+    "prettier": "^3.5.3",
+    "turbo": "^2.5.0",
+    "typescript": "5.8.3"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.7.1",
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }
