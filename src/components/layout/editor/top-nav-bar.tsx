@@ -39,7 +39,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
   return (
     <div className="flex items-center justify-between w-full py-[2px] px-1 bg-background border-b border-border relative">
       <div className="flex items-center h-6">
-        <Button className="cursor-pointer p-0 h-6 w-6" variant="ghost" size="icon" title="Быстрые клавиши">
+        <Button
+          className="cursor-pointer p-0 h-6 w-6"
+          variant="ghost"
+          size="icon"
+          title="Быстрые клавиши"
+        >
           <Keyboard className="h-3.5 w-3.5" />
         </Button>
         <ThemeToggle />
@@ -74,7 +79,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
       <div className="flex items-center space-x-0 h-6">
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="cursor-pointer p-0 h-6 w-6" variant="ghost" size="icon" title="Опубликовать">
+            <Button
+              className="cursor-pointer p-0 h-6 w-6"
+              variant="ghost"
+              size="icon"
+              title="Опубликовать"
+            >
               <Send className="h-3.5 w-3.5" />
             </Button>
           </PopoverTrigger>
@@ -147,7 +157,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         >
           <Upload className="h-3.5 w-3.5" />
         </Button> */}
-        <Button className="cursor-pointer p-0 h-6 w-6" variant="ghost" size="icon" title="Настройки">
+        <Button
+          className="cursor-pointer p-0 h-6 w-6"
+          variant="ghost"
+          size="icon"
+          title="Настройки"
+        >
           <Settings className="h-3.5 w-3.5" />
         </Button>
       </div>

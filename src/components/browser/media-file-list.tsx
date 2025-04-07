@@ -13,8 +13,7 @@ import {
 } from "@/utils/media-utils"
 
 import { Skeleton } from "../ui/skeleton"
-import { FileInfo, MediaPreview } from "."
-import { StatusBar } from "./status-bar"
+import { FileInfo,MediaPreview, StatusBar } from "."
 
 export function MediaFileList({
   viewMode = "thumbnails",

@@ -1,11 +1,18 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Switch } from "@/components/ui/switch"
 import { Folder, Info } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 interface ExportDialogProps {
   open: boolean
@@ -21,10 +28,18 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
         </DialogHeader>
         <Tabs defaultValue="local" className="w-full flex-1 flex flex-col">
           <TabsList className="w-full justify-start bg-muted p-0 h-10">
-            <TabsTrigger value="local" className="rounded-none data-[state=active]:bg-background">Местный</TabsTrigger>
-            <TabsTrigger value="device" className="rounded-none data-[state=active]:bg-background">Устройство</TabsTrigger>
-            <TabsTrigger value="social" className="rounded-none data-[state=active]:bg-background">Социальные сети</TabsTrigger>
-            <TabsTrigger value="dvd" className="rounded-none data-[state=active]:bg-background">DVD</TabsTrigger>
+            <TabsTrigger value="local" className="rounded-none data-[state=active]:bg-background">
+              Местный
+            </TabsTrigger>
+            <TabsTrigger value="device" className="rounded-none data-[state=active]:bg-background">
+              Устройство
+            </TabsTrigger>
+            <TabsTrigger value="social" className="rounded-none data-[state=active]:bg-background">
+              Социальные сети
+            </TabsTrigger>
+            <TabsTrigger value="dvd" className="rounded-none data-[state=active]:bg-background">
+              DVD
+            </TabsTrigger>
           </TabsList>
 
           <div className="flex-1 overflow-y-auto bg-background">
@@ -34,7 +49,9 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                   <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center">
                     <div className="text-muted-foreground">Обложка</div>
                   </div>
-                  <Button variant="outline" className="w-full">Редактировать</Button>
+                  <Button variant="outline" className="w-full">
+                    Редактировать
+                  </Button>
                 </div>
 
                 <div className="space-y-4">
@@ -186,7 +203,9 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                 <div className="flex items-center justify-center">
                   <div className="text-center space-y-4">
                     <img src="/youtube-big.svg" className="w-24 h-24 mx-auto" alt="YouTube" />
-                    <div>Войдите в свою учетную запись YouTube для получения дополнительной информации.</div>
+                    <div>
+                      Войдите в свою учетную запись YouTube для получения дополнительной информации.
+                    </div>
                     <Button>Войти</Button>
                   </div>
                 </div>
@@ -218,4 +237,4 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
       </DialogContent>
     </Dialog>
   )
-} 
+}

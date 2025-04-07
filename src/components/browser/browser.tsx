@@ -1,14 +1,15 @@
 import { Blend, FlipHorizontal2, Image, Music, Sparkles, Sticker, Type } from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
-import { EffectsList } from "./effects-list"
-import { FiltersList } from "./filters-list"
-import { MediaFileList } from "./media-file-list"
-import { MusicFileList } from "./music-file-list"
-import { StickersList } from "./stickers-list"
-import { SubtitlesList } from "./subtitles-list"
-import { TransitionsList } from "./transition-list"
-
+import {
+  EffectsList,
+  FiltersList,
+  MediaFileList,
+  MusicFileList,
+  StickersList,
+  SubtitlesList,
+  TransitionsList,
+} from "."
 export const TAB_TRIGGER_STYLES =
   "text-xs text-gray-800 dark:bg-[#1b1a1f] bg-gray-200 data-[state=active]:bg-secondary data-[state=active]:text-black dark:data-[state=active]:bg-secondary dark:data-[state=active]:text-white hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 border-1 border-transparent flex flex-col items-center justify-center gap-1 py-2"
 

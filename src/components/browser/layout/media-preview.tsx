@@ -7,7 +7,7 @@ import { MediaFile } from "@/types/videos"
 import { calculateRealDimensions, isHorizontalVideo } from "@/utils/media-utils"
 import { getNextVolumeState, VolumeState } from "@/utils/video-utils"
 
-import { Skeleton } from "../ui/skeleton"
+import { Skeleton } from "../../ui/skeleton"
 import { PreviewTimeline } from "./preview-timeline"
 
 interface MediaPreviewProps {

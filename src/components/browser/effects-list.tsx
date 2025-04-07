@@ -1,4 +1,3 @@
-import { Sliders } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
 import { effects, VideoEffect } from "@/types/effects"
