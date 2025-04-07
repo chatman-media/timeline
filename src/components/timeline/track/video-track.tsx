@@ -4,6 +4,7 @@ import { useRootStore } from "@/hooks/use-root-store"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { type Track } from "@/types/videos"
 import { getAspectRatio, getFps } from "@/utils/video-utils"
+import { Waveform } from "../waveform"
 
 interface VideoTrackProps {
   track: Track
@@ -87,18 +88,18 @@ const VideoTrack = memo(
                                 width: "100%",
                                 height: "70px",
                               }}
+                              onClick={(e) => handleClick(e, track, video.id)}
                             >
                               {/* Содержимое для одиночного видео */}
                               <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
                                 <div
-                                  className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0"
+                                  className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0 pointer-events-none"
                                   style={{
                                     backgroundColor: "#004346",
                                     lineHeight: "13px",
                                   }}
-                                  onClick={(e) => handleClick(e, track, video.id)}
                                 >
-                                  <span className="bg-[#033032]">V{track.index}</span>
+                                  <span className="bg-[#033032]">{video.isVideo ? 'V' : 'A'}{track.index}</span>
                                   <span className="bg-[#033032]">
                                     {video.path.split("/").pop()}
                                   </span>
@@ -128,18 +129,16 @@ const VideoTrack = memo(
                                           {audioStream?.bit_rate &&
                                             `${formatBitrate(parseInt(audioStream.bit_rate))}`}
                                         </span>
-                                        <span
-                                          className="bg-[#033032] text-[11px] mb-[2px] px-[3px]"
-                                          style={{
-                                            display: width < 16 ? "none" : "block",
-                                          }}
-                                        >
-                                          {formatDuration(track.combinedDuration, 3)}
-                                        </span>
+                                        <span>{formatDuration(track.combinedDuration, 3)}</span>
                                       </div>
                                     )}
                                   </div>
                                 </div>
+                                {!video.isVideo && (
+                                  <div className="h-[40px] w-full relative pointer-events-none">
+                                    <Waveform audioUrl={video.path} />
+                                  </div>
+                                )}
                                 <div
                                   className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"
                                   style={{
@@ -188,15 +187,15 @@ const VideoTrack = memo(
                               width: `${segmentWidth}%`,
                               height: "70px",
                             }}
+                            onClick={(e) => handleClick(e, track, video.id)}
                           >
                             <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
                               <div
-                                className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0"
+                                className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0 pointer-events-none"
                                 style={{
                                   backgroundColor: "#004346",
                                   lineHeight: "13px",
                                 }}
-                                onClick={(e) => handleClick(e, track, video.id)}
                               >
                                 {idx === 0 && (
                                   <span className="bg-[#033032] text-[11px]">V{track.index}</span>

@@ -16,7 +16,7 @@ export const ActiveVideo = memo(() => {
   useEffect(() => {
     if (!activeVideo) return
 
-    const videoElement = videoRefs.current[activeVideo.id]
+    const videoElement = videoRefs.current ?? videoRefs.current[activeVideo.id]
     if (!videoElement) return
 
     const videoStartTime = activeVideo.startTime || 0
