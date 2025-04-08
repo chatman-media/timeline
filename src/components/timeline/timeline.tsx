@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react"
+import { Trash2, Undo2, Redo2 } from "lucide-react"
 import React, { useMemo, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
@@ -18,8 +18,26 @@ export function Timeline() {
     scale,
     setScale,
     setTracks,
+    activeTrackId,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useRootStore()
   const [activeDate, setActiveDate] = useState<string | null>(null)
+
+  // Обработчик нажатия клавиш
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Backspace' && activeTrackId) {
+        const updatedTracks = tracks.filter(track => track.id !== activeTrackId);
+        setTracks(updatedTracks);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeTrackId, tracks, setTracks]);
 
   const sections = useMemo(() => {
     if (!tracks || tracks.length === 0) return []
@@ -108,13 +126,35 @@ export function Timeline() {
   return (
     <div className="relative w-full h-[calc(50vh-4px)] min-h-[calc(50vh-4px)] overflow-x-auto overflow-y-auto bg-muted/50 dark:bg-[#1a1a1a]">
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
-        <button
-          onClick={() => setTracks([])}
-          className="flex items-center gap-2 px-3 py-1 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
-        >
-          <Trash2 size={16} />
-          Очистить
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={undo}
+            disabled={!canUndo}
+            className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Отменить"
+          >
+            <Undo2 size={16} />
+          </button>
+          <button
+            onClick={redo}
+            disabled={!canRedo}
+            className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            title="Повторить"
+          >
+            <Redo2 size={16} />
+          </button>
+          {activeTrackId && (
+            <button
+              onClick={() => {
+                const updatedTracks = tracks.filter(track => track.id !== activeTrackId);
+                setTracks(updatedTracks);
+              }}
+              className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
+        </div>
         <TimelineControls scale={scale} setScale={setScale} />
       </div>
       <div className="relative w-full min-h-full pt-[2px]" style={{ minWidth: "100%" }}>

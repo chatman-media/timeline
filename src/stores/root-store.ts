@@ -1,9 +1,17 @@
 import { createStore } from "@xstate/store"
+import { historyDB } from "@/lib/indexed-db"
 
 import { STORAGE_KEYS } from "@/lib/constants"
 import { generateVideoId } from "@/lib/utils"
 import type { MediaFile, ScreenLayout, TimeRange, Track } from "@/types/videos"
 import { createTracksFromFiles } from "@/utils/media-utils"
+
+interface Action {
+  id: number
+  type: string
+  data: any
+  timestamp: number
+}
 
 /**
  * Начальное состояние корневого хранилища
@@ -30,6 +38,9 @@ const initialContext = {
   volume: 1,
   trackVolumes: {} as Record<string, number>,
   isSeeking: false,
+  // История действий
+  actionHistory: [] as Action[],
+  currentActionIndex: -1,
 }
 
 /**
@@ -130,9 +141,21 @@ export const rootStore = createStore({
       hasFetched: event.hasFetched,
     }),
 
-    setActiveVideo: (context, event: { videoId: string }) => {
+    setActiveVideo: (context, event: { videoId: string }, enqueue) => {
       const targetVideo = context.media.find((v) => v.id === event.videoId)
       if (targetVideo) {
+        // Добавляем действие в историю
+        enqueue.effect(() => {
+          rootStore.send({
+            type: "addToHistory",
+            data: {
+              type: "setActiveVideo",
+              previousVideo: context.activeVideo,
+              newVideo: targetVideo,
+            },
+          })
+        })
+
         return {
           ...context,
           activeVideo: targetVideo,
@@ -141,7 +164,7 @@ export const rootStore = createStore({
       return context
     },
 
-    setActiveTrack: (context, event: { trackId: string }) => {
+    setActiveTrack: (context, event: { trackId: string }, enqueue) => {
       const { currentTime, tracks } = context
 
       try {
@@ -166,6 +189,18 @@ export const rootStore = createStore({
         })
 
         if (availableVideo) {
+          // Добавляем действие в историю
+          enqueue.effect(() => {
+            rootStore.send({
+              type: "addToHistory",
+              data: {
+                type: "setActiveTrack",
+                previousTrackId: context.activeTrackId,
+                newTrackId: event.trackId,
+              },
+            })
+          })
+
           return {
             ...context,
             activeTrackId: event.trackId,
@@ -198,7 +233,7 @@ export const rootStore = createStore({
       isSeeking: event.isSeeking,
     }),
 
-    setTracks: (context, event: { tracks: Track[] }) => {
+    setTracks: (context, event: { tracks: Track[] }, enqueue) => {
       // Если треки очищаются (пустой массив), то очищаем и addedFiles
       if (event.tracks.length === 0) {
         localStorage.removeItem(STORAGE_KEYS.ADDED_FILES)
@@ -208,6 +243,19 @@ export const rootStore = createStore({
           addedFiles: new Set<string>(),
         }
       }
+
+      // Добавляем действие в историю
+      enqueue.effect(() => {
+        rootStore.send({
+          type: "addToHistory",
+          data: {
+            type: "setTracks",
+            previousTracks: context.tracks,
+            newTracks: event.tracks,
+          },
+        })
+      })
+
       return {
         ...context,
         tracks: event.tracks,
@@ -278,61 +326,54 @@ export const rootStore = createStore({
       }
     },
 
-    saveState: (context) => {
-      const stateToSave = {
-        currentTime: context.currentTime,
-        activeTrackId: context.activeTrackId,
-        activeVideo: context.activeVideo,
-        tracks: context.tracks,
-        timeRanges: context.timeRanges,
-        currentLayout: context.currentLayout,
-      }
+    // Сохранение состояния
+    saveState: (context, _event, enqueue) => {
+      enqueue.effect(async () => {
+        try {
+          await historyDB.saveState(context)
+        } catch (error) {
+          console.error('Ошибка при сохранении состояния:', error)
+        }
+      })
 
-      localStorage.setItem(STORAGE_KEYS.TIMELINE_SLICES, JSON.stringify(stateToSave))
       return context
     },
 
-    loadState: (context) => {
-      try {
-        const savedState = localStorage.getItem(STORAGE_KEYS.TIMELINE_SLICES)
-        const savedAddedFiles = localStorage.getItem(STORAGE_KEYS.ADDED_FILES)
-
-        let updatedContext = context
-
-        if (savedState) {
-          const parsedState = JSON.parse(savedState)
-
-          // Если есть сохраненное активное видео, найдем его в текущих видео
-          let activeVideo = context.activeVideo
-          if (parsedState.activeVideo) {
-            activeVideo =
-              context.media.find((v) => v.id === parsedState.activeVideo.id) || context.activeVideo
+    // Загрузка состояния
+    loadState: (context, _event, enqueue) => {
+      enqueue.effect(async () => {
+        try {
+          const savedState = await historyDB.getLatestState()
+          if (savedState) {
+            rootStore.send({
+              type: "setState",
+              state: savedState
+            })
           }
-
-          updatedContext = {
-            ...updatedContext,
-            currentTime: parsedState.currentTime || context.currentTime,
-            activeTrackId: parsedState.activeTrackId || context.activeTrackId,
-            activeVideo: activeVideo,
-            tracks: parsedState.tracks || context.tracks,
-            timeRanges: parsedState.timeRanges || context.timeRanges,
-            currentLayout: parsedState.currentLayout || context.currentLayout,
-          }
+        } catch (error) {
+          console.error('Ошибка при загрузке состояния:', error)
         }
+      })
 
-        if (savedAddedFiles) {
-          const parsedAddedFiles = JSON.parse(savedAddedFiles)
-          updatedContext = {
-            ...updatedContext,
-            addedFiles: new Set(parsedAddedFiles),
-          }
+      return context
+    },
+
+    // Установка состояния
+    setState: (context, event: { state: any }) => ({
+      ...event.state
+    }),
+
+    // Очистка состояния
+    clearState: (context, _event, enqueue) => {
+      enqueue.effect(async () => {
+        try {
+          await historyDB.clearState()
+        } catch (error) {
+          console.error('Ошибка при очистке состояния:', error)
         }
+      })
 
-        return updatedContext
-      } catch (error) {
-        console.error("Ошибка при загрузке состояния:", error)
-        return context
-      }
+      return initialContext
     },
 
     markAsUnsaved: (context) => ({
@@ -362,6 +403,135 @@ export const rootStore = createStore({
         [event.trackId]: event.volume,
       },
     }),
+
+    // Добавляем действие в историю
+    addToHistory: (context, event: { type: string; data: any }, enqueue) => {
+      enqueue.effect(async () => {
+        try {
+          const id = await historyDB.addAction({
+            type: event.type,
+            data: event.data,
+            timestamp: Date.now(),
+          })
+
+          // Если мы находимся не в конце истории, удаляем все действия после текущего
+          const newHistory = context.actionHistory.slice(0, context.currentActionIndex + 1)
+          newHistory.push({ 
+            id, 
+            type: event.type, 
+            data: event.data,
+            timestamp: Date.now(),
+          })
+          
+          rootStore.send({
+            type: "updateHistory",
+            history: newHistory,
+            currentIndex: newHistory.length - 1,
+          })
+        } catch (error) {
+          console.error('Ошибка при сохранении действия в историю:', error)
+        }
+      })
+
+      return context
+    },
+
+    // Обновление истории
+    updateHistory: (context, event: { history: Action[]; currentIndex: number }) => ({
+      ...context,
+      actionHistory: event.history,
+      currentActionIndex: event.currentIndex,
+    }),
+
+    // Загрузка истории при инициализации
+    loadHistory: (context, _event, enqueue) => {
+      enqueue.effect(async () => {
+        try {
+          const actions = await historyDB.getActions()
+          rootStore.send({
+            type: "updateHistory",
+            history: actions,
+            currentIndex: actions.length - 1,
+          })
+        } catch (error) {
+          console.error('Ошибка при загрузке истории:', error)
+        }
+      })
+
+      return context
+    },
+
+    // Отмена действия
+    undo: (context) => {
+      if (context.currentActionIndex < 0) return context
+      
+      const action = context.actionHistory[context.currentActionIndex]
+      let newContext = { ...context }
+      
+      // Восстанавливаем предыдущее состояние в зависимости от типа действия
+      switch (action.type) {
+        case 'setTracks':
+          newContext.tracks = action.data.previousTracks
+          break
+        case 'setActiveTrack':
+          newContext.activeTrackId = action.data.previousTrackId
+          break
+        case 'setActiveVideo':
+          newContext.activeVideo = action.data.previousVideo
+          break
+        // Добавьте другие типы действий по необходимости
+      }
+      
+      return {
+        ...newContext,
+        currentActionIndex: context.currentActionIndex - 1,
+      }
+    },
+
+    // Повтор действия
+    redo: (context) => {
+      if (context.currentActionIndex >= context.actionHistory.length - 1) return context
+      
+      const action = context.actionHistory[context.currentActionIndex + 1]
+      let newContext = { ...context }
+      
+      // Применяем действие в зависимости от его типа
+      switch (action.type) {
+        case 'setTracks':
+          newContext.tracks = action.data.newTracks
+          break
+        case 'setActiveTrack':
+          newContext.activeTrackId = action.data.newTrackId
+          break
+        case 'setActiveVideo':
+          newContext.activeVideo = action.data.newVideo
+          break
+        // Добавьте другие типы действий по необходимости
+      }
+      
+      return {
+        ...newContext,
+        currentActionIndex: context.currentActionIndex + 1,
+      }
+    },
+
+    // Очистка истории
+    clearHistory: (context, _event, enqueue) => {
+      enqueue.effect(async () => {
+        try {
+          await historyDB.clearHistory()
+          rootStore.send({
+            type: "updateHistory",
+            history: [],
+            currentIndex: -1,
+          })
+        } catch (error) {
+          console.error('Ошибка при очистке истории:', error)
+        }
+      })
+
+      return context
+    },
   },
 })
 

@@ -33,6 +33,8 @@ export function useRootStore() {
     volume,
     trackVolumes,
     isSeeking,
+    actionHistory,
+    currentActionIndex,
   } = useSelector(rootStore, (state) => state.context)
 
   // Действия
@@ -189,6 +191,19 @@ export function useRootStore() {
     [send],
   )
 
+  const undo = useCallback(() => {
+    send({ type: "undo" })
+    send({ type: "markAsUnsaved" })
+  }, [send])
+
+  const redo = useCallback(() => {
+    send({ type: "redo" })
+    send({ type: "markAsUnsaved" })
+  }, [send])
+
+  const canUndo = currentActionIndex >= 0
+  const canRedo = currentActionIndex < actionHistory.length - 1
+
   return {
     // Состояние
     media,
@@ -236,5 +251,9 @@ export function useRootStore() {
     setVolume,
     setTrackVolume,
     setIsSeeking,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   }
 }
