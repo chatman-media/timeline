@@ -1,190 +1,139 @@
-import { memo } from "react"
-
+import { memo, useCallback, useMemo, useEffect, useRef, useState } from "react"
 import { useRootStore } from "@/hooks/use-root-store"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
-import { type Track } from "@/types/videos"
-import { getAspectRatio, getFps } from "@/utils/video-utils"
+import { TimelineTrack } from "@/types/timeline"
+import { useWaveformCache } from "@/hooks/use-waveform-cache"
 import { Waveform } from "../waveform"
 
 interface VideoTrackProps {
-  track: Track
+  track: TimelineTrack
   index: number
-  parentRef: React.RefObject<HTMLDivElement>
   sectionStartTime: number
   sectionDuration: number
 }
 
-const VideoTrack = memo(
-  ({ track, parentRef, sectionStartTime, sectionDuration }: VideoTrackProps) => {
-    const { setCurrentTime, setActiveVideo, activeTrackId, setActiveTrack } = useRootStore()
+const VideoTrack = memo(function VideoTrack({
+  track,
+  sectionStartTime,
+  sectionDuration,
+}: VideoTrackProps) {
+  const { 
+    setCurrentTime, 
+    setActiveVideo, 
+    activeTrackId, 
+    setActiveTrack,
+    volume: globalVolume,
+    trackVolumes,
+  } = useRootStore()
+  const { getWaveform } = useWaveformCache()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [visibleVideos, setVisibleVideos] = useState<string[]>([])
+  const videoElementsRef = useRef<Record<string, HTMLVideoElement>>({})
 
-    if (!track.videos || track.videos.length === 0) {
-      return null
-    }
+  useEffect(() => {
+    // Обновляем громкость для всех видео в треке
+    Object.values(videoElementsRef.current).forEach(videoElement => {
+      if (videoElement) {
+        const trackVolume = trackVolumes[track.id] ?? 1
+        videoElement.volume = globalVolume * trackVolume
+      }
+    })
+  }, [globalVolume, trackVolumes, track.id])
 
-    const firstVideo = track.videos[0]
-    const lastVideo = track.videos[track.videos.length - 1]
+  if (!track.videos || track.videos.length === 0) {
+    return null
+  }
 
-    if (!firstVideo || !lastVideo) {
-      return null
-    }
+  const firstVideo = track.videos[0]
+  const lastVideo = track.videos[track.videos.length - 1]
 
-    const timeToPercent = (time: number) => {
-      if (!sectionStartTime || !sectionDuration || sectionDuration === 0) return 0
-      const percent = ((time - sectionStartTime) / sectionDuration) * 100
-      return Math.max(0, Math.min(100, percent))
-    }
+  if (!firstVideo || !lastVideo) {
+    return null
+  }
 
-    const trackStartTime = firstVideo.startTime || 0
-    const trackEndTime = (lastVideo.startTime || 0) + (lastVideo.duration || 0)
-    const startOffset = timeToPercent(trackStartTime)
-    const width = timeToPercent(trackEndTime) - startOffset
+  const timeToPercent = useCallback((time: number) => {
+    if (!sectionStartTime || !sectionDuration || sectionDuration === 0) return 0
+    const percent = ((time - sectionStartTime) / sectionDuration) * 100
+    return Math.max(0, Math.min(100, percent))
+  }, [sectionStartTime, sectionDuration])
 
-    const videoStream = firstVideo.probeData?.streams.find((s) => s.codec_type === "video")
-    const audioStream = firstVideo.probeData?.streams.find((s) => s.codec_type === "audio")
-    const isActive = track.id === activeTrackId
+  const trackStartTime = firstVideo.startTime ?? 0
+  const trackEndTime = (lastVideo.startTime ?? 0) + (lastVideo.duration ?? 0)
+  const startOffset = timeToPercent(trackStartTime)
+  const width = timeToPercent(trackEndTime) - startOffset
 
-    const handleClick = (_e: React.MouseEvent, track: Track, videoId?: string) => {
-      setActiveTrack(track.id)
-      if (videoId) {
-        setActiveVideo(videoId)
-        const video = track.videos.find((v) => v.id === videoId)
-        if (video) {
-          const videoStartTime = video.startTime || 0
-          setCurrentTime(videoStartTime)
-        }
+  const isActive = track.id === activeTrackId
+
+  const handleClick = useCallback((_e: React.MouseEvent, track: TimelineTrack, videoId?: string) => {
+    setActiveTrack(track.id)
+    if (videoId) {
+      setActiveVideo(videoId)
+      const video = track.videos.find((v) => v.id === videoId)
+      if (video) {
+        const videoStartTime = video.startTime ?? 0
+        setCurrentTime(videoStartTime)
       }
     }
+  }, [setActiveTrack, setActiveVideo, setCurrentTime])
 
-    return (
-      <div className="flex">
-        <div className="w-full">
+  // Определяем видимые видео
+  useEffect(() => {
+    if (!containerRef.current) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleIds = entries
+          .filter(entry => entry.isIntersecting)
+          .map(entry => entry.target.getAttribute('data-video-id') || '')
+          .filter(Boolean)
+
+        setVisibleVideos((prev: string[]) => {
+          const newSet = new Set([...prev, ...visibleIds])
+          return Array.from(newSet)
+        })
+      },
+      { threshold: 0.1 }
+    )
+
+    containerRef.current.querySelectorAll('[data-video-id]').forEach(el => {
+      observer.observe(el)
+    })
+
+    return () => observer.disconnect()
+  }, [track.videos])
+
+  return (
+    <div className="flex" ref={containerRef}>
+      <div className="w-full">
+        <div
+          className="absolute h-full"
+          style={{
+            left: `${startOffset}%`,
+            width: `${width}%`,
+          }}
+        >
           <div
-            className="absolute h-full"
-            style={{
-              left: `${startOffset}%`,
-              width: `${width}%`,
-            }}
+            className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
+            style={{ cursor: "pointer" }}
           >
-            <div
-              className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
-              style={{ cursor: "pointer" }}
-            >
-              <div className="slice--parent bg-[#014a4f]" ref={parentRef}>
-                <div className="absolute h-full w-full timline-border">
-                  <div className="flex h-full w-full flex-col justify-start">
-                    <div className="flex relative">
-                      {track.videos.map((video, idx) => {
-                        const videoStart = video.startTime || 0
-                        const videoDuration = video.duration || 0
+            <div className="slice--parent bg-[#014a4f]">
+              <div className="absolute h-full w-full timline-border">
+                <div className="flex h-full w-full flex-col justify-start">
+                  <div className="flex relative">
+                    {track.videos.map((video) => {
+                      const videoStart = video.startTime || 0
+                      const videoDuration = video.duration || 0
+                      const isVisible = visibleVideos.includes(video.id)
 
-                        if (track.videos.length === 1) {
-                          return (
-                            <div
-                              key={video.id}
-                              className="absolute h-full w-full"
-                              style={{
-                                left: "0%",
-                                width: "100%",
-                                height: "70px",
-                              }}
-                              onClick={(e) => handleClick(e, track, video.id)}
-                            >
-                              {/* Содержимое для одиночного видео */}
-                              <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
-                                <div
-                                  className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0 pointer-events-none"
-                                  style={{
-                                    backgroundColor: "#004346",
-                                    lineHeight: "13px",
-                                  }}
-                                >
-                                  <span className="bg-[#033032]">{video.isVideo ? 'V' : 'A'}{track.index}</span>
-                                  <span className="bg-[#033032]">
-                                    {video.path.split("/").pop()}
-                                  </span>
-                                  <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
-                                    {video.isVideo ? (
-                                      <div className="flex flex-row video-metadata truncate text-xs text-white">
-                                        <span>{videoStream?.codec_name?.toUpperCase()}</span>
-                                        {/* <span>{videoStream?.color_space?.toUpperCase()}</span> */}
-                                        <span>
-                                          {videoStream?.width}×{videoStream?.height}
-                                        </span>
-                                        <span>{getAspectRatio(videoStream)}</span>
-                                        <span>{getFps(videoStream)} fps</span>
-                                        <span>{formatDuration(track.combinedDuration, 3)}</span>
-                                      </div>
-                                    ) : (
-                                      <div className="flex flex-row video-metadata truncate text-xs text-white">
-                                        <span>{audioStream?.codec_name}</span>
-                                        <span>каналов: {audioStream?.channels}</span>
-                                        <span>
-                                          {audioStream?.sample_rate &&
-                                            `${Math.round(
-                                              parseInt(`${audioStream.sample_rate}`) / 1000,
-                                            )}kHz`}
-                                        </span>
-                                        <span>
-                                          {audioStream?.bit_rate &&
-                                            `${formatBitrate(parseInt(audioStream.bit_rate))}`}
-                                        </span>
-                                        <span>{formatDuration(track.combinedDuration, 3)}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                                {!video.isVideo && (
-                                  <div className="h-[40px] w-full relative pointer-events-none">
-                                    <Waveform audioUrl={video.path} />
-                                  </div>
-                                )}
-                                <div
-                                  className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"
-                                  style={{
-                                    display: width < 16 ? "none" : "block",
-                                  }}
-                                >
-                                  {formatTimeWithMilliseconds(videoStart, false, true, true)}
-                                </div>
-                                <div
-                                  className="absolute bottom-0 right-0 text-xs text-gray-100 mb-[2px] mr-1 bg-[#033032] text-[11px] px-[3px]"
-                                  style={{
-                                    display: width < 16 ? "none" : "block",
-                                  }}
-                                >
-                                  {formatTimeWithMilliseconds(
-                                    videoStart + videoDuration,
-                                    false,
-                                    true,
-                                    true,
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                          )
-                        }
-
-                        const segmentStart =
-                          ((videoStart - trackStartTime) / (trackEndTime - trackStartTime)) * 100
-                        const segmentWidth = (videoDuration / (trackEndTime - trackStartTime)) * 100
-
-                        console.log("Segment calculations:", {
-                          videoStart,
-                          videoEnd: videoStart + videoDuration,
-                          segmentStart,
-                          segmentWidth,
-                          trackStartTime,
-                          trackEndTime,
-                        })
-
+                      if (track.videos.length === 1) {
                         return (
                           <div
-                            key={video.id || video.name}
-                            className="absolute h-full"
+                            key={video.id}
+                            data-video-id={video.id}
+                            className="absolute h-full w-full"
                             style={{
-                              left: `${segmentStart}%`,
-                              width: `${segmentWidth}%`,
+                              left: "0%",
+                              width: "100%",
                               height: "70px",
                             }}
                             onClick={(e) => handleClick(e, track, video.id)}
@@ -197,50 +146,78 @@ const VideoTrack = memo(
                                   lineHeight: "13px",
                                 }}
                               >
-                                {idx === 0 && (
-                                  <span className="bg-[#033032] text-[11px]">V{track.index}</span>
-                                )}
-                                <span className="bg-[#033032] text-[11px]">
-                                  {video.path.split("/").pop()}
+                                <span className="bg-[#033032]">
+                                  {video.probeData?.streams[0]?.codec_name?.startsWith('a') ? "A" : "V"}
+                                  {track.index}
                                 </span>
-                                {idx === 0 ? (
-                                  <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
+                                <span className="bg-[#033032]">
+                                  {video.name}
+                                </span>
+                                <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
+                                  {video.probeData?.streams[0]?.codec_name?.startsWith('v') ? (
                                     <div className="flex flex-row video-metadata truncate text-xs text-white">
-                                      <span>{videoStream?.codec_name?.toUpperCase()}</span>
-                                      {/* <span>{videoStream?.color_space?.toUpperCase()}</span> */}
+                                      <span>{video.probeData?.streams[0]?.codec_name?.toUpperCase()}</span>
                                       <span>
-                                        {videoStream?.width}×{videoStream?.height}
+                                        {video.probeData?.streams[0]?.width}×{video.probeData?.streams[0]?.height}
                                       </span>
-                                      <span>{getAspectRatio(videoStream)}</span>
-                                      <span>{getFps(videoStream)} fps</span>
+                                      <span>{video.probeData?.streams[0]?.display_aspect_ratio}</span>
+                                      <span>{video.probeData?.streams[0]?.r_frame_rate?.split('/')[0]} fps</span>
+                                      <span>{video.duration !== undefined ? formatDuration(video.duration, 3) : ''}</span>
                                     </div>
-                                  </div>
-                                ) : (
-                                  <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
-                                    <div className="flex flex-row video-metadata truncate text-xs text-white mb-[2px]">
-                                      <span className="bg-[#033032] text-[11px]">
-                                        {formatDuration(track.combinedDuration, 3)}
+                                  ) : (
+                                    <div className="flex flex-row video-metadata truncate text-xs text-white">
+                                      <span>{video.probeData?.streams[0]?.codec_name}</span>
+                                      <span>каналов: {video.probeData?.streams[0]?.channels}</span>
+                                      <span>
+                                        {video.probeData?.streams[0]?.sample_rate &&
+                                          `${Math.round(Number(video.probeData.streams[0].sample_rate) / 1000)}kHz`}
                                       </span>
+                                      <span>
+                                        {video.probeData?.streams[0]?.bit_rate &&
+                                          `${formatBitrate(Number(video.probeData.streams[0].bit_rate))}`}
+                                      </span>
+                                      <span>{video.duration !== undefined ? formatDuration(video.duration, 3) : ''}</span>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
                               </div>
+                              {isVisible && (
+                                <div className="h-[40px] w-full relative pointer-events-none">
+                                  <Waveform 
+                                    audioUrl={video.path} 
+                                    waveform={getWaveform(video.path)}
+                                  />
+                                </div>
+                              )}
+                              <video
+                                ref={(el) => {
+                                  if (el) {
+                                    videoElementsRef.current[video.id] = el
+                                    const trackVolume = trackVolumes[track.id] ?? 1
+                                    el.volume = globalVolume * trackVolume
+                                  }
+                                }}
+                                src={video.path}
+                                preload="auto"
+                                loop
+                                style={{ display: 'none' }}
+                              />
                               <div
                                 className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"
                                 style={{
-                                  display: segmentWidth < 16 ? "none" : "block",
+                                  display: width < 16 ? "none" : "block",
                                 }}
                               >
-                                {formatTimeWithMilliseconds(videoStart, false, true, true)}
+                                {formatTimeWithMilliseconds(videoStart || 0, false, true, true)}
                               </div>
                               <div
                                 className="absolute bottom-0 right-0 text-xs text-gray-100 mb-[2px] mr-1 bg-[#033032] text-[11px] px-[3px]"
                                 style={{
-                                  display: segmentWidth < 16 ? "none" : "block",
+                                  display: width < 16 ? "none" : "block",
                                 }}
                               >
                                 {formatTimeWithMilliseconds(
-                                  videoStart + videoDuration,
+                                  (videoStart || 0) + (videoDuration || 0),
                                   false,
                                   true,
                                   true,
@@ -249,8 +226,8 @@ const VideoTrack = memo(
                             </div>
                           </div>
                         )
-                      })}
-                    </div>
+                      }
+                    })}
                   </div>
                 </div>
               </div>
@@ -258,9 +235,9 @@ const VideoTrack = memo(
           </div>
         </div>
       </div>
-    )
-  },
-)
+    </div>
+  )
+})
 
 VideoTrack.displayName = "VideoTrack"
 

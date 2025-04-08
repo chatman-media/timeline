@@ -13,7 +13,7 @@ import {
 } from "@/utils/media-utils"
 
 import { Skeleton } from "../ui/skeleton"
-import { FileInfo,MediaPreview, StatusBar } from "."
+import { FileInfo, MediaPreview, StatusBar } from "."
 
 export function MediaFileList({
   viewMode = "thumbnails",
@@ -98,17 +98,10 @@ export function MediaFileList({
   const handleAddMedia = useCallback(
     (e: React.MouseEvent, file: MediaFile) => {
       e.stopPropagation()
-      const fileId = getFileId(file)
-      if (addedFiles.has(fileId)) return
-
-      const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
-      const audioStream = file.probeData?.streams?.find((s) => s.codec_type === "audio")
-
-      if (videoStream || audioStream) {
-        addNewTracks([file])
-      }
+      if (!file.path || addedFiles.has(file.path)) return
+      addNewTracks([file])
     },
-    [addNewTracks, addedFiles, getFileId],
+    [addNewTracks, addedFiles],
   )
 
   const handleAddAllFiles = useCallback(() => {
@@ -235,7 +228,7 @@ export function MediaFileList({
             <tbody>
               {sortedMedia.map((file) => {
                 const fileId = getFileId(file)
-                const isAdded = addedFiles.has(fileId)
+                const isAdded = Boolean(file.path && addedFiles.has(file.path))
                 const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
                 const startTime = file.startTime
                   ? new Date(file.startTime * 1000).toLocaleString("ru-RU", {
@@ -292,7 +285,7 @@ export function MediaFileList({
               const fileId = getFileId(file)
               const duration = file.probeData?.format.duration || 1
               const isAudio = getFileType(file) === "audio"
-              const isAdded = addedFiles.has(fileId)
+              const isAdded = Boolean(file.path && addedFiles.has(file.path))
 
               return (
                 <div

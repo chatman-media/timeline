@@ -1,88 +1,65 @@
 // components/Waveform.tsx
-import { useEffect, useRef, useState } from "react"
-import WaveSurfer from "wavesurfer.js"
+import { memo, useEffect, useRef } from "react"
 
 interface WaveformProps {
   audioUrl: string
-  onReady?: () => void
+  waveform: {
+    data: any
+    isLoading: boolean
+    error: Error | null
+  }
 }
 
-export const Waveform: React.FC<WaveformProps> = ({ audioUrl, onReady }) => {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const wavesurfer = useRef<WaveSurfer | null>(null)
-  const [isReady, setIsReady] = useState(false)
+const Waveform = memo(function Waveform({ audioUrl, waveform }: WaveformProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    let isDestroyed = false
+    if (!canvasRef.current || !waveform.data) return
 
-    if (!containerRef.current) return
+    const canvas = canvasRef.current
+    const ctx = canvas.getContext("2d")
+    if (!ctx) return
 
-    const initWaveSurfer = async () => {
-      try {
-        if (wavesurfer.current) {
-          wavesurfer.current.destroy()
-          wavesurfer.current = null
-          setIsReady(false)
-        }
+    // Очищаем canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-        wavesurfer.current = WaveSurfer.create({
-          container: containerRef.current!,
-          waveColor: "rgba(74, 158, 255, 0.4)",
-          progressColor: "rgba(33, 118, 255, 0.4)",
-          cursorColor: "#ffffff",
-          height: 40,
-          normalize: true,
-          backend: 'MediaElement',
-          autoplay: false,
-          interact: false,
-          hideScrollbar: true,
-          barWidth: 1,
-          barGap: 1,
-          barRadius: 2
-        })
-
-        wavesurfer.current.on("ready", () => {
-          if (!isDestroyed) {
-            setIsReady(true)
-            onReady?.()
-          }
-        })
-
-        wavesurfer.current.on("error", (error) => {
-          console.error("WaveSurfer error:", error)
-        })
-
-        await wavesurfer.current.load(audioUrl)
-      } catch (error) {
-        console.error("Error initializing WaveSurfer:", error)
-      }
+    // Рисуем waveform
+    if (waveform.data) {
+      // Здесь будет логика отрисовки waveform
+      // Пока просто рисуем тестовую линию
+      ctx.beginPath()
+      ctx.moveTo(0, canvas.height / 2)
+      ctx.lineTo(canvas.width, canvas.height / 2)
+      ctx.strokeStyle = "#fff"
+      ctx.stroke()
     }
+  }, [waveform.data])
 
-    initWaveSurfer()
+  if (waveform.isLoading) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="animate-pulse text-gray-400">Загрузка...</div>
+      </div>
+    )
+  }
 
-    return () => {
-      isDestroyed = true
-      if (wavesurfer.current && isReady) {
-        try {
-          wavesurfer.current.destroy()
-        } catch (error) {
-          console.error("Error destroying WaveSurfer:", error)
-        }
-      }
-      wavesurfer.current = null
-      setIsReady(false)
-    }
-  }, [audioUrl, onReady])
+  if (waveform.error) {
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-red-400">Ошибка загрузки</div>
+      </div>
+    )
+  }
 
   return (
-    <div 
-      ref={containerRef} 
-      className="w-full h-full absolute bottom-[40px] left-0 z-0" 
-      style={{
-        clipPath: 'inset(0 0 50% 0)', // Обрезаем нижнюю половину
-        transform: 'scaleY(2)', // Растягиваем верхнюю половину на всю высоту
-        transformOrigin: 'top' // Трансформируем от верхнего края
-      }}
+    <canvas
+      ref={canvasRef}
+      className="w-full h-full"
+      style={{ backgroundColor: "rgba(0, 0, 0, 0.1)" }}
     />
   )
-}
+})
+
+Waveform.displayName = "Waveform"
+
+export { Waveform }

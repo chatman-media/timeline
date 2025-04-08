@@ -4,6 +4,8 @@ export interface TimeRange {
   start: number
   end?: number
   duration: number
+  type: string
+  color?: string
 }
 
 export interface RecordEntry {
@@ -32,7 +34,6 @@ export interface Track {
   videos: MediaFile[] // Все видео этой камеры
   timeRanges: TimeRange[] // Массив временных диапазонов
   startTime: number // Время начала трека в секундах (unix timestamp)
-  endTime: number // Время окончания трека в секундах (unix timestamp)
 }
 
 export interface VideoSegment {

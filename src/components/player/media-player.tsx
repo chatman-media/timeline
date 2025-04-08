@@ -2,11 +2,21 @@ import { memo, useEffect } from "react"
 
 import { PlayerControls } from "@/components/player/player-controls"
 import { useRootStore } from "@/hooks/use-root-store"
-import { MediaFile } from "@/types/videos"
 
 export const ActiveVideo = memo(() => {
-  const { videoRefs, isPlaying, activeVideo, setCurrentTime, setIsPlaying, isChangingCamera } =
-    useRootStore()
+  const { 
+    videoRefs, 
+    isPlaying, 
+    activeVideo, 
+    setCurrentTime, 
+    setIsPlaying, 
+    isChangingCamera,
+    volume: globalVolume,
+    trackVolumes,
+    currentTime,
+    isSeeking,
+    setIsSeeking,
+  } = useRootStore()
 
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -16,12 +26,12 @@ export const ActiveVideo = memo(() => {
   useEffect(() => {
     if (!activeVideo) return
 
-    const videoElement = videoRefs.current ?? videoRefs.current[activeVideo.id]
+    const videoElement = videoRefs[activeVideo.id]
     if (!videoElement) return
 
     const videoStartTime = activeVideo.startTime || 0
     const throttledTimeUpdate = () => {
-      if (!videoElement.seeking && !isChangingCamera) {
+      if (!videoElement.seeking && !isChangingCamera && !isSeeking) {
         const newTime = videoStartTime + videoElement.currentTime
         requestAnimationFrame(() => {
           setCurrentTime(newTime)
@@ -59,14 +69,37 @@ export const ActiveVideo = memo(() => {
       }
     }
 
+    // Устанавливаем громкость для активного видео
+    const trackVolume = trackVolumes[activeVideo.id] ?? 1
+    videoElement.volume = globalVolume * trackVolume
+
     playVideo()
 
     return () => {
       videoElement.removeEventListener("timeupdate", handleTimeUpdate)
       videoElement.removeEventListener("error", handleError)
-      videoElement.pause()
     }
-  }, [activeVideo, isPlaying, isChangingCamera])
+  }, [activeVideo, isPlaying, isChangingCamera, videoRefs, setCurrentTime, setIsPlaying, globalVolume, trackVolumes, isSeeking])
+
+  // Добавляем эффект для обновления времени видео при изменении currentTime
+  useEffect(() => {
+    if (!activeVideo) return
+
+    const videoElement = videoRefs[activeVideo.id]
+    if (!videoElement) return
+
+    const videoStartTime = activeVideo.startTime || 0
+    const newTime = currentTime - videoStartTime
+    
+    // Проверяем что newTime - корректное число
+    if (isFinite(newTime) && newTime >= 0) {
+      videoElement.currentTime = newTime
+      // Сбрасываем флаг после небольшой задержки
+      setTimeout(() => {
+        setIsSeeking(false)
+      }, 100)
+    }
+  }, [currentTime, activeVideo, videoRefs, setIsSeeking])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -87,23 +120,18 @@ export const ActiveVideo = memo(() => {
         <video
           ref={(el) => {
             if (el && activeVideo) {
-              videoRefs.current[activeVideo.id] = el
+              videoRefs[activeVideo.id] = el
             }
           }}
           src={activeVideo.path}
           className="absolute inset-0 w-full h-full object-contain"
           onClick={handlePlayPause}
           playsInline
-          muted
           preload="auto"
           disablePictureInPicture
-          disableRemotePlayback
-          controlsList="nodownload noplaybackrate"
         />
       </div>
-      <div className="flex-shrink-0">
-        <PlayerControls />
-      </div>
+      <PlayerControls />
     </div>
   )
 })

@@ -1,26 +1,21 @@
 import { useRef } from "react"
-
 import { useSectionTime } from "@/hooks/use-section-time"
 
-interface TimelineSectionBarProps {
-  sectionStartTime: number
-  sectionDuration: number
-  height: number
+interface TimelineBarProps {
   startTime: number
   endTime: number
+  height: number
 }
 
-export function TimelineSectionBar({
-  sectionStartTime,
-  sectionDuration,
-  height,
+export function TimelineBar({
   startTime,
   endTime,
-}: TimelineSectionBarProps) {
+  height,
+}: TimelineBarProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const { position, handleMouseDown } = useSectionTime({
-    sectionStartTime,
-    sectionDuration,
+    sectionStartTime: startTime,
+    sectionDuration: endTime - startTime,
     startTime,
     endTime,
   })
@@ -47,4 +42,4 @@ export function TimelineSectionBar({
       </div>
     </div>
   )
-}
+} 

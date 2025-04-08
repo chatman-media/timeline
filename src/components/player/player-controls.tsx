@@ -1,5 +1,6 @@
 import {
-  Camera,
+  ChevronFirst,
+  ChevronLast,
   CircleDot,
   Maximize2,
   Pause,
@@ -10,7 +11,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 
 import { EntryPointIcon } from "@/components/icons/entry-point"
 import { ExitPointIcon } from "@/components/icons/exit-point"
@@ -21,11 +22,16 @@ import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
 
 export function PlayerControls() {
-  const { isPlaying, setIsPlaying, currentTime, activeVideo, setCurrentTime } = useRootStore()
-  const [volume, setVolume] = useState(1)
-  const [showVolumeSlider, setShowVolumeSlider] = useState(false)
+  const { 
+    isPlaying, 
+    setIsPlaying, 
+    currentTime, 
+    activeVideo, 
+    setCurrentTime,
+    volume: globalVolume,
+    setVolume: setGlobalVolume,
+  } = useRootStore()
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const volumeControlRef = useRef<HTMLDivElement>(null)
   const [isRecording, setIsRecording] = useState(false)
   const lastUpdateTime = useRef(0)
 
@@ -34,20 +40,32 @@ export function PlayerControls() {
   }, [isPlaying, setIsPlaying])
 
   const handleSkipBackward = useCallback(() => {
-    // Реализовать перемотку назад
-  }, [])
+    const fps = activeVideo?.probeData?.streams?.[0]?.r_frame_rate;
+    if (!fps) return;
+    
+    const frameTime = 1 / eval(fps);
+    const newTime = Math.max(activeVideo?.startTime || 0, currentTime - frameTime);
+    setIsPlaying(false);
+    setCurrentTime(newTime);
+  }, [activeVideo, currentTime])
 
   const handleSkipForward = useCallback(() => {
-    // Реализовать перемотку вперед
-  }, [])
+    const fps = activeVideo?.probeData?.streams?.[0]?.r_frame_rate;
+    if (!fps) return;
+    
+    const frameTime = 1 / eval(fps);
+    const newTime = Math.min(activeVideo?.endTime || Infinity, currentTime + frameTime);
+    setIsPlaying(false);
+    setCurrentTime(newTime);
+  }, [activeVideo, currentTime])
 
   const handleVolumeChange = useCallback((value: number[]) => {
-    setVolume(value[0])
-  }, [])
+    setGlobalVolume(value[0])
+  }, [setGlobalVolume])
 
   const handleToggleMute = useCallback(() => {
-    setVolume(volume === 0 ? 1 : 0)
-  }, [volume])
+    setGlobalVolume(globalVolume === 0 ? 1 : 0)
+  }, [globalVolume, setGlobalVolume])
 
   const handleFullscreen = useCallback(() => {
     setIsFullscreen(!isFullscreen)
@@ -59,29 +77,21 @@ export function PlayerControls() {
 
   const handleTimeChange = useCallback(
     (value: number[]) => {
-      const now = performance.now()
-      if (now - lastUpdateTime.current < 6.6) return // Ограничиваем до ~60fps
-
       if (activeVideo?.startTime !== undefined) {
-        lastUpdateTime.current = now
-        requestAnimationFrame(() => {
-          setCurrentTime(value[0] + activeVideo.startTime!)
-        })
+        const newTime = value[0] + activeVideo.startTime
+        setCurrentTime(newTime)
       }
     },
-    [activeVideo?.startTime],
+    [activeVideo, setCurrentTime],
   )
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (volumeControlRef.current && !volumeControlRef.current.contains(event.target as Node)) {
-        setShowVolumeSlider(false)
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside)
-    return () => document.removeEventListener("mousedown", handleClickOutside)
+  const handleChevronFirst = useCallback(() => {
+    setCurrentTime(0)
   }, [])
+
+  const handleChevronLast = useCallback(() => {
+    setCurrentTime(activeVideo?.endTime || 0)
+  }, [activeVideo?.endTime])
 
   // Функция для форматирования времени в формат ЧЧ:ММ:СС
   const formatTime = (time: number) => {
@@ -117,24 +127,24 @@ export function PlayerControls() {
 
       <div className="w-full flex items-center p-[2px] justify-between dark:bg-[#1b1a1f] text-white">
         <div className="flex items-center gap-2">
-          <Button
+        <Button
             className="cursor-pointer h-6 w-6"
             variant="ghost"
             size="icon"
-            title="Перемотка назад"
-            onClick={handleSkipBackward}
+            title="Первый кадр"
+            onClick={handleChevronFirst}
           >
-            <StepBack className="w-4 h-4" />
+            <ChevronFirst className="w-4 h-4" />
           </Button>
 
           <Button
             className="cursor-pointer h-6 w-6"
             variant="ghost"
             size="icon"
-            title="Перемотка вперед"
-            onClick={handleSkipForward}
+            title="Предыдущий кадр"
+            onClick={handleSkipBackward}
           >
-            <StepForward className="w-4 h-4" />
+            <StepBack className="w-4 h-4" />
           </Button>
 
           <Button
@@ -145,6 +155,26 @@ export function PlayerControls() {
             onClick={handlePlayPause}
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+          </Button>
+
+          <Button
+            className="cursor-pointer h-6 w-6"
+            variant="ghost"
+            size="icon"
+            title="Следующий кадр"
+            onClick={handleSkipForward}
+          >
+            <StepForward className="w-4 h-4" />
+          </Button>
+
+          <Button
+            className="cursor-pointer h-6 w-6"
+            variant="ghost"
+            size="icon"
+            title="Последний кадр"
+            onClick={handleChevronLast}
+          >
+            <ChevronLast className="w-4 h-4" />
           </Button>
 
           <Button
@@ -193,45 +223,26 @@ export function PlayerControls() {
             <Settings className="w-4 h-4" />
           </Button>
 
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title="Снимок"
-            onClick={() => {}}
-          >
-            <Camera className="w-4 h-4" />
-          </Button>
-
-          <div
-            ref={volumeControlRef}
-            className="relative"
-            onMouseEnter={() => setShowVolumeSlider(true)}
-            onMouseLeave={() => setShowVolumeSlider(false)}
-          >
+          <div className="flex items-center gap-2">
             <Button
               className="cursor-pointer h-6 w-6"
               variant="ghost"
               size="icon"
-              title={volume === 0 ? "Включить звук" : "Выключить звук"}
+              title={globalVolume === 0 ? "Включить звук" : "Выключить звук"}
               onClick={handleToggleMute}
             >
-              {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              {globalVolume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
             </Button>
-
-            {showVolumeSlider && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-24 h-32 bg-black/90 rounded-lg p-4">
-                <Slider
-                  value={[volume]}
-                  onValueChange={handleVolumeChange}
-                  orientation="vertical"
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  className="h-full"
-                />
-              </div>
-            )}
+            <div className="w-20">
+              <Slider
+                value={[globalVolume]}
+                min={0}
+                max={1}
+                step={0.01}
+                onValueChange={handleVolumeChange}
+                className="cursor-pointer"
+              />
+            </div>
           </div>
 
           <Button

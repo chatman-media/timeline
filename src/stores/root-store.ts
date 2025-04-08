@@ -9,7 +9,6 @@ import { createTracksFromFiles } from "@/utils/media-utils"
  * Начальное состояние корневого хранилища
  */
 const initialContext = {
-  videos: [] as MediaFile[],
   media: [] as MediaFile[],
   isLoading: true,
   hasMedia: false,
@@ -27,6 +26,10 @@ const initialContext = {
   currentLayout: { type: "1x1", activeTracks: ["T1"] } as ScreenLayout,
   addedFiles: new Set<string>(),
   isSaved: true,
+  scale: 1,
+  volume: 1,
+  trackVolumes: {} as Record<string, number>,
+  isSeeking: false,
 }
 
 /**
@@ -39,20 +42,6 @@ export const rootStore = createStore({
     setScreenLayout: (context, event: { layout: ScreenLayout }) => ({
       ...context,
       currentLayout: event.layout,
-    }),
-
-    setVideos: (context, event: { videos: MediaFile[] }) => ({
-      ...context,
-      videos: event.videos,
-      activeTrackId: "T1",
-      activeVideo: event.videos.find((v) => v.id === "V1") || event.videos[0],
-      hasMedia: event.videos.length > 0,
-      isChangingCamera: false,
-    }),
-
-    setMedia: (context, event: { media: MediaFile[] }) => ({
-      ...context,
-      media: event.media,
     }),
 
     fetchVideos: (context, _event, enqueue) => {
@@ -129,7 +118,6 @@ export const rootStore = createStore({
       },
     ) => ({
       ...context,
-      videos: event.videos,
       hasMedia: event.hasMedia,
       isLoading: event.isLoading,
       hasFetched: event.hasFetched,
@@ -143,7 +131,7 @@ export const rootStore = createStore({
     }),
 
     setActiveVideo: (context, event: { videoId: string }) => {
-      const targetVideo = context.videos.find((v) => v.id === event.videoId)
+      const targetVideo = context.media.find((v) => v.id === event.videoId)
       if (targetVideo) {
         return {
           ...context,
@@ -202,12 +190,29 @@ export const rootStore = createStore({
     setCurrentTime: (context, event: { time: number }) => ({
       ...context,
       currentTime: event.time,
+      isSeeking: true,
     }),
 
-    setTracks: (context, event: { tracks: Track[] }) => ({
+    setIsSeeking: (context, event: { isSeeking: boolean }) => ({
       ...context,
-      tracks: event.tracks,
+      isSeeking: event.isSeeking,
     }),
+
+    setTracks: (context, event: { tracks: Track[] }) => {
+      // Если треки очищаются (пустой массив), то очищаем и addedFiles
+      if (event.tracks.length === 0) {
+        localStorage.removeItem(STORAGE_KEYS.ADDED_FILES)
+        return {
+          ...context,
+          tracks: [] as Track[],
+          addedFiles: new Set<string>(),
+        }
+      }
+      return {
+        ...context,
+        tracks: event.tracks,
+      }
+    },
 
     addToMetadataCache: (context, event: { key: string; data: any }) => ({
       ...context,
@@ -225,23 +230,51 @@ export const rootStore = createStore({
       },
     }),
 
-    addToAddedFiles: (context, event: { fileIds: string[] }) => ({
-      ...context,
-      addedFiles: new Set([...Array.from(context.addedFiles), ...event.fileIds]),
-    }),
+    addToAddedFiles: (context, event: { filePaths: string[] }) => {
+      const newAddedFiles = new Set([...context.addedFiles, ...event.filePaths])
+      localStorage.setItem(STORAGE_KEYS.ADDED_FILES, JSON.stringify([...newAddedFiles]))
+      return {
+        ...context,
+        addedFiles: newAddedFiles,
+      }
+    },
 
-    addNewTracks: (context, event: { media: MediaFile[] }) => {
+    addNewTracks: (context, event: { media: MediaFile[] }, enqueue) => {
       const { tracks } = context
-      const newTracks = createTracksFromFiles(event.media, tracks.length)
+      
+      // Фильтруем файлы - только с аудио потоком
+      const mediaWithAudio = event.media.filter(file => {
+        const hasAudioStream = file.probeData?.streams?.some(stream => 
+          stream.codec_type === "audio"
+        )
+        return hasAudioStream
+      })
+
+      if (mediaWithAudio.length === 0) {
+        console.warn("Нет файлов с аудио потоком")
+        return context
+      }
+
+      const newTracks = createTracksFromFiles(mediaWithAudio, tracks.length)
       const uniqueNewTracks = newTracks.filter((t) => !new Set(tracks.map((t) => t.id)).has(t.id))
 
-      // Добавляем ID файлов в addedFiles
-      const newFileIds = event.media.map((file) => file.id)
+      // Добавляем пути файлов в addedFiles
+      const newFilePaths = mediaWithAudio
+        .filter((file) => file.path)
+        .map((file) => file.path as string)
+      const updatedAddedFiles = new Set([...Array.from(context.addedFiles), ...newFilePaths])
+
+      // Сохраняем состояние в localStorage
+      enqueue.effect(() => {
+        if (typeof window !== "undefined") {
+          localStorage.setItem(STORAGE_KEYS.ADDED_FILES, JSON.stringify([...updatedAddedFiles]))
+        }
+      })
 
       return {
         ...context,
         tracks: [...tracks, ...uniqueNewTracks],
-        addedFiles: new Set([...Array.from(context.addedFiles), ...newFileIds]),
+        addedFiles: updatedAddedFiles,
       }
     },
 
@@ -262,26 +295,40 @@ export const rootStore = createStore({
     loadState: (context) => {
       try {
         const savedState = localStorage.getItem(STORAGE_KEYS.TIMELINE_SLICES)
-        if (!savedState) return context
+        const savedAddedFiles = localStorage.getItem(STORAGE_KEYS.ADDED_FILES)
+        
+        let updatedContext = context
 
-        const parsedState = JSON.parse(savedState)
+        if (savedState) {
+          const parsedState = JSON.parse(savedState)
 
-        // Если есть сохраненное активное видео, найдем его в текущих видео
-        let activeVideo = context.activeVideo
-        if (parsedState.activeVideo) {
-          activeVideo =
-            context.videos.find((v) => v.id === parsedState.activeVideo.id) || context.activeVideo
+          // Если есть сохраненное активное видео, найдем его в текущих видео
+          let activeVideo = context.activeVideo
+          if (parsedState.activeVideo) {
+            activeVideo =
+              context.media.find((v) => v.id === parsedState.activeVideo.id) || context.activeVideo
+          }
+
+          updatedContext = {
+            ...updatedContext,
+            currentTime: parsedState.currentTime || context.currentTime,
+            activeTrackId: parsedState.activeTrackId || context.activeTrackId,
+            activeVideo: activeVideo,
+            tracks: parsedState.tracks || context.tracks,
+            timeRanges: parsedState.timeRanges || context.timeRanges,
+            currentLayout: parsedState.currentLayout || context.currentLayout,
+          }
         }
 
-        return {
-          ...context,
-          currentTime: parsedState.currentTime || context.currentTime,
-          activeTrackId: parsedState.activeTrackId || context.activeTrackId,
-          activeVideo: activeVideo,
-          tracks: parsedState.tracks || context.tracks,
-          timeRanges: parsedState.timeRanges || context.timeRanges,
-          currentLayout: parsedState.currentLayout || context.currentLayout,
+        if (savedAddedFiles) {
+          const parsedAddedFiles = JSON.parse(savedAddedFiles)
+          updatedContext = {
+            ...updatedContext,
+            addedFiles: new Set(parsedAddedFiles),
+          }
         }
+
+        return updatedContext
       } catch (error) {
         console.error("Ошибка при загрузке состояния:", error)
         return context
@@ -296,6 +343,24 @@ export const rootStore = createStore({
     markAsSaved: (context) => ({
       ...context,
       isSaved: true,
+    }),
+
+    setScale: (context, event: { scale: number }) => ({
+      ...context,
+      scale: event.scale,
+    }),
+
+    setVolume: (context, event: { volume: number }) => ({
+      ...context,
+      volume: event.volume,
+    }),
+
+    setTrackVolume: (context, event: { trackId: string; volume: number }) => ({
+      ...context,
+      trackVolumes: {
+        ...context.trackVolumes,
+        [event.trackId]: event.volume,
+      },
     }),
   },
 })

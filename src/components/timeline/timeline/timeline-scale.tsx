@@ -1,62 +1,32 @@
-import { Track } from "@/types/videos"
-
 import { TimelineMarks } from "./timeline-marks"
 
 interface TimelineScaleProps {
-  tracks: Track[]
-  timeStep: number
-  subStep: number
-  adjustedRange: TimeRange
-  isActive: boolean
-}
-
-interface TimeRange {
   startTime: number
   endTime: number
   duration: number
+  scale: number
 }
 
 export function TimelineScale({
-  tracks,
-  timeStep,
-  subStep,
-  adjustedRange,
-  isActive,
+  startTime,
+  endTime,
+  duration,
+  scale,
 }: TimelineScaleProps) {
+  const timeStep = Math.ceil(100 / scale)
+  const subStep = timeStep / 5
+
   return (
-    <div className={`relative w-full flex flex-col mb-[13px]`}>
-      <div className="h-0.5 w-full" style={{ background: "rgb(47, 61, 62)", height: "1px" }}>
-        {tracks.map((track: Track) =>
-          track.videos.map((video, videoIndex) => {
-            const videoStart = video.startTime || 0
-            const videoDuration = video.duration || 0
-            const rangeWidth = (videoDuration / adjustedRange.duration) * 100
-            const rangePosition =
-              ((videoStart - adjustedRange.startTime) / adjustedRange.duration) * 100
-
-            return (
-              <div
-                key={`${track.id}-${videoIndex}`}
-                className="h-0.5 absolute"
-                style={{
-                  width: `${rangeWidth}%`,
-                  left: `${rangePosition}%`,
-                  background: "rgb(25, 102, 107)",
-                }}
-              />
-            )
-          }),
-        )}
-      </div>
-
+    <div className="relative w-full flex flex-col mb-[13px]">
+      <div className="h-0.5 w-full" style={{ background: "rgb(47, 61, 62)", height: "1px" }} />
       <TimelineMarks
-        startTime={adjustedRange.startTime}
-        endTime={adjustedRange.endTime}
-        duration={adjustedRange.duration}
+        startTime={startTime}
+        endTime={endTime}
+        duration={duration}
         timeStep={timeStep}
         subStep={subStep}
-        isActive={isActive}
+        isActive={true}
       />
     </div>
   )
-}
+} 

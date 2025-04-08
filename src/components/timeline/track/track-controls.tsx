@@ -2,12 +2,13 @@ import { Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react"
 import { useState } from "react"
 
 import { Track } from "@/types/videos"
+import { Slider } from "@/components/ui/slider"
 
 interface TrackControlsProps {
   track: Track
   onVisibilityChange?: (visible: boolean) => void
   onLockChange?: (locked: boolean) => void
-  onVolumeChange?: (muted: boolean) => void
+  onVolumeChange?: (volume: number) => void
 }
 
 export function TrackControls({
@@ -19,6 +20,7 @@ export function TrackControls({
   const [isVisible, setIsVisible] = useState(true)
   const [isLocked, setIsLocked] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
+  const [volume, setVolume] = useState(100)
 
   const handleVisibilityToggle = () => {
     const newValue = !isVisible
@@ -35,7 +37,13 @@ export function TrackControls({
   const handleVolumeToggle = () => {
     const newValue = !isMuted
     setIsMuted(newValue)
-    onVolumeChange?.(newValue)
+    onVolumeChange?.(newValue ? 0 : volume)
+  }
+
+  const handleVolumeChange = (value: number[]) => {
+    const newVolume = value[0]
+    setVolume(newVolume)
+    onVolumeChange?.(newVolume)
   }
 
   // Определяем, является ли трек видео или аудио
@@ -70,20 +78,35 @@ export function TrackControls({
       </button>
 
       {!isVideoTrack && (
-        <button
-          onClick={handleVolumeToggle}
-          className="p-1 hover:bg-gray-700 rounded"
-          title={isMuted ? "Включить звук" : "Выключить звук"}
-        >
-          {isMuted ? (
-            <VolumeX className="w-4 h-4 text-gray-500" />
-          ) : (
-            <Volume2 className="w-4 h-4 text-gray-300" />
-          )}
-        </button>
+        <div className="flex items-center gap-2 flex-1">
+          <button
+            onClick={handleVolumeToggle}
+            className="p-1 hover:bg-gray-700 rounded shrink-0"
+            title={isMuted ? "Включить звук" : "Выключить звук"}
+          >
+            {isMuted ? (
+              <VolumeX className="w-4 h-4 text-gray-500" />
+            ) : (
+              <Volume2 className="w-4 h-4 text-gray-300" />
+            )}
+          </button>
+          <div className="flex items-center gap-2 flex-1 min-w-[100px]">
+            <Slider
+              value={[isMuted ? 0 : volume]}
+              min={0}
+              max={100}
+              step={1}
+              onValueChange={handleVolumeChange}
+              className="w-full [&_[data-orientation=horizontal]]:h-0.5"
+            />
+            <span className="text-xs text-gray-300 w-[30px] text-right">
+              {isMuted ? 0 : volume}
+            </span>
+          </div>
+        </div>
       )}
 
-      <div className="flex-1 text-sm text-gray-300 truncate">
+      <div className="text-sm text-gray-300 truncate shrink-0">
         {isVideoTrack ? `V${track.index}` : `A${track.index}`}
       </div>
     </div>

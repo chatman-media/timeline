@@ -39,7 +39,8 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
   return (
     <div className="flex items-center justify-between w-full py-[2px] px-1 bg-background border-b border-border relative">
       <div className="flex items-center h-6">
-        <Button
+      <ThemeToggle />
+      <Button
           className="cursor-pointer p-0 h-6 w-6"
           variant="ghost"
           size="icon"
@@ -47,7 +48,6 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         >
           <Keyboard className="h-3.5 w-3.5" />
         </Button>
-        <ThemeToggle />
       </div>
       <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
         <div

@@ -1,4 +1,5 @@
-import { Track } from "./videos"
+import { TimeRange } from "./time-range"
+import { MediaFile } from "./videos"
 
 // Базовые типы для временной шкалы
 export interface VideoMetadata {
@@ -9,15 +10,18 @@ export interface VideoMetadata {
   aspectRatio: string
   bitrate: number
   duration: number
+  fps: number
+  channels?: number
+  sampleRate?: number
 }
 
-export interface TrackSliceData {
+export interface TrackSliceState {
   id: string
   x: number
   y: number
   width: string | number
   height: number
-  trackIndex: number
+  trackId: number
   startTime?: number
   duration?: number
 }
@@ -29,10 +33,37 @@ export interface SeekbarState {
   x: number
 }
 
-export interface TimelineSection {
-  date: string
+export interface TimelineTrack {
+  id: string
+  index: number
+  isActive: boolean
+  combinedDuration: number
+  startTime: number
+  videos: MediaFile[]
+  timeRanges: TimeRange[]
+}
+
+export interface TimelineVideo {
+  id: string
+  trackId: string
   startTime: number
   endTime: number
   duration: number
-  tracks: Track[]
+  path: string
+  metadata: {
+    filename: string
+    codecName: string
+    width?: number
+    height?: number
+    aspectRatio?: string
+    bitrate?: number
+    duration?: number
+    channels?: number
+    sampleRate?: number
+    fps?: number
+  }
+  position: {
+    x: number
+    width: number
+  }
 }
