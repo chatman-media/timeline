@@ -22,11 +22,11 @@ import { cn } from "@/lib/utils"
 import { Button } from "../ui/button"
 
 export function PlayerControls() {
-  const { 
-    isPlaying, 
-    setIsPlaying, 
-    currentTime, 
-    activeVideo, 
+  const {
+    isPlaying,
+    setIsPlaying,
+    currentTime,
+    activeVideo,
     setCurrentTime,
     volume: globalVolume,
     setVolume: setGlobalVolume,
@@ -40,28 +40,31 @@ export function PlayerControls() {
   }, [isPlaying, setIsPlaying])
 
   const handleSkipBackward = useCallback(() => {
-    const fps = activeVideo?.probeData?.streams?.[0]?.r_frame_rate;
-    if (!fps) return;
-    
-    const frameTime = 1 / eval(fps);
-    const newTime = Math.max(activeVideo?.startTime || 0, currentTime - frameTime);
-    setIsPlaying(false);
-    setCurrentTime(newTime);
+    const fps = activeVideo?.probeData?.streams?.[0]?.r_frame_rate
+    if (!fps) return
+
+    const frameTime = 1 / eval(fps)
+    const newTime = Math.max(activeVideo?.startTime || 0, currentTime - frameTime)
+    setIsPlaying(false)
+    setCurrentTime(newTime)
   }, [activeVideo, currentTime])
 
   const handleSkipForward = useCallback(() => {
-    const fps = activeVideo?.probeData?.streams?.[0]?.r_frame_rate;
-    if (!fps) return;
-    
-    const frameTime = 1 / eval(fps);
-    const newTime = Math.min(activeVideo?.endTime || Infinity, currentTime + frameTime);
-    setIsPlaying(false);
-    setCurrentTime(newTime);
+    const fps = activeVideo?.probeData?.streams?.[0]?.r_frame_rate
+    if (!fps) return
+
+    const frameTime = 1 / eval(fps)
+    const newTime = Math.min(activeVideo?.endTime || Infinity, currentTime + frameTime)
+    setIsPlaying(false)
+    setCurrentTime(newTime)
   }, [activeVideo, currentTime])
 
-  const handleVolumeChange = useCallback((value: number[]) => {
-    setGlobalVolume(value[0])
-  }, [setGlobalVolume])
+  const handleVolumeChange = useCallback(
+    (value: number[]) => {
+      setGlobalVolume(value[0])
+    },
+    [setGlobalVolume],
+  )
 
   const handleToggleMute = useCallback(() => {
     setGlobalVolume(globalVolume === 0 ? 1 : 0)
@@ -127,7 +130,7 @@ export function PlayerControls() {
 
       <div className="w-full flex items-center p-[2px] justify-between dark:bg-[#1b1a1f] text-white">
         <div className="flex items-center gap-2">
-        <Button
+          <Button
             className="cursor-pointer h-6 w-6"
             variant="ghost"
             size="icon"
@@ -231,7 +234,11 @@ export function PlayerControls() {
               title={globalVolume === 0 ? "Включить звук" : "Выключить звук"}
               onClick={handleToggleMute}
             >
-              {globalVolume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+              {globalVolume === 0 ? (
+                <VolumeX className="w-4 h-4" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
             </Button>
             <div className="w-20">
               <Slider

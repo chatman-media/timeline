@@ -241,11 +241,11 @@ export const rootStore = createStore({
 
     addNewTracks: (context, event: { media: MediaFile[] }, enqueue) => {
       const { tracks } = context
-      
+
       // Фильтруем файлы - только с аудио потоком
-      const mediaWithAudio = event.media.filter(file => {
-        const hasAudioStream = file.probeData?.streams?.some(stream => 
-          stream.codec_type === "audio"
+      const mediaWithAudio = event.media.filter((file) => {
+        const hasAudioStream = file.probeData?.streams?.some(
+          (stream) => stream.codec_type === "audio",
         )
         return hasAudioStream
       })
@@ -296,7 +296,7 @@ export const rootStore = createStore({
       try {
         const savedState = localStorage.getItem(STORAGE_KEYS.TIMELINE_SLICES)
         const savedAddedFiles = localStorage.getItem(STORAGE_KEYS.ADDED_FILES)
-        
+
         let updatedContext = context
 
         if (savedState) {

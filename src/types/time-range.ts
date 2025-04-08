@@ -3,4 +3,4 @@ export interface TimeRange {
   end?: number
   type: string
   color?: string
-} 
+}

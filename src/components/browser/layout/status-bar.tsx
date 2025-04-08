@@ -25,7 +25,7 @@ export function StatusBar({
   const [maxDateInfo, secondMaxDateInfo] = sortedDates
 
   const hasAudioStream = (file: MediaFile) => {
-    return file.probeData?.streams?.some(stream => stream.codec_type === "audio")
+    return file.probeData?.streams?.some((stream) => stream.codec_type === "audio")
   }
 
   // Подсчитываем количество оставшихся файлов каждого типа
@@ -49,8 +49,8 @@ export function StatusBar({
 
   // Функция для подсчета оставшихся файлов за определенную дату
   const getRemainingFilesForDate = (dateInfo: { date: string; files: MediaFile[] }) => {
-    return dateInfo.files.filter((file) => 
-      !file.path || !addedFiles.has(file.path) && hasAudioStream(file)
+    return dateInfo.files.filter(
+      (file) => !file.path || (!addedFiles.has(file.path) && hasAudioStream(file)),
     )
   }
 

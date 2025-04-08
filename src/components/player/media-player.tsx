@@ -4,12 +4,12 @@ import { PlayerControls } from "@/components/player/player-controls"
 import { useRootStore } from "@/hooks/use-root-store"
 
 export const ActiveVideo = memo(() => {
-  const { 
-    videoRefs, 
-    isPlaying, 
-    activeVideo, 
-    setCurrentTime, 
-    setIsPlaying, 
+  const {
+    videoRefs,
+    isPlaying,
+    activeVideo,
+    setCurrentTime,
+    setIsPlaying,
     isChangingCamera,
     volume: globalVolume,
     trackVolumes,
@@ -79,7 +79,17 @@ export const ActiveVideo = memo(() => {
       videoElement.removeEventListener("timeupdate", handleTimeUpdate)
       videoElement.removeEventListener("error", handleError)
     }
-  }, [activeVideo, isPlaying, isChangingCamera, videoRefs, setCurrentTime, setIsPlaying, globalVolume, trackVolumes, isSeeking])
+  }, [
+    activeVideo,
+    isPlaying,
+    isChangingCamera,
+    videoRefs,
+    setCurrentTime,
+    setIsPlaying,
+    globalVolume,
+    trackVolumes,
+    isSeeking,
+  ])
 
   // Добавляем эффект для обновления времени видео при изменении currentTime
   useEffect(() => {
@@ -90,7 +100,7 @@ export const ActiveVideo = memo(() => {
 
     const videoStartTime = activeVideo.startTime || 0
     const newTime = currentTime - videoStartTime
-    
+
     // Проверяем что newTime - корректное число
     if (isFinite(newTime) && newTime >= 0) {
       videoElement.currentTime = newTime

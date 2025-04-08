@@ -1,11 +1,8 @@
 import { useMemo } from "react"
+
 import { TimeRange } from "@/types/time-range"
 
-export function useTimelineScale(
-  startTime: number,
-  endTime: number,
-  scale: number
-) {
+export function useTimelineScale(startTime: number, endTime: number, scale: number) {
   const timeStep = useMemo(() => {
     const desiredPixelsPerStep = 100
     const pixelsPerSecond = scale

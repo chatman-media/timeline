@@ -1,15 +1,24 @@
-import React, { useMemo, useState } from "react"
 import { Trash2 } from "lucide-react"
+import React, { useMemo, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
 import { MediaFile, Track } from "@/types/videos"
-import { TimelineScale } from "./timeline/timeline-scale"
-import { VideoTrack } from "./track/video-track"
+
 import { TimelineBar } from "./timeline/timeline-bar"
 import { TimelineControls } from "./timeline/timeline-controls"
+import { TimelineScale } from "./timeline/timeline-scale"
+import { VideoTrack } from "./track/video-track"
 
 export function Timeline() {
-  const { tracks, activeVideo, setCurrentTime: updateTime, currentTime, scale, setScale, setTracks } = useRootStore()
+  const {
+    tracks,
+    activeVideo,
+    setCurrentTime: updateTime,
+    currentTime,
+    scale,
+    setScale,
+    setTracks,
+  } = useRootStore()
   const [activeDate, setActiveDate] = useState<string | null>(null)
 
   const sections = useMemo(() => {

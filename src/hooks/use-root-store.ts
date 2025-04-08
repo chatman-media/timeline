@@ -1,5 +1,6 @@
 import { useSelector } from "@xstate/store/react"
 import { useCallback } from "react"
+
 import { rootStore } from "@/stores/root-store"
 import type { MediaFile, ScreenLayout, Track } from "@/types/videos"
 

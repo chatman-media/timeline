@@ -7,12 +7,7 @@ interface TimelineScaleProps {
   scale: number
 }
 
-export function TimelineScale({
-  startTime,
-  endTime,
-  duration,
-  scale,
-}: TimelineScaleProps) {
+export function TimelineScale({ startTime, endTime, duration, scale }: TimelineScaleProps) {
   const timeStep = Math.ceil(100 / scale)
   const subStep = timeStep / 5
 
@@ -29,4 +24,4 @@ export function TimelineScale({
       />
     </div>
   )
-} 
+}

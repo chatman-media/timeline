@@ -1,8 +1,10 @@
-import { memo, useCallback, useMemo, useEffect, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+
 import { useRootStore } from "@/hooks/use-root-store"
+import { useWaveformCache } from "@/hooks/use-waveform-cache"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { TimelineTrack } from "@/types/timeline"
-import { useWaveformCache } from "@/hooks/use-waveform-cache"
+
 import { Waveform } from "../waveform"
 
 interface VideoTrackProps {
@@ -17,10 +19,10 @@ const VideoTrack = memo(function VideoTrack({
   sectionStartTime,
   sectionDuration,
 }: VideoTrackProps) {
-  const { 
-    setCurrentTime, 
-    setActiveVideo, 
-    activeTrackId, 
+  const {
+    setCurrentTime,
+    setActiveVideo,
+    activeTrackId,
     setActiveTrack,
     volume: globalVolume,
     trackVolumes,
@@ -32,7 +34,7 @@ const VideoTrack = memo(function VideoTrack({
 
   useEffect(() => {
     // Обновляем громкость для всех видео в треке
-    Object.values(videoElementsRef.current).forEach(videoElement => {
+    Object.values(videoElementsRef.current).forEach((videoElement) => {
       if (videoElement) {
         const trackVolume = trackVolumes[track.id] ?? 1
         videoElement.volume = globalVolume * trackVolume
@@ -51,11 +53,14 @@ const VideoTrack = memo(function VideoTrack({
     return null
   }
 
-  const timeToPercent = useCallback((time: number) => {
-    if (!sectionStartTime || !sectionDuration || sectionDuration === 0) return 0
-    const percent = ((time - sectionStartTime) / sectionDuration) * 100
-    return Math.max(0, Math.min(100, percent))
-  }, [sectionStartTime, sectionDuration])
+  const timeToPercent = useCallback(
+    (time: number) => {
+      if (!sectionStartTime || !sectionDuration || sectionDuration === 0) return 0
+      const percent = ((time - sectionStartTime) / sectionDuration) * 100
+      return Math.max(0, Math.min(100, percent))
+    },
+    [sectionStartTime, sectionDuration],
+  )
 
   const trackStartTime = firstVideo.startTime ?? 0
   const trackEndTime = (lastVideo.startTime ?? 0) + (lastVideo.duration ?? 0)
@@ -64,17 +69,20 @@ const VideoTrack = memo(function VideoTrack({
 
   const isActive = track.id === activeTrackId
 
-  const handleClick = useCallback((_e: React.MouseEvent, track: TimelineTrack, videoId?: string) => {
-    setActiveTrack(track.id)
-    if (videoId) {
-      setActiveVideo(videoId)
-      const video = track.videos.find((v) => v.id === videoId)
-      if (video) {
-        const videoStartTime = video.startTime ?? 0
-        setCurrentTime(videoStartTime)
+  const handleClick = useCallback(
+    (_e: React.MouseEvent, track: TimelineTrack, videoId?: string) => {
+      setActiveTrack(track.id)
+      if (videoId) {
+        setActiveVideo(videoId)
+        const video = track.videos.find((v) => v.id === videoId)
+        if (video) {
+          const videoStartTime = video.startTime ?? 0
+          setCurrentTime(videoStartTime)
+        }
       }
-    }
-  }, [setActiveTrack, setActiveVideo, setCurrentTime])
+    },
+    [setActiveTrack, setActiveVideo, setCurrentTime],
+  )
 
   // Определяем видимые видео
   useEffect(() => {
@@ -83,8 +91,8 @@ const VideoTrack = memo(function VideoTrack({
     const observer = new IntersectionObserver(
       (entries) => {
         const visibleIds = entries
-          .filter(entry => entry.isIntersecting)
-          .map(entry => entry.target.getAttribute('data-video-id') || '')
+          .filter((entry) => entry.isIntersecting)
+          .map((entry) => entry.target.getAttribute("data-video-id") || "")
           .filter(Boolean)
 
         setVisibleVideos((prev: string[]) => {
@@ -92,10 +100,10 @@ const VideoTrack = memo(function VideoTrack({
           return Array.from(newSet)
         })
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     )
 
-    containerRef.current.querySelectorAll('[data-video-id]').forEach(el => {
+    containerRef.current.querySelectorAll("[data-video-id]").forEach((el) => {
       observer.observe(el)
     })
 
@@ -147,22 +155,34 @@ const VideoTrack = memo(function VideoTrack({
                                 }}
                               >
                                 <span className="bg-[#033032]">
-                                  {video.probeData?.streams[0]?.codec_name?.startsWith('a') ? "A" : "V"}
+                                  {video.probeData?.streams[0]?.codec_name?.startsWith("a")
+                                    ? "A"
+                                    : "V"}
                                   {track.index}
                                 </span>
-                                <span className="bg-[#033032]">
-                                  {video.name}
-                                </span>
+                                <span className="bg-[#033032]">{video.name}</span>
                                 <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
-                                  {video.probeData?.streams[0]?.codec_name?.startsWith('v') ? (
+                                  {video.probeData?.streams[0]?.codec_name?.startsWith("v") ? (
                                     <div className="flex flex-row video-metadata truncate text-xs text-white">
-                                      <span>{video.probeData?.streams[0]?.codec_name?.toUpperCase()}</span>
                                       <span>
-                                        {video.probeData?.streams[0]?.width}×{video.probeData?.streams[0]?.height}
+                                        {video.probeData?.streams[0]?.codec_name?.toUpperCase()}
                                       </span>
-                                      <span>{video.probeData?.streams[0]?.display_aspect_ratio}</span>
-                                      <span>{video.probeData?.streams[0]?.r_frame_rate?.split('/')[0]} fps</span>
-                                      <span>{video.duration !== undefined ? formatDuration(video.duration, 3) : ''}</span>
+                                      <span>
+                                        {video.probeData?.streams[0]?.width}×
+                                        {video.probeData?.streams[0]?.height}
+                                      </span>
+                                      <span>
+                                        {video.probeData?.streams[0]?.display_aspect_ratio}
+                                      </span>
+                                      <span>
+                                        {video.probeData?.streams[0]?.r_frame_rate?.split("/")[0]}{" "}
+                                        fps
+                                      </span>
+                                      <span>
+                                        {video.duration !== undefined
+                                          ? formatDuration(video.duration, 3)
+                                          : ""}
+                                      </span>
                                     </div>
                                   ) : (
                                     <div className="flex flex-row video-metadata truncate text-xs text-white">
@@ -176,15 +196,19 @@ const VideoTrack = memo(function VideoTrack({
                                         {video.probeData?.streams[0]?.bit_rate &&
                                           `${formatBitrate(Number(video.probeData.streams[0].bit_rate))}`}
                                       </span>
-                                      <span>{video.duration !== undefined ? formatDuration(video.duration, 3) : ''}</span>
+                                      <span>
+                                        {video.duration !== undefined
+                                          ? formatDuration(video.duration, 3)
+                                          : ""}
+                                      </span>
                                     </div>
                                   )}
                                 </div>
                               </div>
                               {isVisible && (
                                 <div className="h-[40px] w-full relative pointer-events-none">
-                                  <Waveform 
-                                    audioUrl={video.path} 
+                                  <Waveform
+                                    audioUrl={video.path}
                                     waveform={getWaveform(video.path)}
                                   />
                                 </div>
@@ -200,7 +224,7 @@ const VideoTrack = memo(function VideoTrack({
                                 src={video.path}
                                 preload="auto"
                                 loop
-                                style={{ display: 'none' }}
+                                style={{ display: "none" }}
                               />
                               <div
                                 className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"

@@ -38,17 +38,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
 
   return (
     <div className="flex items-center justify-between w-full py-[2px] px-1 bg-background border-b border-border relative">
-      <div className="flex items-center h-6">
-      <ThemeToggle />
-      <Button
-          className="cursor-pointer p-0 h-6 w-6"
-          variant="ghost"
-          size="icon"
-          title="Быстрые клавиши"
-        >
-          <Keyboard className="h-3.5 w-3.5" />
-        </Button>
-      </div>
+      <div className="flex items-center h-6"></div>
       <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
         <div
           className="text-xs font-medium relative group flex items-center gap-2 pointer-events-auto"
@@ -161,10 +151,19 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           className="cursor-pointer p-0 h-6 w-6"
           variant="ghost"
           size="icon"
+          title="Быстрые клавиши"
+        >
+          <Keyboard className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          className="cursor-pointer p-0 h-6 w-6"
+          variant="ghost"
+          size="icon"
           title="Настройки"
         >
           <Settings className="h-3.5 w-3.5" />
         </Button>
+        <ThemeToggle />
       </div>
       {/* <ExportDialog open={isExportOpen} onOpenChange={setIsExportOpen} /> */}
     </div>

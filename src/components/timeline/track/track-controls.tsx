@@ -1,8 +1,8 @@
 import { Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react"
 import { useState } from "react"
 
-import { Track } from "@/types/videos"
 import { Slider } from "@/components/ui/slider"
+import { Track } from "@/types/videos"
 
 interface TrackControlsProps {
   track: Track
