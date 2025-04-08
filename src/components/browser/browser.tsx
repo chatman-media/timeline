@@ -1,4 +1,4 @@
-import { Blend, FlipHorizontal2, Image, Music, Sparkles, Sticker, Type } from "lucide-react"
+import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles, Sticker, Type } from "lucide-react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import {
@@ -41,9 +41,13 @@ export function Browser() {
           <Blend className="w-4 h-4" />
           <span>Фильтры</span>
         </TabsTrigger>
-        <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
+        {/* <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
           <Sticker className="w-4 h-4" />
           <span>Стикеры</span>
+        </TabsTrigger> */}
+        <TabsTrigger value="templates" className={TAB_TRIGGER_STYLES}>
+          <Layout className="w-4 h-4" />
+          <span>Шаблоны</span>
         </TabsTrigger>
       </TabsList>
       <TabsContent value="media" className="h-full">
