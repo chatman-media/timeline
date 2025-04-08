@@ -134,10 +134,10 @@ export function Timeline() {
                 {section.tracks.map((track, index) => (
                   <div
                     key={track.id}
-                    className="relative border-b border-gray-700/50"
+                    className="relative border-b border-gray-700/50 h-21"
                     style={{
                       marginTop: index === 0 ? 0 : "1px",
-                      paddingBottom: "1px",
+                      // paddingBottom: "1px",
                     }}
                   >
                     <VideoTrack
@@ -152,7 +152,7 @@ export function Timeline() {
               <TimelineBar
                 startTime={section.startTime}
                 endTime={section.endTime}
-                height={section.tracks.length * 62}
+                height={section.tracks.length * 85 + 46}
               />
             </div>
           </div>

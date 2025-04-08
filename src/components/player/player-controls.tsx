@@ -11,7 +11,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react"
-import { useCallback, useRef, useState, useEffect } from "react"
+import { useCallback, useEffect,useRef, useState } from "react"
 
 import { EntryPointIcon } from "@/components/icons/entry-point"
 import { ExitPointIcon } from "@/components/icons/exit-point"
@@ -82,7 +82,15 @@ export function PlayerControls() {
   }, [isPlaying, localTime])
 
   useEffect(() => {
-    if (!isPlaying || !activeVideo || localTime === undefined || activeVideo.startTime === undefined || activeVideo.endTime === undefined || !activeVideo.probeData?.streams?.[0]?.r_frame_rate || isSeeking) {
+    if (
+      !isPlaying ||
+      !activeVideo ||
+      localTime === undefined ||
+      activeVideo.startTime === undefined ||
+      activeVideo.endTime === undefined ||
+      !activeVideo.probeData?.streams?.[0]?.r_frame_rate ||
+      isSeeking
+    ) {
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current)
         frameRef.current = null
@@ -93,19 +101,19 @@ export function PlayerControls() {
     const startTime: number = activeVideo.startTime
     const endTime: number = activeVideo.endTime
     const fpsStr = activeVideo.probeData.streams[0].r_frame_rate
-    
+
     // Более надежный расчет FPS
     const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
     const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
-    
-    if (typeof fps !== 'number' || fps <= 0 || isNaN(fps)) {
-      console.error('Некорректный FPS:', fpsStr)
+
+    if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) {
+      console.error("Некорректный FPS:", fpsStr)
       return
     }
 
     // Всегда сбрасываем initialFrameTimeRef при запуске анимации
     initialFrameTimeRef.current = null
-    
+
     const updateFrame = (timestamp: number) => {
       if (initialFrameTimeRef.current === null) {
         initialFrameTimeRef.current = timestamp
@@ -113,11 +121,11 @@ export function PlayerControls() {
 
       // Рассчитываем прошедшее время с начала воспроизведения
       const elapsed = timestamp - initialFrameTimeRef.current
-      
+
       // Вычисляем текущее время на основе точного времени
       // Важно: используем timeAtPlayStartRef.current как базовую точку
-      const exactTime = timeAtPlayStartRef.current + (elapsed / 1000)
-      
+      const exactTime = timeAtPlayStartRef.current + elapsed / 1000
+
       if (exactTime >= endTime) {
         // Если достигли конца, перейти к началу
         setLocalTime(startTime)
@@ -127,7 +135,7 @@ export function PlayerControls() {
       } else {
         // Обновляем локальное время
         setLocalTime(exactTime)
-        
+
         // Обновляем глобальное время реже для улучшения производительности
         const now = performance.now()
         if (now - lastUpdateTime.current >= 200) {
@@ -160,7 +168,8 @@ export function PlayerControls() {
   // Сохраняем состояние при изменении времени
   useEffect(() => {
     const now = Date.now()
-    if (now - lastUpdateTime.current >= 1000) { // Сохраняем не чаще чем раз в секунду
+    if (now - lastUpdateTime.current >= 1000) {
+      // Сохраняем не чаще чем раз в секунду
       saveState()
       lastUpdateTime.current = now
     }
@@ -175,7 +184,7 @@ export function PlayerControls() {
       initialFrameTimeRef.current = null
       timeAtPlayStartRef.current = localTime
     }
-    
+
     setIsPlaying(!isPlaying)
   }, [isPlaying, setIsPlaying, localTime])
 
@@ -194,16 +203,16 @@ export function PlayerControls() {
     // Более надежный расчет FPS
     const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
     const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
-    
-    if (typeof fps !== 'number' || fps <= 0 || isNaN(fps)) return
+
+    if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) return
 
     const frameTime = 1 / fps
     // Используем актуальное localTime
     const newTime = Math.max(activeVideo?.startTime || 0, localTime - frameTime)
-    
+
     // Обновляем timeAtPlayStartRef, чтобы при следующем воспроизведении начать с правильного места
     timeAtPlayStartRef.current = newTime
-    
+
     setLocalTime(newTime)
     setCurrentTime(newTime)
     setIsPlaying(false)
@@ -219,21 +228,21 @@ export function PlayerControls() {
       setIsPlaying(false)
       return
     }
-    
+
     const fpsStr = activeVideo.probeData.streams[0].r_frame_rate
     // Более надежный расчет FPS
     const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
     const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
-    
-    if (typeof fps !== 'number' || fps <= 0 || isNaN(fps)) return
+
+    if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) return
 
     const frameTime = 1 / fps
     // Используем актуальное localTime
     const newTime = Math.min(activeVideo?.endTime || Infinity, localTime + frameTime)
-    
+
     // Обновляем timeAtPlayStartRef, чтобы при следующем воспроизведении начать с правильного места
     timeAtPlayStartRef.current = newTime
-    
+
     setLocalTime(newTime)
     setCurrentTime(newTime)
     setIsPlaying(false)
@@ -262,11 +271,11 @@ export function PlayerControls() {
     (value: number[]) => {
       if (activeVideo?.startTime !== undefined) {
         const newTime = value[0] + activeVideo.startTime
-        
+
         // Обновляем локальное время и timeAtPlayStartRef
         setLocalTime(newTime)
         timeAtPlayStartRef.current = newTime
-        
+
         setCurrentTime(newTime)
         setIsPlaying(false)
       }
@@ -278,10 +287,10 @@ export function PlayerControls() {
     const startTime = activeVideo?.startTime || 0
     setLocalTime(startTime)
     setCurrentTime(startTime)
-    
+
     // Обновляем timeAtPlayStartRef
     timeAtPlayStartRef.current = startTime
-    
+
     setIsPlaying(false)
   }, [activeVideo, setCurrentTime, setIsPlaying])
 
@@ -289,10 +298,10 @@ export function PlayerControls() {
     const endTime = activeVideo?.endTime || 0
     setLocalTime(endTime)
     setCurrentTime(endTime)
-    
+
     // Обновляем timeAtPlayStartRef
     timeAtPlayStartRef.current = endTime
-    
+
     setIsPlaying(false)
   }, [activeVideo?.endTime, setCurrentTime, setIsPlaying])
 

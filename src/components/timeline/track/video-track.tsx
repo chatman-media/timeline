@@ -26,6 +26,7 @@ const VideoTrack = memo(function VideoTrack({
     setActiveTrack,
     volume: globalVolume,
     trackVolumes,
+    setIsPlaying,
   } = useRootStore()
   const { getWaveform } = useWaveformCache()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -78,10 +79,11 @@ const VideoTrack = memo(function VideoTrack({
         if (video) {
           const videoStartTime = video.startTime ?? 0
           setCurrentTime(videoStartTime)
+          setIsPlaying(false)
         }
       }
     },
-    [setActiveTrack, setActiveVideo, setCurrentTime],
+    [setActiveTrack, setActiveVideo, setCurrentTime, setIsPlaying],
   )
 
   // Определяем видимые видео
@@ -123,6 +125,11 @@ const VideoTrack = memo(function VideoTrack({
           <div
             className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
             style={{ cursor: "pointer" }}
+            onClick={(e) => {
+              if (track.videos.length > 0) {
+                handleClick(e, track, track.videos[0].id)
+              }
+            }}
           >
             <div className="slice--parent bg-[#014a4f]">
               <div className="absolute h-full w-full timline-border">

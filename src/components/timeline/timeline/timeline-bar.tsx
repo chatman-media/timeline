@@ -27,7 +27,7 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
           left: `${position}%`,
           top: "0",
           transform: "translateX(-50%)",
-          height: `${height + 70}px`,
+          height: `${height}px`,
         }}
         onMouseDown={handleMouseDown}
       >
@@ -36,6 +36,11 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
           <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-t-[5px] border-t-red-600" />
         </div>
         <div className="w-[2px] mt-[-2px] bg-red-600 flex-1" />
+        <div className="flex flex-col items-center">
+          <div className="w-[2px] mb-[-2px] bg-red-600 h-[5px]" />
+          <div className="w-0 h-0 border-l-[5px] border-l-transparent border-r-[5px] border-r-transparent border-b-[5px] border-b-red-600" />
+          <div className="w-[10px] h-[6px] bg-red-600" />
+        </div>
       </div>
     </div>
   )
