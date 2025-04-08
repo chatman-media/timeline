@@ -1,4 +1,4 @@
-import { Trash2, Undo2, Redo2 } from "lucide-react"
+import { Trash2, Undo2, Redo2, Split, Scissors } from "lucide-react"
 import React, { useMemo, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
@@ -14,7 +14,6 @@ export function Timeline() {
     tracks,
     activeVideo,
     setCurrentTime: updateTime,
-    currentTime,
     scale,
     setScale,
     setTracks,
@@ -143,17 +142,26 @@ export function Timeline() {
           >
             <Redo2 size={16} />
           </button>
-          {activeTrackId && (
+          <button
+            disabled={!activeTrackId}
+            onClick={() => {
+              const updatedTracks = tracks.filter(track => track.id !== activeTrackId);
+              setTracks(updatedTracks);
+            }}
+              className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+            >
+              <Trash2 size={16} />
+            </button>
             <button
-              onClick={() => {
+                          disabled={!activeTrackId}
+                          onClick={() => {
                 const updatedTracks = tracks.filter(track => track.id !== activeTrackId);
                 setTracks(updatedTracks);
               }}
               className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
             >
-              <Trash2 size={16} />
+              <Scissors size={16} className="rotate-90" />
             </button>
-          )}
         </div>
         <TimelineControls scale={scale} setScale={setScale} />
       </div>
