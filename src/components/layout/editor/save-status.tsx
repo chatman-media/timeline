@@ -1,8 +1,6 @@
 import { Check, Loader2 } from "lucide-react"
-import { useEffect, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
-import { cn } from "@/lib/utils"
 
 export function SaveStatus() {
   const { isLoading, isDirty } = useRootStore()

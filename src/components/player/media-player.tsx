@@ -101,15 +101,23 @@ export const ActiveVideo = memo(() => {
     const videoStartTime = activeVideo.startTime || 0
     const newTime = currentTime - videoStartTime
 
-    // Проверяем что newTime - корректное число
+    // Проверяем что newTime - корректное число и не отрицательное
     if (isFinite(newTime) && newTime >= 0) {
       videoElement.currentTime = newTime
       // Сбрасываем флаг после небольшой задержки
       setTimeout(() => {
         setIsSeeking(false)
       }, 100)
+    } else if (newTime < 0) {
+      // Если время отрицательное, устанавливаем время в начало видео
+      videoElement.currentTime = 0
+      // Обновляем глобальное время на начало видео
+      setCurrentTime(videoStartTime)
+      setTimeout(() => {
+        setIsSeeking(false)
+      }, 100)
     }
-  }, [currentTime, activeVideo, videoRefs, setIsSeeking])
+  }, [currentTime, activeVideo, videoRefs, setIsSeeking, setCurrentTime])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {

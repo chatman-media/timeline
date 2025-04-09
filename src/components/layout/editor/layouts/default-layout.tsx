@@ -1,5 +1,4 @@
 import { Browser } from "@/components/browser/browser"
-import { Editing } from "@/components/editing/editing"
 import { ActiveVideo } from "@/components/player/media-player"
 import { Timeline } from "@/components/timeline"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -35,19 +34,7 @@ export function DefaultMediaEditor() {
           <ResizableHandle />
           <ResizablePanel defaultSize={50}>
             <div className="h-full bg-muted/50 border-t border-border">
-              <ResizablePanelGroup direction="horizontal" autoSaveId="vertical-timeline-layout">
-                <ResizablePanel defaultSize={25} minSize={15} maxSize={40}>
-                  <div className="h-full">
-                    <Editing />
-                  </div>
-                </ResizablePanel>
-                <ResizableHandle />
-                <ResizablePanel defaultSize={75}>
-                  <div className="h-full border-l border-border">
-                    <Timeline />
-                  </div>
-                </ResizablePanel>
-              </ResizablePanelGroup>
+              <Timeline />
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>

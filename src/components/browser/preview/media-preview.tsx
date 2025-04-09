@@ -1,5 +1,5 @@
 import { Check, Plus } from "lucide-react"
-import { useState } from "react"
+import { memo, useState } from "react"
 
 import { formatResolution } from "@/lib/utils"
 import { FfprobeStream } from "@/types/ffprobe"
@@ -8,7 +8,7 @@ import { calculateRealDimensions, isHorizontalVideo } from "@/utils/media-utils"
 import { getNextVolumeState, VolumeState } from "@/utils/video-utils"
 
 import { Skeleton } from "../../ui/skeleton"
-import { PreviewTimeline } from "./preview-timeline"
+import { PreviewTimeline } from ".."
 
 interface MediaPreviewProps {
   file: MediaFile
@@ -32,7 +32,8 @@ interface MediaPreviewProps {
   isAdded?: boolean
 }
 
-export function MediaPreview({
+// Оборачиваем в memo для предотвращения ненужных рендеров
+export const MediaPreview = memo(function MediaPreview({
   file,
   fileId,
   duration,
@@ -48,6 +49,148 @@ export function MediaPreview({
   onAddMedia,
   isAdded,
 }: MediaPreviewProps) {
+  // Преобразует rotation из string в number, или возвращает undefined
+  const parseRotation = (rotation?: string | number): number | undefined => {
+    if (rotation === undefined) return undefined
+    if (typeof rotation === "number") return rotation
+    const parsed = parseInt(rotation, 10)
+    return isNaN(parsed) ? undefined : parsed
+  }
+
+  // Перемещаем функцию renderStreamIndicators внутрь компонента
+  const renderStreamIndicators = (
+    file: MediaFile,
+    stream: FfprobeStream,
+    index: number,
+    isLoaded: boolean,
+    videoRef: HTMLVideoElement | null,
+  ) => {
+    const [volume, setVolume] = useState<VolumeState>(VolumeState.FULL)
+
+    const handleVolumeClick = (e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (!videoRef) return
+
+      const nextVolume = getNextVolumeState(volume)
+      setVolume(nextVolume)
+      videoRef.volume = nextVolume
+    }
+
+    const VolumeIcon = () => {
+      if (volume === VolumeState.MUTED) {
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 18V5l12-2v13" />
+            <line x1="1" y1="1" x2="23" y2="23" />
+            <circle cx="6" cy="18" r="3" />
+            <circle cx="18" cy="16" r="3" />
+          </svg>
+        )
+      }
+
+      if (volume === VolumeState.HALF) {
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 18V5l12-2v13" />
+            <circle cx="6" cy="18" r="3" opacity="0.5" />
+            <circle cx="18" cy="16" r="3" opacity="0.5" />
+          </svg>
+        )
+      }
+
+      return (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="12"
+          height="12"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M9 18V5l12-2v13" />
+          <circle cx="6" cy="18" r="3" />
+          <circle cx="18" cy="16" r="3" />
+        </svg>
+      )
+    }
+
+    return (
+      <>
+        {file.probeData?.streams &&
+          file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
+          <div
+            style={{ fontSize: "10px" }}
+            className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
+          >
+            {index + 1}
+          </div>
+        )}
+        {file.probeData?.streams?.some((stream) => stream.codec_type === "audio") && (
+          <div
+            className={`absolute ${
+              isHorizontalVideo(
+                stream.width || 0,
+                stream.height || 0,
+                parseRotation(stream.rotation),
+              )
+                ? "right-[2px] top-[2px]"
+                : "left-1/2 bottom-[2px] -translate-x-1/2"
+            } text-white bg-black/50 rounded p-[2px] cursor-pointer hover:bg-black/70`}
+            onClick={handleVolumeClick}
+            title={
+              volume === VolumeState.FULL
+                ? "Приглушить"
+                : volume === VolumeState.HALF
+                  ? "Без звука"
+                  : "Включить звук"
+            }
+          >
+            <VolumeIcon />
+          </div>
+        )}
+        {isLoaded && (
+          <div
+            style={{ fontSize: "10px" }}
+            className={`absolute ${
+              isHorizontalVideo(
+                stream.width || 0,
+                stream.height || 0,
+                parseRotation(stream.rotation),
+              )
+                ? "left-[2px] top-[2px]"
+                : "left-[calc(50%-8px)] top-[2px]"
+            } text-white bg-black/50 rounded px-[2px] py-0`}
+          >
+            {formatResolution(stream.width || 0, stream.height || 0)}
+          </div>
+        )}
+      </>
+    )
+  }
+
   if (isAudio) {
     return (
       <div
@@ -76,7 +219,9 @@ export function MediaPreview({
         </div>
         <audio
           data-stream="0"
-          ref={(el) => (videoRefs.current[`${fileId}-0`] = el as HTMLVideoElement)}
+          ref={(el) => {
+            if (el) videoRefs.current[`${fileId}-0`] = el as unknown as HTMLVideoElement
+          }}
           src={file.path}
           preload="auto"
           loop
@@ -135,7 +280,14 @@ export function MediaPreview({
             className="h-15 flex-shrink-0 relative"
             style={{
               width: (() => {
-                const dimensions = calculateRealDimensions(stream)
+                // Создаем объект подходящего типа для calculateRealDimensions
+                const videoStream = {
+                  codec_type: "video",
+                  width: stream.width || 0,
+                  height: stream.height || 0,
+                  rotation: stream.rotation?.toString(),
+                }
+                const dimensions = calculateRealDimensions(videoStream)
                 return `${60 * (dimensions.width / dimensions.height)}px`
               })(),
               maxWidth: "100px",
@@ -150,13 +302,14 @@ export function MediaPreview({
               <video
                 data-stream={index}
                 onClick={(e) => handlePlayPause(e, file, index)}
-                ref={(el) => (videoRefs.current[`${fileId}-${index}`] = el)}
+                ref={(el) => {
+                  videoRefs.current[`${fileId}-${index}`] = el
+                }}
                 src={file.path}
                 className={`w-full h-full object-cover rounded focus:outline-none`}
                 tabIndex={0}
                 loop
                 playsInline
-                loading="lazy"
                 preload="metadata"
                 style={{
                   opacity: loadedVideos[`${fileId}-${index}`] ? 1 : 0,
@@ -225,128 +378,4 @@ export function MediaPreview({
         ))}
     </>
   )
-}
-
-function renderStreamIndicators(
-  file: MediaFile,
-  stream: FfprobeStream,
-  index: number,
-  isLoaded: boolean,
-  videoRef: HTMLVideoElement | null,
-) {
-  const [volume, setVolume] = useState<VolumeState>(VolumeState.FULL)
-
-  const handleVolumeClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (!videoRef) return
-
-    const nextVolume = getNextVolumeState(volume)
-    setVolume(nextVolume)
-    videoRef.volume = nextVolume
-  }
-
-  const VolumeIcon = () => {
-    if (volume === VolumeState.MUTED) {
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M9 18V5l12-2v13" />
-          <line x1="1" y1="1" x2="23" y2="23" />
-          <circle cx="6" cy="18" r="3" />
-          <circle cx="18" cy="16" r="3" />
-        </svg>
-      )
-    }
-
-    if (volume === VolumeState.HALF) {
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M9 18V5l12-2v13" />
-          <circle cx="6" cy="18" r="3" opacity="0.5" />
-          <circle cx="18" cy="16" r="3" opacity="0.5" />
-        </svg>
-      )
-    }
-
-    return (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="12"
-        height="12"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M9 18V5l12-2v13" />
-        <circle cx="6" cy="18" r="3" />
-        <circle cx="18" cy="16" r="3" />
-      </svg>
-    )
-  }
-
-  return (
-    <>
-      {file.probeData?.streams.filter((s) => s.codec_type === "video").length > 1 && (
-        <div
-          style={{ fontSize: "10px" }}
-          className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
-        >
-          {index + 1}
-        </div>
-      )}
-      {file.probeData?.streams?.some((stream) => stream.codec_type === "audio") && (
-        <div
-          className={`absolute ${
-            isHorizontalVideo(stream.width, stream.height, stream.rotation || "0")
-              ? "right-[2px] top-[2px]"
-              : "left-1/2 bottom-[2px] -translate-x-1/2"
-          } text-white bg-black/50 rounded p-[2px] cursor-pointer hover:bg-black/70`}
-          onClick={handleVolumeClick}
-          title={
-            volume === VolumeState.FULL
-              ? "Приглушить"
-              : volume === VolumeState.HALF
-                ? "Без звука"
-                : "Включить звук"
-          }
-        >
-          <VolumeIcon />
-        </div>
-      )}
-      {isLoaded && (
-        <div
-          style={{ fontSize: "10px" }}
-          className={`absolute ${
-            isHorizontalVideo(stream.width || 0, stream.height || 0, stream.rotation)
-              ? "left-[2px] top-[2px]"
-              : "left-[calc(50%-8px)] top-[2px]"
-          } text-white bg-black/50 rounded px-[2px] py-0`}
-        >
-          {formatResolution(stream.width || 0, stream.height || 0)}
-        </div>
-      )}
-    </>
-  )
-}
+})

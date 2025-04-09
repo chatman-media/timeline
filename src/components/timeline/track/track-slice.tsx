@@ -2,10 +2,10 @@ import { nanoid } from "nanoid"
 import { useState } from "react"
 import { Rnd } from "react-rnd"
 
-import { TrackSliceData } from "@/types/timeline"
+import { TrackSliceState } from "@/types/timeline"
 
-interface TrackSliceProps extends Partial<TrackSliceData> {
-  updateSlice: (data: Partial<TrackSliceData> & { id: string }) => void
+interface TrackSliceProps extends Partial<TrackSliceState> {
+  updateSlice: (data: Partial<TrackSliceState> & { id: string }) => void
   isSelected?: boolean
   onSelect?: (id: string) => void
   onDelete?: (id: string) => void
@@ -22,19 +22,19 @@ const TrackSlice = ({
   x = 0,
   y = 0,
   id = nanoid(10),
-  trackIndex,
   updateSlice,
   isSelected = false,
   onSelect,
+  trackId = 0,
 }: TrackSliceProps): JSX.Element => {
   // Локальное состояние слайса
-  const [slice, setSlice] = useState<TrackSliceData>({
+  const [slice, setSlice] = useState<TrackSliceState>({
     width,
     height,
     x,
     y,
     id,
-    trackIndex,
+    trackId,
   })
 
   return (

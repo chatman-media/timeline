@@ -1,4 +1,5 @@
 import { createStore } from "@xstate/store"
+import { nanoid } from "nanoid"
 
 import { areStatesEqual } from "@/lib/db-init"
 import { forceSaveState, lastSavedState } from "@/lib/db-init"
@@ -9,12 +10,9 @@ import {
   StorableStateContext,
   StoreEffect,
 } from "@/lib/state-types"
+import { FfprobeData } from "@/types/ffprobe"
 import { TimeRange } from "@/types/time-range"
 import type { MediaFile, ScreenLayout, Track } from "@/types/videos"
-import { FfprobeData } from "@/types/ffprobe"
-
-// Утилита для генерации ID сегмента
-const generateSegmentId = (): string => crypto.randomUUID()
 
 // Определяем тип для enqueue
 type EnqueueObject = {
@@ -65,7 +63,7 @@ export const initialContext: StateContext = {
   // История снимков
   historySnapshotIds: [] as number[],
   currentHistoryIndex: -1,
-  layoutMode: "default" as string,
+  layoutMode: "classic" as string,
   panelLayouts: {} as Record<string, number[]>,
   isDirty: false,
   montageSchema: [],
@@ -118,6 +116,7 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
     }),
 
     setState: (context, event) => {
+      console.log("[setState] Updating state with:", event.state)
       const normalizedEventState = normalizeStateForStore(event.state)
       const newState = {
         ...context,
@@ -134,6 +133,7 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
         newState.addedFiles = new Set<string>()
       }
 
+      console.log("[setState] New state:", newState)
       return newState
     },
 
@@ -163,34 +163,86 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       isDirty: true,
     }),
 
-    setTracks: (context: StateContext, event: { tracks: Track[] }) => ({
-      ...context,
-      tracks: event.tracks,
-      isDirty: true,
-    }),
+    setTracks: (context: StateContext, event: { tracks: Track[] }) => {
+      const newState = {
+        ...context,
+        tracks: event.tracks,
+        isDirty: true,
+      }
 
-    addNewTracks: (context: StateContext, event: { media: MediaFile[] }) => ({
-      ...context,
-      tracks: [
-        ...context.tracks,
-        ...event.media.map(
-          (media) =>
-            ({
-              id: generateSegmentId(),
-              name: media.name,
-              type: "video" as TrackType,
-              isActive: false,
-              videos: [media],
-              startTime: 0,
-              endTime: 0,
-              combinedDuration: 0,
-              timeRanges: [],
-              index: context.tracks.length,
-            }) as NewTrack,
+      // Сохраняем состояние после изменения треков
+      forceSaveState(newState)
+
+      return newState
+    },
+
+    addNewTracks: (context: StateContext, event: { media: MediaFile[] }) => {
+      console.log("[addNewTracks] Adding new tracks:", event.media.length, "files")
+
+      // Проверяем, есть ли уже треки с такими файлами
+      const filePaths = event.media.map((file) => file.path).filter(Boolean) as string[]
+      const existingTrackWithSameFiles = context.tracks.some((track) =>
+        track.videos.some((video) => video.path && filePaths.includes(video.path)),
+      )
+
+      if (existingTrackWithSameFiles) {
+        console.log("[addNewTracks] Some of these files are already in tracks, skipping...")
+        return context
+      }
+
+      // Подсчитываем текущее количество видео и аудио треков
+      let videoTracksCount = context.tracks.filter((track) =>
+        track.videos.some((video) =>
+          video.probeData?.streams?.some((stream) => stream.codec_type === "video"),
         ),
-      ],
-      isDirty: true,
-    }),
+      ).length
+
+      let audioTracksCount = context.tracks.filter(
+        (track) =>
+          !track.videos.some((video) =>
+            video.probeData?.streams?.some((stream) => stream.codec_type === "video"),
+          ),
+      ).length
+
+      // Создаем новые треки с правильными индексами
+      const newTracks = event.media.map((media) => {
+        const hasVideo = media.probeData?.streams?.some((stream) => stream.codec_type === "video")
+        const trackType = hasVideo ? "video" : "audio"
+
+        // Назначаем индекс трека (начиная с 1)
+        const index = hasVideo ? videoTracksCount + 1 : audioTracksCount + 1
+
+        if (hasVideo) {
+          videoTracksCount += 1
+        } else {
+          audioTracksCount += 1
+        }
+
+        return {
+          id: generateSegmentId(),
+          name: media.name,
+          type: trackType as TrackType,
+          isActive: false,
+          videos: [media],
+          startTime: 0,
+          endTime: 0,
+          combinedDuration: 0,
+          timeRanges: [],
+          index: index,
+        } as NewTrack
+      })
+
+      const newState = {
+        ...context,
+        tracks: [...context.tracks, ...newTracks],
+        isDirty: true,
+      }
+
+      // Сохраняем состояние после добавления новых треков
+      forceSaveState(newState)
+
+      return newState
+    },
 
     setLayoutMode: (context: StateContext, event: { mode: string }) => ({
       ...context,
@@ -207,15 +259,30 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       isDirty: true,
     }),
 
+    addToAddedFiles: (context: StateContext, event: { filePaths: string[] }) => {
+      console.log("[rootStore] Запуск addToAddedFiles()", event.filePaths)
+      // Создаем новый Set на основе существующего и добавляем новые пути
+      const newAddedFiles = new Set(context.addedFiles)
+      event.filePaths.forEach((path) => newAddedFiles.add(path))
+
+      return {
+        ...context,
+        addedFiles: newAddedFiles,
+        isDirty: true,
+      }
+    },
+
     startRecordingSchema: (
       context: StateContext,
       event: { trackId: string; startTime: number },
     ) => {
       if (context.isRecordingSchema) return context
 
-      const activeSourceTrackId = context.currentLayout.activeTracks[0]
+      // Используем либо активный трек из макета, либо переданный трек из параметра
+      const activeSourceTrackId = context.currentLayout.activeTracks[0] || event.trackId
+
       if (!activeSourceTrackId) {
-        console.warn("Невозможно начать запись: нет активного трека в текущем макете.")
+        console.warn("Невозможно начать запись: нет активного трека ни в макете, ни в параметрах.")
         return context
       }
 
@@ -230,6 +297,12 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
 
       console.log("Начало записи сегмента:", newSegment)
 
+      // Также обновляем активный трек в макете, если его там нет
+      const updatedLayout = { ...context.currentLayout }
+      if (updatedLayout.activeTracks.length === 0) {
+        updatedLayout.activeTracks = [activeSourceTrackId]
+      }
+
       const nextState = {
         ...context,
         montageSchema: [...context.montageSchema, newSegment],
@@ -237,17 +310,19 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
         currentRecordingSegmentId: newSegmentId,
         isPlaying: true,
         isDirty: true,
+        currentLayout: updatedLayout,
       }
 
       console.log("[startRecordingSchema] Returning state:", {
         isPlaying: nextState.isPlaying,
         isRecordingSchema: nextState.isRecordingSchema,
+        activeTrackId: activeSourceTrackId,
       })
 
       return nextState
     },
 
-    stopRecordingSchema: (context: StateContext, event: {}, args: {}) => {
+    stopRecordingSchema: (context: StateContext, _event: {}, args: EventHandlerArgs) => {
       if (!context.isRecordingSchema || !context.currentRecordingSegmentId) return context
 
       const segmentIndex = context.montageSchema.findIndex(
@@ -286,8 +361,10 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
         isDirty: true,
       }
 
-      if (args && typeof args === "function") {
-        args(() => rootStore.send({ type: "createHistoryPoint", stateForHistory: newState }))
+      if (args?.enqueue) {
+        args.enqueue.effect(() =>
+          rootStore.send({ type: "createHistoryPoint", stateForHistory: newState }),
+        )
       }
 
       return newState
@@ -334,91 +411,70 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       isLoading: false,
     }),
 
-    clearCache: async (_context: StateContext) => {
-      const { resetDatabases } = await import("@/lib/db-reset")
-      await resetDatabases()
-
-      // Возвращаем начальное состояние
-      return {
-        ...initialContext,
-        isLoading: true, // Устанавливаем isLoading в true, так как базы будут пересоздаваться
+    clearCache: (context: StateContext, _event: {}, args: EventHandlerArgs) => {
+      // Устанавливаем начальное состояние для обновления UI
+      const initialState = {
+        ...context,
+        isLoading: true,
         hasFetched: false,
+      }
+
+      // Выполняем асинхронные операции
+      if (args?.enqueue) {
+        args.enqueue.effect(async () => {
+          const { resetDatabases } = await import("@/lib/db-reset")
+          await resetDatabases()
+        })
+      }
+
+      return initialState
+    },
+
+    fetchVideos: (context: StateContext) => {
+      console.log("[rootStore] Запуск fetchVideos()")
+      return context
+    },
+
+    initializeHistory: (context: StateContext) => {
+      console.log("[rootStore] Запуск initializeHistory()")
+      return context
+    },
+
+    undo: (context: StateContext) => {
+      console.log("[rootStore] Запуск undo()")
+      return context
+    },
+
+    redo: (context: StateContext) => {
+      console.log("[rootStore] Запуск redo()")
+      return context
+    },
+
+    clearHistory: (context: StateContext) => {
+      console.log("[rootStore] Запуск clearHistory()")
+      return context
+    },
+
+    saveState: (context: StateContext) => {
+      console.log("[rootStore] Запуск saveState()")
+      return context
+    },
+
+    markAsSaved: (context: StateContext) => {
+      console.log("[rootStore] Запуск markAsSaved()")
+      return {
+        ...context,
+        isSaved: true,
+        isDirty: false,
       }
     },
 
-    fetchVideos: async (context, _event, { effect }) => {
-      if (context.isLoading) {
-        return context
-      }
-
-      const loadingState = {
+    setIsPlaying: (context: StateContext, event: { isPlaying: boolean }) => {
+      console.log("[rootStore] Запуск setIsPlaying()", event.isPlaying)
+      return {
         ...context,
-        isLoading: true,
-        hasMedia: false,
+        isPlaying: event.isPlaying,
       }
-
-      effect(async () => {
-        try {
-          const response = await fetch("/api/media")
-          if (!response.ok) {
-            console.error("Failed to fetch media:", response.statusText)
-            return
-          }
-
-          const data = await response.json()
-          if (!Array.isArray(data)) {
-            console.error("Invalid media data format:", data)
-            return
-          }
-
-          const validMedia = data
-            .filter((item): item is MediaFile => {
-              return (
-                item && typeof item === "object" && "id" in item && "name" in item && "path" in item
-              )
-            })
-            .sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
-
-          rootStore.send({
-            type: "setMedia",
-            media: validMedia,
-          })
-
-          // Запускаем периодическую проверку файлов
-          setInterval(async () => {
-            try {
-              const response = await fetch("/api/media")
-              if (!response.ok) return
-
-              const data = await response.json()
-              if (!Array.isArray(data)) return
-
-              const validMedia = data
-                .filter((item): item is MediaFile => {
-                  return (
-                    item &&
-                    typeof item === "object" &&
-                    "id" in item &&
-                    "name" in item &&
-                    "path" in item
-                  )
-                })
-                .sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
-
-              rootStore.send({
-                type: "setMedia",
-                media: validMedia,
-              })
-            } catch (error) {
-              console.error("Error checking for new files:", error)
-            }
-          }, 5000) // Проверяем каждые 5 секунд
-        } catch (error) {
-          console.error("Error fetching media:", error)
-        }
-      })
-
-      return loadingState
     },
   },
 })
@@ -456,6 +512,12 @@ if (typeof window !== "undefined") {
       console.log("Window closing: Forcing state save...")
       // Асинхронная операция, может не успеть завершиться
       forceSaveState(currentState)
+      console.log("[beforeunload] State forced to save:", currentState)
     }
   })
+}
+
+// Генерация уникальных идентификаторов для использования в приложении
+export function generateSegmentId(): string {
+  return nanoid()
 }

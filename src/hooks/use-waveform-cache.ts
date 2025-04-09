@@ -2,7 +2,7 @@ import { useCallback, useState } from "react"
 
 interface WaveformCache {
   [key: string]: {
-    data: any
+    data: null // WaveSurfer генерирует визуализацию самостоятельно
     isLoading: boolean
     error: Error | null
   }
@@ -14,30 +14,18 @@ export function useWaveformCache() {
   const getWaveform = useCallback(
     (audioUrl: string) => {
       if (!cache[audioUrl]) {
+        // Если путь еще не в кеше, инициализируем состояние
         setCache((prev) => ({
           ...prev,
           [audioUrl]: {
             data: null,
-            isLoading: true,
+            isLoading: false, // Теперь WaveSurfer сам отвечает за загрузку
             error: null,
           },
         }))
-
-        // Здесь будет логика загрузки waveform
-        // Пока просто эмулируем загрузку
-        setTimeout(() => {
-          setCache((prev) => ({
-            ...prev,
-            [audioUrl]: {
-              data: null,
-              isLoading: false,
-              error: null,
-            },
-          }))
-        }, 1000)
       }
 
-      return cache[audioUrl]
+      return cache[audioUrl] || { data: null, isLoading: false, error: null }
     },
     [cache],
   )

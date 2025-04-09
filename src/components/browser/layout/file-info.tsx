@@ -1,3 +1,5 @@
+import { memo } from "react"
+
 import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
 import { MediaFile } from "@/types/videos"
 import { getAspectRatio, getFps } from "@/utils/video-utils"
@@ -8,7 +10,8 @@ interface FileInfoProps {
   isAdded?: boolean
 }
 
-export function FileInfo({ file, onAddMedia, isAdded }: FileInfoProps) {
+// Оборачиваем в memo для предотвращения лишних рендеров
+export const FileInfo = memo(function FileInfo({ file, onAddMedia, isAdded }: FileInfoProps) {
   const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
 
   return (
@@ -56,4 +59,4 @@ export function FileInfo({ file, onAddMedia, isAdded }: FileInfoProps) {
       </div>
     </div>
   )
-}
+})

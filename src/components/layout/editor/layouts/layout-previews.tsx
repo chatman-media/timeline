@@ -1,7 +1,5 @@
 import { Play } from "lucide-react"
 
-import { TrackLines } from "../track-lines"
-
 interface LayoutPreviewsProps {
   onLayoutChange: (mode: string) => void
   layoutMode: string

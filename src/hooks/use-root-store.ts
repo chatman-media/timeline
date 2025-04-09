@@ -167,6 +167,7 @@ export function useRootStore() {
   )
 
   const fetchVideos = useCallback(() => {
+    console.log("[useRootStore] Вызван fetchVideos()")
     send({ type: "fetchVideos" })
   }, [send])
 

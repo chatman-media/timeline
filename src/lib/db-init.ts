@@ -2,16 +2,22 @@ import { DBSchema, IDBPDatabase, openDB } from "idb"
 
 import {
   CRITICAL_ACTIONS,
+  EditorState,
   StateContext,
+  StorableEditorState,
   StorableStateContext,
+  StorableTimelineState,
   TEMPORARY_ACTIONS,
   TEMPORARY_FIELDS,
+  TimelineState,
   // Убрали TEMPORARY_ACTIONS, т.к. логика теперь основана на сравнении состояний
 } from "./state-types"
 
 let dbPromise: Promise<IDBPDatabase<TimelineDB>> | null = null
 // Экспортируем lastSavedState для использования в beforeunload
 export let lastSavedState: StateContext | null = null // Последнее успешно сохраненное состояние
+export let lastSavedEditorState: EditorState | null = null // Последнее успешно сохраненное состояние редактора
+export let lastSavedTimelineState: TimelineState | null = null // Последнее успешно сохраненное состояние таймлайна
 let saveTimeoutId: ReturnType<typeof setTimeout> | null = null
 
 // --- Интервалы и Debounce ---
@@ -42,6 +48,98 @@ interface TimelineDB extends DBSchema {
     key: string
     value: StorableStateContext
   }
+  editorState: {
+    key: string
+    value: StorableEditorState
+  }
+  timelineState: {
+    key: string
+    value: StorableTimelineState
+  }
+}
+
+/**
+ * Отделяет редакторское состояние от полного состояния
+ */
+export function extractEditorState(state: StateContext): EditorState {
+  const editorState: EditorState = {
+    layoutMode: state.layoutMode,
+    panelLayouts: state.panelLayouts,
+    isLoading: state.isLoading,
+    isPlaying: state.isPlaying,
+    currentTime: state.currentTime,
+    scale: state.scale,
+    volume: state.volume,
+    trackVolumes: state.trackVolumes,
+    isSeeking: state.isSeeking,
+    isChangingCamera: state.isChangingCamera,
+    media: state.media,
+    hasMedia: state.hasMedia,
+    hasFetched: state.hasFetched,
+    metadataCache: state.metadataCache,
+    thumbnailCache: state.thumbnailCache,
+    addedFiles: state.addedFiles,
+    activeVideo: state.activeVideo,
+    activeTrackId: state.activeTrackId,
+    currentLayout: state.currentLayout,
+    videoRefs: state.videoRefs,
+  }
+  return editorState
+}
+
+/**
+ * Отделяет состояние таймлайна от полного состояния
+ */
+export function extractTimelineState(state: StateContext): TimelineState {
+  const timelineState: TimelineState = {
+    tracks: state.tracks,
+    timeRanges: state.timeRanges,
+    montageSchema: state.montageSchema,
+    isRecordingSchema: state.isRecordingSchema,
+    currentRecordingSegmentId: state.currentRecordingSegmentId,
+    historySnapshotIds: state.historySnapshotIds,
+    currentHistoryIndex: state.currentHistoryIndex,
+    isDirty: state.isDirty,
+    isSaved: state.isSaved,
+  }
+  return timelineState
+}
+
+/**
+ * Удаляет временные поля из EditorState перед сохранением в хранилище
+ * и конвертирует Set в Array.
+ */
+export function cleanEditorStateForStorage(state: EditorState): StorableEditorState {
+  // Создаем копию, чтобы не мутировать оригинал
+  const cleanState: Partial<EditorState> = { ...state }
+
+  // Удаляем временные поля
+  delete cleanState.videoRefs
+  delete cleanState.metadataCache
+  delete cleanState.thumbnailCache
+
+  // Формируем результат
+  const result = {
+    ...cleanState,
+    addedFiles: Array.from(state.addedFiles || []),
+  } as StorableEditorState
+
+  return result
+}
+
+/**
+ * Удаляет временные поля из TimelineState перед сохранением
+ */
+export function cleanTimelineStateForStorage(state: TimelineState): StorableTimelineState {
+  // Создаем копию, чтобы не мутировать оригинал
+  const cleanState: Partial<TimelineState> = { ...state }
+
+  // Удаляем временные поля
+  delete cleanState.isDirty
+  delete cleanState.isRecordingSchema
+  delete cleanState.currentRecordingSegmentId
+
+  return cleanState as StorableTimelineState
 }
 
 /**
@@ -50,30 +148,14 @@ interface TimelineDB extends DBSchema {
  * ЭКСПОРТИРУЕТСЯ для использования в root-store.ts
  */
 export function cleanStateForStorage(state: StateContext): StorableStateContext {
-  // Создаем копию, чтобы не мутировать оригинал
-  const storableState: Partial<StateContext> = { ...state }
+  const editorState = cleanEditorStateForStorage(extractEditorState(state))
+  const timelineState = cleanTimelineStateForStorage(extractTimelineState(state))
 
-  // Удаляем все временные поля, определенные в state-types
-  for (const key of TEMPORARY_FIELDS) {
-    // Убедимся, что currentTime не удаляется, если оно было в TEMPORARY_FIELDS ранее
-    // (Хотя мы его убрали из TEMPORARY_FIELDS, эта проверка на всякий случай)
-    // if (key === 'currentTime') continue;
-    // Эта проверка больше не нужна, currentTime не в TEMPORARY_FIELDS
-
-    delete storableState[key as keyof Partial<StateContext>]
-  }
-
-  // Формируем результат, соответствующий StorableStateContext
-  const result = {
-    ...storableState, // Включает currentTime, если оно не было удалено выше
-    addedFiles: Array.from(state.addedFiles || []),
-  } as StorableStateContext // Приводим тип к StorableStateContext
-
-  // Важно: Убедиться, что все поля StorableStateContext присутствуют.
-  // TypeScript статически проверит это, если типы заданы верно.
-  // Omit<...> больше не нужен, так как удаление происходит по TEMPORARY_FIELDS.
-
-  return result
+  // Объединяем состояния
+  return {
+    ...editorState,
+    ...timelineState,
+  } as StorableStateContext
 }
 
 /**
@@ -235,20 +317,30 @@ export function shouldSaveState(
 }
 
 /**
- * Инициализирует IndexedDB и загружает последнее состояние.
+ * Инициализирует базу данных и загружает состояние
  */
 export async function initializeDatabase(): Promise<StateContext | null> {
   console.log("[initializeDatabase] Starting...")
   if (!dbPromise) {
     console.log("[initializeDatabase] Creating DB promise...")
-    dbPromise = openDB<TimelineDB>("timeline-db", 1, {
-      upgrade(db) {
-        console.log("[initializeDatabase] Upgrading DB...")
+    dbPromise = openDB<TimelineDB>("timeline-db", 2, {
+      upgrade(db, oldVersion, newVersion) {
+        console.log("[initializeDatabase] Upgrading DB from", oldVersion, "to", newVersion)
+
+        // Создаем хранилища объектов при необходимости
         if (!db.objectStoreNames.contains("appState")) {
-          console.log("[initializeDatabase] Creating 'appState' object store.")
+          console.log("[initializeDatabase] Creating 'appState' object store (legacy).")
           db.createObjectStore("appState")
-        } else {
-          console.log("[initializeDatabase] 'appState' object store already exists.")
+        }
+
+        if (!db.objectStoreNames.contains("editorState")) {
+          console.log("[initializeDatabase] Creating 'editorState' object store.")
+          db.createObjectStore("editorState")
+        }
+
+        if (!db.objectStoreNames.contains("timelineState")) {
+          console.log("[initializeDatabase] Creating 'timelineState' object store.")
+          db.createObjectStore("timelineState")
         }
       },
     })
@@ -257,11 +349,95 @@ export async function initializeDatabase(): Promise<StateContext | null> {
   try {
     console.log("[initializeDatabase] Awaiting DB promise...")
     const db = await dbPromise
-    console.log("[initializeDatabase] DB connection established. Getting 'lastState'...")
+
+    // Сначала пробуем загрузить из раздельных хранилищ
+    const storedEditorState: StorableEditorState | undefined = await db.get(
+      "editorState",
+      "lastState",
+    )
+    const storedTimelineState: StorableTimelineState | undefined = await db.get(
+      "timelineState",
+      "lastState",
+    )
+
+    // Если одно из них существует, используем его
+    if (storedEditorState || storedTimelineState) {
+      console.log("[initializeDatabase] Found separated states in DB")
+
+      // Логирование для отладки
+      if (storedEditorState) {
+        console.log("[initializeDatabase] EditorState info:", {
+          mediaCount: storedEditorState.media?.length || 0,
+          hasAddedFiles: (storedEditorState.addedFiles?.length || 0) > 0,
+          layoutMode: storedEditorState.layoutMode,
+        })
+      }
+
+      if (storedTimelineState) {
+        console.log("[initializeDatabase] TimelineState info:", {
+          tracksCount: storedTimelineState.tracks?.length || 0,
+          historySnapshotIds: storedTimelineState.historySnapshotIds?.length || 0,
+        })
+      }
+
+      // Создаем полное состояние, объединяя загруженные части или используя дефолтные значения
+      const stateContext: StateContext = {
+        // EditorState с дефолтными значениями для отсутствующих полей
+        layoutMode: storedEditorState?.layoutMode || "classic",
+        panelLayouts: storedEditorState?.panelLayouts || {},
+        isLoading: false,
+        isPlaying: false,
+        currentTime: storedEditorState?.currentTime || 0,
+        scale: storedEditorState?.scale || 1,
+        volume: storedEditorState?.volume || 1,
+        trackVolumes: storedEditorState?.trackVolumes || {},
+        isSeeking: false,
+        isChangingCamera: false,
+        media: storedEditorState?.media || [],
+        hasMedia: storedEditorState?.hasMedia || false,
+        hasFetched: storedEditorState?.hasFetched || false,
+        metadataCache: {},
+        thumbnailCache: {},
+        addedFiles: new Set(storedEditorState?.addedFiles || []),
+        activeVideo: storedEditorState?.activeVideo || null,
+        activeTrackId: storedEditorState?.activeTrackId || null,
+        currentLayout: storedEditorState?.currentLayout || { type: "1x1", activeTracks: [] },
+        videoRefs: {},
+
+        // TimelineState с дефолтными значениями для отсутствующих полей
+        tracks: storedTimelineState?.tracks || [],
+        timeRanges: storedTimelineState?.timeRanges || {},
+        montageSchema: storedTimelineState?.montageSchema || [],
+        isRecordingSchema: false,
+        currentRecordingSegmentId: null,
+        historySnapshotIds: storedTimelineState?.historySnapshotIds || [],
+        currentHistoryIndex: storedTimelineState?.currentHistoryIndex || -1,
+        isDirty: false,
+        isSaved: storedTimelineState?.isSaved || true,
+      }
+
+      console.log("[initializeDatabase] State combined successfully")
+
+      // Сохраняем загруженное состояние
+      lastSavedState = JSON.parse(JSON.stringify(stateContext))
+      lastSavedEditorState = extractEditorState(stateContext)
+      lastSavedTimelineState = extractTimelineState(stateContext)
+
+      return stateContext
+    }
+
+    // Если разделенных состояний нет, пробуем загрузить из appState (для обратной совместимости)
+    console.log("[initializeDatabase] No separated states found, trying legacy appState...")
     const storedState: StorableStateContext | undefined = await db.get("appState", "lastState")
 
     if (storedState) {
-      console.log("[initializeDatabase] State loaded from DB, converting to StateContext...")
+      console.log("[initializeDatabase] Legacy state loaded from DB, converting to StateContext...")
+      console.log("[initializeDatabase] Loaded state info:", {
+        mediaCount: storedState.media?.length || 0,
+        tracksCount: storedState.tracks?.length || 0,
+        hasAddedFiles: (storedState.addedFiles?.length || 0) > 0,
+      })
+
       // Преобразуем StorableStateContext в StateContext
       const stateContext: StateContext = {
         ...storedState,
@@ -278,7 +454,13 @@ export async function initializeDatabase(): Promise<StateContext | null> {
         metadataCache: {},
         thumbnailCache: {},
       }
-      console.log("[initializeDatabase] State converted successfully")
+      console.log("[initializeDatabase] Legacy state converted successfully")
+
+      // Сохраняем загруженное состояние
+      lastSavedState = JSON.parse(JSON.stringify(stateContext))
+      lastSavedEditorState = extractEditorState(stateContext)
+      lastSavedTimelineState = extractTimelineState(stateContext)
+
       return stateContext
     }
 
@@ -374,33 +556,79 @@ export async function forceSaveState(state: StateContext): Promise<void> {
   if (saveTimeoutId) {
     clearTimeout(saveTimeoutId)
     saveTimeoutId = null
-    console.log("Cancelled pending debounced save due to forceSaveState.")
+    console.log("[forceSaveState] Cancelled pending debounced save")
   }
   if (!dbPromise) {
-    console.error("Database not initialized. Cannot force save state.")
+    console.error("[forceSaveState] Database not initialized. Cannot force save state.")
     return
   }
 
-  // Сравниваем сохраняемую часть с последним *успешно сохраненным* состоянием
-  const stateToSave = cleanStateForStorage(state)
-  const lastPersistedCleanState = lastSavedState ? cleanStateForStorage(lastSavedState) : null
+  try {
+    const db = await dbPromise
+    console.log("[forceSaveState] Connected to DB, saving states")
 
-  if (
-    !lastPersistedCleanState ||
-    JSON.stringify(stateToSave) !== JSON.stringify(lastPersistedCleanState)
-  ) {
-    try {
-      const db = await dbPromise
-      console.log("Force saving state to DB:", stateToSave)
-      await db.put("appState", stateToSave, "lastState")
-      // Обновляем lastSavedState и timestamp после успешного сохранения
-      lastSavedState = JSON.parse(JSON.stringify(state)) // Сохраняем полное состояние
-      lastSaveTimestamp = Date.now()
-      console.log("State force-saved successfully.")
-    } catch (error) {
-      console.error("Failed to force save state:", error)
+    // Разделяем состояние на части
+    const editorState = extractEditorState(state)
+    const timelineState = extractTimelineState(state)
+
+    // Очищаем состояния для хранения
+    const cleanedEditorState = cleanEditorStateForStorage(editorState)
+    const cleanedTimelineState = cleanTimelineStateForStorage(timelineState)
+
+    // Сохраняем EditorState
+    if (!lastSavedEditorState || !areEditorStatesEqual(editorState, lastSavedEditorState)) {
+      console.log("[forceSaveState] Saving EditorState")
+      await db.put("editorState", cleanedEditorState, "lastState")
+      lastSavedEditorState = JSON.parse(JSON.stringify(editorState))
+    } else {
+      console.log("[forceSaveState] Skipping EditorState save - unchanged")
     }
-  } else {
-    console.log("Skipping force save: state unchanged compared to last persisted state.")
+
+    // Сохраняем TimelineState только если есть треки
+    if (timelineState.tracks && timelineState.tracks.length > 0) {
+      if (
+        !lastSavedTimelineState ||
+        !areTimelineStatesEqual(timelineState, lastSavedTimelineState)
+      ) {
+        console.log(
+          "[forceSaveState] Saving TimelineState with",
+          timelineState.tracks.length,
+          "tracks",
+        )
+        await db.put("timelineState", cleanedTimelineState, "lastState")
+        lastSavedTimelineState = JSON.parse(JSON.stringify(timelineState))
+      } else {
+        console.log("[forceSaveState] Skipping TimelineState save - unchanged")
+      }
+    }
+
+    // Обновляем общее сохраненное состояние
+    lastSavedState = JSON.parse(JSON.stringify(state))
+    lastSaveTimestamp = Date.now()
+    console.log("[forceSaveState] States saved successfully")
+  } catch (error) {
+    console.error("[forceSaveState] Failed to save state:", error)
   }
+}
+
+/**
+ * Сравнивает два EditorState для определения необходимости сохранения
+ */
+export function areEditorStatesEqual(state1: EditorState, state2: EditorState): boolean {
+  // Игнорируем videoRefs, metadataCache, thumbnailCache
+  const cleanState1 = cleanEditorStateForStorage(state1)
+  const cleanState2 = cleanEditorStateForStorage(state2)
+
+  return JSON.stringify(cleanState1) === JSON.stringify(cleanState2)
+}
+
+/**
+ * Сравнивает два TimelineState для определения необходимости сохранения
+ */
+export function areTimelineStatesEqual(state1: TimelineState, state2: TimelineState): boolean {
+  // Игнорируем временные поля
+  const cleanState1 = cleanTimelineStateForStorage(state1)
+  const cleanState2 = cleanTimelineStateForStorage(state2)
+
+  return JSON.stringify(cleanState1) === JSON.stringify(cleanState2)
 }

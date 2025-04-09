@@ -37,16 +37,7 @@ export function TimelineMark({
           <span
             className={`text-[11px] absolute top-4 mt-0 whitespace-nowrap text-gray-900 dark:text-gray-100 transform translate-x-[10px]`}
           >
-            {isFirstMark ? (
-              <>
-                {formatDate(timestamp)}
-                <span className="ml-[2px]">
-                  {formatTimeWithMilliseconds(timestamp, false, true, false)}
-                </span>
-              </>
-            ) : (
-              formatTimeWithMilliseconds(timestamp, false, true, false)
-            )}
+            {formatTimeWithMilliseconds(timestamp, false, true, false)}
           </span>
         )}
       </div>

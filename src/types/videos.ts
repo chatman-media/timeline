@@ -36,7 +36,7 @@ export interface Track {
   endTime: number
   combinedDuration: number
   timeRanges: TimeRange[]
-  index: number
+  index: string | number
 }
 
 export interface VideoSegment {

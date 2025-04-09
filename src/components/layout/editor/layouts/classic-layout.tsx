@@ -1,10 +1,7 @@
 import { Browser } from "@/components/browser/browser"
-import { Editing } from "@/components/editing/editing"
 import { ActiveVideo } from "@/components/player/media-player"
 import { Timeline } from "@/components/timeline"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-
-import { Options } from "../options"
 
 interface ClassicLayoutProps {}
 
@@ -36,19 +33,9 @@ export function ClassicMediaEditor({}: ClassicLayoutProps) {
       <ResizableHandle />
 
       <ResizablePanel defaultSize={50}>
-        <ResizablePanelGroup direction="horizontal" autoSaveId="bottom-layout">
-          <ResizablePanel defaultSize={25} minSize={10} maxSize={50}>
-            <div className="h-full bg-muted/50 border-t border-border">
-              <Editing />
-            </div>
-          </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={75}>
-            <div className="h-full bg-muted/50 border-l border-t border-border">
-              <Timeline />
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
+        <div className="h-full bg-muted/50 border-l border-t border-border">
+          <Timeline />
+        </div>
       </ResizablePanel>
     </ResizablePanelGroup>
   )

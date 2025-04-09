@@ -1,25 +1,91 @@
 import { Sliders } from "lucide-react"
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { formatDuration, formatFileSize } from "@/lib/utils"
+import { rootStore } from "@/stores/root-store"
 import { FileGroup, MediaFile } from "@/types/videos"
 import {
   getFileType,
-  getSequentialFiles,
   groupFilesByDate,
   prepareFileGroups,
 } from "@/utils/media-utils"
 
-import { Skeleton } from "../ui/skeleton"
-import { FileInfo, MediaPreview, StatusBar } from "."
+import { Skeleton } from "../../ui/skeleton"
+import { FileInfo, MediaPreview, StatusBar } from ".."
 
-export function MediaFileList({
+// Оборачиваем в memo для предотвращения ненужных рендеров
+export const MediaFileList = memo(function MediaFileList({
   viewMode = "thumbnails",
 }: { viewMode?: "list" | "grid" | "thumbnails" }) {
-  const { media, isLoading, addNewTracks, fetchVideos, addedFiles } = useRootStore()
+  const { media, isLoading, addNewTracks, addedFiles } = useRootStore()
   const [searchQuery, setSearchQuery] = useState("")
+  const dataFetchedRef = useRef(false) // Для отслеживания, выполнялся ли уже запрос
+
+  console.log("[MediaFileList] Rendering with:", {
+    mediaCount: media.length,
+    isLoading,
+    hasAddedFiles: addedFiles.size > 0,
+    viewMode,
+  })
+
+  // Используем useMemo для сортировки медиафайлов, чтобы не пересортировывать при каждом рендере
+  const sortedMedia = useMemo(() => {
+    const sorted = [...media].sort((a, b) => {
+      const timeA = a.startTime || 0
+      const timeB = b.startTime || 0
+      return timeB - timeA
+    })
+    console.log("[MediaFileList] Rendering media list with:", {
+      mediaCount: media.length,
+      sortedMediaCount: sorted.length,
+    })
+    return sorted
+  }, [media])
+
+  // Мемоизируем другие вычисления
+  const sortedDates = useMemo(() => groupFilesByDate(media), [media])
+  const [fileGroups, setFileGroups] = useState<Record<string, FileGroup>>({})
+
+  // Убираем прямой запрос к API и оставляем только fetchVideos при первой загрузке
+  useEffect(() => {
+    if (!dataFetchedRef.current && media.length === 0) {
+      console.log("[MediaFileList] First render, fetching media...")
+      dataFetchedRef.current = true
+
+      // Делаем прямой запрос к API только если нет существующих данных
+      const directFetch = async () => {
+        try {
+          console.log("[MediaFileList] Прямой запрос к /api/media...")
+          const response = await fetch("/api/media")
+          if (!response.ok) {
+            console.error("[MediaFileList] Ошибка запроса:", response.statusText)
+            return
+          }
+
+          const data = await response.json()
+          console.log("[MediaFileList] Получены данные:", data)
+
+          if (data && data.media && Array.isArray(data.media)) {
+            console.log("[MediaFileList] Найдены медиафайлы:", data.media.length)
+
+            if (data.media.length > 0) {
+              // Отправляем событие setMedia вместо addNewTracks
+              rootStore.send({
+                type: "setMedia",
+                media: data.media,
+              })
+            }
+          }
+        } catch (error) {
+          console.error("[MediaFileList] Ошибка запроса:", error)
+        }
+      }
+
+      directFetch()
+    }
+  }, [media.length])
 
   const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
   const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
@@ -27,22 +93,9 @@ export function MediaFileList({
     {},
   )
 
-  const [fileGroups, setFileGroups] = useState<Record<string, FileGroup>>({})
-
   const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
     videoRefs,
   })
-
-  const sequentialFiles = useMemo(() => getSequentialFiles(media), [media])
-  const sortedDates = useMemo(() => groupFilesByDate(media), [media])
-
-  const sortedMedia = useMemo(() => {
-    return [...media].sort((a, b) => {
-      const timeA = a.startTime || 0
-      const timeB = b.startTime || 0
-      return timeB - timeA
-    })
-  }, [media])
 
   const getFileId = useCallback((file: MediaFile) => {
     return file.id || file.path || file.name
@@ -99,13 +152,34 @@ export function MediaFileList({
     (e: React.MouseEvent, file: MediaFile) => {
       e.stopPropagation()
       if (!file.path || addedFiles.has(file.path)) return
+
+      // Добавляем файл на таймлайн
       addNewTracks([file])
+
+      // Отмечаем файл как добавленный
+      if (file.path) {
+        rootStore.send({
+          type: "addToAddedFiles",
+          filePaths: [file.path],
+        })
+      }
     },
     [addNewTracks, addedFiles],
   )
 
   const handleAddAllFiles = useCallback(() => {
+    // Добавляем все файлы на таймлайн
     addNewTracks(media)
+
+    // Отмечаем все файлы как добавленные
+    const filePaths = media.filter((file) => file.path).map((file) => file.path as string)
+
+    if (filePaths.length > 0) {
+      rootStore.send({
+        type: "addToAddedFiles",
+        filePaths,
+      })
+    }
   }, [media, addNewTracks])
 
   const handleAddDateFiles = useCallback(
@@ -120,7 +194,18 @@ export function MediaFileList({
         return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
       })
 
+      // Добавляем файлы на таймлайн
       addNewTracks(dateFiles)
+
+      // Отмечаем файлы как добавленные
+      const filePaths = dateFiles.filter((file) => file.path).map((file) => file.path as string)
+
+      if (filePaths.length > 0) {
+        rootStore.send({
+          type: "addToAddedFiles",
+          filePaths,
+        })
+      }
     },
     [media, addNewTracks],
   )
@@ -135,24 +220,33 @@ export function MediaFileList({
 
   useEffect(() => {
     if (media.length) {
+      console.log("[MediaFileList] Media changed, count:", media.length)
       setFileGroups(prepareFileGroups(media))
     }
   }, [media])
-
-  useEffect(() => {
-    fetchVideos()
-  }, [fetchVideos])
 
   const handleAddByIds = useCallback(
     (fileIds: string[]) => {
       const filesToAdd = media.filter((file) => fileIds.includes(file.id))
 
+      // Добавляем файлы на таймлайн
       addNewTracks(filesToAdd)
+
+      // Отмечаем файлы как добавленные
+      const filePaths = filesToAdd.filter((file) => file.path).map((file) => file.path as string)
+
+      if (filePaths.length > 0) {
+        rootStore.send({
+          type: "addToAddedFiles",
+          filePaths,
+        })
+      }
     },
     [media, addNewTracks],
   )
 
   if (isLoading) {
+    console.log("[MediaFileList] Rendering loading skeleton")
     return (
       <div className="px-0 h-full overflow-y-auto">
         <div className="space-y-2 dark:bg-[#1b1a1f]">
@@ -174,12 +268,18 @@ export function MediaFileList({
   }
 
   if (!media?.length) {
+    console.log("[MediaFileList] No media available")
     return (
       <div className="p-4">
         <p className="text-sm text-gray-500">Нет доступных файлов</p>
       </div>
     )
   }
+
+  console.log("[MediaFileList] Rendering media list with:", {
+    mediaCount: media.length,
+    sortedMediaCount: sortedMedia.length,
+  })
 
   return (
     <div className="flex flex-col h-full">
@@ -338,4 +438,4 @@ export function MediaFileList({
       </div>
     </div>
   )
-}
+})

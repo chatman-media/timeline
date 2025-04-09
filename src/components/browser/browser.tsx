@@ -1,4 +1,5 @@
 import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles, Sticker, Type } from "lucide-react"
+import { memo, useState } from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 import {
@@ -13,9 +14,18 @@ import {
 export const TAB_TRIGGER_STYLES =
   "text-xs text-gray-800 dark:bg-[#1b1a1f] bg-gray-200 data-[state=active]:bg-secondary data-[state=active]:text-black dark:data-[state=active]:bg-secondary dark:data-[state=active]:text-white hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 border-1 border-transparent flex flex-col items-center justify-center gap-1 py-2"
 
-export function Browser() {
+// Используем memo для предотвращения ненужных рендеров
+export const Browser = memo(function Browser() {
+  console.log("[Browser] Rendering component...")
+  const [activeTab, setActiveTab] = useState("media")
+
   return (
-    <Tabs defaultValue="media" className="w-full h-full">
+    <Tabs
+      value={activeTab}
+      onValueChange={setActiveTab}
+      defaultValue="media"
+      className="w-full h-full"
+    >
       <TabsList className="bg-transparent h-[50px]">
         <TabsTrigger value="media" className={TAB_TRIGGER_STYLES}>
           <Image className="w-4 h-4" />
@@ -41,10 +51,10 @@ export function Browser() {
           <Blend className="w-4 h-4" />
           <span>Фильтры</span>
         </TabsTrigger>
-        {/* <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
+        <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
           <Sticker className="w-4 h-4" />
           <span>Стикеры</span>
-        </TabsTrigger> */}
+        </TabsTrigger>
         <TabsTrigger value="templates" className={TAB_TRIGGER_STYLES}>
           <Layout className="w-4 h-4" />
           <span>Шаблоны</span>
@@ -73,4 +83,4 @@ export function Browser() {
       </TabsContent>
     </Tabs>
   )
-}
+})

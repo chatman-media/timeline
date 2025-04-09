@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
-import { useWaveformCache } from "@/hooks/use-waveform-cache"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { TimelineTrack } from "@/types/timeline"
 
@@ -16,6 +15,7 @@ interface VideoTrackProps {
 
 const VideoTrack = memo(function VideoTrack({
   track,
+  index,
   sectionStartTime,
   sectionDuration,
 }: VideoTrackProps) {
@@ -28,7 +28,6 @@ const VideoTrack = memo(function VideoTrack({
     trackVolumes,
     setIsPlaying,
   } = useRootStore()
-  const { getWaveform } = useWaveformCache()
   const containerRef = useRef<HTMLDivElement>(null)
   const [visibleVideos, setVisibleVideos] = useState<string[]>([])
   const videoElementsRef = useRef<Record<string, HTMLVideoElement>>({})
@@ -212,14 +211,11 @@ const VideoTrack = memo(function VideoTrack({
                                   )}
                                 </div>
                               </div>
-                              {isVisible && (
-                                <div className="h-[40px] w-full relative pointer-events-none">
-                                  <Waveform
-                                    audioUrl={video.path}
-                                    waveform={getWaveform(video.path)}
-                                  />
+                              {/* {isVisible && (
+                                <div className="w-full relative pointer-events-none" style={{ height: "45px", minHeight: "45px", backgroundColor: "transparent" }}>
+                                  <Waveform audioUrl={video.path} />
                                 </div>
-                              )}
+                              )} */}
                               <video
                                 ref={(el) => {
                                   if (el) {

@@ -11,6 +11,58 @@ import { TimelineControls } from "./timeline/timeline-controls"
 import { TimelineScale } from "./timeline/timeline-scale"
 import { VideoTrack } from "./track/video-track"
 
+// Добавим функцию для форматирования даты из ISO строки в удобный вид
+function formatCreationDate(isoDateString: string): string {
+  try {
+    const date = new Date(isoDateString);
+    if (isNaN(date.getTime())) return "Неверный формат даты";
+    
+    // Форматируем дату как "31 марта 25 г." (как на скриншоте)
+    const day = date.getDate();
+    
+    // Месяцы на русском
+    const months = [
+      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+    ];
+    const month = months[date.getMonth()];
+    
+    // Год (последние 2 цифры)
+    const year = date.getFullYear().toString().slice(-2);
+    
+    return `${day} ${month} ${year} г.`;
+  } catch (e) {
+    console.error("Error formatting date:", e);
+    return "Ошибка форматирования даты";
+  }
+}
+
+// Добавляю функцию для форматирования даты секции
+function formatSectionDate(dateString: string): string {
+  try {
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Неверный формат даты";
+    
+    // Форматируем дату как "31 марта 25 г." (как на скриншоте)
+    const day = date.getDate();
+    
+    // Месяцы на русском
+    const months = [
+      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
+    ];
+    const month = months[date.getMonth()];
+    
+    // Год (последние 2 цифры)
+    const year = date.getFullYear().toString().slice(-2);
+    
+    return `${day} ${month} ${year} г.`;
+  } catch (e) {
+    console.error("Error formatting section date:", e);
+    return "Ошибка форматирования даты";
+  }
+}
+
 export function Timeline() {
   const {
     tracks,
@@ -249,6 +301,9 @@ export function Timeline() {
             className={`relative mb-4 ${section.date === activeDate ? "" : "opacity-50"}`}
           >
             <div className="relative">
+              <div className="w-full text-center text-xs text-[#8E8E8E] mb-1">
+                {formatSectionDate(section.date)}
+              </div>
               <TimelineScale
                 startTime={section.startTime}
                 endTime={section.endTime}
@@ -266,7 +321,10 @@ export function Timeline() {
                     }}
                   >
                     <VideoTrack
-                      track={track}
+                      track={{
+                        ...track,
+                        index: Number(track.index)
+                      }}
                       index={index}
                       sectionStartTime={section.startTime}
                       sectionDuration={section.duration}

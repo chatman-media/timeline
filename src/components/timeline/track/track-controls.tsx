@@ -58,11 +58,7 @@ export function TrackControls({
         className="p-1 hover:bg-gray-700 rounded"
         title={isVisible ? "Скрыть трек" : "Показать трек"}
       >
-        {isVisible ? (
-          <Eye className="w-4 h-4 text-gray-300" />
-        ) : (
-          <EyeOff className="w-4 h-4 text-gray-500" />
-        )}
+        {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
       </button>
 
       <button
@@ -70,11 +66,7 @@ export function TrackControls({
         className="p-1 hover:bg-gray-700 rounded"
         title={isLocked ? "Разблокировать трек" : "Заблокировать трек"}
       >
-        {isLocked ? (
-          <Lock className="w-4 h-4 text-gray-300" />
-        ) : (
-          <LockOpen className="w-4 h-4 text-gray-500" />
-        )}
+        {isLocked ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
       </button>
 
       {!isVideoTrack && (

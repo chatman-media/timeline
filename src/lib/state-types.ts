@@ -34,37 +34,71 @@ export interface MontageSegment {
 }
 // --- Конец: Схема Монтажа ---
 
-export interface StateContext {
-  media: MediaFile[]
+// Состояние для редактора (UI, выбранные файлы, макет и т.д.)
+export interface EditorState {
+  // UI состояние
+  layoutMode: string
+  panelLayouts: Record<string, number[]>
   isLoading: boolean
-  hasMedia: boolean
   isPlaying: boolean
   currentTime: number
-  timeRanges: Record<string, TimeRange[]>
-  tracks: Track[]
-  videoRefs: { [key: string]: HTMLVideoElement }
-  activeVideo: MediaFile | null
-  hasFetched: boolean
-  activeTrackId: string | null
-  isChangingCamera: boolean
-  metadataCache: Record<string, any>
-  thumbnailCache: Record<string, string>
-  currentLayout: ScreenLayout
-  addedFiles: Set<string>
-  isSaved: boolean
   scale: number
   volume: number
   trackVolumes: Record<string, number>
   isSeeking: boolean
-  layoutMode: string
-  panelLayouts: Record<string, number[]>
-  isDirty: boolean
+  isChangingCamera: boolean
+
+  // Медиатека
+  media: MediaFile[]
+  hasMedia: boolean
+  hasFetched: boolean
+  metadataCache: Record<string, any>
+  thumbnailCache: Record<string, string>
+
+  // Отметки о добавленных файлах
+  addedFiles: Set<string>
+
+  // Активные элементы
+  activeVideo: MediaFile | null
+  activeTrackId: string | null
+  currentLayout: ScreenLayout
+  videoRefs: { [key: string]: HTMLVideoElement }
+}
+
+// Состояние для таймлайна (треки, схема монтажа и история)
+export interface TimelineState {
+  tracks: Track[]
+  timeRanges: Record<string, TimeRange[]>
   montageSchema: MontageSegment[]
   isRecordingSchema: boolean
   currentRecordingSegmentId: string | null
+
+  // История
   historySnapshotIds: number[]
   currentHistoryIndex: number
+  isDirty: boolean
+  isSaved: boolean
 }
+
+// Полное состояние приложения
+export interface StateContext extends EditorState, TimelineState {}
+
+// Сохраняемое EditorState (для IndexedDB)
+export type StorableEditorState = Omit<
+  EditorState,
+  "videoRefs" | "thumbnailCache" | "metadataCache" | "addedFiles"
+> & {
+  addedFiles: string[] // Set преобразуется в массив для хранения
+}
+
+// Сохраняемое TimelineState (для IndexedDB)
+export type StorableTimelineState = Omit<
+  TimelineState,
+  "isDirty" | "isRecordingSchema" | "currentRecordingSegmentId"
+>
+
+// Комбинированное сохраняемое состояние
+export type StorableStateContext = StorableEditorState & StorableTimelineState
 
 // Убираем временные поля, так как теперь не сохраняем состояние
 export const TEMPORARY_FIELDS = new Set<keyof StateContext>([
@@ -84,14 +118,6 @@ export const TEMPORARY_FIELDS = new Set<keyof StateContext>([
   "timeRanges",
   "montageSchema",
 ])
-
-// Тип для хранения в IndexedDB (Set преобразуется в Array, временные поля исключены)
-export type StorableStateContext = Omit<
-  StateContext,
-  Exclude<keyof typeof TEMPORARY_FIELDS, "currentTime"> | "addedFiles"
-> & {
-  addedFiles: string[]
-}
 
 // Типы действий, которые не требуют сохранения состояния
 export const TEMPORARY_ACTIONS = new Set([
@@ -145,13 +171,13 @@ export type EventPayloadMap = {
   setLayoutMode: { mode: string }
   setPanelLayout: { id: string; sizes: number[] }
   createHistoryPoint: { stateForHistory: StateContext }
-  fetchVideos: never
-  initializeHistory: never
-  stopRecordingSchema: never
+  fetchVideos: {}
+  initializeHistory: {}
+  stopRecordingSchema: {}
   startRecordingSchema: { trackId: string; startTime: number }
-  clearHistory: never
-  saveState: never
-  markAsSaved: never
+  clearHistory: {}
+  saveState: {}
+  markAsSaved: {}
   setIsPlaying: { isPlaying: boolean }
   setCurrentTime: { time: number; source?: "playback" | "user" }
   setScale: { scale: number }
@@ -161,8 +187,11 @@ export type EventPayloadMap = {
   setVolume: { volume: number }
   setTrackVolume: { trackId: string; volume: number }
   setIsSeeking: { isSeeking: boolean }
-  undo: never
-  redo: never
+  undo: {}
+  redo: {}
+  addMediaFiles: { files: File[] }
+  removeMediaFile: { id: string }
+  clearCache: {}
 }
 
 export type Effect = (callback: () => void | Promise<void>) => void
