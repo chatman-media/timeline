@@ -15,7 +15,7 @@ export function TimelineControls({
 }: TimelineControlsProps) {
   const logMinScale = Math.log(minScale)
   const logMaxScale = Math.log(maxScale)
-  const logCurrentScale = Math.log(scale)
+  const logCurrentScale = Math.log(scale || 1)
 
   const logStep = (logMaxScale - logMinScale) / 100
 
@@ -37,7 +37,10 @@ export function TimelineControls({
     setScale(Math.exp(logScale))
   }
 
-  const sliderValue = ((logCurrentScale - logMinScale) / (logMaxScale - logMinScale)) * 100
+  const sliderValue =
+    logMaxScale === logMinScale
+      ? 0
+      : ((logCurrentScale - logMinScale) / (logMaxScale - logMinScale)) * 100
 
   return (
     <div className="flex items-center gap-2 p-2 z-10">
@@ -57,7 +60,7 @@ export function TimelineControls({
           type="range"
           min={0}
           max={100}
-          value={sliderValue}
+          value={String(sliderValue)}
           onChange={handleSliderChange}
           className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
         />

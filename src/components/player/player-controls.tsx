@@ -11,7 +11,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react"
-import { useCallback, useEffect,useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { EntryPointIcon } from "@/components/icons/entry-point"
 import { ExitPointIcon } from "@/components/icons/exit-point"
@@ -35,11 +35,12 @@ export function PlayerControls() {
     tracks,
     activeTrackId,
     timeRanges,
-    saveState,
-    loadState,
+    initializeHistory,
+    isRecordingSchema,
+    startRecordingSchema,
+    stopRecordingSchema,
   } = useRootStore()
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [isRecording, setIsRecording] = useState(false)
   const [localTime, setLocalTime] = useState(currentTime)
   const lastUpdateTime = useRef(0)
   const lastSaveTime = useRef(0)
@@ -50,21 +51,20 @@ export function PlayerControls() {
 
   // Загружаем состояние при монтировании компонента
   useEffect(() => {
-    loadState()
-  }, [loadState])
+    initializeHistory()
+  }, [initializeHistory])
 
   // Сохраняем состояние периодически
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now()
       if (now - lastSaveTime.current >= SAVE_INTERVAL) {
-        saveState()
         lastSaveTime.current = now
       }
     }, SAVE_INTERVAL)
 
     return () => clearInterval(interval)
-  }, [saveState])
+  }, [])
 
   // Синхронизируем локальное время с глобальным при изменении currentTime
   useEffect(() => {
@@ -82,6 +82,25 @@ export function PlayerControls() {
   }, [isPlaying, localTime])
 
   useEffect(() => {
+    console.log(
+      "[PlayerControls] Playback useEffect triggered. isPlaying:",
+      isPlaying,
+      "isSeeking:",
+      isSeeking,
+      "activeVideo:",
+      !!activeVideo,
+    )
+
+    // Логируем activeVideo и его свойства
+    if (activeVideo) {
+      console.log("[PlayerControls] ActiveVideo details:", {
+        id: activeVideo.id,
+        startTime: activeVideo.startTime,
+        endTime: activeVideo.endTime,
+        r_frame_rate: activeVideo.probeData?.streams?.[0]?.r_frame_rate,
+      })
+    }
+
     if (
       !isPlaying ||
       !activeVideo ||
@@ -91,6 +110,15 @@ export function PlayerControls() {
       !activeVideo.probeData?.streams?.[0]?.r_frame_rate ||
       isSeeking
     ) {
+      // Логируем причину отмены анимации
+      console.log("[PlayerControls] Cancelling animation frame. Reason:", {
+        isPlaying,
+        isSeeking,
+        hasActiveVideo: !!activeVideo,
+        hasStartTime: activeVideo?.startTime !== undefined,
+        hasEndTime: activeVideo?.endTime !== undefined,
+        hasFrameRate: !!activeVideo?.probeData?.streams?.[0]?.r_frame_rate,
+      })
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current)
         frameRef.current = null
@@ -102,29 +130,35 @@ export function PlayerControls() {
     const endTime: number = activeVideo.endTime
     const fpsStr = activeVideo.probeData.streams[0].r_frame_rate
 
-    // Более надежный расчет FPS
     const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
     const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
 
+    // Логируем FPS
+    console.log("[PlayerControls] Calculated FPS:", fps, "from", fpsStr)
+
     if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) {
-      console.error("Некорректный FPS:", fpsStr)
+      console.error("Invalid FPS detected, stopping playback.")
       return
     }
 
-    // Всегда сбрасываем initialFrameTimeRef при запуске анимации
     initialFrameTimeRef.current = null
 
     const updateFrame = (timestamp: number) => {
       if (initialFrameTimeRef.current === null) {
         initialFrameTimeRef.current = timestamp
       }
-
-      // Рассчитываем прошедшее время с начала воспроизведения
       const elapsed = timestamp - initialFrameTimeRef.current
-
-      // Вычисляем текущее время на основе точного времени
-      // Важно: используем timeAtPlayStartRef.current как базовую точку
       const exactTime = timeAtPlayStartRef.current + elapsed / 1000
+
+      // Логируем значения внутри updateFrame
+      console.log("[PlayerControls] updateFrame:", {
+        timestamp,
+        elapsed,
+        exactTime,
+        startTime,
+        endTime,
+        timeAtPlayStartRef: timeAtPlayStartRef.current,
+      })
 
       if (exactTime >= endTime) {
         // Если достигли конца, перейти к началу
@@ -139,6 +173,8 @@ export function PlayerControls() {
         // Обновляем глобальное время реже для улучшения производительности
         const now = performance.now()
         if (now - lastUpdateTime.current >= 200) {
+          // Логируем обновление глобального времени
+          console.log("[PlayerControls] Updating global currentTime:", exactTime)
           setCurrentTime(exactTime)
           lastUpdateTime.current = now
         }
@@ -148,43 +184,26 @@ export function PlayerControls() {
       frameRef.current = requestAnimationFrame(updateFrame)
     }
 
-    // Запускаем анимацию
+    console.log("[PlayerControls] Starting requestAnimationFrame.")
     frameRef.current = requestAnimationFrame(updateFrame)
 
     // Очищаем при размонтировании
     return () => {
+      console.log("[PlayerControls] Cleaning up animation frame.")
       if (frameRef.current) {
         cancelAnimationFrame(frameRef.current)
         frameRef.current = null
       }
     }
-  }, [isPlaying, activeVideo, setCurrentTime, isSeeking])
-
-  // Сохраняем состояние при изменении активной дорожки
-  useEffect(() => {
-    saveState()
-  }, [activeTrackId, saveState])
-
-  // Сохраняем состояние при изменении времени
-  useEffect(() => {
-    const now = Date.now()
-    if (now - lastUpdateTime.current >= 1000) {
-      // Сохраняем не чаще чем раз в секунду
-      saveState()
-      lastUpdateTime.current = now
-    }
-  }, [currentTime, saveState])
+  }, [isPlaying, activeVideo, setCurrentTime, isSeeking, localTime])
 
   const handlePlayPause = useCallback(() => {
-    // Если останавливаем воспроизведение, фиксируем текущее время
     if (isPlaying) {
       timeAtPlayStartRef.current = localTime
     } else {
-      // Если запускаем воспроизведение, сбрасываем initialFrameTimeRef
       initialFrameTimeRef.current = null
       timeAtPlayStartRef.current = localTime
     }
-
     setIsPlaying(!isPlaying)
   }, [isPlaying, setIsPlaying, localTime])
 
@@ -264,24 +283,48 @@ export function PlayerControls() {
   }, [isFullscreen])
 
   const handleRecordToggle = useCallback(() => {
-    setIsRecording(!isRecording)
-  }, [isRecording])
+    if (isRecordingSchema) {
+      stopRecordingSchema()
+    } else {
+      activeTrackId && startRecordingSchema(activeTrackId, localTime)
+    }
+  }, [isRecordingSchema, startRecordingSchema, stopRecordingSchema, activeTrackId, localTime])
 
   const handleTimeChange = useCallback(
     (value: number[]) => {
       if (activeVideo?.startTime !== undefined) {
         const newTime = value[0] + activeVideo.startTime
 
-        // Обновляем локальное время и timeAtPlayStartRef
+        // Устанавливаем флаг поиска
+        setIsSeeking(true)
+
+        // Обновляем локальное время
         setLocalTime(newTime)
+
+        // Обновляем глобальное время
+        setCurrentTime(newTime)
+
+        // Обновляем точку отсчета для воспроизведения
         timeAtPlayStartRef.current = newTime
 
-        setCurrentTime(newTime)
+        // Сбрасываем воспроизведение
         setIsPlaying(false)
+
+        // Сбрасываем флаг поиска после небольшой задержки
+        setTimeout(() => {
+          setIsSeeking(false)
+        }, 100)
       }
     },
-    [activeVideo, setCurrentTime, setIsPlaying],
+    [activeVideo, setCurrentTime, setIsPlaying, setIsSeeking],
   )
+
+  // Синхронизируем локальное время с глобальным
+  useEffect(() => {
+    if (!isPlaying && !isSeeking) {
+      setLocalTime(currentTime)
+    }
+  }, [currentTime, isPlaying, isSeeking])
 
   const handleChevronFirst = useCallback(() => {
     const startTime = activeVideo?.startTime || 0
@@ -403,13 +446,15 @@ export function PlayerControls() {
             className={"cursor-pointer h-6 w-6"}
             variant="ghost"
             size="icon"
-            title={isRecording ? "Остановить запись" : "Начать запись"}
+            title={isRecordingSchema ? "Остановить запись" : "Начать запись"}
             onClick={handleRecordToggle}
           >
             <CircleDot
               className={cn(
                 "w-4 h-4",
-                isRecording ? "text-red-500 hover:text-red-600" : "text-white hover:text-gray-300",
+                isRecordingSchema
+                  ? "text-red-500 hover:text-red-600 animate-pulse"
+                  : "text-white hover:text-gray-300",
               )}
             />
           </Button>

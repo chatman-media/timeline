@@ -1,7 +1,9 @@
-import { Trash2, Undo2, Redo2, Split, Scissors } from "lucide-react"
+import { Redo2, Scissors, Split, Trash2, Undo2 } from "lucide-react"
 import React, { useMemo, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
+import { rootStore } from "@/stores/root-store"
+import { TimeRange } from "@/types/time-range"
 import { MediaFile, Track } from "@/types/videos"
 
 import { TimelineBar } from "./timeline/timeline-bar"
@@ -22,21 +24,96 @@ export function Timeline() {
     redo,
     canUndo,
     canRedo,
+    setActiveTrack,
+    isPlaying,
+    setIsPlaying,
+    isRecordingSchema,
+    currentTime,
+    setActiveVideo,
+    currentLayout,
   } = useRootStore()
   const [activeDate, setActiveDate] = useState<string | null>(null)
 
   // Обработчик нажатия клавиш
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Backspace' && activeTrackId) {
-        const updatedTracks = tracks.filter(track => track.id !== activeTrackId);
-        setTracks(updatedTracks);
+      // Удаление трека
+      if (e.key === "Backspace" && activeTrackId) {
+        const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
+        setTracks(updatedTracks)
+        return
       }
-    };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeTrackId, tracks, setTracks]);
+      // Переключение дорожек
+      const key = e.key.toLowerCase()
+      const isVideoTrack = key.startsWith("v")
+      const trackNumber = isVideoTrack ? parseInt(key.slice(1)) : parseInt(key)
+
+      if (
+        (isVideoTrack && trackNumber >= 1 && trackNumber <= 9) ||
+        (!isVideoTrack && trackNumber >= 1 && trackNumber <= 9)
+      ) {
+        const targetTrack = tracks.find((track) => track.index === trackNumber - 1)
+        if (targetTrack) {
+          // Если идет запись, останавливаем её на текущей дорожке
+          if (isRecordingSchema && activeTrackId) {
+            const currentTrack = tracks.find((track) => track.id === activeTrackId)
+            if (currentTrack) {
+              // Останавливаем запись на текущей дорожке
+              rootStore.send({ type: "stopRecordingSchema" })
+
+              // Начинаем запись на новой дорожке
+              setTimeout(() => {
+                rootStore.send({
+                  type: "startRecordingSchema",
+                  trackId: targetTrack.id,
+                  startTime: currentTime,
+                })
+              }, 50)
+            }
+          }
+
+          // Переключаемся на новую дорожку
+          setActiveTrack(targetTrack.id)
+
+          // Если идет воспроизведение, сохраняем текущее время
+          if (isPlaying) {
+            const video = targetTrack.videos.find((v) => {
+              const startTime = v.startTime ?? 0
+              const duration = v.duration ?? 0
+              return startTime <= currentTime && startTime + duration >= currentTime
+            })
+
+            if (video) {
+              setActiveVideo(video.id)
+              updateTime(currentTime)
+            }
+          }
+
+          // Обновляем макет, сохраняя текущий тип и добавляя новую дорожку
+          const newLayout = {
+            ...currentLayout,
+            activeTracks: [targetTrack.id],
+          }
+          rootStore.send({ type: "setScreenLayout", layout: newLayout })
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [
+    activeTrackId,
+    tracks,
+    setTracks,
+    setActiveTrack,
+    isPlaying,
+    isRecordingSchema,
+    currentTime,
+    setActiveVideo,
+    updateTime,
+    currentLayout,
+  ])
 
   const sections = useMemo(() => {
     if (!tracks || tracks.length === 0) return []
@@ -145,23 +222,23 @@ export function Timeline() {
           <button
             disabled={!activeTrackId}
             onClick={() => {
-              const updatedTracks = tracks.filter(track => track.id !== activeTrackId);
-              setTracks(updatedTracks);
+              const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
+              setTracks(updatedTracks)
             }}
-              className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
-            >
-              <Trash2 size={16} />
-            </button>
-            <button
-                          disabled={!activeTrackId}
-                          onClick={() => {
-                const updatedTracks = tracks.filter(track => track.id !== activeTrackId);
-                setTracks(updatedTracks);
-              }}
-              className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
-            >
-              <Scissors size={16} className="rotate-90" />
-            </button>
+            className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+          >
+            <Trash2 size={16} />
+          </button>
+          <button
+            disabled={!activeTrackId}
+            onClick={() => {
+              const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
+              setTracks(updatedTracks)
+            }}
+            className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+          >
+            <Scissors size={16} className="rotate-90" />
+          </button>
         </div>
         <TimelineControls scale={scale} setScale={setScale} />
       </div>

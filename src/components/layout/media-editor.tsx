@@ -9,9 +9,8 @@ import { VerticalMediaEditor } from "./editor/layouts/vertical-layout"
 import { TopNavBar } from "./editor/top-nav-bar"
 
 export function MediaEditor() {
-  const { loadState, saveState, activeVideo, videoRefs } = useRootStore()
+  const { activeVideo, videoRefs, layoutMode, setLayoutMode } = useRootStore()
   const [isLoaded, setIsLoaded] = useState(false)
-  const [layoutMode, setLayoutMode] = useState("default")
   const [hasExternalDisplay, setHasExternalDisplay] = useState(false)
 
   useEffect(() => {
@@ -48,40 +47,19 @@ export function MediaEditor() {
   }, [])
 
   useEffect(() => {
-    const savedLayout = localStorage.getItem("editor-layout-mode")
-
-    if (savedLayout && (savedLayout !== "dual" || hasExternalDisplay)) setLayoutMode(savedLayout)
-
     setIsLoaded(true)
-  }, [hasExternalDisplay])
 
-  useEffect(() => {
-    // Загружаем состояние при монтировании
-    loadState()
-
-    // Если есть активное видео, убедимся что оно загружено
     if (activeVideo) {
       const videoElement = videoRefs[activeVideo.id]
       if (videoElement) {
         videoElement.load()
       }
     }
-
-    // Сохраняем состояние при закрытии страницы
-    const handleBeforeUnload = () => {
-      saveState()
-    }
-
-    window.addEventListener("beforeunload", handleBeforeUnload)
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload)
-    }
-  }, [loadState, saveState, activeVideo])
+  }, [activeVideo, videoRefs])
 
   const changeLayout = (mode: string) => {
     if (mode === "dual" && !hasExternalDisplay) return
     setLayoutMode(mode)
-    localStorage.setItem("editor-layout-mode", mode)
   }
 
   if (!isLoaded) {

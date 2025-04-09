@@ -3,6 +3,8 @@ export interface TimeRange {
   trackId: string
   start: number
   end: number
-  type: 'video' | 'audio'
+  duration: number
+  type: "video" | "audio" | string
   isSelected: boolean
+  color?: string
 }

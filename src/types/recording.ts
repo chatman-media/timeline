@@ -28,4 +28,4 @@ export interface RecordingSession {
     description?: string
     tags?: string[]
   }
-} 
+}

@@ -1,7 +1,7 @@
 export interface Track {
   id: string
   name: string
-  type: 'video' | 'audio'
+  type: "video" | "audio"
   mediaId: string
   startTime: number
   endTime: number
@@ -9,4 +9,4 @@ export interface Track {
   isMuted: boolean
   isLocked: boolean
   isVisible: boolean
-} 
+}

@@ -1,13 +1,14 @@
-export function getSavedLayout(id: string): number[] | null {
-  if (typeof window === "undefined") return null
+import { useRootStore } from "@/hooks/use-root-store"
 
-  try {
-    const savedLayout = localStorage.getItem(`rpl-panel-group:${id}`)
-    return savedLayout ? JSON.parse(savedLayout) : null
-  } catch (e) {
-    console.error("Ошибка при чтении сохраненных размеров:", e)
-    return null
+export function usePanelLayout(id: string): [number[] | null, (sizes: number[]) => void] {
+  const { panelLayouts, setPanelLayout } = useRootStore()
+  const savedLayout = panelLayouts[id]
+
+  const saveLayout = (sizes: number[]) => {
+    setPanelLayout(id, sizes)
   }
+
+  return [savedLayout || null, saveLayout]
 }
 
 export const defaultSizes = {

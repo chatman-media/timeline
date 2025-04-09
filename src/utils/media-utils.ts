@@ -99,35 +99,57 @@ export const getGroupedFiles = (files: MediaFile[]): Record<string, MediaFile[]>
  * @returns Массив созданных треков
  */
 export const createTracksFromFiles = (files: MediaFile[], currentTracksLength: number): Track[] => {
-  if (files.length === 1) {
-    const file = files[0]
-    return [
-      {
+  // Разделяем файлы на видео и аудио
+  const videoFiles = files.filter((file) =>
+    file.probeData?.streams?.some((stream) => stream.codec_type === "video"),
+  )
+  const audioFiles = files.filter(
+    (file) => !file.probeData?.streams?.some((stream) => stream.codec_type === "video"),
+  )
+
+  const tracks: Track[] = []
+
+  // Обрабатываем видео файлы (V1-V9)
+  if (videoFiles.length > 0) {
+    const groupedVideoFiles = getGroupedFiles(videoFiles)
+    Object.values(groupedVideoFiles).forEach((groupFiles, index) => {
+      tracks.push({
         id: nanoid(),
-        index: currentTracksLength + 1,
+        name: `V${currentTracksLength + index + 1}`,
+        type: "video",
         isActive: false,
-        videos: [file],
-        startTime: file.startTime || 0,
-        endTime: (file.startTime || 0) + (file.duration || 0),
-        combinedDuration: file.duration || 0,
-        timeRanges: calculateTimeRanges([file]),
-      },
-    ]
+        videos: groupFiles,
+        startTime: groupFiles[0].startTime || 0,
+        endTime:
+          (groupFiles[groupFiles.length - 1].startTime || 0) +
+          (groupFiles[groupFiles.length - 1].duration || 0),
+        combinedDuration: groupFiles.reduce((total, file) => total + (file.duration || 0), 0),
+        timeRanges: calculateTimeRanges(groupFiles),
+      })
+    })
   }
 
-  const groupedFiles = getGroupedFiles(files)
-  return Object.values(groupedFiles).map((groupFiles, index) => ({
-    id: nanoid(),
-    index: currentTracksLength + index + 1,
-    isActive: false,
-    videos: groupFiles,
-    startTime: groupFiles[0].startTime || 0,
-    endTime:
-      (groupFiles[groupFiles.length - 1].startTime || 0) +
-      (groupFiles[groupFiles.length - 1].duration || 0),
-    combinedDuration: groupFiles.reduce((total, file) => total + (file.duration || 0), 0),
-    timeRanges: calculateTimeRanges(groupFiles),
-  }))
+  // Обрабатываем аудио файлы (A1-A9)
+  if (audioFiles.length > 0) {
+    const groupedAudioFiles = getGroupedFiles(audioFiles)
+    Object.values(groupedAudioFiles).forEach((groupFiles, index) => {
+      tracks.push({
+        id: nanoid(),
+        name: `A${index + 1}`,
+        type: "audio",
+        isActive: false,
+        videos: groupFiles,
+        startTime: groupFiles[0].startTime || 0,
+        endTime:
+          (groupFiles[groupFiles.length - 1].startTime || 0) +
+          (groupFiles[groupFiles.length - 1].duration || 0),
+        combinedDuration: groupFiles.reduce((total, file) => total + (file.duration || 0), 0),
+        timeRanges: calculateTimeRanges(groupFiles),
+      })
+    })
+  }
+
+  return tracks
 }
 
 /**

@@ -1,193 +1,95 @@
-const DB_NAME = 'timeline-history'
-const STORE_NAME = 'actions'
-const STATE_STORE_NAME = 'state'
-const DB_VERSION = 1
+import Dexie, { Table } from "dexie"
 
-interface Action {
-  id: number
-  type: string
-  data: any
-  timestamp: number
-}
+import { StateContext, StateSnapshot, StorableStateContext } from "./state-types"
 
-interface StateSnapshot {
-  id: number
-  state: any
-  timestamp: number
-}
+class HistoryDatabase extends Dexie {
+  // Таблица хранит снимки, где state - это StorableStateContext
+  states!: Table<{ id?: number; timestamp: number; state: StorableStateContext }, number>
 
-class IndexedDBHistory {
-  private db: IDBDatabase | null = null
-
-  async init(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION)
-
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => {
-        this.db = request.result
-        resolve()
-      }
-
-      request.onupgradeneeded = (event) => {
-        const db = (event.target as IDBOpenDBRequest).result
-        if (!db.objectStoreNames.contains(STORE_NAME)) {
-          db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true })
-        }
-        if (!db.objectStoreNames.contains(STATE_STORE_NAME)) {
-          db.createObjectStore(STATE_STORE_NAME, { keyPath: 'id', autoIncrement: true })
-        }
-      }
+  constructor() {
+    super("timeline-history")
+    this.version(1).stores({
+      // Первичный ключ 'id' (автоинкремент) и индекс 'timestamp'
+      states: "++id, timestamp",
     })
+    // MapToClass не нужен, структура соответствует объекту
   }
 
-  private async ensureStoreExists(storeName: string): Promise<void> {
-    if (!this.db) await this.init()
-    
-    return new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, DB_VERSION)
-      
-      request.onerror = () => reject(request.error)
-      request.onsuccess = () => {
-        const db = request.result
-        if (!db.objectStoreNames.contains(storeName)) {
-          // Закрываем текущее соединение
-          db.close()
-          
-          // Открываем новое соединение с увеличенной версией
-          const upgradeRequest = indexedDB.open(DB_NAME, DB_VERSION + 1)
-          
-          upgradeRequest.onerror = () => reject(upgradeRequest.error)
-          upgradeRequest.onupgradeneeded = (event) => {
-            const upgradeDB = (event.target as IDBOpenDBRequest).result
-            upgradeDB.createObjectStore(storeName, { keyPath: 'id', autoIncrement: true })
-          }
-          upgradeRequest.onsuccess = () => {
-            this.db = upgradeRequest.result
-            resolve()
-          }
-        } else {
-          resolve()
-        }
-      }
-    })
+  // При сохранении принимаем УЖЕ ОЧИЩЕННЫЙ StorableStateContext
+  async saveState(state: StorableStateContext): Promise<number> {
+    const snapshot = {
+      // id будет добавлен Dexie автоматически
+      state, // Сохраняем StorableStateContext
+      timestamp: Date.now(),
+    }
+    // put возвращает первичный ключ добавленного/обновленного объекта
+    return this.states.put(snapshot)
   }
 
-  async addAction(action: Omit<Action, 'id'>): Promise<number> {
-    if (!this.db) await this.init()
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(STORE_NAME, 'readwrite')
-      const store = transaction.objectStore(STORE_NAME)
-      const request = store.add(action)
-
-      request.onsuccess = () => resolve(request.result as number)
-      request.onerror = () => reject(request.error)
-    })
+  // При получении возвращаем объект со StorableStateContext
+  async getLatestState(): Promise<{
+    id: number
+    timestamp: number
+    state: StorableStateContext
+  } | null> {
+    const latestSnapshot = await this.states.orderBy("timestamp").last()
+    // Явно типизируем возвращаемое значение, Dexie может вернуть id
+    return latestSnapshot
+      ? ({ ...latestSnapshot, id: latestSnapshot.id! } as {
+          id: number
+          timestamp: number
+          state: StorableStateContext
+        })
+      : null
   }
 
-  async getActions(limit: number = 100): Promise<Action[]> {
-    if (!this.db) await this.init()
+  // Возвращаем массив объектов со StorableStateContext
+  async getAllStatesSorted(): Promise<
+    { id: number; timestamp: number; state: StorableStateContext }[]
+    > {
+    const snapshots = await this.states.orderBy("timestamp").toArray()
+    // Убеждаемся, что id не undefined
+    return snapshots.filter((s) => s.id !== undefined).map((s) => ({ ...s, id: s.id! })) as {
+      id: number
+      timestamp: number
+      state: StorableStateContext
+    }[]
+  }
 
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(STORE_NAME, 'readonly')
-      const store = transaction.objectStore(STORE_NAME)
-      const request = store.getAll()
+  // Возвращаем конкретный объект со StorableStateContext или undefined
+  async getStateById(
+    id: number,
+  ): Promise<{ id: number; timestamp: number; state: StorableStateContext } | undefined> {
+    const snapshot = await this.states.get(id)
+    return snapshot
+      ? ({ ...snapshot, id: snapshot.id! } as {
+          id: number
+          timestamp: number
+          state: StorableStateContext
+        })
+      : undefined
+  }
 
-      request.onsuccess = () => {
-        const actions = request.result as Action[]
-        // Сортируем по времени и берем последние limit действий
-        const sortedActions = actions
-          .sort((a, b) => b.timestamp - a.timestamp)
-          .slice(0, limit)
-        resolve(sortedActions)
-      }
-      request.onerror = () => reject(request.error)
-    })
+  // Удаляем состояния новее указанного ID
+  async deleteStatesAfterId(id: number): Promise<void> {
+    // Получаем все первичные ключи состояний с ID > id
+    const keysToDelete = await this.states.where("id").above(id).primaryKeys()
+    if (keysToDelete.length > 0) {
+      console.log("HistoryDB: Deleting states after ID:", keysToDelete)
+      await this.states.bulkDelete(keysToDelete)
+    }
+  }
+
+  // НОВЫЙ МЕТОД: Удаление конкретного состояния по ID
+  async deleteState(id: number): Promise<void> {
+    console.log("HistoryDB: Deleting state with ID:", id)
+    await this.states.delete(id)
   }
 
   async clearHistory(): Promise<void> {
-    if (!this.db) await this.init()
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(STORE_NAME, 'readwrite')
-      const store = transaction.objectStore(STORE_NAME)
-      const request = store.clear()
-
-      request.onsuccess = () => resolve()
-      request.onerror = () => reject(request.error)
-    })
-  }
-
-  async deleteActions(ids: number[]): Promise<void> {
-    if (!this.db) await this.init()
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(STORE_NAME, 'readwrite')
-      const store = transaction.objectStore(STORE_NAME)
-
-      const requests = ids.map(id => store.delete(id))
-      Promise.all(requests.map(req => 
-        new Promise((res, rej) => {
-          req.onsuccess = () => res(undefined)
-          req.onerror = () => rej(req.error)
-        })
-      ))
-        .then(() => resolve())
-        .catch(reject)
-    })
-  }
-
-  async saveState(state: any): Promise<number> {
-    await this.ensureStoreExists(STATE_STORE_NAME)
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(STATE_STORE_NAME, 'readwrite')
-      const store = transaction.objectStore(STATE_STORE_NAME)
-      const request = store.add({
-        state,
-        timestamp: Date.now()
-      })
-
-      request.onsuccess = () => resolve(request.result as number)
-      request.onerror = () => reject(request.error)
-    })
-  }
-
-  async getLatestState(): Promise<any> {
-    await this.ensureStoreExists(STATE_STORE_NAME)
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(STATE_STORE_NAME, 'readonly')
-      const store = transaction.objectStore(STATE_STORE_NAME)
-      const request = store.getAll()
-
-      request.onsuccess = () => {
-        const states = request.result as StateSnapshot[]
-        if (states.length === 0) {
-          resolve(null)
-          return
-        }
-        // Берем последнее состояние
-        const latestState = states.sort((a, b) => b.timestamp - a.timestamp)[0]
-        resolve(latestState.state)
-      }
-      request.onerror = () => reject(request.error)
-    })
-  }
-
-  async clearState(): Promise<void> {
-    await this.ensureStoreExists(STATE_STORE_NAME)
-
-    return new Promise((resolve, reject) => {
-      const transaction = this.db!.transaction(STATE_STORE_NAME, 'readwrite')
-      const store = transaction.objectStore(STATE_STORE_NAME)
-      const request = store.clear()
-
-      request.onsuccess = () => resolve()
-      request.onerror = () => reject(request.error)
-    })
+    console.log("HistoryDB: Clearing all history states.")
+    return this.states.clear()
   }
 }
 
-export const historyDB = new IndexedDBHistory() 
+export const historyDB = new HistoryDatabase()

@@ -1,6 +1,7 @@
 import { useSelector } from "@xstate/store/react"
 import { useCallback } from "react"
 
+import { StateContext } from "@/lib/state-types"
 import { rootStore } from "@/stores/root-store"
 import type { MediaFile, ScreenLayout, Track } from "@/types/videos"
 
@@ -11,6 +12,8 @@ import type { MediaFile, ScreenLayout, Track } from "@/types/videos"
  */
 export function useRootStore() {
   const { send } = rootStore
+  const context = useSelector(rootStore, (state) => state.context)
+
   const {
     media,
     isLoading,
@@ -33,15 +36,17 @@ export function useRootStore() {
     volume,
     trackVolumes,
     isSeeking,
-    actionHistory,
-    currentActionIndex,
-  } = useSelector(rootStore, (state) => state.context)
+    historySnapshotIds,
+    currentHistoryIndex,
+    layoutMode,
+    panelLayouts,
+    isDirty,
+    isRecordingSchema,
+  } = context
 
-  // Действия
   const setActiveTrack = useCallback(
     (trackId: string) => {
       send({ type: "setActiveTrack", trackId })
-      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -49,7 +54,6 @@ export function useRootStore() {
   const setActiveVideo = useCallback(
     (videoId: string) => {
       send({ type: "setActiveVideo", videoId })
-      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -57,15 +61,13 @@ export function useRootStore() {
   const setIsPlaying = useCallback(
     (isPlaying: boolean) => {
       send({ type: "setIsPlaying", isPlaying })
-      send({ type: "markAsUnsaved" })
     },
     [send],
   )
 
   const setCurrentTime = useCallback(
-    (time: number) => {
-      send({ type: "setCurrentTime", time })
-      send({ type: "markAsUnsaved" })
+    (time: number, source?: "playback" | "user") => {
+      send({ type: "setCurrentTime", time, source })
     },
     [send],
   )
@@ -73,19 +75,13 @@ export function useRootStore() {
   const setScale = useCallback(
     (scale: number) => {
       send({ type: "setScale", scale })
-      send({ type: "markAsUnsaved" })
     },
     [send],
   )
 
-  const fetchVideos = useCallback(() => {
-    send({ type: "fetchVideos" })
-  }, [send])
-
   const setTracks = useCallback(
     (tracks: Track[]) => {
       send({ type: "setTracks", tracks })
-      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -93,7 +89,6 @@ export function useRootStore() {
   const setScreenLayout = useCallback(
     (layout: ScreenLayout) => {
       send({ type: "setScreenLayout", layout })
-      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -101,7 +96,6 @@ export function useRootStore() {
   const addToMetadataCache = useCallback(
     (key: string, data: any) => {
       send({ type: "addToMetadataCache", key, data })
-      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -109,7 +103,6 @@ export function useRootStore() {
   const addToThumbnailCache = useCallback(
     (key: string, data: string) => {
       send({ type: "addToThumbnailCache", key, data })
-      send({ type: "markAsUnsaved" })
     },
     [send],
   )
@@ -117,26 +110,21 @@ export function useRootStore() {
   const addNewTracks = useCallback(
     (media: MediaFile[]) => {
       send({ type: "addNewTracks", media })
-      send({ type: "markAsUnsaved" })
     },
     [send],
   )
 
   const addToAddedFiles = useCallback(
-    (fileIds: string[]) => {
-      send({ type: "addToAddedFiles", fileIds })
-      send({ type: "markAsUnsaved" })
+    (filePaths: string[]) => {
+      send({ type: "addToAddedFiles", filePaths })
     },
     [send],
   )
 
-  // Функция для переключения воспроизведения
   const play = useCallback(() => {
     send({ type: "setIsPlaying", isPlaying: !isPlaying })
-    send({ type: "markAsUnsaved" })
   }, [send, isPlaying])
 
-  // Функции для работы с временем
   const timeToPercent = useCallback(
     (time: number) => {
       const track = tracks.find((t) => t.id === activeTrackId)
@@ -153,21 +141,8 @@ export function useRootStore() {
     [tracks, activeTrackId],
   )
 
-  const saveState = useCallback(() => {
-    send({ type: "saveState" })
-    send({ type: "markAsSaved" })
-  }, [send])
-
-  const loadState = useCallback(() => {
-    send({ type: "loadState" })
-  }, [send])
-
-  const markAsUnsaved = useCallback(() => {
-    send({ type: "markAsUnsaved" })
-  }, [send])
-
-  const markAsSaved = useCallback(() => {
-    send({ type: "markAsSaved" })
+  const initializeHistory = useCallback(() => {
+    send({ type: "initializeHistory" })
   }, [send])
 
   const setVolume = useCallback(
@@ -191,21 +166,60 @@ export function useRootStore() {
     [send],
   )
 
+  const fetchVideos = useCallback(() => {
+    send({ type: "fetchVideos" })
+  }, [send])
+
+  const startRecordingSchema = useCallback(
+    (trackId: string, startTime: number) => {
+      send({ type: "startRecordingSchema", trackId, startTime })
+    },
+    [send],
+  )
+
+  const stopRecordingSchema = useCallback(() => {
+    send({ type: "stopRecordingSchema" })
+  }, [send])
+
   const undo = useCallback(() => {
     send({ type: "undo" })
-    send({ type: "markAsUnsaved" })
   }, [send])
 
   const redo = useCallback(() => {
     send({ type: "redo" })
-    send({ type: "markAsUnsaved" })
   }, [send])
 
-  const canUndo = currentActionIndex >= 0
-  const canRedo = currentActionIndex < actionHistory.length - 1
+  const canUndo = currentHistoryIndex > 0
+  const canRedo = currentHistoryIndex < historySnapshotIds.length - 1
+
+  const setLayoutMode = useCallback(
+    (mode: string) => {
+      send({ type: "setLayoutMode", mode })
+    },
+    [send],
+  )
+
+  const setPanelLayout = useCallback(
+    (id: string, sizes: number[]) => {
+      send({ type: "setPanelLayout", id, sizes })
+    },
+    [send],
+  )
+
+  const clearHistory = useCallback(() => {
+    send({ type: "clearHistory" })
+  }, [send])
+
+  const saveState = useCallback(() => {
+    send({ type: "saveState" })
+  }, [send])
+
+  const markAsSaved = useCallback(() => {
+    send({ type: "markAsSaved" })
+  }, [send])
 
   return {
-    // Состояние
+    context,
     media,
     isLoading,
     hasMedia,
@@ -218,19 +232,28 @@ export function useRootStore() {
     activeTrackId,
     currentLayout,
     addedFiles,
-    isSaved,
     scale,
     volume,
     trackVolumes,
     isSeeking,
+    layoutMode,
+    panelLayouts,
+    isDirty,
+    historySnapshotIds,
+    currentHistoryIndex,
+    isRecordingSchema,
+    canUndo,
+    canRedo,
 
-    // Действия
+    initializeHistory,
+    fetchVideos,
+    startRecordingSchema,
+    stopRecordingSchema,
     setActiveTrack,
     setActiveVideo,
     setIsPlaying,
     setCurrentTime,
     setScale,
-    fetchVideos,
     setTracks,
     setScreenLayout,
     addToMetadataCache,
@@ -244,16 +267,16 @@ export function useRootStore() {
     isChangingCamera,
     metadataCache,
     thumbnailCache,
-    saveState,
-    loadState,
-    markAsUnsaved,
-    markAsSaved,
     setVolume,
     setTrackVolume,
     setIsSeeking,
     undo,
     redo,
-    canUndo,
-    canRedo,
+    setLayoutMode,
+    setPanelLayout,
+    clearHistory,
+    saveState,
+    markAsSaved,
+    isSaved,
   }
 }
