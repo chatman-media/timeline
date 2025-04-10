@@ -186,53 +186,164 @@ const VideoTrack = memo(function VideoTrack({
                                   lineHeight: "13px",
                                 }}
                               >
-                                <span className="bg-[#033032]">
+                                <span className="dark:bg-[#033032] px-1 rounded mr-1 text-xs whitespace-nowrap">
                                   {video.probeData?.streams[0]?.codec_name?.startsWith("a")
                                     ? "Аудио"
                                     : "Видео"}
                                   {" "}{track.index}
                                 </span>
-                                <span className="bg-[#033032]">{video.name}</span>
-                                <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">
-                                  {video.probeData?.streams[0]?.codec_name?.startsWith("v") ? (
-                                    <div className="flex flex-row video-metadata truncate text-xs text-white">
-                                      <span>
-                                        {video.probeData?.streams[0]?.codec_name?.toUpperCase()}
-                                      </span>
-                                      <span>
-                                        {video.probeData?.streams[0]?.width}×
-                                        {video.probeData?.streams[0]?.height}
-                                      </span>
-                                      <span>
-                                        {video.probeData?.streams[0]?.display_aspect_ratio}
-                                      </span>
-                                      <span>
-                                        {video.probeData?.streams[0]?.r_frame_rate?.split("/")[0]}{" "}
-                                        fps
-                                      </span>
-                                      <span>
-                                        {video.duration !== undefined
-                                          ? formatDuration(video.duration, 3)
-                                          : ""}
-                                      </span>
+                                <span className="bg-[#033032] px-1 rounded mr-1 whitespace-nowrap truncate max-w-[120px]">{video.name}</span>
+                                <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white overflow-hidden">
+                                  {video.probeData?.streams?.[0]?.codec_type === "video" ? (
+                                    <div className="flex flex-row video-metadata truncate text-xs text-white px-1 rounded">
+                                      {video.probeData?.streams[0]?.codec_name && (
+                                        <span className="mr-1 font-medium">
+                                          {video.probeData.streams[0].codec_name.toUpperCase()}
+                                        </span>
+                                      )}
+                                      {(() => {
+                                        const stream = video.probeData?.streams[0];
+                                        if (stream?.width && stream?.height) {
+                                          // Проверяем, что это действительно числа
+                                          const width = Number(stream.width);
+                                          const height = Number(stream.height);
+                                          
+                                          if (!isNaN(width) && !isNaN(height) && width > 0 && height > 0) {
+                                            return (
+                                              <span className="mr-1">
+                                                {width}×{height}
+                                              </span>
+                                            );
+                                          }
+                                        }
+                                        return null;
+                                      })()}
+                                      {(video.probeData?.streams[0]?.display_aspect_ratio || 
+                                       (video.probeData?.streams[0]?.width && video.probeData?.streams[0]?.height)) && (
+                                        <span className="mr-1">
+                                          {(() => {
+                                            // Форматируем соотношение сторон в более понятную форму
+                                            let aspectRatio = video.probeData.streams[0].display_aspect_ratio;
+                                            
+                                            // Если соотношение не указано, но есть ширина и высота - рассчитываем
+                                            if (!aspectRatio && video.probeData.streams[0].width && video.probeData.streams[0].height) {
+                                              const width = video.probeData.streams[0].width;
+                                              const height = video.probeData.streams[0].height;
+                                              
+                                              // Находим НОД для сокращения дроби
+                                              const gcd = (a: number, b: number): number => {
+                                                return b === 0 ? a : gcd(b, a % b);
+                                              };
+                                              
+                                              const divisor = gcd(width, height);
+                                              const simplifiedWidth = width / divisor;
+                                              const simplifiedHeight = height / divisor;
+                                              
+                                              // Если после сокращения получаются слишком большие числа,
+                                              // используем приблизительные стандартные соотношения
+                                              if (simplifiedWidth <= 50 && simplifiedHeight <= 50) {
+                                                aspectRatio = `${simplifiedWidth}:${simplifiedHeight}`;
+                                              } else {
+                                                // Находим приблизительное соотношение
+                                                const ratio = width / height;
+                                                
+                                                if (Math.abs(ratio - 16/9) < 0.1) return '16:9';
+                                                if (Math.abs(ratio - 4/3) < 0.1) return '4:3';
+                                                if (Math.abs(ratio - 21/9) < 0.1) return '21:9';
+                                                if (Math.abs(ratio - 1) < 0.1) return '1:1';
+                                                
+                                                // Если не подходит под стандартные, округляем до 2 знаков
+                                                return `${ratio.toFixed(2)}:1`;
+                                              }
+                                            }
+                                            
+                                            // Если N/A или неизвестное значение, пропускаем
+                                            if (!aspectRatio || aspectRatio === 'N/A') {
+                                              return '';
+                                            }
+                                            
+                                            // Далее прежняя логика обработки
+                                            if (aspectRatio.includes(':')) {
+                                              // Переворачиваем соотношение, если оно вертикальное
+                                              if (aspectRatio.startsWith('9:16')) {
+                                                return '16:9';
+                                              }
+                                              return aspectRatio;
+                                            }
+                                            
+                                            // Если это десятичное число, преобразуем в соотношение
+                                            if (!isNaN(parseFloat(aspectRatio))) {
+                                              const ratio = parseFloat(aspectRatio);
+                                              // Проверяем стандартные соотношения
+                                              if (Math.abs(ratio - 1.78) < 0.1) return '16:9';
+                                              if (Math.abs(ratio - 1.33) < 0.1) return '4:3';
+                                              if (Math.abs(ratio - 2.35) < 0.1) return '21:9';
+                                            }
+                                            
+                                            return aspectRatio;
+                                          })()}
+                                        </span>
+                                      )}
+                                      {video.probeData?.streams[0]?.r_frame_rate && (
+                                        <span className="mr-1">
+                                          {(() => {
+                                            // Правильно обрабатываем значение fps из r_frame_rate
+                                            const fpsRaw = video.probeData.streams[0].r_frame_rate;
+                                            if (fpsRaw.includes('/')) {
+                                              const [numerator, denominator] = fpsRaw.split('/').map(Number);
+                                              if (denominator && numerator) {
+                                                // Округляем до 2 знаков после запятой
+                                                const fps = Math.round((numerator / denominator) * 100) / 100;
+                                                return `${fps} fps`;
+                                              }
+                                            }
+                                            // Если формат не распознан, просто показываем как есть
+                                            return `${fpsRaw} fps`;
+                                          })()}
+                                        </span>
+                                      )}
+                                      {video.duration !== undefined && (
+                                        <span>
+                                          {video.duration > 0 ? formatDuration(video.duration, 3) : ''}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ) : video.probeData?.streams?.[0]?.codec_type === "audio" ? (
+                                    <div className="flex flex-row video-metadata truncate text-xs text-white bg-[#033032] px-1">
+                                      {video.probeData?.streams[0]?.codec_name && (
+                                        <span className="mr-1 font-medium">
+                                          {video.probeData.streams[0].codec_name}
+                                        </span>
+                                      )}
+                                      {video.probeData?.streams[0]?.channels && (
+                                        <span className="mr-1">
+                                          каналов: {video.probeData.streams[0].channels}
+                                        </span>
+                                      )}
+                                      {video.probeData?.streams[0]?.sample_rate && (
+                                        <span className="mr-1">
+                                          {Math.round(Number(video.probeData.streams[0].sample_rate) / 1000)}kHz
+                                        </span>
+                                      )}
+                                      {video.probeData?.streams[0]?.bit_rate && (
+                                        <span className="mr-1">
+                                          {formatBitrate(Number(video.probeData.streams[0].bit_rate))}
+                                        </span>
+                                      )}
+                                      {video.duration !== undefined && (
+                                        <span>
+                                          {video.duration > 0 ? formatDuration(video.duration, 3) : ''}
+                                        </span>
+                                      )}
                                     </div>
                                   ) : (
-                                    <div className="flex flex-row video-metadata truncate text-xs text-white">
-                                      <span>{video.probeData?.streams[0]?.codec_name}</span>
-                                      <span>каналов: {video.probeData?.streams[0]?.channels}</span>
-                                      <span>
-                                        {video.probeData?.streams[0]?.sample_rate &&
-                                          `${Math.round(Number(video.probeData.streams[0].sample_rate) / 1000)}kHz`}
-                                      </span>
-                                      <span>
-                                        {video.probeData?.streams[0]?.bit_rate &&
-                                          `${formatBitrate(Number(video.probeData.streams[0].bit_rate))}`}
-                                      </span>
-                                      <span>
-                                        {video.duration !== undefined
-                                          ? formatDuration(video.duration, 3)
-                                          : ""}
-                                      </span>
+                                    <div className="flex flex-row video-metadata truncate text-xs text-white bg-[#033032] px-1 rounded">
+                                      <span>Нет данных</span>
+                                      {video.duration !== undefined && (
+                                        <span className="ml-1">
+                                          {video.duration > 0 ? formatDuration(video.duration, 3) : ''}
+                                        </span>
+                                      )}
                                     </div>
                                   )}
                                 </div>
