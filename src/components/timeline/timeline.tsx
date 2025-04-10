@@ -1,9 +1,17 @@
-import { Redo2, Scissors, Split, Trash2, Undo2 } from "lucide-react"
+import { Redo2, Scissors, Trash2, Undo2, X } from "lucide-react"
 import React, { useMemo, useState } from "react"
 
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { useRootStore } from "@/hooks/use-root-store"
 import { rootStore } from "@/stores/root-store"
-import { TimeRange } from "@/types/time-range"
 import { MediaFile, Track } from "@/types/videos"
 
 import { TimelineBar } from "./timeline/timeline-bar"
@@ -11,55 +19,39 @@ import { TimelineControls } from "./timeline/timeline-controls"
 import { TimelineScale } from "./timeline/timeline-scale"
 import { VideoTrack } from "./track/video-track"
 
-// Добавим функцию для форматирования даты из ISO строки в удобный вид
-function formatCreationDate(isoDateString: string): string {
-  try {
-    const date = new Date(isoDateString);
-    if (isNaN(date.getTime())) return "Неверный формат даты";
-    
-    // Форматируем дату как "31 марта 25 г." (как на скриншоте)
-    const day = date.getDate();
-    
-    // Месяцы на русском
-    const months = [
-      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
-    ];
-    const month = months[date.getMonth()];
-    
-    // Год (последние 2 цифры)
-    const year = date.getFullYear().toString().slice(-2);
-    
-    return `${day} ${month} ${year} г.`;
-  } catch (e) {
-    console.error("Error formatting date:", e);
-    return "Ошибка форматирования даты";
-  }
-}
-
 // Добавляю функцию для форматирования даты секции
 function formatSectionDate(dateString: string): string {
   try {
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "Неверный формат даты";
-    
+    const date = new Date(dateString)
+    if (isNaN(date.getTime())) return "Неверный формат даты"
+
     // Форматируем дату как "31 марта 25 г." (как на скриншоте)
-    const day = date.getDate();
-    
+    const day = date.getDate()
+
     // Месяцы на русском
     const months = [
-      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'
-    ];
-    const month = months[date.getMonth()];
-    
+      "января",
+      "февраля",
+      "марта",
+      "апреля",
+      "мая",
+      "июня",
+      "июля",
+      "августа",
+      "сентября",
+      "октября",
+      "ноября",
+      "декабря",
+    ]
+    const month = months[date.getMonth()]
+
     // Год (последние 2 цифры)
-    const year = date.getFullYear().toString().slice(-2);
-    
-    return `${day} ${month} ${year} г.`;
+    const year = date.getFullYear().toString().slice(-2)
+
+    return `${day} ${month} ${year} г.`
   } catch (e) {
-    console.error("Error formatting section date:", e);
-    return "Ошибка форматирования даты";
+    console.error("Error formatting section date:", e)
+    return "Ошибка форматирования даты"
   }
 }
 
@@ -85,6 +77,8 @@ export function Timeline() {
     currentLayout,
   } = useRootStore()
   const [activeDate, setActiveDate] = useState<string | null>(null)
+  const [deletingSectionDate, setDeletingSectionDate] = useState<string | null>(null)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   // Обработчик нажатия клавиш
   React.useEffect(() => {
@@ -251,6 +245,98 @@ export function Timeline() {
     }
   }, [activeVideo])
 
+  // Функция для удаления секции
+  const handleDeleteSection = (sectionDate: string) => {
+    setDeletingSectionDate(sectionDate)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteSection = () => {
+    if (!deletingSectionDate) return
+
+    // Проверим, удаляем ли мы активную секцию
+    const isDeletingActiveSection = deletingSectionDate === activeDate
+    const wasActiveTrackInDeletedSection = tracks.find(
+      (track) =>
+        track.id === activeTrackId &&
+        track.videos.some((video) => {
+          const videoStart = video.startTime || 0
+          return new Date(videoStart * 1000).toDateString() === deletingSectionDate
+        }),
+    )
+
+    // Обновляем треки, удаляя видео с указанной датой
+    const updatedTracks = tracks
+      .map((track) => {
+        // Фильтруем видео, оставляя только те, которые не относятся к удаляемой дате
+        const filteredVideos = track.videos.filter((video) => {
+          const videoStart = video.startTime || 0
+          return new Date(videoStart * 1000).toDateString() !== deletingSectionDate
+        })
+
+        return {
+          ...track,
+          videos: filteredVideos,
+        }
+      })
+      .filter((track) => track.videos.length > 0) // Удаляем треки, у которых не осталось видео
+
+    // Обновляем треки в хранилище
+    setTracks(updatedTracks)
+
+    // Обрабатываем переключение на другую секцию, если удалили активную
+    if (isDeletingActiveSection || wasActiveTrackInDeletedSection) {
+      const remainingSections = sections.filter((s) => s.date !== deletingSectionDate)
+
+      if (remainingSections.length > 0) {
+        // Находим "соседнюю" секцию для переключения
+        let nextActiveSection
+        const deletedSectionIndex = sections.findIndex((s) => s.date === deletingSectionDate)
+
+        // Пробуем взять следующую секцию, если нет - берем предыдущую
+        if (deletedSectionIndex < sections.length - 1) {
+          nextActiveSection = sections[deletedSectionIndex + 1]
+        } else if (deletedSectionIndex > 0) {
+          nextActiveSection = sections[deletedSectionIndex - 1]
+        } else {
+          nextActiveSection = remainingSections[0]
+        }
+
+        if (nextActiveSection) {
+          setActiveDate(nextActiveSection.date)
+
+          // Находим первый доступный трек в этой секции
+          const nextSectionTracks = updatedTracks.filter((track) =>
+            track.videos.some((video) => {
+              const videoStart = video.startTime || 0
+              return new Date(videoStart * 1000).toDateString() === nextActiveSection.date
+            }),
+          )
+
+          if (nextSectionTracks.length > 0) {
+            setActiveTrack(nextSectionTracks[0].id)
+
+            // Если есть первое видео, устанавливаем его как активное
+            if (nextSectionTracks[0].videos.length > 0) {
+              setActiveVideo(nextSectionTracks[0].videos[0].id)
+              // Обновляем текущее время на начало видео
+              const startTime = nextSectionTracks[0].videos[0].startTime || 0
+              updateTime(startTime, "user")
+            }
+          }
+        }
+      } else {
+        // Если секций не осталось, сбрасываем активную дату и трек
+        setActiveDate(null)
+        setActiveTrack("")
+      }
+    }
+
+    // Закрываем диалог
+    setDeleteDialogOpen(false)
+    setDeletingSectionDate(null)
+  }
+
   return (
     <div className="relative w-full h-[calc(50vh-4px)] min-h-[calc(50vh-4px)] overflow-x-auto overflow-y-auto bg-muted/50 dark:bg-[#1a1a1a]">
       <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
@@ -298,11 +384,18 @@ export function Timeline() {
         {[...sections].reverse().map((section) => (
           <div
             key={section.date}
-            className={`relative mb-4 ${section.date === activeDate ? "" : "opacity-50"}`}
+            className={`relative mb-4 ${section.date === activeDate ? "" : "opacity-50"} timeline-section`}
           >
             <div className="relative">
-              <div className="w-full text-center text-xs text-[#8E8E8E] mb-1">
-                {formatSectionDate(section.date)}
+              <div className="w-full text-left text-xs mb-1 ml-2 flex items-center justify-between">
+                <div>{formatSectionDate(section.date)}</div>
+                <button
+                  onClick={() => handleDeleteSection(section.date)}
+                  className="mr-2 text-gray-400 hover:text-red-500 transition-colors"
+                  title="Удалить секцию"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
               <TimelineScale
                 startTime={section.startTime}
@@ -323,7 +416,7 @@ export function Timeline() {
                     <VideoTrack
                       track={{
                         ...track,
-                        index: Number(track.index)
+                        index: Number(track.index),
                       }}
                       index={index}
                       sectionStartTime={section.startTime}
@@ -332,15 +425,39 @@ export function Timeline() {
                   </div>
                 ))}
               </div>
-              <TimelineBar
-                startTime={section.startTime}
-                endTime={section.endTime}
-                height={section.tracks.length * 85 + 46}
-              />
+              <div style={{ position: "relative", zIndex: 10 }}>
+                <TimelineBar
+                  startTime={section.startTime}
+                  endTime={section.endTime}
+                  height={section.tracks.length * 85 + 46}
+                />
+              </div>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Модальное окно подтверждения удаления секции */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Удаление секции</DialogTitle>
+            <DialogDescription>
+              Вы уверены, что хотите удалить секцию{" "}
+              {deletingSectionDate ? formatSectionDate(deletingSectionDate) : ""}? Это действие
+              нельзя отменить.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+              Отмена
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteSection}>
+              Удалить
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

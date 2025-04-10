@@ -6,11 +6,7 @@ import { useVideoPlayer } from "@/hooks/use-video-player"
 import { formatDuration, formatFileSize } from "@/lib/utils"
 import { rootStore } from "@/stores/root-store"
 import { FileGroup, MediaFile } from "@/types/videos"
-import {
-  getFileType,
-  groupFilesByDate,
-  prepareFileGroups,
-} from "@/utils/media-utils"
+import { getFileType, groupFilesByDate, prepareFileGroups } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from ".."
@@ -283,7 +279,7 @@ export const MediaFileList = memo(function MediaFileList({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="space-y-1 p-3">
+      <div className="space-y-1 p-3 pr-1 pl-1">
         <div className="flex items-center justify-between mb-4">
           <div className="relative w-[50%]">
             <input
@@ -298,89 +294,9 @@ export const MediaFileList = memo(function MediaFileList({
         </div>
 
         {viewMode === "list" ? (
-          <table className="w-full border-collapse">
-            <thead className="bg-gray-50 dark:bg-gray-800 sticky top-0">
-              <tr>
-                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                  Название
-                </th>
-                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                  Начало
-                </th>
-                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                  Длительность
-                </th>
-                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                  Разрешение
-                </th>
-                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                  Кодек
-                </th>
-                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                  Битрейт
-                </th>
-                <th className="px-4 py-1 text-left text-xs font-medium text-gray-500 uppercase">
-                  Размер
-                </th>
-                <th className="px-4 py-1"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedMedia.map((file) => {
-                const fileId = getFileId(file)
-                const isAdded = Boolean(file.path && addedFiles.has(file.path))
-                const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
-                const startTime = file.startTime
-                  ? new Date(file.startTime * 1000).toLocaleString("ru-RU", {
-                    day: "2-digit",
-                    month: "2-digit",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                  })
-                  : "-"
-                const duration = file.probeData?.format.duration
-                  ? formatDuration(file.probeData.format.duration)
-                  : "-"
-                const resolution = videoStream ? `${videoStream.width}x${videoStream.height}` : "-"
-                const codec = videoStream?.codec_name?.toUpperCase() || "-"
-                const bitrate = file.probeData?.format.bit_rate
-                  ? `${Math.round(file.probeData.format.bit_rate / 1000)} Kbps`
-                  : "-"
-                const fileSize = formatFileSize(file.probeData?.format.size || 0)
-
-                return (
-                  <tr
-                    key={fileId}
-                    className={`border-b dark:border-gray-700 ${
-                      isAdded
-                        ? "opacity-50 pointer-events-none"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                    }`}
-                  >
-                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{file.name}</td>
-                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{startTime}</td>
-                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{duration}</td>
-                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{resolution}</td>
-                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{codec}</td>
-                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{bitrate}</td>
-                    <td className="px-3 py-0 text-[12px] whitespace-nowrap">{fileSize}</td>
-                    <td className="px-3 py-0">
-                      <button
-                        onClick={(e) => handleAddMedia(e, file)}
-                        className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-                      >
-                        +
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+          <></>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {sortedMedia.map((file) => {
               const fileId = getFileId(file)
               const duration = file.probeData?.format.duration || 1
@@ -390,12 +306,8 @@ export const MediaFileList = memo(function MediaFileList({
               return (
                 <div
                   key={fileId}
-                  className={`flex items-center gap-3 p-0 pr-2 rounded-md group w-full overflow-hidden
-                    ${
-                isAdded
-                  ? "opacity-50 pointer-events-none"
-                  : "hover:bg-gray-100 dark:hover:bg-gray-800"
-                }`}
+                  className={`flex items-center gap-3 p-0 pb-0 pr-2 pl-3 rounded-md group w-full overflow-hidden
+                    ${isAdded ? "opacity-50 pointer-events-none" : ""}`}
                   style={{ maxWidth: "100%" }}
                 >
                   <div className="relative flex-shrink-0 flex gap-1">

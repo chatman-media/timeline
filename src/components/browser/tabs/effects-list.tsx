@@ -21,15 +21,15 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
       videoElement.style.filter = ""
 
       switch (effectType) {
-      case "blur":
-        videoElement.style.filter = "blur(5px)"
-        break
-      case "brightness":
-        videoElement.style.filter = "brightness(1.5)"
-        break
-      case "speed":
-        videoElement.playbackRate = 2
-        break
+        case "blur":
+          videoElement.style.filter = "blur(5px)"
+          break
+        case "brightness":
+          videoElement.style.filter = "brightness(1.5)"
+          break
+        case "speed":
+          videoElement.playbackRate = 2
+          break
       }
 
       videoElement.play()
@@ -89,7 +89,7 @@ export function EffectsList() {
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="space-y-1 p-3">
+      <div className="space-y-1 p-3 pr-1 pl-1">
         <div className="flex items-center justify-between mb-4">
           <div className="relative w-[50%]">
             <input

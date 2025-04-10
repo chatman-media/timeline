@@ -118,6 +118,29 @@ export function cleanEditorStateForStorage(state: EditorState): StorableEditorSt
   delete cleanState.metadataCache
   delete cleanState.thumbnailCache
 
+  // Проверяем и очищаем массив media от DOM-элементов и циклических ссылок
+  if (cleanState.media && Array.isArray(cleanState.media)) {
+    cleanState.media = cleanState.media.map((file) => {
+      // Создаем безопасную копию файла без DOM элементов
+      const cleanFile = { ...file } as any
+
+      // Удаляем поля, которые могут содержать DOM элементы
+      if ("htmlElement" in cleanFile) delete cleanFile.htmlElement
+      if ("videoElement" in cleanFile) delete cleanFile.videoElement
+      if ("audioElement" in cleanFile) delete cleanFile.audioElement
+      if ("waveformElement" in cleanFile) delete cleanFile.waveformElement
+
+      // Удаляем все свойства, которые начинаются с "__react"
+      Object.keys(cleanFile).forEach((key) => {
+        if (key.startsWith("__react") || key.startsWith("_react")) {
+          delete cleanFile[key]
+        }
+      })
+
+      return cleanFile
+    })
+  }
+
   // Формируем результат
   const result = {
     ...cleanState,
@@ -567,6 +590,9 @@ export async function forceSaveState(state: StateContext): Promise<void> {
     const db = await dbPromise
     console.log("[forceSaveState] Connected to DB, saving states")
 
+    // Получаем копию текущего состояния (сразу очищенную от проблемных полей)
+    const cleanedStateCopy = cleanStateForStorage(state)
+
     // Разделяем состояние на части
     const editorState = extractEditorState(state)
     const timelineState = extractTimelineState(state)
@@ -579,7 +605,21 @@ export async function forceSaveState(state: StateContext): Promise<void> {
     if (!lastSavedEditorState || !areEditorStatesEqual(editorState, lastSavedEditorState)) {
       console.log("[forceSaveState] Saving EditorState")
       await db.put("editorState", cleanedEditorState, "lastState")
-      lastSavedEditorState = JSON.parse(JSON.stringify(editorState))
+      try {
+        // Создаем безопасную копию для сравнения
+        lastSavedEditorState = {
+          ...cleanedEditorState,
+          addedFiles: new Set<string>(
+            Array.isArray(cleanedEditorState.addedFiles) ? cleanedEditorState.addedFiles : [],
+          ),
+          metadataCache: {},
+          thumbnailCache: {},
+          videoRefs: {},
+        } as EditorState
+      } catch (error) {
+        console.error("[forceSaveState] Cannot create EditorState reference:", error)
+        lastSavedEditorState = null
+      }
     } else {
       console.log("[forceSaveState] Skipping EditorState save - unchanged")
     }
@@ -596,14 +636,25 @@ export async function forceSaveState(state: StateContext): Promise<void> {
           "tracks",
         )
         await db.put("timelineState", cleanedTimelineState, "lastState")
-        lastSavedTimelineState = JSON.parse(JSON.stringify(timelineState))
+        try {
+          lastSavedTimelineState = {
+            ...cleanedTimelineState,
+            montageSchema: timelineState.montageSchema || [],
+            isRecordingSchema: false,
+            currentRecordingSegmentId: null,
+            isDirty: false,
+          } as TimelineState
+        } catch (error) {
+          console.error("[forceSaveState] Cannot create TimelineState reference:", error)
+          lastSavedTimelineState = null
+        }
       } else {
         console.log("[forceSaveState] Skipping TimelineState save - unchanged")
       }
     }
 
-    // Обновляем общее сохраненное состояние
-    lastSavedState = JSON.parse(JSON.stringify(state))
+    // Обновляем общее сохраненное состояние - используем очищенную копию
+    lastSavedState = cleanedStateCopy as unknown as StateContext
     lastSaveTimestamp = Date.now()
     console.log("[forceSaveState] States saved successfully")
   } catch (error) {
@@ -615,11 +666,17 @@ export async function forceSaveState(state: StateContext): Promise<void> {
  * Сравнивает два EditorState для определения необходимости сохранения
  */
 export function areEditorStatesEqual(state1: EditorState, state2: EditorState): boolean {
-  // Игнорируем videoRefs, metadataCache, thumbnailCache
-  const cleanState1 = cleanEditorStateForStorage(state1)
-  const cleanState2 = cleanEditorStateForStorage(state2)
+  try {
+    // Игнорируем videoRefs, metadataCache, thumbnailCache
+    const cleanState1 = cleanEditorStateForStorage(state1)
+    const cleanState2 = cleanEditorStateForStorage(state2)
 
-  return JSON.stringify(cleanState1) === JSON.stringify(cleanState2)
+    return JSON.stringify(cleanState1) === JSON.stringify(cleanState2)
+  } catch (error) {
+    console.error("[areEditorStatesEqual] Error comparing states:", error)
+    // Возвращаем false, чтобы сохранить состояние при ошибке сравнения
+    return false
+  }
 }
 
 /**

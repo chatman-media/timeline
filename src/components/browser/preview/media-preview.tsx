@@ -141,13 +141,13 @@ export const MediaPreview = memo(function MediaPreview({
       <>
         {file.probeData?.streams &&
           file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
-          <div
-            style={{ fontSize: "10px" }}
-            className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
-          >
-            {index + 1}
-          </div>
-        )}
+            <div
+              style={{ fontSize: "10px" }}
+              className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
+            >
+              {index + 1}
+            </div>
+          )}
         {file.probeData?.streams?.some((stream) => stream.codec_type === "audio") && (
           <div
             className={`absolute ${
@@ -245,13 +245,13 @@ export const MediaPreview = memo(function MediaPreview({
         {hoverTimes[fileId]?.[0] !== undefined &&
           hoverTimes[fileId]?.[0] !== null &&
           Number.isFinite(hoverTimes[fileId]?.[0]) && (
-          <PreviewTimeline time={hoverTimes[fileId][0]} duration={duration} />
-        )}
+            <PreviewTimeline time={hoverTimes[fileId][0]} duration={duration} />
+          )}
 
         {onAddMedia && (
           <div
-            className={`absolute right-[2px] bottom-[18px] bg-black/60 hover:bg-black/80 text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
-              isAdded ? "bg-[#4FD1C5]/90 hover:bg-[#4FD1C5]" : "bg-black/60 hover:bg-black/90"
+            className={`absolute right-[2px] bottom-[18px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
+              isAdded ? "bg-[#3ebfb2]" : "bg-black/60 hover:bg-black/90"
             }`}
             onClick={(e) => {
               e.stopPropagation()
@@ -260,7 +260,7 @@ export const MediaPreview = memo(function MediaPreview({
             title={isAdded ? "Добавлено" : "Добавить"}
           >
             {isAdded ? (
-              <Check className="w-4 h-4" strokeWidth={3} />
+              <Check className="w-3 h-3" strokeWidth={3} />
             ) : (
               <Plus className="w-3 h-3" strokeWidth={3} />
             )}
@@ -352,13 +352,13 @@ export const MediaPreview = memo(function MediaPreview({
               {hoverTimes[fileId]?.[index] !== undefined &&
                 hoverTimes[fileId]?.[index] !== null &&
                 Number.isFinite(hoverTimes[fileId]?.[index]) && (
-                <PreviewTimeline time={hoverTimes[fileId][index]} duration={duration} />
-              )}
+                  <PreviewTimeline time={hoverTimes[fileId][index]} duration={duration} />
+                )}
 
               {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
                 <div
-                  className={`absolute right-[2px] bottom-[18px] bg-black/60 hover:bg-black/80 text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
-                    isAdded ? "bg-[#4FD1C5]/90 hover:bg-[#4FD1C5]" : "bg-black/60 hover:bg-black/90"
+                  className={`absolute right-[2px] bottom-[18px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
+                    isAdded ? "bg-[#3ebfb2]" : "bg-black/60 hover:bg-black/90"
                   }`}
                   onClick={(e) => {
                     e.stopPropagation()
@@ -367,7 +367,7 @@ export const MediaPreview = memo(function MediaPreview({
                   title={isAdded ? "Добавлено" : "Добавить"}
                 >
                   {isAdded ? (
-                    <Check className="w-4 h-4" strokeWidth={3} />
+                    <Check className="w-3 h-3" strokeWidth={3} />
                   ) : (
                     <Plus className="w-3 h-3" strokeWidth={3} />
                   )}

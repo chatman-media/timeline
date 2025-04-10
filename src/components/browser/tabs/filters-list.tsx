@@ -1,7 +1,7 @@
 export function FiltersList() {
   return (
     <div className="h-full overflow-y-auto">
-      <div className="space-y-1 p-3">
+      <div className="space-y-1 p-3 pr-1 pl-1">
         <div className="flex items-center justify-between mb-4">
           <div className="relative w-[50%]">
             <input

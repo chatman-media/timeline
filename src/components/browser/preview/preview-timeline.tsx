@@ -22,7 +22,7 @@ export function PreviewTimeline({ time, duration }: PreviewTimelineProps) {
           transform: "translateX(-50%)",
         }}
       >
-        {formatTime(time, true)}
+        {formatTime(time, false)}
       </div>
     </>
   )

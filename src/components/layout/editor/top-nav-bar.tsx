@@ -121,11 +121,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <Button
           className={cn(
             "cursor-pointer p-0 h-6 w-6",
-            "variant-ghost",
-            "size-icon",
-            isSaved
-              ? "opacity-50 hover:opacity-50 cursor-not-allowed"
-              : "opacity-100 hover:bg-accent",
+            isSaved ? "opacity-50 hover:opacity-50" : "opacity-100 hover:bg-accent",
           )}
           variant="ghost"
           size="icon"

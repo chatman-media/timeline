@@ -124,7 +124,10 @@ export function PlayerControls() {
       return
     }
 
-    console.log(`[PlayerControls] Воспроизведение видео ${activeVideo.id}, найдено элементов:`, videoElements.length)
+    console.log(
+      `[PlayerControls] Воспроизведение видео ${activeVideo.id}, найдено элементов:`,
+      videoElements.length,
+    )
 
     // Воспроизводим только активное видео
     videoElements.forEach((videoElement) => {
