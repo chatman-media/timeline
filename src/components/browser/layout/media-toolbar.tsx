@@ -1,4 +1,4 @@
-import { ChevronDown, Filter, Grid, Grid2x2, Layout, List, SortDesc, Upload } from "lucide-react"
+import { ChevronDown, Filter, Grid, Grid2x2, List, SortDesc, Upload } from "lucide-react"
 import React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -13,8 +13,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 interface MediaToolbarProps {
-  viewMode: "list" | "grid" | "thumbnails" | "metadata"
-  onViewModeChange: (mode: "list" | "grid" | "thumbnails" | "metadata") => void
+  viewMode: "list" | "grid" | "thumbnails"
+  onViewModeChange: (mode: "list" | "grid" | "thumbnails") => void
   onImport: () => void
   onSort: (sortBy: string) => void
   onFilter: (filterType: string) => void
@@ -42,17 +42,17 @@ export function MediaToolbar({
         </Button>
       </div>
 
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-1">
         {/* Кнопки переключения режимов просмотра */}
         <TooltipProvider>
-          <div className="flex border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden mr-2">
+          <div className="flex rounded-md overflow-hidden mr-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   className={cn(
-                    "h-8 w-8 p-0 rounded-none border-r border-gray-200 dark:border-gray-700",
+                    "h-6 w-6 p-0",
                     viewMode === "list"
                       ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       : "text-gray-400 hover:text-gray-800 dark:hover:text-gray-200",
@@ -69,9 +69,9 @@ export function MediaToolbar({
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   className={cn(
-                    "h-8 w-8 p-0 rounded-none border-r border-gray-200 dark:border-gray-700",
+                    "h-6 w-6 p-1",
                     viewMode === "grid"
                       ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       : "text-gray-400 hover:text-gray-800 dark:hover:text-gray-200",
@@ -88,9 +88,9 @@ export function MediaToolbar({
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   className={cn(
-                    "h-8 w-8 p-0 rounded-none border-r border-gray-200 dark:border-gray-700",
+                    "h-6 w-6 p-1",
                     viewMode === "thumbnails"
                       ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                       : "text-gray-400 hover:text-gray-800 dark:hover:text-gray-200",
@@ -102,25 +102,6 @@ export function MediaToolbar({
               </TooltipTrigger>
               <TooltipContent>Миниатюры</TooltipContent>
             </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={cn(
-                    "h-8 w-8 p-0 rounded-none",
-                    viewMode === "metadata"
-                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      : "text-gray-400 hover:text-gray-800 dark:hover:text-gray-200",
-                  )}
-                  onClick={() => onViewModeChange("metadata")}
-                >
-                  <Layout size={16} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Метаданные</TooltipContent>
-            </Tooltip>
           </div>
         </TooltipProvider>
 
@@ -130,10 +111,10 @@ export function MediaToolbar({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-gray-400 hover:text-gray-100 hover:bg-gray-700"
+              className="h-6 text-gray-400 hover:text-gray-100 hover:bg-gray-700"
             >
-              <SortDesc size={16} />
-              <ChevronDown size={12} className="ml-1" />
+              <SortDesc size={12} />
+              <ChevronDown size={9} className="ml-1" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -150,10 +131,10 @@ export function MediaToolbar({
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-gray-400 hover:text-gray-100 hover:bg-gray-700"
+              className="h-6 text-gray-400 hover:text-gray-100 hover:bg-gray-700"
             >
-              <Filter size={16} />
-              <ChevronDown size={12} className="ml-1" />
+              <Filter size={12} />
+              <ChevronDown size={9} className="ml-1" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
