@@ -199,29 +199,29 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
       // Ограничиваем время в пределах длительности видео
       const clampedTime = Math.min(videoDuration, Math.max(0, sliderValue))
-      
+
       // Определяем, короткое ли у нас видео (меньше 10 секунд)
-      const isShortVideo = videoDuration < 10;
-      
+      const isShortVideo = videoDuration < 10
+
       // Для коротких видео используем меньший порог изменения
-      const timeChangeThreshold = isShortVideo ? 0.001 : 0.01;
-      
+      const timeChangeThreshold = isShortVideo ? 0.001 : 0.01
+
       // Проверяем, существенно ли изменилось время
       if (Math.abs(clampedTime - currentTime) < timeChangeThreshold) return
 
       // Логируем только при значительных изменениях времени
       if (Math.abs(clampedTime - currentTime) > 0.5) {
-        console.log('[handleTimeChange] Значительное изменение времени:', {
+        console.log("[handleTimeChange] Значительное изменение времени:", {
           currentTime: currentTime.toFixed(3),
           clampedTime: clampedTime.toFixed(3),
-          delta: (clampedTime - currentTime).toFixed(3)
+          delta: (clampedTime - currentTime).toFixed(3),
         })
       }
 
-      // Устанавливаем seeking перед изменением времени, чтобы избежать 
+      // Устанавливаем seeking перед изменением времени, чтобы избежать
       // конфликтов с обновлениями от timeupdate
       setIsSeeking(true)
-      
+
       // Устанавливаем новое время с пометкой, что источник - пользователь
       setCurrentTime(clampedTime, "user")
     },
@@ -264,7 +264,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   const formatTime = (time: number) => {
     // Добавим проверку на конечность числа
     if (!isFinite(time)) {
-      console.warn('[formatTime] Received non-finite time:', time)
+      console.warn("[formatTime] Received non-finite time:", time)
       return "00:00:00.000"
     }
     // Используем Math.max для гарантии неотрицательного значения
@@ -277,7 +277,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   }
 
   // Лог для проверки получаемого currentTime
-  console.log('[PlayerControls] Rendering with currentTime:', currentTime)
+  console.log("[PlayerControls] Rendering with currentTime:", currentTime)
 
   return (
     <div className="w-full flex flex-col">

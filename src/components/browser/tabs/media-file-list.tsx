@@ -3,21 +3,31 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
 import { useVideoPlayer } from "@/hooks/use-video-player"
-import { formatDuration, formatFileSize } from "@/lib/utils"
+import { formatDuration, formatFileSize, cn } from "@/lib/utils"
 import { rootStore } from "@/stores/root-store"
 import { FileGroup, MediaFile } from "@/types/videos"
-import { getFileType, groupFilesByDate, prepareFileGroups } from "@/utils/media-utils"
+import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from ".."
+import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
 
 // Оборачиваем в memo для предотвращения ненужных рендеров
 export const MediaFileList = memo(function MediaFileList({
-  viewMode = "thumbnails",
-}: { viewMode?: "list" | "grid" | "thumbnails" }) {
+  viewMode: initialViewMode = "thumbnails",
+}: { viewMode?: "list" | "grid" | "thumbnails" | "metadata" }) {
   const { media, isLoading, addNewTracks, addedFiles } = useRootStore()
   const [searchQuery, setSearchQuery] = useState("")
   const dataFetchedRef = useRef(false) // Для отслеживания, выполнялся ли уже запрос
+
+  // Состояние для режима отображения
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails" | "metadata">(
+    initialViewMode,
+  )
+
+  // Состояние для сортировки и фильтрации
+  const [sortBy, setSortBy] = useState<string>("date")
+  const [filterType, setFilterType] = useState<string>("all")
 
   console.log("[MediaFileList] Rendering with:", {
     mediaCount: media.length,
@@ -26,23 +36,60 @@ export const MediaFileList = memo(function MediaFileList({
     viewMode,
   })
 
+  // Обработчики для MediaToolbar
+  const handleViewModeChange = useCallback((mode: "list" | "grid" | "thumbnails" | "metadata") => {
+    setViewMode(mode)
+  }, [])
+
+  const handleImport = useCallback(() => {
+    // Вызываем метод импорта файлов
+    console.log("[MediaFileList] Import files")
+    // Здесь можно добавить вызов диалога импорта файлов
+  }, [])
+
+  const handleSort = useCallback((newSortBy: string) => {
+    setSortBy(newSortBy)
+  }, [])
+
+  const handleFilter = useCallback((newFilterType: string) => {
+    setFilterType(newFilterType)
+  }, [])
+
   // Используем useMemo для сортировки медиафайлов, чтобы не пересортировывать при каждом рендере
-  const sortedMedia = useMemo(() => {
-    const sorted = [...media].sort((a, b) => {
+  // Фильтрация и сортировка
+  const filteredAndSortedMedia = useMemo(() => {
+    // Сначала фильтрация
+    const filtered =
+      filterType === "all"
+        ? media
+        : media.filter((file) => {
+            if (filterType === "video" && file.probeData?.streams?.[0]?.codec_type === "video")
+              return true
+            if (filterType === "audio" && file.probeData?.streams?.[0]?.codec_type === "audio")
+              return true
+            if (filterType === "image" && file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+              return true
+            if (filterType === "favorites") {
+              // Здесь будет логика для избранного
+              return false
+            }
+            return false
+          })
+
+    // Затем сортировка
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "name") return (a.name || "").localeCompare(b.name || "")
+      if (sortBy === "size") return (b.size || 0) - (a.size || 0)
+      if (sortBy === "duration") return (b.duration || 0) - (a.duration || 0)
+      // По умолчанию сортируем по дате
       const timeA = a.startTime || 0
       const timeB = b.startTime || 0
       return timeB - timeA
     })
-    console.log("[MediaFileList] Rendering media list with:", {
-      mediaCount: media.length,
-      sortedMediaCount: sorted.length,
-    })
-    return sorted
-  }, [media])
+  }, [media, filterType, sortBy])
 
   // Мемоизируем другие вычисления
   const sortedDates = useMemo(() => groupFilesByDate(media), [media])
-  const [fileGroups, setFileGroups] = useState<Record<string, FileGroup>>({})
 
   // Убираем прямой запрос к API и оставляем только fetchVideos при первой загрузке
   useEffect(() => {
@@ -207,46 +254,42 @@ export const MediaFileList = memo(function MediaFileList({
   )
 
   const handleAddAllVideoFiles = useCallback(() => {
-    handleAddByIds(fileGroups.videos.fileIds)
-  }, [fileGroups])
+    const videoFiles = media.filter((file) =>
+      file.probeData?.streams?.some((stream) => stream.codec_type === "video"),
+    )
+    addNewTracks(videoFiles)
+
+    const filePaths = videoFiles.filter((file) => file.path).map((file) => file.path as string)
+    if (filePaths.length > 0) {
+      rootStore.send({
+        type: "addToAddedFiles",
+        filePaths,
+      })
+    }
+  }, [media, addNewTracks])
 
   const handleAddAllAudioFiles = useCallback(() => {
-    handleAddByIds(fileGroups.audio.fileIds)
-  }, [fileGroups])
+    const audioFiles = media.filter(
+      (file) =>
+        !file.probeData?.streams?.some((stream) => stream.codec_type === "video") &&
+        file.probeData?.streams?.some((stream) => stream.codec_type === "audio"),
+    )
+    addNewTracks(audioFiles)
 
-  useEffect(() => {
-    if (media.length) {
-      console.log("[MediaFileList] Media changed, count:", media.length)
-      setFileGroups(prepareFileGroups(media))
+    const filePaths = audioFiles.filter((file) => file.path).map((file) => file.path as string)
+    if (filePaths.length > 0) {
+      rootStore.send({
+        type: "addToAddedFiles",
+        filePaths,
+      })
     }
-  }, [media])
-
-  const handleAddByIds = useCallback(
-    (fileIds: string[]) => {
-      const filesToAdd = media.filter((file) => fileIds.includes(file.id))
-
-      // Добавляем файлы на таймлайн
-      addNewTracks(filesToAdd)
-
-      // Отмечаем файлы как добавленные
-      const filePaths = filesToAdd.filter((file) => file.path).map((file) => file.path as string)
-
-      if (filePaths.length > 0) {
-        rootStore.send({
-          type: "addToAddedFiles",
-          filePaths,
-        })
-      }
-    },
-    [media, addNewTracks],
-  )
+  }, [media, addNewTracks])
 
   if (isLoading) {
-    console.log("[MediaFileList] Rendering loading skeleton")
     return (
-      <div className="px-0 h-full overflow-y-auto">
-        <div className="space-y-2 dark:bg-[#1b1a1f]">
-          {[...Array(8)].map((_, index) => (
+      <div className="flex flex-col h-[calc(50vh-82px)]">
+        <div className="p-4 space-y-4">
+          {Array.from({ length: 5 }).map((_, index) => (
             <div key={index} className="flex items-center gap-3 p-0 pr-2 rounded-md">
               <div className="h-[60px] w-[80px]">
                 <Skeleton className="h-full w-full rounded" />
@@ -272,70 +315,232 @@ export const MediaFileList = memo(function MediaFileList({
     )
   }
 
+  // Функция для отображения различных стилей просмотра
+  const renderContent = () => {
+    // Если нет данных или идет загрузка
+    if (filteredAndSortedMedia.length === 0) {
+      return (
+        <div className="p-4 text-center text-gray-400 dark:text-gray-500">
+          Нет медиа-файлов для отображения
+        </div>
+      )
+    }
+
+    // Выбираем стиль отображения в зависимости от viewMode
+    switch (viewMode) {
+      case "list":
+        return (
+          <div className="space-y-1">
+            {filteredAndSortedMedia.map((file) => {
+              const fileId = getFileId(file)
+              const duration = file.probeData?.format.duration || 1
+              const isAudio = getFileType(file) === "audio"
+              const isAdded = Boolean(file.path && addedFiles.has(file.path))
+
+              return (
+                <div
+                  key={fileId}
+                  className={cn(
+                    "flex items-center p-2 border border-gray-200 dark:border-gray-700 rounded-md",
+                    "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
+                    isAdded && "opacity-50 pointer-events-none",
+                  )}
+                >
+                  <div className="relative flex-shrink-0 flex gap-1 mr-3">
+                    <MediaPreview
+                      file={file}
+                      fileId={fileId}
+                      duration={duration}
+                      isAudio={isAudio}
+                      videoRefs={videoRefs}
+                      loadedVideos={loadedVideos}
+                      setLoadedVideos={setLoadedVideos}
+                      hoverTimes={hoverTimes}
+                      handleMouseMove={handleMouseMove}
+                      handlePlayPause={handlePlayPause}
+                      handleMouseLeave={handleMouseLeave}
+                      setPlayingFileId={setPlayingFileId}
+                      onAddMedia={handleAddMedia}
+                      isAdded={isAdded}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+
+      case "grid":
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {filteredAndSortedMedia.map((file) => {
+              const fileId = getFileId(file)
+              const duration = file.probeData?.format.duration || 1
+              const isAudio = getFileType(file) === "audio"
+              const isAdded = Boolean(file.path && addedFiles.has(file.path))
+
+              return (
+                <div
+                  key={fileId}
+                  className={cn(
+                    "flex flex-col border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden",
+                    "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
+                    isAdded && "opacity-50 pointer-events-none",
+                  )}
+                >
+                  <div className="relative h-32 flex items-center justify-center">
+                    <MediaPreview
+                      file={file}
+                      fileId={fileId}
+                      duration={duration}
+                      isAudio={isAudio}
+                      videoRefs={videoRefs}
+                      loadedVideos={loadedVideos}
+                      setLoadedVideos={setLoadedVideos}
+                      hoverTimes={hoverTimes}
+                      handleMouseMove={handleMouseMove}
+                      handlePlayPause={handlePlayPause}
+                      handleMouseLeave={handleMouseLeave}
+                      setPlayingFileId={setPlayingFileId}
+                      onAddMedia={handleAddMedia}
+                      isAdded={isAdded}
+                    />
+                  </div>
+                  <div className="p-2">
+                    <div className="text-sm font-medium truncate">{file.name}</div>
+                    <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      <span>{formatFileSize(file.size || 0)}</span>
+                      <span>{formatDuration(file.duration || 0)}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+
+      case "metadata":
+        return (
+          <div className="space-y-3">
+            {filteredAndSortedMedia.map((file) => {
+              const fileId = getFileId(file)
+              const isAdded = Boolean(file.path && addedFiles.has(file.path))
+
+              return (
+                <div
+                  key={fileId}
+                  className={cn(
+                    "border border-gray-200 dark:border-gray-700 rounded-md p-3",
+                    "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
+                    isAdded && "opacity-50 pointer-events-none",
+                  )}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="text-sm font-medium">{file.name}</div>
+                    <button
+                      className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                      onClick={(e) => handleAddMedia(e, file)}
+                      disabled={isAdded}
+                    >
+                      {isAdded ? "Добавлено" : "Добавить"}
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="text-gray-500 dark:text-gray-400">Тип:</div>
+                    <div>{file.probeData?.streams?.[0]?.codec_type || "Неизвестно"}</div>
+
+                    <div className="text-gray-500 dark:text-gray-400">Кодек:</div>
+                    <div>{file.probeData?.streams?.[0]?.codec_name || "Неизвестно"}</div>
+
+                    {file.probeData?.streams?.[0]?.width &&
+                      file.probeData?.streams?.[0]?.height && (
+                        <>
+                          <div className="text-gray-500 dark:text-gray-400">Разрешение:</div>
+                          <div>
+                            {file.probeData.streams[0].width}×{file.probeData.streams[0].height}
+                          </div>
+                        </>
+                      )}
+
+                    <div className="text-gray-500 dark:text-gray-400">Размер:</div>
+                    <div>{formatFileSize(file.size || 0)}</div>
+
+                    <div className="text-gray-500 dark:text-gray-400">Длительность:</div>
+                    <div>{formatDuration(file.duration || 0)}</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+
+      case "thumbnails":
+      default:
+        return (
+          <div className="space-y-3">
+            {filteredAndSortedMedia.map((file) => {
+              const fileId = getFileId(file)
+              const duration = file.probeData?.format.duration || 1
+              const isAudio = getFileType(file) === "audio"
+              const isAdded = Boolean(file.path && addedFiles.has(file.path))
+
+              return (
+                <div
+                  key={fileId}
+                  className={`flex items-center gap-3 p-0 pb-0 pr-1 pl-1 group w-full overflow-hidden
+                      ${isAdded ? "opacity-50 pointer-events-none" : ""}`}
+                  style={{ maxWidth: "100%" }}
+                >
+                  <div className="relative flex-shrink-0 flex gap-1">
+                    <MediaPreview
+                      file={file}
+                      fileId={fileId}
+                      duration={duration}
+                      isAudio={isAudio}
+                      videoRefs={videoRefs}
+                      loadedVideos={loadedVideos}
+                      setLoadedVideos={setLoadedVideos}
+                      hoverTimes={hoverTimes}
+                      handleMouseMove={handleMouseMove}
+                      handlePlayPause={handlePlayPause}
+                      handleMouseLeave={handleMouseLeave}
+                      setPlayingFileId={setPlayingFileId}
+                      onAddMedia={handleAddMedia}
+                      isAdded={isAdded}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 overflow-hidden">
+                    <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )
+    }
+  }
+
   console.log("[MediaFileList] Rendering media list with:", {
     mediaCount: media.length,
-    sortedMediaCount: sortedMedia.length,
+    filteredCount: filteredAndSortedMedia.length,
   })
 
   return (
     <div className="flex flex-col h-[calc(50vh-82px)]">
-      <div className="space-y-1 p-3 pr-1 pl-1 overflow-y-auto">
-        {/* <div className="flex items-center justify-between mb-4">
-          <div className="relative w-[50%]">
-            <input
-              type="text"
-              placeholder="Поиск..."
-              className="w-full px-3 py-1 text-sm bg-transparent border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Sliders className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-          </div>
-        </div> */}
-
-        <div className="space-y-3">
-          {sortedMedia.map((file) => {
-            const fileId = getFileId(file)
-            const duration = file.probeData?.format.duration || 1
-            const isAudio = getFileType(file) === "audio"
-            const isAdded = Boolean(file.path && addedFiles.has(file.path))
-
-            return (
-              <div
-                key={fileId}
-                className={`flex items-center gap-3 p-0 pb-0 pr-1 pl-1 group w-full overflow-hidden
-                    ${isAdded ? "opacity-50 pointer-events-none" : ""}`}
-                style={{ maxWidth: "100%" }}
-              >
-                <div className="relative flex-shrink-0 flex gap-1">
-                  <MediaPreview
-                    file={file}
-                    fileId={fileId}
-                    duration={duration}
-                    isAudio={isAudio}
-                    videoRefs={videoRefs}
-                    loadedVideos={loadedVideos}
-                    setLoadedVideos={setLoadedVideos}
-                    hoverTimes={hoverTimes}
-                    handleMouseMove={handleMouseMove}
-                    handlePlayPause={handlePlayPause}
-                    handleMouseLeave={handleMouseLeave}
-                    setPlayingFileId={setPlayingFileId}
-                    onAddMedia={handleAddMedia}
-                    isAdded={isAdded}
-                  />
-                </div>
-                <div className="flex-1 min-w-0 overflow-hidden">
-                  <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
+      <MediaToolbar
+        viewMode={viewMode}
+        onViewModeChange={handleViewModeChange}
+        onImport={handleImport}
+        onSort={handleSort}
+        onFilter={handleFilter}
+      />
+      <div className="space-y-1 p-3 pr-1 pl-1 overflow-y-auto">{renderContent()}</div>
       <div className="flex-shrink-0 h-[24px] w-full absolute bottom-0 left-0 right-0 z-10">
         <StatusBar
-          media={sortedMedia}
+          media={filteredAndSortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}
           onAddAllAudioFiles={handleAddAllAudioFiles}
           onAddDateFiles={handleAddDateFiles}

@@ -150,32 +150,32 @@ export function Timeline() {
 
       // Переключение дорожек
       const key = e.key.toLowerCase()
-      
+
       // Если это число от 1 до 9, то пытаемся найти трек с соответствующим индексом
-      if (key >= '1' && key <= '9') {
+      if (key >= "1" && key <= "9") {
         const trackNumber = parseInt(key)
-        
+
         // Получаем текущую активную секцию (день)
-        const currentSection = sections.find(section => section.date === activeDate);
+        const currentSection = sections.find((section) => section.date === activeDate)
         if (!currentSection) {
-          console.log(`[Timeline] Не найдена активная секция для даты ${activeDate}`);
-          return;
+          console.log(`[Timeline] Не найдена активная секция для даты ${activeDate}`)
+          return
         }
-        
+
         // Ищем трек только среди треков текущей секции
-        const tracksInCurrentSection = currentSection.tracks;
-        
+        const tracksInCurrentSection = currentSection.tracks
+
         // Найдем трек по номеру среди треков только этой секции
         const targetTrack = tracksInCurrentSection.find((track) => {
-          const trackIndex = typeof track.index === 'string' 
-            ? parseInt(track.index) 
-            : track.index;
-          return trackIndex === trackNumber;
-        });
-        
+          const trackIndex = typeof track.index === "string" ? parseInt(track.index) : track.index
+          return trackIndex === trackNumber
+        })
+
         if (targetTrack) {
-          console.log(`[Timeline] Нажата клавиша ${key}, выбран трек ${targetTrack.id} с индексом ${targetTrack.index} в текущей секции (${activeDate})`);
-          
+          console.log(
+            `[Timeline] Нажата клавиша ${key}, выбран трек ${targetTrack.id} с индексом ${targetTrack.index} в текущей секции (${activeDate})`,
+          )
+
           // Если идет запись, останавливаем её на текущей дорожке
           if (isRecordingSchema && activeTrackId) {
             const currentTrack = tracks.find((track) => track.id === activeTrackId)
@@ -213,12 +213,12 @@ export function Timeline() {
           } else {
             // Если воспроизведение не идет, берем первое видео трека
             if (targetTrack.videos.length > 0) {
-              const firstVideo = targetTrack.videos[0];
-              setActiveVideo(firstVideo.id);
-              
+              const firstVideo = targetTrack.videos[0]
+              setActiveVideo(firstVideo.id)
+
               // Сохраняем текущую позицию, а не прыгаем на начало видео
               // Это предотвратит прыжки между секциями
-              updateTime(currentTime);
+              updateTime(currentTime)
             }
           }
 
@@ -229,7 +229,9 @@ export function Timeline() {
           }
           rootStore.send({ type: "setScreenLayout", layout: newLayout })
         } else {
-          console.log(`[Timeline] Трек с индексом ${trackNumber} не найден в текущей секции (${activeDate})`);
+          console.log(
+            `[Timeline] Трек с индексом ${trackNumber} не найден в текущей секции (${activeDate})`,
+          )
         }
       }
     }
@@ -250,7 +252,7 @@ export function Timeline() {
     activeDate,
     sections, // Добавляем зависимость от sections и activeDate
   ])
-  
+
   // Set initial active section when sections change
   React.useEffect(() => {
     if (sections.length > 0 && !activeDate) {

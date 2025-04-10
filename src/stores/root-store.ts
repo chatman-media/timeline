@@ -159,8 +159,8 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
 
     setActiveTrack: (context: StateContext, event: { trackId: string }) => {
       // Проверяем, меняется ли трек
-      const isChangingTrack = context.activeTrackId !== event.trackId;
-      
+      const isChangingTrack = context.activeTrackId !== event.trackId
+
       return {
         ...context,
         activeTrackId: event.trackId,
@@ -465,31 +465,38 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       }
     },
 
-    setCurrentTime: (context: StateContext, event: { time: number; source?: "playback" | "user" }) => {
+    setCurrentTime: (
+      context: StateContext,
+      event: { time: number; source?: "playback" | "user" },
+    ) => {
       // Проверка на валидность времени
       if (!isFinite(event.time) || event.time < 0) {
-        return context;
+        return context
       }
-      
+
       // Определяем, короткое ли у нас видео (меньше 10 секунд)
-      const isShortVideo = context.activeVideo?.duration && context.activeVideo.duration < 10;
-      
+      const isShortVideo = context.activeVideo?.duration && context.activeVideo.duration < 10
+
       // Для коротких видео используем меньший порог для обновления времени
-      const threshold = isShortVideo ? 0.001 : 0.01;
-      
+      const threshold = isShortVideo ? 0.001 : 0.01
+
       // Предотвращаем ненужные обновления при малых изменениях времени
       if (Math.abs(context.currentTime - event.time) < threshold) {
-        return context;
+        return context
       }
-      
+
       // Более точное логирование для коротких видео
       if (isShortVideo) {
-        console.log(`[rootStore] setCurrentTime: ${event.time.toFixed(3)} (source: ${event.source || 'unknown'}, short video)`);
+        console.log(
+          `[rootStore] setCurrentTime: ${event.time.toFixed(3)} (source: ${event.source || "unknown"}, short video)`,
+        )
       } else if (Math.abs(context.currentTime - event.time) > 0.5) {
         // Логируем только значительные изменения для обычных видео
-        console.log(`[rootStore] setCurrentTime: ${event.time.toFixed(3)} (source: ${event.source || 'unknown'})`);
+        console.log(
+          `[rootStore] setCurrentTime: ${event.time.toFixed(3)} (source: ${event.source || "unknown"})`,
+        )
       }
-      
+
       return {
         ...context,
         currentTime: event.time,

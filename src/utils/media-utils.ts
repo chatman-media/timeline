@@ -98,7 +98,11 @@ export const getGroupedFiles = (files: MediaFile[]): Record<string, MediaFile[]>
  * @param currentTracksLength - Текущее количество треков
  * @returns Массив созданных треков
  */
-export const createTracksFromFiles = (files: MediaFile[], currentTracksLength: number, existingTracks: Track[] = []): Track[] => {
+export const createTracksFromFiles = (
+  files: MediaFile[],
+  currentTracksLength: number,
+  existingTracks: Track[] = [],
+): Track[] => {
   // Разделяем файлы на видео и аудио
   const videoFiles = files.filter((file) =>
     file.probeData?.streams?.some((stream) => stream.codec_type === "video"),
@@ -112,7 +116,7 @@ export const createTracksFromFiles = (files: MediaFile[], currentTracksLength: n
   // Группируем видео по дням для правильной нумерации
   const videoFilesByDay = videoFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
     if (!file.startTime) return acc
-    
+
     const date = new Date(file.startTime * 1000).toDateString()
     if (!acc[date]) {
       acc[date] = []
@@ -127,19 +131,25 @@ export const createTracksFromFiles = (files: MediaFile[], currentTracksLength: n
     const maxVideoIndex = Math.max(
       0,
       ...tracks
-        .filter((track) => 
-          track.type === "video" && 
-          track.videos.some(v => v.startTime && new Date(v.startTime * 1000).toDateString() === date)
+        .filter(
+          (track) =>
+            track.type === "video" &&
+            track.videos.some(
+              (v) => v.startTime && new Date(v.startTime * 1000).toDateString() === date,
+            ),
         )
         .map((track) => Number(track.index) || 0),
       ...existingTracks
-        .filter((track) => 
-          track.type === "video" && 
-          track.videos.some(v => v.startTime && new Date(v.startTime * 1000).toDateString() === date)
+        .filter(
+          (track) =>
+            track.type === "video" &&
+            track.videos.some(
+              (v) => v.startTime && new Date(v.startTime * 1000).toDateString() === date,
+            ),
         )
-        .map((track) => Number(track.index) || 0)
+        .map((track) => Number(track.index) || 0),
     )
-    
+
     const groupedVideoFiles = getGroupedFiles(dayFiles)
     Object.values(groupedVideoFiles).forEach((groupFiles, index) => {
       tracks.push({
@@ -162,7 +172,7 @@ export const createTracksFromFiles = (files: MediaFile[], currentTracksLength: n
   // Аналогично для аудио файлов
   const audioFilesByDay = audioFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
     if (!file.startTime) return acc
-    
+
     const date = new Date(file.startTime * 1000).toDateString()
     if (!acc[date]) {
       acc[date] = []
@@ -177,19 +187,25 @@ export const createTracksFromFiles = (files: MediaFile[], currentTracksLength: n
     const maxAudioIndex = Math.max(
       0,
       ...tracks
-        .filter((track) => 
-          track.type === "audio" && 
-          track.videos.some(v => v.startTime && new Date(v.startTime * 1000).toDateString() === date)
+        .filter(
+          (track) =>
+            track.type === "audio" &&
+            track.videos.some(
+              (v) => v.startTime && new Date(v.startTime * 1000).toDateString() === date,
+            ),
         )
         .map((track) => Number(track.index) || 0),
       ...existingTracks
-        .filter((track) => 
-          track.type === "audio" && 
-          track.videos.some(v => v.startTime && new Date(v.startTime * 1000).toDateString() === date)
+        .filter(
+          (track) =>
+            track.type === "audio" &&
+            track.videos.some(
+              (v) => v.startTime && new Date(v.startTime * 1000).toDateString() === date,
+            ),
         )
-        .map((track) => Number(track.index) || 0)
+        .map((track) => Number(track.index) || 0),
     )
-    
+
     const groupedAudioFiles = getGroupedFiles(dayFiles)
     Object.values(groupedAudioFiles).forEach((groupFiles, index) => {
       tracks.push({
