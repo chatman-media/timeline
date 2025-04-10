@@ -22,7 +22,8 @@ export function StatusBar({
   sortedDates,
   addedFiles,
 }: StatusBarProps) {
-  const [maxDateInfo, secondMaxDateInfo] = sortedDates
+  // Сортируем даты по количеству видео (от большего к меньшему)
+  const datesByFileCount = [...sortedDates].sort((a, b) => b.files.length - a.files.length)
 
   const hasAudioStream = (file: MediaFile) => {
     return file.probeData?.streams?.some((stream) => stream.codec_type === "audio")
@@ -54,10 +55,13 @@ export function StatusBar({
     )
   }
 
-  const remainingMaxDateFiles = maxDateInfo ? getRemainingFilesForDate(maxDateInfo) : []
-  const remainingSecondMaxDateFiles = secondMaxDateInfo
-    ? getRemainingFilesForDate(secondMaxDateInfo)
-    : []
+  // Получаем дату с наибольшим количеством оставшихся файлов
+  const topDateWithRemainingFiles = datesByFileCount
+    .map((dateInfo) => ({
+      ...dateInfo,
+      remainingFiles: getRemainingFilesForDate(dateInfo),
+    }))
+    .find((dateInfo) => dateInfo.remainingFiles.length > 0)
 
   return (
     <div className="flex justify-between items-center text-sm w-full h-[28px] bg-background dark:bg-[#1a1a1a] p-[4px] pt-0 border-t border-border">
@@ -76,12 +80,12 @@ export function StatusBar({
         </span>
       </div>
       <div className="flex flex-col items-end justify-center gap-0 text-xs">
-        {maxDateInfo && remainingMaxDateFiles.length > 0 && (
+        {topDateWithRemainingFiles && (
           <ActionButton
-            title="Добавить видео за эту дату"
-            onClick={() => onAddDateFiles(maxDateInfo.date)}
+            title={`Добавить видео за ${topDateWithRemainingFiles.date}`}
+            onClick={() => onAddDateFiles(topDateWithRemainingFiles.date)}
           >
-            {`${remainingMaxDateFiles.length} видео ${maxDateInfo.date}`}
+            {`${topDateWithRemainingFiles.remainingFiles.length} видео ${topDateWithRemainingFiles.date}`}
           </ActionButton>
         )}
       </div>

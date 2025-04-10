@@ -278,9 +278,9 @@ export const MediaFileList = memo(function MediaFileList({
   })
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="space-y-1 p-3 pr-1 pl-1">
-        <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col h-[calc(50vh-82px)]">
+      <div className="space-y-1 p-3 pr-1 pl-1 overflow-y-auto">
+        {/* <div className="flex items-center justify-between mb-4">
           <div className="relative w-[50%]">
             <input
               type="text"
@@ -291,51 +291,47 @@ export const MediaFileList = memo(function MediaFileList({
             />
             <Sliders className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           </div>
-        </div>
+        </div> */}
 
-        {viewMode === "list" ? (
-          <></>
-        ) : (
-          <div className="space-y-3">
-            {sortedMedia.map((file) => {
-              const fileId = getFileId(file)
-              const duration = file.probeData?.format.duration || 1
-              const isAudio = getFileType(file) === "audio"
-              const isAdded = Boolean(file.path && addedFiles.has(file.path))
+        <div className="space-y-3">
+          {sortedMedia.map((file) => {
+            const fileId = getFileId(file)
+            const duration = file.probeData?.format.duration || 1
+            const isAudio = getFileType(file) === "audio"
+            const isAdded = Boolean(file.path && addedFiles.has(file.path))
 
-              return (
-                <div
-                  key={fileId}
-                  className={`flex items-center gap-3 p-0 pb-0 pr-2 pl-3 rounded-md group w-full overflow-hidden
+            return (
+              <div
+                key={fileId}
+                className={`flex items-center gap-3 p-0 pb-0 pr-1 pl-1 group w-full overflow-hidden
                     ${isAdded ? "opacity-50 pointer-events-none" : ""}`}
-                  style={{ maxWidth: "100%" }}
-                >
-                  <div className="relative flex-shrink-0 flex gap-1">
-                    <MediaPreview
-                      file={file}
-                      fileId={fileId}
-                      duration={duration}
-                      isAudio={isAudio}
-                      videoRefs={videoRefs}
-                      loadedVideos={loadedVideos}
-                      setLoadedVideos={setLoadedVideos}
-                      hoverTimes={hoverTimes}
-                      handleMouseMove={handleMouseMove}
-                      handlePlayPause={handlePlayPause}
-                      handleMouseLeave={handleMouseLeave}
-                      setPlayingFileId={setPlayingFileId}
-                      onAddMedia={handleAddMedia}
-                      isAdded={isAdded}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0 overflow-hidden">
-                    <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
-                  </div>
+                style={{ maxWidth: "100%" }}
+              >
+                <div className="relative flex-shrink-0 flex gap-1">
+                  <MediaPreview
+                    file={file}
+                    fileId={fileId}
+                    duration={duration}
+                    isAudio={isAudio}
+                    videoRefs={videoRefs}
+                    loadedVideos={loadedVideos}
+                    setLoadedVideos={setLoadedVideos}
+                    hoverTimes={hoverTimes}
+                    handleMouseMove={handleMouseMove}
+                    handlePlayPause={handlePlayPause}
+                    handleMouseLeave={handleMouseLeave}
+                    setPlayingFileId={setPlayingFileId}
+                    onAddMedia={handleAddMedia}
+                    isAdded={isAdded}
+                  />
                 </div>
-              )
-            })}
-          </div>
-        )}
+                <div className="flex-1 min-w-0 overflow-hidden">
+                  <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
       </div>
       <div className="flex-shrink-0 h-[24px] w-full absolute bottom-0 left-0 right-0 z-10">
         <StatusBar

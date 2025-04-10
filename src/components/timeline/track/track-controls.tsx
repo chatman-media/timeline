@@ -99,7 +99,7 @@ export function TrackControls({
       )}
 
       <div className="text-sm text-gray-300 truncate shrink-0">
-        {isVideoTrack ? `V${track.index}` : `A${track.index}`}
+        {isVideoTrack ? `Видео ${track.index}` : `Аудио ${track.index}`}
       </div>
     </div>
   )

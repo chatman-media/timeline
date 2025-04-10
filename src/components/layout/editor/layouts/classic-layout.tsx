@@ -15,15 +15,13 @@ export function ClassicMediaEditor({}: ClassicLayoutProps) {
       <ResizablePanel defaultSize={50} minSize={20} maxSize={80}>
         <ResizablePanelGroup direction="horizontal" autoSaveId="top-layout">
           <ResizablePanel defaultSize={25} minSize={20} maxSize={50}>
-            <div className="h-full bg-muted/50 p-0 overflow-hidden">
-              <div className="flex-1 relative h-full">
-                <Browser />
-              </div>
+            <div className="flex-1 relative h-full border-border">
+              <Browser />
             </div>
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={45} minSize={30} maxSize={65}>
-            <div className="h-full bg-muted/50 border-l border-border">
+            <div className="h-full border-border">
               <ActiveVideo />
             </div>
           </ResizablePanel>
@@ -33,7 +31,7 @@ export function ClassicMediaEditor({}: ClassicLayoutProps) {
       <ResizableHandle />
 
       <ResizablePanel defaultSize={50}>
-        <div className="h-full bg-muted/50 border-l border-t border-border">
+        <div className="h-full border-border">
           <Timeline />
         </div>
       </ResizablePanel>

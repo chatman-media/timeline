@@ -13,6 +13,7 @@ import {
 import { FfprobeData } from "@/types/ffprobe"
 import { TimeRange } from "@/types/time-range"
 import type { MediaFile, ScreenLayout, Track } from "@/types/videos"
+import { createTracksFromFiles } from "@/utils/media-utils"
 
 // Определяем тип для enqueue
 type EnqueueObject = {
@@ -156,12 +157,25 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       isDirty: true,
     }),
 
-    setActiveTrack: (context: StateContext, event: { trackId: string }) => ({
-      ...context,
-      activeTrackId: event.trackId,
-      isChangingCamera: false,
-      isDirty: true,
-    }),
+    setActiveTrack: (context: StateContext, event: { trackId: string }) => {
+      // Проверяем, меняется ли трек
+      const isChangingTrack = context.activeTrackId !== event.trackId;
+      
+      return {
+        ...context,
+        activeTrackId: event.trackId,
+        // Устанавливаем флаг isChangingCamera только если трек действительно меняется
+        isChangingCamera: isChangingTrack,
+        isDirty: true,
+      }
+    },
+
+    resetChangingCamera: (context: StateContext) => {
+      return {
+        ...context,
+        isChangingCamera: false,
+      }
+    },
 
     setTracks: (context: StateContext, event: { tracks: Track[] }) => {
       const newState = {
@@ -190,47 +204,8 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
         return context
       }
 
-      // Подсчитываем текущее количество видео и аудио треков
-      let videoTracksCount = context.tracks.filter((track) =>
-        track.videos.some((video) =>
-          video.probeData?.streams?.some((stream) => stream.codec_type === "video"),
-        ),
-      ).length
-
-      let audioTracksCount = context.tracks.filter(
-        (track) =>
-          !track.videos.some((video) =>
-            video.probeData?.streams?.some((stream) => stream.codec_type === "video"),
-          ),
-      ).length
-
-      // Создаем новые треки с правильными индексами
-      const newTracks = event.media.map((media) => {
-        const hasVideo = media.probeData?.streams?.some((stream) => stream.codec_type === "video")
-        const trackType = hasVideo ? "video" : "audio"
-
-        // Назначаем индекс трека (начиная с 1)
-        const index = hasVideo ? videoTracksCount + 1 : audioTracksCount + 1
-
-        if (hasVideo) {
-          videoTracksCount += 1
-        } else {
-          audioTracksCount += 1
-        }
-
-        return {
-          id: generateSegmentId(),
-          name: media.name,
-          type: trackType as TrackType,
-          isActive: false,
-          videos: [media],
-          startTime: 0,
-          endTime: 0,
-          combinedDuration: 0,
-          timeRanges: [],
-          index: index,
-        } as NewTrack
-      })
+      // Используем createTracksFromFiles из media-utils.ts и передаем существующие треки
+      const newTracks = createTracksFromFiles(event.media, context.tracks.length, context.tracks)
 
       const newState = {
         ...context,
@@ -264,6 +239,19 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       // Создаем новый Set на основе существующего и добавляем новые пути
       const newAddedFiles = new Set(context.addedFiles)
       event.filePaths.forEach((path) => newAddedFiles.add(path))
+
+      return {
+        ...context,
+        addedFiles: newAddedFiles,
+        isDirty: true,
+      }
+    },
+
+    removeFromAddedFiles: (context: StateContext, event: { filePaths: string[] }) => {
+      console.log("[rootStore] Запуск removeFromAddedFiles()", event.filePaths)
+      // Создаем новый Set на основе существующего и удаляем указанные пути
+      const newAddedFiles = new Set(context.addedFiles)
+      event.filePaths.forEach((path) => newAddedFiles.delete(path))
 
       return {
         ...context,
@@ -474,6 +462,37 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       return {
         ...context,
         isPlaying: event.isPlaying,
+      }
+    },
+
+    setCurrentTime: (context: StateContext, event: { time: number; source?: "playback" | "user" }) => {
+      // Проверка на валидность времени
+      if (!isFinite(event.time) || event.time < 0) {
+        return context;
+      }
+      
+      // Определяем, короткое ли у нас видео (меньше 10 секунд)
+      const isShortVideo = context.activeVideo?.duration && context.activeVideo.duration < 10;
+      
+      // Для коротких видео используем меньший порог для обновления времени
+      const threshold = isShortVideo ? 0.001 : 0.01;
+      
+      // Предотвращаем ненужные обновления при малых изменениях времени
+      if (Math.abs(context.currentTime - event.time) < threshold) {
+        return context;
+      }
+      
+      // Более точное логирование для коротких видео
+      if (isShortVideo) {
+        console.log(`[rootStore] setCurrentTime: ${event.time.toFixed(3)} (source: ${event.source || 'unknown'}, short video)`);
+      } else if (Math.abs(context.currentTime - event.time) > 0.5) {
+        // Логируем только значительные изменения для обычных видео
+        console.log(`[rootStore] setCurrentTime: ${event.time.toFixed(3)} (source: ${event.source || 'unknown'})`);
+      }
+      
+      return {
+        ...context,
+        currentTime: event.time,
       }
     },
   },

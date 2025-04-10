@@ -45,11 +45,14 @@ import { cn } from "@/lib/utils"
 
 import { Button } from "../ui/button"
 
-export function PlayerControls() {
+interface PlayerControlsProps {
+  currentTime: number
+}
+
+export function PlayerControls({ currentTime }: PlayerControlsProps) {
   const {
     isPlaying,
     setIsPlaying,
-    currentTime,
     activeVideo,
     setCurrentTime,
     volume: globalVolume,
@@ -65,12 +68,7 @@ export function PlayerControls() {
     stopRecordingSchema,
   } = useRootStore()
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const [localTime, setLocalTime] = useState(currentTime)
-  const lastUpdateTime = useRef(0)
   const lastSaveTime = useRef(0)
-  const frameRef = useRef<number | null>(null)
-  const initialFrameTimeRef = useRef<number | null>(null)
-  const timeAtPlayStartRef = useRef<number>(0)
   const SAVE_INTERVAL = 5000 // Сохраняем каждые 5 секунд
   const [aspectRatioModalOpen, setAspectRatioModalOpen] = useState(false)
   const [showSafeZones, setShowSafeZones] = useState(false)
@@ -93,209 +91,63 @@ export function PlayerControls() {
     return () => clearInterval(interval)
   }, [])
 
-  // Синхронизируем локальное время с глобальным при изменении currentTime
-  useEffect(() => {
-    if (!isPlaying) {
-      setLocalTime(currentTime)
-    }
-  }, [currentTime, isPlaying])
-
-  // Фиксируем время начала воспроизведения
-  useEffect(() => {
-    if (isPlaying) {
-      initialFrameTimeRef.current = null
-    }
-  }, [isPlaying, localTime])
-
-  // Изменяем логику работы с таймером, чтобы управлять только активным видео
-  useEffect(() => {
-    if (!isPlaying || !activeVideo || isSeeking) {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current)
-        frameRef.current = null
-      }
-      return
-    }
-
-    // Получаем видеоэлементы только для активного видео
-    const videoElements = document.querySelectorAll(`video[data-video-id="${activeVideo.id}"]`)
-    if (videoElements.length === 0) {
-      console.warn("No video elements found for active video:", activeVideo.id)
-      return
-    }
-
-    console.log(
-      `[PlayerControls] Воспроизведение видео ${activeVideo.id}, найдено элементов:`,
-      videoElements.length,
-    )
-
-    // Воспроизводим только активное видео
-    videoElements.forEach((videoElement) => {
-      try {
-        // Приводим элемент к типу HTMLVideoElement
-        const video = videoElement as HTMLVideoElement
-        video.play()
-      } catch (e) {
-        console.error(`Error playing video ${activeVideo.id}:`, e)
-      }
-    })
-
-    // Функция для обновления UI на основе фактического состояния видео
-    const updateVideo = () => {
-      if (videoElements.length === 0) return
-
-      // Берем первый видеоэлемент активного видео как источник времени
-      const mainVideo = videoElements[0] as HTMLVideoElement
-      const newTime = mainVideo.currentTime
-
-      // Обновляем локальное время
-      setLocalTime(newTime)
-
-      // Обновляем глобальное время реже для улучшения производительности
-      const now = performance.now()
-      if (now - lastUpdateTime.current >= 100) {
-        setCurrentTime(newTime)
-        lastUpdateTime.current = now
-      }
-
-      // Запланировать следующий кадр
-      frameRef.current = requestAnimationFrame(updateVideo)
-    }
-
-    frameRef.current = requestAnimationFrame(updateVideo)
-
-    // Очищаем при размонтировании
-    return () => {
-      if (frameRef.current) {
-        cancelAnimationFrame(frameRef.current)
-        frameRef.current = null
-      }
-
-      // Останавливаем только активное видео
-      videoElements.forEach((videoElement) => {
-        try {
-          const video = videoElement as HTMLVideoElement
-          video.pause()
-        } catch (e) {
-          console.error(`Error pausing video ${activeVideo.id}:`, e)
-        }
-      })
-    }
-  }, [isPlaying, activeVideo, setCurrentTime, isSeeking])
-
-  // Обновляем функцию handlePlayPause для работы только с активным видео
+  // Упрощаем handlePlayPause: только переключаем isPlaying
   const handlePlayPause = useCallback(() => {
     if (!activeVideo) return
-
-    // Получаем видеоэлементы только для активного видео
-    const videoElements = document.querySelectorAll(`video[data-video-id="${activeVideo.id}"]`)
-    console.log(`[handlePlayPause] Найдено элементов для ${activeVideo.id}:`, videoElements.length)
-
-    if (isPlaying) {
-      // Если играет - останавливаем
-      videoElements.forEach((videoElement) => {
-        try {
-          const video = videoElement as HTMLVideoElement
-          video.pause()
-          // Когда ставим на паузу, синхронизируем положение слайдера с видео
-          const currentVideoTime = video.currentTime
-          setLocalTime(currentVideoTime)
-          setCurrentTime(currentVideoTime, "user")
-        } catch (e) {
-          console.error(`Error pausing video ${activeVideo.id}:`, e)
-        }
-      })
-    } else {
-      // Если на паузе - запускаем
-      // Сначала получаем актуальное состояние UI
-      const uiTime = localTime
-
-      videoElements.forEach((videoElement) => {
-        try {
-          const video = videoElement as HTMLVideoElement
-          // Устанавливаем текущее время для всех видео
-          video.currentTime = uiTime
-          video.play()
-        } catch (e) {
-          console.error(`Error playing video ${activeVideo.id}:`, e)
-        }
-      })
-    }
-
     setIsPlaying(!isPlaying)
-  }, [isPlaying, setIsPlaying, localTime, setCurrentTime, activeVideo])
+  }, [isPlaying, setIsPlaying, activeVideo])
 
+  // Переписываем handleSkipBackward: используем currentTime, вызываем setCurrentTime
   const handleSkipBackward = useCallback(() => {
     if (!activeVideo) return
 
     const videoStartTime = activeVideo.startTime || 0
-    // Если уже на первом кадре, не делаем ничего
-    if (Math.abs(localTime - videoStartTime) < 0.01) return
+    if (Math.abs(currentTime - videoStartTime) < 0.01) return
 
+    let newTime
     if (!activeVideo?.probeData?.streams?.[0]?.r_frame_rate) {
-      const newTime = Math.max(videoStartTime, localTime - 1 / 25)
-      setLocalTime(newTime)
-      setCurrentTime(newTime)
-      // Важно: обновляем точку отсчета для следующего воспроизведения
-      timeAtPlayStartRef.current = newTime
-      setIsPlaying(false)
-      return
+      newTime = Math.max(videoStartTime, currentTime - 1 / 25)
+    } else {
+      const fpsStr = activeVideo.probeData.streams[0].r_frame_rate
+      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
+      const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
+
+      if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) return
+
+      const frameTime = 1 / fps
+      newTime = Math.max(videoStartTime, currentTime - frameTime)
     }
 
-    const fpsStr = activeVideo.probeData.streams[0].r_frame_rate
-    // Более надежный расчет FPS
-    const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
-    const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
-
-    if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) return
-
-    const frameTime = 1 / fps
-    // Используем актуальное localTime
-    const newTime = Math.max(activeVideo.startTime || 0, localTime - frameTime)
-
-    // Обновляем timeAtPlayStartRef, чтобы при следующем воспроизведении начать с правильного места
-    timeAtPlayStartRef.current = newTime
-
-    setLocalTime(newTime)
     setCurrentTime(newTime)
     setIsPlaying(false)
-  }, [activeVideo, localTime, setCurrentTime, setIsPlaying, currentTime])
+  }, [activeVideo, currentTime, setCurrentTime, setIsPlaying])
 
+  // Переписываем handleSkipForward: используем currentTime, вызываем setCurrentTime
   const handleSkipForward = useCallback(() => {
     if (!activeVideo) return
 
-    const videoEndTime = (activeVideo.startTime || 0) + (activeVideo.duration || 0)
-    // Если уже на последнем кадре, не делаем ничего
-    if (Math.abs(localTime - videoEndTime) < 0.01) return
+    const videoStartTime = activeVideo.startTime || 0
+    const videoDuration = activeVideo.duration || 0
+    const videoEndTime = videoStartTime + videoDuration
+    if (Math.abs(currentTime - videoEndTime) < 0.01) return
 
+    let newTime
     if (!activeVideo?.probeData?.streams?.[0]?.r_frame_rate) {
-      const newTime = Math.min(videoEndTime, localTime + 1 / 25)
-      setLocalTime(newTime)
-      setCurrentTime(newTime)
-      // Важно: обновляем точку отсчета для следующего воспроизведения
-      timeAtPlayStartRef.current = newTime
-      setIsPlaying(false)
-      return
+      newTime = Math.min(videoEndTime, currentTime + 1 / 25)
+    } else {
+      const fpsStr = activeVideo.probeData.streams[0].r_frame_rate
+      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
+      const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
+
+      if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) return
+
+      const frameTime = 1 / fps
+      newTime = Math.min(videoEndTime, currentTime + frameTime)
     }
 
-    const fpsStr = activeVideo.probeData.streams[0].r_frame_rate
-    // Более надежный расчет FPS
-    const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
-    const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
-
-    if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) return
-
-    const frameTime = 1 / fps
-    // Используем актуальное localTime и проверяем, что не выходим за конец видео
-    const newTime = Math.min(videoEndTime, localTime + frameTime)
-
-    // Обновляем timeAtPlayStartRef, чтобы при следующем воспроизведении начать с правильного места
-    timeAtPlayStartRef.current = newTime
-
-    setLocalTime(newTime)
     setCurrentTime(newTime)
     setIsPlaying(false)
-  }, [activeVideo, localTime, setCurrentTime, setIsPlaying, currentTime])
+  }, [activeVideo, currentTime, setCurrentTime, setIsPlaying])
 
   const handleVolumeChange = useCallback(
     (value: number[]) => {
@@ -312,15 +164,15 @@ export function PlayerControls() {
     setIsFullscreen(!isFullscreen)
   }, [isFullscreen])
 
+  // Переписываем handleRecordToggle: используем currentTime
   const handleRecordToggle = useCallback(() => {
     if (isRecordingSchema) {
       stopRecordingSchema()
     } else {
-      // Используем ID активного трека, если он есть, или ID активного видео
       const trackId = activeTrackId || activeVideo?.id || ""
       if (trackId) {
         console.log("[handleRecordToggle] Начинаем запись для трека:", trackId)
-        startRecordingSchema(trackId, localTime)
+        startRecordingSchema(trackId, currentTime)
       } else {
         console.warn("Не удалось начать запись: отсутствует активный трек и активное видео")
       }
@@ -331,105 +183,92 @@ export function PlayerControls() {
     stopRecordingSchema,
     activeTrackId,
     activeVideo,
-    localTime,
+    currentTime,
   ])
 
-  // Упрощаем handleTimeChange для работы напрямую с видео
+  // Оптимизированный handleTimeChange для коротких видео
   const handleTimeChange = useCallback(
     (value: number[]) => {
       if (!activeVideo) return
 
-      const videoStartTime = activeVideo.startTime || 0
-      const videoEndTime = videoStartTime + (activeVideo.duration || 0)
-
-      // Убедимся, что значение из слайдера валидное
+      const videoDuration = activeVideo.duration || 0
       const sliderValue = value[0]
+
+      // Проверка валидности значения
       if (!isFinite(sliderValue) || sliderValue < 0) return
 
-      const newTime = Math.min(videoEndTime, Math.max(videoStartTime, sliderValue + videoStartTime))
+      // Ограничиваем время в пределах длительности видео
+      const clampedTime = Math.min(videoDuration, Math.max(0, sliderValue))
+      
+      // Определяем, короткое ли у нас видео (меньше 10 секунд)
+      const isShortVideo = videoDuration < 10;
+      
+      // Для коротких видео используем меньший порог изменения
+      const timeChangeThreshold = isShortVideo ? 0.001 : 0.01;
+      
+      // Проверяем, существенно ли изменилось время
+      if (Math.abs(clampedTime - currentTime) < timeChangeThreshold) return
 
-      // Устанавливаем локальное и глобальное время сразу
-      setLocalTime(newTime)
-      setCurrentTime(newTime, "user")
-
-      // Флаг seeking не нужно устанавливать на длительное время,
-      // иначе можно заблокировать обработку событий слайдера
-      setIsSeeking(true)
-
-      // Синхронизируем видео элементы после установки времени
-      const updateVideoElements = () => {
-        // Получаем видеоэлементы только для активного видео
-        const videoElements = document.querySelectorAll(`video[data-video-id="${activeVideo.id}"]`)
-        videoElements.forEach((videoElement) => {
-          try {
-            const video = videoElement as HTMLVideoElement
-            // Устанавливаем позицию видео на новое время
-            video.currentTime = newTime
-          } catch (e) {
-            console.error(`Error setting time for video ${activeVideo.id}:`, e)
-          }
+      // Логируем только при значительных изменениях времени
+      if (Math.abs(clampedTime - currentTime) > 0.5) {
+        console.log('[handleTimeChange] Значительное изменение времени:', {
+          currentTime: currentTime.toFixed(3),
+          clampedTime: clampedTime.toFixed(3),
+          delta: (clampedTime - currentTime).toFixed(3)
         })
-
-        // Сразу сбрасываем флаг seeking
-        setIsSeeking(false)
       }
 
-      // Запускаем обновление видео элементов в асинхронном режиме,
-      // чтобы не блокировать обработку событий слайдера
-      setTimeout(updateVideoElements, 0)
+      // Устанавливаем seeking перед изменением времени, чтобы избежать 
+      // конфликтов с обновлениями от timeupdate
+      setIsSeeking(true)
+      
+      // Устанавливаем новое время с пометкой, что источник - пользователь
+      setCurrentTime(clampedTime, "user")
     },
-    [activeVideo, setCurrentTime, setIsSeeking],
+    [activeVideo, setCurrentTime, setIsSeeking, currentTime],
   )
 
+  // Переписываем handleChevronFirst: используем currentTime, вызываем setCurrentTime
   const handleChevronFirst = useCallback(() => {
     if (!activeVideo) return
 
     const startTime = activeVideo.startTime || 0
+    if (Math.abs(currentTime - startTime) < 0.01) return
 
-    // Уже находимся в начале
-    if (Math.abs(localTime - startTime) < 0.01) return
-
-    setLocalTime(startTime)
     setCurrentTime(startTime)
-
-    // Обновляем timeAtPlayStartRef
-    timeAtPlayStartRef.current = startTime
-
     setIsPlaying(false)
-  }, [activeVideo, setCurrentTime, setIsPlaying, localTime])
+  }, [activeVideo, currentTime, setCurrentTime, setIsPlaying])
 
+  // Переписываем handleChevronLast: используем currentTime, вызываем setCurrentTime
   const handleChevronLast = useCallback(() => {
     if (!activeVideo) return
 
-    const videoEndTime = (activeVideo.startTime || 0) + (activeVideo.duration || 0)
+    const videoStartTime = activeVideo.startTime || 0
+    const videoDuration = activeVideo.duration || 0
+    const videoEndTime = videoStartTime + videoDuration
 
-    // Уже находимся в конце
-    if (Math.abs(localTime - videoEndTime) < 0.01) return
+    if (Math.abs(currentTime - videoEndTime) < 0.01) return
 
-    setLocalTime(videoEndTime)
     setCurrentTime(videoEndTime)
-
-    // Обновляем timeAtPlayStartRef
-    timeAtPlayStartRef.current = videoEndTime
-
     setIsPlaying(false)
-  }, [activeVideo, setCurrentTime, setIsPlaying, localTime])
+  }, [activeVideo, currentTime, setCurrentTime, setIsPlaying])
 
-  // Проверяем, находимся ли мы на первом или последнем кадре
+  // Используем currentTime для isFirstFrame / isLastFrame
   const fps = activeVideo?.probeData?.streams?.[0]?.r_frame_rate
   const frameTime = fps ? 1 / eval(fps) : 0
-  const isFirstFrame = Math.abs(localTime - (activeVideo?.startTime || 0)) < frameTime
-  const isLastFrame = Math.abs(localTime - (activeVideo?.endTime || Infinity)) < frameTime
+  const isFirstFrame = Math.abs(currentTime - (activeVideo?.startTime || 0)) < frameTime
+  const videoEndTimeForLastFrame = (activeVideo?.startTime || 0) + (activeVideo?.duration || 0)
+  const isLastFrame = Math.abs(currentTime - videoEndTimeForLastFrame) < frameTime
 
-  // Функция для форматирования времени в формат ЧЧ:ММ:СС.МС
+  // Функция форматирования времени
   const formatTime = (time: number) => {
-    // Обрабатываем отрицательное время (оно не должно отображаться как отрицательное)
-    const absTime = Math.abs(time)
-    // Отрицательное время отображаем как 00:00:00.000
-    if (time < 0) {
+    // Добавим проверку на конечность числа
+    if (!isFinite(time)) {
+      console.warn('[formatTime] Received non-finite time:', time)
       return "00:00:00.000"
     }
-
+    // Используем Math.max для гарантии неотрицательного значения
+    const absTime = Math.max(0, time)
     const hours = Math.floor(absTime / 3600)
     const minutes = Math.floor((absTime % 3600) / 60)
     const seconds = Math.floor(absTime % 60)
@@ -437,108 +276,8 @@ export function PlayerControls() {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`
   }
 
-  // Добавляем эффект для сохранения времени внутри дня при переключении дорожек
-  useEffect(() => {
-    // Если активное видео изменилось, но время внутри дня должно быть сохранено
-    if (activeVideo) {
-      try {
-        // Получаем timestamp из метаданных видео (обычно он хранится в tags.creation_time)
-        const creationTimeStr = activeVideo.probeData?.format?.tags?.creation_time || ""
-
-        if (typeof creationTimeStr !== "string" || !creationTimeStr) {
-          console.log("Нет данных о времени создания видео")
-          return
-        }
-
-        // Получаем абсолютное время суток от начала дня для текущего положения
-        const currentTimeOfDay = getTimeOfDayFromISOTime(creationTimeStr, localTime)
-
-        console.log("[PlayerControls] Переключение на новое видео:", {
-          currentVideo: activeVideo.name,
-          creationTime: creationTimeStr,
-          currentTimeOfDay,
-        })
-
-        // Если удалось получить время суток, применяем его к новой дорожке
-        if (currentTimeOfDay !== null) {
-          // Пытаемся найти такую же временную точку в новом видео
-          const newPositionInVideo = getPositionFromTimeOfDay(creationTimeStr, currentTimeOfDay)
-
-          if (newPositionInVideo !== null) {
-            console.log("[PlayerControls] Устанавливаем позицию в новом видео:", newPositionInVideo)
-
-            // Проверяем, находится ли новая позиция в границах видео
-            const videoStartTime = activeVideo.startTime || 0
-            const videoEndTime = videoStartTime + (activeVideo.duration || 0)
-
-            if (newPositionInVideo >= videoStartTime && newPositionInVideo <= videoEndTime) {
-              // Обновляем локальное время и глобальное время
-              setLocalTime(newPositionInVideo)
-              setCurrentTime(newPositionInVideo, "user")
-
-              // Обновляем видео элементы
-              const videoElements = document.querySelectorAll("video")
-              videoElements.forEach((video) => {
-                try {
-                  video.currentTime = newPositionInVideo
-                } catch (e) {
-                  console.error("Error setting video time during track switch:", e)
-                }
-              })
-            }
-          }
-        }
-      } catch (e) {
-        console.error("Error syncing time between tracks:", e)
-      }
-    }
-  }, [activeVideo?.id, setCurrentTime, localTime])
-
-  // Вспомогательная функция для получения времени суток из ISO времени и позиции видео
-  function getTimeOfDayFromISOTime(isoTime: string, positionInVideo: number): number | null {
-    try {
-      // Парсим ISO время начала видео
-      const date = new Date(isoTime)
-      if (isNaN(date.getTime())) return null
-
-      // Получаем секунды от начала дня для начала видео
-      const hours = date.getHours()
-      const minutes = date.getMinutes()
-      const seconds = date.getSeconds()
-      const milliseconds = date.getMilliseconds()
-
-      const startTimeOfDay = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000
-
-      // Добавляем позицию в видео к начальному времени
-      return startTimeOfDay + positionInVideo
-    } catch (e) {
-      console.error("Error parsing time:", e)
-      return null
-    }
-  }
-
-  // Вспомогательная функция для получения позиции в видео по времени суток
-  function getPositionFromTimeOfDay(isoTime: string, timeOfDay: number): number | null {
-    try {
-      // Парсим ISO время начала видео
-      const date = new Date(isoTime)
-      if (isNaN(date.getTime())) return null
-
-      // Получаем секунды от начала дня для начала видео
-      const hours = date.getHours()
-      const minutes = date.getMinutes()
-      const seconds = date.getSeconds()
-      const milliseconds = date.getMilliseconds()
-
-      const startTimeOfDay = hours * 3600 + minutes * 60 + seconds + milliseconds / 1000
-
-      // Вычисляем позицию в видео
-      return timeOfDay - startTimeOfDay
-    } catch (e) {
-      console.error("Error calculating position:", e)
-      return null
-    }
-  }
+  // Лог для проверки получаемого currentTime
+  console.log('[PlayerControls] Rendering with currentTime:', currentTime)
 
   return (
     <div className="w-full flex flex-col">
@@ -547,16 +286,16 @@ export function PlayerControls() {
         <div className="flex items-center gap-2">
           <div className="flex-1">
             <Slider
-              value={[Math.max(0, localTime - (activeVideo?.startTime || 0))]}
+              value={[Math.max(0, currentTime)]}
               min={0}
               max={activeVideo?.duration || 100}
-              step={0.01}
+              step={0.001}
               onValueChange={handleTimeChange}
               className="cursor-pointer"
             />
           </div>
           <span className="text-xs bg-white dark:bg-black text-black dark:text-white rounded-md px-1">
-            {formatTime(Math.max(0, localTime - (activeVideo?.startTime || 0)))}
+            {formatTime(Math.max(0, currentTime))}
           </span>
           <span className="mb-[3px]">/</span>
           <span className="text-xs bg-white dark:bg-black text-black dark:text-white rounded-md px-1">

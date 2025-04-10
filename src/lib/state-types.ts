@@ -184,9 +184,11 @@ export type EventPayloadMap = {
   addToMetadataCache: { key: string; data: any }
   addToThumbnailCache: { key: string; data: string }
   addToAddedFiles: { filePaths: string[] }
+  removeFromAddedFiles: { filePaths: string[] }
   setVolume: { volume: number }
   setTrackVolume: { trackId: string; volume: number }
   setIsSeeking: { isSeeking: boolean }
+  resetChangingCamera: {}
   undo: {}
   redo: {}
   addMediaFiles: { files: File[] }

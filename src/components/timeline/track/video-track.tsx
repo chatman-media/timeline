@@ -71,19 +71,45 @@ const VideoTrack = memo(function VideoTrack({
 
   const handleClick = useCallback(
     (_e: React.MouseEvent, track: TimelineTrack, videoId?: string) => {
-      setActiveTrack(track.id)
-      if (videoId) {
-        setActiveVideo(videoId)
-        const video = track.videos.find((v) => v.id === videoId)
-        if (video) {
-          const videoStartTime = video.startTime ?? 0
-          setCurrentTime(videoStartTime)
-          setIsPlaying(false)
+      // Предотвращаем всплытие события, чтобы не было двойной обработки
+      _e.stopPropagation();
+      
+      // Проверяем, является ли переключение треков
+      const isTrackChange = track.id !== activeTrackId;
+      
+      // Если переключаем трек, отмечаем это сразу
+      if (isTrackChange) {
+        console.log(`[VideoTrack] Переключение с трека ${activeTrackId} на трек ${track.id}`);
+        
+        // Устанавливаем активный трек (это включит флаг isChangingCamera)
+        setActiveTrack(track.id);
+        
+        // Если есть videoId, устанавливаем активное видео
+        if (videoId) {
+          // Установка активного видео, но без изменения текущего времени
+          console.log(`[VideoTrack] Устанавливаем активное видео ${videoId}`);
+          setActiveVideo(videoId);
+        }
+      } else {
+        // Трек уже выбран, значит это навигация внутри трека
+        if (videoId) {
+          console.log(`[VideoTrack] Навигация внутри трека ${track.id} к видео ${videoId}`);
+          setActiveVideo(videoId);
+          
+          // Находим видео и устанавливаем время начала только для внутритрековой навигации
+          const video = track.videos.find((v) => v.id === videoId);
+          if (video) {
+            const videoStartTime = video.startTime ?? 0;
+            console.log(`[VideoTrack] Устанавливаем время ${videoStartTime}`);
+            setCurrentTime(videoStartTime);
+            // Останавливаем воспроизведение при перемещении внутри трека
+            setIsPlaying(false);
+          }
         }
       }
     },
-    [setActiveTrack, setActiveVideo, setCurrentTime, setIsPlaying],
-  )
+    [setActiveTrack, setActiveVideo, setCurrentTime, setIsPlaying, activeTrackId],
+  );
 
   // Определяем видимые видео
   useEffect(() => {
@@ -162,9 +188,9 @@ const VideoTrack = memo(function VideoTrack({
                               >
                                 <span className="bg-[#033032]">
                                   {video.probeData?.streams[0]?.codec_name?.startsWith("a")
-                                    ? "A"
-                                    : "V"}
-                                  {track.index}
+                                    ? "Аудио"
+                                    : "Видео"}
+                                  {" "}{track.index}
                                 </span>
                                 <span className="bg-[#033032]">{video.name}</span>
                                 <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white">

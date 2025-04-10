@@ -31,7 +31,7 @@ const getSourceTrackInfo = (sourceTrackIds: string[], tracks: Track[]): string =
   if (!sourceTrackIds || sourceTrackIds.length === 0) return "N/A"
   const firstId = sourceTrackIds[0]
   const track = tracks.find((t) => t.id === firstId)
-  return track ? `V${Number(track.index) + 1}` : "N/A"
+  return track ? `Видео ${Number(track.index)}` : "N/A"
 }
 
 export function MontageSchemaView() {

@@ -1,9 +1,9 @@
-import { memo, useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 import { PlayerControls } from "@/components/player/player-controls"
 import { useRootStore } from "@/hooks/use-root-store"
 
-export const ActiveVideo = memo(() => {
+export const ActiveVideo = () => {
   const {
     videoRefs,
     isPlaying,
@@ -16,12 +16,33 @@ export const ActiveVideo = memo(() => {
     currentTime,
     isSeeking,
     setIsSeeking,
+    resetChangingCamera,
   } = useRootStore()
+  
+  // Используем ref для хранения последнего времени обновления, чтобы избежать слишком частых обновлений
+  const lastUpdateTimeRef = useRef(0)
+  // Минимальный интервал между обновлениями времени (мс) - уменьшаем для более плавного движения
+  const UPDATE_THRESHOLD = 16 // ~60fps для максимально плавного обновления
+  // Последнее отправленное время
+  const lastSentTimeRef = useRef(0)
+  // Определяем, короткое ли видео (меньше 10 секунд)
+  const isShortVideo = useRef(false)
 
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation()
     setIsPlaying(!isPlaying)
   }
+
+  // Выводим текущее время только раз в секунду, а не для каждого рендера
+  useEffect(() => {
+    const debugInterval = setInterval(() => {
+      if (activeVideo) {
+        console.log('[ActiveVideo Debug] Текущее время:', currentTime.toFixed(3))
+      }
+    }, 1000)
+    
+    return () => clearInterval(debugInterval)
+  }, [activeVideo, currentTime])
 
   useEffect(() => {
     if (!activeVideo) return
@@ -29,22 +50,33 @@ export const ActiveVideo = memo(() => {
     const videoElement = videoRefs[activeVideo.id]
     if (!videoElement) return
 
-    const videoStartTime = activeVideo.startTime || 0
-    const throttledTimeUpdate = () => {
-      if (!videoElement.seeking && !isChangingCamera && !isSeeking) {
-        const newTime = videoStartTime + videoElement.currentTime
-        requestAnimationFrame(() => {
-          setCurrentTime(newTime)
-        })
-      }
-    }
+    // Определяем, короткое ли у нас видео
+    isShortVideo.current = (activeVideo.duration || 0) < 10
 
-    let lastUpdate = 0
-    const handleTimeUpdate = () => {
+    const videoStartTime = activeVideo.startTime || 0
+
+    // Оптимизированный обработчик timeupdate
+    const onTimeUpdate = () => {
+      // Проверяем время с последнего обновления, чтобы не вызывать слишком частые изменения состояния
       const now = performance.now()
-      if (now - lastUpdate >= 16.6) {
-        throttledTimeUpdate()
-        lastUpdate = now
+      if (now - lastUpdateTimeRef.current < UPDATE_THRESHOLD) return
+      
+      // Обновляем currentTime только если не идет перемотка (внутренняя или внешняя)
+      // и не меняется камера
+      if (!videoElement.seeking && !isChangingCamera && !isSeeking) {
+        const newTime = videoElement.currentTime
+        
+        // Минимальный порог разницы времени - для сверхплавного обновления
+        const timeDiffThreshold = 0.001 // Практически любое изменение времени
+        
+        // Проверяем, изменилось ли время с последнего отправленного значения
+        const timeDiff = Math.abs(newTime - lastSentTimeRef.current)
+        if (timeDiff > timeDiffThreshold) {
+          // Вызываем setCurrentTime с пометкой источника обновления
+          setCurrentTime(newTime, "playback")
+          lastUpdateTimeRef.current = now
+          lastSentTimeRef.current = newTime
+        }
       }
     }
 
@@ -53,21 +85,46 @@ export const ActiveVideo = memo(() => {
       setIsPlaying(false)
     }
 
-    videoElement.addEventListener("timeupdate", handleTimeUpdate)
+    // Добавляем оптимизированный слушатель
+    videoElement.addEventListener("timeupdate", onTimeUpdate)
     videoElement.addEventListener("error", handleError)
 
     const playVideo = async () => {
       try {
-        if (isPlaying && !isChangingCamera) {
-          await videoElement.play()
+        if (isPlaying) {
+          if (isChangingCamera) {
+            // При переключении камеры - синхронизируем время и продолжаем воспроизведение
+            videoElement.currentTime = currentTime;
+            console.log('[ChangingCamera] Продолжаем воспроизведение с позиции:', currentTime.toFixed(3));
+            
+            // Проверяем возможность воспроизведения перед запуском
+            if (videoElement.readyState >= 2) { // HAVE_CURRENT_DATA или выше
+              await videoElement.play();
+            } else {
+              // Если видео не готово, добавляем слушатель для запуска, когда будет готово
+              const handleCanPlay = async () => {
+                await videoElement.play();
+                videoElement.removeEventListener('canplay', handleCanPlay);
+              };
+              videoElement.addEventListener('canplay', handleCanPlay);
+            }
+          } else {
+            // Обычное воспроизведение без смены камеры
+            await videoElement.play();
+          }
         } else {
-          videoElement.pause()
+          // Пауза в любом случае, если isPlaying = false
+          videoElement.pause();
         }
       } catch (error) {
-        console.error("Failed to play video:", error)
-        setIsPlaying(false)
+        console.error("Failed to play video:", error);
+        // Сбрасываем флаг isChangingCamera в случае ошибки
+        if (isChangingCamera) {
+          resetChangingCamera();
+        }
+        setIsPlaying(false);
       }
-    }
+    };
 
     // Устанавливаем громкость для активного видео
     const trackVolume = trackVolumes[activeVideo.id] ?? 1
@@ -75,8 +132,9 @@ export const ActiveVideo = memo(() => {
 
     playVideo()
 
+    // Убираем старые слушатели при очистке
     return () => {
-      videoElement.removeEventListener("timeupdate", handleTimeUpdate)
+      videoElement.removeEventListener("timeupdate", onTimeUpdate)
       videoElement.removeEventListener("error", handleError)
     }
   }, [
@@ -89,35 +147,64 @@ export const ActiveVideo = memo(() => {
     globalVolume,
     trackVolumes,
     isSeeking,
+    currentTime,
+    resetChangingCamera
   ])
 
-  // Добавляем эффект для обновления времени видео при изменении currentTime
+  // Эффект для синхронизации времени видео с общим состоянием
   useEffect(() => {
     if (!activeVideo) return
 
     const videoElement = videoRefs[activeVideo.id]
     if (!videoElement) return
 
-    const videoStartTime = activeVideo.startTime || 0
-    const newTime = currentTime - videoStartTime
+    // Определяем, короткое ли у нас видео
+    isShortVideo.current = (activeVideo.duration || 0) < 10
 
-    // Проверяем что newTime - корректное число и не отрицательное
-    if (isFinite(newTime) && newTime >= 0) {
-      videoElement.currentTime = newTime
-      // Сбрасываем флаг после небольшой задержки
-      setTimeout(() => {
-        setIsSeeking(false)
-      }, 100)
-    } else if (newTime < 0) {
-      // Если время отрицательное, устанавливаем время в начало видео
-      videoElement.currentTime = 0
-      // Обновляем глобальное время на начало видео
-      setCurrentTime(videoStartTime)
-      setTimeout(() => {
-        setIsSeeking(false)
-      }, 100)
+    // Проверяем, что время валидно
+    if (!isFinite(currentTime) || currentTime < 0) {
+      // Если время некорректно, устанавливаем в начало
+      if (Math.abs(videoElement.currentTime - 0) > 0.1) {
+        videoElement.currentTime = 0
+      }
+      return
     }
-  }, [currentTime, activeVideo, videoRefs, setIsSeeking, setCurrentTime])
+
+    // Если мы в процессе переключения камеры, обрабатываем особым образом
+    if (isChangingCamera) {
+      // Не обновляем позицию автоматически при смене камеры,
+      // это будет сделано в эффекте isChangingCamera
+      console.log('[Sync] В процессе смены камеры, сохраняем текущее время:', currentTime.toFixed(3));
+      
+      // Обновляем lastSentTimeRef, чтобы избежать лишних обновлений из onTimeUpdate
+      lastSentTimeRef.current = currentTime;
+      return;
+    }
+
+    // Обновляем lastSentTimeRef, чтобы избежать лишних обновлений из onTimeUpdate
+    lastSentTimeRef.current = currentTime
+
+    // Вычисляем разницу между текущим временем видео и состоянием
+    const timeDifference = Math.abs(videoElement.currentTime - currentTime)
+    
+    // Синхронизируем только при активной перемотке или значительной разнице
+    if (isSeeking) {
+      // При активной перемотке сразу применяем новое время
+      videoElement.currentTime = currentTime
+      
+      // Сбрасываем isSeeking после установки времени с минимальной задержкой
+      setTimeout(() => setIsSeeking(false), 30)
+    } else if (timeDifference > 0.3) { // Уменьшаем порог для более точной синхронизации
+      // Только значительные расхождения синхронизируем принудительно
+      videoElement.currentTime = currentTime
+      console.log('[Sync] Значительная синхронизация времени:', {
+        videoCurrentTime: videoElement.currentTime.toFixed(3),
+        newTime: currentTime.toFixed(3),
+        diff: timeDifference.toFixed(3)
+      })
+    }
+    // Для плавного воспроизведения не синхронизируем малые различия
+  }, [currentTime, activeVideo, videoRefs, isSeeking, setIsSeeking, isChangingCamera])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -129,6 +216,34 @@ export const ActiveVideo = memo(() => {
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [isPlaying, activeVideo, setIsPlaying])
+
+  // Эффект для сброса флага переключения камеры после небольшой задержки
+  useEffect(() => {
+    if (isChangingCamera) {
+      console.log('[ChangingCamera] Обнаружено переключение камеры');
+      
+      // Сохраняем текущее время для синхронизации между треками
+      if (activeVideo) {
+        // Если есть видео, стараемся сохранить точную временную синхронизацию
+        console.log('[ChangingCamera] Текущее время при переключении:', currentTime.toFixed(3));
+        
+        // Постановка видео на паузу, если нужно (убираем запуск во время переключения)
+        const videoElement = videoRefs[activeVideo.id];
+        if (videoElement && Math.abs(videoElement.currentTime - currentTime) > 0.1) {
+          console.log('[ChangingCamera] Синхронизация текущего времени');
+          videoElement.currentTime = currentTime;
+        }
+      }
+      
+      // Сбрасываем флаг isChangingCamera через небольшую задержку после переключения
+      const timeout = setTimeout(() => {
+        resetChangingCamera();
+        console.log('[ChangingCamera] Сброс флага isChangingCamera, время:', currentTime.toFixed(3));
+      }, 200); // Уменьшаем задержку для более быстрого сброса флага
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isChangingCamera, resetChangingCamera, videoRefs, activeVideo, currentTime]);
 
   if (!activeVideo) return null
 
@@ -149,9 +264,9 @@ export const ActiveVideo = memo(() => {
           disablePictureInPicture
         />
       </div>
-      <PlayerControls />
+      <PlayerControls currentTime={currentTime} />
     </div>
   )
-})
+}
 
 ActiveVideo.displayName = "ActiveVideo"

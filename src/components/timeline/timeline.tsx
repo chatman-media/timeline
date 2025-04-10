@@ -75,91 +75,11 @@ export function Timeline() {
     currentTime,
     setActiveVideo,
     currentLayout,
+    removeFromAddedFiles,
   } = useRootStore()
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const [deletingSectionDate, setDeletingSectionDate] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-
-  // Обработчик нажатия клавиш
-  React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Удаление трека
-      if (e.key === "Backspace" && activeTrackId) {
-        const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
-        setTracks(updatedTracks)
-        return
-      }
-
-      // Переключение дорожек
-      const key = e.key.toLowerCase()
-      const isVideoTrack = key.startsWith("v")
-      const trackNumber = isVideoTrack ? parseInt(key.slice(1)) : parseInt(key)
-
-      if (
-        (isVideoTrack && trackNumber >= 1 && trackNumber <= 9) ||
-        (!isVideoTrack && trackNumber >= 1 && trackNumber <= 9)
-      ) {
-        const targetTrack = tracks.find((track) => track.index === trackNumber - 1)
-        if (targetTrack) {
-          // Если идет запись, останавливаем её на текущей дорожке
-          if (isRecordingSchema && activeTrackId) {
-            const currentTrack = tracks.find((track) => track.id === activeTrackId)
-            if (currentTrack) {
-              // Останавливаем запись на текущей дорожке
-              rootStore.send({ type: "stopRecordingSchema" })
-
-              // Начинаем запись на новой дорожке
-              setTimeout(() => {
-                rootStore.send({
-                  type: "startRecordingSchema",
-                  trackId: targetTrack.id,
-                  startTime: currentTime,
-                })
-              }, 50)
-            }
-          }
-
-          // Переключаемся на новую дорожку
-          setActiveTrack(targetTrack.id)
-
-          // Если идет воспроизведение, сохраняем текущее время
-          if (isPlaying) {
-            const video = targetTrack.videos.find((v) => {
-              const startTime = v.startTime ?? 0
-              const duration = v.duration ?? 0
-              return startTime <= currentTime && startTime + duration >= currentTime
-            })
-
-            if (video) {
-              setActiveVideo(video.id)
-              updateTime(currentTime)
-            }
-          }
-
-          // Обновляем макет, сохраняя текущий тип и добавляя новую дорожку
-          const newLayout = {
-            ...currentLayout,
-            activeTracks: [targetTrack.id],
-          }
-          rootStore.send({ type: "setScreenLayout", layout: newLayout })
-        }
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [
-    activeTrackId,
-    tracks,
-    setTracks,
-    setActiveTrack,
-    isPlaying,
-    isRecordingSchema,
-    currentTime,
-    setActiveVideo,
-    updateTime,
-    currentLayout,
-  ])
 
   const sections = useMemo(() => {
     if (!tracks || tracks.length === 0) return []
@@ -218,6 +138,119 @@ export function Timeline() {
       .sort((a, b) => a.startTime - b.startTime)
   }, [tracks])
 
+  // Обработчик нажатия клавиш - перемещен сюда после определения sections
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Удаление трека
+      if (e.key === "Backspace" && activeTrackId) {
+        const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
+        setTracks(updatedTracks)
+        return
+      }
+
+      // Переключение дорожек
+      const key = e.key.toLowerCase()
+      
+      // Если это число от 1 до 9, то пытаемся найти трек с соответствующим индексом
+      if (key >= '1' && key <= '9') {
+        const trackNumber = parseInt(key)
+        
+        // Получаем текущую активную секцию (день)
+        const currentSection = sections.find(section => section.date === activeDate);
+        if (!currentSection) {
+          console.log(`[Timeline] Не найдена активная секция для даты ${activeDate}`);
+          return;
+        }
+        
+        // Ищем трек только среди треков текущей секции
+        const tracksInCurrentSection = currentSection.tracks;
+        
+        // Найдем трек по номеру среди треков только этой секции
+        const targetTrack = tracksInCurrentSection.find((track) => {
+          const trackIndex = typeof track.index === 'string' 
+            ? parseInt(track.index) 
+            : track.index;
+          return trackIndex === trackNumber;
+        });
+        
+        if (targetTrack) {
+          console.log(`[Timeline] Нажата клавиша ${key}, выбран трек ${targetTrack.id} с индексом ${targetTrack.index} в текущей секции (${activeDate})`);
+          
+          // Если идет запись, останавливаем её на текущей дорожке
+          if (isRecordingSchema && activeTrackId) {
+            const currentTrack = tracks.find((track) => track.id === activeTrackId)
+            if (currentTrack) {
+              // Останавливаем запись на текущей дорожке
+              rootStore.send({ type: "stopRecordingSchema" })
+
+              // Начинаем запись на новой дорожке
+              setTimeout(() => {
+                rootStore.send({
+                  type: "startRecordingSchema",
+                  trackId: targetTrack.id,
+                  startTime: currentTime,
+                })
+              }, 50)
+            }
+          }
+
+          // Переключаемся на новую дорожку
+          setActiveTrack(targetTrack.id)
+
+          // Если идет воспроизведение, сохраняем текущее время
+          if (isPlaying) {
+            const video = targetTrack.videos.find((v) => {
+              const startTime = v.startTime ?? 0
+              const duration = v.duration ?? 0
+              return startTime <= currentTime && startTime + duration >= currentTime
+            })
+
+            if (video) {
+              setActiveVideo(video.id)
+              // Сохраняем текущее время при переключении дорожек
+              updateTime(currentTime)
+            }
+          } else {
+            // Если воспроизведение не идет, берем первое видео трека
+            if (targetTrack.videos.length > 0) {
+              const firstVideo = targetTrack.videos[0];
+              setActiveVideo(firstVideo.id);
+              
+              // Сохраняем текущую позицию, а не прыгаем на начало видео
+              // Это предотвратит прыжки между секциями
+              updateTime(currentTime);
+            }
+          }
+
+          // Обновляем макет, сохраняя текущий тип и добавляя новую дорожку
+          const newLayout = {
+            ...currentLayout,
+            activeTracks: [targetTrack.id],
+          }
+          rootStore.send({ type: "setScreenLayout", layout: newLayout })
+        } else {
+          console.log(`[Timeline] Трек с индексом ${trackNumber} не найден в текущей секции (${activeDate})`);
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [
+    activeTrackId,
+    tracks,
+    setTracks,
+    setActiveTrack,
+    isPlaying,
+    isRecordingSchema,
+    currentTime,
+    setActiveVideo,
+    updateTime,
+    currentLayout,
+    activeDate,
+    sections, // Добавляем зависимость от sections и activeDate
+  ])
+  
   // Set initial active section when sections change
   React.useEffect(() => {
     if (sections.length > 0 && !activeDate) {
@@ -265,6 +298,18 @@ export function Timeline() {
         }),
     )
 
+    // Найдем все пути к файлам для удаления из addedFiles
+    const filesToRemove: string[] = []
+
+    tracks.forEach((track) => {
+      track.videos.forEach((video) => {
+        const videoStart = video.startTime || 0
+        if (new Date(videoStart * 1000).toDateString() === deletingSectionDate && video.path) {
+          filesToRemove.push(video.path)
+        }
+      })
+    })
+
     // Обновляем треки, удаляя видео с указанной датой
     const updatedTracks = tracks
       .map((track) => {
@@ -283,6 +328,11 @@ export function Timeline() {
 
     // Обновляем треки в хранилище
     setTracks(updatedTracks)
+
+    // Удаляем файлы из множества addedFiles, чтобы их можно было заново добавить
+    if (filesToRemove.length > 0) {
+      removeFromAddedFiles(filesToRemove)
+    }
 
     // Обрабатываем переключение на другую секцию, если удалили активную
     if (isDeletingActiveSection || wasActiveTrackInDeletedSection) {
@@ -360,8 +410,26 @@ export function Timeline() {
           <button
             disabled={!activeTrackId}
             onClick={() => {
+              // Найдем активную дорожку
+              const trackToDelete = tracks.find((track) => track.id === activeTrackId)
+              if (!trackToDelete) return
+
+              // Соберем все пути к файлам в этой дорожке для удаления из addedFiles
+              const filesToRemove: string[] = []
+              trackToDelete.videos.forEach((video) => {
+                if (video.path) {
+                  filesToRemove.push(video.path)
+                }
+              })
+
+              // Удаляем дорожку
               const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
               setTracks(updatedTracks)
+
+              // Удаляем файлы из множества addedFiles, чтобы их можно было заново добавить
+              if (filesToRemove.length > 0) {
+                removeFromAddedFiles(filesToRemove)
+              }
             }}
             className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
           >
@@ -370,8 +438,26 @@ export function Timeline() {
           <button
             disabled={!activeTrackId}
             onClick={() => {
+              // Найдем активную дорожку
+              const trackToDelete = tracks.find((track) => track.id === activeTrackId)
+              if (!trackToDelete) return
+
+              // Соберем все пути к файлам в этой дорожке для удаления из addedFiles
+              const filesToRemove: string[] = []
+              trackToDelete.videos.forEach((video) => {
+                if (video.path) {
+                  filesToRemove.push(video.path)
+                }
+              })
+
+              // Удаляем дорожку
               const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
               setTracks(updatedTracks)
+
+              // Удаляем файлы из множества addedFiles, чтобы их можно было заново добавить
+              if (filesToRemove.length > 0) {
+                removeFromAddedFiles(filesToRemove)
+              }
             }}
             className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
           >

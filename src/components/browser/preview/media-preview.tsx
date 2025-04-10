@@ -306,7 +306,7 @@ export const MediaPreview = memo(function MediaPreview({
                   videoRefs.current[`${fileId}-${index}`] = el
                 }}
                 src={file.path}
-                className={`w-full h-full object-cover rounded focus:outline-none`}
+                className={`w-full h-full object-cover focus:outline-none`}
                 tabIndex={0}
                 loop
                 playsInline

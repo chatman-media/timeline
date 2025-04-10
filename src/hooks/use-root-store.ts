@@ -121,6 +121,13 @@ export function useRootStore() {
     [send],
   )
 
+  const removeFromAddedFiles = useCallback(
+    (filePaths: string[]) => {
+      send({ type: "removeFromAddedFiles", filePaths })
+    },
+    [send],
+  )
+
   const play = useCallback(() => {
     send({ type: "setIsPlaying", isPlaying: !isPlaying })
   }, [send, isPlaying])
@@ -165,6 +172,10 @@ export function useRootStore() {
     },
     [send],
   )
+
+  const resetChangingCamera = useCallback(() => {
+    send({ type: "resetChangingCamera" })
+  }, [send])
 
   const fetchVideos = useCallback(() => {
     console.log("[useRootStore] Вызван fetchVideos()")
@@ -261,6 +272,7 @@ export function useRootStore() {
     addToThumbnailCache,
     addNewTracks,
     addToAddedFiles,
+    removeFromAddedFiles,
     play,
     timeToPercent,
     percentToTime,
@@ -271,6 +283,7 @@ export function useRootStore() {
     setVolume,
     setTrackVolume,
     setIsSeeking,
+    resetChangingCamera,
     undo,
     redo,
     setLayoutMode,
