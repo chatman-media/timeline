@@ -9,7 +9,7 @@
     "clean": "turbo clean",
     "check-types": "turbo check-types",
     "shadcn": "pnpm --filter @repo/ui shadcn",
-    "tauri": "pnpm --filter native tauri",
+    "tauri": "pnpm --filter desktop tauri",
     "docs:generate:rust": "cargo doc --no-deps --document-private-items",
     "docs:generate:typescript": "typedoc --out docs/src/pages/api-reference",
     "docs:generate": "pnpm docs:generate:rust && pnpm docs:generate:typescript"
