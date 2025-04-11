@@ -5,7 +5,7 @@ import { useVideoPlayer } from "@/hooks/use-video-player"
 import { formatDuration, formatFileSize, cn } from "@/lib/utils"
 import { rootStore } from "@/stores/root-store"
 import { MediaFile } from "@/types/videos"
-import { getFileType, groupFilesByDate } from "@/utils/media-utils"
+import { getFileType, groupFilesByDate, calculateRealDimensions } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from ".."
@@ -437,7 +437,7 @@ export const MediaFileList = memo(function MediaFileList({
 
       case "grid":
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="flex flex-wrap gap-3 justify-between">
             {filteredAndSortedMedia.map((file) => {
               const fileId = getFileId(file)
               const duration = file.probeData?.format.duration || 1
@@ -448,12 +448,28 @@ export const MediaFileList = memo(function MediaFileList({
                 <div
                   key={fileId}
                   className={cn(
-                    "flex flex-col border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden",
-                    "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
+                    "flex flex-col h-full rounded-sm overflow-hidden",
+                    "",
                     isAdded && "opacity-50 pointer-events-none",
                   )}
+                  style={{
+                    width: (() => {
+                      if (isAudio) return "60px"
+                      const stream = file.probeData?.streams?.[0]
+                      if (!stream?.width || !stream?.height) return "107px"
+                      
+                      const videoStream = {
+                        codec_type: "video",
+                        width: stream.width,
+                        height: stream.height,
+                        rotation: stream.rotation?.toString(),
+                      }
+                      const dimensions = calculateRealDimensions(videoStream)
+                      return `${60 * (dimensions.width / dimensions.height)}px`
+                    })()
+                  }}
                 >
-                  <div className="relative h-32 flex items-center justify-center">
+                  <div className="relative flex-1 flex-col flex-grow">
                     <MediaPreview
                       file={file}
                       fileId={fileId}
@@ -471,11 +487,17 @@ export const MediaFileList = memo(function MediaFileList({
                       isAdded={isAdded}
                     />
                   </div>
-                  <div className="p-2">
-                    <div className="text-sm font-medium truncate">{file.name}</div>
-                    <div className="flex justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      <span>{formatFileSize(file.size || 0)}</span>
-                      <span>{formatDuration(file.duration || 0)}</span>
+                  <div className="text-sm font-medium w-full px-1 flex-shrink-0">
+                    <div className="marquee-container">
+                      {file.name.length > 20 ? (
+                        <div className="marquee-content">
+                          {file.name}
+                        </div>
+                      ) : (
+                        <div className="marquee-text">
+                          {file.name}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -423,3 +423,45 @@ input[type="range"]::-moz-range-thumb {
 input[type="range"]::-moz-range-thumb:hover {
   transform: scale(1.1);
 }
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+.marquee-container {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.marquee-content {
+  display: inline-block;
+  animation: marquee 12s linear forwards;
+  animation-play-state: paused;
+}
+
+.marquee-container:hover .marquee-content {
+  animation-play-state: running;
+}
+
+/* Стиль для текста, который не нужно анимировать */
+.marquee-text {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+/* Убираем старые стили */
+.animate-marquee,
+.animate-marquee2,
+.relative.overflow-hidden {
+  display: none;
+} 
