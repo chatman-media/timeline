@@ -487,7 +487,7 @@ export const MediaFileList = memo(function MediaFileList({
                       isAdded={isAdded}
                     />
                   </div>
-                  <div className="text-sm font-medium w-full px-1 flex-shrink-0">
+                  <div className="text-xs w-full px-1 pt-1 flex-shrink-0">
                     <div className="marquee-container">
                       {file.name.length > 20 ? (
                         <div className="marquee-content">
