@@ -1,4 +1,4 @@
-import { ChevronDown, Filter, Grid, Grid2x2, List, SortDesc, Upload } from "lucide-react"
+import { ChevronDown, Filter, Grid, Grid2x2, List, SortDesc, Upload, File, Folder, Camera, Monitor, Mic, Webcam } from "lucide-react"
 import React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -13,32 +13,125 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 interface MediaToolbarProps {
-  viewMode: "list" | "grid" | "thumbnails"
-  onViewModeChange: (mode: "list" | "grid" | "thumbnails") => void
+  viewMode: "list" | "grid" | "thumbnails" | "metadata"
+  onViewModeChange: (mode: "list" | "grid" | "thumbnails" | "metadata") => void
   onImport: () => void
+  onImportFile: () => void
+  onImportFolder: () => void
   onSort: (sortBy: string) => void
   onFilter: (filterType: string) => void
+  onRecord?: () => void
+  onRecordCamera?: () => void
+  onRecordScreen?: () => void
+  onRecordVoice?: () => void
 }
 
 export function MediaToolbar({
   viewMode = "thumbnails",
   onViewModeChange,
   onImport,
+  onImportFile,
+  onImportFolder,
   onSort,
   onFilter,
+  onRecord = () => {},
+  onRecordCamera = () => {},
+  onRecordScreen = () => {},
+  onRecordVoice = () => {},
 }: MediaToolbarProps) {
   return (
-    <div className="flex items-center justify-between px-2 py-1 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-[#1b1a1f]">
-      <div className="flex items-center space-x-2">
+    <div className="flex items-center justify-between px-2 py-2 border-b">
+      <div className="flex items-center gap-2">
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 h-8"
+          className="text-xs flex items-center gap-1 cursor-pointer px-1"
           onClick={onImport}
         >
-          <Upload size={14} />
-          <span>Импорт</span>
-          <ChevronDown size={14} />
+          <span className="text-xs px-2">Импорт</span>
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onImportFile();
+                  }}
+                >
+                  <File size={12} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Добавить файлы</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onImportFolder();
+                  }}
+                >
+                  <Folder size={12} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Добавить папку</TooltipContent>
+            </Tooltip>
+          </div>
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs flex items-center gap-1 cursor-pointer px-1"
+          onClick={onRecord}
+        >
+          <span className="text-xs px-2">Запись</span>
+          <div className="flex items-center gap-1">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRecordCamera();
+                  }}
+                >
+                  <Webcam size={12} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Запись с веб-камеры</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRecordScreen();
+                  }}
+                >
+                  <Monitor size={12} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Запись экрана</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div 
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onRecordVoice();
+                  }}
+                >
+                  <Mic size={12} />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>Запись голоса</TooltipContent>
+            </Tooltip>
+          </div>
         </Button>
       </div>
 
@@ -52,10 +145,8 @@ export function MediaToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 p-0",
-                    viewMode === "list"
-                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      : "text-gray-400 hover:text-gray-800 dark:hover:text-gray-200",
+                    "h-6 w-6 mr-1 cursor-pointer",
+                    viewMode === "list" ? "bg-gray-300 dark:bg-gray-700" : ""
                   )}
                   onClick={() => onViewModeChange("list")}
                 >
@@ -71,10 +162,8 @@ export function MediaToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 p-1",
-                    viewMode === "grid"
-                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      : "text-gray-400 hover:text-gray-800 dark:hover:text-gray-200",
+                    "h-6 w-6 mr-1 cursor-pointer",
+                    viewMode === "grid" ? "bg-gray-300 dark:bg-gray-700" : ""
                   )}
                   onClick={() => onViewModeChange("grid")}
                 >
@@ -90,10 +179,8 @@ export function MediaToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 p-1",
-                    viewMode === "thumbnails"
-                      ? "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      : "text-gray-400 hover:text-gray-800 dark:hover:text-gray-200",
+                    "h-6 w-6 mr-1 cursor-pointer",
+                    viewMode === "thumbnails" ? "bg-gray-300 dark:bg-gray-700" : ""
                   )}
                   onClick={() => onViewModeChange("thumbnails")}
                 >
@@ -108,13 +195,8 @@ export function MediaToolbar({
         {/* Sort Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-gray-400 hover:text-gray-100 hover:bg-gray-700"
-            >
-              <SortDesc size={12} />
-              <ChevronDown size={9} className="ml-1" />
+            <Button variant="ghost" size="sm" className="w-6 h-6 mr-1 cursor-pointer">
+              <SortDesc size={16} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -128,13 +210,8 @@ export function MediaToolbar({
         {/* Filter Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-gray-400 hover:text-gray-100 hover:bg-gray-700"
-            >
-              <Filter size={12} />
-              <ChevronDown size={9} className="ml-1" />
+            <Button variant="ghost" size="sm" className="w-6 h-6 cursor-pointer">
+              <Filter size={16} />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

@@ -1,3 +1,4 @@
+import { Check } from "lucide-react"
 import { MediaFile } from "@/types/videos"
 import { getFileType } from "@/utils/media-utils"
 
@@ -43,11 +44,6 @@ export function StatusBar({
     media.length > 0 &&
     media.filter(hasAudioStream).every((file) => file.path && addedFiles.has(file.path))
 
-  // Если все файлы добавлены, не показываем строку состояния
-  if (allFilesAdded) {
-    return null
-  }
-
   // Функция для подсчета оставшихся файлов за определенную дату
   const getRemainingFilesForDate = (dateInfo: { date: string; files: MediaFile[] }) => {
     return dateInfo.files.filter(
@@ -90,7 +86,12 @@ export function StatusBar({
         )}
       </div>
       <div className="flex flex-col gap-0 items-end justify-center text-xs">
-        {!allFilesAdded && (
+        {allFilesAdded ? (
+          <div className="flex items-center gap-1 text-[#3ebfb2] font-medium px-2">
+            <Check size={14} />
+            <span>Все файлы добавлены</span>
+          </div>
+        ) : (
           <ActionButton title="Добавить все файлы" onClick={onAddAllFiles}>
             Добавить все
           </ActionButton>

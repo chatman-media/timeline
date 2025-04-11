@@ -24,9 +24,9 @@ export const Browser = memo(function Browser() {
       value={activeTab}
       onValueChange={setActiveTab}
       defaultValue="media"
-      className="w-full h-full"
+      className="flex flex-col items-stretch w-full h-full overflow-hidden"
     >
-      <TabsList className="bg-transparent h-[50px]">
+      <TabsList className="bg-transparent h-[50px] flex-shrink-0 justify-start">
         <TabsTrigger value="media" className={TAB_TRIGGER_STYLES}>
           <Image className="w-4 h-4" />
           <span>Медиатека</span>
@@ -60,25 +60,25 @@ export const Browser = memo(function Browser() {
           <span>Шаблоны</span>
         </TabsTrigger>
       </TabsList>
-      <TabsContent value="media" className="h-full">
+      <TabsContent value="media" className="flex-1 overflow-hidden">
         <MediaFileList />
       </TabsContent>
-      <TabsContent value="music" className="h-full">
+      <TabsContent value="music" className="flex-1 overflow-hidden">
         <MusicFileList />
       </TabsContent>
-      <TabsContent value="transitions" className="h-full">
+      <TabsContent value="transitions" className="flex-1 overflow-hidden">
         <TransitionsList />
       </TabsContent>
-      <TabsContent value="effects" className="h-full">
+      <TabsContent value="effects" className="flex-1 overflow-hidden">
         <EffectsList />
       </TabsContent>
-      <TabsContent value="subtitles" className="h-full">
+      <TabsContent value="subtitles" className="flex-1 overflow-hidden">
         <SubtitlesList />
       </TabsContent>
-      <TabsContent value="filters" className="h-full">
+      <TabsContent value="filters" className="flex-1 overflow-hidden">
         <FiltersList />
       </TabsContent>
-      <TabsContent value="stickers" className="h-full">
+      <TabsContent value="stickers" className="flex-1 overflow-hidden">
         <StickersList />
       </TabsContent>
     </Tabs>

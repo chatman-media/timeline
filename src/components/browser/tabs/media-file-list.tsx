@@ -1,11 +1,10 @@
-import { Sliders } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { formatDuration, formatFileSize, cn } from "@/lib/utils"
 import { rootStore } from "@/stores/root-store"
-import { FileGroup, MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/videos"
 import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
@@ -14,7 +13,7 @@ import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
 
 // Оборачиваем в memo для предотвращения ненужных рендеров
 export const MediaFileList = memo(function MediaFileList({
-  viewMode: initialViewMode = "thumbnails",
+  viewMode: initialViewMode = "list",
 }: { viewMode?: "list" | "grid" | "thumbnails" | "metadata" }) {
   const { media, isLoading, addNewTracks, addedFiles } = useRootStore()
   const [searchQuery, setSearchQuery] = useState("")
@@ -42,9 +41,22 @@ export const MediaFileList = memo(function MediaFileList({
   }, [])
 
   const handleImport = useCallback(() => {
-    // Вызываем метод импорта файлов
-    console.log("[MediaFileList] Import files")
-    // Здесь можно добавить вызов диалога импорта файлов
+    // Создаем меню импорта с несколькими опциями
+    console.log("[MediaFileList] Import menu requested")
+    
+    // Можно показать модальное окно с опциями импорта, которое предложит различные варианты
+    // Для примера просто вызовем импорт файлов
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    input.accept = 'video/*,audio/*,image/*'
+    
+    input.onchange = () => {
+      console.log("Файлы выбраны из общего меню импорта, закрываем диалог")
+      // Тут просто закрываем диалог, не обрабатываем файлы
+    }
+    
+    input.click()
   }, [])
 
   const handleSort = useCallback((newSortBy: string) => {
@@ -54,6 +66,60 @@ export const MediaFileList = memo(function MediaFileList({
   const handleFilter = useCallback((newFilterType: string) => {
     setFilterType(newFilterType)
   }, [])
+
+  const handleImportFile = () => {
+    console.log("Импорт файла")
+    // Показываем диалог выбора файлов
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.multiple = true
+    input.accept = 'video/*,audio/*,image/*'
+    
+    input.onchange = () => {
+      console.log("Файлы выбраны, закрываем диалог")
+      // Тут просто закрываем диалог, не обрабатываем файлы
+    }
+    
+    input.click()
+  }
+
+  const handleImportFolder = () => {
+    console.log("Импорт папки")
+    // Показываем диалог выбора папки
+    const input = document.createElement('input')
+    input.type = 'file'
+    // Используем setAttribute для webkitdirectory, так как это нестандартный атрибут
+    input.setAttribute('webkitdirectory', '')
+    input.setAttribute('directory', '')
+    
+    input.onchange = () => {
+      console.log("Папка выбрана, закрываем диалог")
+      // Тут просто закрываем диалог, не обрабатываем файлы
+    }
+    
+    input.click()
+  }
+
+  // Обработчики для кнопок записи
+  const handleRecord = () => {
+    console.log("Открыть меню записи")
+    // В будущем здесь можно добавить логику открытия модального окна с опциями записи
+  }
+
+  const handleRecordCamera = () => {
+    console.log("Запись с веб-камеры")
+    // В будущем здесь будет логика для записи с веб-камеры
+  }
+
+  const handleRecordScreen = () => {
+    console.log("Запись экрана")
+    // В будущем здесь будет логика для записи экрана
+  }
+
+  const handleRecordVoice = () => {
+    console.log("Запись голоса")
+    // В будущем здесь будет логика для записи голоса
+  }
 
   // Используем useMemo для сортировки медиафайлов, чтобы не пересортировывать при каждом рендере
   // Фильтрация и сортировка
@@ -69,10 +135,6 @@ export const MediaFileList = memo(function MediaFileList({
               return true
             if (filterType === "image" && file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i))
               return true
-            if (filterType === "favorites") {
-              // Здесь будет логика для избранного
-              return false
-            }
             return false
           })
 
@@ -330,7 +392,7 @@ export const MediaFileList = memo(function MediaFileList({
     switch (viewMode) {
       case "list":
         return (
-          <div className="space-y-1">
+          <div className="space-y-1 px-0 py-0 pt-0">
             {filteredAndSortedMedia.map((file) => {
               const fileId = getFileId(file)
               const duration = file.probeData?.format.duration || 1
@@ -341,7 +403,7 @@ export const MediaFileList = memo(function MediaFileList({
                 <div
                   key={fileId}
                   className={cn(
-                    "flex items-center p-2 border border-gray-200 dark:border-gray-700 rounded-md",
+                    "flex items-center p-2",
                     "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
                     isAdded && "opacity-50 pointer-events-none",
                   )}
@@ -529,16 +591,25 @@ export const MediaFileList = memo(function MediaFileList({
   })
 
   return (
-    <div className="flex flex-col h-[calc(50vh-82px)]">
+    <div className="flex flex-col flex-1 h-full overflow-hidden">
       <MediaToolbar
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
         onImport={handleImport}
+        onImportFile={handleImportFile}
+        onImportFolder={handleImportFolder}
         onSort={handleSort}
         onFilter={handleFilter}
+        onRecord={handleRecord}
+        onRecordCamera={handleRecordCamera}
+        onRecordScreen={handleRecordScreen}
+        onRecordVoice={handleRecordVoice}
       />
-      <div className="space-y-1 p-3 pr-1 pl-1 overflow-y-auto">{renderContent()}</div>
-      <div className="flex-shrink-0 h-[24px] w-full absolute bottom-0 left-0 right-0 z-10">
+      <div className="flex-1 space-y-1 p-0 overflow-y-auto min-h-0">
+        {renderContent()}
+      </div>
+      {/* Статус-бар как обычный flex-элемент */}
+      <div className="flex-shrink-0 bg-background border-t transition-all duration-200 ease-in-out">
         <StatusBar
           media={filteredAndSortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}
