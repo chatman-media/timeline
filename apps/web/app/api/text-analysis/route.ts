@@ -6,7 +6,6 @@ import {
   createResponse,
   createErrorResponse,
 } from "@repo/ui/lib/api";
-import { TextAnalysisResult } from "@repo/ui/types/text-analysis";
 
 // Define the schema for validating the input using Zod
 const InputSchema = z.object({
@@ -56,7 +55,7 @@ export async function POST(request: Request) {
     // Find the most frequent word
     const mostFrequentWord = findMostFrequentWord(words);
 
-    const response: TextAnalysisResult = {
+    const response: any = {
       id: Math.random().toString(36).substring(7),
       timestamp: new Date().toISOString(),
       analysis: {
