@@ -1,4 +1,7 @@
 import {
+  ArrowDownUp,
+  ArrowUpDown,
+  Check,
   File,
   Filter,
   Folder,
@@ -12,7 +15,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react"
-import React from "react"
+import React, { useState, useEffect } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -33,6 +36,10 @@ interface MediaToolbarProps {
   onImportFolder: () => void
   onSort: (sortBy: string) => void
   onFilter: (filterType: string) => void
+  onChangeOrder?: () => void
+  sortOrder?: "asc" | "desc"
+  currentSortBy?: string
+  currentFilterType?: string
   onRecord?: () => void
   onRecordCamera?: () => void
   onRecordScreen?: () => void
@@ -52,6 +59,10 @@ export function MediaToolbar({
   onImportFolder,
   onSort,
   onFilter,
+  onChangeOrder = () => {},
+  sortOrder = "desc",
+  currentSortBy = "date",
+  currentFilterType = "all",
   onRecord = () => {},
   onRecordCamera = () => {},
   onRecordScreen = () => {},
@@ -60,8 +71,31 @@ export function MediaToolbar({
   onDecreaseSize = () => {},
   canIncreaseSize = true,
   canDecreaseSize = true,
-  currentSize = 100,
 }: MediaToolbarProps) {
+  // Внутренний стейт для управления текущим выбором
+  const [internalSortBy, setInternalSortBy] = useState(currentSortBy);
+  const [internalFilterType, setInternalFilterType] = useState(currentFilterType);
+
+  // Синхронизация внутреннего стейта с пропсами
+  useEffect(() => {
+    setInternalSortBy(currentSortBy);
+  }, [currentSortBy]);
+
+  useEffect(() => {
+    setInternalFilterType(currentFilterType);
+  }, [currentFilterType]);
+
+  // Обработчики для обновления стейта и вызова колбэков
+  const handleSort = (sortBy: string) => {
+    setInternalSortBy(sortBy);
+    onSort(sortBy);
+  };
+
+  const handleFilter = (filterType: string) => {
+    setInternalFilterType(filterType);
+    onFilter(filterType);
+  };
+
   return (
     <div className="flex items-center justify-between px-2 py-2 border-b">
       <div className="flex items-center gap-2">
@@ -265,10 +299,30 @@ export function MediaToolbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="space-y-1" align="end">
-            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => onSort("name")}>По имени</DropdownMenuItem>
-            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => onSort("date")}>По дате</DropdownMenuItem>
-            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => onSort("size")}>По размеру</DropdownMenuItem>
-            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => onSort("duration")}>По длительности</DropdownMenuItem>
+            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("name")}>
+              <div className="flex items-center gap-2">
+                {internalSortBy === "name" && <Check className="h-4 w-4" />}
+                <span>По имени</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("date")}>
+              <div className="flex items-center gap-2">
+                {internalSortBy === "date" && <Check className="h-4 w-4" />}
+                <span>По дате</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("size")}>
+              <div className="flex items-center gap-2">
+                {internalSortBy === "size" && <Check className="h-4 w-4" />}
+                <span>По размеру</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("duration")}>
+              <div className="flex items-center gap-2">
+                {internalSortBy === "duration" && <Check className="h-4 w-4" />}
+                <span>По длительности</span>
+              </div>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 
@@ -280,13 +334,53 @@ export function MediaToolbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onFilter("all")}>Все файлы</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFilter("all")}>
+              <div className="flex items-center gap-2">
+                {internalFilterType === "all" && <Check className="h-4 w-4" />}
+                <span>Все файлы</span>
+              </div>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onFilter("video")}>Видео</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onFilter("audio")}>Аудио</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onFilter("image")}>Изображения</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFilter("video")}>
+              <div className="flex items-center gap-2">
+                {internalFilterType === "video" && <Check className="h-4 w-4" />}
+                <span>Видео</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFilter("audio")}>
+              <div className="flex items-center gap-2">
+                {internalFilterType === "audio" && <Check className="h-4 w-4" />}
+                <span>Аудио</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleFilter("image")}>
+              <div className="flex items-center gap-2">
+                {internalFilterType === "image" && <Check className="h-4 w-4" />}
+                <span>Изображения</span>
+              </div>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Кнопка изменения порядка сортировки */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 cursor-pointer"
+                onClick={onChangeOrder}
+              >
+                {sortOrder === "asc" ? <ArrowDownUp size={16} /> : <ArrowUpDown size={16} />}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {sortOrder === "asc" ? "По убыванию" : "По возрастанию"}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
       </div>
     </div>
   )

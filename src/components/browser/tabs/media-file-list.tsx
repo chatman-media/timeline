@@ -210,6 +210,7 @@ export const MediaFileList = memo(function MediaFileList({
   // Состояние для сортировки и фильтрации
   const [sortBy, setSortBy] = useState<string>("date")
   const [filterType, setFilterType] = useState<string>("all")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
 
   console.log("[MediaFileList] Rendering with:", {
     mediaCount: media.length,
@@ -292,6 +293,10 @@ export const MediaFileList = memo(function MediaFileList({
 
   const handleFilter = useCallback((newFilterType: string) => {
     setFilterType(newFilterType)
+  }, [])
+
+  const handleChangeOrder = useCallback(() => {
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
   }, [])
 
   const handleImportFile = () => {
@@ -426,7 +431,13 @@ export const MediaFileList = memo(function MediaFileList({
 
     // Затем сортировка
     return [...filtered].sort((a, b) => {
-      if (sortBy === "name") return (a.name || "").localeCompare(b.name || "")
+      // Определяем множитель для направления сортировки
+      const orderMultiplier = sortOrder === "asc" ? 1 : -1;
+      
+      if (sortBy === "name") {
+        return orderMultiplier * (a.name || "").localeCompare(b.name || "");
+      }
+      
       if (sortBy === "size") {
         // Получаем размер из метаданных или из поля size
         const getSizeValue = (file: MediaFile): number => {
@@ -459,8 +470,9 @@ export const MediaFileList = memo(function MediaFileList({
           return 0;
         };
         
-        return getSizeValue(b) - getSizeValue(a);
+        return orderMultiplier * (getSizeValue(b) - getSizeValue(a));
       }
+      
       if (sortBy === "duration") {
         // Преобразуем duration в секунды, если это строка формата "00:00:00" или другого формата
         const getDurationInSeconds = (duration: any): number => {
@@ -482,14 +494,15 @@ export const MediaFileList = memo(function MediaFileList({
           return 0;
         };
         
-        return getDurationInSeconds(b.duration) - getDurationInSeconds(a.duration);
+        return orderMultiplier * (getDurationInSeconds(b.duration) - getDurationInSeconds(a.duration));
       }
+      
       // По умолчанию сортируем по дате
-      const timeA = a.startTime || 0
-      const timeB = b.startTime || 0
-      return timeB - timeA
+      const timeA = a.startTime || 0;
+      const timeB = b.startTime || 0;
+      return orderMultiplier * (timeB - timeA);
     })
-  }, [media, filterType, sortBy])
+  }, [media, filterType, sortBy, sortOrder])
 
   // Мемоизируем другие вычисления
   const sortedDates = useMemo(() => groupFilesByDate(media), [media])
@@ -1039,6 +1052,8 @@ export const MediaFileList = memo(function MediaFileList({
         onImportFolder={handleImportFolder}
         onSort={handleSort}
         onFilter={handleFilter}
+        onChangeOrder={handleChangeOrder}
+        sortOrder={sortOrder}
         onRecord={handleRecord}
         onRecordCamera={handleRecordCamera}
         onRecordScreen={handleRecordScreen}
