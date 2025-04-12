@@ -64,7 +64,7 @@ export const initialContext: StateContext = {
   // История снимков
   historySnapshotIds: [] as number[],
   currentHistoryIndex: -1,
-  layoutMode: "classic" as string,
+  layoutMode: "default" as string,
   panelLayouts: {} as Record<string, number[]>,
   isDirty: false,
   montageSchema: [],

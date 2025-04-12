@@ -2,9 +2,10 @@ import { useEffect, useState } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
 
-import { ClassicMediaEditor } from "./editor/layouts/classic-layout"
 import { DefaultMediaEditor } from "./editor/layouts/default-layout"
 import { DualMediaEditor } from "./editor/layouts/dual-layout"
+import { LayoutMode } from "./editor/layouts/layout-previews"
+import { OptionsMediaEditor } from "./editor/layouts/options-layout"
 import { VerticalMediaEditor } from "./editor/layouts/vertical-layout"
 import { TopNavBar } from "./editor/top-nav-bar"
 
@@ -57,7 +58,7 @@ export function MediaEditor() {
     }
   }, [activeVideo, videoRefs])
 
-  const changeLayout = (mode: string) => {
+  const changeLayout = (mode: LayoutMode) => {
     if (mode === "dual" && !hasExternalDisplay) return
     setLayoutMode(mode)
   }
@@ -70,11 +71,11 @@ export function MediaEditor() {
     <div className="flex h-screen flex-col p-0 m-0">
       <TopNavBar
         onLayoutChange={changeLayout}
-        layoutMode={layoutMode}
+        layoutMode={layoutMode as LayoutMode}
         hasExternalDisplay={hasExternalDisplay}
       />
       {layoutMode === "default" && <DefaultMediaEditor />}
-      {layoutMode === "classic" && <ClassicMediaEditor />}
+      {layoutMode === "options" && <OptionsMediaEditor />}
       {layoutMode === "vertical" && <VerticalMediaEditor />}
       {layoutMode === "dual" && hasExternalDisplay && <DualMediaEditor />}
     </div>

@@ -169,7 +169,7 @@ export function MediaToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-1 cursor-pointer",
+                    "h-6 w-6 mr-1 ml-3 cursor-pointer",
                     viewMode === "list" ? "bg-gray-300 dark:bg-gray-700" : "",
                   )}
                   onClick={() => onViewModeChange("list")}

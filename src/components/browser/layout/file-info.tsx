@@ -15,15 +15,15 @@ export const FileInfo = memo(function FileInfo({ file, size = 100 }: FileInfoPro
 
   return (
     <div className="grid grid-rows-2 w-full overflow-hidden" style={{ height: `${size}px` }}>
-      <div className="flex justify-between w-full p-1">
+      <div className="flex justify-between w-full p-2">
         <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">{file.name}</p>
         {file.probeData?.format.duration && (
           <p className="text-xs flex-shrink-0">{formatDuration(file.probeData.format.duration)}</p>
         )}
       </div>
 
-      <div className="flex items-end w-full p-1">
-        <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap">
+      <div className="flex items-end w-full p-2">
+        <span className="text-xs text-gray-700 dark:text-gray-200 flex-shrink-0 whitespace-nowrap">
           {formatTimeWithMilliseconds(file.startTime || 0, true, true, false)}
         </span>
 
@@ -31,11 +31,11 @@ export const FileInfo = memo(function FileInfo({ file, size = 100 }: FileInfoPro
           <p className="text-xs truncate flex justify-between items-center">
             {file.isVideo && videoStream && (
               <span>
-                <span className="text-gray-500 dark:text-gray-400">
+                <span className="text-gray-700 dark:text-gray-200 ml-2">
                   {getAspectRatio(videoStream)}
                 </span>
                 {getFps(videoStream) && (
-                  <span className="ml-2 text-gray-500 dark:text-gray-400">
+                  <span className="ml-2 text-gray-700 dark:text-gray-200 ml-2">
                     {getFps(videoStream)} fps
                   </span>
                 )}
@@ -45,7 +45,7 @@ export const FileInfo = memo(function FileInfo({ file, size = 100 }: FileInfoPro
         </div>
 
         {file.probeData?.format.size && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0 whitespace-nowrap ml-2">
+          <p className="text-xs text-gray-700 dark:text-gray-200 flex-shrink-0 whitespace-nowrap ml-2">
             {formatFileSize(file.probeData.format.size)}
           </p>
         )}

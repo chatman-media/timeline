@@ -406,7 +406,7 @@ export async function initializeDatabase(): Promise<StateContext | null> {
       // Создаем полное состояние, объединяя загруженные части или используя дефолтные значения
       const stateContext: StateContext = {
         // EditorState с дефолтными значениями для отсутствующих полей
-        layoutMode: storedEditorState?.layoutMode || "classic",
+        layoutMode: storedEditorState?.layoutMode || "default",
         panelLayouts: storedEditorState?.panelLayouts || {},
         isLoading: false,
         isPlaying: false,

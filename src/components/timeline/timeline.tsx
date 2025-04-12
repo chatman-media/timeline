@@ -390,8 +390,8 @@ export function Timeline() {
   }
 
   return (
-    <div className="relative w-full h-[calc(50vh-4px)] min-h-[calc(50vh-4px)] overflow-x-auto overflow-y-auto bg-muted/50 dark:bg-[#1a1a1a]">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-700">
+    <div className="relative w-full overflow-x-auto overflow-y-auto">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-border">
         <div className="flex items-center gap-2">
           <button
             onClick={undo}
@@ -468,7 +468,7 @@ export function Timeline() {
         </div>
         <TimelineControls scale={scale} setScale={setScale} />
       </div>
-      <div className="relative w-full min-h-full pt-[2px]" style={{ minWidth: "100%" }}>
+      <div className="relative w-full h-full">
         {[...sections].reverse().map((section) => (
           <div
             key={section.date}

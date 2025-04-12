@@ -3,38 +3,25 @@ import { ActiveVideo } from "@/components/player/media-player"
 import { Timeline } from "@/components/timeline"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
-import { Options } from "../options"
-
 export function DefaultMediaEditor() {
   return (
     <ResizablePanelGroup
-      direction="horizontal"
+      direction="vertical"
       className="min-h-0 flex-grow"
-      autoSaveId="default-main-layout"
+      autoSaveId="default-layout"
     >
-      <ResizablePanel defaultSize={75} minSize={50} maxSize={80}>
-        <ResizablePanelGroup direction="vertical" autoSaveId="vertical-left-layout">
-          <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
-            <div className="h-full">
-              <ResizablePanelGroup direction="horizontal" autoSaveId="vertical-top-layout">
-                <ResizablePanel defaultSize={40} minSize={40} maxSize={80}>
-                  <div className="flex-1 relative h-full">
-                    <Browser />
-                  </div>
-                </ResizablePanel>
-                <ResizableHandle />
-                <ResizablePanel defaultSize={60} minSize={20} maxSize={60}>
-                  <div className="flex-1 h-full">
-                    <ActiveVideo />
-                  </div>
-                </ResizablePanel>
-              </ResizablePanelGroup>
+
+      <ResizablePanel defaultSize={50} minSize={20} maxSize={80}>
+        <ResizablePanelGroup direction="horizontal" autoSaveId="top-layout">
+          <ResizablePanel defaultSize={40} minSize={10} maxSize={80}>
+            <div className="flex-1 relative h-full m-1">
+              <Browser />
             </div>
           </ResizablePanel>
           <ResizableHandle />
-          <ResizablePanel defaultSize={50}>
-            <div className="flex-1 h-full">
-              <Timeline />
+          <ResizablePanel defaultSize={60} minSize={20} maxSize={90}>
+            <div className="flex-1 h-full m-1">
+              <ActiveVideo />
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
@@ -42,11 +29,12 @@ export function DefaultMediaEditor() {
 
       <ResizableHandle />
 
-      <ResizablePanel defaultSize={25}>
-        <div className="flex-1 h-full">
-          <Options />
+      <ResizablePanel defaultSize={50}>
+        <div className="flex-1 h-full m-1">
+          <Timeline />
         </div>
       </ResizablePanel>
+
     </ResizablePanelGroup>
   )
 }

@@ -7,12 +7,12 @@ import { useRootStore } from "@/hooks/use-root-store"
 import { cn } from "@/lib/utils"
 
 import { ThemeToggle } from "../theme-toggle"
-import { LayoutPreviews } from "./layouts/layout-previews"
+import { LayoutMode,LayoutPreviews } from "./layouts/layout-previews"
 import { SaveStatus } from "./save-status"
 
 interface TopNavBarProps {
-  onLayoutChange: (mode: string) => void
-  layoutMode: string
+  onLayoutChange: (mode: LayoutMode) => void
+  layoutMode: LayoutMode
   hasExternalDisplay: boolean
 }
 
