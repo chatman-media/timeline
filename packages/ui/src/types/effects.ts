@@ -1,19 +1,19 @@
 export interface VideoEffect {
-  id: string
-  name: string
-  type: "blur" | "brightness" | "contrast" | "speed" | "reverse"
-  duration: number
+  id: string;
+  name: string;
+  type: "blur" | "brightness" | "contrast" | "speed" | "reverse";
+  duration: number;
   ffmpegCommand: (params: {
-    intensity?: number
-    speed?: number
-    width?: number
-    height?: number
-  }) => string
+    intensity?: number;
+    speed?: number;
+    width?: number;
+    height?: number;
+  }) => string;
   params?: {
-    intensity?: number
-    speed?: number
-  }
-  previewPath: string
+    intensity?: number;
+    speed?: number;
+  };
+  previewPath: string;
 }
 
 export const effects: VideoEffect[] = [
@@ -50,4 +50,4 @@ export const effects: VideoEffect[] = [
     },
     previewPath: "/effects/speed-preview.mp4",
   },
-]
+];
