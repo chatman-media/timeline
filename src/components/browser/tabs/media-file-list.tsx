@@ -775,7 +775,6 @@ export const MediaFileList = memo(function MediaFileList({
       <div className="flex-1 p-0 min-h-0 overflow-y-auto scrollbar-hide hover:scrollbar-default">
         {renderContent()}
       </div>
-      {/* Статус-бар как обычный flex-элемент */}
       <div className="flex-shrink-0 transition-all duration-200 ease-in-out">
         <StatusBar
           media={filteredAndSortedMedia}

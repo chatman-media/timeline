@@ -143,6 +143,15 @@ export const MediaPreview = memo(function MediaPreview({
 
     return (
       <>
+        {/* {file.probeData?.streams &&
+          file.probeData.streams.filter((s) => s.codec_type === "video").length > 0 && (
+            <div
+              style={{ fontSize: "10px" }}
+              className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
+            >
+              {index + 1}
+            </div>
+          )} */}
         {file.probeData?.streams &&
           file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
             <div
@@ -177,7 +186,6 @@ export const MediaPreview = memo(function MediaPreview({
         )}
         {isLoaded && (
           <div
-            style={{ fontSize: "10px" }}
             className={`absolute ${
               isHorizontalVideo(
                 stream.width || 0,
@@ -186,61 +194,13 @@ export const MediaPreview = memo(function MediaPreview({
               )
                 ? "right-[22px] top-[2px]"
                 : "left-[calc(50%-8px)] top-[2px]"
-            } bg-black/50 rounded px-[2px] py-0`}
+            } bg-black/50 rounded px-[2px] py-0 text-xs`}
           >
             {formatResolution(stream.width || 0, stream.height || 0)}
           </div>
         )}
       </>
     )
-  }
-
-  // Функция для создания снимка и сохранения на рабочий стол
-  const captureScreenshot = (e: React.MouseEvent, streamIndex: number) => {
-    e.stopPropagation()
-    const videoElement = videoRefs.current[`${fileId}-${streamIndex}`]
-
-    if (!videoElement) return
-
-    try {
-      // Создаем канвас размером с видео
-      const canvas = document.createElement("canvas")
-      canvas.width = videoElement.videoWidth
-      canvas.height = videoElement.videoHeight
-
-      // Рисуем текущий кадр на канвасе
-      const ctx = canvas.getContext("2d")
-      if (!ctx) return
-
-      ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height)
-
-      // Конвертируем канвас в блоб
-      canvas.toBlob((blob) => {
-        if (!blob) return
-
-        // Создаем имя файла на основе исходного файла и текущего времени
-        const timestamp = new Date().toISOString().replace(/:/g, "-")
-        const originalName = file.name.replace(/\.[^/.]+$/, "") // Имя без расширения
-        const fileName = `${originalName}_snapshot_${timestamp}.png`
-
-        // Создаем ссылку для скачивания
-        const link = document.createElement("a")
-        link.href = URL.createObjectURL(blob)
-        link.download = fileName
-
-        // Добавляем невидимую ссылку в DOM, кликаем по ней и удаляем
-        document.body.appendChild(link)
-        link.click()
-
-        // Небольшая задержка перед удалением ссылки
-        setTimeout(() => {
-          document.body.removeChild(link)
-          URL.revokeObjectURL(link.href)
-        }, 100)
-      }, "image/png")
-    } catch (error) {
-      console.error("Ошибка при создании снимка:", error)
-    }
   }
 
   if (isAudio) {
