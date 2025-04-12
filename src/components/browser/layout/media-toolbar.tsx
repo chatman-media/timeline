@@ -1,4 +1,23 @@
-import { ChevronDown, Filter, Grid, Grid2x2, List, SortDesc, Upload, File, Folder, Camera, Monitor, Mic, Webcam } from "lucide-react"
+import {
+  ChevronDown,
+  Filter,
+  Grid,
+  Grid2x2,
+  List,
+  SortDesc,
+  Upload,
+  File,
+  Folder,
+  Camera,
+  Monitor,
+  Mic,
+  Webcam,
+  ImageUpscale,
+  ImageDown,
+  CircleMinus,
+  ZoomIn,
+  ZoomOut,
+} from "lucide-react"
 import React from "react"
 
 import { Button } from "@/components/ui/button"
@@ -24,6 +43,11 @@ interface MediaToolbarProps {
   onRecordCamera?: () => void
   onRecordScreen?: () => void
   onRecordVoice?: () => void
+  onIncreaseSize?: () => void
+  onDecreaseSize?: () => void
+  canIncreaseSize?: boolean
+  canDecreaseSize?: boolean
+  currentSize?: number
 }
 
 export function MediaToolbar({
@@ -38,6 +62,11 @@ export function MediaToolbar({
   onRecordCamera = () => {},
   onRecordScreen = () => {},
   onRecordVoice = () => {},
+  onIncreaseSize = () => {},
+  onDecreaseSize = () => {},
+  canIncreaseSize = true,
+  canDecreaseSize = true,
+  currentSize = 100,
 }: MediaToolbarProps) {
   return (
     <div className="flex items-center justify-between px-2 py-2 border-b">
@@ -52,11 +81,11 @@ export function MediaToolbar({
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
+                <div
                   className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
                   onClick={(e) => {
-                    e.stopPropagation();
-                    onImportFile();
+                    e.stopPropagation()
+                    onImportFile()
                   }}
                 >
                   <File size={12} />
@@ -66,11 +95,11 @@ export function MediaToolbar({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
+                <div
                   className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
                   onClick={(e) => {
-                    e.stopPropagation();
-                    onImportFolder();
+                    e.stopPropagation()
+                    onImportFolder()
                   }}
                 >
                   <Folder size={12} />
@@ -91,11 +120,11 @@ export function MediaToolbar({
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
+                <div
                   className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
                   onClick={(e) => {
-                    e.stopPropagation();
-                    onRecordCamera();
+                    e.stopPropagation()
+                    onRecordCamera()
                   }}
                 >
                   <Webcam size={12} />
@@ -105,11 +134,11 @@ export function MediaToolbar({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
+                <div
                   className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
                   onClick={(e) => {
-                    e.stopPropagation();
-                    onRecordScreen();
+                    e.stopPropagation()
+                    onRecordScreen()
                   }}
                 >
                   <Monitor size={12} />
@@ -119,11 +148,11 @@ export function MediaToolbar({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div 
+                <div
                   className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
                   onClick={(e) => {
-                    e.stopPropagation();
-                    onRecordVoice();
+                    e.stopPropagation()
+                    onRecordVoice()
                   }}
                 >
                   <Mic size={12} />
@@ -135,7 +164,7 @@ export function MediaToolbar({
         </Button>
       </div>
 
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center space-x-2">
         {/* Кнопки переключения режимов просмотра */}
         <TooltipProvider>
           <div className="flex rounded-md overflow-hidden mr-2">
@@ -146,7 +175,7 @@ export function MediaToolbar({
                   size="icon"
                   className={cn(
                     "h-6 w-6 mr-1 cursor-pointer",
-                    viewMode === "list" ? "bg-gray-300 dark:bg-gray-700" : ""
+                    viewMode === "list" ? "bg-gray-300 dark:bg-gray-700" : "",
                   )}
                   onClick={() => onViewModeChange("list")}
                 >
@@ -163,7 +192,7 @@ export function MediaToolbar({
                   size="icon"
                   className={cn(
                     "h-6 w-6 mr-1 cursor-pointer",
-                    viewMode === "grid" ? "bg-gray-300 dark:bg-gray-700" : ""
+                    viewMode === "grid" ? "bg-gray-300 dark:bg-gray-700" : "",
                   )}
                   onClick={() => onViewModeChange("grid")}
                 >
@@ -180,7 +209,7 @@ export function MediaToolbar({
                   size="icon"
                   className={cn(
                     "h-6 w-6 mr-1 cursor-pointer",
-                    viewMode === "thumbnails" ? "bg-gray-300 dark:bg-gray-700" : ""
+                    viewMode === "thumbnails" ? "bg-gray-300 dark:bg-gray-700" : "",
                   )}
                   onClick={() => onViewModeChange("thumbnails")}
                 >
@@ -188,6 +217,51 @@ export function MediaToolbar({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Миниатюры</TooltipContent>
+            </Tooltip>
+          </div>
+        </TooltipProvider>
+
+        {/* Кнопки изменения размера */}
+        <TooltipProvider>
+          <div className="flex rounded-md overflow-hidden mr-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-6 w-6 mr-1 cursor-pointer",
+                    !canDecreaseSize && "opacity-50 cursor-not-allowed",
+                  )}
+                  onClick={onDecreaseSize}
+                  disabled={!canDecreaseSize}
+                >
+                  <ZoomOut size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Уменьшить ({canDecreaseSize ? "-" : "мин"} {currentSize}px)
+              </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-6 w-6 mr-1 cursor-pointer",
+                    !canIncreaseSize && "opacity-50 cursor-not-allowed",
+                  )}
+                  onClick={onIncreaseSize}
+                  disabled={!canIncreaseSize}
+                >
+                  <ZoomIn size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                Увеличить ({canIncreaseSize ? "+" : "макс"} {currentSize}px)
+              </TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
@@ -220,8 +294,6 @@ export function MediaToolbar({
             <DropdownMenuItem onClick={() => onFilter("video")}>Видео</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onFilter("audio")}>Аудио</DropdownMenuItem>
             <DropdownMenuItem onClick={() => onFilter("image")}>Изображения</DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => onFilter("favorites")}>Избранное</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

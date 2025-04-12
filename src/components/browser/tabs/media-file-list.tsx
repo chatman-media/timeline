@@ -11,13 +11,20 @@ import { Skeleton } from "../../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from ".."
 import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
 
+// Создаем глобальные переменные для кэширования видео и их состояния загрузки
+// Это позволит сохранять состояние между переключениями вкладок и режимов отображения
+const globalVideoCache = new Map<string, HTMLVideoElement | null>()
+const globalLoadedVideosCache = new Map<string, boolean>()
+
 // Оборачиваем в memo для предотвращения ненужных рендеров
 export const MediaFileList = memo(function MediaFileList({
   viewMode: initialViewMode = "list",
 }: { viewMode?: "list" | "grid" | "thumbnails" | "metadata" }) {
-  const { media, isLoading, addNewTracks, addedFiles } = useRootStore()
+  const { media, isLoading, addNewTracks, addedFiles, hasFetched } = useRootStore()
   const [searchQuery, setSearchQuery] = useState("")
-  const dataFetchedRef = useRef(false) // Для отслеживания, выполнялся ли уже запрос
+
+  // Используем локальный ref для избежания повторных запросов в текущей сессии браузера
+  const localDataFetchedRef = useRef(false)
 
   // Состояние для режима отображения
   const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails" | "metadata">(
@@ -33,6 +40,8 @@ export const MediaFileList = memo(function MediaFileList({
     isLoading,
     hasAddedFiles: addedFiles.size > 0,
     viewMode,
+    hasFetched,
+    localFetched: localDataFetchedRef.current,
   })
 
   // Обработчики для MediaToolbar
@@ -43,19 +52,19 @@ export const MediaFileList = memo(function MediaFileList({
   const handleImport = useCallback(() => {
     // Создаем меню импорта с несколькими опциями
     console.log("[MediaFileList] Import menu requested")
-    
+
     // Можно показать модальное окно с опциями импорта, которое предложит различные варианты
     // Для примера просто вызовем импорт файлов
-    const input = document.createElement('input')
-    input.type = 'file'
+    const input = document.createElement("input")
+    input.type = "file"
     input.multiple = true
-    input.accept = 'video/*,audio/*,image/*'
-    
+    input.accept = "video/*,audio/*,image/*"
+
     input.onchange = () => {
       console.log("Файлы выбраны из общего меню импорта, закрываем диалог")
       // Тут просто закрываем диалог, не обрабатываем файлы
     }
-    
+
     input.click()
   }, [])
 
@@ -70,33 +79,33 @@ export const MediaFileList = memo(function MediaFileList({
   const handleImportFile = () => {
     console.log("Импорт файла")
     // Показываем диалог выбора файлов
-    const input = document.createElement('input')
-    input.type = 'file'
+    const input = document.createElement("input")
+    input.type = "file"
     input.multiple = true
-    input.accept = 'video/*,audio/*,image/*'
-    
+    input.accept = "video/*,audio/*,image/*"
+
     input.onchange = () => {
       console.log("Файлы выбраны, закрываем диалог")
       // Тут просто закрываем диалог, не обрабатываем файлы
     }
-    
+
     input.click()
   }
 
   const handleImportFolder = () => {
     console.log("Импорт папки")
     // Показываем диалог выбора папки
-    const input = document.createElement('input')
-    input.type = 'file'
+    const input = document.createElement("input")
+    input.type = "file"
     // Используем setAttribute для webkitdirectory, так как это нестандартный атрибут
-    input.setAttribute('webkitdirectory', '')
-    input.setAttribute('directory', '')
-    
+    input.setAttribute("webkitdirectory", "")
+    input.setAttribute("directory", "")
+
     input.onchange = () => {
       console.log("Папка выбрана, закрываем диалог")
       // Тут просто закрываем диалог, не обрабатываем файлы
     }
-    
+
     input.click()
   }
 
@@ -155,9 +164,10 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Убираем прямой запрос к API и оставляем только fetchVideos при первой загрузке
   useEffect(() => {
-    if (!dataFetchedRef.current && media.length === 0) {
+    // Проверяем локальный флаг и глобальный флаг
+    if (!localDataFetchedRef.current && !hasFetched && media.length === 0) {
       console.log("[MediaFileList] First render, fetching media...")
-      dataFetchedRef.current = true
+      localDataFetchedRef.current = true
 
       // Делаем прямой запрос к API только если нет существующих данных
       const directFetch = async () => {
@@ -176,10 +186,16 @@ export const MediaFileList = memo(function MediaFileList({
             console.log("[MediaFileList] Найдены медиафайлы:", data.media.length)
 
             if (data.media.length > 0) {
-              // Отправляем событие setMedia вместо addNewTracks
+              // Отправляем событие setMedia
               rootStore.send({
                 type: "setMedia",
                 media: data.media,
+              })
+
+              // Отдельно устанавливаем hasFetched
+              rootStore.send({
+                type: "setLoadingState",
+                isLoading: false,
               })
             }
           }
@@ -190,10 +206,84 @@ export const MediaFileList = memo(function MediaFileList({
 
       directFetch()
     }
-  }, [media.length])
+  }, [media.length, hasFetched])
 
-  const videoRefs = useRef<Record<string, HTMLVideoElement | null>>({})
-  const [loadedVideos, setLoadedVideos] = useState<Record<string, boolean>>({})
+  // Используем реф для хранения ссылок на элементы видео
+  const videoRefsObj = useRef<Record<string, HTMLVideoElement | null>>({})
+
+  // Создаем проксированный объект, который будет проксировать обращения к глобальному кэшу
+  const videoRefs = useMemo(() => {
+    return {
+      current: new Proxy({} as Record<string, HTMLVideoElement | null>, {
+        get: (_, key: string) => {
+          return globalVideoCache.get(key) || null
+        },
+        set: (_, key: string, value: HTMLVideoElement | null) => {
+          if (value) {
+            globalVideoCache.set(key, value)
+          }
+          return true
+        },
+      }),
+    }
+  }, [])
+
+  // Создаем проксированный объект для loadedVideos
+  const [loadedVideosObj, setLoadedVideosObj] = useState<Record<string, boolean>>({})
+
+  // Проксируем доступ к loadedVideos через глобальный кэш
+  const loadedVideos = useMemo(() => {
+    return new Proxy({} as Record<string, boolean>, {
+      get: (_, key: string) => {
+        return globalLoadedVideosCache.get(key as string) || false
+      },
+      set: (_, key: string, value: boolean) => {
+        globalLoadedVideosCache.set(key as string, value)
+        return true
+      },
+      ownKeys: () => {
+        return Array.from(globalLoadedVideosCache.keys())
+      },
+      getOwnPropertyDescriptor: (_, key) => {
+        return {
+          enumerable: true,
+          configurable: true,
+          value: globalLoadedVideosCache.get(key as string) || false,
+        }
+      },
+    })
+  }, [])
+
+  // Создаем функцию для обновления loadedVideos
+  const setLoadedVideos = useCallback((updater: React.SetStateAction<Record<string, boolean>>) => {
+    if (typeof updater === "function") {
+      // Если передана функция, создаем текущий снимок состояния
+      const currentState: Record<string, boolean> = {}
+      globalLoadedVideosCache.forEach((value, key) => {
+        currentState[key] = value
+      })
+
+      // Вызываем функцию с текущим состоянием
+      const newState = updater(currentState)
+
+      // Обновляем кэш
+      Object.entries(newState).forEach(([key, value]) => {
+        globalLoadedVideosCache.set(key, value)
+      })
+
+      // Обновляем React-состояние для вызова ререндера
+      setLoadedVideosObj((prev) => ({ ...prev }))
+    } else {
+      // Если передан объект напрямую
+      Object.entries(updater).forEach(([key, value]) => {
+        globalLoadedVideosCache.set(key, value)
+      })
+
+      // Обновляем React-состояние для вызова ререндера
+      setLoadedVideosObj((prev) => ({ ...prev }))
+    }
+  }, [])
+
   const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
     {},
   )
@@ -403,12 +493,12 @@ export const MediaFileList = memo(function MediaFileList({
                 <div
                   key={fileId}
                   className={cn(
-                    "flex items-center p-2",
+                    "flex items-center p-[2px] h-full",
                     "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
                     isAdded && "opacity-50 pointer-events-none",
                   )}
                 >
-                  <div className="relative flex-shrink-0 flex gap-1 mr-3">
+                  <div className="relative h-full flex-shrink-0 flex gap-1 mr-3">
                     <MediaPreview
                       file={file}
                       fileId={fileId}
@@ -424,11 +514,10 @@ export const MediaFileList = memo(function MediaFileList({
                       setPlayingFileId={setPlayingFileId}
                       onAddMedia={handleAddMedia}
                       isAdded={isAdded}
+                      size={100}
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
-                  </div>
+                  <FileInfo file={file} size={100} />
                 </div>
               )
             })}
@@ -457,7 +546,7 @@ export const MediaFileList = memo(function MediaFileList({
                       if (isAudio) return "60px"
                       const stream = file.probeData?.streams?.[0]
                       if (!stream?.width || !stream?.height) return "107px"
-                      
+
                       const videoStream = {
                         codec_type: "video",
                         width: stream.width,
@@ -466,7 +555,7 @@ export const MediaFileList = memo(function MediaFileList({
                       }
                       const dimensions = calculateRealDimensions(videoStream)
                       return `${60 * (dimensions.width / dimensions.height)}px`
-                    })()
+                    })(),
                   }}
                 >
                   <div className="relative flex-1 flex-col flex-grow">
@@ -490,13 +579,9 @@ export const MediaFileList = memo(function MediaFileList({
                   <div className="text-xs w-full px-1 pt-1 flex-shrink-0">
                     <div className="marquee-container">
                       {file.name.length > 20 ? (
-                        <div className="marquee-content">
-                          {file.name}
-                        </div>
+                        <div className="marquee-content">{file.name}</div>
                       ) : (
-                        <div className="marquee-text">
-                          {file.name}
-                        </div>
+                        <div className="marquee-text">{file.name}</div>
                       )}
                     </div>
                   </div>
@@ -564,7 +649,7 @@ export const MediaFileList = memo(function MediaFileList({
       case "thumbnails":
       default:
         return (
-          <div className="space-y-3">
+          <div className="flex flex-wrap gap-3 justify-between">
             {filteredAndSortedMedia.map((file) => {
               const fileId = getFileId(file)
               const duration = file.probeData?.format.duration || 1
@@ -574,31 +659,30 @@ export const MediaFileList = memo(function MediaFileList({
               return (
                 <div
                   key={fileId}
-                  className={`flex items-center gap-3 p-0 pb-0 pr-1 pl-1 group w-full overflow-hidden
-                      ${isAdded ? "opacity-50 pointer-events-none" : ""}`}
-                  style={{ maxWidth: "100%" }}
+                  className={cn(
+                    "flex items-center p-[2px] h-full",
+                    "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
+                    isAdded && "opacity-50 pointer-events-none",
+                  )}
                 >
-                  <div className="relative flex-shrink-0 flex gap-1">
-                    <MediaPreview
-                      file={file}
-                      fileId={fileId}
-                      duration={duration}
-                      isAudio={isAudio}
-                      videoRefs={videoRefs}
-                      loadedVideos={loadedVideos}
-                      setLoadedVideos={setLoadedVideos}
-                      hoverTimes={hoverTimes}
-                      handleMouseMove={handleMouseMove}
-                      handlePlayPause={handlePlayPause}
-                      handleMouseLeave={handleMouseLeave}
-                      setPlayingFileId={setPlayingFileId}
-                      onAddMedia={handleAddMedia}
-                      isAdded={isAdded}
-                    />
-                  </div>
-                  <div className="flex-1 min-w-0 overflow-hidden">
-                    <FileInfo file={file} onAddMedia={handleAddMedia} isAdded={isAdded} />
-                  </div>
+                  <MediaPreview
+                    file={file}
+                    fileId={fileId}
+                    duration={duration}
+                    isAudio={isAudio}
+                    videoRefs={videoRefs}
+                    loadedVideos={loadedVideos}
+                    setLoadedVideos={setLoadedVideos}
+                    hoverTimes={hoverTimes}
+                    handleMouseMove={handleMouseMove}
+                    handlePlayPause={handlePlayPause}
+                    handleMouseLeave={handleMouseLeave}
+                    setPlayingFileId={setPlayingFileId}
+                    onAddMedia={handleAddMedia}
+                    isAdded={isAdded}
+                    size={100}
+                    showFileName={true}
+                  />
                 </div>
               )
             })}
@@ -627,9 +711,7 @@ export const MediaFileList = memo(function MediaFileList({
         onRecordScreen={handleRecordScreen}
         onRecordVoice={handleRecordVoice}
       />
-      <div className="flex-1 space-y-1 p-0 overflow-y-auto min-h-0">
-        {renderContent()}
-      </div>
+      <div className="flex-1 space-y-1 p-0 overflow-y-auto min-h-0">{renderContent()}</div>
       {/* Статус-бар как обычный flex-элемент */}
       <div className="flex-shrink-0 bg-background border-t transition-all duration-200 ease-in-out">
         <StatusBar

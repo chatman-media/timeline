@@ -1,0 +1,47 @@
+<script>
+// Объект для хранения оригинальных модулей
+window.__originalModules = {};
+
+// Функция для мокирования модулей
+window.__mockModule = function(path, mockModule) {
+  // Сохраняем оригинальный модуль
+  if (!window.__originalModules[path]) {
+    try {
+      const originalModule = require(path);
+      window.__originalModules[path] = { ...originalModule };
+    } catch (e) {
+      console.warn(`Failed to save original module for ${path}`, e);
+    }
+  }
+
+  // Заменяем модуль моком
+  try {
+    jest.mock(path, () => mockModule);
+  } catch (e) {
+    console.warn(`Failed to mock module ${path}`, e);
+    // Для случаев, когда jest недоступен, пытаемся использовать другой подход
+    try {
+      const modulePath = require.resolve(path);
+      if (modulePath && require.cache[modulePath]) {
+        Object.assign(require.cache[modulePath].exports, mockModule);
+      }
+    } catch (e2) {
+      console.error(`Failed to mock module ${path} using alternative method`, e2);
+    }
+  }
+};
+
+// Функция для восстановления оригинальных модулей
+window.__restoreModule = function(path) {
+  if (window.__originalModules[path]) {
+    try {
+      const modulePath = require.resolve(path);
+      if (modulePath && require.cache[modulePath]) {
+        Object.assign(require.cache[modulePath].exports, window.__originalModules[path]);
+      }
+    } catch (e) {
+      console.warn(`Failed to restore original module for ${path}`, e);
+    }
+  }
+};
+</script> 

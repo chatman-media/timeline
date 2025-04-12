@@ -47,3 +47,5 @@ public/music/*
 public/videos/*
 public/media/*
 public/thumbnails/*
+
+*storybook.log

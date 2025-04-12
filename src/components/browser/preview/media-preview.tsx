@@ -30,6 +30,8 @@ interface MediaPreviewProps {
   setPlayingFileId: (id: string | null) => void
   onAddMedia?: (e: React.MouseEvent, file: MediaFile) => void
   isAdded?: boolean
+  size?: number
+  showFileName?: boolean
 }
 
 // Оборачиваем в memo для предотвращения ненужных рендеров
@@ -48,6 +50,8 @@ export const MediaPreview = memo(function MediaPreview({
   setPlayingFileId,
   onAddMedia,
   isAdded,
+  size = 60,
+  showFileName = false,
 }: MediaPreviewProps) {
   // Преобразует rotation из string в number, или возвращает undefined
   const parseRotation = (rotation?: string | number): number | undefined => {
@@ -180,9 +184,9 @@ export const MediaPreview = memo(function MediaPreview({
                 stream.height || 0,
                 parseRotation(stream.rotation),
               )
-                ? "left-[2px] top-[2px]"
+                ? "right-[22px] top-[2px]"
                 : "left-[calc(50%-8px)] top-[2px]"
-            } text-white bg-black/50 rounded px-[2px] py-0`}
+            } bg-black/50 rounded px-[2px] py-0`}
           >
             {formatResolution(stream.width || 0, stream.height || 0)}
           </div>
@@ -194,7 +198,8 @@ export const MediaPreview = memo(function MediaPreview({
   if (isAudio) {
     return (
       <div
-        className="w-15 h-15 flex-shrink-0 relative"
+        className={`h-full flex-shrink-0 relative`}
+        style={{ height: `${size}px`, width: `${size}px` }}
         onMouseMove={(e) => handleMouseMove(e, fileId, duration, 0)}
         onClick={(e) => handlePlayPause(e, file, 0)}
         onMouseLeave={() => handleMouseLeave(`${fileId}-0`)}
@@ -277,7 +282,7 @@ export const MediaPreview = memo(function MediaPreview({
         .map((stream, index) => (
           <div
             key={index}
-            className="h-15 flex-shrink-0 relative"
+            className={`h-[${size}px] flex-shrink-0 relative`}
             style={{
               width: (() => {
                 // Создаем объект подходящего типа для calculateRealDimensions
@@ -288,9 +293,10 @@ export const MediaPreview = memo(function MediaPreview({
                   rotation: stream.rotation?.toString(),
                 }
                 const dimensions = calculateRealDimensions(videoStream)
-                return `${60 * (dimensions.width / dimensions.height)}px`
+                if (!dimensions.width || !dimensions.height) return `${size}px`
+                return `${size * (dimensions.width / dimensions.height)}px`
               })(),
-              maxWidth: "100px",
+              // maxWidth: "100px",
             }}
             onMouseMove={(e) => handleMouseMove(e, fileId, duration, index)}
             onMouseLeave={() => handleMouseLeave(`${fileId}-${index}`)}
@@ -354,6 +360,12 @@ export const MediaPreview = memo(function MediaPreview({
                 Number.isFinite(hoverTimes[fileId]?.[index]) && (
                   <PreviewTimeline time={hoverTimes[fileId][index]} duration={duration} />
                 )}
+
+              {showFileName && (
+                <div className="absolute top-[2px] left-[2px] text-xs bg-black/75 px-[2px] rounded-xs line-clamp-1 max-w-[calc(60%)]">
+                  {file.name}
+                </div>
+              )}
 
               {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
                 <div

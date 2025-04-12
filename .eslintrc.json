@@ -1,20 +1,35 @@
 {
-  "extends": ["next/core-web-vitals", "next/typescript"],
-  "plugins": ["simple-import-sort"],
+  "extends": [
+    "next/core-web-vitals",
+    "next/typescript",
+    "plugin:storybook/recommended"
+  ],
+  "plugins": [
+    "simple-import-sort"
+  ],
   "rules": {
-    "semi": ["error", "never"],
+    "semi": [
+      "error",
+      "never"
+    ],
     "simple-import-sort/imports": "error",
     "simple-import-sort/exports": "error",
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-unused-vars": "off",
-    "@typescript-eslint/explicit-function-return-type": ["warn", {
-      "allowExpressions": true,
-      "allowTypedFunctionExpressions": true,
-      "allowHigherOrderFunctions": true,
-      "allowDirectConstAssertionInArrowFunctions": true,
-      "allowConciseArrowFunctionExpressionsStartingWithVoid": false
-    }],
-    "indent": ["error", 2],
+    "@typescript-eslint/explicit-function-return-type": [
+      "warn",
+      {
+        "allowExpressions": true,
+        "allowTypedFunctionExpressions": true,
+        "allowHigherOrderFunctions": true,
+        "allowDirectConstAssertionInArrowFunctions": true,
+        "allowConciseArrowFunctionExpressionsStartingWithVoid": false
+      }
+    ],
+    "indent": [
+      "error",
+      2
+    ],
     "no-tabs": "error",
     "no-mixed-spaces-and-tabs": "error"
   },

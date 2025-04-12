@@ -5,8 +5,15 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
-    setupFiles: ["./src/tests/setup.ts"],
     globals: true,
+    setupFiles: ["./vitest.setup.ts"],
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+    },
+    browser: {
+      name: 'chrome',
+      enabled: false,
+    },
   },
   resolve: {
     alias: {

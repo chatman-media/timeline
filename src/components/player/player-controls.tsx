@@ -304,101 +304,110 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
         </div>
       </div>
 
-      <div className="w-full flex items-center p-[2px] justify-between">
-        <div className="flex items-center gap-2">
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title="Первый кадр"
-            onClick={handleChevronFirst}
-            disabled={isFirstFrame || isPlaying}
-          >
-            <ChevronFirst className="w-4 h-4" />
-          </Button>
+      <div className="w-full h-full p-1">
+        <div className="flex items-center justify-between border border-[#444] rounded-md">
+          <div className="flex items-center gap-2">
+            <Button
+              className="cursor-pointer h-8 w-8"
+              variant="ghost"
+              size="icon"
+              title="Первый кадр"
+              onClick={handleChevronFirst}
+              disabled={isFirstFrame || isPlaying}
+            >
+              <ChevronFirst className="w-6 h-6" />
+            </Button>
 
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title="Предыдущий кадр"
-            onClick={handleSkipBackward}
-            disabled={isFirstFrame || isPlaying}
-          >
-            <StepBack className="w-4 h-4" />
-          </Button>
+            <Button
+              className="cursor-pointer h-8 w-8"
+              variant="ghost"
+              size="icon"
+              title="Предыдущий кадр"
+              onClick={handleSkipBackward}
+              disabled={isFirstFrame || isPlaying}
+            >
+              <StepBack className="w-6 h-6" />
+            </Button>
 
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title={isPlaying ? "Пауза" : "Воспроизвести"}
-            onClick={handlePlayPause}
-          >
-            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-          </Button>
+            <Button
+              className="cursor-pointer h-8 w-8"
+              variant="ghost"
+              size="icon"
+              title={isPlaying ? "Пауза" : "Воспроизвести"}
+              onClick={handlePlayPause}
+            >
+              {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+            </Button>
 
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title="Следующий кадр"
-            onClick={handleSkipForward}
-            disabled={isLastFrame || isPlaying}
-          >
-            <StepForward className="w-4 h-4" />
-          </Button>
+            <Button
+              className="cursor-pointer h-8 w-8"
+              variant="ghost"
+              size="icon"
+              title="Следующий кадр"
+              onClick={handleSkipForward}
+              disabled={isLastFrame || isPlaying}
+            >
+              <StepForward className="w-6 h-6" />
+            </Button>
 
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title="Последний кадр"
-            onClick={handleChevronLast}
-            disabled={isLastFrame || isPlaying}
-          >
-            <ChevronLast className="w-4 h-4" />
-          </Button>
+            <Button
+              className="cursor-pointer h-8 w-8"
+              variant="ghost"
+              size="icon"
+              title="Последний кадр"
+              onClick={handleChevronLast}
+              disabled={isLastFrame || isPlaying}
+            >
+              <ChevronLast className="w-6 h-6" />
+            </Button>
 
-          <Button
-            className={"cursor-pointer h-6 w-6"}
-            variant="ghost"
-            size="icon"
-            title={isRecordingSchema ? "Остановить запись" : "Начать запись"}
-            onClick={handleRecordToggle}
-          >
-            <CircleDot
-              className={cn(
-                "w-4 h-4",
-                isRecordingSchema
-                  ? "text-red-500 hover:text-red-600 animate-pulse"
-                  : "text-white hover:text-gray-300",
-              )}
-            />
-          </Button>
-        </div>
+            <Button
+              className={"cursor-pointer h-8 w-8"}
+              variant="ghost"
+              size="icon"
+              title={isRecordingSchema ? "Остановить запись" : "Начать запись"}
+              onClick={handleRecordToggle}
+            >
+              <CircleDot
+                className={cn(
+                  "w-4 h-4",
+                  isRecordingSchema
+                    ? "text-red-500 hover:text-red-600 animate-pulse"
+                    : "text-white hover:text-gray-300",
+                )}
+              />
+            </Button>
+          </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title="Точка входа"
-            onClick={() => {}}
-          >
-            <EntryPointIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title="Точка выхода"
-            onClick={() => {}}
-          >
-            <ExitPointIcon className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              className="cursor-pointer h-6 w-6"
+              variant="ghost"
+              size="icon"
+              title="Точка входа"
+              onClick={() => {}}
+            >
+              <EntryPointIcon className="w-4 h-4" />
+            </Button>
+            <Button
+              className="cursor-pointer h-6 w-6"
+              variant="ghost"
+              size="icon"
+              title="Точка выхода"
+              onClick={() => {}}
+            >
+              <ExitPointIcon className="w-4 h-4" />
+            </Button>
+            <Button
+              className="cursor-pointer h-6 w-6"
+              variant="ghost"
+              size="icon"
+              title="Настройки"
+            >
+              <MonitorCog className="w-4 h-4" />
+            </Button>
 
-          <DropdownMenu>
+            {/* <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 className="cursor-pointer h-6 w-6"
@@ -433,53 +442,54 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 <span className="ml-2 text-[#999]">⌘P</span>
               </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
-          </DropdownMenu>
+          </DropdownMenu> */}
 
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title="Сделать снимок"
-            onClick={() => {}}
-          >
-            <Camera className="w-4 h-4" />
-          </Button>
-
-          <div className="flex items-center gap-2">
             <Button
               className="cursor-pointer h-6 w-6"
               variant="ghost"
               size="icon"
-              title={globalVolume === 0 ? "Включить звук" : "Выключить звук"}
-              onClick={handleToggleMute}
+              title="Сделать снимок"
+              onClick={() => {}}
             >
-              {globalVolume === 0 ? (
-                <VolumeX className="w-4 h-4" />
-              ) : (
-                <Volume2 className="w-4 h-4" />
-              )}
+              <Camera className="w-4 h-4" />
             </Button>
-            <div className="w-20">
-              <Slider
-                value={[globalVolume]}
-                min={0}
-                max={1}
-                step={0.01}
-                onValueChange={handleVolumeChange}
-                className="cursor-pointer"
-              />
-            </div>
-          </div>
 
-          <Button
-            className="cursor-pointer h-6 w-6"
-            variant="ghost"
-            size="icon"
-            title={isFullscreen ? "Выйти из полноэкранного режима" : "Полноэкранный режим"}
-            onClick={handleFullscreen}
-          >
-            <Maximize2 className="w-4 h-4" />
-          </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                className="cursor-pointer h-6 w-6"
+                variant="ghost"
+                size="icon"
+                title={globalVolume === 0 ? "Включить звук" : "Выключить звук"}
+                onClick={handleToggleMute}
+              >
+                {globalVolume === 0 ? (
+                  <VolumeX className="w-4 h-4" />
+                ) : (
+                  <Volume2 className="w-4 h-4" />
+                )}
+              </Button>
+              <div className="w-20">
+                <Slider
+                  value={[globalVolume]}
+                  min={0}
+                  max={1}
+                  step={0.01}
+                  onValueChange={handleVolumeChange}
+                  className="cursor-pointer"
+                />
+              </div>
+            </div>
+
+            <Button
+              className="cursor-pointer h-6 w-6"
+              variant="ghost"
+              size="icon"
+              title={isFullscreen ? "Выйти из полноэкранного режима" : "Полноэкранный режим"}
+              onClick={handleFullscreen}
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
