@@ -17,6 +17,92 @@ import { FileInfo, MediaPreview, StatusBar } from ".."
 const globalVideoCache = new Map<string, HTMLVideoElement | null>()
 const globalLoadedVideosCache = new Map<string, boolean>()
 
+// Размеры превью, доступные для выбора
+const PREVIEW_SIZES = [60, 80, 100, 125, 150, 200, 250, 300, 400]
+const DEFAULT_SIZE = 100
+const MIN_SIZE = 60
+const MIN_SIZE_THUMBNAILS = 100
+
+// Определяем размеры по умолчанию для разных режимов
+const DEFAULT_SIZE_GRID = 60
+const DEFAULT_SIZE_THUMBNAILS = 125 
+const DEFAULT_SIZE_LIST = 80
+const DEFAULT_SIZE_METADATA = 100
+
+// Ключи для localStorage
+const STORAGE_KEY_PREFIX = "timeline-preview-size-"
+const STORAGE_KEY_GRID = `${STORAGE_KEY_PREFIX}grid`
+const STORAGE_KEY_THUMBNAILS = `${STORAGE_KEY_PREFIX}thumbnails`
+const STORAGE_KEY_LIST = `${STORAGE_KEY_PREFIX}list`
+const STORAGE_KEY_METADATA = `${STORAGE_KEY_PREFIX}metadata`
+
+// Функция для загрузки сохраненного размера из localStorage
+const getSavedSize = (mode: string, defaultSize: number): number => {
+  if (typeof window === "undefined") return defaultSize // Проверка на SSR
+
+  // Выбираем правильный ключ на основе режима
+  let storageKey;
+  if (mode === "grid") storageKey = STORAGE_KEY_GRID;
+  else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS;
+  else if (mode === "list") storageKey = STORAGE_KEY_LIST;
+  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA;
+  else storageKey = `${STORAGE_KEY_PREFIX}${mode}`; // Запасной вариант
+
+  try {
+    const savedValue = localStorage.getItem(storageKey)
+    
+    if (savedValue) {
+      const parsedValue = parseInt(savedValue, 10)
+      // Проверяем, что значение входит в допустимый диапазон
+      if (PREVIEW_SIZES.includes(parsedValue)) {
+        console.log(`[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`)
+        return parsedValue
+      }
+    }
+  } catch (error) {
+    console.error("[MediaFileList] Error reading from localStorage:", error)
+  }
+  
+  console.log(`[MediaFileList] No saved size for mode ${mode}, using default ${defaultSize}`)
+  return defaultSize
+}
+
+// Функция для сохранения выбранного размера в localStorage
+const saveSize = (mode: string, size: number): void => {
+  if (typeof window === "undefined") return // Проверка на SSR
+  
+  // Выбираем правильный ключ на основе режима
+  let storageKey;
+  if (mode === "grid") storageKey = STORAGE_KEY_GRID;
+  else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS;
+  else if (mode === "list") storageKey = STORAGE_KEY_LIST;
+  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA;
+  else storageKey = `${STORAGE_KEY_PREFIX}${mode}`; // Запасной вариант
+  
+  try {
+    localStorage.setItem(storageKey, size.toString())
+    console.log(`[MediaFileList] Saved size ${size} for mode ${mode} to key ${storageKey}`)
+  } catch (error) {
+    console.error("[MediaFileList] Error saving to localStorage:", error)
+  }
+}
+
+// Функция для очистки всех сохраненных размеров
+const clearAllSavedSizes = (): void => {
+  if (typeof window === "undefined") return // Проверка на SSR
+  
+  try {
+    // Удаляем все сохраненные размеры
+    localStorage.removeItem(STORAGE_KEY_GRID);
+    localStorage.removeItem(STORAGE_KEY_THUMBNAILS);
+    localStorage.removeItem(STORAGE_KEY_LIST);
+    localStorage.removeItem(STORAGE_KEY_METADATA);
+    console.log("[MediaFileList] Cleared all saved sizes from localStorage")
+  } catch (error) {
+    console.error("[MediaFileList] Error clearing localStorage:", error)
+  }
+}
+
 // Оборачиваем в memo для предотвращения ненужных рендеров
 export const MediaFileList = memo(function MediaFileList({
   viewMode: initialViewMode = "list",
@@ -27,11 +113,99 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Используем локальный ref для избежания повторных запросов в текущей сессии браузера
   const localDataFetchedRef = useRef(false)
+  
+  // Ref для отслеживания первого рендера при смене режима
+  const initialRenderRef = useRef(true)
 
   // Состояние для режима отображения
   const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails" | "metadata">(
     initialViewMode,
   )
+
+  // Определяем начальный размер для текущего режима
+  let initialSize = DEFAULT_SIZE
+  if (initialViewMode === "grid") initialSize = DEFAULT_SIZE_GRID
+  else if (initialViewMode === "thumbnails") initialSize = DEFAULT_SIZE_THUMBNAILS
+  else if (initialViewMode === "list") initialSize = DEFAULT_SIZE_LIST
+  else if (initialViewMode === "metadata") initialSize = DEFAULT_SIZE_METADATA
+
+  // Пытаемся загрузить сохраненный размер
+  const savedInitialSize = getSavedSize(initialViewMode, initialSize)
+  const actualInitialSize = savedInitialSize < MIN_SIZE ? MIN_SIZE : savedInitialSize
+
+  // Состояние для размера превью с учетом режима просмотра
+  const [previewSize, setPreviewSize] = useState<number>(actualInitialSize)
+
+  // Обертка для setPreviewSize, которая также сохраняет размер в localStorage
+  const updatePreviewSize = useCallback((sizeOrUpdater: number | ((prevSize: number) => number)) => {
+    if (typeof sizeOrUpdater === 'function') {
+      setPreviewSize((prevSize) => {
+        const newSize = sizeOrUpdater(prevSize);
+        saveSize(viewMode, newSize);
+        return newSize;
+      });
+    } else {
+      setPreviewSize(sizeOrUpdater);
+      saveSize(viewMode, sizeOrUpdater);
+    }
+  }, [viewMode])
+
+  // Эффект для установки правильных размеров при первом рендере
+  useEffect(() => {
+    // Очистим localStorage для тестирования
+    // clearAllSavedSizes(); // Раскомментировать для сброса всех сохраненных размеров
+
+    console.log("[MediaFileList] Initial mount, viewMode:", viewMode)
+    
+    // Определяем размер по умолчанию для текущего режима
+    let defaultSize = DEFAULT_SIZE
+    if (viewMode === "grid") defaultSize = DEFAULT_SIZE_GRID
+    else if (viewMode === "thumbnails") defaultSize = DEFAULT_SIZE_THUMBNAILS
+    else if (viewMode === "list") defaultSize = DEFAULT_SIZE_LIST
+    else if (viewMode === "metadata") defaultSize = DEFAULT_SIZE_METADATA
+    
+    // Устанавливаем соответствующий размер для текущего режима просмотра из localStorage
+    const savedSize = getSavedSize(viewMode, defaultSize)
+    
+    // Применяем минимальные ограничения
+    if (savedSize < MIN_SIZE) {
+      console.log(`[MediaFileList] Initial size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`)
+      updatePreviewSize(MIN_SIZE)
+    } else {
+      console.log(`[MediaFileList] Setting initial size to ${savedSize} for mode ${viewMode}`)
+      updatePreviewSize(savedSize)
+    }
+  }, []) // Выполняется только при монтировании
+
+  // Эффект для отслеживания изменения режима просмотра
+  useEffect(() => {
+    // Пропускаем первый рендер (обрабатывается в эффекте выше)
+    if (initialRenderRef.current) {
+      initialRenderRef.current = false;
+      return;
+    }
+
+    console.log(`[MediaFileList] View mode changed to ${viewMode}`)
+    
+    // Определяем размер по умолчанию для нового режима
+    let defaultSize = DEFAULT_SIZE
+    if (viewMode === "grid") defaultSize = DEFAULT_SIZE_GRID
+    else if (viewMode === "thumbnails") defaultSize = DEFAULT_SIZE_THUMBNAILS
+    else if (viewMode === "list") defaultSize = DEFAULT_SIZE_LIST
+    else if (viewMode === "metadata") defaultSize = DEFAULT_SIZE_METADATA
+    
+    // При изменении режима просмотра загружаем сохраненный размер
+    const savedSize = getSavedSize(viewMode, defaultSize)
+    
+    // Применяем минимальные ограничения
+    if (savedSize < MIN_SIZE) {
+      console.log(`[MediaFileList] Saved size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`)
+      updatePreviewSize(MIN_SIZE)
+    } else {
+      console.log(`[MediaFileList] Loading saved size ${savedSize} for mode ${viewMode}`)
+      updatePreviewSize(savedSize)
+    }
+  }, [viewMode, updatePreviewSize])
 
   // Состояние для сортировки и фильтрации
   const [sortBy, setSortBy] = useState<string>("date")
@@ -44,12 +218,54 @@ export const MediaFileList = memo(function MediaFileList({
     viewMode,
     hasFetched,
     localFetched: localDataFetchedRef.current,
+    previewSize,
   })
 
   // Обработчики для MediaToolbar
   const handleViewModeChange = useCallback((mode: "list" | "grid" | "thumbnails" | "metadata") => {
+    // Просто меняем режим просмотра, установка размера произойдет в useEffect
     setViewMode(mode)
   }, [])
+
+  // Функция для получения текущего минимального размера на основе режима
+  const getMinSizeForCurrentMode = useCallback(() => {
+    if (viewMode === "thumbnails") return MIN_SIZE_THUMBNAILS
+    return MIN_SIZE
+  }, [viewMode])
+
+  // Обработчики для изменения размера превью
+  const handleIncreaseSize = useCallback(() => {
+    updatePreviewSize((currentSize: number) => {
+      const currentIndex = PREVIEW_SIZES.indexOf(currentSize)
+      if (currentIndex < PREVIEW_SIZES.length - 1) {
+        return PREVIEW_SIZES[currentIndex + 1]
+      }
+      return currentSize
+    })
+  }, [updatePreviewSize])
+
+  const handleDecreaseSize = useCallback(() => {
+    updatePreviewSize((currentSize: number) => {
+      const currentIndex = PREVIEW_SIZES.indexOf(currentSize)
+      const minSize = getMinSizeForCurrentMode()
+      
+      if (currentIndex > 0 && PREVIEW_SIZES[currentIndex - 1] >= minSize) {
+        return PREVIEW_SIZES[currentIndex - 1]
+      }
+      return currentSize
+    })
+  }, [getMinSizeForCurrentMode, updatePreviewSize])
+
+  // Проверка возможности увеличения/уменьшения размера
+  const canIncreaseSize = useMemo(() => {
+    return PREVIEW_SIZES.indexOf(previewSize) < PREVIEW_SIZES.length - 1
+  }, [previewSize])
+
+  const canDecreaseSize = useMemo(() => {
+    const minSize = getMinSizeForCurrentMode()
+    const currentIndex = PREVIEW_SIZES.indexOf(previewSize)
+    return currentIndex > 0 && PREVIEW_SIZES[currentIndex - 1] >= minSize
+  }, [previewSize, getMinSizeForCurrentMode])
 
   const handleImport = useCallback(() => {
     // Создаем меню импорта с несколькими опциями
@@ -574,10 +790,10 @@ export const MediaFileList = memo(function MediaFileList({
                       setPlayingFileId={setPlayingFileId}
                       onAddMedia={handleAddMedia}
                       isAdded={isAdded}
-                      size={100}
+                      size={previewSize}
                     />
                   </div>
-                  <FileInfo file={file} size={100} />
+                  <FileInfo file={file} size={previewSize} />
                 </div>
               )
             })}
@@ -603,9 +819,9 @@ export const MediaFileList = memo(function MediaFileList({
                   )}
                   style={{
                     width: (() => {
-                      if (isAudio) return `${60*16/9}px`
+                      if (isAudio) return `${previewSize*16/9}px`
                       const stream = file.probeData?.streams?.[0]
-                      if (!stream?.width || !stream?.height) return `${60*16/9}px`
+                      if (!stream?.width || !stream?.height) return `${previewSize*16/9}px`
 
                       const videoStream = {
                         codec_type: "video",
@@ -614,7 +830,7 @@ export const MediaFileList = memo(function MediaFileList({
                         rotation: stream.rotation?.toString(),
                       }
                       const dimensions = calculateRealDimensions(videoStream)
-                      return `${60 * (dimensions.width / dimensions.height)}px`
+                      return `${previewSize * (dimensions.width / dimensions.height)}px`
                     })(),
                   }}
                 >
@@ -634,6 +850,7 @@ export const MediaFileList = memo(function MediaFileList({
                       setPlayingFileId={setPlayingFileId}
                       onAddMedia={handleAddMedia}
                       isAdded={isAdded}
+                      size={previewSize}
                       fixedSize={true}
                     />
                   </div>
@@ -741,7 +958,7 @@ export const MediaFileList = memo(function MediaFileList({
                     setPlayingFileId={setPlayingFileId}
                     onAddMedia={handleAddMedia}
                     isAdded={isAdded}
-                    size={100}
+                    size={previewSize}
                     showFileName={true}
                   />
                 </div>
@@ -771,6 +988,11 @@ export const MediaFileList = memo(function MediaFileList({
         onRecordCamera={handleRecordCamera}
         onRecordScreen={handleRecordScreen}
         onRecordVoice={handleRecordVoice}
+        onIncreaseSize={handleIncreaseSize}
+        onDecreaseSize={handleDecreaseSize}
+        canIncreaseSize={canIncreaseSize}
+        canDecreaseSize={canDecreaseSize}
+        currentSize={previewSize}
       />
       <div className="flex-1 p-0 min-h-0 overflow-y-auto scrollbar-hide hover:scrollbar-default">
         {renderContent()}
