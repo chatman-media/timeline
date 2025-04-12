@@ -802,7 +802,7 @@ export const MediaFileList = memo(function MediaFileList({
 
       case "grid":
         return (
-          <div className="flex flex-wrap gap-3 justify-between">
+          <div className="flex flex-wrap gap-3 items-left">
             {filteredAndSortedMedia.map((file) => {
               const fileId = getFileId(file)
               const duration = file.probeData?.format.duration || 1
