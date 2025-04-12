@@ -15,15 +15,13 @@ export function DualMediaEditor() {
       <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
         <ResizablePanelGroup direction="horizontal" autoSaveId="dual-top-layout">
           <ResizablePanel defaultSize={70} minSize={50} maxSize={85}>
-            <div className="h-full bg-muted/50 p-0 overflow-hidden">
-              <div className="flex-1 relative h-full">
-                <ActiveVideo />
-              </div>
+            <div className="flex-1 relative h-full">
+              <ActiveVideo />
             </div>
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={30} minSize={15} maxSize={50}>
-            <div className="h-full bg-muted/50 border-l border-border">
+            <div className="flex-1 h-full">
               <Options />
             </div>
           </ResizablePanel>
@@ -35,13 +33,13 @@ export function DualMediaEditor() {
       <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
         <ResizablePanelGroup direction="vertical" autoSaveId="dual-bottom-layout">
           <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
-            <div className="h-full bg-muted/50 border-t border-border">
+            <div className="flex-1 h-full">
               <Browser />
             </div>
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={60} minSize={40} maxSize={80}>
-            <div className="h-full bg-muted/50 border-t border-border">
+            <div className="flex-1 h-full">
               <Timeline />
             </div>
           </ResizablePanel>

@@ -15,7 +15,7 @@ export function VerticalMediaEditor() {
       <ResizablePanel defaultSize={67} minSize={50} maxSize={80}>
         <ResizablePanelGroup direction="vertical" autoSaveId="vertical-left-layout">
           <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
-            <div className="h-full bg-muted/50 p-0 overflow-hidden">
+            <div className="h-full p-0 overflow-hidden">
               <ResizablePanelGroup direction="horizontal" autoSaveId="vertical-top-layout">
                 <ResizablePanel defaultSize={40} minSize={40} maxSize={80}>
                   <div className="flex-1 relative h-full">
@@ -24,7 +24,7 @@ export function VerticalMediaEditor() {
                 </ResizablePanel>
                 <ResizableHandle />
                 <ResizablePanel defaultSize={60} minSize={20} maxSize={60}>
-                  <div className="h-full border-l border-border">
+                  <div className="flex-1 h-full">
                     <Options />
                   </div>
                 </ResizablePanel>
@@ -33,7 +33,7 @@ export function VerticalMediaEditor() {
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={50}>
-            <div className="h-full border-l border-border">
+            <div className="flex-1 h-full">
               <Timeline />
             </div>
           </ResizablePanel>
@@ -43,7 +43,7 @@ export function VerticalMediaEditor() {
       <ResizableHandle />
 
       <ResizablePanel defaultSize={33}>
-        <div className="h-full bg-muted/50 border-l border-border">
+        <div className="flex-1 h-full">
           <ActiveVideo />
         </div>
       </ResizablePanel>

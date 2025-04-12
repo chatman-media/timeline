@@ -1,11 +1,12 @@
-import React from "react"
-import { Meta, StoryObj } from "@storybook/react"
-import { fn } from "@storybook/test"
-import { MediaEditor } from "./media-editor"
-
 // Подключаем стили для корректного отображения в Storybook
 import "../../../src/styles/globals.css"
+
+import { Meta, StoryObj } from "@storybook/react"
+import { fn } from "@storybook/test"
+import React from "react"
+
 import { RootStoreProvider } from "../mocks/root-store-provider"
+import { MediaEditor } from "./media-editor"
 
 // Определяем типы для параметров компонентов
 type TopNavBarProps = {

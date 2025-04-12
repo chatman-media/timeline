@@ -1,10 +1,11 @@
-import { Meta, StoryObj } from "@storybook/react"
-import { fn } from "@storybook/test"
-import { PlayerControls } from "./player-controls"
-
 // Подключаем стили для корректного отображения в Storybook
 import "../../../src/styles/globals.css"
+
+import { Meta, StoryObj } from "@storybook/react"
+import { fn } from "@storybook/test"
+
 import { RootStoreProvider } from "../mocks/root-store-provider"
+import { PlayerControls } from "./player-controls"
 
 const meta: Meta<typeof PlayerControls> = {
   title: "Компоненты/Плеер/Элементы управления",
