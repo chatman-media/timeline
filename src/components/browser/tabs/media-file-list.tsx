@@ -427,7 +427,40 @@ export const MediaFileList = memo(function MediaFileList({
     // Затем сортировка
     return [...filtered].sort((a, b) => {
       if (sortBy === "name") return (a.name || "").localeCompare(b.name || "")
-      if (sortBy === "size") return (b.size || 0) - (a.size || 0)
+      if (sortBy === "size") {
+        // Получаем размер из метаданных или из поля size
+        const getSizeValue = (file: MediaFile): number => {
+          // Приоритетно используем размер из метаданных, если он доступен
+          if (file.probeData?.format?.size !== undefined) {
+            return file.probeData.format.size;
+          }
+          
+          // Иначе используем поле size (с конвертацией, если нужно)
+          if (file.size !== undefined) {
+            if (typeof file.size === 'number') return file.size;
+            if (typeof file.size === 'string') {
+              // Если размер представлен строкой с единицами измерения (например, "1.5 GB")
+              const sizeStr = file.size as string; // явное приведение типа для линтера
+              const match = sizeStr.match(/^([\d.]+)\s*([KMGT]?B)?$/i);
+              if (match) {
+                const value = parseFloat(match[1]);
+                const unit = (match[2] || "").toUpperCase();
+                
+                if (unit === "KB") return value * 1024;
+                if (unit === "MB") return value * 1024 * 1024;
+                if (unit === "GB") return value * 1024 * 1024 * 1024;
+                if (unit === "TB") return value * 1024 * 1024 * 1024 * 1024;
+                return value; // Просто байты
+              }
+              return parseFloat(sizeStr) || 0;
+            }
+          }
+          
+          return 0;
+        };
+        
+        return getSizeValue(b) - getSizeValue(a);
+      }
       if (sortBy === "duration") {
         // Преобразуем duration в секунды, если это строка формата "00:00:00" или другого формата
         const getDurationInSeconds = (duration: any): number => {
