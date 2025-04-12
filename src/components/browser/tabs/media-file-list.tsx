@@ -10,6 +10,7 @@ import { getFileType, groupFilesByDate, calculateRealDimensions } from "@/utils/
 import { Skeleton } from "../../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from ".."
 import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
+import { CameraCaptureModal } from "@/components/modals/camera-capture-modal"
 
 // Создаем глобальные переменные для кэширования видео и их состояния загрузки
 // Это позволит сохранять состояние между переключениями вкладок и режимов отображения
@@ -22,6 +23,7 @@ export const MediaFileList = memo(function MediaFileList({
 }: { viewMode?: "list" | "grid" | "thumbnails" | "metadata" }) {
   const { media, isLoading, addNewTracks, addedFiles, hasFetched } = useRootStore()
   const [searchQuery, setSearchQuery] = useState("")
+  const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
 
   // Используем локальный ref для избежания повторных запросов в текущей сессии браузера
   const localDataFetchedRef = useRef(false)
@@ -116,8 +118,8 @@ export const MediaFileList = memo(function MediaFileList({
   }
 
   const handleRecordCamera = () => {
-    console.log("Запись с веб-камеры")
-    // В будущем здесь будет логика для записи с веб-камеры
+    console.log("Открытие модального окна записи с веб-камеры")
+    setIsRecordingModalOpen(true)
   }
 
   const handleRecordScreen = () => {
@@ -129,6 +131,62 @@ export const MediaFileList = memo(function MediaFileList({
     console.log("Запись голоса")
     // В будущем здесь будет логика для записи голоса
   }
+
+  const handleRecordedVideo = useCallback((blob: Blob, fileName: string) => {
+    console.log(`Получена запись видео: ${fileName}, размер: ${blob.size} байт`)
+    
+    // Создаем медиафайл из записанного блоба
+    const file = new File([blob], fileName, { type: 'video/webm' })
+    
+    // Создаем объект URL для просмотра видео
+    const fileUrl = URL.createObjectURL(file)
+    
+    // Получаем длительность видео
+    const videoElement = document.createElement('video')
+    videoElement.src = fileUrl
+    
+    videoElement.onloadedmetadata = () => {
+      const duration = videoElement.duration
+      
+      // Создаем новый MediaFile объект
+      const newMediaFile: MediaFile = {
+        id: `recorded-${Date.now()}`,
+        name: fileName,
+        path: fileUrl,
+        size: blob.size,
+        startTime: 0,
+        duration: duration,
+        probeData: {
+          format: {
+            duration: duration,
+            filename: fileName,
+            format_name: 'webm',
+            size: blob.size,
+          },
+          streams: [
+            {
+              codec_type: 'video',
+              codec_name: 'vp9',
+              width: videoElement.videoWidth,
+              height: videoElement.videoHeight,
+              r_frame_rate: '30/1',
+              index: 0,
+            }
+          ],
+          chapters: [],
+        },
+      }
+      
+      // Добавляем видео в медиатеку с правильным типом события
+      rootStore.send({
+        type: "setMedia",
+        media: [...media, newMediaFile],
+      })
+      
+      // Очищаем URL
+      URL.revokeObjectURL(fileUrl)
+    }
+  }, [media])
 
   // Используем useMemo для сортировки медиафайлов, чтобы не пересортировывать при каждом рендере
   // Фильтрация и сортировка
@@ -711,7 +769,15 @@ export const MediaFileList = memo(function MediaFileList({
         onRecordScreen={handleRecordScreen}
         onRecordVoice={handleRecordVoice}
       />
-      <div className="flex-1 space-y-1 p-0 overflow-y-auto min-h-0">{renderContent()}</div>
+      <div className={cn(
+        "flex-1 space-y-1 p-0 overflow-y-auto min-h-0",
+        viewMode === "list" && "space-y-1",
+        viewMode === "grid" && "flex flex-wrap gap-3 justify-between",
+        viewMode === "metadata" && "space-y-3",
+        viewMode === "thumbnails" && "flex flex-wrap gap-3 justify-between"
+      )}>
+        {renderContent()}
+      </div>
       {/* Статус-бар как обычный flex-элемент */}
       <div className="flex-shrink-0 bg-background border-t transition-all duration-200 ease-in-out">
         <StatusBar
@@ -724,6 +790,13 @@ export const MediaFileList = memo(function MediaFileList({
           addedFiles={addedFiles}
         />
       </div>
+      {isRecordingModalOpen && (
+        <CameraCaptureModal
+          isOpen={isRecordingModalOpen}
+          onClose={() => setIsRecordingModalOpen(false)}
+          onVideoRecorded={handleRecordedVideo}
+        />
+      )}
     </div>
   )
 })
