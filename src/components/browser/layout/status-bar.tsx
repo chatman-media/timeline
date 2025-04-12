@@ -1,9 +1,11 @@
-import { Check } from "lucide-react"
+import { Check, CopyPlus, SquarePlus } from "lucide-react"
 
 import { MediaFile } from "@/types/videos"
 import { getFileType } from "@/utils/media-utils"
 
 import { ActionButton } from "./action-button"
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface StatusBarProps {
   media: MediaFile[]
@@ -61,41 +63,65 @@ export function StatusBar({
     .find((dateInfo) => dateInfo.remainingFiles.length > 0)
 
   return (
-    <div className="flex justify-between items-center text-sm w-full h-8 p-[4px] pt-0 border-t border-border">
+    <div className="flex justify-between items-center text-sm w-full h-11 pb-1 border-t border-border gap-2">
       <div className="flex flex-col items-end justify-center gap-0 text-xs text-gray-700 dark:text-gray-300">
         <span className="px-1 flex items-center whitespace-nowrap gap-2">
           {remainingVideoCount > 0 && (
-            <ActionButton title="Добавить все видео" onClick={onAddAllVideoFiles}>
-              {remainingVideoCount} видео
-            </ActionButton>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7"
+              title="Добавить все видео"
+              onClick={onAddAllVideoFiles}
+          >
+            {remainingVideoCount} видео
+              <CopyPlus size={10} className="" />
+            </Button>
           )}
           {remainingAudioCount > 0 && (
-            <ActionButton title="Добавить все аудио" onClick={onAddAllAudioFiles}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7"
+              title="Добавить все аудио"
+              onClick={onAddAllAudioFiles}
+            >
               {remainingAudioCount} аудио
-            </ActionButton>
+              <CopyPlus size={10} className="" />
+            </Button>
           )}
         </span>
       </div>
-      <div className="flex flex-col items-end justify-center gap-0 text-xs">
+      <div className="flex flex-col items-end justify-center gap-1 text-xs">
         {topDateWithRemainingFiles && (
-          <ActionButton
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7"
             title={`Добавить видео за ${topDateWithRemainingFiles.date}`}
             onClick={() => onAddDateFiles(topDateWithRemainingFiles.date)}
           >
             {`${topDateWithRemainingFiles.remainingFiles.length} видео ${topDateWithRemainingFiles.date}`}
-          </ActionButton>
+            <CopyPlus size={10} className="" />
+          </Button>
         )}
       </div>
       <div className="flex flex-col gap-0 items-end justify-center text-xs">
         {allFilesAdded ? (
-          <div className="flex items-center gap-1 text-[#3ebfb2] font-medium px-2">
-            <Check size={14} />
+          <div className="flex items-center gap-1 text-[#49a293] font-medium px-2">
             <span>Все файлы добавлены</span>
           </div>
         ) : (
-          <ActionButton title="Добавить все файлы" onClick={onAddAllFiles}>
-            Добавить все
-          </ActionButton>
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs flex items-center gap-1 cursor-pointer px-1 h-7"
+            title="Добавить все файлы"
+            onClick={onAddAllFiles}
+          >
+            <span className="text-xs px-1">Добавить все</span>
+            <CopyPlus size={10} className="" />
+          </Button>
         )}
       </div>
     </div>
