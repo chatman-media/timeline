@@ -264,11 +264,11 @@ export function MediaToolbar({
               <SortDesc size={16} />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onSort("name")}>По имени</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onSort("date")}>По дате</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onSort("size")}>По размеру</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onSort("duration")}>По длительности</DropdownMenuItem>
+          <DropdownMenuContent className="space-y-1" align="end">
+            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => onSort("name")}>По имени</DropdownMenuItem>
+            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => onSort("date")}>По дате</DropdownMenuItem>
+            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => onSort("size")}>По размеру</DropdownMenuItem>
+            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => onSort("duration")}>По длительности</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
 

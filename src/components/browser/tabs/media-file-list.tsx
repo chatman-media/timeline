@@ -428,7 +428,29 @@ export const MediaFileList = memo(function MediaFileList({
     return [...filtered].sort((a, b) => {
       if (sortBy === "name") return (a.name || "").localeCompare(b.name || "")
       if (sortBy === "size") return (b.size || 0) - (a.size || 0)
-      if (sortBy === "duration") return (b.duration || 0) - (a.duration || 0)
+      if (sortBy === "duration") {
+        // Преобразуем duration в секунды, если это строка формата "00:00:00" или другого формата
+        const getDurationInSeconds = (duration: any): number => {
+          if (!duration) return 0;
+          if (typeof duration === 'number') return duration;
+          if (typeof duration === 'string') {
+            // Если формат "01:23:45"
+            const parts = duration.split(':').map(Number);
+            if (parts.length === 3) {
+              return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            }
+            // Если формат "01:23"
+            else if (parts.length === 2) {
+              return parts[0] * 60 + parts[1];
+            }
+            // Если только число
+            return parseFloat(duration) || 0;
+          }
+          return 0;
+        };
+        
+        return getDurationInSeconds(b.duration) - getDurationInSeconds(a.duration);
+      }
       // По умолчанию сортируем по дате
       const timeA = a.startTime || 0
       const timeB = b.startTime || 0
