@@ -769,15 +769,7 @@ export const MediaFileList = memo(function MediaFileList({
         onRecordScreen={handleRecordScreen}
         onRecordVoice={handleRecordVoice}
       />
-      <div className={cn(
-        "flex-1 space-y-1 p-0 overflow-y-auto min-h-0",
-        viewMode === "list" && "space-y-1",
-        viewMode === "grid" && "flex flex-wrap gap-3 justify-between",
-        viewMode === "metadata" && "space-y-3",
-        viewMode === "thumbnails" && "flex flex-wrap gap-3 justify-between"
-      )}>
-        {renderContent()}
-      </div>
+      <div className="flex-1 space-y-1 p-0 overflow-y-auto min-h-0">{renderContent()}</div>
       {/* Статус-бар как обычный flex-элемент */}
       <div className="flex-shrink-0 bg-background border-t transition-all duration-200 ease-in-out">
         <StatusBar
