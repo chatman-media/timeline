@@ -32,6 +32,7 @@ interface MediaPreviewProps {
   isAdded?: boolean
   size?: number
   showFileName?: boolean
+  fixedSize?: boolean
 }
 
 // Оборачиваем в memo для предотвращения ненужных рендеров
@@ -52,6 +53,7 @@ export const MediaPreview = memo(function MediaPreview({
   isAdded,
   size = 60,
   showFileName = false,
+  fixedSize = false,
 }: MediaPreviewProps) {
   // Преобразует rotation из string в number, или возвращает undefined
   const parseRotation = (rotation?: string | number): number | undefined => {
@@ -207,7 +209,7 @@ export const MediaPreview = memo(function MediaPreview({
     return (
       <div
         className={`h-full flex-shrink-0 relative`}
-        style={{ height: `${size}px`, width: `${size}px` }}
+        style={{ height: `${size}px`, width: `${(size*16/9).toFixed(0)}px` }}
         onMouseMove={(e) => handleMouseMove(e, fileId, duration, 0)}
         onClick={(e) => handlePlayPause(e, file, 0)}
         onMouseLeave={() => handleMouseLeave(`${fileId}-0`)}
@@ -293,6 +295,7 @@ export const MediaPreview = memo(function MediaPreview({
             className={`h-[${size}px] flex-shrink-0 relative`}
             style={{
               width: (() => {
+                if (fixedSize) return `${size*16/9}px`
                 // Создаем объект подходящего типа для calculateRealDimensions
                 const videoStream = {
                   codec_type: "video",
@@ -311,7 +314,7 @@ export const MediaPreview = memo(function MediaPreview({
           >
             <div className="relative w-full h-full">
               {!loadedVideos[`${fileId}-${index}`] && (
-                <Skeleton className="absolute inset-0 rounded" />
+                <Skeleton className="absolute inset-0 p-0" />
               )}
               <video
                 data-stream={index}

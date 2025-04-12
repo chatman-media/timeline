@@ -534,12 +534,11 @@ export const MediaFileList = memo(function MediaFileList({
     if (filteredAndSortedMedia.length === 0) {
       return (
         <div className="p-4 text-center text-gray-400 dark:text-gray-500">
-          Нет медиа-файлов для отображения
+          Нет медиа-файлов
         </div>
       )
     }
 
-    // Выбираем стиль отображения в зависимости от viewMode
     switch (viewMode) {
       case "list":
         return (
@@ -554,7 +553,7 @@ export const MediaFileList = memo(function MediaFileList({
                 <div
                   key={fileId}
                   className={cn(
-                    "flex items-center p-[2px] h-full",
+                    "flex items-center p-0 h-full",
                     "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
                     isAdded && "opacity-50 pointer-events-none",
                   )}
@@ -604,9 +603,9 @@ export const MediaFileList = memo(function MediaFileList({
                   )}
                   style={{
                     width: (() => {
-                      if (isAudio) return "60px"
+                      if (isAudio) return `${60*16/9}px`
                       const stream = file.probeData?.streams?.[0]
-                      if (!stream?.width || !stream?.height) return "107px"
+                      if (!stream?.width || !stream?.height) return `${60*16/9}px`
 
                       const videoStream = {
                         codec_type: "video",
@@ -635,6 +634,7 @@ export const MediaFileList = memo(function MediaFileList({
                       setPlayingFileId={setPlayingFileId}
                       onAddMedia={handleAddMedia}
                       isAdded={isAdded}
+                      fixedSize={true}
                     />
                   </div>
                   <div className="text-xs w-full px-1 pt-1 flex-shrink-0">
