@@ -17,12 +17,12 @@ const MockRootStoreContext = createContext<any>(null)
  */
 export function useMockRootStore() {
   const mockState = useContext(MockRootStoreContext)
-  
+
   // Если контекст не предоставлен, используем оригинальный хук
   if (mockState === null) {
     return originalUseRootStore()
   }
-  
+
   return mockState
 }
 
@@ -30,9 +30,5 @@ export function useMockRootStore() {
  * Провайдер для мокирования RootStore в тестах и Storybook
  */
 export function RootStoreProvider({ children, mockState }: RootStoreProviderProps) {
-  return (
-    <MockRootStoreContext.Provider value={mockState}>
-      {children}
-    </MockRootStoreContext.Provider>
-  )
-} 
+  return <MockRootStoreContext.Provider value={mockState}>{children}</MockRootStoreContext.Provider>
+}

@@ -13,10 +13,10 @@ const meta: Meta<typeof PlayerControls> = {
     layout: "centered",
     // Добавляем параметры тем для всех историй
     themes: {
-      default: 'dark',
+      default: "dark",
       list: [
-        { name: 'light', class: '', color: '#ffffff' },
-        { name: 'dark', class: 'dark', color: '#1a1a1a' }
+        { name: "light", class: "", color: "#ffffff" },
+        { name: "dark", class: "dark", color: "#1a1a1a" },
       ],
     },
   },
@@ -83,10 +83,12 @@ export const Воспроизведение: Story = {
   },
   decorators: [
     (Story) => (
-      <RootStoreProvider mockState={{
-        ...mockStoreData,
-        isPlaying: true,
-      }}>
+      <RootStoreProvider
+        mockState={{
+          ...mockStoreData,
+          isPlaying: true,
+        }}
+      >
         <Story />
       </RootStoreProvider>
     ),
@@ -100,10 +102,12 @@ export const Запись: Story = {
   },
   decorators: [
     (Story) => (
-      <RootStoreProvider mockState={{
-        ...mockStoreData,
-        isRecordingSchema: true,
-      }}>
+      <RootStoreProvider
+        mockState={{
+          ...mockStoreData,
+          isRecordingSchema: true,
+        }}
+      >
         <Story />
       </RootStoreProvider>
     ),
@@ -117,10 +121,12 @@ export const БезЗвука: Story = {
   },
   decorators: [
     (Story) => (
-      <RootStoreProvider mockState={{
-        ...mockStoreData,
-        volume: 0,
-      }}>
+      <RootStoreProvider
+        mockState={{
+          ...mockStoreData,
+          volume: 0,
+        }}
+      >
         <Story />
       </RootStoreProvider>
     ),
@@ -134,7 +140,7 @@ export const СветлаяТема: Story = {
   },
   parameters: {
     themes: {
-      default: 'light',
+      default: "light",
     },
   },
   decorators: [
@@ -144,4 +150,4 @@ export const СветлаяТема: Story = {
       </RootStoreProvider>
     ),
   ],
-} 
+}

@@ -41,7 +41,7 @@ describe("PlayerControls", () => {
 
   it("должен корректно рендериться с переданным currentTime", () => {
     render(<PlayerControls currentTime={50} />)
-    
+
     // Проверяем, что время отображается
     expect(screen.getByText("00:00:50.000")).toBeInTheDocument()
     expect(screen.getByText("00:01:40.000")).toBeInTheDocument() // Длительность видео 100 сек
@@ -49,7 +49,7 @@ describe("PlayerControls", () => {
 
   it("должен показывать иконку Play, когда видео не воспроизводится", () => {
     render(<PlayerControls currentTime={10} />)
-    
+
     // Найдем кнопку с title "Воспроизвести"
     const playButton = screen.getByTitle("Воспроизвести")
     expect(playButton).toBeInTheDocument()
@@ -63,10 +63,10 @@ describe("PlayerControls", () => {
     })
 
     render(<PlayerControls currentTime={10} />)
-    
+
     const prevFrameButton = screen.getByTitle("Предыдущий кадр")
     const firstFrameButton = screen.getByTitle("Первый кадр")
-    
+
     expect(prevFrameButton).toBeDisabled()
     expect(firstFrameButton).toBeDisabled()
   })
@@ -79,7 +79,7 @@ describe("PlayerControls", () => {
     })
 
     render(<PlayerControls currentTime={0} />)
-    
+
     const firstFrameButton = screen.getByTitle("Первый кадр")
     expect(firstFrameButton).toBeDisabled()
   })
@@ -92,14 +92,14 @@ describe("PlayerControls", () => {
     })
 
     render(<PlayerControls currentTime={10} />)
-    
+
     // Находим слайдер громкости (это может быть сложно в зависимости от реализации)
     // Обычно мы используем data-testid или другие атрибуты для упрощения поиска
     // Но здесь просто имитируем изменение с помощью fireEvent
     const volumeSlider = screen.getAllByRole("slider")[1] // предполагаем, что это второй слайдер
-    
+
     fireEvent.change(volumeSlider, { target: { value: 0.8 } })
-    
+
     expect(setVolumeMock).toHaveBeenCalled()
   })
-}) 
+})

@@ -36,14 +36,13 @@ vi.mock("./editor/layouts/dual-layout", () => ({
 vi.mock("./editor/top-nav-bar", () => ({
   TopNavBar: ({ onLayoutChange, layoutMode, hasExternalDisplay }) => (
     <div data-testid="top-nav-bar">
-      <button 
-        data-testid="change-to-classic" 
-        onClick={() => onLayoutChange("classic")}
-      >
+      <button data-testid="change-to-classic" onClick={() => onLayoutChange("classic")}>
         К классическому
       </button>
       <span data-testid="current-layout">{layoutMode}</span>
-      <span data-testid="has-external-display">{hasExternalDisplay ? "Есть внешний дисплей" : "Нет внешнего дисплея"}</span>
+      <span data-testid="has-external-display">
+        {hasExternalDisplay ? "Есть внешний дисплей" : "Нет внешнего дисплея"}
+      </span>
     </div>
   ),
 }))
@@ -51,11 +50,11 @@ vi.mock("./editor/top-nav-bar", () => ({
 describe("MediaEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    
+
     // Мокируем matchMedia
-    Object.defineProperty(window, 'matchMedia', {
+    Object.defineProperty(window, "matchMedia", {
       writable: true,
-      value: vi.fn().mockImplementation(query => ({
+      value: vi.fn().mockImplementation((query) => ({
         matches: false,
         media: query,
         onchange: null,
@@ -66,32 +65,32 @@ describe("MediaEditor", () => {
         dispatchEvent: vi.fn(),
       })),
     })
-    
+
     // Мокируем screen
-    Object.defineProperty(window, 'screen', {
+    Object.defineProperty(window, "screen", {
       writable: true,
       value: {
         width: 1440,
-        height: 900
-      }
+        height: 900,
+      },
     })
-    
+
     // Мокируем devicePixelRatio
-    Object.defineProperty(window, 'devicePixelRatio', {
+    Object.defineProperty(window, "devicePixelRatio", {
       writable: true,
-      value: 1
+      value: 1,
     })
   })
 
   it("должен показывать экран загрузки перед рендерингом контента", () => {
     // Перезаписываем useState для первого вызова, чтобы isLoaded был false
-    const isLoadedSpy = vi.spyOn(React, 'useState')
+    const isLoadedSpy = vi.spyOn(React, "useState")
     isLoadedSpy.mockImplementationOnce(() => [false, vi.fn()])
-    
+
     render(<MediaEditor />)
-    
+
     expect(screen.getByText("Загрузка...")).toBeInTheDocument()
-    
+
     // Восстанавливаем оригинальный useState
     isLoadedSpy.mockRestore()
   })
@@ -106,7 +105,7 @@ describe("MediaEditor", () => {
     })
 
     render(<MediaEditor />)
-    
+
     expect(screen.getByTestId("default-layout")).toBeInTheDocument()
     expect(screen.queryByTestId("classic-layout")).not.toBeInTheDocument()
     expect(screen.queryByTestId("vertical-layout")).not.toBeInTheDocument()
@@ -123,7 +122,7 @@ describe("MediaEditor", () => {
     })
 
     render(<MediaEditor />)
-    
+
     expect(screen.queryByTestId("default-layout")).not.toBeInTheDocument()
     expect(screen.getByTestId("classic-layout")).toBeInTheDocument()
     expect(screen.queryByTestId("vertical-layout")).not.toBeInTheDocument()
@@ -132,7 +131,7 @@ describe("MediaEditor", () => {
 
   it("должен определять наличие внешнего дисплея", () => {
     // Устанавливаем широкий экран
-    window.matchMedia = vi.fn().mockImplementation(query => ({
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
       matches: query === "(min-width: 1920px)",
       media: query,
       onchange: null,
@@ -142,12 +141,12 @@ describe("MediaEditor", () => {
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
     }))
-    
+
     // Устанавливаем большой размер экрана
     window.screen.width = 2560
-    
+
     render(<MediaEditor />)
-    
+
     expect(screen.getByTestId("has-external-display").textContent).toBe("Есть внешний дисплей")
   })
 
@@ -159,9 +158,9 @@ describe("MediaEditor", () => {
       layoutMode: "dual",
       setLayoutMode: vi.fn(),
     })
-    
+
     // Устанавливаем узкий экран
-    window.matchMedia = vi.fn().mockImplementation(query => ({
+    window.matchMedia = vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
       onchange: null,
@@ -171,13 +170,13 @@ describe("MediaEditor", () => {
       removeEventListener: vi.fn(),
       dispatchEvent: vi.fn(),
     }))
-    
+
     // Устанавливаем обычный размер экрана
     window.screen.width = 1440
-    
+
     render(<MediaEditor />)
-    
+
     expect(screen.queryByTestId("dual-layout")).not.toBeInTheDocument()
     expect(screen.getByTestId("has-external-display").textContent).toBe("Нет внешнего дисплея")
   })
-}) 
+})

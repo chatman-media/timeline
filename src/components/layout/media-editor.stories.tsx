@@ -55,26 +55,26 @@ const MockTopNavBar = ({ onLayoutChange, layoutMode, hasExternalDisplay }: TopNa
   <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
     <div className="text-xl font-bold">Timeline Editor</div>
     <div className="flex gap-2">
-      <button 
-        className={`px-3 py-1 rounded ${layoutMode === 'default' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+      <button
+        className={`px-3 py-1 rounded ${layoutMode === "default" ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-gray-700"}`}
         onClick={() => onLayoutChange("default")}
       >
         Стандартный
       </button>
-      <button 
-        className={`px-3 py-1 rounded ${layoutMode === 'classic' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+      <button
+        className={`px-3 py-1 rounded ${layoutMode === "classic" ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-gray-700"}`}
         onClick={() => onLayoutChange("classic")}
       >
         Классический
       </button>
-      <button 
-        className={`px-3 py-1 rounded ${layoutMode === 'vertical' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+      <button
+        className={`px-3 py-1 rounded ${layoutMode === "vertical" ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-gray-700"}`}
         onClick={() => onLayoutChange("vertical")}
       >
         Вертикальный
       </button>
-      <button 
-        className={`px-3 py-1 rounded ${layoutMode === 'dual' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+      <button
+        className={`px-3 py-1 rounded ${layoutMode === "dual" ? "bg-blue-500 text-white" : "bg-gray-200 dark:bg-gray-700"}`}
         onClick={() => onLayoutChange("dual")}
         disabled={!hasExternalDisplay}
       >
@@ -89,14 +89,14 @@ const MockTopNavBar = ({ onLayoutChange, layoutMode, hasExternalDisplay }: TopNa
 
 // Создаем моки для модулей
 // Вместо использования jest, переопределяем компоненты через React.createElement
-const DefaultMediaEditorMock = MockDefaultLayout;
-const ClassicMediaEditorMock = MockClassicLayout;
-const VerticalMediaEditorMock = MockVerticalLayout;
-const DualMediaEditorMock = MockDualLayout;
-const TopNavBarMock = MockTopNavBar;
+const DefaultMediaEditorMock = MockDefaultLayout
+const ClassicMediaEditorMock = MockClassicLayout
+const VerticalMediaEditorMock = MockVerticalLayout
+const DualMediaEditorMock = MockDualLayout
+const TopNavBarMock = MockTopNavBar
 
 // Мок для обертывания компонентов лейаутов
-const LayoutWrapper = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+const LayoutWrapper = ({ children }: { children: React.ReactNode }) => <>{children}</>
 
 const meta: Meta<typeof MediaEditor> = {
   title: "Компоненты/Лейаут/MediaEditor",
@@ -143,7 +143,7 @@ const mockStoreData = {
 // Настраиваем окружение с экранами для историй
 const setupScreenEnvironment = (hasExternalDisplay: boolean) => {
   // Мокируем matchMedia для истории
-  Object.defineProperty(window, 'matchMedia', {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
     value: (query: string) => ({
       matches: query === "(min-width: 1920px)" && hasExternalDisplay,
@@ -156,14 +156,14 @@ const setupScreenEnvironment = (hasExternalDisplay: boolean) => {
       dispatchEvent: () => {},
     }),
   })
-  
+
   // Устанавливаем размер экрана в зависимости от hasExternalDisplay
-  Object.defineProperty(window, 'screen', {
+  Object.defineProperty(window, "screen", {
     writable: true,
     value: {
       width: hasExternalDisplay ? 2560 : 1440,
-      height: hasExternalDisplay ? 1440 : 900
-    }
+      height: hasExternalDisplay ? 1440 : 900,
+    },
   })
 }
 
@@ -174,10 +174,12 @@ export const Стандартный: Story = {
       setupScreenEnvironment(false)
       return (
         <div className="dark">
-          <RootStoreProvider mockState={{
-            ...mockStoreData,
-            layoutMode: "default",
-          }}>
+          <RootStoreProvider
+            mockState={{
+              ...mockStoreData,
+              layoutMode: "default",
+            }}
+          >
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
@@ -195,10 +197,12 @@ export const Классический: Story = {
       setupScreenEnvironment(false)
       return (
         <div className="dark">
-          <RootStoreProvider mockState={{
-            ...mockStoreData,
-            layoutMode: "classic",
-          }}>
+          <RootStoreProvider
+            mockState={{
+              ...mockStoreData,
+              layoutMode: "classic",
+            }}
+          >
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
@@ -216,10 +220,12 @@ export const Вертикальный: Story = {
       setupScreenEnvironment(false)
       return (
         <div className="dark">
-          <RootStoreProvider mockState={{
-            ...mockStoreData,
-            layoutMode: "vertical",
-          }}>
+          <RootStoreProvider
+            mockState={{
+              ...mockStoreData,
+              layoutMode: "vertical",
+            }}
+          >
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
@@ -237,10 +243,12 @@ export const ДвойнойСВнешнимДисплеем: Story = {
       setupScreenEnvironment(true)
       return (
         <div className="dark">
-          <RootStoreProvider mockState={{
-            ...mockStoreData,
-            layoutMode: "dual",
-          }}>
+          <RootStoreProvider
+            mockState={{
+              ...mockStoreData,
+              layoutMode: "dual",
+            }}
+          >
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
@@ -258,10 +266,12 @@ export const ДвойнойБезВнешнегоДисплея: Story = {
       setupScreenEnvironment(false)
       return (
         <div className="dark">
-          <RootStoreProvider mockState={{
-            ...mockStoreData,
-            layoutMode: "dual",
-          }}>
+          <RootStoreProvider
+            mockState={{
+              ...mockStoreData,
+              layoutMode: "dual",
+            }}
+          >
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
@@ -270,4 +280,4 @@ export const ДвойнойБезВнешнегоДисплея: Story = {
       )
     },
   ],
-} 
+}

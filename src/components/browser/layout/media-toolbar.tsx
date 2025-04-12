@@ -1,20 +1,14 @@
 import {
-  ChevronDown,
   Filter,
   Grid,
   Grid2x2,
   List,
   SortDesc,
-  Upload,
   File,
   Folder,
-  Camera,
   Monitor,
   Mic,
   Webcam,
-  ImageUpscale,
-  ImageDown,
-  CircleMinus,
   ZoomIn,
   ZoomOut,
 } from "lucide-react"
@@ -239,9 +233,7 @@ export function MediaToolbar({
                   <ZoomOut size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                Уменьшить ({canDecreaseSize ? "-" : "мин"} {currentSize}px)
-              </TooltipContent>
+              <TooltipContent>Уменьшить превью</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -259,9 +251,7 @@ export function MediaToolbar({
                   <ZoomIn size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>
-                Увеличить ({canIncreaseSize ? "+" : "макс"} {currentSize}px)
-              </TooltipContent>
+              <TooltipContent>Увеличить превью</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
