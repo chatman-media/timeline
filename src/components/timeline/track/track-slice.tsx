@@ -26,7 +26,7 @@ const TrackSlice = ({
   isSelected = false,
   onSelect,
   trackId = 0,
-}: TrackSliceProps): JSX.Element => {
+}: TrackSliceProps) => {
   // Локальное состояние слайса
   const [slice, setSlice] = useState<TrackSliceState>({
     width,

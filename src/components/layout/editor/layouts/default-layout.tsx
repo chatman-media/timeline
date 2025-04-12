@@ -10,7 +10,6 @@ export function DefaultMediaEditor() {
       className="min-h-0 flex-grow"
       autoSaveId="default-layout"
     >
-
       <ResizablePanel defaultSize={50} minSize={20} maxSize={80}>
         <ResizablePanelGroup direction="horizontal" autoSaveId="top-layout">
           <ResizablePanel defaultSize={40} minSize={10} maxSize={80}>
@@ -34,7 +33,6 @@ export function DefaultMediaEditor() {
           <Timeline />
         </div>
       </ResizablePanel>
-
     </ResizablePanelGroup>
   )
 }

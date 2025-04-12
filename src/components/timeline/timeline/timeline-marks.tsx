@@ -51,7 +51,6 @@ export function TimelineMarks({
         position={position}
         markType={markType}
         showValue={showValue}
-        isFirstMark={timestamp === Math.ceil(startTime / level1Step) * level1Step}
       />,
     )
   }

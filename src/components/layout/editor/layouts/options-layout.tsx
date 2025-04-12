@@ -10,11 +10,9 @@ interface OptionsLayoutProps {}
 export function OptionsMediaEditor({}: OptionsLayoutProps) {
   return (
     <ResizablePanelGroup
-
       direction="horizontal"
       className="min-h-0 flex-grow"
       autoSaveId="default-main-layout"
-
     >
       <ResizablePanel defaultSize={75} minSize={50} maxSize={80}>
         <ResizablePanelGroup direction="vertical" autoSaveId="vertical-left-layout">
@@ -53,4 +51,4 @@ export function OptionsMediaEditor({}: OptionsLayoutProps) {
       </ResizablePanel>
     </ResizablePanelGroup>
   )
-} 
+}

@@ -12,7 +12,7 @@ dayjs.extend(timezone)
 
 export default function Home() {
   return (
-    <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-white dark:bg-[#1b1a1f]">
+    <div className="min-h-screen font-[family-name:var(--font-geist-sans)] relative bg-[#f7fcff] dark:bg-[#1b1a1f]">
       <MediaEditor />
     </div>
   )

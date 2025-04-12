@@ -48,8 +48,7 @@ function DefaultLayout({ isActive, onClick }: LayoutProps) {
             </div>
           </div>
           <div className="h-[40%] w-full flex">
-            <div className="w-[10%] border-r-2 border-gray-700 p-1">
-            </div>
+            <div className="w-[10%] border-r-2 border-gray-700 p-1"></div>
             <div className="w-[70%] relative px-2 py-1">
               <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
               <div className="h-2 w-[75%] bg-primary/70 rounded-sm"></div>
@@ -96,8 +95,7 @@ function OptionsLayout({ isActive, onClick }: LayoutProps) {
             </div>
           </div>
           <div className="h-[40%] w-full flex">
-            <div className="w-[15%] border-r-2 border-gray-700 p-1">
-            </div>
+            <div className="w-[15%] border-r-2 border-gray-700 p-1"></div>
             <div className="w-[70%] relative px-2 py-1">
               <div className="h-2 w-full bg-primary/70 rounded-sm mb-1"></div>
               <div className="h-2 w-[75%] bg-primary/70 rounded-sm"></div>
@@ -151,8 +149,7 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
             </div>
           </div>
           <div className="h-[50%] w-full flex">
-            <div className="w-[14%] border-r-2 border-gray-700 p-1">
-            </div>
+            <div className="w-[14%] border-r-2 border-gray-700 p-1"></div>
             <div className="w-[86%] relative px-2 py-1">
               <div className="h-2 w-[85%] ml-[13%] bg-primary/70 rounded-sm mb-1"></div>
               <div className="h-2 w-[75%] bg-primary/70 rounded-sm mb-1"></div>
@@ -198,7 +195,7 @@ function DualLayout({ isActive, onClick, hasExternalDisplay }: DualLayoutProps) 
             <div className="w-[70%] border-r-2 border-gray-700 flex items-center justify-center">
               <div className="w-[90%] h-[90%] border-2 border-gray-700 bg-muted flex items-center justify-center">
                 <Play className="w-3 h-3 text-primary" />
-              </div>  
+              </div>
             </div>
             <div className="w-[30%] p-1">
               <div className="h-1.5 w-full bg-primary/70 rounded-sm mb-1"></div>

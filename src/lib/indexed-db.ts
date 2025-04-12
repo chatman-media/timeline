@@ -46,7 +46,7 @@ class HistoryDatabase extends Dexie {
   // Возвращаем массив объектов со StorableStateContext
   async getAllStatesSorted(): Promise<
     { id: number; timestamp: number; state: StorableStateContext }[]
-    > {
+  > {
     const snapshots = await this.states.orderBy("timestamp").toArray()
     // Убеждаемся, что id не undefined
     return snapshots.filter((s) => s.id !== undefined).map((s) => ({ ...s, id: s.id! })) as {

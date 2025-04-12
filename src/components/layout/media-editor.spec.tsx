@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import * as React from "react"
-import { beforeEach,describe, expect, it, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { MediaEditor } from "./media-editor"
 

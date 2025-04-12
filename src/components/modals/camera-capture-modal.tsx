@@ -770,16 +770,6 @@ export function CameraCaptureModal({ isOpen, onClose, onVideoRecorded }: CameraC
               {/* Запись */}
               <div className="flex flex-col items-center">
                 <div className="flex items-center justify-center mb-4 gap-6">
-                  {/* Кнопка для создания снимка */}
-                  <Button
-                    className="w-14 h-14 rounded-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center border-2 border-white"
-                    onClick={takeScreenshot}
-                    disabled={!isDeviceReady || isRecording}
-                    title="Сделать снимок"
-                  >
-                    <Camera className="w-6 h-6" />
-                  </Button>
-
                   {!isRecording ? (
                     <Button
                       className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center mb-0 border-2 border-white"

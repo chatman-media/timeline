@@ -7,7 +7,7 @@ import { useRootStore } from "@/hooks/use-root-store"
 import { cn } from "@/lib/utils"
 
 import { ThemeToggle } from "../theme-toggle"
-import { LayoutMode,LayoutPreviews } from "./layouts/layout-previews"
+import { LayoutMode, LayoutPreviews } from "./layouts/layout-previews"
 import { SaveStatus } from "./save-status"
 
 interface TopNavBarProps {
@@ -37,7 +37,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
   }
 
   return (
-    <div className="flex items-center justify-between w-full py-[2px] px-1 bg-background border-b border-border relative">
+    <div className="flex items-center justify-between w-full py-[2px] px-1 bg-gray-200 dark:bg-[#1b1a1f] relative">
       <div className="flex items-center h-6">
         <ThemeToggle />
       </div>

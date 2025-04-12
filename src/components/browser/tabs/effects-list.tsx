@@ -21,15 +21,15 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
       videoElement.style.filter = ""
 
       switch (effectType) {
-      case "blur":
-        videoElement.style.filter = "blur(5px)"
-        break
-      case "brightness":
-        videoElement.style.filter = "brightness(1.5)"
-        break
-      case "speed":
-        videoElement.playbackRate = 2
-        break
+        case "blur":
+          videoElement.style.filter = "blur(5px)"
+          break
+        case "brightness":
+          videoElement.style.filter = "brightness(1.5)"
+          break
+        case "speed":
+          videoElement.playbackRate = 2
+          break
       }
 
       videoElement.play()

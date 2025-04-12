@@ -145,13 +145,13 @@ export const MediaPreview = memo(function MediaPreview({
       <>
         {file.probeData?.streams &&
           file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
-          <div
-            style={{ fontSize: "10px" }}
-            className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
-          >
-            {index + 1}
-          </div>
-        )}
+            <div
+              style={{ fontSize: "10px" }}
+              className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
+            >
+              {index + 1}
+            </div>
+          )}
         {file.probeData?.streams?.some((stream) => stream.codec_type === "audio") && (
           <div
             className={`absolute ${
@@ -298,8 +298,8 @@ export const MediaPreview = memo(function MediaPreview({
         {hoverTimes[fileId]?.[0] !== undefined &&
           hoverTimes[fileId]?.[0] !== null &&
           Number.isFinite(hoverTimes[fileId]?.[0]) && (
-          <PreviewTimeline time={hoverTimes[fileId][0]} duration={duration} />
-        )}
+            <PreviewTimeline time={hoverTimes[fileId][0]} duration={duration} />
+          )}
 
         {onAddMedia && (
           <div
@@ -406,23 +406,12 @@ export const MediaPreview = memo(function MediaPreview({
               {hoverTimes[fileId]?.[index] !== undefined &&
                 hoverTimes[fileId]?.[index] !== null &&
                 Number.isFinite(hoverTimes[fileId]?.[index]) && (
-                <PreviewTimeline time={hoverTimes[fileId][index]} duration={duration} />
-              )}
+                  <PreviewTimeline time={hoverTimes[fileId][index]} duration={duration} />
+                )}
 
               {showFileName && (
                 <div className="absolute top-[2px] left-[2px] text-xs bg-black/75 px-[2px] rounded-xs line-clamp-1 max-w-[calc(60%)]">
                   {file.name}
-                </div>
-              )}
-
-              {/* Добавляем кнопку для снимка экрана */}
-              {loadedVideos[`${fileId}-${index}`] && (
-                <div
-                  className="absolute right-[2px] bottom-[40px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 bg-black/60 hover:bg-black/90"
-                  onClick={(e) => captureScreenshot(e, index)}
-                  title="Сделать снимок"
-                >
-                  <Camera className="w-3 h-3" strokeWidth={3} />
                 </div>
               )}
 
