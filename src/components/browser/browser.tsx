@@ -7,7 +7,7 @@ import {
   FiltersList,
   MediaFileList,
   MusicFileList,
-  StickersList,
+  // StickersList,
   SubtitlesList,
   TransitionsList,
 } from "."
@@ -43,18 +43,18 @@ export const Browser = memo(function Browser() {
           <Sparkles className="w-4 h-4" />
           <span>Эффекты</span>
         </TabsTrigger>
-        <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
-          <Type className="w-4 h-4" />
-          <span>Титры</span>
-        </TabsTrigger>
         <TabsTrigger value="filters" className={TAB_TRIGGER_STYLES}>
           <Blend className="w-4 h-4" />
           <span>Фильтры</span>
         </TabsTrigger>
-        <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
+        <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
+          <Type className="w-4 h-4" />
+          <span>Титры</span>
+        </TabsTrigger>
+        {/* <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
           <Sticker className="w-4 h-4" />
           <span>Стикеры</span>
-        </TabsTrigger>
+        </TabsTrigger> */}
         <TabsTrigger value="templates" className={TAB_TRIGGER_STYLES}>
           <Layout className="w-4 h-4" />
           <span>Шаблоны</span>
@@ -78,9 +78,9 @@ export const Browser = memo(function Browser() {
       <TabsContent value="filters" className="flex-1 overflow-hidden">
         <FiltersList />
       </TabsContent>
-      <TabsContent value="stickers" className="flex-1 overflow-hidden">
+      {/* <TabsContent value="stickers" className="flex-1 overflow-hidden">
         <StickersList />
-      </TabsContent>
+      </TabsContent> */}
     </Tabs>
   )
 })

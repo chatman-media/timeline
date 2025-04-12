@@ -71,6 +71,7 @@ export function MediaToolbar({
           className="text-xs flex items-center gap-1 cursor-pointer px-1"
           onClick={onImport}
         >
+          {/* <Import size={12} /> */}
           <span className="text-xs px-2">Импорт</span>
           <div className="flex items-center gap-1">
             <Tooltip>
