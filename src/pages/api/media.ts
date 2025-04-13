@@ -87,6 +87,8 @@ export default async function handler(
             hasStreams: probeData.streams?.length || 0,
           })
 
+          // console.log(probeData.format)
+
           return {
             id: nanoid(),
             name: file,

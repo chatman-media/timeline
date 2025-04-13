@@ -7,7 +7,9 @@ import {
   Folder,
   Grid,
   Grid2x2,
+  Group,
   List,
+  ListFilterPlus,
   Mic,
   Monitor,
   SortDesc,
@@ -36,10 +38,12 @@ interface MediaToolbarProps {
   onImportFolder: () => void
   onSort: (sortBy: string) => void
   onFilter: (filterType: string) => void
+  onGroupBy: (groupBy: string) => void
   onChangeOrder?: () => void
   sortOrder?: "asc" | "desc"
   currentSortBy?: string
   currentFilterType?: string
+  currentGroupBy?: string
   onRecord?: () => void
   onRecordCamera?: () => void
   onRecordScreen?: () => void
@@ -59,10 +63,12 @@ export function MediaToolbar({
   onImportFolder,
   onSort,
   onFilter,
+  onGroupBy,
   onChangeOrder = () => {},
   sortOrder = "desc",
   currentSortBy = "date",
   currentFilterType = "all",
+  currentGroupBy = "none",
   onRecord = () => {},
   onRecordCamera = () => {},
   onRecordScreen = () => {},
@@ -75,7 +81,7 @@ export function MediaToolbar({
   // Внутренний стейт для управления текущим выбором
   const [internalSortBy, setInternalSortBy] = useState(currentSortBy)
   const [internalFilterType, setInternalFilterType] = useState(currentFilterType)
-
+  const [internalGroupBy, setInternalGroupBy] = useState(currentGroupBy)
   // Синхронизация внутреннего стейта с пропсами
   useEffect(() => {
     setInternalSortBy(currentSortBy)
@@ -94,6 +100,11 @@ export function MediaToolbar({
   const handleFilter = (filterType: string) => {
     setInternalFilterType(filterType)
     onFilter(filterType)
+  }
+
+  const handleGroupBy = (groupBy: string) => {
+    setInternalGroupBy(groupBy)
+    onGroupBy(groupBy)
   }
 
   return (
@@ -293,10 +304,15 @@ export function MediaToolbar({
 
         {/* Sort Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-6 h-6 mr-1 cursor-pointer">
-              <SortDesc size={16} />
-            </Button>
+          <DropdownMenuTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="w-6 h-6 cursor-pointer">
+                  <SortDesc size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Сортировка</TooltipContent>
+            </Tooltip>
           </DropdownMenuTrigger>
           <DropdownMenuContent className="space-y-1" align="end">
             <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("name")}>
@@ -328,10 +344,15 @@ export function MediaToolbar({
 
         {/* Filter Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-6 h-6 cursor-pointer">
-              <Filter size={16} />
-            </Button>
+          <DropdownMenuTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-6 h-6 cursor-pointer">
+                  <Filter size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Фильтры</TooltipContent>
+            </Tooltip>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => handleFilter("all")}>
@@ -357,6 +378,47 @@ export function MediaToolbar({
               <div className="flex items-center gap-2">
                 {internalFilterType === "image" && <Check className="h-4 w-4" />}
                 <span>Изображения</span>
+              </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Group Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="w-6 h-6 cursor-pointer">
+                  <ListFilterPlus size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Группировка</TooltipContent>
+            </Tooltip>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleGroupBy("none")}>
+              <div className="flex items-center gap-2">
+                {internalGroupBy === "none" && <Check className="h-4 w-4" />}
+                <span>Не группировать</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => handleGroupBy("type")}>
+              <div className="flex items-center gap-2">
+                {internalGroupBy === "type" && <Check className="h-4 w-4" />}
+                <span>Тип</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleGroupBy("date")}>
+              <div className="flex items-center gap-2">
+                {internalGroupBy === "date" && <Check className="h-4 w-4" />}
+                <span>По дате создания</span>
+              </div>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleGroupBy("duration")}>
+              <div className="flex items-center gap-2">
+                {internalGroupBy === "duration" && <Check className="h-4 w-4" />}
+                <span>По длительности</span>
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>

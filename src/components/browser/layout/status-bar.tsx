@@ -64,7 +64,7 @@ export function StatusBar({
 
   return (
     <div className="flex justify-between items-center text-sm w-full p-2 gap-2">
-      <div className="flex flex-col items-end justify-center gap-0 text-xs text-gray-700 dark:text-gray-300">
+      <div className="flex flex-col items-end justify-center gap-0 text-xs">
         <span className="px-1 flex items-center whitespace-nowrap gap-2">
           {remainingVideoCount > 0 && (
             <Button
