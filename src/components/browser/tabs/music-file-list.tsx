@@ -129,15 +129,15 @@ export function MusicFileList() {
   }
 
   const renderAudioPlayer = () => {
-    if (!activeFile) return null;
-    
+    if (!activeFile) return null
+
     const formatDuration = (seconds?: number) => {
-      if (!seconds) return "00:00";
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+      if (!seconds) return "00:00"
+      const mins = Math.floor(seconds / 60)
+      const secs = Math.floor(seconds % 60)
+      return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
     }
-    
+
     return (
       <div className="border-b">
         <AudioPlayer
@@ -146,25 +146,27 @@ export function MusicFileList() {
           isPlaying={isPlaying}
           onPlay={() => {
             if (audioRef[0]) {
-              audioRef[0].play();
-              setIsPlaying(true);
+              audioRef[0].play()
+              setIsPlaying(true)
             }
           }}
           onPause={() => {
             if (audioRef[0]) {
-              audioRef[0].pause();
-              setIsPlaying(false);
+              audioRef[0].pause()
+              setIsPlaying(false)
             }
           }}
-          onAddToPlaylist={() => handleAdd(
-            { currentTarget: document.createElement('button') } as MouseEvent<HTMLButtonElement>,
-            activeFile
-          )}
+          onAddToPlaylist={() =>
+            handleAdd(
+              { currentTarget: document.createElement("button") } as MouseEvent<HTMLButtonElement>,
+              activeFile,
+            )
+          }
           onFavorite={() => console.log("Добавить в избранное", activeFile.name)}
         />
       </div>
-    );
-  };
+    )
+  }
 
   const renderMusicFiles = () => {
     switch (viewMode) {

@@ -66,31 +66,21 @@ export function AudioPlayer({
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-medium truncate">{title}</h3>
           <div className="flex items-center space-x-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={handleFavorite}
-            >
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleFavorite}>
               <Heart size={16} className={cn(favorite && "fill-current text-red-500")} />
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={onAddToPlaylist}
-            >
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onAddToPlaylist}>
               <Plus size={16} />
             </Button>
           </div>
         </div>
-        
+
         {/* Визуализация */}
         <div className="h-5 flex items-center justify-between">
           <div className="w-full pr-12">
             <div className="h-5 flex items-center gap-[2px]">
               {Array.from({ length: 40 }).map((_, i) => (
-                <div 
+                <div
                   key={i}
                   className="w-[2px] bg-gray-300 dark:bg-gray-600"
                   style={{ height: `${Math.random() * 100}%` }}
@@ -103,4 +93,4 @@ export function AudioPlayer({
       </div>
     </div>
   )
-} 
+}

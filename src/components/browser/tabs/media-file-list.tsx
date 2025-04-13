@@ -7,7 +7,7 @@ import { useVideoPlayer } from "@/hooks/use-video-player"
 import { cn, formatDuration, formatFileSize } from "@/lib/utils"
 import { rootStore } from "@/stores/root-store"
 import { MediaFile } from "@/types/videos"
-import { calculateRealDimensions, getFileType, groupFilesByDate } from "@/utils/media-utils"
+import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from ".."
