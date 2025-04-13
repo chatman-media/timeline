@@ -873,7 +873,7 @@ export const MediaFileList = memo(function MediaFileList({
                   className={cn(
                     "flex items-center p-0 h-full",
                     "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
-                    isAdded && "opacity-50 pointer-events-none",
+                    isAdded && "pointer-events-none",
                   )}
                 >
                   <div className="relative h-full flex-shrink-0 flex gap-1 mr-3">
@@ -916,7 +916,7 @@ export const MediaFileList = memo(function MediaFileList({
                   key={fileId}
                   className={cn(
                     "flex flex-col h-full w-full rounded-sm overflow-hidden",
-                    isAdded && "opacity-50 pointer-events-none",
+                    isAdded && "pointer-events-none",
                   )}
                   style={{
                     width: `${((previewSize * 16) / 9).toFixed(0)}px`,
@@ -1028,7 +1028,7 @@ export const MediaFileList = memo(function MediaFileList({
                   className={cn(
                     "flex items-center p-[2px] h-full",
                     "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
-                    isAdded && "opacity-50 pointer-events-none",
+                    isAdded && "pointer-events-none",
                   )}
                 >
                   <MediaPreview

@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from "react"
 
-import { formatTime } from "@/lib/utils"
-
 interface PreviewTimelineProps {
   time: number
   duration: number
@@ -94,7 +92,7 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
           left: `${positionPercent}%`,
         }}
       />
-      <div
+      {/* <div
         className="absolute bottom-0 text-xs bg-black/75 text-white px-1 rounded pointer-events-none z-20"
         style={{
           left: `${positionPercent}%`,
@@ -103,7 +101,7 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
         }}
       >
         {formatTime(displayTime, false)}
-      </div>
+      </div> */}
     </>
   )
 }

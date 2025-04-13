@@ -114,7 +114,6 @@ export const MediaPreview = memo(function MediaPreview({
     const isVideo = stream.codec_type === "video"
     const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
     const isImage = file.isImage || (isVideo && !hasAudio && !duration)
-    const iconSize = size < 100 ? "w-3 h-3" : "w-4 h-4"
     const smallPadding = size < 100 ? "px-[2px] py-0" : "px-[4px] py-[2px]"
 
     return (
@@ -242,7 +241,7 @@ export const MediaPreview = memo(function MediaPreview({
         {onAddMedia && (
           <div
             className={`absolute right-[2px] bottom-[${size < 100 ? 18 : 24}px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
-              isAdded ? "bg-[#3ebfb2]" : "bg-black/60 hover:bg-black/90"
+              isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
             }`}
             onClick={(e) => {
               e.stopPropagation()
@@ -297,7 +296,7 @@ export const MediaPreview = memo(function MediaPreview({
           {onAddMedia && (
             <div
               className={`absolute right-[2px] bottom-[18px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
-                isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-black/90"
+                isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
               }`}
               onClick={(e) => {
                 e.stopPropagation()
@@ -406,8 +405,8 @@ export const MediaPreview = memo(function MediaPreview({
 
               {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
                 <div
-                  className={`absolute right-[4px] bottom-[18px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
-                    isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-black/90"
+                  className={`absolute right-[4px] bottom-[4px] text-white rounded-full p-1 cursor-pointer z-10 ${
+                    isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
                   }`}
                   onClick={(e) => {
                     e.stopPropagation()
