@@ -1,4 +1,4 @@
-import { Camera, Check, Music, Plus } from "lucide-react"
+import { Camera, Check, Music, Plus, Image as ImageIcon, Film } from "lucide-react"
 import { memo, useState } from "react"
 
 import { formatResolution } from "@/lib/utils"
@@ -71,77 +71,12 @@ export const MediaPreview = memo(function MediaPreview({
     isLoaded: boolean,
     videoRef: HTMLVideoElement | null,
   ) => {
-    const [volume, setVolume] = useState<VolumeState>(VolumeState.FULL)
-
-    const handleVolumeClick = (e: React.MouseEvent) => {
-      e.stopPropagation()
-      if (!videoRef) return
-
-      const nextVolume = getNextVolumeState(volume)
-      setVolume(nextVolume)
-      videoRef.volume = nextVolume
-    }
-
-    const VolumeIcon = () => {
-      if (volume === VolumeState.MUTED) {
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 18V5l12-2v13" />
-            <line x1="1" y1="1" x2="23" y2="23" />
-            <circle cx="6" cy="18" r="3" />
-            <circle cx="18" cy="16" r="3" />
-          </svg>
-        )
-      }
-
-      if (volume === VolumeState.HALF) {
-        return (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="12"
-            height="12"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M9 18V5l12-2v13" />
-            <circle cx="6" cy="18" r="3" opacity="0.5" />
-            <circle cx="18" cy="16" r="3" opacity="0.5" />
-          </svg>
-        )
-      }
-
-      return (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="12"
-          height="12"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M9 18V5l12-2v13" />
-          <circle cx="6" cy="18" r="3" />
-          <circle cx="18" cy="16" r="3" />
-        </svg>
-      )
-    }
+    // Определяем тип медиа
+    const isVideo = stream.codec_type === "video"
+    const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
+    const isImage = isVideo && !hasAudio && !duration
+    const iconSize = size < 100 ? "w-3 h-3" : "w-4 h-4"
+    const smallPadding = size < 100 ? "px-[2px] py-0" : "px-[4px] py-[2px]"
 
     return (
       <>
@@ -149,7 +84,7 @@ export const MediaPreview = memo(function MediaPreview({
           file.probeData.streams.filter((s) => s.codec_type === "video").length > 0 && (
             <div
               style={{ fontSize: "10px" }}
-              className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
+              className={`absolute left-1 top-[calc(50%-8px)] text-white bg-black/50 rounded ${smallPadding}`}
             >
               {index + 1}
             </div>
@@ -158,34 +93,29 @@ export const MediaPreview = memo(function MediaPreview({
           file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
             <div
               style={{ fontSize: "10px" }}
-              className={`absolute left-[2px] top-[calc(50%-8px)] text-white bg-black/50 rounded px-[4px] py-0`}
+              className={`absolute left-1 top-[calc(50%-8px)] text-white bg-black/50 rounded ${smallPadding}`}
             >
               {index + 1}
             </div>
           )}
-        {file.probeData?.streams?.some((stream) => stream.codec_type === "audio") && (
-          <div
-            className={`absolute ${
-              isHorizontalVideo(
-                stream.width || 0,
-                stream.height || 0,
-                parseRotation(stream.rotation),
-              )
-                ? "right-[2px] top-[2px]"
-                : "left-1/2 bottom-[2px] -translate-x-1/2"
-            } text-white bg-black/50 rounded p-[2px] cursor-pointer hover:bg-black/70`}
-            onClick={handleVolumeClick}
-            title={
-              volume === VolumeState.FULL
-                ? "Приглушить"
-                : volume === VolumeState.HALF
-                  ? "Без звука"
-                  : "Включить звук"
-            }
-          >
-            <VolumeIcon />
-          </div>
-        )}
+        
+        {/* Иконка типа медиа */}
+        <div
+          className={`absolute ${
+            isHorizontalVideo(
+              stream.width || 0,
+              stream.height || 0,
+              parseRotation(stream.rotation),
+            )
+              ? size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"
+              : "left-1/2 bottom-1 -translate-x-1/2"
+          } text-white cursor-pointer bg-black/65 rounded p-0.5`}
+        >
+          {isVideo && <Film size={size > 100 ? 16 : 12} />}
+          {hasAudio && !isVideo && <Music size={size > 100 ? 16 : 12} />}
+          {isImage && <ImageIcon size={size > 100 ? 16 : 12} />}
+        </div>
+
         {isLoaded && (
           <div
             className={`absolute ${
@@ -194,9 +124,9 @@ export const MediaPreview = memo(function MediaPreview({
                 stream.height || 0,
                 parseRotation(stream.rotation),
               )
-                ? "right-[22px] top-[2px]"
-                : "left-[calc(50%-8px)] top-[2px]"
-            } bg-black/50 rounded px-[2px] py-0 text-xs`}
+                ? size > 100 ? "right-[28px]" : "right-[22px]"
+                : "left-[calc(50%-8px)]"
+            } bg-black/65 font-medium rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs text-white`}
           >
             {formatResolution(stream.width || 0, stream.height || 0)}
           </div>
@@ -242,11 +172,23 @@ export const MediaPreview = memo(function MediaPreview({
           }}
           onMouseEnter={(e) => e.currentTarget.focus()}
         />
+        
+        {/* Иконка типа медиа в правом верхнем углу */}
+        <div className={`absolute right-1 top-1 text-white cursor-pointer bg-black/65 rounded p-0.5`}>
+          <Music className={`${size < 100 ? "w-3 h-3" : "w-4 h-4"}`} />
+        </div>
+        
         {hoverTimes[fileId]?.[0] !== undefined &&
           hoverTimes[fileId]?.[0] !== null &&
           Number.isFinite(hoverTimes[fileId]?.[0]) && (
             <PreviewTimeline time={hoverTimes[fileId][0]} duration={duration} />
           )}
+
+        {showFileName && (
+          <div className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}>
+            {file.name}
+          </div>
+        )}
 
         {onAddMedia && (
           <div
@@ -358,7 +300,7 @@ export const MediaPreview = memo(function MediaPreview({
                 )}
 
               {showFileName && (
-                <div className="absolute top-[2px] left-[2px] text-xs bg-black/75 px-[2px] rounded-xs line-clamp-1 max-w-[calc(60%)]">
+                <div className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}>
                   {file.name}
                 </div>
               )}
@@ -366,7 +308,7 @@ export const MediaPreview = memo(function MediaPreview({
               {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
                 <div
                   className={`absolute right-[2px] bottom-[18px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
-                    isAdded ? "bg-[#3ebfb2]" : "bg-black/60 hover:bg-black/90"
+                    isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-black/90"
                   }`}
                   onClick={(e) => {
                     e.stopPropagation()
