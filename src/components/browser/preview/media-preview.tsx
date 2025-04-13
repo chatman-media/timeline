@@ -1,7 +1,7 @@
 import { Check, Film, Image as ImageIcon, Music, Plus } from "lucide-react"
 import { memo } from "react"
 
-import { formatResolution } from "@/lib/utils"
+import { formatDuration, formatResolution } from "@/lib/utils"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/videos"
 import { isHorizontalVideo } from "@/utils/media-utils"
@@ -120,7 +120,7 @@ export const MediaPreview = memo(function MediaPreview({
         {/* {file.probeData?.streams &&
           file.probeData.streams.filter((s) => s.codec_type === "video").length > 0 && (
             <div
-              style={{ fontSize: "10px" }}
+
               className={`absolute left-1 top-[calc(50%-8px)] text-white bg-black/50 rounded ${smallPadding}`}
             >
               {index + 1}
@@ -129,10 +129,18 @@ export const MediaPreview = memo(function MediaPreview({
         {file.probeData?.streams &&
           file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
             <div
-              style={{ fontSize: "10px" }}
-              className={`absolute left-1 top-[calc(50%-8px)] text-white bg-black/50 rounded ${smallPadding}`}
+              className={`absolute text-xs leading-[16px] left-1 top-[calc(50%-8px)] text-white bg-black/50 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
             >
               {index + 1}
+            </div>
+          )}
+        {file.probeData?.streams &&
+          file.probeData.streams.filter((s) => s.codec_type === "video" || s.codec_type === "audio")
+            .length > 1 && (
+            <div
+              className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/65 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+            >
+              {formatDuration(duration)}
             </div>
           )}
 
@@ -163,7 +171,7 @@ export const MediaPreview = memo(function MediaPreview({
                   ? "right-[28px]"
                   : "right-[20px]"
                 : "left-[calc(50%-8px)]"
-            } bg-black/65 text-xs leading-[16px] rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} font-medium text-white`}
+            } bg-black/65 text-xs leading-[16px] rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} mr-0.5 font-medium text-white`}
           >
             {formatResolution(stream.width || 0, stream.height || 0)}
           </div>
@@ -181,6 +189,15 @@ export const MediaPreview = memo(function MediaPreview({
         onClick={(e) => handlePlayPause(e, file, 0)}
         onMouseLeave={() => handleMouseLeave(`${fileId}-0`)}
       >
+        {file.probeData?.streams &&
+          file.probeData.streams.filter((s) => s.codec_type === "audio").length > 0 && (
+            <div
+              className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/65 rounded ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+            >
+              {formatDuration(duration)}
+            </div>
+          )}
+
         <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
           <Music className="w-6 h-6 text-gray-500 dark:text-gray-400" />
         </div>
@@ -231,7 +248,7 @@ export const MediaPreview = memo(function MediaPreview({
 
         {showFileName && (
           <div
-            className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}
+            className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
           >
             {file.name}
           </div>
@@ -286,7 +303,7 @@ export const MediaPreview = memo(function MediaPreview({
 
           {showFileName && (
             <div
-              className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}
+              className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
             >
               {file.name}
             </div>
@@ -376,13 +393,7 @@ export const MediaPreview = memo(function MediaPreview({
                 }}
               />
               {/* Stream indicators */}
-              {renderStreamIndicators(
-                file,
-                stream,
-                index,
-                loadedVideos[`${fileId}-${index}`],
-                videoRefs.current[`${fileId}-${index}`],
-              )}
+              {renderStreamIndicators(file, stream, index, loadedVideos[`${fileId}-${index}`])}
               {/* Timeline */}
               {hoverTimes[fileId]?.[index] !== undefined &&
                 hoverTimes[fileId]?.[index] !== null &&
@@ -394,9 +405,20 @@ export const MediaPreview = memo(function MediaPreview({
                   />
                 )}
 
+              {file.probeData?.streams &&
+                file.probeData.streams.filter(
+                  (s) => s.codec_type === "video" || s.codec_type === "audio",
+                ).length > 1 && (
+                  <div
+                    className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/65 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+                  >
+                    {formatDuration(duration)}
+                  </div>
+                )}
+
               {showFileName && (
                 <div
-                  className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}
+                  className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
                 >
                   {file.name}
                 </div>
