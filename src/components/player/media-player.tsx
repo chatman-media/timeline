@@ -17,6 +17,7 @@ export const ActiveVideo = () => {
     isSeeking,
     setIsSeeking,
     resetChangingCamera,
+    isRecordingSchema,
   } = useRootStore()
 
   // Используем ref для хранения последнего времени обновления, чтобы избежать слишком частых обновлений
@@ -103,11 +104,19 @@ export const ActiveVideo = () => {
             // Проверяем возможность воспроизведения перед запуском
             if (videoElement.readyState >= 2) {
               // HAVE_CURRENT_DATA или выше
-              await videoElement.play()
+              try {
+                await videoElement.play()
+              } catch (playErr) {
+                console.error("[ChangingCamera] Ошибка при воспроизведении после смены камеры:", playErr)
+              }
             } else {
               // Если видео не готово, добавляем слушатель для запуска, когда будет готово
               const handleCanPlay = async () => {
-                await videoElement.play()
+                try {
+                  await videoElement.play()
+                } catch (playErr) {
+                  console.error("[ChangingCamera] Ошибка при отложенном воспроизведении:", playErr)
+                }
                 videoElement.removeEventListener("canplay", handleCanPlay)
               }
               videoElement.addEventListener("canplay", handleCanPlay)
@@ -237,9 +246,34 @@ export const ActiveVideo = () => {
 
         // Постановка видео на паузу, если нужно (убираем запуск во время переключения)
         const videoElement = videoRefs[activeVideo.id]
-        if (videoElement && Math.abs(videoElement.currentTime - currentTime) > 0.1) {
-          console.log("[ChangingCamera] Синхронизация текущего времени")
-          videoElement.currentTime = currentTime
+        if (videoElement) {
+          if (Math.abs(videoElement.currentTime - currentTime) > 0.1) {
+            console.log("[ChangingCamera] Синхронизация текущего времени")
+            videoElement.currentTime = currentTime
+          }
+          
+          // Особая обработка для записи - всегда запускаем воспроизведение
+          if (isRecordingSchema) {
+            console.log("[ChangingCamera] В режиме записи - продолжаем воспроизведение")
+            setIsPlaying(true)
+            try {
+              videoElement.play().catch(err => {
+                console.error("[ChangingCamera] Ошибка воспроизведения при записи:", err)
+              })
+            } catch (error) {
+              console.error("[ChangingCamera] Ошибка при воспроизведении во время записи:", error)
+            }
+          }
+          // Обычное воспроизведение, если нужно
+          else if (isPlaying && videoElement.paused) {
+            try {
+              videoElement.play().catch(err => {
+                console.error("[ChangingCamera] Ошибка воспроизведения:", err)
+              })
+            } catch (error) {
+              console.error("[ChangingCamera] Ошибка при воспроизведении:", error)
+            }
+          }
         }
       }
 
@@ -247,11 +281,11 @@ export const ActiveVideo = () => {
       const timeout = setTimeout(() => {
         resetChangingCamera()
         console.log("[ChangingCamera] Сброс флага isChangingCamera, время:", currentTime.toFixed(3))
-      }, 200) // Уменьшаем задержку для более быстрого сброса флага
+      }, 100) // Уменьшаем задержку для более быстрого сброса флага
 
       return () => clearTimeout(timeout)
     }
-  }, [isChangingCamera, resetChangingCamera, videoRefs, activeVideo, currentTime])
+  }, [isChangingCamera, resetChangingCamera, videoRefs, activeVideo, currentTime, isPlaying, isRecordingSchema, setIsPlaying])
 
   if (!activeVideo) return null
 

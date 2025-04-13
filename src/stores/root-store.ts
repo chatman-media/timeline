@@ -154,6 +154,8 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
     setActiveVideo: (context: StateContext, event: { videoId: string }) => ({
       ...context,
       activeVideo: context.media.find((m) => m.id === event.videoId) ?? null,
+      // Если меняется видео, но не меняется трек, то все равно устанавливаем флаг смены камеры
+      isChangingCamera: context.activeVideo?.id !== event.videoId || context.isChangingCamera,
       isDirty: true,
     }),
 
@@ -275,10 +277,15 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       }
 
       const newSegmentId = generateSegmentId()
+      
+      // Используем переданное время начала или текущее системное время
+      const startTime = event.startTime || (Date.now() / 1000)
+      console.log(`[startRecordingSchema] Время начала записи: ${startTime.toFixed(3)}`)
+      
       const newSegment: MontageSegment = {
         id: newSegmentId,
         sourceTrackIds: [activeSourceTrackId],
-        startTime: Date.now() / 1000,
+        startTime: startTime,
         endTime: null,
         settings: {},
       }
@@ -299,6 +306,8 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
         isPlaying: true,
         isDirty: true,
         currentLayout: updatedLayout,
+        // Обновляем текущее время, если оно было передано
+        currentTime: event.startTime || context.currentTime,
       }
 
       console.log("[startRecordingSchema] Returning state:", {
@@ -322,7 +331,6 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
           ...context,
           isRecordingSchema: false,
           currentRecordingSegmentId: null,
-          isPlaying: false,
         }
       }
 
@@ -345,7 +353,8 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
         montageSchema: updatedSchema,
         isRecordingSchema: false,
         currentRecordingSegmentId: null,
-        isPlaying: false,
+        // Не останавливаем воспроизведение при остановке записи
+        // это может быть вызвано переключением дорожки
         isDirty: true,
       }
 
