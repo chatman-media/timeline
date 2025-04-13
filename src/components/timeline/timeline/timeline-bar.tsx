@@ -67,7 +67,6 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
         }}
         onMouseDown={handleMouseDown}
       >
-        {/* Cursor line - modified to be more stylish */}
         <div className="h-full w-[1px] bg-primary group-hover:bg-primary group-active:bg-primary/90 transition-colors">
           <div className="absolute top-0 w-3 h-5 -translate-x-[5px] overflow-visible">
             <svg
