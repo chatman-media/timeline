@@ -22,6 +22,7 @@ export function useVideoPlayer({ videoRefs }: UseVideoPlayerProps) {
             await mediaElement.pause()
             setPlayingFileId(null)
           } else {
+            // Останавливаем предыдущее видео, если оно было
             if (playingFileId) {
               Object.entries(videoRefs.current).forEach(([key, player]) => {
                 if (key.startsWith(playingFileId) && player) {
@@ -42,15 +43,20 @@ export function useVideoPlayer({ videoRefs }: UseVideoPlayerProps) {
     [playingFileId],
   )
 
+  // Упрощенный обработчик для выхода курсора с видео
   const handleMouseLeave = useCallback(
     (fileId: string) => {
       const baseFileId = fileId.split("-")[0]
+      const [prefix, streamIndex] = fileId.split("-")
+
+      // Находим конкретный элемент видео и останавливаем его
+      const videoElement = videoRefs.current[fileId]
+      if (videoElement && !videoElement.paused) {
+        videoElement.pause()
+      }
+
+      // Сбрасываем индикатор проигрывания, если это было активное видео
       if (playingFileId === baseFileId) {
-        Object.entries(videoRefs.current).forEach(([key, player]) => {
-          if (key.startsWith(baseFileId) && player) {
-            player.pause()
-          }
-        })
         setPlayingFileId(null)
       }
     },

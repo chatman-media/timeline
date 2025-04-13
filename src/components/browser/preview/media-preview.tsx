@@ -193,7 +193,6 @@ export const MediaPreview = memo(function MediaPreview({
           }}
           src={file.path}
           preload="auto"
-          loop
           tabIndex={0}
           className="focus:outline-none"
           onPlay={(e) => {
@@ -210,6 +209,9 @@ export const MediaPreview = memo(function MediaPreview({
             }
           }}
           onMouseEnter={(e) => e.currentTarget.focus()}
+          onEnded={(e) => {
+            e.currentTarget.pause()
+          }}
         />
 
         {/* Иконка типа медиа в правом верхнем углу */}
@@ -222,7 +224,11 @@ export const MediaPreview = memo(function MediaPreview({
         {hoverTimes[fileId]?.[0] !== undefined &&
           hoverTimes[fileId]?.[0] !== null &&
           Number.isFinite(hoverTimes[fileId]?.[0]) && (
-            <PreviewTimeline time={hoverTimes[fileId][0]} duration={duration} />
+            <PreviewTimeline
+              time={hoverTimes[fileId][0]}
+              duration={duration}
+              videoRef={videoRefs.current[`${fileId}-0`]}
+            />
           )}
 
         {showFileName && (
@@ -337,7 +343,6 @@ export const MediaPreview = memo(function MediaPreview({
                 src={file.path}
                 className={`w-full h-full object-cover focus:outline-none`}
                 tabIndex={0}
-                loop
                 playsInline
                 preload="metadata"
                 style={{
@@ -368,6 +373,9 @@ export const MediaPreview = memo(function MediaPreview({
                   }
                 }}
                 onMouseEnter={(e) => e.currentTarget.focus()}
+                onEnded={(e) => {
+                  e.currentTarget.pause()
+                }}
               />
               {/* Stream indicators */}
               {renderStreamIndicators(
@@ -381,7 +389,11 @@ export const MediaPreview = memo(function MediaPreview({
               {hoverTimes[fileId]?.[index] !== undefined &&
                 hoverTimes[fileId]?.[index] !== null &&
                 Number.isFinite(hoverTimes[fileId]?.[index]) && (
-                  <PreviewTimeline time={hoverTimes[fileId][index]} duration={duration} />
+                  <PreviewTimeline
+                    time={hoverTimes[fileId][index]}
+                    duration={duration}
+                    videoRef={videoRefs.current[`${fileId}-${index}`]}
+                  />
                 )}
 
               {showFileName && (
