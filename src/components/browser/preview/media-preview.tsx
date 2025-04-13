@@ -240,7 +240,7 @@ export const MediaPreview = memo(function MediaPreview({
 
         {onAddMedia && (
           <div
-            className={`absolute right-[2px] bottom-[${size < 100 ? 18 : 24}px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
+            className={`absolute right-[2px] bottom-[4px] text-white rounded-full p-[3px] cursor-pointer z-10 ${
               isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
             }`}
             onClick={(e) => {
@@ -250,9 +250,9 @@ export const MediaPreview = memo(function MediaPreview({
             title={isAdded ? "Добавлено" : "Добавить"}
           >
             {isAdded ? (
-              <Check className={size >= 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
+              <Check className={size > 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
             ) : (
-              <Plus className={size >= 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
+              <Plus className={size > 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
             )}
           </div>
         )}
@@ -295,7 +295,7 @@ export const MediaPreview = memo(function MediaPreview({
 
           {onAddMedia && (
             <div
-              className={`absolute right-[2px] bottom-[18px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
+              className={`absolute right-[2px] bottom-[18px] text-white rounded-full p-1 cursor-pointer z-10 ${
                 isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
               }`}
               onClick={(e) => {
@@ -305,9 +305,9 @@ export const MediaPreview = memo(function MediaPreview({
               title={isAdded ? "Добавлено" : "Добавить"}
             >
               {isAdded ? (
-                <Check className="w-3 h-3" strokeWidth={3} />
+                <Check className={size > 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
               ) : (
-                <Plus className="w-3 h-3" strokeWidth={3} />
+                <Plus className={size > 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
               )}
             </div>
           )}
@@ -415,9 +415,9 @@ export const MediaPreview = memo(function MediaPreview({
                   title={isAdded ? "Добавлено" : "Добавить"}
                 >
                   {isAdded ? (
-                    <Check className={size >= 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
+                    <Check className={size > 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
                   ) : (
-                    <Plus className={size >= 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
+                    <Plus className={size > 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
                   )}
                 </div>
               )}

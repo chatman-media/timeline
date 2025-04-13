@@ -35,6 +35,14 @@ const STORAGE_KEY_PREFIX = "timeline-preview-size-"
 const STORAGE_KEY_GRID = `${STORAGE_KEY_PREFIX}grid`
 const STORAGE_KEY_THUMBNAILS = `${STORAGE_KEY_PREFIX}thumbnails`
 const STORAGE_KEY_LIST = `${STORAGE_KEY_PREFIX}list`
+const STORAGE_KEY_METADATA = `${STORAGE_KEY_PREFIX}metadata`
+
+// Ключи для настроек
+const STORAGE_KEY_VIEW_MODE = "timeline-view-mode"
+const STORAGE_KEY_GROUP_BY = "timeline-group-by"
+const STORAGE_KEY_SORT_BY = "timeline-sort-by"
+const STORAGE_KEY_SORT_ORDER = "timeline-sort-order"
+const STORAGE_KEY_FILTER_TYPE = "timeline-filter-type"
 
 // Функция для загрузки сохраненного размера из localStorage
 const getSavedSize = (mode: string, defaultSize: number): number => {
@@ -45,6 +53,7 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
   if (mode === "grid") storageKey = STORAGE_KEY_GRID
   else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
   else if (mode === "list") storageKey = STORAGE_KEY_LIST
+  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
   else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
 
   try {
@@ -68,37 +77,48 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
   return defaultSize
 }
 
-// Функция для сохранения выбранного размера в localStorage
-const saveSize = (mode: string, size: number): void => {
-  if (typeof window === "undefined") return // Проверка на SSR
-
-  // Выбираем правильный ключ на основе режима
-  let storageKey
-  if (mode === "grid") storageKey = STORAGE_KEY_GRID
-  else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
-  else if (mode === "list") storageKey = STORAGE_KEY_LIST
-  else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
+// Функция для загрузки сохраненных настроек
+const loadSavedSettings = () => {
+  if (typeof window === "undefined") return null
 
   try {
-    localStorage.setItem(storageKey, size.toString())
-    console.log(`[MediaFileList] Saved size ${size} for mode ${mode} to key ${storageKey}`)
+    const viewMode = localStorage.getItem(STORAGE_KEY_VIEW_MODE) || "grid"
+    const groupBy = localStorage.getItem(STORAGE_KEY_GROUP_BY) || "date"
+    const sortBy = localStorage.getItem(STORAGE_KEY_SORT_BY) || "date"
+    const sortOrder = localStorage.getItem(STORAGE_KEY_SORT_ORDER) || "asc"
+    const filterType = localStorage.getItem(STORAGE_KEY_FILTER_TYPE) || "all"
+
+    return {
+      viewMode,
+      groupBy,
+      sortBy,
+      sortOrder,
+      filterType,
+    }
   } catch (error) {
-    console.error("[MediaFileList] Error saving to localStorage:", error)
+    console.error("[MediaFileList] Error loading settings:", error)
+    return null
   }
 }
 
-// Функция для очистки всех сохраненных размеров
-const clearAllSavedSizes = (): void => {
-  if (typeof window === "undefined") return // Проверка на SSR
+// Функция для сохранения настроек
+const saveSettings = (settings: {
+  viewMode: string
+  groupBy: string
+  sortBy: string
+  sortOrder: string
+  filterType: string
+}) => {
+  if (typeof window === "undefined") return
 
   try {
-    // Удаляем все сохраненные размеры
-    localStorage.removeItem(STORAGE_KEY_GRID)
-    localStorage.removeItem(STORAGE_KEY_THUMBNAILS)
-    localStorage.removeItem(STORAGE_KEY_LIST)
-    console.log("[MediaFileList] Cleared all saved sizes from localStorage")
+    localStorage.setItem(STORAGE_KEY_VIEW_MODE, settings.viewMode)
+    localStorage.setItem(STORAGE_KEY_GROUP_BY, settings.groupBy)
+    localStorage.setItem(STORAGE_KEY_SORT_BY, settings.sortBy)
+    localStorage.setItem(STORAGE_KEY_SORT_ORDER, settings.sortOrder)
+    localStorage.setItem(STORAGE_KEY_FILTER_TYPE, settings.filterType)
   } catch (error) {
-    console.error("[MediaFileList] Error clearing localStorage:", error)
+    console.error("[MediaFileList] Error saving settings:", error)
   }
 }
 
@@ -110,7 +130,7 @@ interface GroupedMediaFiles {
 // Оборачиваем в memo для предотвращения ненужных рендеров
 export const MediaFileList = memo(function MediaFileList({
   viewMode: initialViewMode = "list",
-}: { viewMode?: "list" | "grid" | "thumbnails" }) {
+}: { viewMode?: "list" | "grid" | "thumbnails" | "metadata" }) {
   const { media, isLoading, addNewTracks, addedFiles, hasFetched } = useRootStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
@@ -121,8 +141,30 @@ export const MediaFileList = memo(function MediaFileList({
   // Ref для отслеживания первого рендера при смене режима
   const initialRenderRef = useRef(true)
 
-  // Состояние для режима отображения
-  const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails">(initialViewMode)
+  // Загружаем сохраненные настройки
+  const savedSettings = loadSavedSettings()
+
+  // Инициализируем состояние с сохраненными настройками
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails" | "metadata">(
+    (savedSettings?.viewMode as any) || initialViewMode
+  )
+  const [sortBy, setSortBy] = useState<string>(savedSettings?.sortBy || "date")
+  const [filterType, setFilterType] = useState<string>(savedSettings?.filterType || "all")
+  const [groupBy, setGroupBy] = useState<string>(savedSettings?.groupBy || "none")
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
+    (savedSettings?.sortOrder as "asc" | "desc") || "desc"
+  )
+
+  // Сохраняем настройки при их изменении
+  useEffect(() => {
+    saveSettings({
+      viewMode,
+      groupBy,
+      sortBy,
+      sortOrder,
+      filterType,
+    })
+  }, [viewMode, groupBy, sortBy, sortOrder, filterType])
 
   // Определяем начальный размер для текущего режима
   let initialSize = DEFAULT_SIZE
@@ -211,12 +253,6 @@ export const MediaFileList = memo(function MediaFileList({
     }
   }, [viewMode, updatePreviewSize])
 
-  // Состояние для сортировки и фильтрации
-  const [sortBy, setSortBy] = useState<string>("date")
-  const [filterType, setFilterType] = useState<string>("all")
-  const [groupBy, setGroupBy] = useState<string>("none")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
-
   console.log("[MediaFileList] Rendering with:", {
     mediaCount: media.length,
     isLoading,
@@ -228,7 +264,7 @@ export const MediaFileList = memo(function MediaFileList({
   })
 
   // Обработчики для MediaToolbar
-  const handleViewModeChange = useCallback((mode: "list" | "grid" | "thumbnails") => {
+  const handleViewModeChange = useCallback((mode: "list" | "grid" | "thumbnails" | "metadata") => {
     // Просто меняем режим просмотра, установка размера произойдет в useEffect
     setViewMode(mode)
   }, [])
@@ -955,6 +991,42 @@ export const MediaFileList = memo(function MediaFileList({
     }
   }, [media, addNewTracks])
 
+  // Функция для сохранения выбранного размера в localStorage
+  const saveSize = (mode: string, size: number): void => {
+    if (typeof window === "undefined") return // Проверка на SSR
+
+    // Выбираем правильный ключ на основе режима
+    let storageKey
+    if (mode === "grid") storageKey = STORAGE_KEY_GRID
+    else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
+    else if (mode === "list") storageKey = STORAGE_KEY_LIST
+    else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
+    else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
+
+    try {
+      localStorage.setItem(storageKey, size.toString())
+      console.log(`[MediaFileList] Saved size ${size} for mode ${mode} to key ${storageKey}`)
+    } catch (error) {
+      console.error("[MediaFileList] Error saving to localStorage:", error)
+    }
+  }
+
+  // Функция для очистки всех сохраненных размеров
+  const clearAllSavedSizes = (): void => {
+    if (typeof window === "undefined") return // Проверка на SSR
+
+    try {
+      // Удаляем все сохраненные размеры
+      localStorage.removeItem(STORAGE_KEY_GRID)
+      localStorage.removeItem(STORAGE_KEY_THUMBNAILS)
+      localStorage.removeItem(STORAGE_KEY_LIST)
+      localStorage.removeItem(STORAGE_KEY_METADATA)
+      console.log("[MediaFileList] Cleared all saved sizes from localStorage")
+    } catch (error) {
+      console.error("[MediaFileList] Error clearing localStorage:", error)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-[calc(50vh-82px)]">
@@ -1194,6 +1266,9 @@ export const MediaFileList = memo(function MediaFileList({
         onGroupBy={handleGroupBy}
         onChangeOrder={handleChangeOrder}
         sortOrder={sortOrder}
+        currentSortBy={sortBy}
+        currentFilterType={filterType}
+        currentGroupBy={groupBy}
         onRecord={handleRecord}
         onRecordCamera={handleRecordCamera}
         onRecordScreen={handleRecordScreen}
