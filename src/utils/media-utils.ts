@@ -270,11 +270,13 @@ export const groupFilesByDate = (media: MediaFile[]): DateGroup[] => {
 /**
  * Определяет тип медиафайла
  * @param file - Медиафайл
- * @returns "video" или "audio"
+ * @returns "video" или "audio" или "image"
  */
-export const getFileType = (file: MediaFile): "video" | "audio" => {
+export const getFileType = (file: MediaFile): "video" | "audio" | "image" => {
   const hasVideoStream = file.probeData?.streams?.some((stream) => stream.codec_type === "video")
-  return hasVideoStream ? "video" : "audio"
+  if (file.isImage) return "image"
+  if (hasVideoStream) return "video"
+  return "audio"
 }
 
 /**
@@ -286,13 +288,30 @@ export const prepareFileGroups = (files: MediaFile[]): Record<string, FileGroup>
   const groups: Record<string, FileGroup> = {
     videos: {
       id: "all-videos",
+      title: "Все видео",
       fileIds: files.filter((f) => getFileType(f) === "video").map((f) => f.id),
       type: "video",
+      count: files.filter((f) => getFileType(f) === "video").length,
+      totalDuration: 0,
+      totalSize: 0,
     },
     audio: {
       id: "all-audio",
+      title: "Все аудио",
       fileIds: files.filter((f) => getFileType(f) === "audio").map((f) => f.id),
       type: "audio",
+      count: files.filter((f) => getFileType(f) === "audio").length,
+      totalDuration: 0,
+      totalSize: 0,
+    },
+    images: {
+      id: "all-images",
+      title: "Все изображения",
+      fileIds: files.filter((f) => getFileType(f) === "image").map((f) => f.id),
+      type: "image",
+      count: files.filter((f) => getFileType(f) === "image").length,
+      totalDuration: 0,
+      totalSize: 0,
     },
   }
 
@@ -303,9 +322,12 @@ export const prepareFileGroups = (files: MediaFile[]): Record<string, FileGroup>
     .forEach(([key, groupFiles]) => {
       groups[`sequential-${key}`] = {
         id: `sequential-${key}`,
+        title: `Группа ${key}`,
         fileIds: groupFiles.map((f) => f.id),
         type: "sequential",
         count: groupFiles.length,
+        totalDuration: 0,
+        totalSize: 0,
         videosPerSeries: groupFiles.length,
       }
     })

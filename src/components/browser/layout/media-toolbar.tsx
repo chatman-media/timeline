@@ -15,7 +15,7 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react"
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -73,28 +73,28 @@ export function MediaToolbar({
   canDecreaseSize = true,
 }: MediaToolbarProps) {
   // Внутренний стейт для управления текущим выбором
-  const [internalSortBy, setInternalSortBy] = useState(currentSortBy);
-  const [internalFilterType, setInternalFilterType] = useState(currentFilterType);
+  const [internalSortBy, setInternalSortBy] = useState(currentSortBy)
+  const [internalFilterType, setInternalFilterType] = useState(currentFilterType)
 
   // Синхронизация внутреннего стейта с пропсами
   useEffect(() => {
-    setInternalSortBy(currentSortBy);
-  }, [currentSortBy]);
+    setInternalSortBy(currentSortBy)
+  }, [currentSortBy])
 
   useEffect(() => {
-    setInternalFilterType(currentFilterType);
-  }, [currentFilterType]);
+    setInternalFilterType(currentFilterType)
+  }, [currentFilterType])
 
   // Обработчики для обновления стейта и вызова колбэков
   const handleSort = (sortBy: string) => {
-    setInternalSortBy(sortBy);
-    onSort(sortBy);
-  };
+    setInternalSortBy(sortBy)
+    onSort(sortBy)
+  }
 
   const handleFilter = (filterType: string) => {
-    setInternalFilterType(filterType);
-    onFilter(filterType);
-  };
+    setInternalFilterType(filterType)
+    onFilter(filterType)
+  }
 
   return (
     <div className="flex items-center justify-between px-2 py-2 border-b">
@@ -380,7 +380,6 @@ export function MediaToolbar({
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
-
       </div>
     </div>
   )

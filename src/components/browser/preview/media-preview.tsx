@@ -1,11 +1,10 @@
-import { Camera, Check, Music, Plus, Image as ImageIcon, Film } from "lucide-react"
-import { memo, useState } from "react"
+import { Check, Film, Image as ImageIcon, Music, Plus } from "lucide-react"
+import { memo } from "react"
 
 import { formatResolution } from "@/lib/utils"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/videos"
-import { calculateRealDimensions, isHorizontalVideo } from "@/utils/media-utils"
-import { getNextVolumeState, VolumeState } from "@/utils/video-utils"
+import { isHorizontalVideo } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { PreviewTimeline } from ".."
@@ -63,6 +62,46 @@ export const MediaPreview = memo(function MediaPreview({
     return isNaN(parsed) ? undefined : parsed
   }
 
+  // Функция для расчета ширины с учетом ограничений соотношения сторон
+  const calculateWidth = (
+    widthValue: number,
+    heightValue: number,
+    rotation?: number | string,
+  ): number => {
+    if (fixedSize) {
+      // Для режима сетки всегда используем 16:9
+      return (size * 16) / 9
+    }
+
+    // Для аудио всегда 16:9
+    if (isAudio) {
+      return (size * 16) / 9
+    }
+
+    // Для режима миниатюр рассчитываем с учетом реальных пропорций, но с ограничением
+    const maxAspectRatio = 2.35 // Максимальное соотношение 2.35:1 (широкоэкранное кино)
+    const defaultAspectRatio = 16 / 9 // По умолчанию 16:9
+
+    // Учитываем поворот
+    const rotationNum = typeof rotation === "string" ? parseFloat(rotation) : rotation || 0
+    const isRotated = Math.abs(rotationNum) === 90 || Math.abs(rotationNum) === 270
+
+    // Если повернуто на 90 или 270 градусов, меняем местами ширину и высоту
+    const actualWidth = isRotated ? heightValue : widthValue
+    const actualHeight = isRotated ? widthValue : heightValue
+
+    if (!actualWidth || !actualHeight) {
+      return size * defaultAspectRatio
+    }
+
+    const aspectRatio = actualWidth / actualHeight
+
+    // Ограничиваем соотношение сторон максимальным значением
+    const limitedRatio = Math.min(aspectRatio, maxAspectRatio)
+
+    return size * limitedRatio
+  }
+
   // Перемещаем функцию renderStreamIndicators внутрь компонента
   const renderStreamIndicators = (
     file: MediaFile,
@@ -74,7 +113,7 @@ export const MediaPreview = memo(function MediaPreview({
     // Определяем тип медиа
     const isVideo = stream.codec_type === "video"
     const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
-    const isImage = isVideo && !hasAudio && !duration
+    const isImage = file.isImage || (isVideo && !hasAudio && !duration)
     const iconSize = size < 100 ? "w-3 h-3" : "w-4 h-4"
     const smallPadding = size < 100 ? "px-[2px] py-0" : "px-[4px] py-[2px]"
 
@@ -98,16 +137,14 @@ export const MediaPreview = memo(function MediaPreview({
               {index + 1}
             </div>
           )}
-        
+
         {/* Иконка типа медиа */}
         <div
           className={`absolute ${
-            isHorizontalVideo(
-              stream.width || 0,
-              stream.height || 0,
-              parseRotation(stream.rotation),
-            )
-              ? size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"
+            isHorizontalVideo(stream.width || 0, stream.height || 0, parseRotation(stream.rotation))
+              ? size > 100
+                ? "right-1 top-1"
+                : "right-0.5 top-0.5"
               : "left-1/2 bottom-1 -translate-x-1/2"
           } text-white cursor-pointer bg-black/65 rounded p-0.5`}
         >
@@ -124,7 +161,9 @@ export const MediaPreview = memo(function MediaPreview({
                 stream.height || 0,
                 parseRotation(stream.rotation),
               )
-                ? size > 100 ? "right-[28px]" : "right-[22px]"
+                ? size > 100
+                  ? "right-[28px]"
+                  : "right-[22px]"
                 : "left-[calc(50%-8px)]"
             } bg-black/65 font-medium rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs text-white`}
           >
@@ -139,13 +178,13 @@ export const MediaPreview = memo(function MediaPreview({
     return (
       <div
         className={`h-full flex-shrink-0 relative`}
-        style={{ height: `${size}px`, width: `${(size*16/9).toFixed(0)}px` }}
+        style={{ height: `${size}px`, width: `${calculateWidth(0, 0, 0).toFixed(0)}px` }}
         onMouseMove={(e) => handleMouseMove(e, fileId, duration, 0)}
         onClick={(e) => handlePlayPause(e, file, 0)}
         onMouseLeave={() => handleMouseLeave(`${fileId}-0`)}
       >
         <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-         <Music className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+          <Music className="w-6 h-6 text-gray-500 dark:text-gray-400" />
         </div>
         <audio
           data-stream="0"
@@ -172,12 +211,14 @@ export const MediaPreview = memo(function MediaPreview({
           }}
           onMouseEnter={(e) => e.currentTarget.focus()}
         />
-        
+
         {/* Иконка типа медиа в правом верхнем углу */}
-        <div className={`absolute right-1 top-1 text-white cursor-pointer bg-black/65 rounded p-0.5`}>
-          <Music className={`${size < 100 ? "w-3 h-3" : "w-4 h-4"}`} />
+        <div
+          className={`absolute ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white cursor-pointer bg-black/65 rounded p-0.5`}
+        >
+          <Music size={size > 100 ? 16 : 12} />
         </div>
-        
+
         {hoverTimes[fileId]?.[0] !== undefined &&
           hoverTimes[fileId]?.[0] !== null &&
           Number.isFinite(hoverTimes[fileId]?.[0]) && (
@@ -185,7 +226,9 @@ export const MediaPreview = memo(function MediaPreview({
           )}
 
         {showFileName && (
-          <div className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}>
+          <div
+            className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}
+          >
             {file.name}
           </div>
         )}
@@ -212,6 +255,62 @@ export const MediaPreview = memo(function MediaPreview({
     )
   }
 
+  // Обработка случая, когда файл - изображение
+  if (file.isImage) {
+    return (
+      <div
+        className={`h-full flex-shrink-0 relative`}
+        style={{ height: `${size}px`, width: `${calculateWidth(0, 0, 0).toFixed(0)}px` }}
+      >
+        <div className="w-full h-full relative">
+          <img
+            src={file.path}
+            alt={file.name}
+            className="w-full h-full object-contain bg-gray-100 dark:bg-gray-800"
+            style={{
+              opacity: 1,
+              transition: "opacity 0.2s ease-in-out",
+            }}
+          />
+
+          {/* Иконка типа медиа */}
+          <div
+            className={`absolute ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white cursor-pointer bg-black/65 rounded p-0.5`}
+          >
+            <ImageIcon size={size > 100 ? 16 : 12} />
+          </div>
+
+          {showFileName && (
+            <div
+              className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}
+            >
+              {file.name}
+            </div>
+          )}
+
+          {onAddMedia && (
+            <div
+              className={`absolute right-[2px] bottom-[18px] text-white rounded-full p-[3px] cursor-pointer hover:scale-125 transform transition-all duration-100 z-10 ${
+                isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-black/90"
+              }`}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (!isAdded) onAddMedia(e, file)
+              }}
+              title={isAdded ? "Добавлено" : "Добавить"}
+            >
+              {isAdded ? (
+                <Check className="w-3 h-3" strokeWidth={3} />
+              ) : (
+                <Plus className="w-3 h-3" strokeWidth={3} />
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       {file.probeData?.streams
@@ -221,28 +320,14 @@ export const MediaPreview = memo(function MediaPreview({
             key={index}
             className={`h-[${size}px] flex-shrink-0 relative`}
             style={{
-              width: (() => {
-                if (fixedSize) return `${size*16/9}px`
-                // Создаем объект подходящего типа для calculateRealDimensions
-                const videoStream = {
-                  codec_type: "video",
-                  width: stream.width || 0,
-                  height: stream.height || 0,
-                  rotation: stream.rotation?.toString(),
-                }
-                const dimensions = calculateRealDimensions(videoStream)
-                if (!dimensions.width || !dimensions.height) return `${size}px`
-                return `${size * (dimensions.width / dimensions.height)}px`
-              })(),
+              width: `${calculateWidth(stream.width || 0, stream.height || 0, stream.rotation).toFixed(0)}px`,
               // maxWidth: "100px",
             }}
             onMouseMove={(e) => handleMouseMove(e, fileId, duration, index)}
             onMouseLeave={() => handleMouseLeave(`${fileId}-${index}`)}
           >
             <div className="relative w-full h-full">
-              {!loadedVideos[`${fileId}-${index}`] && (
-                <Skeleton className="absolute inset-0 p-0" />
-              )}
+              {!loadedVideos[`${fileId}-${index}`] && <Skeleton className="absolute inset-0 p-0" />}
               <video
                 data-stream={index}
                 onClick={(e) => handlePlayPause(e, file, index)}
@@ -300,7 +385,9 @@ export const MediaPreview = memo(function MediaPreview({
                 )}
 
               {showFileName && (
-                <div className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}>
+                <div
+                  className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs line-clamp-1 max-w-[calc(60%)]`}
+                >
                   {file.name}
                 </div>
               )}

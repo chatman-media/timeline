@@ -21,6 +21,7 @@ export interface MediaFile {
   endTime?: number
   duration?: number
   isVideo?: boolean
+  isImage?: boolean
   size?: number
   createdAt?: string
   updatedAt?: string
@@ -29,7 +30,7 @@ export interface MediaFile {
 export interface Track {
   id: string
   name: string
-  type: "video" | "audio"
+  type: "video" | "audio" | "image"
   isActive: boolean
   videos: MediaFile[]
   startTime: number
@@ -63,9 +64,12 @@ export interface ThumbnailParams {
 }
 
 export interface FileGroup {
+  id: string
   title: string
   fileIds: string[]
   count: number
   totalDuration: number
   totalSize: number
+  type?: "video" | "audio" | "image" | "sequential"
+  videosPerSeries?: number
 }

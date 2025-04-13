@@ -38,6 +38,11 @@ export default async function handler(
       ".aac",
       ".ogg",
       ".flac",
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".gif",
+      ".webp",
     ]
 
     console.log("[API] Фильтрую файлы по расширениям...")
@@ -69,11 +74,14 @@ export default async function handler(
           console.log(`[API] ffprobe успешно для ${file}`)
 
           const isVideo = probeData.streams.some((stream) => stream.codec_type === "video")
+          const fileExt = path.extname(file).toLowerCase()
+          const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt)
           const startTime = getMediaCreationTime(probeData)
           const duration = probeData.format.duration || 0
 
           console.log(`[API] Данные файла ${file}:`, {
             isVideo,
+            isImage,
             startTime,
             duration,
             hasStreams: probeData.streams?.length || 0,
@@ -83,15 +91,59 @@ export default async function handler(
             id: nanoid(),
             name: file,
             path: `/media/${file}`,
-            thumbnail: isVideo ? `/thumbnails/${thumbnailName}` : undefined,
+            thumbnail: isVideo && !isImage ? `/thumbnails/${thumbnailName}` : undefined,
             probeData,
             startTime,
             endTime: startTime + duration,
             duration,
-            isVideo,
+            isVideo: isImage ? false : isVideo,
+            isImage,
           }
         } catch (probeError) {
           console.error(`[API] Ошибка ffprobe для ${file}:`, probeError)
+
+          // Проверяем, является ли файл изображением
+          const fileExt = path.extname(file).toLowerCase()
+          const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt)
+
+          if (isImage) {
+            return {
+              id: nanoid(),
+              name: file,
+              path: `/media/${file}`,
+              startTime: 0,
+              endTime: 0,
+              duration: 0,
+              isVideo: false,
+              isImage: true,
+              probeData: {
+                format: {
+                  duration: 0,
+                  size: 0,
+                  bit_rate: 0,
+                  filename: file,
+                  nb_streams: 1,
+                  format_name: "image",
+                  format_long_name: "image",
+                  start_time: 0,
+                  tags: {},
+                },
+                streams: [
+                  {
+                    codec_type: "video",
+                    codec_name: "image",
+                    width: 1920,
+                    height: 1080,
+                    duration: 0,
+                    codec_tag: "0",
+                    codec_tag_string: "",
+                    index: 0,
+                  },
+                ],
+                chapters: [],
+              } as unknown as FfprobeData,
+            }
+          }
 
           // Если не смогли получить метаданные, создаем минимальный объект
           return {

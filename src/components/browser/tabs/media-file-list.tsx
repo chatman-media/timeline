@@ -25,7 +25,7 @@ const MIN_SIZE_THUMBNAILS = 100
 
 // Определяем размеры по умолчанию для разных режимов
 const DEFAULT_SIZE_GRID = 60
-const DEFAULT_SIZE_THUMBNAILS = 125 
+const DEFAULT_SIZE_THUMBNAILS = 125
 const DEFAULT_SIZE_LIST = 80
 const DEFAULT_SIZE_METADATA = 100
 
@@ -41,28 +41,30 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
   if (typeof window === "undefined") return defaultSize // Проверка на SSR
 
   // Выбираем правильный ключ на основе режима
-  let storageKey;
-  if (mode === "grid") storageKey = STORAGE_KEY_GRID;
-  else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS;
-  else if (mode === "list") storageKey = STORAGE_KEY_LIST;
-  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA;
-  else storageKey = `${STORAGE_KEY_PREFIX}${mode}`; // Запасной вариант
+  let storageKey
+  if (mode === "grid") storageKey = STORAGE_KEY_GRID
+  else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
+  else if (mode === "list") storageKey = STORAGE_KEY_LIST
+  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
+  else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
 
   try {
     const savedValue = localStorage.getItem(storageKey)
-    
+
     if (savedValue) {
       const parsedValue = parseInt(savedValue, 10)
       // Проверяем, что значение входит в допустимый диапазон
       if (PREVIEW_SIZES.includes(parsedValue)) {
-        console.log(`[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`)
+        console.log(
+          `[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`,
+        )
         return parsedValue
       }
     }
   } catch (error) {
     console.error("[MediaFileList] Error reading from localStorage:", error)
   }
-  
+
   console.log(`[MediaFileList] No saved size for mode ${mode}, using default ${defaultSize}`)
   return defaultSize
 }
@@ -70,15 +72,15 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
 // Функция для сохранения выбранного размера в localStorage
 const saveSize = (mode: string, size: number): void => {
   if (typeof window === "undefined") return // Проверка на SSR
-  
+
   // Выбираем правильный ключ на основе режима
-  let storageKey;
-  if (mode === "grid") storageKey = STORAGE_KEY_GRID;
-  else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS;
-  else if (mode === "list") storageKey = STORAGE_KEY_LIST;
-  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA;
-  else storageKey = `${STORAGE_KEY_PREFIX}${mode}`; // Запасной вариант
-  
+  let storageKey
+  if (mode === "grid") storageKey = STORAGE_KEY_GRID
+  else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
+  else if (mode === "list") storageKey = STORAGE_KEY_LIST
+  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
+  else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
+
   try {
     localStorage.setItem(storageKey, size.toString())
     console.log(`[MediaFileList] Saved size ${size} for mode ${mode} to key ${storageKey}`)
@@ -90,13 +92,13 @@ const saveSize = (mode: string, size: number): void => {
 // Функция для очистки всех сохраненных размеров
 const clearAllSavedSizes = (): void => {
   if (typeof window === "undefined") return // Проверка на SSR
-  
+
   try {
     // Удаляем все сохраненные размеры
-    localStorage.removeItem(STORAGE_KEY_GRID);
-    localStorage.removeItem(STORAGE_KEY_THUMBNAILS);
-    localStorage.removeItem(STORAGE_KEY_LIST);
-    localStorage.removeItem(STORAGE_KEY_METADATA);
+    localStorage.removeItem(STORAGE_KEY_GRID)
+    localStorage.removeItem(STORAGE_KEY_THUMBNAILS)
+    localStorage.removeItem(STORAGE_KEY_LIST)
+    localStorage.removeItem(STORAGE_KEY_METADATA)
     console.log("[MediaFileList] Cleared all saved sizes from localStorage")
   } catch (error) {
     console.error("[MediaFileList] Error clearing localStorage:", error)
@@ -113,7 +115,7 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Используем локальный ref для избежания повторных запросов в текущей сессии браузера
   const localDataFetchedRef = useRef(false)
-  
+
   // Ref для отслеживания первого рендера при смене режима
   const initialRenderRef = useRef(true)
 
@@ -137,18 +139,21 @@ export const MediaFileList = memo(function MediaFileList({
   const [previewSize, setPreviewSize] = useState<number>(actualInitialSize)
 
   // Обертка для setPreviewSize, которая также сохраняет размер в localStorage
-  const updatePreviewSize = useCallback((sizeOrUpdater: number | ((prevSize: number) => number)) => {
-    if (typeof sizeOrUpdater === 'function') {
-      setPreviewSize((prevSize) => {
-        const newSize = sizeOrUpdater(prevSize);
-        saveSize(viewMode, newSize);
-        return newSize;
-      });
-    } else {
-      setPreviewSize(sizeOrUpdater);
-      saveSize(viewMode, sizeOrUpdater);
-    }
-  }, [viewMode])
+  const updatePreviewSize = useCallback(
+    (sizeOrUpdater: number | ((prevSize: number) => number)) => {
+      if (typeof sizeOrUpdater === "function") {
+        setPreviewSize((prevSize) => {
+          const newSize = sizeOrUpdater(prevSize)
+          saveSize(viewMode, newSize)
+          return newSize
+        })
+      } else {
+        setPreviewSize(sizeOrUpdater)
+        saveSize(viewMode, sizeOrUpdater)
+      }
+    },
+    [viewMode],
+  )
 
   // Эффект для установки правильных размеров при первом рендере
   useEffect(() => {
@@ -156,20 +161,22 @@ export const MediaFileList = memo(function MediaFileList({
     // clearAllSavedSizes(); // Раскомментировать для сброса всех сохраненных размеров
 
     console.log("[MediaFileList] Initial mount, viewMode:", viewMode)
-    
+
     // Определяем размер по умолчанию для текущего режима
     let defaultSize = DEFAULT_SIZE
     if (viewMode === "grid") defaultSize = DEFAULT_SIZE_GRID
     else if (viewMode === "thumbnails") defaultSize = DEFAULT_SIZE_THUMBNAILS
     else if (viewMode === "list") defaultSize = DEFAULT_SIZE_LIST
     else if (viewMode === "metadata") defaultSize = DEFAULT_SIZE_METADATA
-    
+
     // Устанавливаем соответствующий размер для текущего режима просмотра из localStorage
     const savedSize = getSavedSize(viewMode, defaultSize)
-    
+
     // Применяем минимальные ограничения
     if (savedSize < MIN_SIZE) {
-      console.log(`[MediaFileList] Initial size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`)
+      console.log(
+        `[MediaFileList] Initial size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`,
+      )
       updatePreviewSize(MIN_SIZE)
     } else {
       console.log(`[MediaFileList] Setting initial size to ${savedSize} for mode ${viewMode}`)
@@ -181,22 +188,22 @@ export const MediaFileList = memo(function MediaFileList({
   useEffect(() => {
     // Пропускаем первый рендер (обрабатывается в эффекте выше)
     if (initialRenderRef.current) {
-      initialRenderRef.current = false;
-      return;
+      initialRenderRef.current = false
+      return
     }
 
     console.log(`[MediaFileList] View mode changed to ${viewMode}`)
-    
+
     // Определяем размер по умолчанию для нового режима
     let defaultSize = DEFAULT_SIZE
     if (viewMode === "grid") defaultSize = DEFAULT_SIZE_GRID
     else if (viewMode === "thumbnails") defaultSize = DEFAULT_SIZE_THUMBNAILS
     else if (viewMode === "list") defaultSize = DEFAULT_SIZE_LIST
     else if (viewMode === "metadata") defaultSize = DEFAULT_SIZE_METADATA
-    
+
     // При изменении режима просмотра загружаем сохраненный размер
     const savedSize = getSavedSize(viewMode, defaultSize)
-    
+
     // Применяем минимальные ограничения
     if (savedSize < MIN_SIZE) {
       console.log(`[MediaFileList] Saved size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`)
@@ -249,7 +256,7 @@ export const MediaFileList = memo(function MediaFileList({
     updatePreviewSize((currentSize: number) => {
       const currentIndex = PREVIEW_SIZES.indexOf(currentSize)
       const minSize = getMinSizeForCurrentMode()
-      
+
       if (currentIndex > 0 && PREVIEW_SIZES[currentIndex - 1] >= minSize) {
         return PREVIEW_SIZES[currentIndex - 1]
       }
@@ -432,75 +439,77 @@ export const MediaFileList = memo(function MediaFileList({
     // Затем сортировка
     return [...filtered].sort((a, b) => {
       // Определяем множитель для направления сортировки
-      const orderMultiplier = sortOrder === "asc" ? 1 : -1;
-      
+      const orderMultiplier = sortOrder === "asc" ? 1 : -1
+
       if (sortBy === "name") {
-        return orderMultiplier * (a.name || "").localeCompare(b.name || "");
+        return orderMultiplier * (a.name || "").localeCompare(b.name || "")
       }
-      
+
       if (sortBy === "size") {
         // Получаем размер из метаданных или из поля size
         const getSizeValue = (file: MediaFile): number => {
           // Приоритетно используем размер из метаданных, если он доступен
           if (file.probeData?.format?.size !== undefined) {
-            return file.probeData.format.size;
+            return file.probeData.format.size
           }
-          
+
           // Иначе используем поле size (с конвертацией, если нужно)
           if (file.size !== undefined) {
-            if (typeof file.size === 'number') return file.size;
-            if (typeof file.size === 'string') {
+            if (typeof file.size === "number") return file.size
+            if (typeof file.size === "string") {
               // Если размер представлен строкой с единицами измерения (например, "1.5 GB")
-              const sizeStr = file.size as string; // явное приведение типа для линтера
-              const match = sizeStr.match(/^([\d.]+)\s*([KMGT]?B)?$/i);
+              const sizeStr = file.size as string // явное приведение типа для линтера
+              const match = sizeStr.match(/^([\d.]+)\s*([KMGT]?B)?$/i)
               if (match) {
-                const value = parseFloat(match[1]);
-                const unit = (match[2] || "").toUpperCase();
-                
-                if (unit === "KB") return value * 1024;
-                if (unit === "MB") return value * 1024 * 1024;
-                if (unit === "GB") return value * 1024 * 1024 * 1024;
-                if (unit === "TB") return value * 1024 * 1024 * 1024 * 1024;
-                return value; // Просто байты
+                const value = parseFloat(match[1])
+                const unit = (match[2] || "").toUpperCase()
+
+                if (unit === "KB") return value * 1024
+                if (unit === "MB") return value * 1024 * 1024
+                if (unit === "GB") return value * 1024 * 1024 * 1024
+                if (unit === "TB") return value * 1024 * 1024 * 1024 * 1024
+                return value // Просто байты
               }
-              return parseFloat(sizeStr) || 0;
+              return parseFloat(sizeStr) || 0
             }
           }
-          
-          return 0;
-        };
-        
-        return orderMultiplier * (getSizeValue(b) - getSizeValue(a));
+
+          return 0
+        }
+
+        return orderMultiplier * (getSizeValue(b) - getSizeValue(a))
       }
-      
+
       if (sortBy === "duration") {
         // Преобразуем duration в секунды, если это строка формата "00:00:00" или другого формата
         const getDurationInSeconds = (duration: any): number => {
-          if (!duration) return 0;
-          if (typeof duration === 'number') return duration;
-          if (typeof duration === 'string') {
+          if (!duration) return 0
+          if (typeof duration === "number") return duration
+          if (typeof duration === "string") {
             // Если формат "01:23:45"
-            const parts = duration.split(':').map(Number);
+            const parts = duration.split(":").map(Number)
             if (parts.length === 3) {
-              return parts[0] * 3600 + parts[1] * 60 + parts[2];
+              return parts[0] * 3600 + parts[1] * 60 + parts[2]
             }
             // Если формат "01:23"
             else if (parts.length === 2) {
-              return parts[0] * 60 + parts[1];
+              return parts[0] * 60 + parts[1]
             }
             // Если только число
-            return parseFloat(duration) || 0;
+            return parseFloat(duration) || 0
           }
-          return 0;
-        };
-        
-        return orderMultiplier * (getDurationInSeconds(b.duration) - getDurationInSeconds(a.duration));
+          return 0
+        }
+
+        return (
+          orderMultiplier * (getDurationInSeconds(b.duration) - getDurationInSeconds(a.duration))
+        )
       }
-      
+
       // По умолчанию сортируем по дате
-      const timeA = a.startTime || 0;
-      const timeB = b.startTime || 0;
-      return orderMultiplier * (timeB - timeA);
+      const timeA = a.startTime || 0
+      const timeB = b.startTime || 0
+      return orderMultiplier * (timeB - timeA)
     })
   }, [media, filterType, sortBy, sortOrder])
 
@@ -817,9 +826,7 @@ export const MediaFileList = memo(function MediaFileList({
     // Если нет данных или идет загрузка
     if (filteredAndSortedMedia.length === 0) {
       return (
-        <div className="p-4 text-center text-gray-400 dark:text-gray-500">
-          Нет медиа-файлов
-        </div>
+        <div className="p-4 text-center text-gray-400 dark:text-gray-500">Нет медиа-файлов</div>
       )
     }
 
@@ -881,28 +888,14 @@ export const MediaFileList = memo(function MediaFileList({
                 <div
                   key={fileId}
                   className={cn(
-                    "flex flex-col h-full rounded-sm overflow-hidden",
-                    "",
+                    "flex flex-col h-full w-full rounded-sm overflow-hidden",
                     isAdded && "opacity-50 pointer-events-none",
                   )}
                   style={{
-                    width: (() => {
-                      if (isAudio) return `${previewSize*16/9}px`
-                      const stream = file.probeData?.streams?.[0]
-                      if (!stream?.width || !stream?.height) return `${previewSize*16/9}px`
-
-                      const videoStream = {
-                        codec_type: "video",
-                        width: stream.width,
-                        height: stream.height,
-                        rotation: stream.rotation?.toString(),
-                      }
-                      const dimensions = calculateRealDimensions(videoStream)
-                      return `${previewSize * (dimensions.width / dimensions.height)}px`
-                    })(),
+                    width: `${((previewSize * 16) / 9).toFixed(0)}px`,
                   }}
                 >
-                  <div className="relative flex-1 flex-col flex-grow">
+                  <div className="relative flex-1 flex-col w-full flex-grow">
                     <MediaPreview
                       file={file}
                       fileId={fileId}

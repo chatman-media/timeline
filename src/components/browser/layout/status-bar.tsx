@@ -1,11 +1,11 @@
 import { Check, CopyPlus, SquarePlus } from "lucide-react"
 
+import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { MediaFile } from "@/types/videos"
 import { getFileType } from "@/utils/media-utils"
 
 import { ActionButton } from "./action-button"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface StatusBarProps {
   media: MediaFile[]
@@ -73,8 +73,8 @@ export function StatusBar({
               className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7"
               title="Добавить все видео"
               onClick={onAddAllVideoFiles}
-          >
-            {remainingVideoCount} видео
+            >
+              {remainingVideoCount} видео
               <CopyPlus size={10} className="" />
             </Button>
           )}
