@@ -108,7 +108,6 @@ export const MediaPreview = memo(function MediaPreview({
     stream: FfprobeStream,
     index: number,
     isLoaded: boolean,
-    videoRef: HTMLVideoElement | null,
   ) => {
     // Определяем тип медиа
     const isVideo = stream.codec_type === "video"
@@ -164,7 +163,7 @@ export const MediaPreview = memo(function MediaPreview({
                   ? "right-[28px]"
                   : "right-[20px]"
                 : "left-[calc(50%-8px)]"
-            } bg-black/65 ${size > 100 ? "text-sm" : "text-xs"} ${size <= 100 ? "leading-[16px]" : "leading-[16px]"} rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} font-medium text-white`}
+            } bg-black/65 text-xs leading-[16px] rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} font-medium text-white`}
           >
             {formatResolution(stream.width || 0, stream.height || 0)}
           </div>
@@ -240,7 +239,7 @@ export const MediaPreview = memo(function MediaPreview({
 
         {onAddMedia && (
           <div
-            className={`absolute right-[2px] bottom-[4px] text-white rounded-full p-[3px] cursor-pointer z-10 ${
+            className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
               isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
             }`}
             onClick={(e) => {
@@ -295,7 +294,7 @@ export const MediaPreview = memo(function MediaPreview({
 
           {onAddMedia && (
             <div
-              className={`absolute right-[2px] bottom-[18px] text-white rounded-full p-1 cursor-pointer z-10 ${
+              className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
                 isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
               }`}
               onClick={(e) => {
@@ -332,7 +331,7 @@ export const MediaPreview = memo(function MediaPreview({
             onMouseLeave={() => handleMouseLeave(`${fileId}-${index}`)}
           >
             <div className="relative w-full h-full">
-              {!loadedVideos[`${fileId}-${index}`] && <Skeleton className="absolute inset-0 p-0" />}
+              {!loadedVideos[`${fileId}-${index}`] && <Skeleton className="absolute inset-0 p-1" />}
               <video
                 data-stream={index}
                 onClick={(e) => handlePlayPause(e, file, index)}
@@ -405,7 +404,7 @@ export const MediaPreview = memo(function MediaPreview({
 
               {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
                 <div
-                  className={`absolute right-[4px] bottom-[4px] text-white rounded-full p-1 cursor-pointer z-10 ${
+                  className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
                     isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
                   }`}
                   onClick={(e) => {
