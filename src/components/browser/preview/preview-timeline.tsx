@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+
 import { formatTime } from "@/lib/utils"
 
 interface PreviewTimelineProps {

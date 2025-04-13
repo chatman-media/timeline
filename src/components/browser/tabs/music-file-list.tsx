@@ -1,6 +1,6 @@
 import { Pause, Play, Plus } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
 import type { MouseEvent } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { AudioPlayer } from "@/components/browser/layout/audio-player"
 import { MusicToolbar } from "@/components/browser/layout/music-toolbar"

@@ -182,8 +182,10 @@ export function Timeline() {
             if (currentTrack) {
               // Сохраняем текущее время перед остановкой
               const savedCurrentTime = currentTime
-              console.log(`[Timeline] Сохраняем текущее время перед переключением: ${savedCurrentTime.toFixed(3)}`)
-              
+              console.log(
+                `[Timeline] Сохраняем текущее время перед переключением: ${savedCurrentTime.toFixed(3)}`,
+              )
+
               // Останавливаем запись на текущей дорожке
               rootStore.send({ type: "stopRecordingSchema" })
 
@@ -191,30 +193,30 @@ export function Timeline() {
               setTimeout(() => {
                 // Устанавливаем активный трек и активное видео сразу после остановки
                 setActiveTrack(targetTrack.id)
-                
+
                 // Найдем подходящее видео в новом треке для текущего времени
                 const video = targetTrack.videos.find((v) => {
                   const startTime = v.startTime ?? 0
                   const duration = v.duration ?? 0
                   return startTime <= savedCurrentTime && startTime + duration >= savedCurrentTime
                 })
-                
+
                 if (video) {
                   setActiveVideo(video.id)
                 } else if (targetTrack.videos.length > 0) {
                   // Если нет видео, соответствующего текущему времени, используем первое
                   setActiveVideo(targetTrack.videos[0].id)
                 }
-                
+
                 // Обновляем время до запуска новой записи
                 updateTime(savedCurrentTime)
-                
+
                 rootStore.send({
                   type: "startRecordingSchema",
                   trackId: targetTrack.id,
                   startTime: savedCurrentTime,
                 })
-                
+
                 // Обновляем макет
                 const newLayout = {
                   ...currentLayout,
@@ -222,7 +224,7 @@ export function Timeline() {
                 }
                 rootStore.send({ type: "setScreenLayout", layout: newLayout })
               }, 100)
-              
+
               // Дальше не выполняем стандартную логику переключения
               return
             }

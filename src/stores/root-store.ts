@@ -277,11 +277,11 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       }
 
       const newSegmentId = generateSegmentId()
-      
+
       // Используем переданное время начала или текущее системное время
-      const startTime = event.startTime || (Date.now() / 1000)
+      const startTime = event.startTime || Date.now() / 1000
       console.log(`[startRecordingSchema] Время начала записи: ${startTime.toFixed(3)}`)
-      
+
       const newSegment: MontageSegment = {
         id: newSegmentId,
         sourceTrackIds: [activeSourceTrackId],

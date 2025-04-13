@@ -63,7 +63,7 @@ export function StatusBar({
     .find((dateInfo) => dateInfo.remainingFiles.length > 0)
 
   return (
-    <div className="flex justify-between items-center text-sm w-full h-11 pb-1 border-t border-border gap-2">
+    <div className="flex justify-between items-center text-sm w-full p-2 gap-2">
       <div className="flex flex-col items-end justify-center gap-0 text-xs text-gray-700 dark:text-gray-300">
         <span className="px-1 flex items-center whitespace-nowrap gap-2">
           {remainingVideoCount > 0 && (

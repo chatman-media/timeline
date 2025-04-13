@@ -26,7 +26,7 @@ export function OptionsMediaEditor({}: OptionsLayoutProps) {
                 </ResizablePanel>
                 <ResizableHandle />
                 <ResizablePanel defaultSize={60} minSize={20} maxSize={60}>
-                  <div className="flex-1 h-full">
+                  <div className="flex-1 relative h-full">
                     <ActiveVideo />
                   </div>
                 </ResizablePanel>
@@ -35,7 +35,7 @@ export function OptionsMediaEditor({}: OptionsLayoutProps) {
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={50}>
-            <div className="flex-1 h-full">
+            <div className="flex-1 relative h-full">
               <Timeline />
             </div>
           </ResizablePanel>

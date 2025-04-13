@@ -43,7 +43,7 @@ export function VerticalMediaEditor() {
       <ResizableHandle />
 
       <ResizablePanel defaultSize={33}>
-        <div className="flex-1 h-full m-1">
+        <div className="flex-1 relative h-full">
           <ActiveVideo />
         </div>
       </ResizablePanel>

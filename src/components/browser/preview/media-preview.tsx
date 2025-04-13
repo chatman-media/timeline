@@ -163,9 +163,9 @@ export const MediaPreview = memo(function MediaPreview({
               )
                 ? size > 100
                   ? "right-[28px]"
-                  : "right-[22px]"
+                  : "right-[20px]"
                 : "left-[calc(50%-8px)]"
-            } bg-black/65 font-medium rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs text-white`}
+            } bg-black/65 ${size > 100 ? "text-sm" : "text-xs"} ${size <= 100 ? "leading-[16px]" : "leading-[16px]"} rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} font-medium text-white`}
           >
             {formatResolution(stream.width || 0, stream.height || 0)}
           </div>

@@ -85,7 +85,7 @@ export function MusicToolbar({
   }
 
   return (
-    <div className="flex items-center justify-between px-2 py-2 border-b">
+    <div className="flex items-center justify-between px-2 py-2">
       <div className="flex items-center gap-2">
         <Button
           variant="outline"

@@ -107,7 +107,10 @@ export const ActiveVideo = () => {
               try {
                 await videoElement.play()
               } catch (playErr) {
-                console.error("[ChangingCamera] Ошибка при воспроизведении после смены камеры:", playErr)
+                console.error(
+                  "[ChangingCamera] Ошибка при воспроизведении после смены камеры:",
+                  playErr,
+                )
               }
             } else {
               // Если видео не готово, добавляем слушатель для запуска, когда будет готово
@@ -251,13 +254,13 @@ export const ActiveVideo = () => {
             console.log("[ChangingCamera] Синхронизация текущего времени")
             videoElement.currentTime = currentTime
           }
-          
+
           // Особая обработка для записи - всегда запускаем воспроизведение
           if (isRecordingSchema) {
             console.log("[ChangingCamera] В режиме записи - продолжаем воспроизведение")
             setIsPlaying(true)
             try {
-              videoElement.play().catch(err => {
+              videoElement.play().catch((err) => {
                 console.error("[ChangingCamera] Ошибка воспроизведения при записи:", err)
               })
             } catch (error) {
@@ -267,7 +270,7 @@ export const ActiveVideo = () => {
           // Обычное воспроизведение, если нужно
           else if (isPlaying && videoElement.paused) {
             try {
-              videoElement.play().catch(err => {
+              videoElement.play().catch((err) => {
                 console.error("[ChangingCamera] Ошибка воспроизведения:", err)
               })
             } catch (error) {
@@ -285,7 +288,16 @@ export const ActiveVideo = () => {
 
       return () => clearTimeout(timeout)
     }
-  }, [isChangingCamera, resetChangingCamera, videoRefs, activeVideo, currentTime, isPlaying, isRecordingSchema, setIsPlaying])
+  }, [
+    isChangingCamera,
+    resetChangingCamera,
+    videoRefs,
+    activeVideo,
+    currentTime,
+    isPlaying,
+    isRecordingSchema,
+    setIsPlaying,
+  ])
 
   if (!activeVideo) return null
 

@@ -375,18 +375,19 @@ const VideoTrack = memo(function VideoTrack({
                                   )}
                                 </div>
                               </div>
-                              {isVisible && video.probeData?.streams?.[0]?.codec_type === "audio" && (
-                                <div 
-                                  className="w-full relative pointer-events-none" 
-                                  style={{ 
-                                    height: "45px", 
-                                    minHeight: "45px", 
-                                    backgroundColor: "transparent" 
-                                  }}
-                                >
-                                  <Waveform audioUrl={video.path} />
-                                </div>
-                              )}
+                              {isVisible &&
+                                video.probeData?.streams?.[0]?.codec_type === "audio" && (
+                                  <div
+                                    className="w-full relative pointer-events-none"
+                                    style={{
+                                      height: "45px",
+                                      minHeight: "45px",
+                                      backgroundColor: "transparent",
+                                    }}
+                                  >
+                                    <Waveform audioUrl={video.path} />
+                                  </div>
+                                )}
                               <video
                                 ref={(el) => {
                                   if (el) {

@@ -33,7 +33,7 @@ export function DualMediaEditor() {
       <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
         <ResizablePanelGroup direction="vertical" autoSaveId="dual-bottom-layout">
           <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
-            <div className="flex-1 h-full">
+            <div className="flex-1 relative h-full">
               <Browser />
             </div>
           </ResizablePanel>

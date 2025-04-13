@@ -705,7 +705,7 @@ export const MediaFileList = memo(function MediaFileList({
       // Проверяем, является ли файл изображением
       if (file.isImage) {
         console.log("[handleAddMedia] Добавляем изображение только в медиафайлы:", file.name)
-        
+
         // Только отмечаем файл как добавленный, но не добавляем на таймлайн
         if (file.path) {
           rootStore.send({
@@ -732,9 +732,9 @@ export const MediaFileList = memo(function MediaFileList({
 
   const handleAddAllFiles = useCallback(() => {
     // Фильтруем файлы - изображения не добавляем на таймлайн
-    const nonImageFiles = media.filter(file => !file.isImage)
-    const imageFiles = media.filter(file => file.isImage)
-    
+    const nonImageFiles = media.filter((file) => !file.isImage)
+    const imageFiles = media.filter((file) => file.isImage)
+
     // Добавляем видео и аудио файлы на таймлайн
     if (nonImageFiles.length > 0) {
       addNewTracks(nonImageFiles)
@@ -749,10 +749,12 @@ export const MediaFileList = memo(function MediaFileList({
         filePaths,
       })
     }
-    
+
     // Логируем информацию о добавленных файлах
     if (imageFiles.length > 0) {
-      console.log(`[handleAddAllFiles] Изображений добавлено только в медиафайлы: ${imageFiles.length}`)
+      console.log(
+        `[handleAddAllFiles] Изображений добавлено только в медиафайлы: ${imageFiles.length}`,
+      )
     }
   }, [media, addNewTracks])
 
@@ -1085,7 +1087,7 @@ export const MediaFileList = memo(function MediaFileList({
       <div className="flex-1 p-0 min-h-0 overflow-y-auto scrollbar-hide hover:scrollbar-default">
         {renderContent()}
       </div>
-      <div className="flex-shrink-0 transition-all duration-200 ease-in-out">
+      <div className="flex-shrink-0 transition-all duration-200 ease-in-out p-0 m-0">
         <StatusBar
           media={filteredAndSortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}
