@@ -12,6 +12,8 @@ import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from ".."
+import { Button } from "@/components/ui/button"
+import { CopyPlus, Plus } from "lucide-react"
 
 // Создаем глобальные переменные для кэширования видео и их состояния загрузки
 // Это позволит сохранять состояние между переключениями вкладок и режимов отображения
@@ -558,25 +560,25 @@ export const MediaFileList = memo(function MediaFileList({
 
     if (groupBy === "date") {
       const groups: Record<string, MediaFile[]> = {}
-      
+
       filteredAndSortedMedia.forEach((file) => {
         // Для изображений используем дату создания файла, если она доступна
         let timestamp = file.startTime
         if (!timestamp && file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i)) {
           // Пробуем получить дату из метаданных
-          timestamp = file.probeData?.format?.tags?.creation_time 
+          timestamp = file.probeData?.format?.tags?.creation_time
             ? new Date(file.probeData.format.tags.creation_time).getTime() / 1000
             : 0
         }
-        
-        const date = timestamp 
+
+        const date = timestamp
           ? new Date(timestamp * 1000).toLocaleDateString("ru-RU", {
               day: "2-digit",
               month: "long",
               year: "numeric",
             })
           : "Без даты"
-        
+
         if (!groups[date]) {
           groups[date] = []
         }
@@ -614,17 +616,23 @@ export const MediaFileList = memo(function MediaFileList({
         }
 
         const duration = file.probeData?.format?.duration || 0
-        if (duration < 60) { // до 1 минуты
+        if (duration < 60) {
+          // до 1 минуты
           groups.veryShort.push(file)
-        } else if (duration < 300) { // 1-5 минут
+        } else if (duration < 300) {
+          // 1-5 минут
           groups.short.push(file)
-        } else if (duration < 1800) { // 5-30 минут
+        } else if (duration < 1800) {
+          // 5-30 минут
           groups.medium.push(file)
-        } else if (duration < 3600) { // 30-60 минут
+        } else if (duration < 3600) {
+          // 30-60 минут
           groups.long.push(file)
-        } else if (duration < 10800) { // 1-3 часа
+        } else if (duration < 10800) {
+          // 1-3 часа
           groups.veryLong.push(file)
-        } else { // 3+ часа
+        } else {
+          // 3+ часа
           groups.extraLong.push(file)
         }
       })
@@ -632,13 +640,20 @@ export const MediaFileList = memo(function MediaFileList({
       return Object.entries(groups)
         .filter(([, files]) => files.length > 0)
         .map(([type, files]) => ({
-          title: type === "noDuration" ? "Файлы без длительности" :
-                 type === "veryShort" ? "Очень короткие (до 1 минуты)" :
-                 type === "short" ? "Короткие (1-5 минут)" : 
-                 type === "medium" ? "Средние (5-30 минут)" : 
-                 type === "long" ? "Длинные (30-60 минут)" :
-                 type === "veryLong" ? "Очень длинные (1-3 часа)" :
-                 "Сверхдлинные (более 3 часов)",
+          title:
+            type === "noDuration"
+              ? "Файлы без длительности"
+              : type === "veryShort"
+                ? "Очень короткие (до 1 минуты)"
+                : type === "short"
+                  ? "Короткие (1-5 минут)"
+                  : type === "medium"
+                    ? "Средние (5-30 минут)"
+                    : type === "long"
+                      ? "Длинные (30-60 минут)"
+                      : type === "veryLong"
+                        ? "Очень длинные (1-3 часа)"
+                        : "Сверхдлинные (более 3 часов)",
           files,
         }))
     }
@@ -1091,15 +1106,14 @@ export const MediaFileList = memo(function MediaFileList({
                 <div className="text-gray-500 dark:text-gray-400">Кодек:</div>
                 <div>{file.probeData?.streams?.[0]?.codec_name || "Неизвестно"}</div>
 
-                {file.probeData?.streams?.[0]?.width &&
-                  file.probeData?.streams?.[0]?.height && (
-                    <>
-                      <div className="text-gray-500 dark:text-gray-400">Разрешение:</div>
-                      <div>
-                        {file.probeData.streams[0].width}×{file.probeData.streams[0].height}
-                      </div>
-                    </>
-                  )}
+                {file.probeData?.streams?.[0]?.width && file.probeData?.streams?.[0]?.height && (
+                  <>
+                    <div className="text-gray-500 dark:text-gray-400">Разрешение:</div>
+                    <div>
+                      {file.probeData.streams[0].width}×{file.probeData.streams[0].height}
+                    </div>
+                  </>
+                )}
 
                 <div className="text-gray-500 dark:text-gray-400">Размер:</div>
                 <div>{formatFileSize(file.size || 0)}</div>
@@ -1108,7 +1122,7 @@ export const MediaFileList = memo(function MediaFileList({
                 <div>{formatDuration(file.duration || 0)}</div>
               </div>
             </div>
-      )
+          )
 
         case "thumbnails":
           return (
@@ -1146,7 +1160,15 @@ export const MediaFileList = memo(function MediaFileList({
     const renderGroup = (group: { title: string; files: MediaFile[] }) => {
       if (!group.title) {
         return (
-          <div className={viewMode === "grid" ? "flex flex-wrap gap-3 items-left" : viewMode === "thumbnails" ? "flex flex-wrap gap-3 justify-between" : "space-y-1"}>
+          <div
+            className={
+              viewMode === "grid"
+                ? "flex flex-wrap gap-3 items-left"
+                : viewMode === "thumbnails"
+                  ? "flex flex-wrap gap-3 justify-between"
+                  : "space-y-1"
+            }
+          >
             {group.files.map(renderFile)}
           </div>
         )
@@ -1154,10 +1176,48 @@ export const MediaFileList = memo(function MediaFileList({
 
       return (
         <div className="mb-4">
-          <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 px-2">
-            {group.title} ({group.files.length})
-          </h3>
-          <div className={viewMode === "grid" ? "flex flex-wrap gap-3 items-left" : viewMode === "thumbnails" ? "flex flex-wrap gap-3 justify-between" : "space-y-1"}>
+          <div className="flex items-center justify-between mb-2 px-2">
+            <h3 className="text-sm font-medium">{group.title}</h3>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-xs flex items-center gap-1 cursor-pointer px-1 h-7"
+              onClick={() => {
+                // Фильтруем файлы - изображения не добавляем на таймлайн
+                const nonImageFiles = group.files.filter((file) => !file.isImage)
+                const imageFiles = group.files.filter((file) => file.isImage)
+
+                // Добавляем видео и аудио файлы на таймлайн
+                if (nonImageFiles.length > 0) {
+                  addNewTracks(nonImageFiles)
+                }
+
+                // Отмечаем все файлы как добавленные
+                const filePaths = group.files
+                  .filter((file) => file.path)
+                  .map((file) => file.path as string)
+
+                if (filePaths.length > 0) {
+                  rootStore.send({
+                    type: "addToAddedFiles",
+                    filePaths,
+                  })
+                }
+              }}
+            >
+              <span className="text-xs px-1">Добавить все</span>
+              <CopyPlus className="h-3 w-3 mr-1" />
+            </Button>
+          </div>
+          <div
+            className={
+              viewMode === "grid"
+                ? "flex flex-wrap gap-3 items-left"
+                : viewMode === "thumbnails"
+                  ? "flex flex-wrap gap-3 justify-between"
+                  : "space-y-1"
+            }
+          >
             {group.files.map(renderFile)}
           </div>
         </div>

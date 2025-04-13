@@ -247,7 +247,7 @@ export const getSequentialFiles = (files: MediaFile[]): MediaFile[] => {
  */
 export const groupFilesByDate = (media: MediaFile[]): DateGroup[] => {
   const videoFilesByDate = media.reduce<Record<string, MediaFile[]>>((acc, file) => {
-    const date = file.startTime 
+    const date = file.startTime
       ? new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
           day: "2-digit",
           month: "long",
