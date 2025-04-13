@@ -702,7 +702,21 @@ export const MediaFileList = memo(function MediaFileList({
       e.stopPropagation()
       if (!file.path || addedFiles.has(file.path)) return
 
-      // Добавляем файл на таймлайн
+      // Проверяем, является ли файл изображением
+      if (file.isImage) {
+        console.log("[handleAddMedia] Добавляем изображение только в медиафайлы:", file.name)
+        
+        // Только отмечаем файл как добавленный, но не добавляем на таймлайн
+        if (file.path) {
+          rootStore.send({
+            type: "addToAddedFiles",
+            filePaths: [file.path],
+          })
+        }
+        return
+      }
+
+      // Для видео и аудио добавляем на таймлайн
       addNewTracks([file])
 
       // Отмечаем файл как добавленный
@@ -717,8 +731,14 @@ export const MediaFileList = memo(function MediaFileList({
   )
 
   const handleAddAllFiles = useCallback(() => {
-    // Добавляем все файлы на таймлайн
-    addNewTracks(media)
+    // Фильтруем файлы - изображения не добавляем на таймлайн
+    const nonImageFiles = media.filter(file => !file.isImage)
+    const imageFiles = media.filter(file => file.isImage)
+    
+    // Добавляем видео и аудио файлы на таймлайн
+    if (nonImageFiles.length > 0) {
+      addNewTracks(nonImageFiles)
+    }
 
     // Отмечаем все файлы как добавленные
     const filePaths = media.filter((file) => file.path).map((file) => file.path as string)
@@ -728,6 +748,11 @@ export const MediaFileList = memo(function MediaFileList({
         type: "addToAddedFiles",
         filePaths,
       })
+    }
+    
+    // Логируем информацию о добавленных файлах
+    if (imageFiles.length > 0) {
+      console.log(`[handleAddAllFiles] Изображений добавлено только в медиафайлы: ${imageFiles.length}`)
     }
   }, [media, addNewTracks])
 
