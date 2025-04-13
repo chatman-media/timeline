@@ -2,10 +2,9 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
 import { CameraCaptureModal } from "@/components/modals/camera-capture-modal"
-import { VideoMetadata } from "@/components/timeline/video-metadata"
 import { useRootStore } from "@/hooks/use-root-store"
 import { useVideoPlayer } from "@/hooks/use-video-player"
-import { cn, formatDuration, formatFileSize } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 import { rootStore } from "@/stores/root-store"
 import { MediaFile } from "@/types/videos"
 import { getFileType, groupFilesByDate } from "@/utils/media-utils"
@@ -13,7 +12,7 @@ import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 import { Skeleton } from "../../ui/skeleton"
 import { FileInfo, MediaPreview, StatusBar } from ".."
 import { Button } from "@/components/ui/button"
-import { CopyPlus, Plus } from "lucide-react"
+import { CopyPlus } from "lucide-react"
 
 // Создаем глобальные переменные для кэширования видео и их состояния загрузки
 // Это позволит сохранять состояние между переключениями вкладок и режимов отображения
@@ -30,14 +29,12 @@ const MIN_SIZE_THUMBNAILS = 100
 const DEFAULT_SIZE_GRID = 60
 const DEFAULT_SIZE_THUMBNAILS = 125
 const DEFAULT_SIZE_LIST = 80
-const DEFAULT_SIZE_METADATA = 100
 
 // Ключи для localStorage
 const STORAGE_KEY_PREFIX = "timeline-preview-size-"
 const STORAGE_KEY_GRID = `${STORAGE_KEY_PREFIX}grid`
 const STORAGE_KEY_THUMBNAILS = `${STORAGE_KEY_PREFIX}thumbnails`
 const STORAGE_KEY_LIST = `${STORAGE_KEY_PREFIX}list`
-const STORAGE_KEY_METADATA = `${STORAGE_KEY_PREFIX}metadata`
 
 // Функция для загрузки сохраненного размера из localStorage
 const getSavedSize = (mode: string, defaultSize: number): number => {
@@ -48,7 +45,6 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
   if (mode === "grid") storageKey = STORAGE_KEY_GRID
   else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
   else if (mode === "list") storageKey = STORAGE_KEY_LIST
-  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
   else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
 
   try {
@@ -81,7 +77,6 @@ const saveSize = (mode: string, size: number): void => {
   if (mode === "grid") storageKey = STORAGE_KEY_GRID
   else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
   else if (mode === "list") storageKey = STORAGE_KEY_LIST
-  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
   else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
 
   try {
@@ -101,7 +96,6 @@ const clearAllSavedSizes = (): void => {
     localStorage.removeItem(STORAGE_KEY_GRID)
     localStorage.removeItem(STORAGE_KEY_THUMBNAILS)
     localStorage.removeItem(STORAGE_KEY_LIST)
-    localStorage.removeItem(STORAGE_KEY_METADATA)
     console.log("[MediaFileList] Cleared all saved sizes from localStorage")
   } catch (error) {
     console.error("[MediaFileList] Error clearing localStorage:", error)
@@ -116,7 +110,7 @@ interface GroupedMediaFiles {
 // Оборачиваем в memo для предотвращения ненужных рендеров
 export const MediaFileList = memo(function MediaFileList({
   viewMode: initialViewMode = "list",
-}: { viewMode?: "list" | "grid" | "thumbnails" | "metadata" }) {
+}: { viewMode?: "list" | "grid" | "thumbnails" }) {
   const { media, isLoading, addNewTracks, addedFiles, hasFetched } = useRootStore()
   const [searchQuery, setSearchQuery] = useState("")
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
@@ -128,16 +122,13 @@ export const MediaFileList = memo(function MediaFileList({
   const initialRenderRef = useRef(true)
 
   // Состояние для режима отображения
-  const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails" | "metadata">(
-    initialViewMode,
-  )
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails">(initialViewMode)
 
   // Определяем начальный размер для текущего режима
   let initialSize = DEFAULT_SIZE
   if (initialViewMode === "grid") initialSize = DEFAULT_SIZE_GRID
   else if (initialViewMode === "thumbnails") initialSize = DEFAULT_SIZE_THUMBNAILS
   else if (initialViewMode === "list") initialSize = DEFAULT_SIZE_LIST
-  else if (initialViewMode === "metadata") initialSize = DEFAULT_SIZE_METADATA
 
   // Пытаемся загрузить сохраненный размер
   const savedInitialSize = getSavedSize(initialViewMode, initialSize)
@@ -175,7 +166,6 @@ export const MediaFileList = memo(function MediaFileList({
     if (viewMode === "grid") defaultSize = DEFAULT_SIZE_GRID
     else if (viewMode === "thumbnails") defaultSize = DEFAULT_SIZE_THUMBNAILS
     else if (viewMode === "list") defaultSize = DEFAULT_SIZE_LIST
-    else if (viewMode === "metadata") defaultSize = DEFAULT_SIZE_METADATA
 
     // Устанавливаем соответствующий размер для текущего режима просмотра из localStorage
     const savedSize = getSavedSize(viewMode, defaultSize)
@@ -207,7 +197,6 @@ export const MediaFileList = memo(function MediaFileList({
     if (viewMode === "grid") defaultSize = DEFAULT_SIZE_GRID
     else if (viewMode === "thumbnails") defaultSize = DEFAULT_SIZE_THUMBNAILS
     else if (viewMode === "list") defaultSize = DEFAULT_SIZE_LIST
-    else if (viewMode === "metadata") defaultSize = DEFAULT_SIZE_METADATA
 
     // При изменении режима просмотра загружаем сохраненный размер
     const savedSize = getSavedSize(viewMode, defaultSize)
@@ -239,7 +228,7 @@ export const MediaFileList = memo(function MediaFileList({
   })
 
   // Обработчики для MediaToolbar
-  const handleViewModeChange = useCallback((mode: "list" | "grid" | "thumbnails" | "metadata") => {
+  const handleViewModeChange = useCallback((mode: "list" | "grid" | "thumbnails") => {
     // Просто меняем режим просмотра, установка размера произойдет в useEffect
     setViewMode(mode)
   }, [])
@@ -1076,51 +1065,7 @@ export const MediaFileList = memo(function MediaFileList({
                   size={previewSize}
                 />
               </div>
-            </div>
-          )
-
-        case "metadata":
-          return (
-            <div
-              key={fileId}
-              className={cn(
-                "border border-gray-200 dark:border-gray-700 rounded-md p-3",
-                "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
-                isAdded && "opacity-50 pointer-events-none",
-              )}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <div className="text-sm font-medium">{file.name}</div>
-                <button
-                  className="text-xs px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                  onClick={(e) => handleAddMedia(e, file)}
-                  disabled={isAdded}
-                >
-                  {isAdded ? "Добавлено" : "Добавить"}
-                </button>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="text-gray-500 dark:text-gray-400">Тип:</div>
-                <div>{file.probeData?.streams?.[0]?.codec_type || "Неизвестно"}</div>
-
-                <div className="text-gray-500 dark:text-gray-400">Кодек:</div>
-                <div>{file.probeData?.streams?.[0]?.codec_name || "Неизвестно"}</div>
-
-                {file.probeData?.streams?.[0]?.width && file.probeData?.streams?.[0]?.height && (
-                  <>
-                    <div className="text-gray-500 dark:text-gray-400">Разрешение:</div>
-                    <div>
-                      {file.probeData.streams[0].width}×{file.probeData.streams[0].height}
-                    </div>
-                  </>
-                )}
-
-                <div className="text-gray-500 dark:text-gray-400">Размер:</div>
-                <div>{formatFileSize(file.size || 0)}</div>
-
-                <div className="text-gray-500 dark:text-gray-400">Длительность:</div>
-                <div>{formatDuration(file.duration || 0)}</div>
-              </div>
+              <div className="p-1 text-xs truncate">{file.name}</div>
             </div>
           )
 
@@ -1158,6 +1103,12 @@ export const MediaFileList = memo(function MediaFileList({
     }
 
     const renderGroup = (group: { title: string; files: MediaFile[] }) => {
+      // Не показываем группу, если в ней нет файлов
+      if (group.files.length === 0) {
+        return null
+      }
+
+      // Если нет заголовка и есть файлы, показываем их без группы
       if (!group.title) {
         return (
           <div
@@ -1211,11 +1162,9 @@ export const MediaFileList = memo(function MediaFileList({
           </div>
           <div
             className={
-              viewMode === "grid"
+              viewMode === "grid" || viewMode === "thumbnails"
                 ? "flex flex-wrap gap-3 items-left"
-                : viewMode === "thumbnails"
-                  ? "flex flex-wrap gap-3 justify-between"
-                  : "space-y-1"
+                : "space-y-1"
             }
           >
             {group.files.map(renderFile)}
