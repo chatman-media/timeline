@@ -17,12 +17,23 @@ export const TAB_TRIGGER_STYLES =
 // Используем memo для предотвращения ненужных рендеров
 export const Browser = memo(function Browser() {
   console.log("[Browser] Rendering component...")
-  const [activeTab, setActiveTab] = useState("media")
+
+  // Загружаем сохраненную вкладку
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window === "undefined") return "media"
+    return localStorage.getItem("timeline-active-tab") || "media"
+  })
+
+  // Сохраняем выбранную вкладку
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    localStorage.setItem("timeline-active-tab", value)
+  }
 
   return (
     <Tabs
       value={activeTab}
-      onValueChange={setActiveTab}
+      onValueChange={handleTabChange}
       defaultValue="media"
       className="flex flex-col items-stretch w-full h-full overflow-hidden"
     >

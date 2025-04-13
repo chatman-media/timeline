@@ -146,13 +146,13 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Инициализируем состояние с сохраненными настройками
   const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails" | "metadata">(
-    (savedSettings?.viewMode as any) || initialViewMode
+    (savedSettings?.viewMode as any) || initialViewMode,
   )
   const [sortBy, setSortBy] = useState<string>(savedSettings?.sortBy || "date")
   const [filterType, setFilterType] = useState<string>(savedSettings?.filterType || "all")
   const [groupBy, setGroupBy] = useState<string>(savedSettings?.groupBy || "none")
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
-    (savedSettings?.sortOrder as "asc" | "desc") || "desc"
+    (savedSettings?.sortOrder as "asc" | "desc") || "desc",
   )
 
   // Сохраняем настройки при их изменении
