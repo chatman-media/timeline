@@ -136,17 +136,6 @@ export const MediaPreview = memo(function MediaPreview({
               {index + 1}
             </div>
           )}
-        {file.probeData?.streams &&
-          file.probeData.streams.filter((s) => s.codec_type === "video" || s.codec_type === "audio")
-            .length > 1 &&
-          !hideTime && (
-            <div
-              className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/65 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
-            >
-              {formatDuration(duration)}
-            </div>
-          )}
-
         {/* Иконка типа медиа */}
         <div
           className={`absolute ${
@@ -155,7 +144,7 @@ export const MediaPreview = memo(function MediaPreview({
                 ? "right-1 top-1"
                 : "right-0.5 top-0.5"
               : "left-1/2 bottom-1 -translate-x-1/2"
-          } text-white cursor-pointer bg-black/65 rounded p-0.5`}
+          } text-white cursor-pointer bg-black/50 rounded p-0.5`}
         >
           {isVideo && <Film size={size > 100 ? 16 : 12} />}
           {hasAudio && !isVideo && <Music size={size > 100 ? 16 : 12} />}
@@ -174,7 +163,7 @@ export const MediaPreview = memo(function MediaPreview({
                   ? "right-[28px]"
                   : "right-[20px]"
                 : "left-[calc(50%-8px)]"
-            } bg-black/65 text-xs leading-[16px] rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} mr-0.5 font-medium text-white`}
+            } bg-black/50 text-xs leading-[16px] rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} mr-0.5 font-medium text-white`}
           >
             {formatResolution(stream.width || 0, stream.height || 0)}
           </div>
@@ -196,7 +185,7 @@ export const MediaPreview = memo(function MediaPreview({
           file.probeData.streams.filter((s) => s.codec_type === "audio").length > 0 &&
           !hideTime && (
             <div
-              className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/65 rounded ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+              className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/50 rounded ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
             >
               {formatDuration(duration)}
             </div>
@@ -235,7 +224,7 @@ export const MediaPreview = memo(function MediaPreview({
 
         {/* Иконка типа медиа в правом верхнем углу */}
         <div
-          className={`absolute ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white cursor-pointer bg-black/65 rounded p-0.5`}
+          className={`absolute ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white cursor-pointer bg-black/50 rounded p-0.5`}
         >
           <Music size={size > 100 ? 16 : 12} />
         </div>
@@ -252,7 +241,7 @@ export const MediaPreview = memo(function MediaPreview({
 
         {showFileName && (
           <div
-            className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+            className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
           >
             {file.name}
           </div>
@@ -261,7 +250,7 @@ export const MediaPreview = memo(function MediaPreview({
         {onAddMedia && (
           <div
             className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
-              isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
+              isAdded ? "bg-[#3ebfb2]" : "bg-black/50 hover:bg-[#3ebfb2]"
             }`}
             onClick={(e) => {
               e.stopPropagation()
@@ -300,14 +289,14 @@ export const MediaPreview = memo(function MediaPreview({
 
           {/* Иконка типа медиа */}
           <div
-            className={`absolute ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white cursor-pointer bg-black/65 rounded p-0.5`}
+            className={`absolute ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white cursor-pointer bg-black/50 rounded p-0.5`}
           >
             <ImageIcon size={size > 100 ? 16 : 12} />
           </div>
 
           {showFileName && (
             <div
-              className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+              className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
             >
               {file.name}
             </div>
@@ -316,7 +305,7 @@ export const MediaPreview = memo(function MediaPreview({
           {onAddMedia && (
             <div
               className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
-                isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
+                isAdded ? "bg-[#3ebfb2]" : "bg-black/50 hover:bg-[#3ebfb2]"
               }`}
               onClick={(e) => {
                 e.stopPropagation()
@@ -415,7 +404,7 @@ export const MediaPreview = memo(function MediaPreview({
                 ).length > 1 &&
                 !hideTime && (
                   <div
-                    className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/65 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+                    className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/50 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
                   >
                     {formatDuration(duration)}
                   </div>
@@ -423,7 +412,7 @@ export const MediaPreview = memo(function MediaPreview({
 
               {showFileName && (
                 <div
-                  className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/65 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+                  className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
                 >
                   {file.name}
                 </div>
@@ -432,7 +421,7 @@ export const MediaPreview = memo(function MediaPreview({
               {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
                 <div
                   className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
-                    isAdded ? "bg-[#3ebfb2]" : "bg-black/65 hover:bg-[#3ebfb2]"
+                    isAdded ? "bg-[#3ebfb2]" : "bg-black/50 hover:bg-[#3ebfb2]"
                   }`}
                   onClick={(e) => {
                     e.stopPropagation()
