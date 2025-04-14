@@ -1037,18 +1037,20 @@ export const MediaFileList = memo(function MediaFileList({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-[calc(50vh-82px)]">
+      <div className="flex flex-col h-full overflow-hidden">
+        <div className="flex-1 p-3 pb-1">
+        <Skeleton className="w-full h-8 rounded" />
+        </div>
         <div className="p-4 space-y-4">
           {Array.from({ length: 5 }).map((_, index) => (
             <div key={index} className="flex items-center gap-3 p-0 pr-2 rounded-md">
-              <div className="h-[60px] w-[80px]">
+              <div className="h-[100px] w-[170px]">
                 <Skeleton className="h-full w-full rounded" />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 h-[90px] items-center">
                 <Skeleton className="h-4 w-3/4 mb-3" />
                 <Skeleton className="h-3 w-1/2" />
               </div>
-              <Skeleton className="h-7 w-7 rounded" />
             </div>
           ))}
         </div>
