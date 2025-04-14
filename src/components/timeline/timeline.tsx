@@ -554,13 +554,11 @@ export function Timeline() {
                   </div>
                 ))}
               </div>
-              <div style={{ position: "relative", zIndex: 10 }}>
-                <TimelineBar
+              <TimelineBar
                   startTime={section.startTime}
                   endTime={section.endTime}
                   height={section.tracks.length * 85 + 46}
                 />
-              </div>
             </div>
           </div>
         ))}

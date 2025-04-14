@@ -87,16 +87,6 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
             </svg>
           </div>
         </div>
-
-        {/* Pulse effect when playing */}
-        {isPlaying && (
-          <div className="absolute top-[5px] w-[5px] h-[5px] rounded-full bg-primary animate-ping opacity-75"></div>
-        )}
-
-        {/* Timestamp tooltip */}
-        <div className="absolute -top-7 left-1/2 transform -translate-x-1/2 bg-popover text-popover-foreground px-2 py-1 rounded-md text-xs font-medium shadow-md opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity z-50">
-          {formatTime(currentTime)}
-        </div>
       </div>
     </div>
   )
