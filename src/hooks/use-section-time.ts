@@ -53,7 +53,7 @@ export function useSectionTime({
     // Устанавливаем активное видео и дорожку
     setActiveVideo(videoId)
     setActiveTrack(trackId)
-    setCurrentTime(videoStartTime)
+    // setCurrentTime(videoStartTime)
   }
 
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useRef } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
@@ -18,27 +18,11 @@ const VideoTrack = memo(function VideoTrack({
   sectionDuration,
 }: VideoTrackProps) {
   const {
-    setCurrentTime,
     setActiveVideo,
     activeTrackId,
     setActiveTrack,
-    volume: globalVolume,
-    trackVolumes,
-    setIsPlaying,
   } = useRootStore()
   const containerRef = useRef<HTMLDivElement>(null)
-  const [visibleVideos, setVisibleVideos] = useState<string[]>([])
-  const videoElementsRef = useRef<Record<string, HTMLVideoElement>>({})
-
-  useEffect(() => {
-    // Обновляем громкость для всех видео в треке
-    Object.values(videoElementsRef.current).forEach((videoElement) => {
-      if (videoElement) {
-        const trackVolume = trackVolumes[track.id] ?? 1
-        videoElement.volume = globalVolume * trackVolume
-      }
-    })
-  }, [globalVolume, trackVolumes, track.id])
 
   if (!track.videos || track.videos.length === 0) {
     return null
@@ -68,71 +52,23 @@ const VideoTrack = memo(function VideoTrack({
   const isActive = track.id === activeTrackId
 
   const handleClick = useCallback(
-    (_e: React.MouseEvent, track: TimelineTrack, videoId?: string) => {
-      // Предотвращаем всплытие события, чтобы не было двойной обработки
+    (_e: React.MouseEvent, track: TimelineTrack, videoId: string) => {
+      // Предотвращаем всплытие события
       _e.stopPropagation()
 
-      // Проверяем, является ли переключение треков
-      const isTrackChange = track.id !== activeTrackId
+      // Находим видео
+      const video = track.videos.find((v) => v.id === videoId)
+      if (!video) return
 
-      // Если переключаем трек, отмечаем это сразу
-      if (isTrackChange) {
-        console.log(`[VideoTrack] Переключение с трека ${activeTrackId} на трек ${track.id}`)
+      console.log(`[VideoTrack] Клик по видео ${videoId}`)
 
-        // Устанавливаем активный трек (это включит флаг isChangingCamera)
-        setActiveTrack(track.id)
-
-        // Если есть videoId, устанавливаем активное видео
-        if (videoId) {
-          // Установка активного видео, но без изменения текущего времени
-          console.log(`[VideoTrack] Устанавливаем активное видео ${videoId}`)
-          setActiveVideo(videoId)
-        }
-      }
-      // Трек уже выбран, значит это навигация внутри трека
-      if (videoId) {
-        console.log(`[VideoTrack] Навигация внутри трека ${track.id} к видео ${videoId}`)
-        setActiveVideo(videoId)
-
-        // Находим видео и устанавливаем время начала только для внутритрековой навигации
-        const video = track.videos.find((v) => v.id === videoId)
-        if (video) {
-          const videoStartTime = video.startTime ?? 0
-          console.log(`[VideoTrack] Устанавливаем время ${videoStartTime}`)
-          setCurrentTime(videoStartTime)
-          // Останавливаем воспроизведение при перемещении внутри трека
-          setIsPlaying(false)
-        }
-      }
+      // Устанавливаем активный трек
+      setActiveTrack(track.id)
+      // Устанавливаем активное видео
+      setActiveVideo(videoId)
     },
-    [setActiveTrack, setActiveVideo, setCurrentTime, setIsPlaying, activeTrackId],
+    [setActiveTrack, setActiveVideo],
   )
-
-  // Определяем видимые видео
-  useEffect(() => {
-    if (!containerRef.current) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visibleIds = entries
-          .filter((entry) => entry.isIntersecting)
-          .map((entry) => entry.target.getAttribute("data-video-id") || "")
-          .filter(Boolean)
-
-        setVisibleVideos((prev: string[]) => {
-          const newSet = new Set([...prev, ...visibleIds])
-          return Array.from(newSet)
-        })
-      },
-      { threshold: 0.1 },
-    )
-
-    containerRef.current.querySelectorAll("[data-video-id]").forEach((el) => {
-      observer.observe(el)
-    })
-
-    return () => observer.disconnect()
-  }, [track.videos])
 
   return (
     <div className="flex" ref={containerRef}>
@@ -146,7 +82,11 @@ const VideoTrack = memo(function VideoTrack({
         >
           <div
             className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
-            style={{ cursor: "pointer" }}
+            style={{ 
+              cursor: "pointer",
+              zIndex: 1,
+              position: "relative"
+            }}
             onClick={(e) => {
               if (track.videos.length > 0) {
                 handleClick(e, track, track.videos[0].id)
@@ -160,7 +100,6 @@ const VideoTrack = memo(function VideoTrack({
                     {track.videos.map((video) => {
                       const videoStart = video.startTime || 0
                       const videoDuration = video.duration || 0
-                      const isVisible = visibleVideos.includes(video.id)
 
                       if (track.videos.length === 1) {
                         return (
@@ -177,7 +116,7 @@ const VideoTrack = memo(function VideoTrack({
                           >
                             <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
                               <div
-                                className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0 pointer-events-none"
+                                className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0"
                                 style={{
                                   backgroundColor: "#004346",
                                   lineHeight: "13px",

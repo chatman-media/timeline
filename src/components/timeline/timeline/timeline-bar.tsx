@@ -1,4 +1,4 @@
-import React, { useMemo } from "react"
+import React, { useEffect, useMemo, useRef } from "react"
 
 import { useRootStore } from "@/hooks/use-root-store"
 
@@ -10,6 +10,7 @@ interface TimelineBarProps {
 
 export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
   const { currentTime, setCurrentTime, scale, isPlaying } = useRootStore()
+  const animationFrameRef = useRef<number | undefined>(undefined)
 
   const position = useMemo(() => {
     if (currentTime < startTime) return "-5px"
@@ -18,13 +19,39 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
     return `${percent}%`
   }, [currentTime, startTime, endTime])
 
-  const handleClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect()
-    const clickX = e.clientX - rect.left
-    const percent = clickX / rect.width
-    const time = startTime + percent * (endTime - startTime)
-    setCurrentTime(time, "user")
-  }
+  // Эффект для анимации бара во время воспроизведения
+  useEffect(() => {
+    if (!isPlaying) {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+      return
+    }
+
+    let lastTime = performance.now()
+    const animate = (now: number) => {
+      const deltaTime = (now - lastTime) / 1000 // в секундах
+      lastTime = now
+
+      const newTime = currentTime + deltaTime
+      // Если достигли конца секции, останавливаем анимацию
+      if (newTime >= endTime) {
+        setCurrentTime(endTime)
+        return
+      }
+      setCurrentTime(newTime)
+
+      animationFrameRef.current = requestAnimationFrame(animate)
+    }
+
+    animationFrameRef.current = requestAnimationFrame(animate)
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current)
+      }
+    }
+  }, [isPlaying, endTime, setCurrentTime, currentTime])
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation()
@@ -34,7 +61,7 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
       const mouseX = e.clientX - rect.left
       const percent = Math.max(0, Math.min(1, mouseX / rect.width))
       const time = startTime + percent * (endTime - startTime)
-      setCurrentTime(time, "user")
+      setCurrentTime(time)
     }
 
     const onMouseUp = () => {
@@ -49,17 +76,11 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
   return (
     <div
       id="timeline-bar-container"
-      className="absolute top-0 left-0 right-0 h-full pointer-events-none"
+      className="absolute top-0 left-0 right-0 h-full"
       style={{ height }}
     >
-      {/* Невидимая полоса для перехода к нужному времени */}
       <div
-        className="absolute top-0 left-0 w-full h-[30px] pointer-events-auto"
-        onClick={handleClick}
-      />
-
-      <div
-        className="absolute top-0 bottom-0 w-[3px] z-50 flex flex-col items-center cursor-col-resize group pointer-events-auto"
+        className="absolute top-0 bottom-0 w-[3px] z-[100] flex flex-col items-center cursor-col-resize group"
         style={{
           left: position,
           transform: "translateX(-50%)",

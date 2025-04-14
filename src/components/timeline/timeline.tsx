@@ -234,8 +234,13 @@ export function Timeline() {
 
             if (video) {
               setActiveVideo(video.id)
-              // Сохраняем текущее время при переключении дорожек
-              updateTime(currentTime)
+              // Проверяем время перед обновлением
+              if (isFinite(currentTime) && currentTime >= 0 && currentTime <= (video.duration || 0)) {
+                updateTime(currentTime)
+              } else {
+                console.warn("[Timeline] Некорректное время при переключении дорожек:", currentTime)
+                updateTime(0)
+              }
             } else if (targetTrack.videos.length > 0) {
               // Если не нашли подходящее видео, берем первое видео
               const firstVideo = targetTrack.videos[0]
@@ -248,9 +253,13 @@ export function Timeline() {
               const firstVideo = targetTrack.videos[0]
               setActiveVideo(firstVideo.id)
 
-              // Сохраняем текущую позицию, а не прыгаем на начало видео
-              // Это предотвратит прыжки между секциями
-              updateTime(currentTime)
+              // Проверяем время перед обновлением
+              if (isFinite(currentTime) && currentTime >= 0 && currentTime <= (firstVideo.duration || 0)) {
+                updateTime(currentTime)
+              } else {
+                console.warn("[Timeline] Некорректное время при переключении дорожек:", currentTime)
+                updateTime(firstVideo.startTime ?? 0)
+              }
             }
           }
 

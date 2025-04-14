@@ -72,8 +72,6 @@ export interface TimelineState {
   montageSchema: MontageSegment[]
   isRecordingSchema: boolean
   currentRecordingSegmentId: string | null
-
-  // История
   historySnapshotIds: number[]
   currentHistoryIndex: number
   isDirty: boolean
@@ -86,19 +84,21 @@ export interface StateContext extends EditorState, TimelineState {}
 // Сохраняемое EditorState (для IndexedDB)
 export type StorableEditorState = Omit<
   EditorState,
-  "videoRefs" | "thumbnailCache" | "metadataCache" | "addedFiles"
+  | "isLoading"
+  | "isPlaying"
+  | "isSeeking"
+  | "isChangingCamera"
+  | "isDirty"
+  | "hasFetched"
+  | "videoRefs"
+  | "metadataCache"
+  | "thumbnailCache"
 > & {
-  addedFiles: string[] // Set преобразуется в массив для хранения
+  addedFiles: string[] // Конвертируем Set в Array для хранения
 }
 
-// Сохраняемое TimelineState (для IndexedDB)
-export type StorableTimelineState = Omit<
-  TimelineState,
-  "isDirty" | "isRecordingSchema" | "currentRecordingSegmentId"
->
-
 // Комбинированное сохраняемое состояние
-export type StorableStateContext = StorableEditorState & StorableTimelineState
+export type StorableStateContext = StorableEditorState
 
 // Убираем временные поля, так как теперь не сохраняем состояние
 export const TEMPORARY_FIELDS = new Set<keyof StateContext>([

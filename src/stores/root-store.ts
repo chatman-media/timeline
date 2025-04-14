@@ -24,17 +24,6 @@ type EventHandlerArgs = {
   enqueue?: EnqueueObject
 }
 
-// Обновляем тип для новых файлов
-type NewMediaFile = Omit<MediaFile, "probeData"> & {
-  probeData: FfprobeData
-}
-
-type TrackType = "video" | "audio"
-
-interface NewTrack extends Track {
-  timeRanges: []
-}
-
 /**
  * Начальное состояние корневого хранилища
  * ЭКСПОРТИРУЕТСЯ для использования в StateInitializer
@@ -138,6 +127,60 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       return newState
     },
 
+    setHistoryState: (context, event) => {
+      const normalizedEventState = normalizeStateForStore(event.state)
+      return {
+        ...context,
+        ...normalizedEventState,
+      }
+    },
+
+    createHistoryPoint: (context, event) => {
+      return {
+        ...context,
+        ...event.stateForHistory,
+      }
+    },
+
+    setScale: (context, event) => ({
+      ...context,
+      scale: event.scale,
+    }),
+
+    setVolume: (context, event) => ({
+      ...context,
+      volume: event.volume,
+    }),
+
+    setTrackVolume: (context, event) => ({
+      ...context,
+      trackVolumes: {
+        ...context.trackVolumes,
+        [event.trackId]: event.volume,
+      },
+    }),
+
+    setIsSeeking: (context, event) => ({
+      ...context,
+      isSeeking: event.isSeeking,
+    }),
+
+    addToMetadataCache: (context, event) => ({
+      ...context,
+      metadataCache: {
+        ...context.metadataCache,
+        [event.key]: event.data,
+      },
+    }),
+
+    addToThumbnailCache: (context, event) => ({
+      ...context,
+      thumbnailCache: {
+        ...context.thumbnailCache,
+        [event.key]: event.data,
+      },
+    }),
+
     setMedia: (context, event) => ({
       ...context,
       media: event.media,
@@ -151,13 +194,14 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       isDirty: true,
     }),
 
-    setActiveVideo: (context: StateContext, event: { videoId: string }) => ({
-      ...context,
-      activeVideo: context.media.find((m) => m.id === event.videoId) ?? null,
-      // Если меняется видео, но не меняется трек, то все равно устанавливаем флаг смены камеры
-      isChangingCamera: context.activeVideo?.id !== event.videoId || context.isChangingCamera,
-      isDirty: true,
-    }),
+    setActiveVideo: (context: StateContext, event: { videoId: string }) => {
+      const newVideo = context.media.find((m) => m.id === event.videoId) ?? null
+      return newVideo ? {
+        ...context,
+        activeVideo: newVideo,
+        isDirty: true,
+      } : context
+    },
 
     setActiveTrack: (context: StateContext, event: { trackId: string }) => {
       // Проверяем, меняется ли трек
@@ -408,7 +452,7 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
       isLoading: false,
     }),
 
-    clearCache: (context: StateContext, _event: {}, args: EventHandlerArgs) => {
+    clearCache: (context: StateContext, _event: {}, enq: EnqueueObject) => {
       // Устанавливаем начальное состояние для обновления UI
       const initialState = {
         ...context,
@@ -416,13 +460,11 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
         hasFetched: false,
       }
 
-      // Выполняем асинхронные операции
-      if (args?.enqueue) {
-        args.enqueue.effect(async () => {
-          const { resetDatabases } = await import("@/lib/db-reset")
-          await resetDatabases()
-        })
-      }
+      // // Выполняем асинхронные операции
+      // enq.effect(async () => {
+      //   const { resetDatabases } = await import("@/lib/db-reset")
+      //   await resetDatabases()
+      // })
 
       return initialState
     },
@@ -480,32 +522,53 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
     ) => {
       // Проверка на валидность времени
       if (!isFinite(event.time) || event.time < 0) {
+        console.warn("[setCurrentTime] Некорректное время:", event.time)
         return context
       }
 
-      // Определяем, короткое ли у нас видео (меньше 10 секунд)
-      const isShortVideo = context.activeVideo?.duration && context.activeVideo.duration < 10
-
-      // Для коротких видео используем меньший порог для обновления времени
-      const threshold = isShortVideo ? 0.001 : 0.01
-
-      // Предотвращаем ненужные обновления при малых изменениях времени
-      if (Math.abs(context.currentTime - event.time) < threshold) {
-        return context
+      // Проверяем, что время не слишком большое (больше 100 лет)
+      if (event.time > 100 * 365 * 24 * 60 * 60) {
+        console.warn("[setCurrentTime] Время слишком большое:", event.time)
+        return {
+          ...context,
+          currentTime: 0,
+        }
       }
 
-      // Более точное логирование для коротких видео
-      if (isShortVideo) {
-        console.log(
-          `[rootStore] setCurrentTime: ${event.time.toFixed(3)} (source: ${event.source || "unknown"}, short video)`,
-        )
-      } else if (Math.abs(context.currentTime - event.time) > 0.5) {
-        // Логируем только значительные изменения для обычных видео
-        console.log(
-          `[rootStore] setCurrentTime: ${event.time.toFixed(3)} (source: ${event.source || "unknown"})`,
-        )
+      // Проверяем, что время не слишком маленькое (меньше 0.001 секунды)
+      if (event.time < 0.001) {
+        console.warn("[setCurrentTime] Время слишком маленькое:", event.time)
+        return {
+          ...context,
+          currentTime: 0,
+        }
       }
 
+      // Проверяем, что время не NaN
+      if (isNaN(event.time)) {
+        console.warn("[setCurrentTime] Время NaN:", event.time)
+        return {
+          ...context,
+          currentTime: 0,
+        }
+      }
+
+      // Если есть активное видео, проверяем, что время не выходит за его пределы
+      if (context.activeVideo) {
+        const videoStartTime = context.activeVideo.startTime || 0
+        const videoDuration = context.activeVideo.duration || 0
+        const videoEndTime = videoStartTime + videoDuration
+
+        if (event.time > videoEndTime) {
+          console.warn("[setCurrentTime] Время больше длительности видео:", event.time)
+          return {
+            ...context,
+            currentTime: videoEndTime,
+          }
+        }
+      }
+
+      // Если все проверки пройдены, обновляем время
       return {
         ...context,
         currentTime: event.time,

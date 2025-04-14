@@ -39,6 +39,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     isRecordingSchema,
     startRecordingSchema,
     stopRecordingSchema,
+    tracks,
   } = useRootStore()
   const [isFullscreen, setIsFullscreen] = useState(false)
   const lastSaveTime = useRef(0)
@@ -200,14 +201,22 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
   // Переписываем handleChevronFirst: используем currentTime, вызываем setCurrentTime
   const handleChevronFirst = useCallback(() => {
-    if (!activeVideo) return
+    if (!activeVideo || !activeTrackId) return
 
-    const startTime = activeVideo.startTime || 0
+    // Находим активный трек
+    const activeTrack = tracks.find(track => track.id === activeTrackId)
+    if (!activeTrack) return
+
+    // Находим первое видео в треке
+    const firstVideo = activeTrack.videos[0]
+    if (!firstVideo) return
+
+    const startTime = firstVideo.startTime || 0
     if (Math.abs(currentTime - startTime) < 0.01) return
 
     setCurrentTime(startTime)
     setIsPlaying(false)
-  }, [activeVideo, currentTime, setCurrentTime, setIsPlaying])
+  }, [activeVideo, activeTrackId, tracks, currentTime, setCurrentTime, setIsPlaying])
 
   // Переписываем handleChevronLast: используем currentTime, вызываем setCurrentTime
   const handleChevronLast = useCallback(() => {

@@ -67,6 +67,36 @@ export const ActiveVideo = () => {
       if (!videoElement.seeking && !isChangingCamera && !isSeeking) {
         const newTime = videoElement.currentTime
 
+        // Проверяем валидность времени
+        if (!isFinite(newTime) || isNaN(newTime) || newTime < 0) {
+          console.warn("[onTimeUpdate] Некорректное время:", newTime)
+          setCurrentTime(0)
+          return
+        }
+
+        // Проверяем, что время не слишком большое (больше 100 лет)
+        if (newTime > 100 * 365 * 24 * 60 * 60) {
+          console.warn("[onTimeUpdate] Время слишком большое:", newTime)
+          setCurrentTime(0)
+          return
+        }
+
+        // Проверяем, что время не слишком маленькое (меньше 0.001 секунды)
+        if (newTime < 0.001) {
+          console.warn("[onTimeUpdate] Время слишком маленькое:", newTime)
+          setCurrentTime(0)
+          return
+        }
+
+        // Проверяем, что время не выходит за пределы видео
+        const videoEndTime = videoStartTime + (activeVideo.duration || 0)
+
+        if (newTime > videoEndTime) {
+          console.warn("[onTimeUpdate] Время больше длительности видео:", newTime)
+          setCurrentTime(videoEndTime)
+          return
+        }
+
         // Минимальный порог разницы времени - для сверхплавного обновления
         const timeDiffThreshold = 0.001 // Практически любое изменение времени
 
@@ -167,6 +197,67 @@ export const ActiveVideo = () => {
     resetChangingCamera,
   ])
 
+  useEffect(() => {
+    if (isChangingCamera) {
+      console.log("[ChangingCamera] Обнаружено переключение камеры")
+
+      // Сохраняем текущее время для синхронизации между треками
+      if (activeVideo) {
+        // Если есть видео, стараемся сохранить точную временную синхронизацию
+        console.log("[ChangingCamera] Текущее время при переключении:", currentTime.toFixed(3))
+
+        // Проверяем, что время не слишком большое (больше 100 лет)
+        if (currentTime > 100 * 365 * 24 * 60 * 60) {
+          console.warn("[ChangingCamera] Время слишком большое:", currentTime)
+          // Если время слишком большое, устанавливаем в начало
+          setCurrentTime(0)
+          return
+        }
+
+        // Постановка видео на паузу, если нужно (убираем запуск во время переключения)
+        const videoElement = videoRefs[activeVideo.id]
+        if (videoElement) {
+          // Синхронизируем время только если разница больше 0.1 секунды
+          if (Math.abs(videoElement.currentTime - currentTime) > 0.1) {
+            console.log("[ChangingCamera] Синхронизация текущего времени")
+            videoElement.currentTime = currentTime
+          }
+
+          // Особая обработка для записи - всегда запускаем воспроизведение
+          if (isRecordingSchema) {
+            console.log("[ChangingCamera] В режиме записи - продолжаем воспроизведение")
+            setIsPlaying(true)
+            try {
+              videoElement.play().catch((err) => {
+                console.error("[ChangingCamera] Ошибка воспроизведения при записи:", err)
+              })
+            } catch (error) {
+              console.error("[ChangingCamera] Ошибка при воспроизведении во время записи:", error)
+            }
+          }
+          // Обычное воспроизведение, если нужно
+          else if (isPlaying && videoElement.paused) {
+            try {
+              videoElement.play().catch((err) => {
+                console.error("[ChangingCamera] Ошибка воспроизведения:", err)
+              })
+            } catch (error) {
+              console.error("[ChangingCamera] Ошибка при воспроизведении:", error)
+            }
+          }
+        }
+      }
+
+      // Сбрасываем флаг isChangingCamera через небольшую задержку после переключения
+      const timeout = setTimeout(() => {
+        resetChangingCamera()
+        console.log("[ChangingCamera] Сброс флага isChangingCamera, время:", currentTime.toFixed(3))
+      }, 100) // Уменьшаем задержку для более быстрого сброса флага
+
+      return () => clearTimeout(timeout)
+    }
+  }, [isChangingCamera, resetChangingCamera, videoRefs, activeVideo, currentTime, isPlaying, isRecordingSchema, setIsPlaying])
+
   // Эффект для синхронизации времени видео с общим состоянием
   useEffect(() => {
     if (!activeVideo) return
@@ -237,86 +328,32 @@ export const ActiveVideo = () => {
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [isPlaying, activeVideo, setIsPlaying])
 
-  // Эффект для сброса флага переключения камеры после небольшой задержки
-  useEffect(() => {
-    if (isChangingCamera) {
-      console.log("[ChangingCamera] Обнаружено переключение камеры")
-
-      // Сохраняем текущее время для синхронизации между треками
-      if (activeVideo) {
-        // Если есть видео, стараемся сохранить точную временную синхронизацию
-        console.log("[ChangingCamera] Текущее время при переключении:", currentTime.toFixed(3))
-
-        // Постановка видео на паузу, если нужно (убираем запуск во время переключения)
-        const videoElement = videoRefs[activeVideo.id]
-        if (videoElement) {
-          if (Math.abs(videoElement.currentTime - currentTime) > 0.1) {
-            console.log("[ChangingCamera] Синхронизация текущего времени")
-            videoElement.currentTime = currentTime
-          }
-
-          // Особая обработка для записи - всегда запускаем воспроизведение
-          if (isRecordingSchema) {
-            console.log("[ChangingCamera] В режиме записи - продолжаем воспроизведение")
-            setIsPlaying(true)
-            try {
-              videoElement.play().catch((err) => {
-                console.error("[ChangingCamera] Ошибка воспроизведения при записи:", err)
-              })
-            } catch (error) {
-              console.error("[ChangingCamera] Ошибка при воспроизведении во время записи:", error)
-            }
-          }
-          // Обычное воспроизведение, если нужно
-          else if (isPlaying && videoElement.paused) {
-            try {
-              videoElement.play().catch((err) => {
-                console.error("[ChangingCamera] Ошибка воспроизведения:", err)
-              })
-            } catch (error) {
-              console.error("[ChangingCamera] Ошибка при воспроизведении:", error)
-            }
-          }
-        }
-      }
-
-      // Сбрасываем флаг isChangingCamera через небольшую задержку после переключения
-      const timeout = setTimeout(() => {
-        resetChangingCamera()
-        console.log("[ChangingCamera] Сброс флага isChangingCamera, время:", currentTime.toFixed(3))
-      }, 100) // Уменьшаем задержку для более быстрого сброса флага
-
-      return () => clearTimeout(timeout)
-    }
-  }, [
-    isChangingCamera,
-    resetChangingCamera,
-    videoRefs,
-    activeVideo,
-    currentTime,
-    isPlaying,
-    isRecordingSchema,
-    setIsPlaying,
-  ])
-
   if (!activeVideo) return null
+
+  const videoStartTime = activeVideo.startTime || 0
+  const videoEndTime = videoStartTime + (activeVideo.duration || 0)
+  const isTimeInRange = currentTime >= videoStartTime && currentTime <= videoEndTime
 
   return (
     <div className="relative h-full flex flex-col">
       <div className="flex-1 relative bg-black">
-        <video
-          ref={(el) => {
-            if (el && activeVideo) {
-              videoRefs[activeVideo.id] = el
-            }
-          }}
-          src={activeVideo.path}
-          className="absolute inset-0 w-full h-full object-contain"
-          onClick={handlePlayPause}
-          playsInline
-          preload="auto"
-          disablePictureInPicture
-        />
+        {isTimeInRange ? (
+          <video
+            ref={(el) => {
+              if (el && activeVideo) {
+                videoRefs[activeVideo.id] = el
+              }
+            }}
+            src={activeVideo.path}
+            className="absolute inset-0 w-full h-full object-contain"
+            onClick={handlePlayPause}
+            playsInline
+            preload="auto"
+            disablePictureInPicture
+          />
+        ) : (
+          <div className="absolute inset-0 w-full h-full bg-black" />
+        )}
       </div>
       <PlayerControls currentTime={currentTime} />
     </div>
