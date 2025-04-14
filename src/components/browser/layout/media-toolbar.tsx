@@ -7,7 +7,6 @@ import {
   Folder,
   Grid,
   Grid2x2,
-  Group,
   List,
   ListFilterPlus,
   Mic,
@@ -304,7 +303,7 @@ export function MediaToolbar({
 
         {/* Sort Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="w-6 h-6 cursor-pointer">
@@ -344,7 +343,7 @@ export function MediaToolbar({
 
         {/* Filter Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" className="w-6 h-6 cursor-pointer">
@@ -385,7 +384,7 @@ export function MediaToolbar({
 
         {/* Group Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" className="w-6 h-6 cursor-pointer">

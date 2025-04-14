@@ -4,8 +4,6 @@ import { useRootStore } from "@/hooks/use-root-store"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { TimelineTrack } from "@/types/timeline"
 
-import { Waveform } from "../waveform"
-
 interface VideoTrackProps {
   track: TimelineTrack
   index: number
@@ -375,32 +373,16 @@ const VideoTrack = memo(function VideoTrack({
                                   )}
                                 </div>
                               </div>
-                              {isVisible &&
-                                video.probeData?.streams?.[0]?.codec_type === "audio" && (
-                                  <div
-                                    className="w-full relative pointer-events-none"
-                                    style={{
-                                      height: "45px",
-                                      minHeight: "45px",
-                                      backgroundColor: "transparent",
-                                    }}
-                                  >
-                                    <Waveform audioUrl={video.path} />
-                                  </div>
-                                )}
-                              <video
-                                ref={(el) => {
-                                  if (el) {
-                                    videoElementsRef.current[video.id] = el
-                                    const trackVolume = trackVolumes[track.id] ?? 1
-                                    el.volume = globalVolume * trackVolume
-                                  }
+                              {/* <div
+                                className="w-full absolute bottom-0 left-0"
+                                style={{
+                                  height: "40px",
+                                  minHeight: "40px",
+                                  // backgroundColor: "transparent",
                                 }}
-                                src={video.path}
-                                preload="auto"
-                                loop
-                                style={{ display: "none" }}
-                              />
+                              >
+                                <Waveform audioUrl={video.path} />
+                              </div> */}
                               <div
                                 className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"
                                 style={{

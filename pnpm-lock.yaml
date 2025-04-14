@@ -134,6 +134,9 @@ importers:
       tailwindcss-animate:
         specifier: ^1.0.7
         version: 1.0.7(tailwindcss@4.1.3)
+      wavesurfer-react:
+        specifier: ^3.0.4
+        version: 3.0.4(react@19.1.0)(wavesurfer.js@7.9.4)
       wavesurfer.js:
         specifier: ^7.9.4
         version: 7.9.4
@@ -7106,6 +7109,12 @@ packages:
   watchpack@2.4.2:
     resolution: {integrity: sha512-TnbFSbcOCcDgjZ4piURLCbJ3nJhznVh9kw6F6iokjiFPl8ONxe9A6nMDVXDiNbrSfLILs6vB07F7wLBrwPYzJw==}
     engines: {node: '>=10.13.0'}
+
+  wavesurfer-react@3.0.4:
+    resolution: {integrity: sha512-Eq+9ihd28UhX23ZVRrg9llpfo4ejUbYZ8oMEx+XwoymHiwLw44GwYVAo+iUPl9W8aVxuoncBKjbslukvqv0kFw==}
+    peerDependencies:
+      react: ^16 || ^17 || ^18 || ^19
+      wavesurfer.js: ^7
 
   wavesurfer.js@7.9.4:
     resolution: {integrity: sha512-ahOMvrOKo5jULNnXq8Ske8v/ZStoNNTDjYohvgLNerUFuh+6fJSt7wlxFesEXmnlcTnjMy5/tIzhn9KusjO6bg==}
@@ -15147,6 +15156,11 @@ snapshots:
     dependencies:
       glob-to-regexp: 0.4.1
       graceful-fs: 4.2.11
+
+  wavesurfer-react@3.0.4(react@19.1.0)(wavesurfer.js@7.9.4):
+    dependencies:
+      react: 19.1.0
+      wavesurfer.js: 7.9.4
 
   wavesurfer.js@7.9.4: {}
 

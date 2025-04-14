@@ -91,13 +91,3 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
     </div>
   )
 }
-
-function formatTime(seconds: number): string {
-  const date = new Date(seconds * 1000)
-  const hours = date.getUTCHours()
-  const minutes = date.getUTCMinutes()
-  const secs = date.getUTCSeconds()
-  const ms = date.getUTCMilliseconds()
-
-  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${ms.toString().padStart(3, "0")}`
-}

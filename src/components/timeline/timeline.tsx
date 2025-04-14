@@ -120,22 +120,13 @@ export function Timeline() {
       })
     })
 
-    // Преобразуем мапу в массив секций
-    return Array.from(videosByDay.entries())
-      .map(([date, data]) => ({
-        date,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        duration: data.endTime - data.startTime,
-        tracks: data.tracks.map((track) => ({
-          ...track,
-          videos: track.videos.filter((video) => {
-            const videoStart = video.startTime || 0
-            return new Date(videoStart * 1000).toDateString() === date
-          }),
-        })),
-      }))
-      .sort((a, b) => a.startTime - b.startTime)
+    return Array.from(videosByDay.entries()).map(([date, data]) => ({
+      date,
+      startTime: data.startTime,
+      endTime: data.endTime,
+      duration: data.endTime - data.startTime,
+      tracks: data.tracks,
+    }))
   }, [tracks])
 
   // Обработчик нажатия клавиш - перемещен сюда после определения sections
@@ -431,7 +422,7 @@ export function Timeline() {
   }
 
   return (
-    <div className="relative w-full overflow-x-auto overflow-y-auto">
+    <div className="relative w-full h-full overflow-x-auto overflow-y-auto">
       <div className="flex items-center justify-between px-4 py-2 border-b border-border">
         <div className="flex items-center gap-2">
           <button
@@ -536,7 +527,7 @@ export function Timeline() {
                 {section.tracks.map((track, index) => (
                   <div
                     key={track.id}
-                    className="relative border-b border-gray-700/50 h-21"
+                    className="relative border-b border-gray-700/50"
                     style={{
                       marginTop: index === 0 ? 0 : "1px",
                       // paddingBottom: "1px",
@@ -555,10 +546,10 @@ export function Timeline() {
                 ))}
               </div>
               <TimelineBar
-                  startTime={section.startTime}
-                  endTime={section.endTime}
-                  height={section.tracks.length * 85 + 46}
-                />
+                startTime={section.startTime}
+                endTime={section.endTime}
+                height={section.tracks.length * 80 + 46}
+              />
             </div>
           </div>
         ))}

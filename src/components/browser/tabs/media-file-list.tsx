@@ -875,6 +875,14 @@ export const MediaFileList = memo(function MediaFileList({
       e.stopPropagation()
       if (!file.path || addedFiles.has(file.path)) return
 
+      // Останавливаем все видео в текущей группе
+      const fileId = getFileId(file)
+      const videoElement = videoRefs.current[`${fileId}-0`]
+      if (videoElement) {
+        videoElement.pause()
+        videoElement.currentTime = 0
+      }
+
       // Проверяем, является ли файл изображением
       if (file.isImage) {
         console.log("[handleAddMedia] Добавляем изображение только в медиафайлы:", file.name)
@@ -900,7 +908,7 @@ export const MediaFileList = memo(function MediaFileList({
         })
       }
     },
-    [addNewTracks, addedFiles],
+    [addNewTracks, addedFiles, getFileId, videoRefs],
   )
 
   const handleAddAllFiles = useCallback(() => {
@@ -1147,7 +1155,7 @@ export const MediaFileList = memo(function MediaFileList({
             <div
               key={fileId}
               className={cn(
-                "flex items-center p-[2px] h-full",
+                "flex items-center p-0 h-full",
                 "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
                 isAdded && "pointer-events-none",
               )}
@@ -1185,6 +1193,7 @@ export const MediaFileList = memo(function MediaFileList({
       if (!group.title) {
         return (
           <div
+            key="ungrouped"
             className={
               viewMode === "grid"
                 ? "flex flex-wrap gap-3 items-left"
@@ -1193,13 +1202,13 @@ export const MediaFileList = memo(function MediaFileList({
                   : "space-y-1"
             }
           >
-            {group.files.map(renderFile)}
+            {group.files.map((file) => renderFile(file))}
           </div>
         )
       }
 
       return (
-        <div className="mb-4">
+        <div key={group.title} className="mb-4">
           <div className="flex items-center justify-between mb-2 px-2">
             <h3 className="text-sm font-medium">{group.title}</h3>
             <Button
@@ -1240,13 +1249,13 @@ export const MediaFileList = memo(function MediaFileList({
                 : "space-y-1"
             }
           >
-            {group.files.map(renderFile)}
+            {group.files.map((file) => renderFile(file))}
           </div>
         </div>
       )
     }
 
-    return <div className="space-y-4">{groupedFiles.map(renderGroup)}</div>
+    return <div className="space-y-4">{groupedFiles.map((group, index) => renderGroup(group))}</div>
   }
 
   console.log("[MediaFileList] Rendering media list with:", {
