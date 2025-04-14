@@ -79,13 +79,13 @@ export default async function handler(
           const startTime = getMediaCreationTime(probeData)
           const duration = probeData.format.duration || 0
 
-          console.log(`[API] Данные файла ${file}:`, {
-            isVideo,
-            isImage,
-            startTime,
-            duration,
-            hasStreams: probeData.streams?.length || 0,
-          })
+          // console.log(`[API] Данные файла ${file}:`, {
+          //   isVideo,
+          //   isImage,
+          //   startTime,
+          //   duration,
+          //   hasStreams: probeData.streams?.length || 0,
+          // })
 
           // console.log(probeData.format)
 
