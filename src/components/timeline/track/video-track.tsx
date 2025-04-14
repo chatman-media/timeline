@@ -88,21 +88,20 @@ const VideoTrack = memo(function VideoTrack({
           console.log(`[VideoTrack] Устанавливаем активное видео ${videoId}`)
           setActiveVideo(videoId)
         }
-      } else {
-        // Трек уже выбран, значит это навигация внутри трека
-        if (videoId) {
-          console.log(`[VideoTrack] Навигация внутри трека ${track.id} к видео ${videoId}`)
-          setActiveVideo(videoId)
+      }
+      // Трек уже выбран, значит это навигация внутри трека
+      if (videoId) {
+        console.log(`[VideoTrack] Навигация внутри трека ${track.id} к видео ${videoId}`)
+        setActiveVideo(videoId)
 
-          // Находим видео и устанавливаем время начала только для внутритрековой навигации
-          const video = track.videos.find((v) => v.id === videoId)
-          if (video) {
-            const videoStartTime = video.startTime ?? 0
-            console.log(`[VideoTrack] Устанавливаем время ${videoStartTime}`)
-            setCurrentTime(videoStartTime)
-            // Останавливаем воспроизведение при перемещении внутри трека
-            setIsPlaying(false)
-          }
+        // Находим видео и устанавливаем время начала только для внутритрековой навигации
+        const video = track.videos.find((v) => v.id === videoId)
+        if (video) {
+          const videoStartTime = video.startTime ?? 0
+          console.log(`[VideoTrack] Устанавливаем время ${videoStartTime}`)
+          setCurrentTime(videoStartTime)
+          // Останавливаем воспроизведение при перемещении внутри трека
+          setIsPlaying(false)
         }
       }
     },
@@ -139,7 +138,7 @@ const VideoTrack = memo(function VideoTrack({
     <div className="flex" ref={containerRef}>
       <div className="w-full h-full">
         <div
-          className="h-full"
+          className="h-full relative"
           style={{
             left: `${startOffset}%`,
             width: `${width}%`,
@@ -324,7 +323,7 @@ const VideoTrack = memo(function VideoTrack({
                                         </span>
                                       )}
                                     </div>
-                                  ) : video.probeData?.streams?.[0]?.codec_type === "audio" ? (
+                                  ) : (
                                     <div className="flex flex-row video-metadata truncate text-xs text-white bg-[#033032] px-1">
                                       {video.probeData?.streams[0]?.codec_name && (
                                         <span className="mr-1 font-medium">
@@ -359,30 +358,9 @@ const VideoTrack = memo(function VideoTrack({
                                         </span>
                                       )}
                                     </div>
-                                  ) : (
-                                    <div className="flex flex-row video-metadata truncate text-xs text-white bg-[#033032] px-1 rounded">
-                                      <span>Нет данных</span>
-                                      {video.duration !== undefined && (
-                                        <span className="ml-1">
-                                          {video.duration > 0
-                                            ? formatDuration(video.duration, 3)
-                                            : ""}
-                                        </span>
-                                      )}
-                                    </div>
                                   )}
                                 </div>
                               </div>
-                              {/* <div
-                                className="w-full absolute bottom-0 left-0"
-                                style={{
-                                  height: "40px",
-                                  minHeight: "40px",
-                                  // backgroundColor: "transparent",
-                                }}
-                              >
-                                <Waveform audioUrl={video.path} />
-                              </div> */}
                               <div
                                 className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"
                                 style={{

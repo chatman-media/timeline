@@ -422,7 +422,7 @@ export function Timeline() {
   }
 
   return (
-    <div className="relative w-full h-full overflow-x-auto overflow-y-auto">
+    <div className="flex flex-col w-full h-full">
       <div className="flex items-center justify-between px-4 py-2 border-b border-border">
         <div className="flex items-center gap-2">
           <button
@@ -500,8 +500,8 @@ export function Timeline() {
         </div>
         <TimelineControls scale={scale} setScale={setScale} />
       </div>
-      <div className="relative w-full h-full">
-        {[...sections].reverse().map((section) => (
+      <div className="relative w-full h-full overflow-x-auto overflow-y-auto">
+        {[...sections].map((section) => (
           <div
             key={section.date}
             className={`relative mb-4 ${section.date === activeDate ? "" : "opacity-50"} timeline-section`}
@@ -523,15 +523,13 @@ export function Timeline() {
                 duration={section.duration}
                 scale={scale}
               />
-              <div className="flex-1 w-full h-full relative border-t border-gray-700/50">
+              <div className="flex-1 w-full h-full relative border-t border-border">
                 {section.tracks.map((track, index) => (
                   <div
                     key={track.id}
-                    className="flex-1 relative border-b border-gray-700/50"
-                    style={{
-                      marginTop: index === 0 ? 0 : "1px",
-                      // paddingBottom: "1px",
-                    }}
+                    className={`flex-1 relative my-1 mt-${index === 0 ? 0 : 1} mb-${
+                      index === section.tracks.length - 1 ? 0 : 1
+                    }`}
                   >
                     <VideoTrack
                       track={{
@@ -554,7 +552,6 @@ export function Timeline() {
           </div>
         ))}
       </div>
-
       {/* Модальное окно подтверждения удаления секции */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
