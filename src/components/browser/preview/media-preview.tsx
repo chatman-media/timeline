@@ -32,6 +32,7 @@ interface MediaPreviewProps {
   size?: number
   showFileName?: boolean
   fixedSize?: boolean
+  hideTime?: boolean
 }
 
 // Оборачиваем в memo для предотвращения ненужных рендеров
@@ -53,6 +54,7 @@ export const MediaPreview = memo(function MediaPreview({
   size = 60,
   showFileName = false,
   fixedSize = false,
+  hideTime = false,
 }: MediaPreviewProps) {
   // Преобразует rotation из string в number, или возвращает undefined
   const parseRotation = (rotation?: string | number): number | undefined => {
@@ -136,7 +138,8 @@ export const MediaPreview = memo(function MediaPreview({
           )}
         {file.probeData?.streams &&
           file.probeData.streams.filter((s) => s.codec_type === "video" || s.codec_type === "audio")
-            .length > 1 && (
+            .length > 1 &&
+          !hideTime && (
             <div
               className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/65 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
             >
@@ -190,7 +193,8 @@ export const MediaPreview = memo(function MediaPreview({
         onMouseLeave={() => handleMouseLeave(`${fileId}-0`)}
       >
         {file.probeData?.streams &&
-          file.probeData.streams.filter((s) => s.codec_type === "audio").length > 0 && (
+          file.probeData.streams.filter((s) => s.codec_type === "audio").length > 0 &&
+          !hideTime && (
             <div
               className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/65 rounded ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
             >
@@ -408,7 +412,8 @@ export const MediaPreview = memo(function MediaPreview({
               {file.probeData?.streams &&
                 file.probeData.streams.filter(
                   (s) => s.codec_type === "video" || s.codec_type === "audio",
-                ).length > 1 && (
+                ).length > 1 &&
+                !hideTime && (
                   <div
                     className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/65 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
                   >

@@ -1100,6 +1100,7 @@ export const MediaFileList = memo(function MediaFileList({
                   onAddMedia={handleAddMedia}
                   isAdded={isAdded}
                   size={previewSize}
+                  hideTime={true}
                 />
               </div>
               <FileInfo file={file} size={previewSize} />
