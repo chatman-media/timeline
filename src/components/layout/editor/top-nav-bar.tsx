@@ -1,14 +1,14 @@
-import { Cloud, Keyboard, Layout, ListTodo, Save, Send, Settings, Upload } from "lucide-react"
+import { Keyboard, Layout, ListTodo, Save, Send, Settings } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useRootStore } from "@/hooks/use-root-store"
 import { cn } from "@/lib/utils"
+import { ProjectSettingsDialog } from "@/components/player/project-settings-dialog"
 
 import { ThemeToggle } from "../theme-toggle"
 import { LayoutMode, LayoutPreviews } from "./layouts/layout-previews"
-import { SaveStatus } from "./save-status"
 
 interface TopNavBarProps {
   onLayoutChange: (mode: LayoutMode) => void
@@ -20,6 +20,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
   const { saveState, isSaved, markAsSaved } = useRootStore()
   const [projectName, setProjectName] = useState("Без названия #1")
   const [isEditing, setIsEditing] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setProjectName(e.target.value)
@@ -40,14 +41,47 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
     <div className="flex items-center justify-between w-full py-[2px] px-1 bg-gray-200 dark:bg-[#1b1a1f] relative">
       <div className="flex items-center h-6">
         <ThemeToggle />
+        <Button
+          className="cursor-pointer p-0 h-6 w-6"
+          variant="ghost"
+          size="icon"
+          title="Быстрые клавиши"
+        >
+          <Keyboard className="h-3.5 w-3.5" />
+        </Button>
       </div>
-      <div className="absolute left-0 right-0 flex justify-center pointer-events-none">
+      <div className="flex items-center gap-2">
+        <Button
+          className="cursor-pointer p-0 h-6 w-6"
+          variant="ghost"
+          size="icon"
+          title="Настройки"
+          onClick={() => setIsSettingsOpen(true)}
+        >
+          <Settings className="h-3.5 w-3.5" />
+        </Button>
+        <Button
+          className={cn(
+            "cursor-pointer p-0 h-6 w-6",
+            isSaved ? "opacity-50 hover:opacity-50" : "opacity-100 hover:bg-accent",
+          )}
+          variant="ghost"
+          size="icon"
+          title={isSaved ? "Все изменения сохранены" : "Сохранить изменения"}
+          onClick={handleSave}
+          disabled={isSaved}
+        >
+          <Save className="h-3.5 w-3.5" />
+        </Button>
+
         <div
-          className="text-xs font-medium relative group flex items-center gap-2 pointer-events-auto"
-          onMouseEnter={() => !isEditing && setIsEditing(true)}
-          onMouseLeave={() =>
-            !document.activeElement?.id?.includes("project-name") && setIsEditing(false)
-          }
+          className={cn(
+            "relative group w-[200px] text-xs",
+            isEditing
+              ? "ring-1 ring-[#3ebfb2]"
+              : "group-hover:ring-1 group-hover:ring-[#3ebfb2] transition-colors",
+          )}
+          onClick={() => setIsEditing(true)}
         >
           {isEditing ? (
             <input
@@ -57,15 +91,14 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
               onChange={handleNameChange}
               onKeyDown={handleKeyDown}
               onBlur={() => setIsEditing(false)}
-              className="text-xs bg-transparent border-b border-gray-400 focus:outline-none focus:border-primary text-center min-w-[70px]"
+              className="text-xs bg-transparent focus:outline-none w-full pl-[1px]"
               autoFocus
             />
           ) : (
-            <span className="group-hover:border-b group-hover:border-dashed group-hover:border-gray-400 pb-0.5">
+            <span className="block truncate hover:border pl-[1px] hover:pl-[0px] hover:border-[#3ebfb2]">
               {projectName}
             </span>
           )}
-          <SaveStatus />
         </div>
       </div>
       <div className="flex items-center space-x-0 h-6">
@@ -120,19 +153,6 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
             />
           </PopoverContent>
         </Popover>
-        <Button
-          className={cn(
-            "cursor-pointer p-0 h-6 w-6",
-            isSaved ? "opacity-50 hover:opacity-50" : "opacity-100 hover:bg-accent",
-          )}
-          variant="ghost"
-          size="icon"
-          title={isSaved ? "Все изменения сохранены" : "Сохранить изменения"}
-          onClick={handleSave}
-          disabled={isSaved}
-        >
-          <Save className="h-3.5 w-3.5" />
-        </Button>
         {/* <Button
           variant="ghost"
           size="icon"
@@ -142,24 +162,9 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         >
           <Upload className="h-3.5 w-3.5" />
         </Button> */}
-        <Button
-          className="cursor-pointer p-0 h-6 w-6"
-          variant="ghost"
-          size="icon"
-          title="Быстрые клавиши"
-        >
-          <Keyboard className="h-3.5 w-3.5" />
-        </Button>
-        <Button
-          className="cursor-pointer p-0 h-6 w-6"
-          variant="ghost"
-          size="icon"
-          title="Настройки"
-        >
-          <Settings className="h-3.5 w-3.5" />
-        </Button>
       </div>
       {/* <ExportDialog open={isExportOpen} onOpenChange={setIsExportOpen} /> */}
+      <ProjectSettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
     </div>
   )
 }

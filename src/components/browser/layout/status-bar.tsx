@@ -1,11 +1,8 @@
-import { Check, CopyPlus, SquarePlus } from "lucide-react"
+import { CopyPlus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { MediaFile } from "@/types/videos"
 import { getFileType } from "@/utils/media-utils"
-
-import { ActionButton } from "./action-button"
 
 interface StatusBarProps {
   media: MediaFile[]

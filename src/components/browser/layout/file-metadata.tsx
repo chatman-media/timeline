@@ -4,13 +4,13 @@ import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/li
 import { MediaFile } from "@/types/videos"
 import { getAspectRatio, getFps } from "@/utils/video-utils"
 
-interface FileInfoProps {
+interface FileMetadataProps {
   file: MediaFile
   size?: number
 }
 
 // Оборачиваем в memo для предотвращения лишних рендеров
-export const FileInfo = memo(function FileInfo({ file, size = 100 }: FileInfoProps) {
+export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: FileMetadataProps) {
   const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
 
   return (

@@ -21,8 +21,6 @@ import { Slider } from "@/components/ui/slider"
 import { useRootStore } from "@/hooks/use-root-store"
 import { cn } from "@/lib/utils"
 
-import { ProjectSettingsDialog } from "./project-settings-dialog"
-
 interface PlayerControlsProps {
   currentTime: number
 }
@@ -35,11 +33,8 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setCurrentTime,
     volume: globalVolume,
     setVolume: setGlobalVolume,
-    isSeeking,
     setIsSeeking,
-    tracks,
     activeTrackId,
-    timeRanges,
     initializeHistory,
     isRecordingSchema,
     startRecordingSchema,
@@ -48,9 +43,6 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const lastSaveTime = useRef(0)
   const SAVE_INTERVAL = 5000 // Сохраняем каждые 5 секунд
-  const [aspectRatioModalOpen, setAspectRatioModalOpen] = useState(false)
-  const [showSafeZones, setShowSafeZones] = useState(false)
-  const [showRuler, setShowRuler] = useState(false)
 
   // Загружаем состояние при монтировании компонента
   useEffect(() => {
@@ -381,7 +373,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               variant="ghost"
               size="icon"
               title="Настройки"
-              onClick={() => setAspectRatioModalOpen(true)}
+              onClick={() => {}}
             >
               <MonitorCog className="w-4 h-4" />
             </Button>
@@ -434,8 +426,6 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
           </div>
         </div>
       </div>
-
-      <ProjectSettingsDialog open={aspectRatioModalOpen} onOpenChange={setAspectRatioModalOpen} />
     </div>
   )
 }

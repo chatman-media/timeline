@@ -14,6 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { useProjectStore } from "@/store/project-store"
+import { AspectRatio, ColorSpace, FrameRate, Resolution } from "@/types/project"
 
 interface ProjectSettingsDialogProps {
   open: boolean
@@ -21,170 +23,152 @@ interface ProjectSettingsDialogProps {
 }
 
 export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDialogProps) {
+  const { settings, updateSettings } = useProjectStore()
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-[#1a1a1a] text-white border-[#333]">
+      <DialogContent className="[&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className="text-white text-center text-xl">
-            Настройки проекта
-          </DialogTitle>
+          <DialogTitle className=" text-center text-md">Настройки проекта</DialogTitle>
         </DialogHeader>
-        <div className="flex flex-col space-y-6 py-4">
-          <div className="flex justify-between items-center">
-            <Label className="text-[#ccc]">Соотношение сторон:</Label>
-            <Select defaultValue="16:9">
-              <SelectTrigger className="w-[300px] bg-[#1a1a1a] border-[#333] text-white">
+        <div className="flex flex-col space-y-6 py-1">
+          <div className="flex justify-end items-center">
+            <Label className="text-xs mr-2">Соотношение сторон:</Label>
+            <Select
+              value={settings.aspectRatio}
+              onValueChange={(value: AspectRatio) => updateSettings({ aspectRatio: value })}
+            >
+              <SelectTrigger className="w-[300px] ">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
-                <SelectItem value="16:9" className="text-white hover:bg-[#333] focus:bg-[#333]">
+              <SelectContent className="">
+                <SelectItem value="16:9" className="">
                   16:9 (Широкоэкранный)
                 </SelectItem>
-                <SelectItem value="9:16" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="9:16" className="">
                   9:16 (Портрет)
                 </SelectItem>
-                <SelectItem value="1:1" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="1:1" className="">
                   1:1 (Instagram)
                 </SelectItem>
-                <SelectItem value="4:3" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="4:3" className="">
                   4:3 (Стандарт)
                 </SelectItem>
-                <SelectItem value="4:5" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="4:5" className="">
                   4:5 (Вертикальный)
                 </SelectItem>
-                <SelectItem value="21:9" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="21:9" className="">
                   21:9 (Кинотеатр)
                 </SelectItem>
-                <SelectItem value="3:4" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="3:4" className="">
                   3:4 (Бизнес)
                 </SelectItem>
-                <SelectItem
-                  value="custom"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+                <SelectItem value="custom" className="">
                   Пользовательское
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex justify-between items-center">
-            <Label className="text-[#ccc]">Разрешение:</Label>
-            <Select defaultValue="4096x2160">
-              <SelectTrigger className="w-[300px] bg-[#1a1a1a] border-[#333] text-white">
+          <div className="flex justify-end items-center">
+            <Label className="text-xs mr-2">Разрешение:</Label>
+            <Select
+              value={settings.resolution}
+              onValueChange={(value: Resolution) => updateSettings({ resolution: value })}
+            >
+              <SelectTrigger className="w-[300px] ">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
-                <SelectItem
-                  value="1280x720"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+              <SelectContent className="">
+                <SelectItem value="1280x720" className="">
                   1280x720 (HD)
                 </SelectItem>
                 <SelectItem
                   value="1920x1080"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
+                  className=""
                 >
                   1920x1080 (Full HD)
                 </SelectItem>
                 <SelectItem
                   value="3840x2160"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
+                  className=""
                 >
                   3840x2160 (4k UHD)
                 </SelectItem>
                 <SelectItem
                   value="4096x2160"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
+                  className=""
                 >
                   4096x2160 (DCI 4k)
                 </SelectItem>
-                <SelectItem
-                  value="custom"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+                <SelectItem value="custom" className="">
                   Пользовательское
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex justify-between items-center">
-            <Label className="text-[#ccc]">Частота кадров:</Label>
-            <Select defaultValue="30">
-              <SelectTrigger className="w-[300px] bg-[#1a1a1a] border-[#333] text-white">
+          <div className="flex justify-end items-center">
+            <Label className="text-xs mr-2">Частота кадров:</Label>
+            <Select
+              value={settings.frameRate}
+              onValueChange={(value: FrameRate) => updateSettings({ frameRate: value })}
+            >
+              <SelectTrigger className="w-[300px] ">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
-                <SelectItem
-                  value="23.97"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+              <SelectContent className="">
+                <SelectItem value="23.97" className="">
                   23.97 fps
                 </SelectItem>
-                <SelectItem value="24" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="24" className="">
                   24 fps
                 </SelectItem>
-                <SelectItem value="25" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="25" className="">
                   25 fps
                 </SelectItem>
-                <SelectItem
-                  value="29.97"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+                <SelectItem value="29.97" className="">
                   29.97 fps
                 </SelectItem>
-                <SelectItem value="30" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="30" className="">
                   30 fps
                 </SelectItem>
-                <SelectItem value="50" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="50" className="">
                   50 fps
                 </SelectItem>
-                <SelectItem
-                  value="59.94"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+                <SelectItem value="59.94" className="">
                   59.94 fps
                 </SelectItem>
-                <SelectItem value="60" className="text-white hover:bg-[#333] focus:bg-[#333]">
+                <SelectItem value="60" className="">
                   60 fps
                 </SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          <div className="flex justify-between items-center">
-            <Label className="text-[#ccc]">Цветовое пространство:</Label>
-            <Select defaultValue="sdr">
-              <SelectTrigger className="w-[300px] bg-[#1a1a1a] border-[#333] text-white">
+          <div className="flex justify-end items-center">
+            <Label className="text-xs mr-2">Цветовое пространство:</Label>
+            <Select
+              value={settings.colorSpace}
+              onValueChange={(value: ColorSpace) => updateSettings({ colorSpace: value })}
+            >
+              <SelectTrigger className="w-[300px] ">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#1a1a1a] border-[#333] text-white">
-                <SelectItem value="sdr" className="text-white hover:bg-[#333] focus:bg-[#333]">
+              <SelectContent className="">
+                <SelectItem value="sdr" className="">
                   SDR - Rec.709
                 </SelectItem>
-                <SelectItem
-                  value="dci-p3"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+                <SelectItem value="dci-p3" className="">
                   DCI-P3
                 </SelectItem>
-                <SelectItem
-                  value="p3-d65"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+                <SelectItem value="p3-d65" className="">
                   P3-D65
                 </SelectItem>
-                <SelectItem
-                  value="hdr-hlg"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+                <SelectItem value="hdr-hlg" className="">
                   HDR - Rec.2100HLG
                 </SelectItem>
-                <SelectItem
-                  value="hdr-pq"
-                  className="text-white hover:bg-[#333] focus:bg-[#333]"
-                >
+                <SelectItem value="hdr-pq" className="">
                   HDR - Rec.2100PQ
                 </SelectItem>
               </SelectContent>
@@ -193,18 +177,17 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
         </div>
         <DialogFooter className="flex justify-between space-x-4">
           <Button
-            variant="outline"
-            className="flex-1 text-white bg-[#333333] hover:bg-[#444444] border-none"
+            variant="default"
+            className="flex-1 cursor-pointer"
             onClick={() => onOpenChange(false)}
           >
             Отменить
           </Button>
           <Button
             variant="default"
-            className="flex-1 bg-[#00CCC0] hover:bg-[#00AAA0] text-black border-none"
+            className="flex-1 bg-[#00CCC0] cursor-pointer hover:bg-[#00AAA0] text-black"
             onClick={() => {
               onOpenChange(false)
-              // Здесь логика сохранения настроек
             }}
           >
             OK
@@ -213,4 +196,4 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
       </DialogContent>
     </Dialog>
   )
-} 
+}

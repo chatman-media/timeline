@@ -10,7 +10,7 @@ import { MediaFile } from "@/types/videos"
 import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
-import { FileInfo, MediaPreview, StatusBar } from ".."
+import { FileMetadata, MediaPreview, StatusBar } from ".."
 import { Button } from "@/components/ui/button"
 import { CopyPlus } from "lucide-react"
 
@@ -1039,7 +1039,7 @@ export const MediaFileList = memo(function MediaFileList({
     return (
       <div className="flex flex-col h-full overflow-hidden">
         <div className="flex-1 p-3 pb-1">
-        <Skeleton className="w-full h-8 rounded" />
+          <Skeleton className="w-full h-8 rounded" />
         </div>
         <div className="p-4 space-y-4">
           {Array.from({ length: 5 }).map((_, index) => (
@@ -1113,7 +1113,7 @@ export const MediaFileList = memo(function MediaFileList({
                   hideTime={true}
                 />
               </div>
-              <FileInfo file={file} size={previewSize} />
+              <FileMetadata file={file} size={previewSize} />
             </div>
           )
 

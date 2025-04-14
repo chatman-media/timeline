@@ -1,3 +1,2 @@
-export * from "./action-button"
-export * from "./file-info"
+export * from "./file-metadata"
 export * from "./status-bar"
