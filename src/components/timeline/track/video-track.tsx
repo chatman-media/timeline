@@ -137,9 +137,9 @@ const VideoTrack = memo(function VideoTrack({
 
   return (
     <div className="flex" ref={containerRef}>
-      <div className="w-full">
+      <div className="w-full h-full">
         <div
-          className="absolute h-full"
+          className="h-full"
           style={{
             left: `${startOffset}%`,
             width: `${width}%`,

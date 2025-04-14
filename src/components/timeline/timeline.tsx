@@ -523,11 +523,11 @@ export function Timeline() {
                 duration={section.duration}
                 scale={scale}
               />
-              <div className="relative border-t border-gray-700/50">
+              <div className="flex-1 w-full h-full relative border-t border-gray-700/50">
                 {section.tracks.map((track, index) => (
                   <div
                     key={track.id}
-                    className="relative border-b border-gray-700/50"
+                    className="flex-1 relative border-b border-gray-700/50"
                     style={{
                       marginTop: index === 0 ? 0 : "1px",
                       // paddingBottom: "1px",
