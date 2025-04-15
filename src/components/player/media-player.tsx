@@ -9,20 +9,15 @@ export function MediaPlayer() {
     videoRefs,
     setTime,
     currentTime,
-    setVideo,
-    setTrack,
     isPlaying,
     setPlaying,
     duration,
-    setDuration,
     isSeeking,
     setSeeking,
     seek,
     isChangingCamera,
     resetCamera,
     isRecordingSchema,
-    volume: globalVolume,
-    trackVolumes,
   } = useTimeline()
 
   if (!activeVideo) {
