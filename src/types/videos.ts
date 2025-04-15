@@ -22,6 +22,7 @@ export interface MediaFile {
   duration?: number
   isVideo?: boolean
   isImage?: boolean
+  isAudio?: boolean
   size?: number
   createdAt?: string
   updatedAt?: string
@@ -48,11 +49,6 @@ export interface VideoSegment {
   duration: number
   type: string
   color?: string
-}
-
-export interface ScreenLayout {
-  type: string
-  activeTracks: string[]
 }
 
 export interface ThumbnailParams {

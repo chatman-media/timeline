@@ -1,15 +1,5 @@
 import { TimeRange } from "@/types/time-range"
-import type { MediaFile, ScreenLayout, Track } from "@/types/videos"
-
-// Убираем Action, если он больше нигде не используется
-/*
-export interface Action {
-  id: number
-  type: string
-  data: any
-  timestamp: number
-}
-*/
+import type { MediaFile, Track } from "@/types/videos"
 
 export interface StateSnapshot {
   id?: number
@@ -38,7 +28,6 @@ export interface MontageSegment {
 export interface EditorState {
   // UI состояние
   layoutMode: string
-  panelLayouts: Record<string, number[]>
   isLoading: boolean
   isPlaying: boolean
   currentTime: number
@@ -51,7 +40,7 @@ export interface EditorState {
   // Медиатека
   media: MediaFile[]
   hasMedia: boolean
-  hasFetched: boolean
+  hasFetched?: boolean | undefined
   metadataCache: Record<string, any>
   thumbnailCache: Record<string, string>
 
@@ -61,8 +50,12 @@ export interface EditorState {
   // Активные элементы
   activeVideo: MediaFile | null
   activeTrackId: string | null
-  currentLayout: ScreenLayout
   videoRefs: { [key: string]: HTMLVideoElement }
+  tracks: Track[]
+  isRecordingSchema: boolean
+  currentRecordingSegmentId: string | null
+  historySnapshotIds: number[]
+  currentHistoryIndex: number
 }
 
 // Состояние для таймлайна (треки, схема монтажа и история)
@@ -163,7 +156,6 @@ export type EventPayloadMap = {
   setState: { state: Partial<StateContext> }
   setHistoryState: { state: Partial<StateContext> }
   setMedia: { media: MediaFile[] }
-  setScreenLayout: { layout: ScreenLayout }
   setActiveVideo: { videoId: string }
   setActiveTrack: { trackId: string }
   setTracks: { tracks: Track[] }
@@ -183,8 +175,8 @@ export type EventPayloadMap = {
   setScale: { scale: number }
   addToMetadataCache: { key: string; data: any }
   addToThumbnailCache: { key: string; data: string }
-  addToAddedFiles: { filePaths: string[] }
-  removeFromAddedFiles: { filePaths: string[] }
+  addToAddedFiles: { data: string[] }
+  removeFromAddedFiles: { data: string[] }
   setVolume: { volume: number }
   setTrackVolume: { trackId: string; volume: number }
   setIsSeeking: { isSeeking: boolean }

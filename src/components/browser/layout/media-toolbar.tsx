@@ -302,7 +302,7 @@ export function MediaToolbar({
 
         {/* Sort Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" className="w-6 h-6 cursor-pointer">
@@ -342,7 +342,7 @@ export function MediaToolbar({
 
         {/* Filter Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" className="w-6 h-6 cursor-pointer">
@@ -383,7 +383,7 @@ export function MediaToolbar({
 
         {/* Group Dropdown */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="sm" className="w-6 h-6 cursor-pointer">

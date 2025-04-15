@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useProjectStore } from "@/store/project-store"
+import { useProject } from "@/machines/project-machine"
 import { AspectRatio, ColorSpace, FrameRate, Resolution } from "@/types/project"
 
 interface ProjectSettingsDialogProps {
@@ -23,7 +23,7 @@ interface ProjectSettingsDialogProps {
 }
 
 export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDialogProps) {
-  const { settings, updateSettings } = useProjectStore()
+  const { settings, updateSettings } = useProject()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

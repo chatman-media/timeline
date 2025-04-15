@@ -1,5 +1,5 @@
 import { Browser } from "@/components/browser/browser"
-import { ActiveVideo } from "@/components/player/media-player"
+import { MediaPlayer } from "@/components/player/media-player"
 import { Timeline } from "@/components/timeline"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
@@ -27,7 +27,7 @@ export function OptionsMediaEditor({}: OptionsLayoutProps) {
                 <ResizableHandle />
                 <ResizablePanel defaultSize={60} minSize={20} maxSize={60}>
                   <div className="flex-1 relative h-full">
-                    <ActiveVideo />
+                    <MediaPlayer />
                   </div>
                 </ResizablePanel>
               </ResizablePanelGroup>

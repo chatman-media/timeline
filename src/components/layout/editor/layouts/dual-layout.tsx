@@ -1,5 +1,5 @@
 import { Browser } from "@/components/browser/browser"
-import { ActiveVideo } from "@/components/player/media-player"
+import { MediaPlayer } from "@/components/player/media-player"
 import { Timeline } from "@/components/timeline"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
@@ -16,7 +16,7 @@ export function DualMediaEditor() {
         <ResizablePanelGroup direction="horizontal" autoSaveId="dual-top-layout">
           <ResizablePanel defaultSize={70} minSize={50} maxSize={85}>
             <div className="flex-1 relative h-full">
-              <ActiveVideo />
+              <MediaPlayer />
             </div>
           </ResizablePanel>
           <ResizableHandle />

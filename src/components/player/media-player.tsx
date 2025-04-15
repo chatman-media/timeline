@@ -1,24 +1,33 @@
 import { useEffect, useRef } from "react"
 
 import { PlayerControls } from "@/components/player/player-controls"
-import { useRootStore } from "@/hooks/use-root-store"
+import { useTimeline } from "@/providers/timeline-provider"
 
-export const ActiveVideo = () => {
+export function MediaPlayer() {
   const {
-    videoRefs,
-    isPlaying,
     activeVideo,
-    setCurrentTime,
-    setIsPlaying,
+    videoRefs,
+    setTime,
+    currentTime,
+    setVideo,
+    setTrack,
+    isPlaying,
+    setPlaying,
+    duration,
+    setDuration,
+    isSeeking,
+    setSeeking,
+    seek,
     isChangingCamera,
+    resetCamera,
+    isRecordingSchema,
     volume: globalVolume,
     trackVolumes,
-    currentTime,
-    isSeeking,
-    setIsSeeking,
-    resetChangingCamera,
-    isRecordingSchema,
-  } = useRootStore()
+  } = useTimeline()
+
+  if (!activeVideo) {
+    return null
+  }
 
   // Используем ref для хранения последнего времени обновления, чтобы избежать слишком частых обновлений
   const lastUpdateTimeRef = useRef(0)
@@ -28,33 +37,37 @@ export const ActiveVideo = () => {
   const lastSentTimeRef = useRef(0)
   // Определяем, короткое ли видео (меньше 10 секунд)
   const isShortVideo = useRef(false)
+  const videoStartTime = useRef(0)
 
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation()
-    setIsPlaying(!isPlaying)
+    if (isPlaying) {
+      setPlaying(false)
+    } else {
+      setPlaying(true)
+    }
   }
 
   // Выводим текущее время только раз в секунду, а не для каждого рендера
   useEffect(() => {
     const debugInterval = setInterval(() => {
-      if (activeVideo) {
-        console.log("[ActiveVideo Debug] Текущее время:", currentTime.toFixed(3))
+      if (activeVideo.id) {
+        console.log("[MediaPlayer Debug] Текущее время:", currentTime.toFixed(3))
       }
     }, 1000)
 
     return () => clearInterval(debugInterval)
-  }, [activeVideo, currentTime])
+  }, [activeVideo.id, currentTime])
 
   useEffect(() => {
-    if (!activeVideo) return
+    if (!activeVideo.id) return
 
     const videoElement = videoRefs[activeVideo.id]
     if (!videoElement) return
 
     // Определяем, короткое ли у нас видео
-    isShortVideo.current = (activeVideo.duration || 0) < 10
-
-    const videoStartTime = activeVideo.startTime || 0
+    isShortVideo.current = (duration || 0) < 10
+    videoStartTime.current = 0
 
     // Оптимизированный обработчик timeupdate
     const onTimeUpdate = () => {
@@ -70,30 +83,30 @@ export const ActiveVideo = () => {
         // Проверяем валидность времени
         if (!isFinite(newTime) || isNaN(newTime) || newTime < 0) {
           console.warn("[onTimeUpdate] Некорректное время:", newTime)
-          // setCurrentTime(0)
+          seek(0)
           return
         }
 
         // Проверяем, что время не слишком большое (больше 100 лет)
         if (newTime > 100 * 365 * 24 * 60 * 60) {
           console.warn("[onTimeUpdate] Время слишком большое:", newTime)
-          // setCurrentTime(0)
+          seek(0)
           return
         }
 
         // Проверяем, что время не слишком маленькое (меньше 0.001 секунды)
         if (newTime < 0.001) {
           console.warn("[onTimeUpdate] Время слишком маленькое:", newTime)
-          // setCurrentTime(0)
+          seek(0)
           return
         }
 
         // Проверяем, что время не выходит за пределы видео
-        const videoEndTime = videoStartTime + (activeVideo.duration || 0)
+        const videoEndTime = videoStartTime.current + (duration || 0)
 
         if (newTime > videoEndTime) {
           console.warn("[onTimeUpdate] Время больше длительности видео:", newTime)
-          setCurrentTime(videoEndTime)
+          seek(videoEndTime)
           return
         }
 
@@ -103,8 +116,8 @@ export const ActiveVideo = () => {
         // Проверяем, изменилось ли время с последнего отправленного значения
         const timeDiff = Math.abs(newTime - lastSentTimeRef.current)
         if (timeDiff > timeDiffThreshold) {
-          // Вызываем setCurrentTime с пометкой источника обновления
-          setCurrentTime(newTime, "playback")
+          // Вызываем seek с пометкой источника обновления
+          seek(newTime)
           lastUpdateTimeRef.current = now
           lastSentTimeRef.current = newTime
         }
@@ -113,7 +126,7 @@ export const ActiveVideo = () => {
 
     const handleError = (e: ErrorEvent) => {
       console.error("Video playback error:", e)
-      setIsPlaying(false)
+      setPlaying(false)
     }
 
     // Добавляем оптимизированный слушатель
@@ -136,7 +149,7 @@ export const ActiveVideo = () => {
               // HAVE_CURRENT_DATA или выше
               try {
                 await videoElement.play()
-              } catch (playErr) {
+              } catch (playErr: unknown) {
                 console.error(
                   "[ChangingCamera] Ошибка при воспроизведении после смены камеры:",
                   playErr,
@@ -147,7 +160,7 @@ export const ActiveVideo = () => {
               const handleCanPlay = async () => {
                 try {
                   await videoElement.play()
-                } catch (playErr) {
+                } catch (playErr: unknown) {
                   console.error("[ChangingCamera] Ошибка при отложенном воспроизведении:", playErr)
                 }
                 videoElement.removeEventListener("canplay", handleCanPlay)
@@ -166,15 +179,15 @@ export const ActiveVideo = () => {
         console.error("Failed to play video:", error)
         // Сбрасываем флаг isChangingCamera в случае ошибки
         if (isChangingCamera) {
-          resetChangingCamera()
+          resetCamera()
         }
-        setIsPlaying(false)
+        setPlaying(false)
       }
     }
 
     // Устанавливаем громкость для активного видео
-    const trackVolume = trackVolumes[activeVideo.id] ?? 1
-    videoElement.volume = globalVolume * trackVolume
+    // const trackVolume = trackVolumes[activeVideo.id] ?? 1
+    // videoElement.volume = globalVolume * trackVolume
 
     playVideo()
 
@@ -184,25 +197,24 @@ export const ActiveVideo = () => {
       videoElement.removeEventListener("error", handleError)
     }
   }, [
-    activeVideo,
+    activeVideo.id,
     isPlaying,
     isChangingCamera,
     videoRefs,
-    setCurrentTime,
-    setIsPlaying,
-    globalVolume,
-    trackVolumes,
+    seek,
+    setPlaying,
+    duration,
     isSeeking,
     currentTime,
-    resetChangingCamera,
+    resetCamera,
   ])
 
   useEffect(() => {
-    if (isChangingCamera) {
+    if (isChangingCamera && activeVideo.id && videoRefs[activeVideo.id]) {
       console.log("[ChangingCamera] Обнаружено переключение камеры")
 
       // Сохраняем текущее время для синхронизации между треками
-      if (activeVideo) {
+      if (activeVideo.id) {
         // Если есть видео, стараемся сохранить точную временную синхронизацию
         console.log("[ChangingCamera] Текущее время при переключении:", currentTime.toFixed(3))
 
@@ -210,7 +222,7 @@ export const ActiveVideo = () => {
         if (currentTime > 100 * 365 * 24 * 60 * 60) {
           console.warn("[ChangingCamera] Время слишком большое:", currentTime)
           // Если время слишком большое, устанавливаем в начало
-          setCurrentTime(0)
+          seek(0)
           return
         }
 
@@ -226,9 +238,9 @@ export const ActiveVideo = () => {
           // Особая обработка для записи - всегда запускаем воспроизведение
           if (isRecordingSchema) {
             console.log("[ChangingCamera] В режиме записи - продолжаем воспроизведение")
-            setIsPlaying(true)
+            setPlaying(true)
             try {
-              videoElement.play().catch((err) => {
+              videoElement.play().catch((err: unknown) => {
                 console.error("[ChangingCamera] Ошибка воспроизведения при записи:", err)
               })
             } catch (error) {
@@ -238,7 +250,7 @@ export const ActiveVideo = () => {
           // Обычное воспроизведение, если нужно
           else if (isPlaying && videoElement.paused) {
             try {
-              videoElement.play().catch((err) => {
+              videoElement.play().catch((err: unknown) => {
                 console.error("[ChangingCamera] Ошибка воспроизведения:", err)
               })
             } catch (error) {
@@ -250,7 +262,7 @@ export const ActiveVideo = () => {
 
       // Сбрасываем флаг isChangingCamera через небольшую задержку после переключения
       const timeout = setTimeout(() => {
-        resetChangingCamera()
+        resetCamera()
         console.log("[ChangingCamera] Сброс флага isChangingCamera, время:", currentTime.toFixed(3))
       }, 100) // Уменьшаем задержку для более быстрого сброса флага
 
@@ -258,24 +270,25 @@ export const ActiveVideo = () => {
     }
   }, [
     isChangingCamera,
-    resetChangingCamera,
+    resetCamera,
     videoRefs,
-    activeVideo,
+    activeVideo.id,
     currentTime,
     isPlaying,
     isRecordingSchema,
-    setIsPlaying,
+    setPlaying,
+    seek,
   ])
 
   // Эффект для синхронизации времени видео с общим состоянием
   useEffect(() => {
-    if (!activeVideo) return
+    if (!activeVideo.id) return
 
     const videoElement = videoRefs[activeVideo.id]
     if (!videoElement) return
 
     // Определяем, короткое ли у нас видео
-    isShortVideo.current = (activeVideo.duration || 0) < 10
+    isShortVideo.current = (duration || 0) < 10
 
     // Проверяем, что время валидно
     if (!isFinite(currentTime) || currentTime < 0) {
@@ -312,7 +325,7 @@ export const ActiveVideo = () => {
       videoElement.currentTime = currentTime
 
       // Сбрасываем isSeeking после установки времени с минимальной задержкой
-      setTimeout(() => setIsSeeking(false), 30)
+      setTimeout(() => setSeeking(false), 30)
     } else if (timeDifference > 0.3) {
       // Уменьшаем порог для более точной синхронизации
       // Только значительные расхождения синхронизируем принудительно
@@ -324,24 +337,27 @@ export const ActiveVideo = () => {
       })
     }
     // Для плавного воспроизведения не синхронизируем малые различия
-  }, [currentTime, activeVideo, videoRefs, isSeeking, setIsSeeking, isChangingCamera])
+  }, [currentTime, activeVideo.id, videoRefs, isSeeking, setSeeking, isChangingCamera])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
-      if (e.key.toLowerCase() === "p" && activeVideo) {
-        setIsPlaying(!isPlaying)
+      if (e.key.toLowerCase() === "p" && activeVideo.id) {
+        if (isPlaying) {
+          setPlaying(false)
+        } else {
+          setPlaying(true)
+        }
       }
     }
 
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
-  }, [isPlaying, activeVideo, setIsPlaying])
+  }, [isPlaying, activeVideo.id, setPlaying])
 
-  if (!activeVideo) return null
+  if (!activeVideo.id) return null
 
-  const videoStartTime = activeVideo.startTime || 0
-  const videoEndTime = videoStartTime + (activeVideo.duration || 0)
-  const isTimeInRange = currentTime >= videoStartTime && currentTime <= videoEndTime
+  const videoEndTime = videoStartTime.current + (duration || 0)
+  const isTimeInRange = currentTime >= videoStartTime.current && currentTime <= videoEndTime
 
   return (
     <div className="relative h-full flex flex-col">
@@ -349,7 +365,7 @@ export const ActiveVideo = () => {
         {isTimeInRange ? (
           <video
             ref={(el) => {
-              if (el && activeVideo) {
+              if (el) {
                 videoRefs[activeVideo.id] = el
               }
             }}
@@ -359,6 +375,12 @@ export const ActiveVideo = () => {
             playsInline
             preload="auto"
             disablePictureInPicture
+            onTimeUpdate={(e) => {
+              const video = e.currentTarget
+              if (video) {
+                setTime(video.currentTime + (activeVideo.startTime || 0))
+              }
+            }}
           />
         ) : (
           <div className="absolute inset-0 w-full h-full bg-black" />
@@ -369,4 +391,4 @@ export const ActiveVideo = () => {
   )
 }
 
-ActiveVideo.displayName = "ActiveVideo"
+MediaPlayer.displayName = "MediaPlayer"

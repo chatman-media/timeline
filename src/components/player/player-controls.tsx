@@ -18,8 +18,8 @@ import { EntryPointIcon } from "@/components/icons/entry-point"
 import { ExitPointIcon } from "@/components/icons/exit-point"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { useRootStore } from "@/hooks/use-root-store"
 import { cn } from "@/lib/utils"
+import { useTimeline } from "@/providers"
 
 interface PlayerControlsProps {
   currentTime: number
@@ -40,7 +40,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     startRecordingSchema,
     stopRecordingSchema,
     tracks,
-  } = useRootStore()
+  } = useTimeline()
   const [isFullscreen, setIsFullscreen] = useState(false)
   const lastSaveTime = useRef(0)
   const SAVE_INTERVAL = 5000 // Сохраняем каждые 5 секунд

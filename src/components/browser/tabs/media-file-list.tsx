@@ -1,13 +1,15 @@
 import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { JSX } from "react"
 
 import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
-import { CameraCaptureModal } from "@/components/modals/camera-capture-modal"
+import { CameraCaptureDialog } from "@/components/dialogs/camera-capture-dialog"
 import { Button } from "@/components/ui/button"
-import { useRootStore } from "@/hooks/use-root-store"
+import { useMedia } from "@/hooks/use-media"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { cn } from "@/lib/utils"
-import { rootStore } from "@/stores/root-store"
+import { useMediaContext } from "@/providers/media-provider"
+import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/videos"
 import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
@@ -35,7 +37,6 @@ const STORAGE_KEY_PREFIX = "timeline-preview-size-"
 const STORAGE_KEY_GRID = `${STORAGE_KEY_PREFIX}grid`
 const STORAGE_KEY_THUMBNAILS = `${STORAGE_KEY_PREFIX}thumbnails`
 const STORAGE_KEY_LIST = `${STORAGE_KEY_PREFIX}list`
-const STORAGE_KEY_METADATA = `${STORAGE_KEY_PREFIX}metadata`
 
 // Ключи для настроек
 const STORAGE_KEY_VIEW_MODE = "timeline-view-mode"
@@ -53,7 +54,6 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
   if (mode === "grid") storageKey = STORAGE_KEY_GRID
   else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
   else if (mode === "list") storageKey = STORAGE_KEY_LIST
-  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
   else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
 
   try {
@@ -127,12 +127,17 @@ interface GroupedMediaFiles {
   files: MediaFile[]
 }
 
+// Обновляем тип для viewMode
+type ViewMode = "list" | "grid" | "thumbnails"
+
 // Оборачиваем в memo для предотвращения ненужных рендеров
 export const MediaFileList = memo(function MediaFileList({
   viewMode: initialViewMode = "list",
-}: { viewMode?: "list" | "grid" | "thumbnails" | "metadata" }) {
-  const { media, isLoading, addNewTracks, addedFiles, hasFetched } = useRootStore()
-  const [searchQuery, setSearchQuery] = useState("")
+}: {
+  viewMode?: ViewMode
+}): JSX.Element {
+  const { addedFiles, isLoading, handleAddFiles } = useMediaContext()
+  const { media } = useMedia()
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
 
   // Используем локальный ref для избежания повторных запросов в текущей сессии браузера
@@ -145,7 +150,7 @@ export const MediaFileList = memo(function MediaFileList({
   const savedSettings = loadSavedSettings()
 
   // Инициализируем состояние с сохраненными настройками
-  const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails" | "metadata">(
+  const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails">(
     (savedSettings?.viewMode as any) || initialViewMode,
   )
   const [sortBy, setSortBy] = useState<string>(savedSettings?.sortBy || "date")
@@ -258,14 +263,13 @@ export const MediaFileList = memo(function MediaFileList({
     isLoading,
     hasAddedFiles: addedFiles.size > 0,
     viewMode,
-    hasFetched,
+    hasFetched: media.length > 0,
     localFetched: localDataFetchedRef.current,
     previewSize,
   })
 
   // Обработчики для MediaToolbar
-  const handleViewModeChange = useCallback((mode: "list" | "grid" | "thumbnails" | "metadata") => {
-    // Просто меняем режим просмотра, установка размера произойдет в useEffect
+  const handleViewModeChange = useCallback((mode: ViewMode) => {
     setViewMode(mode)
   }, [])
 
@@ -444,18 +448,118 @@ export const MediaFileList = memo(function MediaFileList({
           },
         }
 
-        // Добавляем видео в медиатеку с правильным типом события
-        rootStore.send({
-          type: "setMedia",
-          media: [...media, newMediaFile],
-        })
+        // Заменяем rootStore.send на handleSetMedia
+        handleAddFiles([newMediaFile])
 
         // Очищаем URL
         URL.revokeObjectURL(fileUrl)
       }
     },
-    [media],
+    [media, handleAddFiles],
   )
+
+  // Используем реф для хранения ссылок на элементы видео
+  const videoRefsObj = useRef<Record<string, HTMLVideoElement | null>>({})
+
+  // Создаем проксированный объект, который будет проксировать обращения к глобальному кэшу
+  const videoRefs = useMemo(() => {
+    return {
+      current: new Proxy({} as Record<string, HTMLVideoElement | null>, {
+        get: (_, key: string) => {
+          return globalVideoCache.get(key) || null
+        },
+        set: (_, key: string, value: HTMLVideoElement | null) => {
+          if (value) {
+            globalVideoCache.set(key, value)
+          }
+          return true
+        },
+      }),
+    }
+  }, [])
+
+  // Создаем проксированный объект для loadedVideos
+  const [loadedVideosObj, setLoadedVideosObj] = useState<Record<string, boolean>>({})
+
+  // Проксируем доступ к loadedVideos через глобальный кэш
+  const loadedVideos = useMemo(() => {
+    return new Proxy({} as Record<string, boolean>, {
+      get: (_, key: string) => {
+        return globalLoadedVideosCache.get(key as string) || false
+      },
+      set: (_, key: string, value: boolean) => {
+        globalLoadedVideosCache.set(key as string, value)
+        return true
+      },
+    })
+  }, [])
+
+  const setLoadedVideos = useCallback((updater: React.SetStateAction<Record<string, boolean>>) => {
+    if (typeof updater === "function") {
+      const currentState: Record<string, boolean> = {}
+      globalLoadedVideosCache.forEach((value, key) => {
+        currentState[key] = value
+      })
+      const newState = updater(currentState)
+      Object.entries(newState).forEach(([key, value]) => {
+        globalLoadedVideosCache.set(key, value)
+      })
+      setLoadedVideosObj((prev) => ({ ...prev }))
+    } else {
+      Object.entries(updater).forEach(([key, value]) => {
+        globalLoadedVideosCache.set(key, value)
+      })
+      setLoadedVideosObj((prev) => ({ ...prev }))
+    }
+  }, [])
+
+  const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
+    {},
+  )
+
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>, fileId: string, duration: number, streamIndex = 0) => {
+      const mediaElement =
+        e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)?.parentElement ||
+        e.currentTarget
+      if (!mediaElement) return
+
+      const rect = mediaElement.getBoundingClientRect()
+      if (e.clientX < rect.left || e.clientX > rect.right) {
+        setHoverTimes((prev) => ({
+          ...prev,
+          [fileId]: {
+            ...(prev[fileId] || {}),
+            [streamIndex]: null as any,
+          },
+        }))
+        return
+      }
+
+      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
+      const percentage = x / rect.width
+      const time = percentage * duration
+
+      if (Number.isFinite(time)) {
+        setHoverTimes((prev) => ({
+          ...prev,
+          [fileId]: {
+            ...(prev[fileId] || {}),
+            [streamIndex]: time,
+          },
+        }))
+        const videoElement = videoRefs.current[`${fileId}-${streamIndex}`]
+        if (videoElement) {
+          videoElement.currentTime = time
+        }
+      }
+    },
+    [videoRefs],
+  )
+
+  const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
+    videoRefs,
+  })
 
   // Используем useMemo для сортировки медиафайлов, чтобы не пересортировывать при каждом рендере
   // Фильтрация и сортировка
@@ -464,7 +568,7 @@ export const MediaFileList = memo(function MediaFileList({
     const filtered =
       filterType === "all"
         ? media
-        : media.filter((file) => {
+        : media.filter((file: MediaFile) => {
             if (filterType === "video" && file.probeData?.streams?.[0]?.codec_type === "video")
               return true
             if (filterType === "audio" && file.probeData?.streams?.[0]?.codec_type === "audio")
@@ -475,7 +579,7 @@ export const MediaFileList = memo(function MediaFileList({
           })
 
     // Затем сортировка
-    return [...filtered].sort((a, b) => {
+    return [...filtered].sort((a: MediaFile, b: MediaFile) => {
       // Определяем множитель для направления сортировки
       const orderMultiplier = sortOrder === "asc" ? 1 : -1
 
@@ -689,315 +793,77 @@ export const MediaFileList = memo(function MediaFileList({
   // Мемоизируем другие вычисления
   const sortedDates = useMemo(() => groupFilesByDate(media), [media])
 
-  // Убираем прямой запрос к API и оставляем только fetchVideos при первой загрузке
-  useEffect(() => {
-    // Проверяем локальный флаг и глобальный флаг
-    if (!localDataFetchedRef.current && !hasFetched && media.length === 0) {
-      console.log("[MediaFileList] First render, fetching media...")
-      localDataFetchedRef.current = true
-
-      // Делаем прямой запрос к API только если нет существующих данных
-      const directFetch = async () => {
-        try {
-          console.log("[MediaFileList] Прямой запрос к /api/media...")
-          const response = await fetch("/api/media")
-          if (!response.ok) {
-            console.error("[MediaFileList] Ошибка запроса:", response.statusText)
-            return
-          }
-
-          const data = await response.json()
-          console.log("[MediaFileList] Получены данные:", data)
-
-          if (data && data.media && Array.isArray(data.media)) {
-            console.log("[MediaFileList] Найдены медиафайлы:", data.media.length)
-
-            if (data.media.length > 0) {
-              // Отправляем событие setMedia
-              rootStore.send({
-                type: "setMedia",
-                media: data.media,
-              })
-
-              // Отдельно устанавливаем hasFetched
-              rootStore.send({
-                type: "setLoadingState",
-                isLoading: false,
-              })
-            }
-          }
-        } catch (error) {
-          console.error("[MediaFileList] Ошибка запроса:", error)
-        }
-      }
-
-      directFetch()
-    }
-  }, [media.length, hasFetched])
-
-  // Используем реф для хранения ссылок на элементы видео
-  const videoRefsObj = useRef<Record<string, HTMLVideoElement | null>>({})
-
-  // Создаем проксированный объект, который будет проксировать обращения к глобальному кэшу
-  const videoRefs = useMemo(() => {
-    return {
-      current: new Proxy({} as Record<string, HTMLVideoElement | null>, {
-        get: (_, key: string) => {
-          return globalVideoCache.get(key) || null
-        },
-        set: (_, key: string, value: HTMLVideoElement | null) => {
-          if (value) {
-            globalVideoCache.set(key, value)
-          }
-          return true
-        },
-      }),
-    }
-  }, [])
-
-  // Создаем проксированный объект для loadedVideos
-  const [loadedVideosObj, setLoadedVideosObj] = useState<Record<string, boolean>>({})
-
-  // Проксируем доступ к loadedVideos через глобальный кэш
-  const loadedVideos = useMemo(() => {
-    return new Proxy({} as Record<string, boolean>, {
-      get: (_, key: string) => {
-        return globalLoadedVideosCache.get(key as string) || false
-      },
-      set: (_, key: string, value: boolean) => {
-        globalLoadedVideosCache.set(key as string, value)
-        return true
-      },
-      ownKeys: () => {
-        return Array.from(globalLoadedVideosCache.keys())
-      },
-      getOwnPropertyDescriptor: (_, key) => {
-        return {
-          enumerable: true,
-          configurable: true,
-          value: globalLoadedVideosCache.get(key as string) || false,
-        }
-      },
-    })
-  }, [])
-
-  // Создаем функцию для обновления loadedVideos
-  const setLoadedVideos = useCallback((updater: React.SetStateAction<Record<string, boolean>>) => {
-    if (typeof updater === "function") {
-      // Если передана функция, создаем текущий снимок состояния
-      const currentState: Record<string, boolean> = {}
-      globalLoadedVideosCache.forEach((value, key) => {
-        currentState[key] = value
-      })
-
-      // Вызываем функцию с текущим состоянием
-      const newState = updater(currentState)
-
-      // Обновляем кэш
-      Object.entries(newState).forEach(([key, value]) => {
-        globalLoadedVideosCache.set(key, value)
-      })
-
-      // Обновляем React-состояние для вызова ререндера
-      setLoadedVideosObj((prev) => ({ ...prev }))
-    } else {
-      // Если передан объект напрямую
-      Object.entries(updater).forEach(([key, value]) => {
-        globalLoadedVideosCache.set(key, value)
-      })
-
-      // Обновляем React-состояние для вызова ререндера
-      setLoadedVideosObj((prev) => ({ ...prev }))
-    }
-  }, [])
-
-  const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
-    {},
-  )
-
-  const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
-    videoRefs,
-  })
-
-  const getFileId = useCallback((file: MediaFile) => {
-    return file.id || file.path || file.name
-  }, [])
-
-  const handleMouseMove = useCallback(
-    (
-      e: React.MouseEvent<HTMLDivElement>,
-      fileId: string,
-      duration: number,
-      streamIndex: number = 0,
-    ) => {
-      const mediaElement =
-        e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)?.parentElement ||
-        e.currentTarget
-      if (!mediaElement) return
-
-      const rect = mediaElement.getBoundingClientRect()
-
-      if (e.clientX < rect.left || e.clientX > rect.right) {
-        setHoverTimes((prev: Record<string, { [streamIndex: number]: number }>) => ({
-          ...prev,
-          [fileId]: {
-            ...(prev[fileId] || {}),
-            // deno-lint-ignore no-explicit-any
-            [streamIndex]: null as any,
-          },
-        }))
-        return
-      }
-
-      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
-      const percentage = x / rect.width
-      const time = percentage * duration
-
-      if (Number.isFinite(time)) {
-        setHoverTimes((prev: Record<string, { [streamIndex: number]: number }>) => ({
-          ...prev,
-          [fileId]: {
-            ...(prev[fileId] || {}),
-            [streamIndex]: time,
-          },
-        }))
-        const videoElement = videoRefs.current[`${fileId}-${streamIndex}`]
-        if (videoElement) {
-          videoElement.currentTime = time
-        }
-      }
-    },
-    [],
-  )
-
-  const handleAddMedia = useCallback(
-    (e: React.MouseEvent, file: MediaFile) => {
-      e.stopPropagation()
-      if (!file.path || addedFiles.has(file.path)) return
-
-      // Останавливаем все видео в текущей группе
-      const fileId = getFileId(file)
-      const videoElement = videoRefs.current[`${fileId}-0`]
-      if (videoElement) {
-        videoElement.pause()
-        videoElement.currentTime = 0
-      }
-
-      // Проверяем, является ли файл изображением
-      if (file.isImage) {
-        console.log("[handleAddMedia] Добавляем изображение только в медиафайлы:", file.name)
-
-        // Только отмечаем файл как добавленный, но не добавляем на таймлайн
-        if (file.path) {
-          rootStore.send({
-            type: "addToAddedFiles",
-            filePaths: [file.path],
-          })
-        }
-        return
-      }
-
-      // Для видео и аудио добавляем на таймлайн
-      addNewTracks([file])
-
-      // Отмечаем файл как добавленный
-      if (file.path) {
-        rootStore.send({
-          type: "addToAddedFiles",
-          filePaths: [file.path],
-        })
-      }
-    },
-    [addNewTracks, addedFiles, getFileId, videoRefs],
-  )
-
+  // Удаляем импорт rootStore
+  // Заменяем все остальные вызовы rootStore.send
   const handleAddAllFiles = useCallback(() => {
-    // Фильтруем файлы - изображения не добавляем на таймлайн
-    const nonImageFiles = media.filter((file) => !file.isImage)
-    const imageFiles = media.filter((file) => file.isImage)
+    const nonImageFiles = media.filter((file: MediaFile) => !file.isImage)
+    const imageFiles = media.filter((file: MediaFile) => !file.isImage)
 
-    // Добавляем видео и аудио файлы на таймлайн
     if (nonImageFiles.length > 0) {
-      addNewTracks(nonImageFiles)
+      handleAddFiles(nonImageFiles)
     }
 
-    // Отмечаем все файлы как добавленные
-    const filePaths = media.filter((file) => file.path).map((file) => file.path as string)
-
-    if (filePaths.length > 0) {
-      rootStore.send({
-        type: "addToAddedFiles",
-        filePaths,
-      })
+    const files = media.filter((file: MediaFile) => file.path)
+    if (files.length > 0) {
+      handleAddFiles(files)
     }
-
-    // Логируем информацию о добавленных файлах
-    if (imageFiles.length > 0) {
-      console.log(
-        `[handleAddAllFiles] Изображений добавлено только в медиафайлы: ${imageFiles.length}`,
-      )
-    }
-  }, [media, addNewTracks])
+  }, [media, handleAddFiles])
 
   const handleAddDateFiles = useCallback(
     (targetDate: string) => {
-      const dateFiles = media.filter((file) => {
+      const dateFiles = media.filter((file: MediaFile) => {
         if (!file.startTime) return false
         const fileDate = new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
-          day: "2-digit",
-          month: "long",
           year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
         })
-        return fileDate === targetDate && file.probeData?.streams?.[0]?.codec_type === "video"
+        return fileDate === targetDate
       })
 
-      // Добавляем файлы на таймлайн
-      addNewTracks(dateFiles)
+      if (dateFiles.length > 0) {
+        handleAddFiles(dateFiles)
+      }
 
-      // Отмечаем файлы как добавленные
-      const filePaths = dateFiles.filter((file) => file.path).map((file) => file.path as string)
-
-      if (filePaths.length > 0) {
-        rootStore.send({
-          type: "addToAddedFiles",
-          filePaths,
-        })
+      const files = dateFiles.filter((file: MediaFile) => file.path)
+      if (files.length > 0) {
+        handleAddFiles(files)
       }
     },
-    [media, addNewTracks],
+    [media, handleAddFiles],
   )
 
   const handleAddAllVideoFiles = useCallback(() => {
-    const videoFiles = media.filter((file) =>
-      file.probeData?.streams?.some((stream) => stream.codec_type === "video"),
+    const videoFiles = media.filter((file: MediaFile) =>
+      file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "video"),
     )
-    addNewTracks(videoFiles)
 
-    const filePaths = videoFiles.filter((file) => file.path).map((file) => file.path as string)
-    if (filePaths.length > 0) {
-      rootStore.send({
-        type: "addToAddedFiles",
-        filePaths,
-      })
+    if (videoFiles.length > 0) {
+      handleAddFiles(videoFiles)
     }
-  }, [media, addNewTracks])
+
+    const files = videoFiles.filter((file: MediaFile) => file.path)
+    if (files.length > 0) {
+      handleAddFiles(files)
+    }
+  }, [media, handleAddFiles])
 
   const handleAddAllAudioFiles = useCallback(() => {
     const audioFiles = media.filter(
-      (file) =>
-        !file.probeData?.streams?.some((stream) => stream.codec_type === "video") &&
-        file.probeData?.streams?.some((stream) => stream.codec_type === "audio"),
+      (file: MediaFile) =>
+        !file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "video") &&
+        file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "audio"),
     )
-    addNewTracks(audioFiles)
 
-    const filePaths = audioFiles.filter((file) => file.path).map((file) => file.path as string)
-    if (filePaths.length > 0) {
-      rootStore.send({
-        type: "addToAddedFiles",
-        filePaths,
-      })
+    if (audioFiles.length > 0) {
+      handleAddFiles(audioFiles)
     }
-  }, [media, addNewTracks])
+
+    const files = audioFiles.filter((file: MediaFile) => file.path)
+    if (files.length > 0) {
+      handleAddFiles(files)
+    }
+  }, [media, handleAddFiles])
 
   // Функция для сохранения выбранного размера в localStorage
   const saveSize = (mode: string, size: number): void => {
@@ -1008,7 +874,6 @@ export const MediaFileList = memo(function MediaFileList({
     if (mode === "grid") storageKey = STORAGE_KEY_GRID
     else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
     else if (mode === "list") storageKey = STORAGE_KEY_LIST
-    else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
     else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
 
     try {
@@ -1028,12 +893,50 @@ export const MediaFileList = memo(function MediaFileList({
       localStorage.removeItem(STORAGE_KEY_GRID)
       localStorage.removeItem(STORAGE_KEY_THUMBNAILS)
       localStorage.removeItem(STORAGE_KEY_LIST)
-      localStorage.removeItem(STORAGE_KEY_METADATA)
       console.log("[MediaFileList] Cleared all saved sizes from localStorage")
     } catch (error) {
       console.error("[MediaFileList] Error clearing localStorage:", error)
     }
   }
+
+  const handleAddMedia = useCallback(
+    (e: React.MouseEvent, file: MediaFile) => {
+      e.stopPropagation()
+
+      // Проверяем, не добавлен ли файл уже в addedFiles
+      if (!file.path || addedFiles.has(file.path)) {
+        console.log(`[handleAddMedia] Файл ${file.name} уже добавлен в медиафайлы`)
+        return
+      }
+
+      // Останавливаем все видео в текущей группе
+      const fileId = file.id || file.path || file.name
+      const videoElement = videoRefs.current[`${fileId}-0`]
+      if (videoElement) {
+        videoElement.pause()
+        videoElement.currentTime = 0
+      }
+
+      // Проверяем, является ли файл изображением
+      if (file.isImage) {
+        console.log("[handleAddMedia] Добавляем изображение только в медиафайлы:", file.name)
+        // Только отмечаем файл как добавленный, но не добавляем на таймлайн
+        if (file.path) {
+          handleAddFiles([file])
+        }
+        return
+      }
+
+      // Для видео и аудио добавляем на таймлайн
+      handleAddFiles([file])
+
+      // Отмечаем файл как добавленный
+      if (file.path) {
+        handleAddFiles([file])
+      }
+    },
+    [media, handleAddFiles, addedFiles, videoRefs],
+  )
 
   if (isLoading) {
     return (
@@ -1077,7 +980,7 @@ export const MediaFileList = memo(function MediaFileList({
     }
 
     const renderFile = (file: MediaFile) => {
-      const fileId = getFileId(file)
+      const fileId = file.id || file.path || file.name
       const duration = file.probeData?.format.duration || 1
       const isAudio = getFileType(file) === "audio"
       const isAdded = Boolean(file.path && addedFiles.has(file.path))
@@ -1224,19 +1127,13 @@ export const MediaFileList = memo(function MediaFileList({
 
                 // Добавляем видео и аудио файлы на таймлайн
                 if (nonImageFiles.length > 0) {
-                  addNewTracks(nonImageFiles)
+                  handleAddFiles(nonImageFiles)
                 }
 
                 // Отмечаем все файлы как добавленные
-                const filePaths = group.files
-                  .filter((file) => file.path)
-                  .map((file) => file.path as string)
-
-                if (filePaths.length > 0) {
-                  rootStore.send({
-                    type: "addToAddedFiles",
-                    filePaths,
-                  })
+                const files = group.files.filter((file) => file.path)
+                if (files.length > 0) {
+                  handleAddFiles(files)
                 }
               }}
             >
@@ -1268,7 +1165,7 @@ export const MediaFileList = memo(function MediaFileList({
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden">
       <MediaToolbar
-        viewMode={viewMode}
+        viewMode={viewMode as ViewMode}
         onViewModeChange={handleViewModeChange}
         onImport={handleImport}
         onImportFile={handleImportFile}
@@ -1289,7 +1186,6 @@ export const MediaFileList = memo(function MediaFileList({
         onDecreaseSize={handleDecreaseSize}
         canIncreaseSize={canIncreaseSize}
         canDecreaseSize={canDecreaseSize}
-        currentSize={previewSize}
       />
       <div className="flex-1 p-0 min-h-0 overflow-y-auto scrollbar-hide hover:scrollbar-default">
         {renderContent()}
@@ -1306,7 +1202,7 @@ export const MediaFileList = memo(function MediaFileList({
         />
       </div>
       {isRecordingModalOpen && (
-        <CameraCaptureModal
+        <CameraCaptureDialog
           isOpen={isRecordingModalOpen}
           onClose={() => setIsRecordingModalOpen(false)}
           onVideoRecorded={handleRecordedVideo}

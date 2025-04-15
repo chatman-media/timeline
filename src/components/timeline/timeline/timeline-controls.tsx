@@ -1,40 +1,37 @@
 import { Minus, Plus } from "lucide-react"
 
+import { useTimeline } from "../../../providers/timeline-provider"
+
 interface TimelineControlsProps {
-  scale: number
-  setScale: (scale: number) => void
   minScale?: number
   maxScale?: number
 }
 
-export function TimelineControls({
-  scale,
-  setScale,
-  minScale = 0.001,
-  maxScale = 18,
-}: TimelineControlsProps) {
+export function TimelineControls({ minScale = 0.001, maxScale = 18 }: TimelineControlsProps) {
+  const { zoomLevel, handleZoom } = useTimeline()
+
   const logMinScale = Math.log(minScale)
   const logMaxScale = Math.log(maxScale)
-  const logCurrentScale = Math.log(scale || 1)
+  const logCurrentScale = Math.log(zoomLevel || 1)
 
   const logStep = (logMaxScale - logMinScale) / 100
 
   const handleScaleDecrease = () => {
     const newLogScale = logCurrentScale - logStep
     const newScale = Math.exp(Math.max(newLogScale, logMinScale))
-    setScale(newScale)
+    handleZoom(newScale)
   }
 
   const handleScaleIncrease = () => {
     const newLogScale = logCurrentScale + logStep
     const newScale = Math.exp(Math.min(newLogScale, logMaxScale))
-    setScale(newScale)
+    handleZoom(newScale)
   }
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sliderValue = Number(e.target.value)
     const logScale = logMinScale + (sliderValue / 100) * (logMaxScale - logMinScale)
-    setScale(Math.exp(logScale))
+    handleZoom(Math.exp(logScale))
   }
 
   const sliderValue =

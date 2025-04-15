@@ -10,8 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useRootStore } from "@/hooks/use-root-store"
-import { rootStore } from "@/stores/root-store"
+import { useTimeline } from "@/providers/timeline-provider"
 import { MediaFile, Track } from "@/types/videos"
 
 import { TimelineBar } from "./timeline/timeline-bar"
@@ -56,27 +55,42 @@ function formatSectionDate(dateString: string): string {
 }
 
 export function Timeline() {
+  const context = useTimeline()
+  if (!context) {
+    throw new Error("Timeline must be used within a TimelineProvider")
+  }
+
   const {
     tracks,
-    activeVideo,
-    setCurrentTime: updateTime,
-    scale,
-    setScale,
     setTracks,
-    activeTrackId,
+    currentLayout,
+    setLayout,
     undo,
     redo,
     canUndo,
     canRedo,
-    setActiveTrack,
-    isPlaying,
-    setIsPlaying,
-    isRecordingSchema,
     currentTime,
-    setActiveVideo,
-    currentLayout,
-    removeFromAddedFiles,
-  } = useRootStore()
+    isPlaying,
+    isRecordingSchema,
+    activeTrackId,
+    activeVideoId,
+    setVideo,
+    seek,
+    setTrack,
+    stopRecording,
+    startRecording,
+    removeFiles,
+  } = context
+
+  const activeVideo = useMemo(() => {
+    if (!activeVideoId || !tracks) return null
+    for (const track of tracks) {
+      const video = track.videos.find((v) => v.id === activeVideoId)
+      if (video) return video
+    }
+    return null
+  }, [activeVideoId, tracks])
+
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const [deletingSectionDate, setDeletingSectionDate] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -178,12 +192,12 @@ export function Timeline() {
               )
 
               // Останавливаем запись на текущей дорожке
-              rootStore.send({ type: "stopRecordingSchema" })
+              stopRecording()
 
               // Начинаем запись на новой дорожке
               setTimeout(() => {
                 // Устанавливаем активный трек и активное видео сразу после остановки
-                setActiveTrack(targetTrack.id)
+                setTrack(targetTrack.id)
 
                 // Найдем подходящее видео в новом треке для текущего времени
                 const video = targetTrack.videos.find((v) => {
@@ -193,27 +207,23 @@ export function Timeline() {
                 })
 
                 if (video) {
-                  setActiveVideo(video.id)
+                  setVideo(video.id)
                 } else if (targetTrack.videos.length > 0) {
                   // Если нет видео, соответствующего текущему времени, используем первое
-                  setActiveVideo(targetTrack.videos[0].id)
+                  setVideo(targetTrack.videos[0].id)
                 }
 
                 // Обновляем время до запуска новой записи
-                updateTime(savedCurrentTime)
+                seek(savedCurrentTime)
 
-                rootStore.send({
-                  type: "startRecordingSchema",
-                  trackId: targetTrack.id,
-                  startTime: savedCurrentTime,
-                })
+                startRecording(targetTrack.id, savedCurrentTime)
 
                 // Обновляем макет
-                const newLayout = {
-                  ...currentLayout,
-                  activeTracks: [targetTrack.id],
-                }
-                rootStore.send({ type: "setScreenLayout", layout: newLayout })
+                // const newLayout = {
+                //   ...currentLayout,
+                //   activeTracks: [targetTrack.id],
+                // }
+                // setCurrentLayout(newLayout)
               }, 100)
 
               // Дальше не выполняем стандартную логику переключения
@@ -222,7 +232,7 @@ export function Timeline() {
           }
 
           // Переключаемся на новую дорожку
-          setActiveTrack(targetTrack.id)
+          setTrack(targetTrack.id)
 
           // Если идет воспроизведение, сохраняем текущее время
           if (isPlaying) {
@@ -233,29 +243,29 @@ export function Timeline() {
             })
 
             if (video) {
-              setActiveVideo(video.id)
+              setVideo(video.id)
               // Проверяем время перед обновлением
               if (
                 isFinite(currentTime) &&
                 currentTime >= 0 &&
                 currentTime <= (video.duration || 0)
               ) {
-                updateTime(currentTime)
+                seek(currentTime)
               } else {
                 console.warn("[Timeline] Некорректное время при переключении дорожек:", currentTime)
-                updateTime(0)
+                seek(0)
               }
             } else if (targetTrack.videos.length > 0) {
               // Если не нашли подходящее видео, берем первое видео
               const firstVideo = targetTrack.videos[0]
-              setActiveVideo(firstVideo.id)
-              updateTime(firstVideo.startTime ?? 0)
+              setVideo(firstVideo.id)
+              seek(firstVideo.startTime ?? 0)
             }
           } else {
             // Если воспроизведение не идет, берем первое видео трека
             if (targetTrack.videos.length > 0) {
               const firstVideo = targetTrack.videos[0]
-              setActiveVideo(firstVideo.id)
+              setVideo(firstVideo.id)
 
               // Проверяем время перед обновлением
               if (
@@ -263,20 +273,13 @@ export function Timeline() {
                 currentTime >= 0 &&
                 currentTime <= (firstVideo.duration || 0)
               ) {
-                updateTime(currentTime)
+                seek(currentTime)
               } else {
                 console.warn("[Timeline] Некорректное время при переключении дорожек:", currentTime)
-                updateTime(firstVideo.startTime ?? 0)
+                seek(firstVideo.startTime ?? 0)
               }
             }
           }
-
-          // Обновляем макет, сохраняя текущий тип и добавляя новую дорожку
-          const newLayout = {
-            ...currentLayout,
-            activeTracks: [targetTrack.id],
-          }
-          rootStore.send({ type: "setScreenLayout", layout: newLayout })
         } else {
           console.log(
             `[Timeline] Трек с индексом ${trackNumber} не найден в текущей секции (${activeDate})`,
@@ -291,13 +294,14 @@ export function Timeline() {
     activeTrackId,
     tracks,
     setTracks,
-    setActiveTrack,
+    setTrack,
     isPlaying,
     isRecordingSchema,
     currentTime,
-    setActiveVideo,
-    updateTime,
+    setVideo,
+    seek,
     currentLayout,
+    setLayout,
     activeDate,
     sections, // Добавляем зависимость от sections и activeDate
   ])
@@ -314,7 +318,7 @@ export function Timeline() {
         if (firstTrack.videos.length > 0) {
           const firstVideo = firstTrack.videos[0]
           const videoStartTime = firstVideo.startTime || 0
-          updateTime(videoStartTime)
+          seek(videoStartTime)
         }
       }
     }
@@ -382,7 +386,7 @@ export function Timeline() {
 
     // Удаляем файлы из множества addedFiles, чтобы их можно было заново добавить
     if (filesToRemove.length > 0) {
-      removeFromAddedFiles(filesToRemove)
+      removeFiles(filesToRemove)
     }
 
     // Обрабатываем переключение на другую секцию, если удалили активную
@@ -415,27 +419,43 @@ export function Timeline() {
           )
 
           if (nextSectionTracks.length > 0) {
-            setActiveTrack(nextSectionTracks[0].id)
+            setTrack(nextSectionTracks[0].id)
 
             // Если есть первое видео, устанавливаем его как активное
             if (nextSectionTracks[0].videos.length > 0) {
-              setActiveVideo(nextSectionTracks[0].videos[0].id)
+              setVideo(nextSectionTracks[0].videos[0].id)
               // Обновляем текущее время на начало видео
               const startTime = nextSectionTracks[0].videos[0].startTime || 0
-              updateTime(startTime, "user")
+              seek(startTime)
             }
           }
         }
       } else {
         // Если секций не осталось, сбрасываем активную дату и трек
         setActiveDate(null)
-        setActiveTrack("")
+        setTrack("")
       }
     }
 
     // Закрываем диалог
     setDeleteDialogOpen(false)
     setDeletingSectionDate(null)
+  }
+
+  const handleTrackClick = (track: Track) => {
+    // ... existing code ...
+  }
+
+  const handleVideoClick = (video: MediaFile) => {
+    // ... existing code ...
+  }
+
+  const handleTrackDoubleClick = (track: Track) => {
+    // ... existing code ...
+  }
+
+  const handleVideoDoubleClick = (video: MediaFile) => {
+    // ... existing code ...
   }
 
   return (
@@ -479,7 +499,7 @@ export function Timeline() {
 
               // Удаляем файлы из множества addedFiles, чтобы их можно было заново добавить
               if (filesToRemove.length > 0) {
-                removeFromAddedFiles(filesToRemove)
+                removeFiles(filesToRemove)
               }
             }}
             className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
@@ -507,7 +527,7 @@ export function Timeline() {
 
               // Удаляем файлы из множества addedFiles, чтобы их можно было заново добавить
               if (filesToRemove.length > 0) {
-                removeFromAddedFiles(filesToRemove)
+                removeFiles(filesToRemove)
               }
             }}
             className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
@@ -515,7 +535,7 @@ export function Timeline() {
             <Scissors size={16} className="rotate-90" />
           </button>
         </div>
-        <TimelineControls scale={scale} setScale={setScale} />
+        <TimelineControls />
       </div>
       <div className="relative w-full h-full overflow-x-auto overflow-y-auto">
         {[...sections].map((section) => (
@@ -538,7 +558,6 @@ export function Timeline() {
                 startTime={section.startTime}
                 endTime={section.endTime}
                 duration={section.duration}
-                scale={scale}
               />
               <div className="flex-1 w-full h-full relative border-t border-border">
                 {section.tracks.map((track, index) => (

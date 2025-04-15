@@ -1,10 +1,10 @@
 import React, { createContext, ReactNode, useContext } from "react"
 
 // Мок для useRootStore
-import { useRootStore as originalUseRootStore } from "@/hooks/use-root-store"
+import { useStore as originalUseRootStore } from "@/hooks/use-store"
 
 // Создаем контекст для представления стора
-type RootStoreProviderProps = {
+type StoreProviderProps = {
   children: ReactNode
   mockState: any
 }
@@ -15,7 +15,7 @@ const MockRootStoreContext = createContext<any>(null)
 /**
  * Хук для использования мок-состояния стора
  */
-export function useMockRootStore() {
+export function useMockStore() {
   const mockState = useContext(MockRootStoreContext)
 
   // Если контекст не предоставлен, используем оригинальный хук
@@ -29,6 +29,6 @@ export function useMockRootStore() {
 /**
  * Провайдер для мокирования RootStore в тестах и Storybook
  */
-export function RootStoreProvider({ children, mockState }: RootStoreProviderProps) {
+export function StoreProvider({ children, mockState }: StoreProviderProps) {
   return <MockRootStoreContext.Provider value={mockState}>{children}</MockRootStoreContext.Provider>
 }

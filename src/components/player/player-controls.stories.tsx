@@ -4,7 +4,7 @@ import "../../../src/styles/globals.css"
 import { Meta, StoryObj } from "@storybook/react"
 import { fn } from "@storybook/test"
 
-import { RootStoreProvider } from "../mocks/root-store-provider"
+import { StoreProvider } from "../mocks/store-provider"
 import { PlayerControls } from "./player-controls"
 
 const meta: Meta<typeof PlayerControls> = {
@@ -70,9 +70,9 @@ export const Обычное: Story = {
   },
   decorators: [
     (Story) => (
-      <RootStoreProvider mockState={mockStoreData}>
+      <StoreProvider mockState={mockStoreData}>
         <Story />
-      </RootStoreProvider>
+      </StoreProvider>
     ),
   ],
 }
@@ -84,14 +84,14 @@ export const Воспроизведение: Story = {
   },
   decorators: [
     (Story) => (
-      <RootStoreProvider
+      <StoreProvider
         mockState={{
           ...mockStoreData,
           isPlaying: true,
         }}
       >
         <Story />
-      </RootStoreProvider>
+      </StoreProvider>
     ),
   ],
 }
@@ -103,14 +103,14 @@ export const Запись: Story = {
   },
   decorators: [
     (Story) => (
-      <RootStoreProvider
+      <StoreProvider
         mockState={{
           ...mockStoreData,
           isRecordingSchema: true,
         }}
       >
         <Story />
-      </RootStoreProvider>
+      </StoreProvider>
     ),
   ],
 }
@@ -122,14 +122,14 @@ export const БезЗвука: Story = {
   },
   decorators: [
     (Story) => (
-      <RootStoreProvider
+      <StoreProvider
         mockState={{
           ...mockStoreData,
           volume: 0,
         }}
       >
         <Story />
-      </RootStoreProvider>
+      </StoreProvider>
     ),
   ],
 }
@@ -146,9 +146,9 @@ export const СветлаяТема: Story = {
   },
   decorators: [
     (Story) => (
-      <RootStoreProvider mockState={mockStoreData}>
+      <StoreProvider mockState={mockStoreData}>
         <Story />
-      </RootStoreProvider>
+      </StoreProvider>
     ),
   ],
 }

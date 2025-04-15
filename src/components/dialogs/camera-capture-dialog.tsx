@@ -1,4 +1,3 @@
-import { Camera } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -23,7 +22,7 @@ interface Resolution {
   label: string
 }
 
-interface CameraCaptureModalProps {
+interface CameraCaptureDialogProps {
   isOpen: boolean
   onClose: () => void
   onVideoRecorded: (blob: Blob, fileName: string) => void
@@ -38,7 +37,11 @@ const COMMON_RESOLUTIONS: Resolution[] = [
 
 const COMMON_FRAMERATES = [30, 60, 24, 25]
 
-export function CameraCaptureModal({ isOpen, onClose, onVideoRecorded }: CameraCaptureModalProps) {
+export function CameraCaptureDialog({
+  isOpen,
+  onClose,
+  onVideoRecorded,
+}: CameraCaptureDialogProps) {
   const [devices, setDevices] = useState<CaptureDevice[]>([])
   const [selectedDevice, setSelectedDevice] = useState<string>("")
   const [audioDevices, setAudioDevices] = useState<CaptureDevice[]>([])

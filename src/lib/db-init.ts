@@ -64,7 +64,6 @@ interface TimelineDB extends DBSchema {
 export function extractEditorState(state: StateContext): EditorState {
   const editorState: EditorState = {
     layoutMode: state.layoutMode,
-    panelLayouts: state.panelLayouts,
     isLoading: state.isLoading,
     isPlaying: state.isPlaying,
     currentTime: state.currentTime,
@@ -81,7 +80,6 @@ export function extractEditorState(state: StateContext): EditorState {
     addedFiles: state.addedFiles,
     activeVideo: state.activeVideo,
     activeTrackId: state.activeTrackId,
-    currentLayout: state.currentLayout,
     videoRefs: state.videoRefs,
   }
   return editorState
@@ -275,11 +273,9 @@ export function areSignificantStatesEqual(
   // Проверяем другие значимые поля
   const significantFields: (keyof StateContext)[] = [
     "activeTrackId",
-    "currentLayout",
     "addedFiles",
     "hasMedia",
     "layoutMode",
-    "panelLayouts",
   ]
 
   for (const field of significantFields) {
@@ -407,7 +403,6 @@ export async function initializeDatabase(): Promise<StateContext | null> {
       const stateContext: StateContext = {
         // EditorState с дефолтными значениями для отсутствующих полей
         layoutMode: storedEditorState?.layoutMode || "default",
-        panelLayouts: storedEditorState?.panelLayouts || {},
         isLoading: false,
         isPlaying: false,
         currentTime: storedEditorState?.currentTime || 0,
@@ -424,7 +419,6 @@ export async function initializeDatabase(): Promise<StateContext | null> {
         addedFiles: new Set(storedEditorState?.addedFiles || []),
         activeVideo: storedEditorState?.activeVideo || null,
         activeTrackId: storedEditorState?.activeTrackId || null,
-        currentLayout: storedEditorState?.currentLayout || { type: "1x1", activeTracks: [] },
         videoRefs: {},
 
         // TimelineState с дефолтными значениями для отсутствующих полей
@@ -476,6 +470,12 @@ export async function initializeDatabase(): Promise<StateContext | null> {
         currentRecordingSegmentId: null,
         metadataCache: {},
         thumbnailCache: {},
+        tracks: [],
+        timeRanges: {},
+        montageSchema: [],
+        historySnapshotIds: [],
+        currentHistoryIndex: -1,
+        isSaved: true,
       }
       console.log("[initializeDatabase] Legacy state converted successfully")
 

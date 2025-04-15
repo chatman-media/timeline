@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { useRootStore } from "@/hooks/use-root-store"
+import { useStore } from "@/hooks/use-store"
 
 import { DefaultMediaEditor } from "./editor/layouts/default-layout"
 import { DualMediaEditor } from "./editor/layouts/dual-layout"
@@ -10,8 +10,7 @@ import { VerticalMediaEditor } from "./editor/layouts/vertical-layout"
 import { TopNavBar } from "./editor/top-nav-bar"
 
 export function MediaEditor() {
-  const { activeVideo, videoRefs, layoutMode, setLayoutMode } = useRootStore()
-  const [isLoaded, setIsLoaded] = useState(false)
+  const { layoutMode, setLayoutMode } = useStore()
   const [hasExternalDisplay, setHasExternalDisplay] = useState(false)
 
   useEffect(() => {
@@ -28,43 +27,16 @@ export function MediaEditor() {
     checkExternalDisplay()
 
     const mediaQuery = window.matchMedia("(min-width: 1920px)")
-    const handleChange = (e: MediaQueryListEvent) => {
-      checkExternalDisplay()
-    }
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handleChange)
-    } else if (mediaQuery.addListener) {
-      mediaQuery.addListener(handleChange)
-    }
+    mediaQuery.addEventListener("change", checkExternalDisplay)
 
     return () => {
-      if (mediaQuery.removeEventListener) {
-        mediaQuery.removeEventListener("change", handleChange)
-      } else if (mediaQuery.removeListener) {
-        mediaQuery.removeListener(handleChange)
-      }
+      mediaQuery.removeEventListener("change", checkExternalDisplay)
     }
   }, [])
-
-  useEffect(() => {
-    setIsLoaded(true)
-
-    if (activeVideo) {
-      const videoElement = videoRefs[activeVideo.id]
-      if (videoElement) {
-        videoElement.load()
-      }
-    }
-  }, [activeVideo, videoRefs])
 
   const changeLayout = (mode: LayoutMode) => {
     if (mode === "dual" && !hasExternalDisplay) return
     setLayoutMode(mode)
-  }
-
-  if (!isLoaded) {
-    return <div className="flex h-screen items-center justify-center">Загрузка...</div>
   }
 
   return (

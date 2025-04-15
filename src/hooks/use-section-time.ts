@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 
-import { useRootStore } from "./use-root-store"
+import { useTimeline } from "@/providers/timeline-provider"
 
 interface UseSectionTimeProps {
   sectionStartTime: number
@@ -18,8 +18,7 @@ export function useSectionTime({
   const [position, setPosition] = useState(0)
   const isDragging = useRef(false)
   const wasTimeManuallySet = useRef(false)
-  const { activeVideo, videoRefs, setCurrentTime, currentTime, setActiveVideo, setActiveTrack } =
-    useRootStore()
+  const { activeVideo, videoRefs, setTime, currentTime, setVideo, setTrack } = useTimeline()
   const lastUpdateTime = useRef(0)
   const animationFrameId = useRef<number | undefined>(undefined)
 
@@ -51,9 +50,9 @@ export function useSectionTime({
     setPosition(percentage)
 
     // Устанавливаем активное видео и дорожку
-    setActiveVideo(videoId)
-    setActiveTrack(trackId)
-    // setCurrentTime(videoStartTime)
+    setVideo(videoId)
+    setTrack(trackId)
+    // setTime(videoStartTime)
   }
 
   useEffect(() => {
@@ -78,7 +77,7 @@ export function useSectionTime({
         const videoStartTime = activeVideo.startTime || 0
         videoElement.currentTime = clampedTime - videoStartTime
       }
-      setCurrentTime(clampedTime)
+      setTime(clampedTime)
     }
 
     const handleMouseUp = () => {
@@ -96,15 +95,7 @@ export function useSectionTime({
       document.removeEventListener("mousemove", handleMouseMove)
       document.removeEventListener("mouseup", handleMouseUp)
     }
-  }, [
-    sectionStartTime,
-    sectionDuration,
-    startTime,
-    endTime,
-    setCurrentTime,
-    activeVideo,
-    videoRefs,
-  ])
+  }, [sectionStartTime, sectionDuration, startTime, endTime, setTime, activeVideo, videoRefs])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     isDragging.current = true

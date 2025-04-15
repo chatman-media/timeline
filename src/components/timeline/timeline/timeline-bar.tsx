@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useRef } from "react"
 
-import { useRootStore } from "@/hooks/use-root-store"
+import { useTimeline } from "@/providers/timeline-provider"
 
 interface TimelineBarProps {
   startTime: number
   endTime: number
-  height: number
+  height?: number
 }
 
 export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
-  const { currentTime, setCurrentTime, scale, isPlaying } = useRootStore()
+  const { currentTime, setTime, isPlaying } = useTimeline()
   const animationFrameRef = useRef<number | undefined>(undefined)
 
   const position = useMemo(() => {
@@ -36,10 +36,10 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
       const newTime = currentTime + deltaTime
       // Если достигли конца секции, останавливаем анимацию
       if (newTime >= endTime) {
-        setCurrentTime(endTime)
+        setTime(endTime)
         return
       }
-      setCurrentTime(newTime)
+      setTime(newTime)
 
       animationFrameRef.current = requestAnimationFrame(animate)
     }
@@ -51,7 +51,7 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [isPlaying, endTime, setCurrentTime, currentTime])
+  }, [isPlaying, endTime, setTime, currentTime])
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.stopPropagation()
@@ -61,7 +61,7 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
       const mouseX = e.clientX - rect.left
       const percent = Math.max(0, Math.min(1, mouseX / rect.width))
       const time = startTime + percent * (endTime - startTime)
-      setCurrentTime(time)
+      setTime(time)
     }
 
     const onMouseUp = () => {

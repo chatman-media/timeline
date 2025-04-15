@@ -1,11 +1,11 @@
 import { Keyboard, Layout, ListTodo, Save, Send, Settings } from "lucide-react"
 import { useState } from "react"
 
-import { ProjectSettingsDialog } from "@/components/player/project-settings-dialog"
+import { ProjectSettingsDialog } from "@/components/dialogs/project-settings-dialog"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useRootStore } from "@/hooks/use-root-store"
 import { cn } from "@/lib/utils"
+import { useProject } from "@/machines/project-machine"
 
 import { ThemeToggle } from "../theme-toggle"
 import { LayoutMode, LayoutPreviews } from "./layouts/layout-previews"
@@ -17,13 +17,12 @@ interface TopNavBarProps {
 }
 
 export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: TopNavBarProps) {
-  const { saveState, isSaved, markAsSaved } = useRootStore()
-  const [projectName, setProjectName] = useState("Без названия #1")
+  const { name, isDirty, setName, setDirty } = useProject()
   const [isEditing, setIsEditing] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProjectName(e.target.value)
+    setName(e.target.value)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -33,8 +32,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
   }
 
   const handleSave = () => {
-    saveState()
-    markAsSaved()
+    setDirty(false)
   }
 
   return (
@@ -63,13 +61,13 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <Button
           className={cn(
             "cursor-pointer p-0 h-6 w-6",
-            isSaved ? "opacity-50 hover:opacity-50" : "opacity-100 hover:bg-accent",
+            isDirty ? "opacity-50 hover:opacity-50" : "opacity-100 hover:bg-accent",
           )}
           variant="ghost"
           size="icon"
-          title={isSaved ? "Все изменения сохранены" : "Сохранить изменения"}
+          title={isDirty ? "Все изменения сохранены" : "Сохранить изменения"}
           onClick={handleSave}
-          disabled={isSaved}
+          disabled={isDirty}
         >
           <Save className="h-3.5 w-3.5" />
         </Button>
@@ -87,7 +85,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
             <input
               id="project-name-input"
               type="text"
-              value={projectName}
+              value={name}
               onChange={handleNameChange}
               onKeyDown={handleKeyDown}
               onBlur={() => setIsEditing(false)}
@@ -96,7 +94,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
             />
           ) : (
             <span className="block truncate hover:border pl-[1px] hover:pl-[0px] hover:border-[#3ebfb2]">
-              {projectName}
+              {name}
             </span>
           )}
         </div>

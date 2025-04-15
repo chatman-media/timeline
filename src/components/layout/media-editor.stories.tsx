@@ -5,7 +5,7 @@ import { Meta, StoryObj } from "@storybook/react"
 import { fn } from "@storybook/test"
 import React from "react"
 
-import { RootStoreProvider } from "../mocks/root-store-provider"
+import { StoreProvider } from "../mocks/store-provider"
 import { MediaEditor } from "./media-editor"
 
 // Определяем типы для параметров компонентов
@@ -175,7 +175,7 @@ export const Стандартный: Story = {
       setupScreenEnvironment(false)
       return (
         <div className="dark">
-          <RootStoreProvider
+          <StoreProvider
             mockState={{
               ...mockStoreData,
               layoutMode: "default",
@@ -184,7 +184,7 @@ export const Стандартный: Story = {
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
-          </RootStoreProvider>
+          </StoreProvider>
         </div>
       )
     },
@@ -198,7 +198,7 @@ export const Классический: Story = {
       setupScreenEnvironment(false)
       return (
         <div className="dark">
-          <RootStoreProvider
+          <StoreProvider
             mockState={{
               ...mockStoreData,
               layoutMode: "classic",
@@ -207,7 +207,7 @@ export const Классический: Story = {
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
-          </RootStoreProvider>
+          </StoreProvider>
         </div>
       )
     },
@@ -221,7 +221,7 @@ export const Вертикальный: Story = {
       setupScreenEnvironment(false)
       return (
         <div className="dark">
-          <RootStoreProvider
+          <StoreProvider
             mockState={{
               ...mockStoreData,
               layoutMode: "vertical",
@@ -230,7 +230,7 @@ export const Вертикальный: Story = {
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
-          </RootStoreProvider>
+          </StoreProvider>
         </div>
       )
     },
@@ -244,7 +244,7 @@ export const ДвойнойСВнешнимДисплеем: Story = {
       setupScreenEnvironment(true)
       return (
         <div className="dark">
-          <RootStoreProvider
+          <StoreProvider
             mockState={{
               ...mockStoreData,
               layoutMode: "dual",
@@ -253,7 +253,7 @@ export const ДвойнойСВнешнимДисплеем: Story = {
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
-          </RootStoreProvider>
+          </StoreProvider>
         </div>
       )
     },
@@ -267,7 +267,7 @@ export const ДвойнойБезВнешнегоДисплея: Story = {
       setupScreenEnvironment(false)
       return (
         <div className="dark">
-          <RootStoreProvider
+          <StoreProvider
             mockState={{
               ...mockStoreData,
               layoutMode: "dual",
@@ -276,7 +276,7 @@ export const ДвойнойБезВнешнегоДисплея: Story = {
             <LayoutWrapper>
               <Story />
             </LayoutWrapper>
-          </RootStoreProvider>
+          </StoreProvider>
         </div>
       )
     },

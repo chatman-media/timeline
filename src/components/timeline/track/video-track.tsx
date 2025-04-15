@@ -1,7 +1,7 @@
 import { memo, useCallback, useRef } from "react"
 
-import { useRootStore } from "@/hooks/use-root-store"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
+import { useTimeline } from "@/providers"
 import { TimelineTrack } from "@/types/timeline"
 
 interface VideoTrackProps {
@@ -17,7 +17,7 @@ const VideoTrack = memo(function VideoTrack({
   sectionStartTime,
   sectionDuration,
 }: VideoTrackProps) {
-  const { setActiveVideo, activeTrackId, setActiveTrack } = useRootStore()
+  const { setActiveVideo, activeTrackId, setActiveTrack } = useTimeline()
   const containerRef = useRef<HTMLDivElement>(null)
 
   if (!track.videos || track.videos.length === 0) {

@@ -1,5 +1,5 @@
 // Реэкспортируем хук из нашего мок-провайдера
-import { useMockRootStore } from "../../components/mocks/root-store-provider"
+import { useMockStore } from "../../components/mocks/store-provider"
 
 // Экспортируем его под оригинальным именем
-export const useRootStore = useMockRootStore
+export const useStore = useMockStore

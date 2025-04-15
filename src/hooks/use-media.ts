@@ -16,14 +16,16 @@ export function useMedia() {
       if (!response.ok) throw new Error("Не удалось загрузить медиафайлы")
 
       const data = await response.json()
-      if (!Array.isArray(data)) throw new Error("Неверный формат данных")
+      if (!data || typeof data !== "object" || !("media" in data)) {
+        throw new Error("Неверный формат данных")
+      }
 
-      const validMedia = data
+      const validMedia = data.media
         .filter(
-          (item): item is MediaFile =>
+          (item: MediaFile): item is MediaFile =>
             item && typeof item === "object" && "id" in item && "name" in item && "path" in item,
         )
-        .sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
+        .sort((a: MediaFile, b: MediaFile) => (a.startTime || 0) - (b.startTime || 0))
 
       setMedia(validMedia)
     } catch (error) {
