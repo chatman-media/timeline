@@ -11,8 +11,8 @@ import { rootStore } from "@/stores/root-store"
 import { MediaFile } from "@/types/videos"
 import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
-import { Skeleton } from "../../ui/skeleton"
-import { FileMetadata, MediaPreview, StatusBar } from ".."
+import { Skeleton } from "../../../ui/skeleton"
+import { FileMetadata, MediaPreview, StatusBar } from "../.."
 
 // Создаем глобальные переменные для кэширования видео и их состояния загрузки
 // Это позволит сохранять состояние между переключениями вкладок и режимов отображения

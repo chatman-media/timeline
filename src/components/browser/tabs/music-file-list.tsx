@@ -156,13 +156,6 @@ export function MusicFileList() {
               setIsPlaying(false)
             }
           }}
-          onAddToPlaylist={() =>
-            handleAdd(
-              { currentTarget: document.createElement("button") } as MouseEvent<HTMLButtonElement>,
-              activeFile,
-            )
-          }
-          onFavorite={() => console.log("Добавить в избранное", activeFile.name)}
         />
       </div>
     )
