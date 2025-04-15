@@ -311,12 +311,12 @@ export function shouldSaveState(
   // Если это критическое действие, сохраняем
   if (actionType && CRITICAL_ACTIONS.has(actionType)) {
     // Для setCurrentTime используем более длинный интервал
-    if (actionType === "setCurrentTime") {
-      const now = Date.now()
-      if (now - lastSaveTimestamp < TIME_SAVE_INTERVAL) {
-        return false
-      }
-    }
+    // if (actionType === "setCurrentTime") {
+    //   const now = Date.now()
+    //   if (now - lastSaveTimestamp < TIME_SAVE_INTERVAL) {
+    //     return false
+    //   }
+    // }
     return true
   }
 

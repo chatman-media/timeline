@@ -70,21 +70,21 @@ export const ActiveVideo = () => {
         // Проверяем валидность времени
         if (!isFinite(newTime) || isNaN(newTime) || newTime < 0) {
           console.warn("[onTimeUpdate] Некорректное время:", newTime)
-          setCurrentTime(0)
+          // setCurrentTime(0)
           return
         }
 
         // Проверяем, что время не слишком большое (больше 100 лет)
         if (newTime > 100 * 365 * 24 * 60 * 60) {
           console.warn("[onTimeUpdate] Время слишком большое:", newTime)
-          setCurrentTime(0)
+          // setCurrentTime(0)
           return
         }
 
         // Проверяем, что время не слишком маленькое (меньше 0.001 секунды)
         if (newTime < 0.001) {
           console.warn("[onTimeUpdate] Время слишком маленькое:", newTime)
-          setCurrentTime(0)
+          // setCurrentTime(0)
           return
         }
 
@@ -256,7 +256,16 @@ export const ActiveVideo = () => {
 
       return () => clearTimeout(timeout)
     }
-  }, [isChangingCamera, resetChangingCamera, videoRefs, activeVideo, currentTime, isPlaying, isRecordingSchema, setIsPlaying])
+  }, [
+    isChangingCamera,
+    resetChangingCamera,
+    videoRefs,
+    activeVideo,
+    currentTime,
+    isPlaying,
+    isRecordingSchema,
+    setIsPlaying,
+  ])
 
   // Эффект для синхронизации времени видео с общим состоянием
   useEffect(() => {

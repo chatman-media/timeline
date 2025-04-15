@@ -204,7 +204,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     if (!activeVideo || !activeTrackId) return
 
     // Находим активный трек
-    const activeTrack = tracks.find(track => track.id === activeTrackId)
+    const activeTrack = tracks.find((track) => track.id === activeTrackId)
     if (!activeTrack) return
 
     // Находим первое видео в треке

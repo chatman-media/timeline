@@ -1,11 +1,11 @@
 import { Keyboard, Layout, ListTodo, Save, Send, Settings } from "lucide-react"
 import { useState } from "react"
 
+import { ProjectSettingsDialog } from "@/components/player/project-settings-dialog"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { useRootStore } from "@/hooks/use-root-store"
 import { cn } from "@/lib/utils"
-import { ProjectSettingsDialog } from "@/components/player/project-settings-dialog"
 
 import { ThemeToggle } from "../theme-toggle"
 import { LayoutMode, LayoutPreviews } from "./layouts/layout-previews"

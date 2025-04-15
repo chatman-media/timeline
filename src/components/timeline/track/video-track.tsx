@@ -17,11 +17,7 @@ const VideoTrack = memo(function VideoTrack({
   sectionStartTime,
   sectionDuration,
 }: VideoTrackProps) {
-  const {
-    setActiveVideo,
-    activeTrackId,
-    setActiveTrack,
-  } = useRootStore()
+  const { setActiveVideo, activeTrackId, setActiveTrack } = useRootStore()
   const containerRef = useRef<HTMLDivElement>(null)
 
   if (!track.videos || track.videos.length === 0) {
@@ -82,10 +78,10 @@ const VideoTrack = memo(function VideoTrack({
         >
           <div
             className={`drag--parent flex-1 ${isActive ? "drag--parent--bordered" : ""}`}
-            style={{ 
+            style={{
               cursor: "pointer",
               zIndex: 1,
-              position: "relative"
+              position: "relative",
             }}
             onClick={(e) => {
               if (track.videos.length > 0) {

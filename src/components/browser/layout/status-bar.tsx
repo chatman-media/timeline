@@ -2,7 +2,7 @@ import { CopyPlus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { MediaFile } from "@/types/videos"
-import { getFileType } from "@/utils/media-utils"
+import { getRemainingMediaCounts, getTopDateWithRemainingFiles } from "@/utils/media-file-utils"
 
 interface StatusBarProps {
   media: MediaFile[]
@@ -23,47 +23,17 @@ export function StatusBar({
   sortedDates,
   addedFiles,
 }: StatusBarProps) {
-  // Сортируем даты по количеству видео (от большего к меньшему)
-  const datesByFileCount = [...sortedDates].sort((a, b) => b.files.length - a.files.length)
-
-  const hasAudioStream = (file: MediaFile) => {
-    return file.probeData?.streams?.some((stream) => stream.codec_type === "audio")
-  }
-
-  // Подсчитываем количество оставшихся файлов каждого типа
-  const remainingVideoCount = media.filter((f) => {
-    return getFileType(f) === "video" && f.path && !addedFiles.has(f.path) && hasAudioStream(f)
-  }).length
-
-  const remainingAudioCount = media.filter((f) => {
-    return getFileType(f) === "audio" && f.path && !addedFiles.has(f.path) && hasAudioStream(f)
-  }).length
-
-  // Проверяем, все ли файлы уже добавлены
-  const allFilesAdded =
-    media.length > 0 &&
-    media.filter(hasAudioStream).every((file) => file.path && addedFiles.has(file.path))
-
-  // Функция для подсчета оставшихся файлов за определенную дату
-  const getRemainingFilesForDate = (dateInfo: { date: string; files: MediaFile[] }) => {
-    return dateInfo.files.filter(
-      (file) => !file.path || (!addedFiles.has(file.path) && hasAudioStream(file)),
-    )
-  }
-
-  // Получаем дату с наибольшим количеством оставшихся файлов
-  const topDateWithRemainingFiles = datesByFileCount
-    .map((dateInfo) => ({
-      ...dateInfo,
-      remainingFiles: getRemainingFilesForDate(dateInfo),
-    }))
-    .find((dateInfo) => dateInfo.remainingFiles.length > 0)
+  const { remainingVideoCount, remainingAudioCount, allFilesAdded } = getRemainingMediaCounts(
+    media,
+    addedFiles,
+  )
+  const topDateWithRemainingFiles = getTopDateWithRemainingFiles(sortedDates, addedFiles)
 
   return (
     <div className="flex justify-between items-center text-sm w-full p-2 gap-2">
       <div className="flex flex-col items-end justify-center gap-0 text-xs">
         <span className="px-1 flex items-center whitespace-nowrap gap-2">
-          {remainingVideoCount > 0 && (
+          {remainingVideoCount && (
             <Button
               variant="outline"
               size="sm"
@@ -75,7 +45,7 @@ export function StatusBar({
               <CopyPlus size={10} className="" />
             </Button>
           )}
-          {remainingAudioCount > 0 && (
+          {remainingAudioCount && (
             <Button
               variant="outline"
               size="sm"

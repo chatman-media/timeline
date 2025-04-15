@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -13,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Button } from "@/components/ui/button"
 import { useProjectStore } from "@/store/project-store"
 import { AspectRatio, ColorSpace, FrameRate, Resolution } from "@/types/project"
 
@@ -27,7 +27,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="[&>button]:hidden">
+      <DialogContent className="dark:bg-[#1b1a1f] rounded-sm [&>button]:hidden">
         <DialogHeader>
           <DialogTitle className=" text-center text-md">Настройки проекта</DialogTitle>
         </DialogHeader>
@@ -83,22 +83,13 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                 <SelectItem value="1280x720" className="">
                   1280x720 (HD)
                 </SelectItem>
-                <SelectItem
-                  value="1920x1080"
-                  className=""
-                >
+                <SelectItem value="1920x1080" className="">
                   1920x1080 (Full HD)
                 </SelectItem>
-                <SelectItem
-                  value="3840x2160"
-                  className=""
-                >
+                <SelectItem value="3840x2160" className="">
                   3840x2160 (4k UHD)
                 </SelectItem>
-                <SelectItem
-                  value="4096x2160"
-                  className=""
-                >
+                <SelectItem value="4096x2160" className="">
                   4096x2160 (DCI 4k)
                 </SelectItem>
                 <SelectItem value="custom" className="">

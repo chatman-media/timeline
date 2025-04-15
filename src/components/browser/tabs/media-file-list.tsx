@@ -1,7 +1,9 @@
+import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
 import { CameraCaptureModal } from "@/components/modals/camera-capture-modal"
+import { Button } from "@/components/ui/button"
 import { useRootStore } from "@/hooks/use-root-store"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { cn } from "@/lib/utils"
@@ -11,8 +13,6 @@ import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { FileMetadata, MediaPreview, StatusBar } from ".."
-import { Button } from "@/components/ui/button"
-import { CopyPlus } from "lucide-react"
 
 // Создаем глобальные переменные для кэширования видео и их состояния загрузки
 // Это позволит сохранять состояние между переключениями вкладок и режимов отображения

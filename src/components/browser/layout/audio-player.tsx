@@ -1,8 +1,6 @@
-import { Heart, Pause, Play, Plus } from "lucide-react"
-import { useState } from "react"
+import { Pause, Play, Plus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 
 interface AudioPlayerProps {
   title: string
@@ -11,8 +9,7 @@ interface AudioPlayerProps {
   isPlaying?: boolean
   onPlay?: () => void
   onPause?: () => void
-  onAddToPlaylist?: () => void
-  onFavorite?: () => void
+  onAdd?: () => void
 }
 
 export function AudioPlayer({
@@ -22,22 +19,14 @@ export function AudioPlayer({
   isPlaying = false,
   onPlay,
   onPause,
-  onAddToPlaylist,
-  onFavorite,
+  onAdd,
 }: AudioPlayerProps) {
-  const [favorite, setFavorite] = useState(false)
-
   const handlePlayPause = () => {
     if (isPlaying) {
       onPause?.()
     } else {
       onPlay?.()
     }
-  }
-
-  const handleFavorite = () => {
-    setFavorite(!favorite)
-    onFavorite?.()
   }
 
   return (
@@ -66,10 +55,7 @@ export function AudioPlayer({
         <div className="flex justify-between items-center">
           <h3 className="text-sm font-medium truncate">{title}</h3>
           <div className="flex items-center space-x-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleFavorite}>
-              <Heart size={16} className={cn(favorite && "fill-current text-red-500")} />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onAddToPlaylist}>
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onAdd}>
               <Plus size={16} />
             </Button>
           </div>

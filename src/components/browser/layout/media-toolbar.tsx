@@ -30,8 +30,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 interface MediaToolbarProps {
-  viewMode: "list" | "grid" | "thumbnails" | "metadata"
-  onViewModeChange: (mode: "list" | "grid" | "thumbnails" | "metadata") => void
+  viewMode: "list" | "grid" | "thumbnails"
+  onViewModeChange: (mode: "list" | "grid" | "thumbnails") => void
   onImport: () => void
   onImportFile: () => void
   onImportFolder: () => void
@@ -51,7 +51,6 @@ interface MediaToolbarProps {
   onDecreaseSize?: () => void
   canIncreaseSize?: boolean
   canDecreaseSize?: boolean
-  currentSize?: number
 }
 
 export function MediaToolbar({

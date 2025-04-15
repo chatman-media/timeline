@@ -196,11 +196,13 @@ export const rootStore = createStore<StateContext, EventPayloadMap, StoreEffect>
 
     setActiveVideo: (context: StateContext, event: { videoId: string }) => {
       const newVideo = context.media.find((m) => m.id === event.videoId) ?? null
-      return newVideo ? {
-        ...context,
-        activeVideo: newVideo,
-        isDirty: true,
-      } : context
+      return newVideo
+        ? {
+            ...context,
+            activeVideo: newVideo,
+            isDirty: true,
+          }
+        : context
     },
 
     setActiveTrack: (context: StateContext, event: { trackId: string }) => {

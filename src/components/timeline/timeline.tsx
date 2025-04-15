@@ -235,7 +235,11 @@ export function Timeline() {
             if (video) {
               setActiveVideo(video.id)
               // Проверяем время перед обновлением
-              if (isFinite(currentTime) && currentTime >= 0 && currentTime <= (video.duration || 0)) {
+              if (
+                isFinite(currentTime) &&
+                currentTime >= 0 &&
+                currentTime <= (video.duration || 0)
+              ) {
                 updateTime(currentTime)
               } else {
                 console.warn("[Timeline] Некорректное время при переключении дорожек:", currentTime)
@@ -254,7 +258,11 @@ export function Timeline() {
               setActiveVideo(firstVideo.id)
 
               // Проверяем время перед обновлением
-              if (isFinite(currentTime) && currentTime >= 0 && currentTime <= (firstVideo.duration || 0)) {
+              if (
+                isFinite(currentTime) &&
+                currentTime >= 0 &&
+                currentTime <= (firstVideo.duration || 0)
+              ) {
                 updateTime(currentTime)
               } else {
                 console.warn("[Timeline] Некорректное время при переключении дорожек:", currentTime)
