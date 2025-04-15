@@ -18,6 +18,13 @@ import {
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
 
+import {
+  FilterType,
+  GroupBy,
+  SortBy,
+  SortOrder,
+  ViewMode,
+} from "@/components/browser/tabs/media/types"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -30,19 +37,19 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 interface MediaToolbarProps {
-  viewMode: "list" | "grid" | "thumbnails"
-  onViewModeChange: (mode: "list" | "grid" | "thumbnails") => void
+  viewMode: ViewMode
+  onViewModeChange: (mode: ViewMode) => void
   onImport: () => void
   onImportFile: () => void
   onImportFolder: () => void
-  onSort: (sortBy: string) => void
-  onFilter: (filterType: string) => void
-  onGroupBy: (groupBy: string) => void
+  onSort: (sortBy: SortBy) => void
+  onFilter: (filterType: FilterType) => void
+  onGroupBy: (groupBy: GroupBy) => void
   onChangeOrder?: () => void
-  sortOrder?: "asc" | "desc"
-  currentSortBy?: string
-  currentFilterType?: string
-  currentGroupBy?: string
+  sortOrder?: SortOrder
+  currentSortBy?: SortBy
+  currentFilterType?: FilterType
+  currentGroupBy?: GroupBy
   onRecord?: () => void
   onRecordCamera?: () => void
   onRecordScreen?: () => void
@@ -51,6 +58,7 @@ interface MediaToolbarProps {
   onDecreaseSize?: () => void
   canIncreaseSize?: boolean
   canDecreaseSize?: boolean
+  currentSize?: number
 }
 
 export function MediaToolbar({
@@ -90,17 +98,17 @@ export function MediaToolbar({
   }, [currentFilterType])
 
   // Обработчики для обновления стейта и вызова колбэков
-  const handleSort = (sortBy: string) => {
+  const handleSort = (sortBy: SortBy) => {
     setInternalSortBy(sortBy)
     onSort(sortBy)
   }
 
-  const handleFilter = (filterType: string) => {
+  const handleFilter = (filterType: FilterType) => {
     setInternalFilterType(filterType)
     onFilter(filterType)
   }
 
-  const handleGroupBy = (groupBy: string) => {
+  const handleGroupBy = (groupBy: GroupBy) => {
     setInternalGroupBy(groupBy)
     onGroupBy(groupBy)
   }

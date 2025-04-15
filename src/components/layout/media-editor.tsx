@@ -8,6 +8,7 @@ import { LayoutMode } from "./editor/layouts/layout-previews"
 import { OptionsMediaEditor } from "./editor/layouts/options-layout"
 import { VerticalMediaEditor } from "./editor/layouts/vertical-layout"
 import { TopNavBar } from "./editor/top-nav-bar"
+import { CameraRecord } from "./record/camera-record"
 
 export function MediaEditor() {
   const { activeVideo, videoRefs, layoutMode, setLayoutMode } = useRootStore()
@@ -78,6 +79,7 @@ export function MediaEditor() {
       {layoutMode === "options" && <OptionsMediaEditor />}
       {layoutMode === "vertical" && <VerticalMediaEditor />}
       {layoutMode === "dual" && hasExternalDisplay && <DualMediaEditor />}
+      <CameraRecord />
     </div>
   )
 }

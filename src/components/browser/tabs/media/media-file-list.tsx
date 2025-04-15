@@ -2,20 +2,20 @@ import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
-import { CameraCaptureModal } from "@/components/modals/camera-capture-modal"
 import { Button } from "@/components/ui/button"
 import { useRootStore } from "@/hooks/use-root-store"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { cn } from "@/lib/utils"
+import { useModalContext } from "@/providers/modal-provider"
 import { rootStore } from "@/stores/root-store"
 import { MediaFile } from "@/types/videos"
 import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../../ui/skeleton"
 import { FileMetadata, MediaPreview, StatusBar } from "../.."
+import { FilterType, GroupBy, MediaSettings, SortBy, SortOrder, ViewMode } from "./types"
 
 // Создаем глобальные переменные для кэширования видео и их состояния загрузки
-// Это позволит сохранять состояние между переключениями вкладок и режимов отображения
 const globalVideoCache = new Map<string, HTMLVideoElement | null>()
 const globalLoadedVideosCache = new Map<string, boolean>()
 
@@ -31,95 +31,82 @@ const DEFAULT_SIZE_THUMBNAILS = 125
 const DEFAULT_SIZE_LIST = 80
 
 // Ключи для localStorage
-const STORAGE_KEY_PREFIX = "timeline-preview-size-"
-const STORAGE_KEY_GRID = `${STORAGE_KEY_PREFIX}grid`
-const STORAGE_KEY_THUMBNAILS = `${STORAGE_KEY_PREFIX}thumbnails`
-const STORAGE_KEY_LIST = `${STORAGE_KEY_PREFIX}list`
-const STORAGE_KEY_METADATA = `${STORAGE_KEY_PREFIX}metadata`
+const STORAGE_KEYS = {
+  PREFIX: "timeline-preview-size-",
+  GRID: "timeline-preview-size-grid",
+  THUMBNAILS: "timeline-preview-size-thumbnails",
+  LIST: "timeline-preview-size-list",
+  VIEW_MODE: "timeline-view-mode",
+  GROUP_BY: "timeline-group-by",
+  SORT_BY: "timeline-sort-by",
+  SORT_ORDER: "timeline-sort-order",
+  FILTER_TYPE: "timeline-filter-type",
+} as const
 
-// Ключи для настроек
-const STORAGE_KEY_VIEW_MODE = "timeline-view-mode"
-const STORAGE_KEY_GROUP_BY = "timeline-group-by"
-const STORAGE_KEY_SORT_BY = "timeline-sort-by"
-const STORAGE_KEY_SORT_ORDER = "timeline-sort-order"
-const STORAGE_KEY_FILTER_TYPE = "timeline-filter-type"
+// Функция для работы с localStorage
+const storage = {
+  get: <T,>(key: string, defaultValue: T): T => {
+    if (typeof window === "undefined") return defaultValue
+    try {
+      const value = localStorage.getItem(key)
+      if (!value) return defaultValue
+
+      // Если значение - строка, возвращаем как есть
+      if (typeof defaultValue === "string") {
+        return value as T
+      }
+
+      // Для остальных типов пытаемся распарсить JSON
+      return JSON.parse(value)
+    } catch (error) {
+      console.error(`[MediaFileList] Error reading from localStorage:`, error)
+      return defaultValue
+    }
+  },
+
+  set: (key: string, value: any): void => {
+    if (typeof window === "undefined") return
+    try {
+      localStorage.setItem(key, JSON.stringify(value))
+    } catch (error) {
+      console.error(`[MediaFileList] Error saving to localStorage:`, error)
+    }
+  },
+
+  remove: (key: string): void => {
+    if (typeof window === "undefined") return
+    try {
+      localStorage.removeItem(key)
+    } catch (error) {
+      console.error(`[MediaFileList] Error removing from localStorage:`, error)
+    }
+  },
+}
 
 // Функция для загрузки сохраненного размера из localStorage
-const getSavedSize = (mode: string, defaultSize: number): number => {
-  if (typeof window === "undefined") return defaultSize // Проверка на SSR
-
-  // Выбираем правильный ключ на основе режима
-  let storageKey
-  if (mode === "grid") storageKey = STORAGE_KEY_GRID
-  else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
-  else if (mode === "list") storageKey = STORAGE_KEY_LIST
-  else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
-  else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
-
-  try {
-    const savedValue = localStorage.getItem(storageKey)
-
-    if (savedValue) {
-      const parsedValue = parseInt(savedValue, 10)
-      // Проверяем, что значение входит в допустимый диапазон
-      if (PREVIEW_SIZES.includes(parsedValue)) {
-        console.log(
-          `[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`,
-        )
-        return parsedValue
-      }
-    }
-  } catch (error) {
-    console.error("[MediaFileList] Error reading from localStorage:", error)
-  }
-
-  console.log(`[MediaFileList] No saved size for mode ${mode}, using default ${defaultSize}`)
-  return defaultSize
+const getSavedSize = (mode: ViewMode, defaultSize: number): number => {
+  const key =
+    STORAGE_KEYS[mode.toUpperCase() as keyof typeof STORAGE_KEYS] || `${STORAGE_KEYS.PREFIX}${mode}`
+  const savedValue = storage.get(key, defaultSize)
+  return PREVIEW_SIZES.includes(savedValue) ? savedValue : defaultSize
 }
 
 // Функция для загрузки сохраненных настроек
-const loadSavedSettings = () => {
-  if (typeof window === "undefined") return null
-
-  try {
-    const viewMode = localStorage.getItem(STORAGE_KEY_VIEW_MODE) || "grid"
-    const groupBy = localStorage.getItem(STORAGE_KEY_GROUP_BY) || "date"
-    const sortBy = localStorage.getItem(STORAGE_KEY_SORT_BY) || "date"
-    const sortOrder = localStorage.getItem(STORAGE_KEY_SORT_ORDER) || "asc"
-    const filterType = localStorage.getItem(STORAGE_KEY_FILTER_TYPE) || "all"
-
-    return {
-      viewMode,
-      groupBy,
-      sortBy,
-      sortOrder,
-      filterType,
-    }
-  } catch (error) {
-    console.error("[MediaFileList] Error loading settings:", error)
-    return null
+const loadSavedSettings = (): MediaSettings => {
+  return {
+    viewMode: storage.get(STORAGE_KEYS.VIEW_MODE, "grid") as ViewMode,
+    groupBy: storage.get(STORAGE_KEYS.GROUP_BY, "date") as GroupBy,
+    sortBy: storage.get(STORAGE_KEYS.SORT_BY, "date") as SortBy,
+    sortOrder: storage.get(STORAGE_KEYS.SORT_ORDER, "asc") as SortOrder,
+    filterType: storage.get(STORAGE_KEYS.FILTER_TYPE, "all") as FilterType,
   }
 }
 
 // Функция для сохранения настроек
-const saveSettings = (settings: {
-  viewMode: string
-  groupBy: string
-  sortBy: string
-  sortOrder: string
-  filterType: string
-}) => {
-  if (typeof window === "undefined") return
-
-  try {
-    localStorage.setItem(STORAGE_KEY_VIEW_MODE, settings.viewMode)
-    localStorage.setItem(STORAGE_KEY_GROUP_BY, settings.groupBy)
-    localStorage.setItem(STORAGE_KEY_SORT_BY, settings.sortBy)
-    localStorage.setItem(STORAGE_KEY_SORT_ORDER, settings.sortOrder)
-    localStorage.setItem(STORAGE_KEY_FILTER_TYPE, settings.filterType)
-  } catch (error) {
-    console.error("[MediaFileList] Error saving settings:", error)
-  }
+const saveSettings = (settings: MediaSettings): void => {
+  Object.entries(settings).forEach(([key, value]) => {
+    storage.set(STORAGE_KEYS[key.toUpperCase() as keyof typeof STORAGE_KEYS], value)
+  })
 }
 
 interface GroupedMediaFiles {
@@ -130,10 +117,9 @@ interface GroupedMediaFiles {
 // Оборачиваем в memo для предотвращения ненужных рендеров
 export const MediaFileList = memo(function MediaFileList({
   viewMode: initialViewMode = "list",
-}: { viewMode?: "list" | "grid" | "thumbnails" | "metadata" }) {
+}: { viewMode?: ViewMode }) {
   const { media, isLoading, addNewTracks, addedFiles, hasFetched } = useRootStore()
   const [searchQuery, setSearchQuery] = useState("")
-  const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
 
   // Используем локальный ref для избежания повторных запросов в текущей сессии браузера
   const localDataFetchedRef = useRef(false)
@@ -145,14 +131,14 @@ export const MediaFileList = memo(function MediaFileList({
   const savedSettings = loadSavedSettings()
 
   // Инициализируем состояние с сохраненными настройками
-  const [viewMode, setViewMode] = useState<"list" | "grid" | "thumbnails" | "metadata">(
-    (savedSettings?.viewMode as any) || initialViewMode,
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    (savedSettings?.viewMode as ViewMode) || initialViewMode,
   )
-  const [sortBy, setSortBy] = useState<string>(savedSettings?.sortBy || "date")
-  const [filterType, setFilterType] = useState<string>(savedSettings?.filterType || "all")
-  const [groupBy, setGroupBy] = useState<string>(savedSettings?.groupBy || "none")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
-    (savedSettings?.sortOrder as "asc" | "desc") || "desc",
+  const [sortBy, setSortBy] = useState<SortBy>(savedSettings?.sortBy || "date")
+  const [filterType, setFilterType] = useState<FilterType>(savedSettings?.filterType || "all")
+  const [groupBy, setGroupBy] = useState<GroupBy>(savedSettings?.groupBy || "none")
+  const [sortOrder, setSortOrder] = useState<SortOrder>(
+    (savedSettings?.sortOrder as SortOrder) || "desc",
   )
 
   // Сохраняем настройки при их изменении
@@ -178,6 +164,9 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Состояние для размера превью с учетом режима просмотра
   const [previewSize, setPreviewSize] = useState<number>(actualInitialSize)
+
+  const { handleOpenModal } = useModalContext()
+  const openRecordModal = () => handleOpenModal("record")
 
   // Обертка для setPreviewSize, которая также сохраняет размер в localStorage
   const updatePreviewSize = useCallback(
@@ -264,8 +253,7 @@ export const MediaFileList = memo(function MediaFileList({
   })
 
   // Обработчики для MediaToolbar
-  const handleViewModeChange = useCallback((mode: "list" | "grid" | "thumbnails" | "metadata") => {
-    // Просто меняем режим просмотра, установка размера произойдет в useEffect
+  const handleViewModeChange = useCallback((mode: ViewMode) => {
     setViewMode(mode)
   }, [])
 
@@ -328,15 +316,15 @@ export const MediaFileList = memo(function MediaFileList({
     input.click()
   }, [])
 
-  const handleSort = useCallback((newSortBy: string) => {
+  const handleSort = useCallback((newSortBy: SortBy) => {
     setSortBy(newSortBy)
   }, [])
 
-  const handleFilter = useCallback((newFilterType: string) => {
+  const handleFilter = useCallback((newFilterType: FilterType) => {
     setFilterType(newFilterType)
   }, [])
 
-  const handleGroupBy = useCallback((newGroupBy: string) => {
+  const handleGroupBy = useCallback((newGroupBy: GroupBy) => {
     setGroupBy(newGroupBy)
   }, [])
 
@@ -379,13 +367,12 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Обработчики для кнопок записи
   const handleRecord = () => {
-    console.log("Открыть меню записи")
-    // В будущем здесь можно добавить логику открытия модального окна с опциями записи
+    openRecordModal()
   }
 
   const handleRecordCamera = () => {
     console.log("Открытие модального окна записи с веб-камеры")
-    setIsRecordingModalOpen(true)
+    openRecordModal()
   }
 
   const handleRecordScreen = () => {
@@ -397,65 +384,6 @@ export const MediaFileList = memo(function MediaFileList({
     console.log("Запись голоса")
     // В будущем здесь будет логика для записи голоса
   }
-
-  const handleRecordedVideo = useCallback(
-    (blob: Blob, fileName: string) => {
-      console.log(`Получена запись видео: ${fileName}, размер: ${blob.size} байт`)
-
-      // Создаем медиафайл из записанного блоба
-      const file = new File([blob], fileName, { type: "video/webm" })
-
-      // Создаем объект URL для просмотра видео
-      const fileUrl = URL.createObjectURL(file)
-
-      // Получаем длительность видео
-      const videoElement = document.createElement("video")
-      videoElement.src = fileUrl
-
-      videoElement.onloadedmetadata = () => {
-        const duration = videoElement.duration
-
-        // Создаем новый MediaFile объект
-        const newMediaFile: MediaFile = {
-          id: `recorded-${Date.now()}`,
-          name: fileName,
-          path: fileUrl,
-          size: blob.size,
-          startTime: 0,
-          duration: duration,
-          probeData: {
-            format: {
-              duration: duration,
-              filename: fileName,
-              format_name: "webm",
-              size: blob.size,
-            },
-            streams: [
-              {
-                codec_type: "video",
-                codec_name: "vp9",
-                width: videoElement.videoWidth,
-                height: videoElement.videoHeight,
-                r_frame_rate: "30/1",
-                index: 0,
-              },
-            ],
-            chapters: [],
-          },
-        }
-
-        // Добавляем видео в медиатеку с правильным типом события
-        rootStore.send({
-          type: "setMedia",
-          media: [...media, newMediaFile],
-        })
-
-        // Очищаем URL
-        URL.revokeObjectURL(fileUrl)
-      }
-    },
-    [media],
-  )
 
   // Используем useMemo для сортировки медиафайлов, чтобы не пересортировывать при каждом рендере
   // Фильтрация и сортировка
@@ -1005,11 +933,10 @@ export const MediaFileList = memo(function MediaFileList({
 
     // Выбираем правильный ключ на основе режима
     let storageKey
-    if (mode === "grid") storageKey = STORAGE_KEY_GRID
-    else if (mode === "thumbnails") storageKey = STORAGE_KEY_THUMBNAILS
-    else if (mode === "list") storageKey = STORAGE_KEY_LIST
-    else if (mode === "metadata") storageKey = STORAGE_KEY_METADATA
-    else storageKey = `${STORAGE_KEY_PREFIX}${mode}` // Запасной вариант
+    if (mode === "grid") storageKey = STORAGE_KEYS.GRID
+    else if (mode === "thumbnails") storageKey = STORAGE_KEYS.THUMBNAILS
+    else if (mode === "list") storageKey = STORAGE_KEYS.LIST
+    else storageKey = `${STORAGE_KEYS.PREFIX}${mode}` // Запасной вариант
 
     try {
       localStorage.setItem(storageKey, size.toString())
@@ -1025,10 +952,9 @@ export const MediaFileList = memo(function MediaFileList({
 
     try {
       // Удаляем все сохраненные размеры
-      localStorage.removeItem(STORAGE_KEY_GRID)
-      localStorage.removeItem(STORAGE_KEY_THUMBNAILS)
-      localStorage.removeItem(STORAGE_KEY_LIST)
-      localStorage.removeItem(STORAGE_KEY_METADATA)
+      localStorage.removeItem(STORAGE_KEYS.GRID)
+      localStorage.removeItem(STORAGE_KEYS.THUMBNAILS)
+      localStorage.removeItem(STORAGE_KEYS.LIST)
       console.log("[MediaFileList] Cleared all saved sizes from localStorage")
     } catch (error) {
       console.error("[MediaFileList] Error clearing localStorage:", error)
@@ -1305,13 +1231,6 @@ export const MediaFileList = memo(function MediaFileList({
           addedFiles={addedFiles}
         />
       </div>
-      {isRecordingModalOpen && (
-        <CameraCaptureModal
-          isOpen={isRecordingModalOpen}
-          onClose={() => setIsRecordingModalOpen(false)}
-          onVideoRecorded={handleRecordedVideo}
-        />
-      )}
     </div>
   )
 })

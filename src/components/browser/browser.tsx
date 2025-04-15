@@ -1,4 +1,4 @@
-import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles, Sticker, Type } from "lucide-react"
+import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles, Type } from "lucide-react"
 import { memo, useState } from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
@@ -11,6 +11,7 @@ import {
   SubtitlesList,
   TransitionsList,
 } from "."
+
 export const TAB_TRIGGER_STYLES =
   "text-xs text-gray-800 dark:bg-[#1b1a1f] bg-gray-200 data-[state=active]:bg-secondary data-[state=active]:text-[#3ebfb2] dark:data-[state=active]:bg-secondary dark:data-[state=active]:text-[#3ebfb2] hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 border-1 border-transparent flex flex-col items-center justify-center gap-1 py-2 [&>svg]:data-[state=active]:text-[#3ebfb2]"
 
