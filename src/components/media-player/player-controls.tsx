@@ -26,16 +26,17 @@ interface PlayerControlsProps {
 }
 
 export function PlayerControls({ currentTime }: PlayerControlsProps) {
-  const { tracks } = useTimelineContext()
+  const { tracks, activeTrackId } = useTimelineContext()
   const {
     isPlaying,
     setIsPlaying,
-    activeVideo,
+    video,
     setCurrentTime,
     volume,
     setVolume,
     isRecording,
     setIsRecording,
+    setIsSeeking,
   } = usePlayerContext()
   const [isFullscreen, setIsFullscreen] = useState(false)
   const lastSaveTime = useRef(0)
@@ -55,22 +56,22 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
   // Упрощаем handlePlayPause: только переключаем isPlaying
   const handlePlayPause = useCallback(() => {
-    if (!activeVideo) return
+    if (!video) return
     setIsPlaying(!isPlaying)
-  }, [isPlaying, setIsPlaying, activeVideo])
+  }, [isPlaying, setIsPlaying, video])
 
   // Переписываем handleSkipBackward: используем currentTime, вызываем setCurrentTime
   const handleSkipBackward = useCallback(() => {
-    if (!activeVideo) return
+    if (!video) return
 
-    const videoStartTime = activeVideo.startTime || 0
+    const videoStartTime = video.startTime || 0
     if (Math.abs(currentTime - videoStartTime) < 0.01) return
 
     let newTime
-    if (!activeVideo?.probeData?.streams?.[0]?.r_frame_rate) {
+    if (!video?.probeData?.streams?.[0]?.r_frame_rate) {
       newTime = Math.max(videoStartTime, currentTime - 1 / 25)
     } else {
-      const fpsStr = activeVideo.probeData.streams[0].r_frame_rate
+      const fpsStr = video.probeData.streams[0].r_frame_rate
       const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
       const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
 
@@ -82,22 +83,22 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
     setCurrentTime(newTime)
     setIsPlaying(false)
-  }, [activeVideo, currentTime, setCurrentTime, setIsPlaying])
+  }, [video, currentTime, setCurrentTime, setIsPlaying])
 
   // Переписываем handleSkipForward: используем currentTime, вызываем setCurrentTime
   const handleSkipForward = useCallback(() => {
-    if (!activeVideo) return
+    if (!video) return
 
-    const videoStartTime = activeVideo.startTime || 0
-    const videoDuration = activeVideo.duration || 0
+    const videoStartTime = video.startTime || 0
+    const videoDuration = video.duration || 0
     const videoEndTime = videoStartTime + videoDuration
     if (Math.abs(currentTime - videoEndTime) < 0.01) return
 
     let newTime
-    if (!activeVideo?.probeData?.streams?.[0]?.r_frame_rate) {
+    if (!video?.probeData?.streams?.[0]?.r_frame_rate) {
       newTime = Math.min(videoEndTime, currentTime + 1 / 25)
     } else {
-      const fpsStr = activeVideo.probeData.streams[0].r_frame_rate
+      const fpsStr = video.probeData.streams[0].r_frame_rate
       const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
       const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
 
@@ -109,7 +110,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
     setCurrentTime(newTime)
     setIsPlaying(false)
-  }, [activeVideo, currentTime, setCurrentTime, setIsPlaying])
+  }, [video, currentTime, setCurrentTime, setIsPlaying])
 
   const handleVolumeChange = useCallback(
     (value: number[]) => {
@@ -128,32 +129,25 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
   // Переписываем handleRecordToggle: используем currentTime
   const handleRecordToggle = useCallback(() => {
-    if (isRecordingSchema) {
-      stopRecordingSchema()
+    if (isRecording) {
+      setIsRecording(false)
     } else {
-      const trackId = activeTrackId || activeVideo?.id || ""
+      const trackId = activeTrackId || video?.id || ""
       if (trackId) {
         console.log("[handleRecordToggle] Начинаем запись для трека:", trackId)
-        startRecordingSchema(trackId, currentTime)
+        setIsRecording(true)
       } else {
         console.warn("Не удалось начать запись: отсутствует активный трек и активное видео")
       }
     }
-  }, [
-    isRecordingSchema,
-    startRecordingSchema,
-    stopRecordingSchema,
-    activeTrackId,
-    activeVideo,
-    currentTime,
-  ])
+  }, [isRecording, setIsRecording, activeTrackId, video, currentTime])
 
   // Оптимизированный handleTimeChange для коротких видео
   const handleTimeChange = useCallback(
     (value: number[]) => {
-      if (!activeVideo) return
+      if (!video) return
 
-      const videoDuration = activeVideo.duration || 0
+      const videoDuration = video.duration || 0
       const sliderValue = value[0]
 
       // Проверка валидности значения
@@ -185,14 +179,14 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       setIsSeeking(true)
 
       // Устанавливаем новое время с пометкой, что источник - пользователь
-      setCurrentTime(clampedTime, "user")
+      setCurrentTime(clampedTime)
     },
-    [activeVideo, setCurrentTime, setIsSeeking, currentTime],
+    [video, setCurrentTime, setIsSeeking, currentTime],
   )
 
   // Переписываем handleChevronFirst: используем currentTime, вызываем setCurrentTime
   const handleChevronFirst = useCallback(() => {
-    if (!activeVideo || !activeTrackId) return
+    if (!video || !activeTrackId) return
 
     // Находим активный трек
     const activeTrack = tracks.find((track) => track.id === activeTrackId)
@@ -207,27 +201,27 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
     setCurrentTime(startTime)
     setIsPlaying(false)
-  }, [activeVideo, activeTrackId, tracks, currentTime, setCurrentTime, setIsPlaying])
+  }, [video, activeTrackId, tracks, currentTime, setCurrentTime, setIsPlaying])
 
   // Переписываем handleChevronLast: используем currentTime, вызываем setCurrentTime
   const handleChevronLast = useCallback(() => {
-    if (!activeVideo) return
+    if (!video) return
 
-    const videoStartTime = activeVideo.startTime || 0
-    const videoDuration = activeVideo.duration || 0
+    const videoStartTime = video.startTime || 0
+    const videoDuration = video.duration || 0
     const videoEndTime = videoStartTime + videoDuration
 
     if (Math.abs(currentTime - videoEndTime) < 0.01) return
 
     setCurrentTime(videoEndTime)
     setIsPlaying(false)
-  }, [activeVideo, currentTime, setCurrentTime, setIsPlaying])
+  }, [video, currentTime, setCurrentTime, setIsPlaying])
 
   // Используем currentTime для isFirstFrame / isLastFrame
-  const fps = activeVideo?.probeData?.streams?.[0]?.r_frame_rate
+  const fps = video?.probeData?.streams?.[0]?.r_frame_rate
   const frameTime = fps ? 1 / eval(fps) : 0
-  const isFirstFrame = Math.abs(currentTime - (activeVideo?.startTime || 0)) < frameTime
-  const videoEndTimeForLastFrame = (activeVideo?.startTime || 0) + (activeVideo?.duration || 0)
+  const isFirstFrame = Math.abs(currentTime - (video?.startTime || 0)) < frameTime
+  const videoEndTimeForLastFrame = (video?.startTime || 0) + (video?.duration || 0)
   const isLastFrame = Math.abs(currentTime - videoEndTimeForLastFrame) < frameTime
 
   // Функция форматирования времени
@@ -258,7 +252,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
             <Slider
               value={[Math.max(0, currentTime)]}
               min={0}
-              max={activeVideo?.duration || 100}
+              max={video?.duration || 100}
               step={0.001}
               onValueChange={handleTimeChange}
               className="cursor-pointer"
@@ -269,7 +263,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
           </span>
           <span className="mb-[3px]">/</span>
           <span className="text-xs bg-white dark:bg-black text-black dark:text-white rounded-md px-1">
-            {formatTime(activeVideo?.duration || 0)}
+            {formatTime(video?.duration || 0)}
           </span>
         </div>
       </div>
@@ -335,13 +329,13 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className={"cursor-pointer h-8 w-8"}
               variant="ghost"
               size="icon"
-              title={isRecordingSchema ? "Остановить запись" : "Начать запись"}
+              title={isRecording ? "Остановить запись" : "Начать запись"}
               onClick={handleRecordToggle}
             >
               <CircleDot
                 className={cn(
                   "w-4 h-4",
-                  isRecordingSchema
+                  isRecording
                     ? "text-red-500 hover:text-red-600 animate-pulse"
                     : "text-white hover:text-gray-300",
                 )}
@@ -393,18 +387,14 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 className="cursor-pointer h-6 w-6"
                 variant="ghost"
                 size="icon"
-                title={globalVolume === 0 ? "Включить звук" : "Выключить звук"}
+                title={volume === 0 ? "Включить звук" : "Выключить звук"}
                 onClick={handleToggleMute}
               >
-                {globalVolume === 0 ? (
-                  <VolumeX className="w-4 h-4" />
-                ) : (
-                  <Volume2 className="w-4 h-4" />
-                )}
+                {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
               </Button>
               <div className="w-20">
                 <Slider
-                  value={[globalVolume]}
+                  value={[volume]}
                   min={0}
                   max={1}
                   step={0.01}
