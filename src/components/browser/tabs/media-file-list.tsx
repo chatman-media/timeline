@@ -138,6 +138,13 @@ export const MediaFileList = memo(function MediaFileList({
 }): JSX.Element {
   const { isLoading, includeFiles, includedFiles, allMediaFiles: media } = useMediaContext()
   const { addMediaFiles } = useTimelineContext()
+  const addFilesToTimeline = useCallback(
+    (files: MediaFile[]) => {
+      includeFiles(files)
+      addMediaFiles(files)
+    },
+    [addMediaFiles],
+  )
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
 
   // Используем локальный ref для избежания повторных запросов в текущей сессии браузера
@@ -799,14 +806,15 @@ export const MediaFileList = memo(function MediaFileList({
     const imageFiles = media.filter((file: MediaFile) => !file.isImage)
 
     if (nonImageFiles.length > 0) {
-      includeFiles(nonImageFiles)
+      addFilesToTimeline(nonImageFiles)
+      return
     }
 
-    const files = media.filter((file: MediaFile) => file.path)
-    if (files.length > 0) {
-      includeFiles(files)
-    }
-  }, [media, includeFiles])
+    // const files = media.filter((file: MediaFile) => file.path)
+    // if (files.length > 0) {
+    //   addFilesToTimeline(files)
+    // }
+  }, [media, addFilesToTimeline])
 
   const handleAddDateFiles = useCallback(
     (targetDate: string) => {
@@ -819,17 +827,14 @@ export const MediaFileList = memo(function MediaFileList({
         })
         return fileDate === targetDate
       })
-
-      if (dateFiles.length > 0) {
-        includeFiles(dateFiles)
-      }
+      console.log("[handleAddDateFiles] Date files:", dateFiles)
 
       const files = dateFiles.filter((file: MediaFile) => file.path)
       if (files.length > 0) {
-        includeFiles(files)
+        addFilesToTimeline(files)
       }
     },
-    [media, includeFiles],
+    [media, addFilesToTimeline],
   )
 
   const handleAddAllVideoFiles = useCallback(() => {
@@ -838,14 +843,10 @@ export const MediaFileList = memo(function MediaFileList({
     )
 
     if (videoFiles.length > 0) {
-      includeFiles(videoFiles)
+      addFilesToTimeline(videoFiles)
+      return
     }
-
-    const files = videoFiles.filter((file: MediaFile) => file.path)
-    if (files.length > 0) {
-      includeFiles(files)
-    }
-  }, [media, includeFiles])
+  }, [media, addFilesToTimeline])
 
   const handleAddAllAudioFiles = useCallback(() => {
     const audioFiles = media.filter(
@@ -855,14 +856,10 @@ export const MediaFileList = memo(function MediaFileList({
     )
 
     if (audioFiles.length > 0) {
-      includeFiles(audioFiles)
+      addFilesToTimeline(audioFiles)
+      return
     }
-
-    const files = audioFiles.filter((file: MediaFile) => file.path)
-    if (files.length > 0) {
-      includeFiles(files)
-    }
-  }, [media, includeFiles])
+  }, [media, addFilesToTimeline])
 
   // Функция для сохранения выбранного размера в localStorage
   const saveSize = (mode: string, size: number): void => {
@@ -880,21 +877,6 @@ export const MediaFileList = memo(function MediaFileList({
       console.log(`[MediaFileList] Saved size ${size} for mode ${mode} to key ${storageKey}`)
     } catch (error) {
       console.error("[MediaFileList] Error saving to localStorage:", error)
-    }
-  }
-
-  // Функция для очистки всех сохраненных размеров
-  const clearAllSavedSizes = (): void => {
-    if (typeof window === "undefined") return // Проверка на SSR
-
-    try {
-      // Удаляем все сохраненные размеры
-      localStorage.removeItem(STORAGE_KEY_GRID)
-      localStorage.removeItem(STORAGE_KEY_THUMBNAILS)
-      localStorage.removeItem(STORAGE_KEY_LIST)
-      console.log("[MediaFileList] Cleared all saved sizes from localStorage")
-    } catch (error) {
-      console.error("[MediaFileList] Error clearing localStorage:", error)
     }
   }
 
@@ -919,16 +901,12 @@ export const MediaFileList = memo(function MediaFileList({
         return
       }
 
-      // Для видео и аудио добавляем на таймлайн
-      includeFiles([file])
-      addMediaFiles([file])
-
       // Отмечаем файл как добавленный
       if (file.path) {
-        includeFiles([file])
+        addFilesToTimeline([file])
       }
     },
-    [media, includeFiles, videoRefs],
+    [media, addFilesToTimeline, videoRefs],
   )
 
   if (isLoading) {
@@ -1115,18 +1093,13 @@ export const MediaFileList = memo(function MediaFileList({
               className="text-xs flex items-center gap-1 cursor-pointer px-1 h-7"
               onClick={() => {
                 // Фильтруем файлы - изображения не добавляем на таймлайн
+                console.log("[renderGroup] Group files:", group.files)
                 const nonImageFiles = group.files.filter((file) => !file.isImage)
                 const imageFiles = group.files.filter((file) => file.isImage)
 
                 // Добавляем видео и аудио файлы на таймлайн
-                if (nonImageFiles.length > 0) {
-                  includeFiles(nonImageFiles)
-                }
-
-                // Отмечаем все файлы как добавленные
-                const files = group.files.filter((file) => file.path)
-                if (files.length > 0) {
-                  includeFiles(files)
+                if (group.files.length > 0) {
+                  addFilesToTimeline(group.files)
                 }
               }}
             >
