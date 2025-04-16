@@ -1098,8 +1098,8 @@ export const MediaFileList = memo(function MediaFileList({
                 const imageFiles = group.files.filter((file) => file.isImage)
 
                 // Добавляем видео и аудио файлы на таймлайн
-                if (group.files.length > 0) {
-                  addFilesToTimeline(group.files)
+                if (nonImageFiles.length > 0) {
+                  addFilesToTimeline(nonImageFiles)
                 }
               }}
             >
