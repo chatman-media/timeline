@@ -22,32 +22,32 @@ export function RootProvider({ children }: RootProviderProps) {
     const inspector = createBrowserInspector()
 
     const actors = [
-      createActor(timelineMachine, { 
+      createActor(timelineMachine, {
         inspect: inspector.inspect,
-        id: 'timeline'
+        id: "timeline",
       }),
-      createActor(modalMachine, { 
+      createActor(modalMachine, {
         inspect: inspector.inspect,
-        id: 'modal'
+        id: "modal",
       }),
-      createActor(playerMachine, { 
+      createActor(playerMachine, {
         inspect: inspector.inspect,
-        id: 'player'
+        id: "player",
       }),
-      createActor(projectMachine, { 
+      createActor(projectMachine, {
         inspect: inspector.inspect,
-        id: 'project'
+        id: "project",
       }),
-      createActor(mediaMachine, { 
+      createActor(mediaMachine, {
         inspect: inspector.inspect,
-        id: 'media'
+        id: "media",
       }),
     ]
 
-    actors.forEach(actor => actor.start())
+    actors.forEach((actor) => actor.start())
 
     return () => {
-      actors.forEach(actor => actor.stop())
+      actors.forEach((actor) => actor.stop())
     }
   }, [])
 

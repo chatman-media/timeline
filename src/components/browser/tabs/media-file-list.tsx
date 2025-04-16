@@ -5,7 +5,6 @@ import { JSX } from "react"
 import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
 import { CameraCaptureDialog } from "@/components/dialogs/camera-capture-dialog"
 import { Button } from "@/components/ui/button"
-import { useMedia } from "@/hooks/use-media"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { cn } from "@/lib/utils"
 import { useMediaContext } from "@/providers/media-provider"
@@ -15,6 +14,7 @@ import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { FileMetadata, MediaPreview, StatusBar } from ".."
+import { useTimelineContext } from "@/providers"
 
 // Создаем глобальные переменные для кэширования видео и их состояния загрузки
 // Это позволит сохранять состояние между переключениями вкладок и режимов отображения
@@ -63,9 +63,9 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
       const parsedValue = parseInt(savedValue, 10)
       // Проверяем, что значение входит в допустимый диапазон
       if (PREVIEW_SIZES.includes(parsedValue)) {
-        console.log(
-          `[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`,
-        )
+        // console.log(
+        //   `[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`,
+        // )
         return parsedValue
       }
     }
@@ -136,9 +136,8 @@ export const MediaFileList = memo(function MediaFileList({
 }: {
   viewMode?: ViewMode
 }): JSX.Element {
-  const { isLoading, includeFiles, includedFiles } = useMediaContext()
-  // const { setVideo } = usePlayerContext()
-  const { media } = useMedia()
+  const { isLoading, includeFiles, includedFiles, allMediaFiles: media } = useMediaContext()
+  const { addMediaFiles } = useTimelineContext()
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
 
   // Используем локальный ref для избежания повторных запросов в текущей сессии браузера
@@ -254,20 +253,20 @@ export const MediaFileList = memo(function MediaFileList({
       console.log(`[MediaFileList] Saved size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`)
       updatePreviewSize(MIN_SIZE)
     } else {
-      console.log(`[MediaFileList] Loading saved size ${savedSize} for mode ${viewMode}`)
+      // console.log(`[MediaFileList] Loading saved size ${savedSize} for mode ${viewMode}`)
       updatePreviewSize(savedSize)
     }
   }, [viewMode, updatePreviewSize])
 
-  console.log("[MediaFileList] Rendering with:", {
-    mediaCount: media.length,
-    isLoading,
-    hasAddedFiles: includedFiles.length > 0,
-    viewMode,
-    hasFetched: media.length > 0,
-    localFetched: localDataFetchedRef.current,
-    previewSize,
-  })
+  // console.log("[MediaFileList] Rendering with:", {
+  //   mediaCount: media.length,
+  //   isLoading,
+  //   hasAddedFiles: includedFiles.length > 0,
+  //   viewMode,
+  //   hasFetched: media.length > 0,
+  //   localFetched: localDataFetchedRef.current,
+  //   previewSize,
+  // })
 
   // Обработчики для MediaToolbar
   const handleViewModeChange = useCallback((mode: ViewMode) => {
@@ -902,6 +901,7 @@ export const MediaFileList = memo(function MediaFileList({
   const handleAddMedia = useCallback(
     (e: React.MouseEvent, file: MediaFile) => {
       e.stopPropagation()
+      console.log("[handleAddMedia] Adding media file:", file.name)
 
       // Проверяем, не добавлен ли файл уже в addedFiles
       if (!file.path || includedFiles.map((f) => f.path).includes(file.path)) {
@@ -911,24 +911,17 @@ export const MediaFileList = memo(function MediaFileList({
 
       // Останавливаем все видео в текущей группе
       const fileId = file.id || file.path || file.name
-      const videoElement = videoRefs.current[`${fileId}-0`]
-      if (videoElement) {
-        videoElement.pause()
-        videoElement.currentTime = 0
-      }
+      console.log("[handleAddMedia] File ID:", fileId)
 
       // Проверяем, является ли файл изображением
       if (file.isImage) {
         console.log("[handleAddMedia] Добавляем изображение только в медиафайлы:", file.name)
-        // Только отмечаем файл как добавленный, но не добавляем на таймлайн
-        if (file.path) {
-          includeFiles([file])
-        }
         return
       }
 
       // Для видео и аудио добавляем на таймлайн
-      // includeFiles([file])
+      includeFiles([file])
+      addMediaFiles([file])
 
       // Отмечаем файл как добавленный
       if (file.path) {
@@ -1157,10 +1150,10 @@ export const MediaFileList = memo(function MediaFileList({
     return <div className="space-y-4">{groupedFiles.map((group, index) => renderGroup(group))}</div>
   }
 
-  console.log("[MediaFileList] Rendering media list with:", {
-    mediaCount: media.length,
-    filteredCount: filteredAndSortedMedia.length,
-  })
+  // console.log("[MediaFileList] Rendering media list with:", {
+  //   mediaCount: media.length,
+  //   filteredCount: filteredAndSortedMedia.length,
+  // })
 
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden">

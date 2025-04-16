@@ -11,11 +11,20 @@ import {
   OptionsMediaEditor,
   VerticalMediaEditor,
 } from "./layouts"
+import { useMediaContext } from "@/providers"
 
 export function MediaEditor() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("default")
-  useMedia()
   const [hasExternalDisplay, setHasExternalDisplay] = useState(false)
+  const { setAllMediaFiles } = useMediaContext()
+
+  const { media, isLoading } = useMedia()
+  useEffect(() => {
+    if (media.length > 0) {
+      setAllMediaFiles(media)
+      console.log("[MediaEditor] Media:", media)
+    }
+  }, [media])
 
   useEffect(() => {
     const checkExternalDisplay = () => {

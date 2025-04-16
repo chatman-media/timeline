@@ -104,7 +104,10 @@ export const mediaMachine = createMachine({
         },
         setIncludedFiles: {
           actions: assign({
-            includedFiles: ({ event }) => event.files,
+            includedFiles: ({ event }) => {
+              console.log("setIncludedFiles", event.files)
+              return event.files
+            },
           }),
         },
         includeFiles: {
