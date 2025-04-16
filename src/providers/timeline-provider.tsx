@@ -4,7 +4,7 @@ import { createActor } from "xstate"
 import { timelineMachine } from "@/machines/timeline-machine"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
-import { TimelineVideo } from "@/types/timeline"
+import { TimeRange } from "@/types/time-range"
 
 interface TimelineProviderProps {
   children: React.ReactNode
@@ -15,20 +15,11 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
   const [tracks, setTracks] = useState<Track[]>([])
-  const [currentLayout, setCurrentLayout] = useState("default")
   const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
-  const [isRecordingSchema, setIsRecordingSchema] = useState(false)
-  const [currentTime, setCurrentTime] = useState(0)
-  const [duration, setDuration] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [activeVideoId, setActiveVideoId] = useState<string | null>(null)
-  const [volume, setVolume] = useState(1)
   const [trackVolumes, setTrackVolumes] = useState<Record<string, number>>({})
   const [isSeeking, setIsSeeking] = useState(false)
   const [isChangingCamera, setIsChangingCamera] = useState(false)
-  const [videoRefs, setVideoRefs] = useState<Record<string, HTMLVideoElement>>({})
-  const [videos, setVideos] = useState<Record<string, TimelineVideo>>({})
-  const [localActiveVideo, setLocalActiveVideo] = useState<MediaFile | null>(null)
+  const [timeRanges, setTimeRanges] = useState<Record<string, TimeRange[]>>({})
 
   const timelineActor = useMemo(() => createActor(timelineMachine), [])
 
@@ -54,16 +45,9 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     timelineActor.send({ type: "REDO" })
   }, [timelineActor])
 
-  const handleSetLayout = useCallback(
-    (layout: string) => {
-      timelineActor.send({ type: "SET_LAYOUT", layout })
-    },
-    [timelineActor],
-  )
-
-  const handleSetActiveTrack = useCallback(
+  const setActiveTrack = useCallback(
     (trackId: string | null) => {
-      timelineActor.send({ type: "SET_ACTIVE_TRACK", trackId })
+      timelineActor.send({ type: "setActiveTrack", trackId })
     },
     [timelineActor],
   )
@@ -84,17 +68,6 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [timelineActor],
   )
 
-  const handleStopRecordingSchema = useCallback(() => {
-    timelineActor.send({ type: "STOP_RECORDING_SCHEMA" })
-  }, [timelineActor])
-
-  const handleSetCurrentTime = useCallback(
-    (time: number) => {
-      timelineActor.send({ type: "SET_CURRENT_TIME", time })
-    },
-    [timelineActor],
-  )
-
   const handleSetPlaying = useCallback(
     (playing: boolean) => {
       timelineActor.send({ type: "SET_PLAYING", playing })
@@ -102,23 +75,9 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [timelineActor],
   )
 
-  const handleSetActiveVideo = useCallback(
-    (videoId: string | null) => {
-      timelineActor.send({ type: "SET_ACTIVE_VIDEO", videoId })
-    },
-    [timelineActor],
-  )
-
   const handleSeek = useCallback(
     (time: number) => {
       timelineActor.send({ type: "SEEK", time })
-    },
-    [timelineActor],
-  )
-
-  const handleStartRecordingSchema = useCallback(
-    (trackId: string, time: number) => {
-      timelineActor.send({ type: "START_RECORDING_SCHEMA", trackId, time })
     },
     [timelineActor],
   )
@@ -137,9 +96,12 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [timelineActor],
   )
 
-  const handleResetChangingCamera = useCallback(() => {
-    timelineActor.send({ type: "RESET_CHANGING_CAMERA" })
-  }, [timelineActor])
+  const handleSetTimeRanges = useCallback(
+    (timeRanges: Record<string, TimeRange[]>) => {
+      timelineActor.send({ type: "setTimeRanges", ranges: timeRanges })
+    },
+    [timelineActor],
+  )
 
   useEffect(() => {
     const subscription = timelineActor.subscribe((state) => {
@@ -148,8 +110,6 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
       setCanRedo(false)
       setTracks(state.context.tracks)
       setActiveTrackId(state.context.activeTrackId)
-      setIsRecordingSchema(state.context.isRecordingSchema)
-      setCurrentTime(state.context.currentTime)
       setTrackVolumes(state.context.trackVolumes)
       setIsSeeking(state.context.isSeeking)
       setIsChangingCamera(state.context.isChangingCamera)
@@ -160,53 +120,28 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     }
   }, [timelineActor])
 
-  const activeVideo = useMemo(() => {
-    if (!activeVideoId) return null
-    return videos[activeVideoId]
-  }, [activeVideoId, videos])
-
-  const { send } = timelineActor
-
-  const setVideo = (video: MediaFile | null) => {
-    send({ type: "SET_ACTIVE_VIDEO", videoId: video?.id || null })
-  }
-
   const value = {
+    timeRanges,
     zoomLevel,
     zoom: handleZoom,
     tracks,
     setTracks,
-    currentLayout,
-    setLayout: handleSetLayout,
     undo: handleUndo,
     redo: handleRedo,
     canUndo,
     canRedo,
-    currentTime,
-    duration,
-    isPlaying,
-    isRecordingSchema,
     activeTrackId,
-    activeVideoId: localActiveVideo?.id || null,
-    activeVideo: localActiveVideo,
-    setVideo,
     seek: handleSeek,
-    setTrack: handleSetActiveTrack,
-    stopRecording: handleStopRecordingSchema,
-    startRecording: handleStartRecordingSchema,
+    setTrack: setActiveTrack,
     removeFiles: handleRemoveFromAddedFiles,
     addMediaFiles,
-    setTime: handleSetCurrentTime,
     setPlaying: handleSetPlaying,
     setTrackVolume: handleSetTrackVolume,
     setSeeking: handleSetSeeking,
-    resetCamera: handleResetChangingCamera,
-    videoRefs,
-    volume,
     isSeeking,
     isChangingCamera,
-    videoPath: localActiveVideo?.path || null,
     trackVolumes,
+    setTimeRanges: handleSetTimeRanges,
   }
 
   return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>
@@ -217,39 +152,27 @@ export const TimelineContext = React.createContext<{
   zoom: (level: number) => void
   tracks: Track[]
   setTracks: (tracks: Track[]) => void
-  currentLayout: string
-  setLayout: (layout: string) => void
   undo: () => void
   redo: () => void
   canUndo: boolean
   canRedo: boolean
-  currentTime: number
-  duration: number
-  isPlaying: boolean
-  isRecordingSchema: boolean
   activeTrackId: string | null
-  activeVideoId: string | null
-  activeVideo: MediaFile | null
-  setVideo: (video: MediaFile | null) => void
   seek: (time: number) => void
   setTrack: (trackId: string | null) => void
   addMediaFiles: (files: MediaFile[]) => void
   removeFiles: (fileIds: string[]) => void
-  setTime: (time: number) => void
   setPlaying: (playing: boolean) => void
   setTrackVolume: (trackId: string, volume: number) => void
   setSeeking: (isSeeking: boolean) => void
-  resetCamera: () => void
+  setTimeRanges: (timeRanges: Record<string, TimeRange[]>) => void
   trackVolumes: Record<string, number>
-  videoRefs: Record<string, HTMLVideoElement>
-  volume: number
   isSeeking: boolean
   isChangingCamera: boolean
-  videoPath: string | null
+  timeRanges: Record<string, TimeRange[]>
 } | null>(null)
 
 // Хук для использования контекста таймлайна
-export function useTimeline() {
+export function useTimelineContext() {
   const context = React.useContext(TimelineContext)
   if (!context) {
     throw new Error("useTimeline must be used within a TimelineProvider")

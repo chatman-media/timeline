@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from "react"
 
-import { useTimeline } from "@/providers/timeline-provider"
+import { usePlayerContext } from "@/providers/player-provider"
 
 interface TimelineBarProps {
   startTime: number
@@ -9,7 +9,7 @@ interface TimelineBarProps {
 }
 
 export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
-  const { currentTime, setTime, isPlaying } = useTimeline()
+  const { currentTime, setCurrentTime: setTime, isPlaying } = usePlayerContext()
   const animationFrameRef = useRef<number | undefined>(undefined)
 
   const position = useMemo(() => {

@@ -10,7 +10,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { useTimeline } from "@/providers/timeline-provider"
+import { usePlayerContext } from "@/providers"
+import { useTimelineContext } from "@/providers/timeline-provider"
 import { MediaFile, Track } from "@/types/media"
 
 import { TimelineBar } from "./layout/timeline-bar"
@@ -55,7 +56,7 @@ function formatSectionDate(dateString: string): string {
 }
 
 export function Timeline() {
-  const context = useTimeline()
+  const context = useTimelineContext()
   if (!context) {
     throw new Error("Timeline must be used within a TimelineProvider")
   }
@@ -63,33 +64,19 @@ export function Timeline() {
   const {
     tracks,
     setTracks,
-    currentLayout,
-    setLayout,
     undo,
     redo,
     canUndo,
     canRedo,
-    currentTime,
-    isPlaying,
-    isRecordingSchema,
     activeTrackId,
-    activeVideoId,
-    setVideo,
     seek,
     setTrack,
-    stopRecording,
-    startRecording,
     removeFiles,
   } = context
 
-  const activeVideo = useMemo(() => {
-    if (!activeVideoId || !tracks) return null
-    for (const track of tracks) {
-      const video = track.videos.find((v) => v.id === activeVideoId)
-      if (video) return video
-    }
-    return null
-  }, [activeVideoId, tracks])
+  const { isRecording, setIsRecording, setVideo, video, currentTime, isPlaying } =
+    usePlayerContext()
+  const activeVideo = video
 
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const [deletingSectionDate, setDeletingSectionDate] = useState<string | null>(null)
@@ -182,7 +169,7 @@ export function Timeline() {
           )
 
           // Если идет запись, останавливаем её на текущей дорожке
-          if (isRecordingSchema && activeTrackId) {
+          if (isRecording && activeTrackId) {
             const currentTrack = tracks.find((track) => track.id === activeTrackId)
             if (currentTrack) {
               // Сохраняем текущее время перед остановкой
@@ -192,7 +179,7 @@ export function Timeline() {
               )
 
               // Останавливаем запись на текущей дорожке
-              stopRecording()
+              setIsRecording(false)
 
               // Начинаем запись на новой дорожке
               setTimeout(() => {
@@ -207,16 +194,16 @@ export function Timeline() {
                 })
 
                 if (video) {
-                  setVideo(video.id)
+                  setVideo(video)
                 } else if (targetTrack.videos.length > 0) {
                   // Если нет видео, соответствующего текущему времени, используем первое
-                  setVideo(targetTrack.videos[0].id)
+                  setVideo(targetTrack.videos[0])
                 }
 
                 // Обновляем время до запуска новой записи
                 seek(savedCurrentTime)
 
-                startRecording(targetTrack.id, savedCurrentTime)
+                setIsRecording(true)
 
                 // Обновляем макет
                 // const newLayout = {
@@ -243,7 +230,7 @@ export function Timeline() {
             })
 
             if (video) {
-              setVideo(video.id)
+              setVideo(video)
               // Проверяем время перед обновлением
               if (
                 isFinite(currentTime) &&
@@ -258,14 +245,14 @@ export function Timeline() {
             } else if (targetTrack.videos.length > 0) {
               // Если не нашли подходящее видео, берем первое видео
               const firstVideo = targetTrack.videos[0]
-              setVideo(firstVideo.id)
+              setVideo(firstVideo)
               seek(firstVideo.startTime ?? 0)
             }
           } else {
             // Если воспроизведение не идет, берем первое видео трека
             if (targetTrack.videos.length > 0) {
               const firstVideo = targetTrack.videos[0]
-              setVideo(firstVideo.id)
+              setVideo(firstVideo)
 
               // Проверяем время перед обновлением
               if (
@@ -296,12 +283,10 @@ export function Timeline() {
     setTracks,
     setTrack,
     isPlaying,
-    isRecordingSchema,
+    isRecording,
     currentTime,
     setVideo,
     seek,
-    currentLayout,
-    setLayout,
     activeDate,
     sections, // Добавляем зависимость от sections и activeDate
   ])
@@ -423,7 +408,7 @@ export function Timeline() {
 
             // Если есть первое видео, устанавливаем его как активное
             if (nextSectionTracks[0].videos.length > 0) {
-              setVideo(nextSectionTracks[0].videos[0].id)
+              setVideo(nextSectionTracks[0].videos[0])
               // Обновляем текущее время на начало видео
               const startTime = nextSectionTracks[0].videos[0].startTime || 0
               seek(startTime)

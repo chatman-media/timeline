@@ -1,5 +1,5 @@
 import { useMachine } from "@xstate/react"
-import { createContext } from "react"
+import { createContext, useContext } from "react"
 
 import {
   type ProjectContext,
@@ -32,4 +32,12 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
       {children}
     </ProjectContextType.Provider>
   )
+}
+
+export function useProjectContext() {
+  const context = useContext(ProjectContextType)
+  if (!context) {
+    throw new Error("useProjectContext must be used within a ProjectProvider")
+  }
+  return context
 }

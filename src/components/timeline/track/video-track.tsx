@@ -1,11 +1,12 @@
 import { memo, useCallback, useRef } from "react"
 
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
-import { useTimeline } from "@/providers"
-import { TimelineTrack } from "@/types/timeline"
+import { usePlayerContext } from "@/providers"
+import { useTimelineContext } from "@/providers/timeline-provider"
+import { TimelineTrack as TimelineTrackType } from "@/types/timeline"
 
 interface TimelineTrackProps {
-  track: TimelineTrack
+  track: TimelineTrackType
   index: number
   sectionStartTime: number
   sectionDuration: number
@@ -17,7 +18,8 @@ const TimelineTrack = memo(function TimelineTrack({
   sectionStartTime,
   sectionDuration,
 }: TimelineTrackProps) {
-  const { setActiveVideo, activeTrackId, setActiveTrack } = useTimeline()
+  const { activeTrackId, setTrack: setActiveTrack } = useTimelineContext()
+  const { setVideo: setActiveVideo } = usePlayerContext()
   const containerRef = useRef<HTMLDivElement>(null)
 
   if (!track.videos || track.videos.length === 0) {
@@ -48,7 +50,7 @@ const TimelineTrack = memo(function TimelineTrack({
   const isActive = track.id === activeTrackId
 
   const handleClick = useCallback(
-    (_e: React.MouseEvent, track: TimelineTrack, videoId: string) => {
+    (_e: React.MouseEvent, track: TimelineTrackType, videoId: string) => {
       // Предотвращаем всплытие события
       _e.stopPropagation()
 
@@ -61,7 +63,7 @@ const TimelineTrack = memo(function TimelineTrack({
       // Устанавливаем активный трек
       setActiveTrack(track.id)
       // Устанавливаем активное видео
-      setActiveVideo(videoId)
+      setActiveVideo(video)
     },
     [setActiveTrack, setActiveVideo],
   )

@@ -1,4 +1,4 @@
-import { useTimeline } from "@/providers"
+import { useTimelineContext } from "@/providers/timeline-provider"
 
 import { TimelineMarks } from "."
 
@@ -9,7 +9,7 @@ interface TimelineScaleProps {
 }
 
 export function TimelineScale({ startTime, endTime, duration }: TimelineScaleProps) {
-  const { zoomLevel } = useTimeline()
+  const { zoomLevel } = useTimelineContext()
   const timeStep = Math.ceil(100 / zoomLevel)
   const subStep = timeStep / 5
 

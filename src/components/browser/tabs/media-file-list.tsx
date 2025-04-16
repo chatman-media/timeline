@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { useMedia } from "@/hooks/use-media"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { cn } from "@/lib/utils"
-import { useTimeline } from "@/providers"
 import { useMediaContext } from "@/providers/media-provider"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
@@ -138,7 +137,7 @@ export const MediaFileList = memo(function MediaFileList({
   viewMode?: ViewMode
 }): JSX.Element {
   const { isLoading, includeFiles, includedFiles } = useMediaContext()
-  const { setVideo } = useTimeline()
+  // const { setVideo } = usePlayerContext()
   const { media } = useMedia()
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
 

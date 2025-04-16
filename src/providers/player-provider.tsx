@@ -2,9 +2,11 @@ import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
 import { playerMachine } from "@/machines"
+import { MediaFile } from "@/types/media"
 import { TimelineVideo } from "@/types/timeline"
 
 interface PlayerContextType {
+  video: MediaFile | null
   currentTime: number
   duration: number
   volume: number
@@ -17,15 +19,18 @@ interface PlayerContextType {
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
 
+  setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) => void
+
+  setVideo: (video: MediaFile) => void
+  setVideos: (videos: Record<string, TimelineVideo>) => void
+  setDuration: (duration: number) => void
+  setVolume: (volume: number) => void
+
   setCurrentTime: (currentTime: number) => void
   setIsPlaying: (isPlaying: boolean) => void
   setIsSeeking: (isSeeking: boolean) => void
   setIsChangingCamera: (isChangingCamera: boolean) => void
   setIsRecording: (isRecording: boolean) => void
-  setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) => void
-  setVideos: (videos: Record<string, TimelineVideo>) => void
-  setDuration: (duration: number) => void
-  setVolume: (volume: number) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined)
@@ -41,17 +46,18 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     <PlayerContext.Provider
       value={{
         ...state.context,
-        setCurrentTime: (currentTime: number) => send({ type: "SET_CURRENT_TIME", currentTime }),
-        setIsPlaying: (isPlaying: boolean) => send({ type: "SET_IS_PLAYING", isPlaying }),
-        setIsSeeking: (isSeeking: boolean) => send({ type: "SET_IS_SEEKING", isSeeking }),
+        setCurrentTime: (currentTime: number) => send({ type: "setTime", currentTime }),
+        setIsPlaying: (isPlaying: boolean) => send({ type: "setIsPlaying", isPlaying }),
+        setIsSeeking: (isSeeking: boolean) => send({ type: "setIsSeeking", isSeeking }),
         setIsChangingCamera: (isChangingCamera: boolean) =>
-          send({ type: "SET_IS_CHANGING_CAMERA", isChangingCamera }),
-        setIsRecording: (isRecording: boolean) => send({ type: "SET_IS_RECORDING", isRecording }),
+          send({ type: "setIsChangingCamera", isChangingCamera }),
+        setIsRecording: (isRecording: boolean) => send({ type: "setIsRecording", isRecording }),
         setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) =>
-          send({ type: "SET_VIDEO_REFS", videoRefs }),
-        setVideos: (videos: Record<string, TimelineVideo>) => send({ type: "SET_VIDEOS", videos }),
-        setDuration: (duration: number) => send({ type: "SET_DURATION", duration }),
-        setVolume: (volume: number) => send({ type: "SET_VOLUME", volume }),
+          send({ type: "setVideoRefs", videoRefs }),
+        setVideo: (video: MediaFile) => send({ type: "setVideo", video }),
+        setVideos: (videos: Record<string, TimelineVideo>) => send({ type: "setVideos", videos }),
+        setDuration: (duration: number) => send({ type: "setDuration", duration }),
+        setVolume: (volume: number) => send({ type: "setVolume", volume }),
       }}
     >
       {children}

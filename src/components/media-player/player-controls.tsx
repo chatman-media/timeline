@@ -19,14 +19,14 @@ import { ExitPointIcon } from "@/components/icons/exit-point"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
-import { usePlayerContext, useTimeline } from "@/providers"
+import { usePlayerContext, useTimelineContext } from "@/providers"
 
 interface PlayerControlsProps {
   currentTime: number
 }
 
 export function PlayerControls({ currentTime }: PlayerControlsProps) {
-  const { tracks, startRecordingSchema, stopRecordingSchema } = use()
+  const { tracks } = useTimelineContext()
   const {
     isPlaying,
     setIsPlaying,
@@ -34,16 +34,12 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setCurrentTime,
     volume,
     setVolume,
-    isRecordingSchema,
+    isRecording,
+    setIsRecording,
   } = usePlayerContext()
   const [isFullscreen, setIsFullscreen] = useState(false)
   const lastSaveTime = useRef(0)
   const SAVE_INTERVAL = 5000 // Сохраняем каждые 5 секунд
-
-  // Загружаем состояние при монтировании компонента
-  useEffect(() => {
-    initializeHistory()
-  }, [initializeHistory])
 
   // Сохраняем состояние периодически
   useEffect(() => {

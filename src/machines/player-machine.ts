@@ -5,6 +5,7 @@ import { MediaFile } from "@/types/media"
 import { TimelineVideo } from "@/types/timeline"
 
 export interface PlayerContextType {
+  video: MediaFile | null
   currentTime: number
   duration: number
   volume: number
@@ -19,6 +20,7 @@ export interface PlayerContextType {
 }
 
 const initialContext: PlayerContextType = {
+  video: null,
   currentTime: 0,
   isPlaying: false,
   isSeeking: false,
@@ -75,6 +77,11 @@ type SetVolumeEvent = {
   volume: number
 }
 
+type SetVideoEvent = {
+  type: "setVideo"
+  video: MediaFile
+}
+
 export type PlayerEvent =
   | SetCurrentTimeEvent
   | SetIsPlayingEvent
@@ -85,6 +92,7 @@ export type PlayerEvent =
   | SetVideosEvent
   | SetDurationEvent
   | SetVolumeEvent
+  | SetVideoEvent
 
 export const playerMachine = createMachine({
   id: "player",
@@ -93,39 +101,37 @@ export const playerMachine = createMachine({
   states: {
     idle: {
       on: {
-        SET_CURRENT_TIME: {
+        setTime: {
           actions: assign({ currentTime: ({ event }) => event.currentTime }),
         },
-        SET_IS_PLAYING: {
+        setIsPlaying: {
           actions: assign({ isPlaying: ({ event }) => event.isPlaying }),
         },
-        SET_IS_SEEKING: {
+        setIsSeeking: {
           actions: assign({ isSeeking: ({ event }) => event.isSeeking }),
         },
-        SET_IS_CHANGING_CAMERA: {
+        setIsChangingCamera: {
           actions: assign({ isChangingCamera: ({ event }) => event.isChangingCamera }),
         },
-        SET_IS_RECORDING: {
+        setIsRecording: {
           actions: assign({ isRecording: ({ event }) => event.isRecording }),
         },
-        SET_VIDEO_REFS: {
+        setVideoRefs: {
           actions: assign({ videoRefs: ({ event }) => event.videoRefs }),
         },
-        SET_VIDEOS: {
+        setVideo: {
+          actions: assign({ video: ({ event }) => event.video }),
+        },
+        setVideos: {
           actions: assign({ videos: ({ event }) => event.videos }),
         },
-        SET_DURATION: {
+        setDuration: {
           actions: assign({ duration: ({ event }) => event.duration }),
         },
-        SET_VOLUME: {
+        setVolume: {
           actions: assign({ volume: ({ event }) => event.volume }),
         },
       },
     },
   },
 })
-
-export const usePlayerMachine = () => {
-  const [state, send] = useMachine(playerMachine)
-  return { state, send }
-}

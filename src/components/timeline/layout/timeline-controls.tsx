@@ -1,14 +1,13 @@
 import { Minus, Plus } from "lucide-react"
 
-import { useTimeline } from "../../../providers/timeline-provider"
-
+import { useTimelineContext } from "@/providers/timeline-provider"
 interface TimelineControlsProps {
   minScale?: number
   maxScale?: number
 }
 
 export function TimelineControls({ minScale = 0.001, maxScale = 18 }: TimelineControlsProps) {
-  const { zoomLevel, handleZoom } = useTimeline()
+  const { zoomLevel, zoom: handleZoom } = useTimelineContext()
 
   const logMinScale = Math.log(minScale)
   const logMaxScale = Math.log(maxScale)
