@@ -3,26 +3,54 @@ import { assign, createMachine } from "xstate"
 
 import { DEFAULT_PROJECT_SETTINGS, ProjectSettings } from "@/types/project"
 
-interface ProjectContext {
+export type ProjectContext = {
   settings: ProjectSettings
   name: string
   isDirty: boolean
 }
 
-type ProjectEvent =
-  | { type: "UPDATE_SETTINGS"; settings: Partial<ProjectSettings> }
-  | { type: "RESET_SETTINGS" }
-  | { type: "SET_NAME"; name: string }
-  | { type: "SET_DIRTY"; isDirty: boolean }
+export type ProjectContextEvents = {
+  setName: (name: string) => void
+  setDirty: (isDirty: boolean) => void
+  updateSettings: (settings: ProjectSettings) => void
+  resetSettings: () => void
+}
+
+export const initialProjectContext: ProjectContext = {
+  settings: DEFAULT_PROJECT_SETTINGS,
+  name: "Без названия #1",
+  isDirty: false,
+}
+
+type UpdateSettingsEvent = {
+  type: "UPDATE_SETTINGS"
+  settings: Partial<ProjectSettings>
+}
+
+type ResetSettingsEvent = {
+  type: "RESET_SETTINGS"
+}
+
+type SetNameEvent = {
+  type: "SET_NAME"
+  name: string
+}
+
+type SetDirtyEvent = {
+  type: "SET_DIRTY"
+  isDirty: boolean
+}
+
+type ProjectEvent = UpdateSettingsEvent | ResetSettingsEvent | SetNameEvent | SetDirtyEvent
 
 export const projectMachine = createMachine({
   id: "project",
   initial: "idle",
-  context: {
-    settings: DEFAULT_PROJECT_SETTINGS,
-    name: "Без названия #1",
-    isDirty: false,
-  } as ProjectContext,
+  context: initialProjectContext,
+  types: {
+    context: {} as ProjectContext,
+    events: {} as ProjectEvent,
+  },
   states: {
     idle: {
       on: {
@@ -36,7 +64,7 @@ export const projectMachine = createMachine({
         },
         RESET_SETTINGS: {
           actions: assign({
-            settings: () => DEFAULT_PROJECT_SETTINGS,
+            ...initialProjectContext,
           }),
         },
         SET_NAME: {

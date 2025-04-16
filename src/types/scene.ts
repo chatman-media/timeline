@@ -1,4 +1,5 @@
-import { MediaFile, TimeRange, Track } from "./videos"
+import { MediaFile, Track } from "./media"
+import { TimeRange } from "./time-range"
 
 // export interface SceneTimeRange {
 //   min: number /** Минимальное время в секундах (unix timestamp) */

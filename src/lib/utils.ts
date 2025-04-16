@@ -6,7 +6,7 @@ import utc from "dayjs/plugin/utc"
 import { twMerge } from "tailwind-merge"
 
 import { FfprobeData } from "@/types/ffprobe"
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 
 // Инициализируем плагин duration если еще не инициализирован
 if (!dayjs.isDuration) {

@@ -1,5 +1,5 @@
+import { MediaFile } from "./media"
 import { TimeRange } from "./time-range"
-import { MediaFile } from "./videos"
 
 // Базовые типы для временной шкалы
 export interface VideoMetadata {
@@ -52,7 +52,7 @@ export interface TimelineVideo {
   path: string
   metadata: {
     filename: string
-    codecName: string
+    codecName?: string
     width?: number
     height?: number
     aspectRatio?: string

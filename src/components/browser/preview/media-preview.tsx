@@ -3,7 +3,7 @@ import { memo } from "react"
 
 import { formatDuration, formatResolution } from "@/lib/utils"
 import { FfprobeStream } from "@/types/ffprobe"
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 import { isHorizontalVideo } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"

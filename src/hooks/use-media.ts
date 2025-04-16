@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react"
 
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 
 /**
  * Хук для работы с медиафайлами

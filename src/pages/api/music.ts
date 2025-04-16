@@ -6,7 +6,7 @@ import type { NextApiRequest, NextApiResponse } from "next"
 import path from "path"
 import { promisify } from "util"
 
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 
 const ffprobeAsync = promisify(ffprobe)
 const metadataCache = new Map<string, FfprobeData>()

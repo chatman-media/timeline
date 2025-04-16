@@ -1,6 +1,6 @@
 import { nanoid } from "nanoid"
 
-import type { FileGroup, MediaFile, Track } from "@/types/videos"
+import type { FileGroup, MediaFile, Track } from "@/types/media"
 
 import { calculateTimeRanges } from "./video-utils"
 
@@ -115,9 +115,9 @@ export const createTracksFromFiles = (
 
   // Группируем видео по дням для правильной нумерации
   const videoFilesByDay = videoFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
-    if (!file.startTime) return acc
-
-    const date = new Date(file.startTime * 1000).toDateString()
+    // Если нет startTime, используем текущее время
+    const startTime = file.startTime || Date.now() / 1000
+    const date = new Date(startTime * 1000).toDateString()
     if (!acc[date]) {
       acc[date] = []
     }
@@ -165,15 +165,19 @@ export const createTracksFromFiles = (
         combinedDuration: groupFiles.reduce((total, file) => total + (file.duration || 0), 0),
         timeRanges: calculateTimeRanges(groupFiles),
         index: maxVideoIndex + index + 1,
+        volume: 1,
+        isMuted: false,
+        isLocked: false,
+        isVisible: true,
       })
     })
   })
 
   // Аналогично для аудио файлов
   const audioFilesByDay = audioFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
-    if (!file.startTime) return acc
-
-    const date = new Date(file.startTime * 1000).toDateString()
+    // Если нет startTime, используем текущее время
+    const startTime = file.startTime || Date.now() / 1000
+    const date = new Date(startTime * 1000).toDateString()
     if (!acc[date]) {
       acc[date] = []
     }
@@ -221,6 +225,10 @@ export const createTracksFromFiles = (
         combinedDuration: groupFiles.reduce((total, file) => total + (file.duration || 0), 0),
         timeRanges: calculateTimeRanges(groupFiles),
         index: maxAudioIndex + index + 1,
+        volume: 1,
+        isMuted: false,
+        isLocked: false,
+        isVisible: true,
       })
     })
   })

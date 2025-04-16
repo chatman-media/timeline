@@ -1,30 +1,9 @@
 import { assign, createMachine } from "xstate"
 
+import { Track } from "@/types/media"
+import { MediaFile } from "@/types/media"
 import { TimeRange } from "@/types/time-range"
-import { Track } from "@/types/videos"
-import { MediaFile } from "@/types/videos"
-
-export interface TimelineVideo {
-  id: string
-  trackId: string
-  startTime: number
-  endTime: number
-  duration: number
-  path: string
-  metadata: {
-    filename: string
-    codecName: string
-    width: number
-    height: number
-    aspectRatio: string
-    bitrate: number
-    duration: number
-  }
-  position: {
-    x: number
-    width: number
-  }
-}
+import { createTracksFromFiles } from "@/utils/media-utils"
 
 interface TimelineContext {
   zoomLevel: number
@@ -34,20 +13,16 @@ interface TimelineContext {
   currentTime: number
   isPlaying: boolean
   isRecordingSchema: boolean
-  activeVideoId: string | null
-  videos: Record<string, TimelineVideo>
-  duration: number
   activeTrackId: string | null
-  volume: number
   trackVolumes: Record<string, number>
   isSeeking: boolean
   isChangingCamera: boolean
-  videoRefs: Record<string, HTMLVideoElement>
   tracks: Track[]
   history: TimelineContext[]
   historyIndex: number
   currentLayout: string
-  activeVideo: MediaFile | null
+  canUndo: boolean
+  canRedo: boolean
 }
 
 type ZoomEvent = {
@@ -90,19 +65,6 @@ type SetActiveVideoEvent = {
   videoId: string | null
 }
 
-type SetVideosEvent = {
-  type: "SET_VIDEOS"
-  videos: Record<string, TimelineVideo>
-}
-
-type PlayEvent = {
-  type: "PLAY"
-}
-
-type PauseEvent = {
-  type: "PAUSE"
-}
-
 type SeekEvent = {
   type: "SEEK"
   time: number
@@ -138,11 +100,6 @@ type ResetChangingCameraEvent = {
   type: "RESET_CHANGING_CAMERA"
 }
 
-type AddTrackEvent = {
-  type: "ADD_TRACK"
-  track: Track
-}
-
 type UndoEvent = {
   type: "UNDO"
 }
@@ -156,9 +113,9 @@ type SetLayoutEvent = {
   layout: string
 }
 
-type SetTracksEvent = {
-  type: "SET_TRACKS"
-  tracks: Track[]
+type addMediaFilesEvent = {
+  type: "addMediaFiles"
+  files: MediaFile[]
 }
 
 type RemoveFromAddedFilesEvent = {
@@ -178,32 +135,23 @@ type StartRecordingSchemaEvent = {
 
 type TimelineEvent =
   | ZoomEvent
-  | SetTimeRangesEvent
   | SetLayoutModeEvent
-  | SetMontageSchemaEvent
   | SetCurrentTimeEvent
   | SetPlayingEvent
   | SetRecordingEvent
   | SetActiveVideoEvent
-  | SetVideosEvent
-  | PlayEvent
-  | PauseEvent
   | SeekEvent
-  | SetDurationEvent
   | SetActiveTrackEvent
-  | SetVolumeEvent
   | SetTrackVolumeEvent
   | SetSeekingEvent
   | ResetChangingCameraEvent
-  | AddTrackEvent
   | UndoEvent
   | RedoEvent
   | SetLayoutEvent
-  | SetTracksEvent
+  | addMediaFilesEvent
   | RemoveFromAddedFilesEvent
   | StopRecordingSchemaEvent
   | StartRecordingSchemaEvent
-  | { type: "SET_VIDEO"; video: MediaFile | null }
 
 export const timelineMachine = createMachine({
   id: "timeline",
@@ -230,6 +178,8 @@ export const timelineMachine = createMachine({
     historyIndex: -1,
     currentLayout: "default",
     activeVideo: null,
+    canUndo: false,
+    canRedo: false,
   } as TimelineContext,
   types: {
     context: {} as TimelineContext,
@@ -239,23 +189,9 @@ export const timelineMachine = createMachine({
     idle: {
       on: {
         ZOOM: {
-          actions: assign(({ context }, { zoomLevel }) => ({
-            zoomLevel,
-            history: [...context.history, { ...context }],
-            historyIndex: context.historyIndex + 1,
+          actions: assign(({ context, event }) => ({
+            zoomLevel: (event as ZoomEvent).level,
           })),
-        },
-        SET_TIME_RANGES: {
-          actions: assign({
-            timeRanges: ({ event }) => (event as SetTimeRangesEvent).ranges,
-            isDirty: true,
-          }),
-        },
-        SET_MONTAGE_SCHEMA: {
-          actions: assign({
-            montageSchema: ({ event }) => (event as SetMontageSchemaEvent).schema,
-            isDirty: true,
-          }),
         },
         SET_CURRENT_TIME: {
           actions: assign({
@@ -270,21 +206,6 @@ export const timelineMachine = createMachine({
         SET_RECORDING: {
           actions: assign({
             isRecordingSchema: ({ event }) => (event as SetRecordingEvent).recording,
-          }),
-        },
-        SET_ACTIVE_VIDEO: {
-          actions: assign({
-            activeVideoId: ({ event }) => (event as SetActiveVideoEvent).videoId,
-          }),
-        },
-        SET_VIDEOS: {
-          actions: assign({
-            videos: ({ event }) => (event as SetVideosEvent).videos,
-          }),
-        },
-        SET_VOLUME: {
-          actions: assign({
-            volume: ({ event }) => (event as SetVolumeEvent).volume,
           }),
         },
         SET_TRACK_VOLUME: {
@@ -305,32 +226,10 @@ export const timelineMachine = createMachine({
             isChangingCamera: false,
           }),
         },
-        PLAY: {
-          actions: assign({
-            isPlaying: true,
-          }),
-        },
-        PAUSE: {
-          actions: assign({
-            isPlaying: false,
-          }),
-        },
-        SET_DURATION: {
-          actions: assign({
-            duration: ({ event }) => (event as SetDurationEvent).duration,
-          }),
-        },
         SET_ACTIVE_TRACK: {
           actions: assign({
             activeTrackId: ({ event }) => (event as SetActiveTrackEvent).trackId,
           }),
-        },
-        ADD_TRACK: {
-          actions: assign(({ context }, { track }) => ({
-            tracks: [...context.tracks, track],
-            history: [...context.history, { ...context }],
-            historyIndex: context.historyIndex + 1,
-          })),
         },
         UNDO: {
           actions: assign(({ context }) => {
@@ -362,10 +261,17 @@ export const timelineMachine = createMachine({
             isDirty: true,
           }),
         },
-        SET_TRACKS: {
-          actions: assign({
-            tracks: ({ event }) => (event as SetTracksEvent).tracks,
-            isDirty: true,
+        addMediaFiles: {
+          actions: assign(({ context, event }) => {
+            const newTracks = createTracksFromFiles(
+              (event as addMediaFilesEvent).files,
+              context.tracks.length,
+              context.tracks,
+            )
+            return {
+              tracks: [...context.tracks, ...newTracks],
+              isDirty: true,
+            }
           }),
         },
         REMOVE_FROM_ADDED_FILES: {
@@ -387,13 +293,6 @@ export const timelineMachine = createMachine({
             activeTrackId: ({ event }) => (event as StartRecordingSchemaEvent).trackId,
             currentTime: ({ event }) => (event as StartRecordingSchemaEvent).time,
           }),
-        },
-        SET_VIDEO: {
-          actions: assign(({ context }, { video }) => ({
-            activeVideo: video,
-            history: [...context.history, { ...context }],
-            historyIndex: context.historyIndex + 1,
-          })),
         },
       },
     },

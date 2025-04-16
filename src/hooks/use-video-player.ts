@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react"
 
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 
 interface UseVideoPlayerProps {
   videoRefs: React.MutableRefObject<Record<string, HTMLVideoElement | null>>

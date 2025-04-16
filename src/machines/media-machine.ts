@@ -1,27 +1,79 @@
 import { assign, createMachine } from "xstate"
 
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 
 export interface MediaContext {
-  addedFiles: Set<string>
-  filePaths: MediaFile[]
+  allMediaFiles: MediaFile[]
+  // files that are included in the project
+  includedFiles: MediaFile[]
+  includedFilePaths: string[]
+
+  unavailableFiles: MediaFile[]
   isLoading: boolean
 }
 
+const initialMediaContext: MediaContext = {
+  allMediaFiles: [],
+  includedFiles: [],
+  includedFilePaths: [],
+  unavailableFiles: [],
+  isLoading: false,
+}
+
+type SetLoadingEvent = {
+  type: "setLoading"
+  loading: boolean
+}
+
+type SetAllMediaFilesEvent = {
+  type: "setAllMediaFiles"
+  files: MediaFile[]
+}
+
+type AddMediaFilesEvent = {
+  type: "addMediaFiles"
+  files: MediaFile[]
+}
+
+type RemoveMediaFilesEvent = {
+  type: "removeMediaFiles"
+  files: MediaFile[]
+}
+
+type SetIncludedFilesEvent = {
+  type: "setIncludedFiles"
+  files: MediaFile[]
+}
+
+type IncludeFilesEvent = {
+  type: "includeFiles"
+  files: MediaFile[]
+}
+
+type UnincludeFilesEvent = {
+  type: "unincludeFiles"
+  files: MediaFile[]
+}
+
+type SetUnavailableFilesEvent = {
+  type: "setUnavailableFiles"
+  files: MediaFile[]
+}
+
 export type MediaEvent =
-  | { type: "ADD_FILES"; files: MediaFile[] }
-  | { type: "REMOVE_FILES"; files: MediaFile[] }
-  | { type: "SET_LOADING"; loading: boolean }
-  | { type: "RESET_MEDIA" }
+  | SetLoadingEvent
+  | SetAllMediaFilesEvent
+  | AddMediaFilesEvent
+  | RemoveMediaFilesEvent
+  | SetIncludedFilesEvent
+  | IncludeFilesEvent
+  | UnincludeFilesEvent
+  | SetUnavailableFilesEvent
 
 export const mediaMachine = createMachine({
-  id: "media-files",
+  id: "media",
   initial: "idle",
-  context: {
-    addedFiles: new Set<string>(),
-    filePaths: [] as MediaFile[],
-    isLoading: false,
-  } as MediaContext,
+  context: initialMediaContext,
   types: {
     context: {} as MediaContext,
     events: {} as MediaEvent,
@@ -29,45 +81,54 @@ export const mediaMachine = createMachine({
   states: {
     idle: {
       on: {
-        ADD_FILES: {
-          actions: assign({
-            addedFiles: ({ context, event }) => {
-              const newSet = new Set(context.addedFiles)
-              event.files.forEach((file) => {
-                if (file.path) {
-                  newSet.add(file.path)
-                }
-              })
-              return newSet
-            },
-            filePaths: ({ context, event }) => [...context.filePaths, ...event.files],
-          }),
-        },
-        REMOVE_FILES: {
-          actions: assign({
-            addedFiles: ({ context, event }) => {
-              const newSet = new Set(context.addedFiles)
-              event.files.forEach((file) => {
-                if (file.path) {
-                  newSet.delete(file.path)
-                }
-              })
-              return newSet
-            },
-            filePaths: ({ context, event }) =>
-              context.filePaths.filter((file) => !event.files.some((f) => f.path === file.path)),
-          }),
-        },
-        SET_LOADING: {
+        setLoading: {
           actions: assign({
             isLoading: ({ event }) => event.loading,
           }),
         },
-        RESET_MEDIA: {
+        setAllMediaFiles: {
           actions: assign({
-            addedFiles: new Set<string>(),
-            filePaths: [],
-            isLoading: false,
+            allMediaFiles: ({ event }) => event.files,
+          }),
+        },
+        addMediaFiles: {
+          actions: assign({
+            allMediaFiles: ({ context, event: { files } }) => [...context.allMediaFiles, ...files],
+          }),
+        },
+        removeMediaFiles: {
+          actions: assign({
+            allMediaFiles: ({ context, event: { files } }) =>
+              context.allMediaFiles.filter((file) => !files.includes(file)),
+          }),
+        },
+        setIncludedFiles: {
+          actions: assign({
+            includedFiles: ({ event }) => event.files,
+          }),
+        },
+        includeFiles: {
+          actions: assign({
+            includedFiles: ({ context, event: { files } }) => [...context.includedFiles, ...files],
+            includedFilePaths: ({ context, event: { files } }) => [
+              ...context.includedFilePaths,
+              ...files.map((file) => file.path),
+            ],
+          }),
+        },
+        unincludeFiles: {
+          actions: ({ context, event: { files } }) => ({
+            ...context,
+            includedFiles: context.includedFiles.filter((file) => !files.includes(file)),
+            includedFilePaths: context.includedFilePaths.filter(
+              (path) => !files.some((file) => file.path === path),
+            ),
+          }),
+        },
+        setUnavailableFiles: {
+          actions: ({ context, event: { files } }) => ({
+            ...context,
+            unavailableFiles: files,
           }),
         },
       },

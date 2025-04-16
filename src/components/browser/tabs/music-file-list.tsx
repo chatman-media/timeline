@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react"
 import { AudioPlayer } from "@/components/browser/layout/audio-player"
 import { MusicToolbar } from "@/components/browser/layout/music-toolbar"
 import { formatFileSize, formatTime } from "@/lib/utils"
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 
 export function MusicFileList() {
   const [musicFiles, setMusicFiles] = useState<MediaFile[]>([])

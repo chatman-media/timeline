@@ -1,7 +1,7 @@
 import { CopyPlus } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 import { getRemainingMediaCounts, getTopDateWithRemainingFiles } from "@/utils/media-file-utils"
 
 interface StatusBarProps {
@@ -11,7 +11,7 @@ interface StatusBarProps {
   onAddDateFiles: (date: string) => void
   onAddAllFiles: () => void
   sortedDates: { date: string; files: MediaFile[] }[]
-  addedFiles: Set<string>
+  addedFiles: MediaFile[]
 }
 
 export function StatusBar({
@@ -23,11 +23,12 @@ export function StatusBar({
   sortedDates,
   addedFiles,
 }: StatusBarProps) {
+  const addedFilesSet = new Set(addedFiles.map((file) => file.path))
   const { remainingVideoCount, remainingAudioCount, allFilesAdded } = getRemainingMediaCounts(
     media,
-    addedFiles,
+    addedFilesSet,
   )
-  const topDateWithRemainingFiles = getTopDateWithRemainingFiles(sortedDates, addedFiles)
+  const topDateWithRemainingFiles = getTopDateWithRemainingFiles(sortedDates, addedFilesSet)
 
   return (
     <div className="flex justify-between items-center text-sm w-full p-2 gap-2">

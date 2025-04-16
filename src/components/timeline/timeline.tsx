@@ -11,11 +11,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useTimeline } from "@/providers/timeline-provider"
-import { MediaFile, Track } from "@/types/videos"
+import { MediaFile, Track } from "@/types/media"
 
-import { TimelineBar } from "./timeline/timeline-bar"
-import { TimelineControls } from "./timeline/timeline-controls"
-import { TimelineScale } from "./timeline/timeline-scale"
+import { TimelineBar } from "./layout/timeline-bar"
+import { TimelineControls } from "./layout/timeline-controls"
+import { TimelineScale } from "./timeline-scale/timeline-scale"
 import { VideoTrack } from "./track/video-track"
 
 // Добавляю функцию для форматирования даты секции

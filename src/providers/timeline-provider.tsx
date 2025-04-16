@@ -2,9 +2,9 @@ import React, { useCallback, useEffect, useMemo, useState } from "react"
 import { createActor } from "xstate"
 
 import { timelineMachine } from "@/machines/timeline-machine"
-import { TimelineVideo } from "@/machines/timeline-machine"
-import { Track } from "@/types/videos"
-import { MediaFile } from "@/types/videos"
+import { Track } from "@/types/media"
+import { MediaFile } from "@/types/media"
+import { TimelineVideo } from "@/types/timeline"
 
 interface TimelineProviderProps {
   children: React.ReactNode
@@ -68,6 +68,13 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [timelineActor],
   )
 
+  const addMediaFiles = useCallback(
+    (files: MediaFile[]) => {
+      timelineActor.send({ type: "addMediaFiles", files })
+    },
+    [timelineActor],
+  )
+
   const handleRemoveFromAddedFiles = useCallback(
     (fileIds: string[]) => {
       fileIds.forEach((fileId) => {
@@ -84,13 +91,6 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
   const handleSetCurrentTime = useCallback(
     (time: number) => {
       timelineActor.send({ type: "SET_CURRENT_TIME", time })
-    },
-    [timelineActor],
-  )
-
-  const handleSetDuration = useCallback(
-    (duration: number) => {
-      timelineActor.send({ type: "SET_DURATION", duration })
     },
     [timelineActor],
   )
@@ -123,13 +123,6 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [timelineActor],
   )
 
-  const handleSetVolume = useCallback(
-    (volume: number) => {
-      timelineActor.send({ type: "SET_VOLUME", volume })
-    },
-    [timelineActor],
-  )
-
   const handleSetTrackVolume = useCallback(
     (trackId: string, volume: number) => {
       timelineActor.send({ type: "SET_TRACK_VOLUME", trackId, volume })
@@ -148,33 +141,18 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     timelineActor.send({ type: "RESET_CHANGING_CAMERA" })
   }, [timelineActor])
 
-  const handlePlay = useCallback(() => {
-    timelineActor.send({ type: "PLAY" })
-  }, [timelineActor])
-
-  const handlePause = useCallback(() => {
-    timelineActor.send({ type: "PAUSE" })
-  }, [timelineActor])
-
   useEffect(() => {
     const subscription = timelineActor.subscribe((state) => {
       setZoomLevel(state.context.zoomLevel)
-      setCanUndo(state.context.historyIndex > 0)
-      setCanRedo(state.context.historyIndex < state.context.history.length - 1)
+      setCanUndo(false)
+      setCanRedo(false)
       setTracks(state.context.tracks)
-      setCurrentLayout(state.context.currentLayout)
       setActiveTrackId(state.context.activeTrackId)
       setIsRecordingSchema(state.context.isRecordingSchema)
       setCurrentTime(state.context.currentTime)
-      setDuration(state.context.duration)
-      setIsPlaying(state.context.isPlaying)
-      setLocalActiveVideo(state.context.activeVideo)
-      setVolume(state.context.volume)
       setTrackVolumes(state.context.trackVolumes)
       setIsSeeking(state.context.isSeeking)
       setIsChangingCamera(state.context.isChangingCamera)
-      setVideoRefs(state.context.videoRefs)
-      setVideos(state.context.videos)
     })
 
     return () => {
@@ -190,7 +168,7 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
   const { send } = timelineActor
 
   const setVideo = (video: MediaFile | null) => {
-    send({ type: "SET_VIDEO", video })
+    send({ type: "SET_ACTIVE_VIDEO", videoId: video?.id || null })
   }
 
   const value = {
@@ -217,21 +195,18 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     stopRecording: handleStopRecordingSchema,
     startRecording: handleStartRecordingSchema,
     removeFiles: handleRemoveFromAddedFiles,
+    addMediaFiles,
     setTime: handleSetCurrentTime,
-    setDuration: handleSetDuration,
     setPlaying: handleSetPlaying,
-    setVolume: handleSetVolume,
     setTrackVolume: handleSetTrackVolume,
     setSeeking: handleSetSeeking,
     resetCamera: handleResetChangingCamera,
-    play: handlePlay,
-    pause: handlePause,
-    trackVolumes,
     videoRefs,
     volume,
     isSeeking,
     isChangingCamera,
     videoPath: localActiveVideo?.path || null,
+    trackVolumes,
   }
 
   return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>
@@ -258,18 +233,13 @@ export const TimelineContext = React.createContext<{
   setVideo: (video: MediaFile | null) => void
   seek: (time: number) => void
   setTrack: (trackId: string | null) => void
-  stopRecording: () => void
-  startRecording: (trackId: string, time: number) => void
+  addMediaFiles: (files: MediaFile[]) => void
   removeFiles: (fileIds: string[]) => void
   setTime: (time: number) => void
-  setDuration: (duration: number) => void
   setPlaying: (playing: boolean) => void
-  setVolume: (volume: number) => void
   setTrackVolume: (trackId: string, volume: number) => void
   setSeeking: (isSeeking: boolean) => void
   resetCamera: () => void
-  play: () => void
-  pause: () => void
   trackVolumes: Record<string, number>
   videoRefs: Record<string, HTMLVideoElement>
   volume: number

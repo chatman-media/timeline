@@ -8,7 +8,7 @@ import path from "path"
 import { promisify } from "util"
 
 import { getMediaCreationTime } from "@/lib/utils"
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 
 // Промисифицируем ffprobe
 const ffprobeAsync = promisify(ffprobe)

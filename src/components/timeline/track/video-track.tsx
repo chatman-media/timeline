@@ -4,19 +4,19 @@ import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib
 import { useTimeline } from "@/providers"
 import { TimelineTrack } from "@/types/timeline"
 
-interface VideoTrackProps {
+interface TimelineTrackProps {
   track: TimelineTrack
   index: number
   sectionStartTime: number
   sectionDuration: number
 }
 
-const VideoTrack = memo(function VideoTrack({
+const TimelineTrack = memo(function TimelineTrack({
   track,
   index,
   sectionStartTime,
   sectionDuration,
-}: VideoTrackProps) {
+}: TimelineTrackProps) {
   const { setActiveVideo, activeTrackId, setActiveTrack } = useTimeline()
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -333,6 +333,6 @@ const VideoTrack = memo(function VideoTrack({
   )
 })
 
-VideoTrack.displayName = "VideoTrack"
+TimelineTrack.displayName = "VideoTrack"
 
-export { VideoTrack }
+export { TimelineTrack as VideoTrack }

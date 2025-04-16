@@ -2,11 +2,8 @@
 
 import { ReactNode } from "react"
 
-import { MediaProvider } from "@/providers/media-provider"
-import { SelectionProvider } from "@/providers/selection-provider"
+import { MediaProvider, ModalProvider, ProjectProvider, TimelineProvider } from "."
 
-import { ProjectProvider } from "./project-provider"
-import { TimelineProvider } from "./timeline-provider"
 interface RootProviderProps {
   children: ReactNode
 }
@@ -15,9 +12,9 @@ export function RootProvider({ children }: RootProviderProps) {
   return (
     <MediaProvider>
       <ProjectProvider>
-        <SelectionProvider>
+        <ModalProvider>
           <TimelineProvider>{children}</TimelineProvider>
-        </SelectionProvider>
+        </ModalProvider>
       </ProjectProvider>
     </MediaProvider>
   )

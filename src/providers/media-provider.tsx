@@ -1,16 +1,27 @@
 import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
-import { mediaMachine } from "@/machines"
-import { MediaFile } from "@/types/videos"
+import { mediaMachine, timelineMachine } from "@/machines"
+import { MediaFile } from "@/types/media"
 
 interface MediaContextType {
-  addedFiles: Set<string>
-  filePaths: MediaFile[]
   isLoading: boolean
-  handleAddFiles: (files: MediaFile[]) => void
-  handleRemoveFiles: (files: MediaFile[]) => void
-  handleSetLoadingState: (loading: boolean) => void
+  allMediaFiles: MediaFile[]
+  includedFiles: MediaFile[]
+  includedFilePaths: string[]
+  unavailableFiles: MediaFile[]
+
+  setLoading: (loading: boolean) => void
+
+  setAllMediaFiles: (files: MediaFile[]) => void
+  addMediaFiles: (files: MediaFile[]) => void
+  removeMediaFiles: (files: MediaFile[]) => void
+
+  setIncludedFiles: (files: MediaFile[]) => void
+  includeFiles: (files: MediaFile[]) => void
+  unincludeFiles: (files: MediaFile[]) => void
+
+  setUnavailableFiles: (files: MediaFile[]) => void
 }
 
 const MediaContext = createContext<MediaContextType | undefined>(undefined)
@@ -21,32 +32,26 @@ interface MediaProviderProps {
 
 export function MediaProvider({ children }: MediaProviderProps) {
   const [state, send] = useMachine(mediaMachine)
-
-  const addedFiles = state.context.addedFiles
-  const filePaths = state.context.filePaths
-  const isLoading = state.context.isLoading
-
-  const handleAddFiles = (files: MediaFile[]) => {
-    send({ type: "ADD_FILES", files })
-  }
-
-  const handleRemoveFiles = (files: MediaFile[]) => {
-    send({ type: "REMOVE_FILES", files })
-  }
-
-  const handleSetLoadingState = (loading: boolean) => {
-    send({ type: "SET_LOADING", loading })
-  }
+  const [timelineState, timelineSend] = useMachine(timelineMachine)
 
   return (
     <MediaContext.Provider
       value={{
-        addedFiles,
-        filePaths,
-        isLoading,
-        handleAddFiles,
-        handleRemoveFiles,
-        handleSetLoadingState,
+        ...state.context,
+        setLoading: (loading: boolean) => send({ type: "setLoading", loading }),
+        setAllMediaFiles: (files: MediaFile[]) => send({ type: "setAllMediaFiles", files }),
+        addMediaFiles: (files: MediaFile[]) => send({ type: "addMediaFiles", files }),
+        removeMediaFiles: (files: MediaFile[]) => send({ type: "removeMediaFiles", files }),
+        setIncludedFiles: (files: MediaFile[]) => send({ type: "setIncludedFiles", files }),
+        includeFiles: (files: MediaFile[]) => {
+          send({ type: "includeFiles", files })
+          timelineSend({ type: "addMediaFiles", files })
+        },
+        unincludeFiles: (files: MediaFile[]) => {
+          send({ type: "unincludeFiles", files })
+          // timelineSend({ type: "removeFiles", files })
+        },
+        setUnavailableFiles: (files: MediaFile[]) => send({ type: "setUnavailableFiles", files }),
       }}
     >
       {children}

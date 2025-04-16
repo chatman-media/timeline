@@ -1,4 +1,4 @@
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 import { getFileType } from "@/utils/media-utils"
 
 export function hasAudioStream(file: MediaFile) {

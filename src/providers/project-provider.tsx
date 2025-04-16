@@ -1,9 +1,35 @@
-import { createActorContext } from "@xstate/react"
+import { useMachine } from "@xstate/react"
+import { createContext } from "react"
 
-import { projectMachine } from "@/machines/project-machine"
+import {
+  type ProjectContext,
+  type ProjectContextEvents,
+  projectMachine,
+} from "@/machines/project-machine"
+import { ProjectSettings } from "@/types/project"
 
-export const ProjectContext = createActorContext(projectMachine)
+export const ProjectContextType = createContext<
+  (ProjectContext & ProjectContextEvents) | undefined
+>(undefined)
 
-export function ProjectProvider({ children }: { children: React.ReactNode }) {
-  return <ProjectContext.Provider>{children}</ProjectContext.Provider>
+interface ProjectProviderProps {
+  children: React.ReactNode
+}
+
+export function ProjectProvider({ children }: ProjectProviderProps) {
+  const [state, send] = useMachine(projectMachine)
+
+  return (
+    <ProjectContextType.Provider
+      value={{
+        ...state.context,
+        setName: (name: string) => send({ type: "SET_NAME", name }),
+        setDirty: (isDirty: boolean) => send({ type: "SET_DIRTY", isDirty }),
+        updateSettings: (settings: ProjectSettings) => send({ type: "UPDATE_SETTINGS", settings }),
+        resetSettings: () => send({ type: "RESET_SETTINGS" }),
+      }}
+    >
+      {children}
+    </ProjectContextType.Provider>
+  )
 }

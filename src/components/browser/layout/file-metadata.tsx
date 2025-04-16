@@ -1,7 +1,7 @@
 import { memo } from "react"
 
 import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 import { getAspectRatio, getFps } from "@/utils/video-utils"
 
 interface FileMetadataProps {

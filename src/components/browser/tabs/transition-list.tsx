@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 
 interface TransitionPreviewProps {
   sourceVideo: MediaFile

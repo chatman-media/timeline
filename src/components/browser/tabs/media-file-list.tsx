@@ -8,9 +8,10 @@ import { Button } from "@/components/ui/button"
 import { useMedia } from "@/hooks/use-media"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { cn } from "@/lib/utils"
+import { useTimeline } from "@/providers"
 import { useMediaContext } from "@/providers/media-provider"
 import { FfprobeStream } from "@/types/ffprobe"
-import { MediaFile } from "@/types/videos"
+import { MediaFile } from "@/types/media"
 import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
@@ -136,7 +137,8 @@ export const MediaFileList = memo(function MediaFileList({
 }: {
   viewMode?: ViewMode
 }): JSX.Element {
-  const { addedFiles, isLoading, handleAddFiles } = useMediaContext()
+  const { isLoading, includeFiles, includedFiles } = useMediaContext()
+  const { setVideo } = useTimeline()
   const { media } = useMedia()
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
 
@@ -261,7 +263,7 @@ export const MediaFileList = memo(function MediaFileList({
   console.log("[MediaFileList] Rendering with:", {
     mediaCount: media.length,
     isLoading,
-    hasAddedFiles: addedFiles.size > 0,
+    hasAddedFiles: includedFiles.length > 0,
     viewMode,
     hasFetched: media.length > 0,
     localFetched: localDataFetchedRef.current,
@@ -444,18 +446,17 @@ export const MediaFileList = memo(function MediaFileList({
                 index: 0,
               },
             ],
-            chapters: [],
           },
         }
 
         // Заменяем rootStore.send на handleSetMedia
-        handleAddFiles([newMediaFile])
+        // handleAddFiles([newMediaFile])
 
         // Очищаем URL
         URL.revokeObjectURL(fileUrl)
       }
     },
-    [media, handleAddFiles],
+    [media],
   )
 
   // Используем реф для хранения ссылок на элементы видео
@@ -800,14 +801,14 @@ export const MediaFileList = memo(function MediaFileList({
     const imageFiles = media.filter((file: MediaFile) => !file.isImage)
 
     if (nonImageFiles.length > 0) {
-      handleAddFiles(nonImageFiles)
+      includeFiles(nonImageFiles)
     }
 
     const files = media.filter((file: MediaFile) => file.path)
     if (files.length > 0) {
-      handleAddFiles(files)
+      includeFiles(files)
     }
-  }, [media, handleAddFiles])
+  }, [media, includeFiles])
 
   const handleAddDateFiles = useCallback(
     (targetDate: string) => {
@@ -822,15 +823,15 @@ export const MediaFileList = memo(function MediaFileList({
       })
 
       if (dateFiles.length > 0) {
-        handleAddFiles(dateFiles)
+        includeFiles(dateFiles)
       }
 
       const files = dateFiles.filter((file: MediaFile) => file.path)
       if (files.length > 0) {
-        handleAddFiles(files)
+        includeFiles(files)
       }
     },
-    [media, handleAddFiles],
+    [media, includeFiles],
   )
 
   const handleAddAllVideoFiles = useCallback(() => {
@@ -839,14 +840,14 @@ export const MediaFileList = memo(function MediaFileList({
     )
 
     if (videoFiles.length > 0) {
-      handleAddFiles(videoFiles)
+      includeFiles(videoFiles)
     }
 
     const files = videoFiles.filter((file: MediaFile) => file.path)
     if (files.length > 0) {
-      handleAddFiles(files)
+      includeFiles(files)
     }
-  }, [media, handleAddFiles])
+  }, [media, includeFiles])
 
   const handleAddAllAudioFiles = useCallback(() => {
     const audioFiles = media.filter(
@@ -856,14 +857,14 @@ export const MediaFileList = memo(function MediaFileList({
     )
 
     if (audioFiles.length > 0) {
-      handleAddFiles(audioFiles)
+      includeFiles(audioFiles)
     }
 
     const files = audioFiles.filter((file: MediaFile) => file.path)
     if (files.length > 0) {
-      handleAddFiles(files)
+      includeFiles(files)
     }
-  }, [media, handleAddFiles])
+  }, [media, includeFiles])
 
   // Функция для сохранения выбранного размера в localStorage
   const saveSize = (mode: string, size: number): void => {
@@ -904,7 +905,7 @@ export const MediaFileList = memo(function MediaFileList({
       e.stopPropagation()
 
       // Проверяем, не добавлен ли файл уже в addedFiles
-      if (!file.path || addedFiles.has(file.path)) {
+      if (!file.path || includedFiles.map((f) => f.path).includes(file.path)) {
         console.log(`[handleAddMedia] Файл ${file.name} уже добавлен в медиафайлы`)
         return
       }
@@ -922,20 +923,20 @@ export const MediaFileList = memo(function MediaFileList({
         console.log("[handleAddMedia] Добавляем изображение только в медиафайлы:", file.name)
         // Только отмечаем файл как добавленный, но не добавляем на таймлайн
         if (file.path) {
-          handleAddFiles([file])
+          includeFiles([file])
         }
         return
       }
 
       // Для видео и аудио добавляем на таймлайн
-      handleAddFiles([file])
+      // includeFiles([file])
 
       // Отмечаем файл как добавленный
       if (file.path) {
-        handleAddFiles([file])
+        includeFiles([file])
       }
     },
-    [media, handleAddFiles, addedFiles, videoRefs],
+    [media, includeFiles, videoRefs],
   )
 
   if (isLoading) {
@@ -983,7 +984,7 @@ export const MediaFileList = memo(function MediaFileList({
       const fileId = file.id || file.path || file.name
       const duration = file.probeData?.format.duration || 1
       const isAudio = getFileType(file) === "audio"
-      const isAdded = Boolean(file.path && addedFiles.has(file.path))
+      const isAdded = Boolean(file.path && includedFiles.map((f) => f.path).includes(file.path))
 
       switch (viewMode) {
         case "list":
@@ -1127,13 +1128,13 @@ export const MediaFileList = memo(function MediaFileList({
 
                 // Добавляем видео и аудио файлы на таймлайн
                 if (nonImageFiles.length > 0) {
-                  handleAddFiles(nonImageFiles)
+                  includeFiles(nonImageFiles)
                 }
 
                 // Отмечаем все файлы как добавленные
                 const files = group.files.filter((file) => file.path)
                 if (files.length > 0) {
-                  handleAddFiles(files)
+                  includeFiles(files)
                 }
               }}
             >
@@ -1198,7 +1199,7 @@ export const MediaFileList = memo(function MediaFileList({
           onAddDateFiles={handleAddDateFiles}
           onAddAllFiles={handleAddAllFiles}
           sortedDates={sortedDates}
-          addedFiles={addedFiles}
+          addedFiles={includedFiles}
         />
       </div>
       {isRecordingModalOpen && (

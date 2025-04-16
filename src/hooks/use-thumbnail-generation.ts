@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { MediaFile } from "../types/videos"
+import { MediaFile } from "../types/media"
 
 export function useThumbnailGeneration(rawVideos: MediaFile[]) {
   const [videos, setVideos] = useState<MediaFile[]>([])

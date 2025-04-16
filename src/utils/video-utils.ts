@@ -1,4 +1,5 @@
-import type { MediaFile, TimeRange } from "@/types/videos"
+import type { MediaFile } from "@/types/media"
+import type { TimeRange } from "@/types/time-range"
 
 // Константы для работы с временными промежутками
 const TIME_CONSTANTS = {
@@ -35,6 +36,10 @@ export const calculateTimeRanges = (videos: MediaFile[]): TimeRange[] => {
     duration:
       Math.floor(sortedTimes[1] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND) -
       Math.floor(sortedTimes[0] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND),
+    id: "",
+    trackId: "",
+    type: "video",
+    isSelected: false,
   }
 
   for (let i = 1; i < sortedTimes.length; i++) {
