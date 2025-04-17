@@ -38,21 +38,22 @@ export interface FileGroup {
 
 export interface Track {
   id: string
-  name: string
-  type: "video" | "audio" | "image"
-  isActive: boolean
-  videos: MediaFile[]
-  startTime: number
-  endTime: number
-  combinedDuration: number
-  timeRanges: TimeRange[]
+  name?: string
+  type?: "video" | "audio" | "image"
+  isActive?: boolean
+  videos?: MediaFile[]
+  startTime?: number
+  endTime?: number
+  combinedDuration?: number
+  timeRanges?: TimeRange[]
   index: string | number
 
-  volume: number
-  isMuted: boolean
-  isLocked: boolean
-  isVisible: boolean
+  volume?: number
+  isMuted?: boolean
+  isLocked?: boolean
+  isVisible?: boolean
 }
+  
 
 export interface TimelineTimeRange {
   id: string

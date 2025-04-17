@@ -33,16 +33,6 @@ export interface SeekbarState {
   x: number
 }
 
-export interface TimelineTrack {
-  id: string
-  index: number
-  isActive: boolean
-  combinedDuration: number
-  startTime: number
-  videos: MediaFile[]
-  timeRanges: TimeRange[]
-}
-
 export interface TimelineVideo {
   id: string
   trackId: string

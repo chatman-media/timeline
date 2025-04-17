@@ -479,6 +479,10 @@ export const MediaFileList = memo(function MediaFileList({
         set: (_, key: string, value: HTMLVideoElement | null) => {
           if (value) {
             globalVideoCache.set(key, value)
+            // Предзагружаем видео при добавлении в кэш
+            // value.load()
+            // Обновляем состояние загрузки без перерисовки
+            globalLoadedVideosCache.set(key, true)
           }
           return true
         },
@@ -486,8 +490,8 @@ export const MediaFileList = memo(function MediaFileList({
     }
   }, [])
 
-  // Создаем проксированный объект для loadedVideos
-  const [loadedVideosObj, setLoadedVideosObj] = useState<Record<string, boolean>>({})
+  // Используем ref для loadedVideos вместо useState
+  const loadedVideosRef = useRef<Record<string, boolean>>({})
 
   // Проксируем доступ к loadedVideos через глобальный кэш
   const loadedVideos = useMemo(() => {
@@ -497,6 +501,7 @@ export const MediaFileList = memo(function MediaFileList({
       },
       set: (_, key: string, value: boolean) => {
         globalLoadedVideosCache.set(key as string, value)
+        loadedVideosRef.current[key] = value
         return true
       },
     })
@@ -511,13 +516,13 @@ export const MediaFileList = memo(function MediaFileList({
       const newState = updater(currentState)
       Object.entries(newState).forEach(([key, value]) => {
         globalLoadedVideosCache.set(key, value)
+        loadedVideosRef.current[key] = value
       })
-      setLoadedVideosObj((prev) => ({ ...prev }))
     } else {
       Object.entries(updater).forEach(([key, value]) => {
         globalLoadedVideosCache.set(key, value)
+        loadedVideosRef.current[key] = value
       })
-      setLoadedVideosObj((prev) => ({ ...prev }))
     }
   }, [])
 
@@ -911,6 +916,21 @@ export const MediaFileList = memo(function MediaFileList({
     [media, addFilesToTimeline, videoRefs],
   )
 
+  // Функция для предзагрузки всех видео
+  const preloadAllVideos = useCallback(() => {
+    Object.entries(videoRefs.current).forEach(([key, video]) => {
+      if (video && !loadedVideos[key]) {
+        video.load()
+        setLoadedVideos((prev) => ({ ...prev, [key]: true }))
+      }
+    })
+  }, [videoRefs, loadedVideos])
+
+  // Предзагружаем все видео при монтировании компонента
+  useEffect(() => {
+    preloadAllVideos()
+  }, [preloadAllVideos])
+
   if (isLoading) {
     return (
       <div className="flex flex-col h-full overflow-hidden">
@@ -1105,7 +1125,7 @@ export const MediaFileList = memo(function MediaFileList({
                 }
               }}
             >
-              <span className="text-xs px-1">Добавить все</span>
+              <span className="text-xs px-1">Добавить</span>
               <CopyPlus className="h-3 w-3 mr-1" />
             </Button>
           </div>
@@ -1122,7 +1142,9 @@ export const MediaFileList = memo(function MediaFileList({
       )
     }
 
-    return <div className="space-y-4">{groupedFiles.map((group, index) => renderGroup(group))}</div>
+    return (
+      <div className="p-2 space-y-4">{groupedFiles.map((group, index) => renderGroup(group))}</div>
+    )
   }
 
   // console.log("[MediaFileList] Rendering media list with:", {
@@ -1155,7 +1177,7 @@ export const MediaFileList = memo(function MediaFileList({
         canIncreaseSize={canIncreaseSize}
         canDecreaseSize={canDecreaseSize}
       />
-      <div className="flex-1 p-0 min-h-0 overflow-y-auto scrollbar-hide hover:scrollbar-default">
+      <div className="flex-1 p-0 min-h-0 dark:bg-[#1b1a1f] overflow-y-auto scrollbar-hide hover:scrollbar-default">
         {renderContent()}
       </div>
       <div className="flex-shrink-0 transition-all duration-200 ease-in-out p-0 m-0">

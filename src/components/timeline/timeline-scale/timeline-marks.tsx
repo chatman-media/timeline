@@ -21,7 +21,7 @@ export function TimelineMarks({
   const level1Step = timeStep
   const level2Step = subStep
   const level3Step = subStep / 2
-  const level4Step = subStep / 4
+  const level4Step = subStep / 10
 
   const firstMark = Math.floor(startTime / level4Step) * level4Step
 

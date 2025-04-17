@@ -2,6 +2,7 @@ import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
 import { modalMachine, ModalType } from "@/machines/modal-machine"
+
 import { browserInspector } from "./providers"
 
 interface ModalContextType {

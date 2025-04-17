@@ -12,9 +12,11 @@ export interface PlayerContextType {
 
   isPlaying: boolean
   isSeeking: boolean
-
   isChangingCamera: boolean
   isRecording: boolean
+  isVideoLoading: boolean
+  isVideoReady: boolean
+
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
 }
@@ -26,6 +28,8 @@ const initialContext: PlayerContextType = {
   isSeeking: false,
   isChangingCamera: false,
   isRecording: false,
+  isVideoLoading: false,
+  isVideoReady: false,
   videoRefs: {},
   videos: {},
   duration: 0,
@@ -82,6 +86,16 @@ type SetVideoEvent = {
   video: MediaFile
 }
 
+type SetVideoLoadingEvent = {
+  type: "setVideoLoading"
+  isVideoLoading: boolean
+}
+
+type SetVideoReadyEvent = {
+  type: "setVideoReady"
+  isVideoReady: boolean
+}
+
 export type PlayerEvent =
   | SetCurrentTimeEvent
   | SetIsPlayingEvent
@@ -93,6 +107,8 @@ export type PlayerEvent =
   | SetDurationEvent
   | SetVolumeEvent
   | SetVideoEvent
+  | SetVideoLoadingEvent
+  | SetVideoReadyEvent
 
 export const playerMachine = createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QAcA2BDAnmATgOgEsJUwBiWMAFwBUCBbMAbQAYBdRFAe1gMoM4B2HEAA9EATgDMeAGwB2cTIAccgKwAaEJgkAWcXlVylARgBMqgL4XNaLLkLEyFSgElYABQyYCAqC3ZIIMjcvPxCgWIIRnhyMsZyxioaWohKqtJmltZBXvZEJORUbgDKYGAA1j5+bMLBPHyCwpGxmtpRqjKyCUlWNrn4+U5FsADCABbovlUj6Aw46P61IQ3hoJE6pq2IMjLMeKaJar05dgOOha6wAEpgAMacOBBVi4F1oY0R20p4kpKqUmotggOtJYh1zMdbNgzgVnAA1IhgTg3ABmsBeXHqYSaiDkOh+8kOyTaOnkP0ykP6DlhVARECRGKCy2xnwQ4j2Ol+-0kgJSCB5ezSAKyfVO1KGlDpSPRNVezI+a1SnUkxhkOmYMnMQNMeLw6s1IpO0PFFwAIgBXeYrRlvFY4hBKPY6uSSTm8trxOR4cTpCnZKF5c7wzioc0MG3y1aiVL4yTMUlJIEmAxWbICTj0+CvfpLLEK6MIAC0MiBxcpYsGufeUcixmMe1VCmU7sQ9dUxjwzBVENTQA */
@@ -102,6 +118,14 @@ export const playerMachine = createMachine({
   states: {
     idle: {
       on: {
+        setVideo: {
+          target: "loading",
+          actions: [
+            assign({ video: ({ event }) => event.video }),
+            assign({ isVideoLoading: true }),
+            assign({ isVideoReady: false })
+          ]
+        },
         setTime: {
           actions: assign({ currentTime: ({ event }) => event.currentTime }),
         },
@@ -120,9 +144,6 @@ export const playerMachine = createMachine({
         setVideoRefs: {
           actions: assign({ videoRefs: ({ event }) => event.videoRefs }),
         },
-        setVideo: {
-          actions: assign({ video: ({ event }) => event.video }),
-        },
         setVideos: {
           actions: assign({ videos: ({ event }) => event.videos }),
         },
@@ -134,5 +155,28 @@ export const playerMachine = createMachine({
         },
       },
     },
+    loading: {
+      on: {
+        setVideoReady: {
+          target: "ready",
+          actions: assign({ isVideoReady: true, isVideoLoading: false })
+        },
+        setVideoLoading: {
+          actions: assign({ isVideoLoading: ({ event }) => event.isVideoLoading })
+        }
+      }
+    },
+    ready: {
+      on: {
+        setVideo: {
+          target: "loading",
+          actions: [
+            assign({ video: ({ event }) => event.video }),
+            assign({ isVideoLoading: true }),
+            assign({ isVideoReady: false })
+          ]
+        }
+      }
+    }
   },
 })

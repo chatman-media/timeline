@@ -5,7 +5,10 @@ export function hasAudioStream(file: MediaFile): boolean {
   return file.probeData?.streams?.some((stream) => stream.codec_type === "audio") ?? false
 }
 
-export function getRemainingMediaCounts(media: MediaFile[], addedFiles: Set<string>): {
+export function getRemainingMediaCounts(
+  media: MediaFile[],
+  addedFiles: Set<string>,
+): {
   remainingVideoCount: number
   remainingAudioCount: number
   allFilesAdded: boolean

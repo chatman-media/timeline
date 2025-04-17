@@ -178,7 +178,11 @@ export function formatFileSize(bytes: number): string {
 export function getMediaCreationTime(probeData: FfprobeData): number {
   // 1. Try to get from probeData metadata
   if (probeData?.format?.tags?.creation_time) {
-    return new Date(probeData.format.tags.creation_time).getTime() / 1000
+    const time = new Date(probeData.format.tags.creation_time).getTime() / 1000
+    console.log(
+      `[getMediaCreationTime] Время из метаданных: ${new Date(time * 1000).toISOString()}`,
+    )
+    return time
   }
 
   // 2. Try to parse from filename (e.g. "20240910_170942")
@@ -186,14 +190,25 @@ export function getMediaCreationTime(probeData: FfprobeData): number {
     ? parseFileNameDateTime(probeData.format.filename)
     : null
   if (parsedDate) {
-    return parsedDate.getTime() / 1000
+    const time = parsedDate.getTime() / 1000
+    console.log(
+      `[getMediaCreationTime] Время из имени файла: ${new Date(time * 1000).toISOString()}`,
+    )
+    return time
   }
 
   // 3. Try to get from probeData start_time
   const startTime = probeData?.format.start_time
   if (startTime) {
+    console.log(
+      `[getMediaCreationTime] Время из start_time: ${new Date(startTime * 1000).toISOString()}`,
+    )
     return startTime
   }
 
-  return 0
+  // 4. If all else fails, return current time
+  console.warn(
+    `[getMediaCreationTime] Не удалось определить время создания файла ${probeData?.format?.filename}, используем текущее время`,
+  )
+  return Math.floor(Date.now() / 1000)
 }

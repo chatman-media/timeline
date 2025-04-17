@@ -9,10 +9,11 @@ interface ProvidersProps {
   children: ReactNode
 }
 
-export const browserInspector = createBrowserInspector()
+export const browserInspector = createBrowserInspector({
+  autoStart: false,
+})
 
 export function Providers({ children }: ProvidersProps) {
-
   return (
     <MediaProvider>
       <ProjectProvider>

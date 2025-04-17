@@ -3,6 +3,7 @@ import { createContext, useContext } from "react"
 
 import { mediaMachine, timelineMachine } from "@/machines"
 import { MediaFile } from "@/types/media"
+
 import { browserInspector } from "./providers"
 
 interface MediaContextType {

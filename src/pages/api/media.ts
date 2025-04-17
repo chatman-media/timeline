@@ -1,16 +1,16 @@
 import * as fs from "node:fs/promises"
 import process from "node:process"
 
+import { exec } from "child_process"
 import { ffprobe, FfprobeData } from "fluent-ffmpeg"
 import { nanoid } from "nanoid"
 import type { NextApiRequest, NextApiResponse } from "next"
 import path from "path"
 import { promisify } from "util"
-import { exec } from "child_process"
 
 import { getMediaCreationTime } from "@/lib/utils"
-import { MediaFile } from "@/types/media"
 import { FfprobeStream } from "@/types/ffprobe"
+import { MediaFile } from "@/types/media"
 
 // Промисифицируем ffprobe
 const ffprobeAsync = promisify(ffprobe)
@@ -73,7 +73,20 @@ export default async function handler(
       const fileType = path.extname(filename).toLowerCase()
 
       // Для изображений
-      if ([".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif", ".arw", "hif", "hevc"].includes(fileType)) {
+      if (
+        [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".gif",
+          ".webp",
+          ".heic",
+          ".heif",
+          ".arw",
+          "hif",
+          "hevc",
+        ].includes(fileType)
+      ) {
         return {
           id: path.basename(filename, path.extname(filename)),
           name: filename,
@@ -86,14 +99,14 @@ export default async function handler(
               size: stats.size,
               bit_rate: 0,
             },
-          }
+          },
         }
       }
 
       // Для аудио файлов
       if ([".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac", ".alac"].includes(fileType)) {
         try {
-          const probeData = await ffprobeAsync(filePath) as FfprobeData
+          const probeData = (await ffprobeAsync(filePath)) as FfprobeData
           const audioStream = probeData.streams.find((s: FfprobeStream) => s.codec_type === "audio")
 
           return {
@@ -111,7 +124,7 @@ export default async function handler(
                 size: probeData.format.size || 0,
                 bit_rate: probeData.format.bit_rate || 0,
               },
-            }
+            },
           }
         } catch (error) {
           console.error(`[API] Ошибка при обработке аудио файла ${filename}:`, error)
@@ -122,10 +135,16 @@ export default async function handler(
       // Для видео файлов
       if ([".mp4", ".mov", ".avi", ".mkv", ".webm", ".insv"].includes(fileType)) {
         try {
-          const probeData = await ffprobeAsync(filePath) as FfprobeData
+          const probeData = (await ffprobeAsync(filePath)) as FfprobeData
 
           // Генерируем прокси-файл
           const proxyPath = await generateProxyFile(filePath)
+
+          // Получаем время создания файла из метаданных
+          const creationTime = getMediaCreationTime(probeData)
+          console.log(
+            `[API] Время создания файла ${filename}: ${new Date(creationTime * 1000).toISOString()}`,
+          )
 
           const mediaFile: MediaFile = {
             id: path.basename(filename, path.extname(filename)),
@@ -133,6 +152,7 @@ export default async function handler(
             path: `/media/${filename}`,
             size: stats.size,
             duration: probeData.format.duration || 0,
+            startTime: creationTime,
             probeData: {
               streams: probeData.streams,
               format: {
@@ -143,12 +163,14 @@ export default async function handler(
             },
             isVideo: true,
             isAudio: false,
-            proxy: proxyPath ? {
-              path: proxyPath,
-              width: PROXY_SETTINGS.width,
-              height: PROXY_SETTINGS.height,
-              bitrate: parseInt(PROXY_SETTINGS.bitrate),
-            } : undefined,
+            proxy: proxyPath
+              ? {
+                path: proxyPath,
+                width: PROXY_SETTINGS.width,
+                height: PROXY_SETTINGS.height,
+                bitrate: parseInt(PROXY_SETTINGS.bitrate),
+              }
+              : undefined,
           }
 
           return mediaFile

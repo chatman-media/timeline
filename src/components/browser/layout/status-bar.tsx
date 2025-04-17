@@ -31,10 +31,10 @@ export function StatusBar({
   const topDateWithRemainingFiles = getTopDateWithRemainingFiles(sortedDates, addedFilesSet)
 
   return (
-    <div className="flex justify-between items-center text-sm w-full p-2 gap-2">
+    <div className="flex justify-between items-center text-sm w-full p-1 gap-2">
       <div className="flex flex-col items-end justify-center gap-0 text-xs">
         <span className="px-1 flex items-center whitespace-nowrap gap-2">
-          {remainingVideoCount && (
+          {remainingVideoCount > 0 && (
             <Button
               variant="outline"
               size="sm"
@@ -46,7 +46,7 @@ export function StatusBar({
               <CopyPlus size={10} className="" />
             </Button>
           )}
-          {remainingAudioCount && (
+          {remainingAudioCount > 0 && (
             <Button
               variant="outline"
               size="sm"
@@ -61,7 +61,7 @@ export function StatusBar({
         </span>
       </div>
       <div className="flex flex-col items-end justify-center gap-1 text-xs">
-        {topDateWithRemainingFiles && (
+        {topDateWithRemainingFiles && topDateWithRemainingFiles.remainingFiles.length > 0 && (
           <Button
             variant="outline"
             size="sm"

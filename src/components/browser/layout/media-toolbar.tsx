@@ -111,7 +111,7 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 cursor-pointer px-1"
+          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#e8e8e8] dark:bg-[#3e3c49]"
           onClick={onImport}
         >
           {/* <Import size={12} /> */}
@@ -151,7 +151,7 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 cursor-pointer px-1"
+          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#e8e8e8] dark:bg-[#3e3c49]"
           onClick={onRecord}
         >
           <span className="text-xs px-2">Запись</span>
@@ -213,7 +213,7 @@ export function MediaToolbar({
                   size="icon"
                   className={cn(
                     "h-6 w-6 mr-1 ml-3 cursor-pointer",
-                    viewMode === "list" ? "bg-gray-300 dark:bg-gray-700" : "",
+                    viewMode === "list" ? "bg-[#cfcdcd] dark:bg-[#625f74]" : "",
                   )}
                   onClick={() => onViewModeChange("list")}
                 >
@@ -230,7 +230,7 @@ export function MediaToolbar({
                   size="icon"
                   className={cn(
                     "h-6 w-6 mr-1 cursor-pointer",
-                    viewMode === "grid" ? "bg-gray-300 dark:bg-gray-700" : "",
+                    viewMode === "grid" ? "bg-[#cfcdcd] dark:bg-[#625f74]" : "",
                   )}
                   onClick={() => onViewModeChange("grid")}
                 >
@@ -247,7 +247,7 @@ export function MediaToolbar({
                   size="icon"
                   className={cn(
                     "h-6 w-6 mr-1 cursor-pointer",
-                    viewMode === "thumbnails" ? "bg-gray-300 dark:bg-gray-700" : "",
+                    viewMode === "thumbnails" ? "bg-[#cfcdcd] dark:bg-[#625f74]" : "",
                   )}
                   onClick={() => onViewModeChange("thumbnails")}
                 >
@@ -331,7 +331,10 @@ export function MediaToolbar({
                     <span>По размеру</span>
                   </div>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("duration")}>
+                <DropdownMenuItem
+                  className="h-6 cursor-pointer"
+                  onClick={() => handleSort("duration")}
+                >
                   <div className="flex items-center gap-2">
                     {internalSortBy === "duration" && <Check className="h-4 w-4" />}
                     <span>По длительности</span>

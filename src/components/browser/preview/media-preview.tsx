@@ -385,15 +385,11 @@ export const MediaPreview = memo(function MediaPreview({
               {/* Stream indicators */}
               {renderStreamIndicators(file, stream, index, loadedVideos[`${fileId}-${index}`])}
               {/* Timeline */}
-              {hoverTimes[fileId]?.[index] !== undefined &&
-                hoverTimes[fileId]?.[index] !== null &&
-                Number.isFinite(hoverTimes[fileId]?.[index]) && (
-                <PreviewTimeline
-                  time={hoverTimes[fileId][index]}
-                  duration={duration}
-                  videoRef={videoRefs.current[`${fileId}-${index}`]}
-                />
-              )}
+              <PreviewTimeline
+                time={hoverTimes[fileId]?.[index] ?? 0}
+                duration={duration}
+                videoRef={videoRefs.current[`${fileId}-${index}`]}
+              />
 
               {file.probeData?.streams &&
                 file.probeData.streams.filter(

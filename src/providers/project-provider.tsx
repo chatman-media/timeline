@@ -7,6 +7,7 @@ import {
   projectMachine,
 } from "@/machines/project-machine"
 import { ProjectSettings } from "@/types/project"
+
 import { browserInspector } from "./providers"
 export const ProjectContextType = createContext<
   (ProjectContext & ProjectContextEvents) | undefined

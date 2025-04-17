@@ -9,12 +9,15 @@ interface PreviewTimelineProps {
 export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelineProps) {
   const animationRef = useRef<number | undefined>(undefined)
   const [displayTime, setDisplayTime] = useState(time)
+  const videoRefId = useRef<string | null>(null)
+  const lastTimeRef = useRef<number>(time)
 
   // Эффект для синхронизации с внешним временем при не проигрывании
   useEffect(() => {
     // Если не воспроизводится или нет ссылки на видео, используем переданное время
     if (!videoRef || videoRef.paused) {
       setDisplayTime(time)
+      lastTimeRef.current = time
     }
   }, [time, videoRef])
 
@@ -22,13 +25,16 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
   useEffect(() => {
     if (!videoRef) return
 
-    console.log("[PreviewTimeline] videoRef установлен, настраиваем анимацию")
-
     // Функция для обновления позиции индикатора
     const updatePosition = () => {
-      // Обновляем состояние только если видео проигрывается
-      if (!videoRef.paused) {
-        setDisplayTime(videoRef.currentTime)
+      if (!videoRef) return
+
+      const currentTime = videoRef.currentTime
+
+      // Обновляем позицию только если время изменилось
+      if (currentTime !== lastTimeRef.current) {
+        setDisplayTime(currentTime)
+        lastTimeRef.current = currentTime
       }
 
       // Запрашиваем следующий кадр анимации
@@ -37,13 +43,11 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
 
     // Запускаем анимацию сразу если видео уже играет
     if (!videoRef.paused) {
-      console.log("[PreviewTimeline] Видео проигрывается, запускаем анимацию")
       animationRef.current = requestAnimationFrame(updatePosition)
     }
 
     // Добавляем слушатели событий
     const handlePlay = () => {
-      console.log("[PreviewTimeline] Событие play, запускаем анимацию")
       // Отменяем предыдущую анимацию, если она есть
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
@@ -53,7 +57,6 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
     }
 
     const handlePause = () => {
-      console.log("[PreviewTimeline] Событие pause, останавливаем анимацию")
       // Останавливаем анимацию
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current)
@@ -61,11 +64,20 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
       }
       // Устанавливаем последнее известное время
       setDisplayTime(videoRef.currentTime)
+      lastTimeRef.current = videoRef.currentTime
+    }
+
+    const handleTimeUpdate = () => {
+      if (!videoRef.paused) {
+        setDisplayTime(videoRef.currentTime)
+        lastTimeRef.current = videoRef.currentTime
+      }
     }
 
     // Регистрируем слушатели
     videoRef.addEventListener("play", handlePlay)
     videoRef.addEventListener("pause", handlePause)
+    videoRef.addEventListener("timeupdate", handleTimeUpdate)
 
     // Очистка при размонтировании
     return () => {
@@ -77,6 +89,7 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
       if (videoRef) {
         videoRef.removeEventListener("play", handlePlay)
         videoRef.removeEventListener("pause", handlePause)
+        videoRef.removeEventListener("timeupdate", handleTimeUpdate)
       }
     }
   }, [videoRef]) // Зависимость только от videoRef

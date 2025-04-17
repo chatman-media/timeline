@@ -4,6 +4,7 @@ import { createContext, useContext } from "react"
 import { playerMachine } from "@/machines"
 import { MediaFile } from "@/types/media"
 import { TimelineVideo } from "@/types/timeline"
+
 import { browserInspector } from "./providers"
 interface PlayerContextType {
   video: MediaFile | null
@@ -13,24 +14,26 @@ interface PlayerContextType {
 
   isPlaying: boolean
   isSeeking: boolean
-
   isChangingCamera: boolean
   isRecording: boolean
+  isVideoLoading: boolean
+  isVideoReady: boolean
+
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
 
   setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) => void
-
   setVideo: (video: MediaFile) => void
   setVideos: (videos: Record<string, TimelineVideo>) => void
   setDuration: (duration: number) => void
   setVolume: (volume: number) => void
-
   setCurrentTime: (currentTime: number) => void
   setIsPlaying: (isPlaying: boolean) => void
   setIsSeeking: (isSeeking: boolean) => void
   setIsChangingCamera: (isChangingCamera: boolean) => void
   setIsRecording: (isRecording: boolean) => void
+  setVideoLoading: (isLoading: boolean) => void
+  setVideoReady: (isReady: boolean) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined)
@@ -46,7 +49,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     <PlayerContext.Provider
       value={{
         ...state.context,
-        setCurrentTime: (currentTime: number) => send({ type: "setTime", currentTime }),
+        setCurrentTime: (currentTime: number) => send({ type: "setCurrentTime", currentTime }),
         setIsPlaying: (isPlaying: boolean) => send({ type: "setIsPlaying", isPlaying }),
         setIsSeeking: (isSeeking: boolean) => send({ type: "setIsSeeking", isSeeking }),
         setIsChangingCamera: (isChangingCamera: boolean) =>
@@ -58,6 +61,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         setVideos: (videos: Record<string, TimelineVideo>) => send({ type: "setVideos", videos }),
         setDuration: (duration: number) => send({ type: "setDuration", duration }),
         setVolume: (volume: number) => send({ type: "setVolume", volume }),
+        setVideoLoading: (isLoading: boolean) => send({ type: "setVideoLoading", isVideoLoading: isLoading }),
+        setVideoReady: (isReady: boolean) => send({ type: "setVideoReady", isVideoReady: isReady }),
       }}
     >
       {children}
