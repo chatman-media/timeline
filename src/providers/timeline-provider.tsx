@@ -1,4 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react"
+import React, {
+  createContext,
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react"
 import { createActor } from "xstate"
 
 import { timelineMachine } from "@/machines/timeline-machine"
@@ -6,20 +14,51 @@ import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimeRange } from "@/types/time-range"
 
-interface TimelineProviderProps {
-  children: React.ReactNode
+interface TimelineContextType {
+  isDirty: boolean
+  zoomLevel: number
+  timeRanges: Record<string, TimeRange[]>
+  activeTrackId: string | null
+  trackVolumes: Record<string, number>
+  isSeeking: boolean
+  isChangingCamera: boolean
+  tracks: Track[]
+  history: TimelineContextType[]
+  historyIndex: number
+  future: TimelineContextType[]
+  canUndo: boolean
+  canRedo: boolean
+  videoRefs: Record<string, HTMLVideoElement | null>
+  loadedVideos: Record<string, boolean>
+
+
+  zoom: (level: number) => void
+  undo: () => void
+  redo: () => void
+  setTracks: (tracks: Track[]) => void
+  setActiveTrack: (id: string) => void
+  seek: (time: number) => void
+  removeFiles: (fileIds: string[]) => void
+  addMediaFiles: (files: MediaFile[]) => void
+  setPlaying: (playing: boolean) => void
+  setTrackVolume: (trackId: string, volume: number) => void
+  setSeeking: (isSeeking: boolean) => void
+  setTimeRanges: (timeRanges: Record<string, TimeRange[]>) => void
+  setVideoRef: (fileId: string, video: HTMLVideoElement | null) => void
+  setLoadedVideo: (fileId: string, loaded: boolean) => void
+  preloadAllVideos: () => void
 }
 
-export function TimelineProvider({ children }: TimelineProviderProps) {
-  const [zoomLevel, setZoomLevel] = useState(1)
-  const [canUndo, setCanUndo] = useState(false)
-  const [canRedo, setCanRedo] = useState(false)
-  const [tracks, setTracks] = useState<Track[]>([])
-  const [activeTrackId, setActiveTrackId] = useState<string | null>(null)
-  const [trackVolumes, setTrackVolumes] = useState<Record<string, number>>({})
-  const [isSeeking, setIsSeeking] = useState(false)
-  const [isChangingCamera, setIsChangingCamera] = useState(false)
-  const [timeRanges, setTimeRanges] = useState<Record<string, TimeRange[]>>({})
+const TimelineContext = createContext<TimelineContextType | null>(null)
+
+interface TimelineProviderProps {
+  children: ReactNode
+}
+
+export function TimelineProvider({
+  children,
+}: TimelineProviderProps) {
+  const [state, setState] = useState<TimelineContextType | undefined>(undefined)
 
   const timelineActor = useMemo(() => createActor(timelineMachine), [])
 
@@ -32,87 +71,108 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
 
   const handleZoom = useCallback(
     (level: number) => {
-      timelineActor.send({ type: "ZOOM", level })
+      timelineActor.send({ type: "zoom", level })
     },
-    [timelineActor],
+    [timelineActor]
   )
 
   const handleUndo = useCallback(() => {
-    timelineActor.send({ type: "UNDO" })
+    timelineActor.send({ type: "undo" })
   }, [timelineActor])
 
   const handleRedo = useCallback(() => {
-    timelineActor.send({ type: "REDO" })
+    timelineActor.send({ type: "redo" })
   }, [timelineActor])
 
   const setActiveTrack = useCallback(
-    (trackId: string | null) => {
+    (trackId: string) => {
       timelineActor.send({ type: "setActiveTrack", trackId })
     },
-    [timelineActor],
+    [timelineActor]
   )
 
   const addMediaFiles = useCallback(
     (files: MediaFile[]) => {
       timelineActor.send({ type: "addMediaFiles", files })
     },
-    [timelineActor],
+    [timelineActor]
   )
 
   const handleRemoveFromAddedFiles = useCallback(
     (fileIds: string[]) => {
       fileIds.forEach((fileId) => {
-        timelineActor.send({ type: "REMOVE_FROM_ADDED_FILES", fileId })
+        timelineActor.send({ type: "removeFromAddedFiles", fileId })
       })
     },
-    [timelineActor],
+    [timelineActor]
   )
 
   const handleSetPlaying = useCallback(
     (playing: boolean) => {
-      timelineActor.send({ type: "SET_PLAYING", playing })
+      timelineActor.send({ type: "setPlaying", playing })
     },
-    [timelineActor],
+    [timelineActor]
   )
 
   const handleSeek = useCallback(
     (time: number) => {
-      timelineActor.send({ type: "SEEK", time })
+      timelineActor.send({ type: "seek", time })
     },
-    [timelineActor],
+    [timelineActor]
   )
 
   const handleSetTrackVolume = useCallback(
     (trackId: string, volume: number) => {
-      timelineActor.send({ type: "SET_TRACK_VOLUME", trackId, volume })
+      timelineActor.send({ type: "setTrackVolume", trackId, volume })
     },
-    [timelineActor],
+    [timelineActor]
   )
 
   const handleSetSeeking = useCallback(
     (isSeeking: boolean) => {
-      timelineActor.send({ type: "SET_SEEKING", isSeeking })
+      timelineActor.send({ type: "setSeeking", isSeeking })
     },
-    [timelineActor],
+    [timelineActor]
   )
 
   const handleSetTimeRanges = useCallback(
     (timeRanges: Record<string, TimeRange[]>) => {
       timelineActor.send({ type: "setTimeRanges", ranges: timeRanges })
     },
-    [timelineActor],
+    [timelineActor]
+  )
+
+  const setVideoRef = useCallback(
+    (fileId: string, video: HTMLVideoElement | null) => {
+      timelineActor.send({ type: "setVideoRef", fileId, video })
+    },
+    [timelineActor]
+  )
+
+  const setLoadedVideo = useCallback(
+    (fileId: string, loaded: boolean) => {
+      timelineActor.send({ type: "setLoadedVideo", fileId, loaded })
+    },
+    [timelineActor]
+  )
+
+  const preloadAllVideos = useCallback(() => {
+    timelineActor.send({ type: "preloadAllVideos" })
+  }, [timelineActor])
+
+  const setTracks = useCallback(
+    (tracks: Track[]) => {
+      timelineActor.send({ type: "setTracks", tracks })
+    },
+    [timelineActor]
   )
 
   useEffect(() => {
-    const subscription = timelineActor.subscribe((state) => {
-      setZoomLevel(state.context.zoomLevel)
-      setCanUndo(false)
-      setCanRedo(false)
-      setTracks(state.context.tracks)
-      setActiveTrackId(state.context.activeTrackId)
-      setTrackVolumes(state.context.trackVolumes)
-      setIsSeeking(state.context.isSeeking)
-      setIsChangingCamera(state.context.isChangingCamera)
+    const subscription = timelineActor.subscribe((snapshot) => {
+      setState((prev: TimelineContextType) => ({
+        ...prev,
+        ...snapshot.context
+      }))
     })
 
     return () => {
@@ -121,61 +181,31 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
   }, [timelineActor])
 
   const value = {
-    timeRanges,
-    zoomLevel,
+    ...state,
     zoom: handleZoom,
-    tracks,
-    setTracks,
     undo: handleUndo,
     redo: handleRedo,
-    canUndo,
-    canRedo,
-    activeTrackId,
+    setActiveTrack,
+    setTracks,
     seek: handleSeek,
-    setTrack: setActiveTrack,
     removeFiles: handleRemoveFromAddedFiles,
     addMediaFiles,
     setPlaying: handleSetPlaying,
     setTrackVolume: handleSetTrackVolume,
     setSeeking: handleSetSeeking,
-    isSeeking,
-    isChangingCamera,
-    trackVolumes,
     setTimeRanges: handleSetTimeRanges,
+    setVideoRef,
+    setLoadedVideo,
+    preloadAllVideos,
   }
 
   return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>
 }
 
-export const TimelineContext = React.createContext<{
-  zoomLevel: number
-  zoom: (level: number) => void
-  tracks: Track[]
-  setTracks: (tracks: Track[]) => void
-  undo: () => void
-  redo: () => void
-  canUndo: boolean
-  canRedo: boolean
-  activeTrackId: string | null
-  seek: (time: number) => void
-  setTrack: (trackId: string | null) => void
-  addMediaFiles: (files: MediaFile[]) => void
-  removeFiles: (fileIds: string[]) => void
-  setPlaying: (playing: boolean) => void
-  setTrackVolume: (trackId: string, volume: number) => void
-  setSeeking: (isSeeking: boolean) => void
-  setTimeRanges: (timeRanges: Record<string, TimeRange[]>) => void
-  trackVolumes: Record<string, number>
-  isSeeking: boolean
-  isChangingCamera: boolean
-  timeRanges: Record<string, TimeRange[]>
-    } | null>(null)
-
-// Хук для использования контекста таймлайна
 export function useTimelineContext() {
-  const context = React.useContext(TimelineContext)
+  const context = useContext(TimelineContext)
   if (!context) {
-    throw new Error("useTimeline must be used within a TimelineProvider")
+    throw new Error("useTimelineContext must be used within a TimelineProvider")
   }
   return context
 }

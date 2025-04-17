@@ -113,11 +113,15 @@ export const createTracksFromFiles = (
 
   const tracks: Track[] = []
 
+  // Сортируем файлы по времени начала
+  const sortedVideoFiles = [...videoFiles].sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
+  const sortedAudioFiles = [...audioFiles].sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
+
   // Группируем видео по дням для правильной нумерации
-  const videoFilesByDay = videoFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
+  const videoFilesByDay = sortedVideoFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
     // Если нет startTime, используем текущее время
     const startTime = file.startTime || Date.now() / 1000
-    const date = new Date(startTime * 1000).toDateString()
+    const date = new Date(startTime * 1000).toISOString().split('T')[0]
     if (!acc[date]) {
       acc[date] = []
     }
@@ -127,15 +131,15 @@ export const createTracksFromFiles = (
 
   // Обрабатываем видео файлы по дням
   Object.entries(videoFilesByDay).forEach(([date, dayFiles]) => {
-    // Определяем максимальный номер видеодорожки для этого дня (включая существующие треки)
+    // Определяем максимальный номер видеодорожки для этого дня
     const maxVideoIndex = Math.max(
       0,
       ...tracks
         .filter(
           (track) =>
             track.type === "video" &&
-            track.videos.some(
-              (v) => v.startTime && new Date(v.startTime * 1000).toDateString() === date,
+            track.videos?.some(
+              (v) => v.startTime && new Date(v.startTime * 1000).toISOString().split('T')[0] === date,
             ),
         )
         .map((track) => Number(track.index) || 0),
@@ -143,8 +147,8 @@ export const createTracksFromFiles = (
         .filter(
           (track) =>
             track.type === "video" &&
-            track.videos.some(
-              (v) => v.startTime && new Date(v.startTime * 1000).toDateString() === date,
+            track.videos?.some(
+              (v) => v.startTime && new Date(v.startTime * 1000).toISOString().split('T')[0] === date,
             ),
         )
         .map((track) => Number(track.index) || 0),
@@ -174,10 +178,9 @@ export const createTracksFromFiles = (
   })
 
   // Аналогично для аудио файлов
-  const audioFilesByDay = audioFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
-    // Если нет startTime, используем текущее время
+  const audioFilesByDay = sortedAudioFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
     const startTime = file.startTime || Date.now() / 1000
-    const date = new Date(startTime * 1000).toDateString()
+    const date = new Date(startTime * 1000).toISOString().split('T')[0]
     if (!acc[date]) {
       acc[date] = []
     }
@@ -187,15 +190,14 @@ export const createTracksFromFiles = (
 
   // Обрабатываем аудио файлы по дням
   Object.entries(audioFilesByDay).forEach(([date, dayFiles]) => {
-    // Определяем максимальный номер аудиодорожки для этого дня (включая существующие треки)
     const maxAudioIndex = Math.max(
       0,
       ...tracks
         .filter(
           (track) =>
             track.type === "audio" &&
-            track.videos.some(
-              (v) => v.startTime && new Date(v.startTime * 1000).toDateString() === date,
+            track.videos?.some(
+              (v) => v.startTime && new Date(v.startTime * 1000).toISOString().split('T')[0] === date,
             ),
         )
         .map((track) => Number(track.index) || 0),
@@ -203,8 +205,8 @@ export const createTracksFromFiles = (
         .filter(
           (track) =>
             track.type === "audio" &&
-            track.videos.some(
-              (v) => v.startTime && new Date(v.startTime * 1000).toDateString() === date,
+            track.videos?.some(
+              (v) => v.startTime && new Date(v.startTime * 1000).toISOString().split('T')[0] === date,
             ),
         )
         .map((track) => Number(track.index) || 0),

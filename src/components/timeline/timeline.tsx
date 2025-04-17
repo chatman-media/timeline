@@ -63,14 +63,14 @@ export function Timeline() {
 
   const {
     tracks,
-    setTracks,
     undo,
     redo,
     canUndo,
     canRedo,
     activeTrackId,
     seek,
-    setTrack,
+    setActiveTrack,
+    setTracks,
     removeFiles,
   } = context
 
@@ -96,7 +96,7 @@ export function Timeline() {
     >()
 
     tracks.forEach((track) => {
-      track.videos.forEach((video) => {
+      track.videos?.forEach((video) => {
         const videoStart = video.startTime || 0
         const videoEnd = videoStart + (video.duration || 0)
         const date = new Date(videoStart * 1000).toISOString().split("T")[0]
@@ -168,9 +168,9 @@ export function Timeline() {
               setIsRecording(false)
 
               setTimeout(() => {
-                setTrack(targetTrack.id)
+                setActiveTrack(targetTrack.id)
 
-                const video = targetTrack.videos.find((v) => {
+                const video = targetTrack.videos?.find((v) => {
                   const startTime = v.startTime ?? 0
                   const duration = v.duration ?? 0
                   return startTime <= savedCurrentTime && startTime + duration >= savedCurrentTime
@@ -178,7 +178,7 @@ export function Timeline() {
 
                 if (video) {
                   setVideo(video)
-                } else if (targetTrack.videos.length > 0) {
+                } else if (targetTrack.videos?.length) {
                   setVideo(targetTrack.videos[0])
                 }
 
@@ -189,10 +189,10 @@ export function Timeline() {
             }
           }
 
-          setTrack(targetTrack.id)
+          setActiveTrack(targetTrack.id)
 
           if (isPlaying) {
-            const video = targetTrack.videos.find((v) => {
+            const video = targetTrack.videos?.find((v) => {
               const startTime = v.startTime ?? 0
               const duration = v.duration ?? 0
               return startTime <= currentTime && startTime + duration >= currentTime
@@ -210,13 +210,13 @@ export function Timeline() {
                 console.warn("[Timeline] Некорректное время при переключении дорожек:", currentTime)
                 seek(0)
               }
-            } else if (targetTrack.videos.length > 0) {
+            } else if (targetTrack.videos?.length) {
               const firstVideo = targetTrack.videos[0]
               setVideo(firstVideo)
               seek(firstVideo.startTime ?? 0)
             }
           } else {
-            if (targetTrack.videos.length > 0) {
+            if (targetTrack.videos?.length) {
               const firstVideo = targetTrack.videos[0]
               setVideo(firstVideo)
 
@@ -242,7 +242,7 @@ export function Timeline() {
     activeTrackId,
     tracks,
     setTracks,
-    setTrack,
+    setActiveTrack,
     isPlaying,
     isRecording,
     currentTime,
@@ -259,7 +259,7 @@ export function Timeline() {
 
       if (latestSection.tracks.length > 0) {
         const firstTrack = latestSection.tracks[0]
-        if (firstTrack.videos.length > 0) {
+        if (firstTrack.videos?.length) {
           const firstVideo = firstTrack.videos[0]
           const videoStartTime = firstVideo.startTime || 0
           seek(videoStartTime)
@@ -288,7 +288,7 @@ export function Timeline() {
     const wasActiveTrackInDeletedSection = tracks.find(
       (track) =>
         track.id === activeTrackId &&
-        track.videos.some((video) => {
+        track.videos?.some((video) => {
           const videoStart = video.startTime || 0
           return new Date(videoStart * 1000).toDateString() === deletingSectionDate
         }),
@@ -297,7 +297,7 @@ export function Timeline() {
     const filesToRemove: string[] = []
 
     tracks.forEach((track) => {
-      track.videos.forEach((video) => {
+      track.videos?.forEach((video) => {
         const videoStart = video.startTime || 0
         if (new Date(videoStart * 1000).toDateString() === deletingSectionDate && video.path) {
           filesToRemove.push(video.path)
@@ -307,7 +307,7 @@ export function Timeline() {
 
     const updatedTracks = tracks
       .map((track) => {
-        const filteredVideos = track.videos.filter((video) => {
+        const filteredVideos = track.videos?.filter((video) => {
           const videoStart = video.startTime || 0
           return new Date(videoStart * 1000).toDateString() !== deletingSectionDate
         })
@@ -317,7 +317,7 @@ export function Timeline() {
           videos: filteredVideos,
         }
       })
-      .filter((track) => track.videos.length > 0)
+      .filter((track) => track.videos?.length)
 
     setTracks(updatedTracks)
 
@@ -344,16 +344,16 @@ export function Timeline() {
           setActiveDate(nextActiveSection.date)
 
           const nextSectionTracks = updatedTracks.filter((track) =>
-            track.videos.some((video) => {
+            track.videos?.some((video) => {
               const videoStart = video.startTime || 0
               return new Date(videoStart * 1000).toDateString() === nextActiveSection.date
             }),
           )
 
           if (nextSectionTracks.length > 0) {
-            setTrack(nextSectionTracks[0].id)
+            setActiveTrack(nextSectionTracks[0].id)
 
-            if (nextSectionTracks[0].videos.length > 0) {
+            if (nextSectionTracks[0].videos?.length) {
               setVideo(nextSectionTracks[0].videos[0])
               const startTime = nextSectionTracks[0].videos[0].startTime || 0
               seek(startTime)
@@ -362,7 +362,7 @@ export function Timeline() {
         }
       } else {
         setActiveDate(null)
-        setTrack("")
+        setActiveTrack("")
       }
     }
 
@@ -397,7 +397,7 @@ export function Timeline() {
               if (!trackToDelete) return
 
               const filesToRemove: string[] = []
-              trackToDelete.videos.forEach((video) => {
+              trackToDelete.videos?.forEach((video) => {
                 if (video.path) {
                   filesToRemove.push(video.path)
                 }
@@ -421,7 +421,7 @@ export function Timeline() {
               if (!trackToDelete) return
 
               const filesToRemove: string[] = []
-              trackToDelete.videos.forEach((video) => {
+              trackToDelete.videos?.forEach((video) => {
                 if (video.path) {
                   filesToRemove.push(video.path)
                 }

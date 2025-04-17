@@ -16,12 +16,15 @@ interface TimelineContext {
   tracks: Track[]
   history: TimelineContext[]
   historyIndex: number
+  future: TimelineContext[]
   canUndo: boolean
   canRedo: boolean
+  videoRefs: Record<string, HTMLVideoElement | null>
+  loadedVideos: Record<string, boolean>
 }
 
 type ZoomEvent = {
-  type: "ZOOM"
+  type: "zoom"
   level: number
 }
 
@@ -31,12 +34,12 @@ type SetTimeRangesEvent = {
 }
 
 type SetLayoutModeEvent = {
-  type: "SET_LAYOUT_MODE"
+  type: "setLayoutMode"
   mode: string
 }
 
 type SetMontageSchemaEvent = {
-  type: "SET_MONTAGE_SCHEMA"
+  type: "setMontageSchema"
   schema: any[]
 }
 
@@ -46,22 +49,22 @@ type SetCurrentTimeEvent = {
 }
 
 type SetPlayingEvent = {
-  type: "SET_PLAYING"
+  type: "setPlaying"
   playing: boolean
 }
 
 type SetRecordingEvent = {
-  type: "SET_RECORDING"
+  type: "setRecording"
   recording: boolean
 }
 
 type SetActiveVideoEvent = {
-  type: "SET_ACTIVE_VIDEO"
+  type: "setActiveVideo"
   videoId: string | null
 }
 
 type SeekEvent = {
-  type: "SEEK"
+  type: "seek"
   time: number
 }
 
@@ -81,30 +84,30 @@ type SetVolumeEvent = {
 }
 
 type SetTrackVolumeEvent = {
-  type: "SET_TRACK_VOLUME"
+  type: "setTrackVolume"
   trackId: string
   volume: number
 }
 
 type SetSeekingEvent = {
-  type: "SET_SEEKING"
+  type: "setSeeking"
   isSeeking: boolean
 }
 
 type ResetChangingCameraEvent = {
-  type: "RESET_CHANGING_CAMERA"
+  type: "resetChangingCamera"
 }
 
 type UndoEvent = {
-  type: "UNDO"
+  type: "undo"
 }
 
 type RedoEvent = {
-  type: "REDO"
+  type: "redo"
 }
 
 type SetLayoutEvent = {
-  type: "SET_LAYOUT"
+  type: "setLayout"
   layout: string
 }
 
@@ -114,18 +117,39 @@ type addMediaFilesEvent = {
 }
 
 type RemoveFromAddedFilesEvent = {
-  type: "REMOVE_FROM_ADDED_FILES"
+  type: "removeFromAddedFiles"
   fileId: string
 }
 
 type StopRecordingSchemaEvent = {
-  type: "STOP_RECORDING_SCHEMA"
+  type: "stopRecordingSchema"
 }
 
 type StartRecordingSchemaEvent = {
-  type: "START_RECORDING_SCHEMA"
+  type: "startRecordingSchema"
   trackId: string
   time: number
+}
+
+type SetVideoRefEvent = {
+  type: "setVideoRef"
+  fileId: string
+  video: HTMLVideoElement | null
+}
+
+type SetLoadedVideoEvent = {
+  type: "setLoadedVideo"
+  fileId: string
+  loaded: boolean
+}
+
+type PreloadAllVideosEvent = {
+  type: "preloadAllVideos"
+}
+
+type SetTracksEvent = {
+  type: "setTracks"
+  tracks: Track[]
 }
 
 type TimelineEvent =
@@ -148,16 +172,21 @@ type TimelineEvent =
   | StopRecordingSchemaEvent
   | StartRecordingSchemaEvent
   | SetTimeRangesEvent
+  | SetVideoRefEvent
+  | SetLoadedVideoEvent
+  | PreloadAllVideosEvent
+  | SetTracksEvent
+  | SetVolumeEvent
 
 export const timelineMachine = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QBcCWBbMAbVA7MAdKhFmAMQBaA8lQLIDaADALqKgAOA9rKmp7mxAAPRAEYATAA4C48QDYArHIDsjSZNUBmOXIA0IAJ6IAnMbkEFyyY1MAWeQsm3RAXxf60mHPiIlysMGQAFQwwACUAQ1wYWCZWJBAuHj4BBJEEMxllZU0FTWNJBSVbRgV9IwzGRgIJW2NsxmzRHUk3D1DvQmJSMgBlAFEggH0gsIBBAGEAaSGANSoAGQBVWn64wSTeVH5BdOVbAg1RUUZNcRzm201lcsRrTQIVUULbZXP9szaQT2w8Lr8+oMhgN+lMAJIAOQA4usEpsUrsxIxxAQ3opsgpxJpsQVRLcEKplDJnjksVZsVivj9Or4emF+gNhhMABJjaGQqFDCZjVbjWEcbhbHZpRB1AjInIlErKApnWx6QyIOQnVGKZVVKTGUQKKkdP60-yBMYAYzQADcwEEAE4RY0Aa35iUFCJFGWkJwU8ustmsCmMtjKioQClEB00tQ0Kn99WUuq8+u65CWEIAIlRHfDtqlQOkJNJZGrVOotDp8c4iYVjNo8poqt7bHHfj5E2R6WmM86s4iEHmZA4VGoNKdS0GzqICCU5OJ7AVGDpww33N89c2AREIBBaJBUBEAGKoUixFgbTvCnMmYyPOQlT2vOpyKqafGyA7GPISOfh6eOWNL6kJgF6VoKhZn6IZdzCOghjGFMU36FNwLBBYGQ7ZIu1dex8V7OpTAKKRnikSw3CXXBOAgOBBH-fATzQs9hEQABaBUKiYxsaUTGihWzeie3yVFsk0HCp2KacsJsaRTgkcRRGyB9GG1YiXCAA */
+  /** @xstate-layout N4IgpgJg5mDOIC5QBcCWBbMAbVA7MAdKhFmAMQBaA8lQLIDaADALqKgAOA9rKmp7mxAAPRAFoA7AFYCjAGwBGWZMbKATABZxGyQBoQAT0SyAnKoIBmdbIWXJqgBzjj5gL4u9aTDnxES5WGDIACoYYABKAIa4MLBMrEggXDx8AgkiCOb28gSO9uaqjPJO9uryqnqGCOKyjASSWZn2ksrG8ubGbh6h3oTEpGQAygCiQQD6QWEAggDCANKjAGpUADIAqrRDcYJJvKj8guny6vYWhaXGdir2jMayFUbmsgRtGlrG4uaMjObinSCe2DwvT8gxGo2GQ1mAEkAHIAcS2CR2KQOYkUxgI70U9hs4nEDXs9wQklk5me8m+qkeSgc6j+AJ6vn6YSGwzG0wAEpN4bC4aNppMNlNERxuLt9mlEJkngpxPJ5MYvqSqXcDEZVNlSUplOZJJ88q53P9ukCmf5ApMAMZoABuYCCACcIpaANYixJilGS4llZ7qBzmCmvOWqyqWWqPdr+0rYhz0k0+PrkVYwgAiVHdyL2qVA6VE8jsBDx1Q1x3y6kkxiJ0ZkjBxdgcBcs9njXlNSbILPTmc92dRCHzeQICkk8iy+Out2MhLVCADBFUsiabWuON1j1bgMTIIiEAgtEgqAiADFUKRYixtr2JbnEMYMdZ1Cp1Jp1LcvuYiaoNJi9WU5IG2iOJujIdiytBUAsQyjMeYR0KMkypqmQypjBULLKyPbJH23r+kSZQnG+97To29gOJIvx-LgnAQHAggMkCV7YTewhiFSmoFmORT2JOJgzpUohPF8wlvkqhSqO8IHtn4THijmrEIG0GLFrqSiOHIeL4WUZIOOI6jmI805WB0bguEAA */
   id: "timeline",
   initial: "idle",
   context: {
+    isDirty: false,
     zoomLevel: 1,
     timeRanges: {},
     montageSchema: [],
-    isDirty: false,
     currentTime: 0,
     isPlaying: false,
     isRecordingSchema: false,
@@ -173,67 +202,85 @@ export const timelineMachine = createMachine({
     tracks: [],
     history: [],
     historyIndex: -1,
-    currentLayout: "default",
-    activeVideo: null,
     canUndo: false,
     canRedo: false,
+    future: [],
+    loadedVideos: {}
   } as TimelineContext,
   types: {
     context: {} as TimelineContext,
-    events: {} as TimelineEvent,
+    events: {} as TimelineEvent
   },
   states: {
     idle: {
       on: {
-        ZOOM: {
-          actions: assign(({ context, event }) => ({
-            zoomLevel: (event as ZoomEvent).level,
-          })),
-        },
-        setTimeRanges: {
+        zoom: {
           actions: assign({
-            timeRanges: ({ event }) => (event as SetTimeRangesEvent).ranges,
-          }),
-        },
-        SET_TRACK_VOLUME: {
-          actions: assign({
-            trackVolumes: ({ context, event }) => ({
-              ...context.trackVolumes,
-              [(event as SetTrackVolumeEvent).trackId]: (event as SetTrackVolumeEvent).volume,
-            }),
-          }),
-        },
-        SET_SEEKING: {
-          actions: assign({
-            isSeeking: ({ event }) => (event as SetSeekingEvent).isSeeking,
-          }),
-        },
-        RESET_CHANGING_CAMERA: {
-          actions: assign({
-            isChangingCamera: false,
-          }),
+            zoomLevel: ({ event }) => event.level
+          })
         },
         setActiveTrack: {
           actions: assign({
-            activeTrackId: ({ event }) => (event as SetActiveTrackEvent).trackId,
-          }),
+            activeTrackId: ({ event }) => event.trackId
+          })
         },
-        UNDO: {
+        seek: {
+          actions: assign({
+            isSeeking: true
+          })
+        },
+        setPlaying: {
+          actions: assign({
+            isSeeking: false
+          })
+        },
+        setTrackVolume: {
+          actions: assign({
+            trackVolumes: ({ context, event }) => ({
+              ...context.trackVolumes,
+              [event.trackId]: event.volume
+            })
+          })
+        },
+        setSeeking: {
+          actions: assign({
+            isSeeking: ({ event }) => event.isSeeking
+          })
+        },
+        setTimeRanges: {
+          actions: assign({
+            timeRanges: ({ event }) => event.ranges
+          })
+        },
+        setVideoRef: {
+          actions: assign({
+            videoRefs: ({ context, event }) => ({
+              ...context.videoRefs,
+              [event.fileId]: event.video
+            })
+          })
+        },
+        setLoadedVideo: {
+          actions: assign({
+            loadedVideos: ({ context, event }) => ({
+              ...context.loadedVideos,
+              [event.fileId]: event.loaded
+            })
+          })
+        },
+        preloadAllVideos: {
+          actions: ({ context }) => {
+            Object.entries(context.videoRefs).forEach(([fileId, video]) => {
+              if (video && !context.loadedVideos[fileId]) {
+                context.loadedVideos[fileId] = true
+              }
+            })
+          }
+        },
+        undo: {
           actions: assign(({ context }) => {
             if (context.historyIndex > 0) {
               const newIndex = context.historyIndex - 1
-              return {
-                ...context.history[newIndex],
-                historyIndex: newIndex,
-              }
-            }
-            return {}
-          }),
-        },
-        REDO: {
-          actions: assign(({ context }) => {
-            if (context.historyIndex < context.history.length - 1) {
-              const newIndex = context.historyIndex + 1
               return {
                 ...context.history[newIndex],
                 historyIndex: newIndex,
@@ -255,13 +302,18 @@ export const timelineMachine = createMachine({
             }
           }),
         },
-        REMOVE_FROM_ADDED_FILES: {
+        removeFromAddedFiles: {
           actions: assign({
             tracks: ({ context, event }) =>
               context.tracks.filter(
                 (track) => track.id !== (event as RemoveFromAddedFilesEvent).fileId,
               ),
           }),
+        },
+        setTracks: {
+          actions: assign({
+            tracks: ({ event }) => event.tracks
+          })
         },
       },
     },

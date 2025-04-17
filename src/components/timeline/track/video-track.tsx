@@ -3,23 +3,30 @@ import { memo, useCallback, useRef } from "react"
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { usePlayerContext } from "@/providers"
 import { useTimelineContext } from "@/providers/timeline-provider"
-import { TimelineTrack as TimelineTrackType } from "@/types/timeline"
+import { Track } from "@/types/media"
 
 interface TimelineTrackProps {
-  track: TimelineTrackType
+  track: Track
   index: number
   sectionStartTime: number
   sectionDuration: number
+  coordinates: {
+    left: number
+    width: number
+    videos: Record<string, {
+      left: number
+      width: number
+    }>
+  }
 }
 
 const TimelineTrack = memo(function TimelineTrack({
   track,
   index,
-  sectionStartTime,
-  sectionDuration,
+  coordinates,
 }: TimelineTrackProps) {
-  const { activeTrackId, setTrack: setActiveTrack } = useTimelineContext()
-  const { setVideo: setActiveVideo } = usePlayerContext()
+  const { activeTrackId, setActiveTrack } = useTimelineContext()
+  const { setVideo: setActiveVideo, setVideoLoading, setVideoReady } = usePlayerContext()
   const containerRef = useRef<HTMLDivElement>(null)
 
   if (!track.videos || track.videos.length === 0) {
@@ -33,39 +40,34 @@ const TimelineTrack = memo(function TimelineTrack({
     return null
   }
 
-  const timeToPercent = useCallback(
-    (time: number) => {
-      if (!sectionStartTime || !sectionDuration || sectionDuration === 0) return 0
-      const percent = ((time - sectionStartTime) / sectionDuration) * 100
-      return Math.max(0, Math.min(100, percent))
-    },
-    [sectionStartTime, sectionDuration],
-  )
-
-  const trackStartTime = firstVideo.startTime ?? 0
-  const trackEndTime = (lastVideo.startTime ?? 0) + (lastVideo.duration ?? 0)
-  const startOffset = timeToPercent(trackStartTime)
-  const width = timeToPercent(trackEndTime) - startOffset
-
   const isActive = track.id === activeTrackId
 
   const handleClick = useCallback(
-    (_e: React.MouseEvent, track: TimelineTrackType, videoId: string) => {
-      // Предотвращаем всплытие события
+    (_e: React.MouseEvent, track: Track, videoId: string) => {
       _e.stopPropagation()
-
-      // Находим видео
-      const video = track.videos.find((v) => v.id === videoId)
+      const video = track.videos?.find((v) => v.id === videoId)
       if (!video) return
 
       console.log(`[VideoTrack] Клик по видео ${videoId}`)
-
-      // Устанавливаем активный трек
       setActiveTrack(track.id)
-      // Устанавливаем активное видео
+      setVideoLoading(true)
       setActiveVideo(video)
+      
+      // Создаем временный элемент для проверки готовности видео
+      const tempVideo = document.createElement('video')
+      tempVideo.src = video.path
+      
+      tempVideo.onloadeddata = () => {
+        setVideoReady(true)
+        setVideoLoading(false)
+      }
+      
+      tempVideo.onerror = () => {
+        setVideoLoading(false)
+        console.error('Failed to load video:', video.path)
+      }
     },
-    [setActiveTrack, setActiveVideo],
+    [setActiveTrack, setActiveVideo, setVideoLoading, setVideoReady],
   )
 
   return (
@@ -74,8 +76,8 @@ const TimelineTrack = memo(function TimelineTrack({
         <div
           className="h-full relative"
           style={{
-            left: `${startOffset}%`,
-            width: `${width}%`,
+            left: `${coordinates.left}%`,
+            width: `${coordinates.width}%`,
           }}
         >
           <div
@@ -86,7 +88,7 @@ const TimelineTrack = memo(function TimelineTrack({
               position: "relative",
             }}
             onClick={(e) => {
-              if (track.videos.length > 0) {
+              if (track.videos?.length) {
                 handleClick(e, track, track.videos[0].id)
               }
             }}
@@ -95,11 +97,11 @@ const TimelineTrack = memo(function TimelineTrack({
               <div className="absolute h-full w-full timline-border">
                 <div className="flex h-full w-full flex-col justify-start">
                   <div className="flex relative">
-                    {track.videos.map((video) => {
-                      const videoStart = video.startTime || 0
-                      const videoDuration = video.duration || 0
+                    {track.videos?.map((video) => {
+                      const coords = coordinates.videos[video.id]
+                      if (!coords) return null
 
-                      if (track.videos.length === 1) {
+                      if (track.videos?.length) {
                         return (
                           <div
                             key={video.id}
@@ -301,19 +303,19 @@ const TimelineTrack = memo(function TimelineTrack({
                               <div
                                 className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"
                                 style={{
-                                  display: width < 16 ? "none" : "block",
+                                  display: coords.width < 16 ? "none" : "block",
                                 }}
                               >
-                                {formatTimeWithMilliseconds(videoStart || 0, false, true, true)}
+                                {formatTimeWithMilliseconds(video.startTime || 0, false, true, true)}
                               </div>
                               <div
                                 className="absolute bottom-0 right-0 text-xs text-gray-100 mb-[2px] mr-1 bg-[#033032] text-[11px] px-[3px]"
                                 style={{
-                                  display: width < 16 ? "none" : "block",
+                                  display: coords.width < 16 ? "none" : "block",
                                 }}
                               >
                                 {formatTimeWithMilliseconds(
-                                  (videoStart || 0) + (videoDuration || 0),
+                                  (video.startTime || 0) + (video.duration || 0),
                                   false,
                                   true,
                                   true,

@@ -126,7 +126,7 @@ export const playerMachine = createMachine({
             assign({ isVideoReady: false })
           ]
         },
-        setTime: {
+        setCurrentTime: {
           actions: assign({ currentTime: ({ event }) => event.currentTime }),
         },
         setIsPlaying: {
