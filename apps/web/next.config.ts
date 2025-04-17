@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
   transpilePackages: ["@repo/ui"],
@@ -13,13 +13,12 @@ const nextConfig: NextConfig = {
           { key: "Access-Control-Allow-Methods", value: "POST" },
           {
             key: "Access-Control-Allow-Headers",
-            value:
-              "Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date",
+            value: "Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date",
           },
         ],
       },
-    ];
+    ]
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

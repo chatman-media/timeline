@@ -1,7 +1,7 @@
-"use client";
+"use client"
 
-import { AnalyzeTextView } from "@repo/ui/views/analyzeTextView";
+import { MediaEditorView } from "@repo/ui/views/media-editor-view"
 
 export default function Home() {
-  return <AnalyzeTextView />;
+  return <MediaEditorView />
 }

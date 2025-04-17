@@ -1,21 +1,21 @@
-"use client";
+"use client"
 
-import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useTauriThemeContext } from "@repo/ui/components/tauri-theme-provider";
-import { Button } from "@repo/ui/components/button";
+import { Moon, Sun } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useTauriThemeContext } from "@repo/ui/components/tauri-theme-provider"
+import { Button } from "@repo/ui/components/button"
 
 export function TauriThemeToggle() {
-  const [mounted, setMounted] = useState(false);
-  const { theme, setTheme } = useTauriThemeContext();
+  const [mounted, setMounted] = useState(false)
+  const { theme, setTheme } = useTauriThemeContext()
 
   // Ждем монтирования компонента, чтобы избежать проблем с гидратацией
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    setMounted(true)
+  }, [])
 
   if (!mounted) {
-    return null;
+    return null
   }
 
   return (
@@ -29,5 +29,5 @@ export function TauriThemeToggle() {
       <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-gray-600 dark:text-gray-100 hover:text-gray-900 dark:hover:text-gray-50" />
       <span className="sr-only">Переключить тему</span>
     </Button>
-  );
+  )
 }
