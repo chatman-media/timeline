@@ -71,6 +71,7 @@ export function TimelineProvider({
 
   const handleZoom = useCallback(
     (level: number) => {
+      console.log('TimelineProvider zoom:', level)
       timelineActor.send({ type: "zoom", level })
     },
     [timelineActor]
@@ -181,7 +182,21 @@ export function TimelineProvider({
   }, [timelineActor])
 
   const value = {
-    ...state,
+    isDirty: state?.isDirty,
+    zoomLevel: state?.zoomLevel,
+    timeRanges: state?.timeRanges,
+    activeTrackId: state?.activeTrackId,
+    trackVolumes: state?.trackVolumes,
+    isSeeking: state?.isSeeking,
+    isChangingCamera: state?.isChangingCamera,
+    tracks: state?.tracks,
+    history: state?.history,
+    historyIndex: state?.historyIndex,
+    future: state?.future,
+    canUndo: state?.canUndo,
+    canRedo: state?.canRedo,
+    videoRefs: state?.videoRefs,
+    loadedVideos: state?.loadedVideos,
     zoom: handleZoom,
     undo: handleUndo,
     redo: handleRedo,

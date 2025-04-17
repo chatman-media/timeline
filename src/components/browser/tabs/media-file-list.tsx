@@ -910,6 +910,7 @@ export const MediaFileList = memo(function MediaFileList({
 
       // Отмечаем файл как добавленный
       if (file.path) {
+        console.log("[handleAddMedia] Вызываем addFilesToTimeline с файлом:", file)
         addFilesToTimeline([file])
       }
     },

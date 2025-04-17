@@ -10,8 +10,27 @@ interface TimelineScaleProps {
 
 export function TimelineScale({ startTime, endTime, duration }: TimelineScaleProps) {
   const { zoomLevel } = useTimelineContext()
-  const timeStep = Math.ceil(100 / zoomLevel)
-  const subStep = timeStep / 5
+  
+  console.log('TimelineScale zoomLevel:', zoomLevel)
+  
+  // Определяем шаг в зависимости от масштаба
+  let timeStep = 1
+  if (zoomLevel > 5) {
+    timeStep = 1 // При большом увеличении - 1 секунда
+  } else if (zoomLevel > 2) {
+    timeStep = 5 // При увеличении - 5 секунд
+  } else if (zoomLevel > 1) {
+    timeStep = 10 // При небольшом увеличении - 10 секунд
+  } else if (zoomLevel > 0.5) {
+    timeStep = 30 // При уменьшении - 30 секунд
+  } else {
+    timeStep = 60 // При сильном уменьшении - 1 минута
+  }
+  
+  console.log('TimelineScale timeStep:', timeStep)
+  
+  // При увеличении масштаба делаем более мелкие деления
+  const subStep = timeStep / (zoomLevel > 1 ? 5 : 2)
 
   return (
     <div className="relative w-full flex flex-col mb-[13px]">
