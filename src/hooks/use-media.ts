@@ -20,14 +20,13 @@ export function useMedia() {
         throw new Error("Неверный формат данных")
       }
 
-      const validMedia = data.media
-        .filter(
-          (item: MediaFile): item is MediaFile =>
-            item && typeof item === "object" && "id" in item && "name" in item && "path" in item,
-        )
-        .sort((a: MediaFile, b: MediaFile) => (a.startTime || 0) - (b.startTime || 0))
+      const validMedia = data.media.filter((file: MediaFile): file is MediaFile => {
+        return Boolean(file.isVideo || file.isAudio || file.isImage)
+      })
 
+      // Сохраняем валидные медиа-файлы в состояние
       setMedia(validMedia)
+      return validMedia
     } catch (error) {
       console.error("Ошибка при загрузке медиафайлов:", error)
     } finally {

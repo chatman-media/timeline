@@ -47,5 +47,5 @@ public/music/*
 public/videos/*
 public/media/*
 public/thumbnails/*
-
+public/proxies/*
 *storybook.log

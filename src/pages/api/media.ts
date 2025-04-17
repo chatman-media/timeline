@@ -6,12 +6,53 @@ import { nanoid } from "nanoid"
 import type { NextApiRequest, NextApiResponse } from "next"
 import path from "path"
 import { promisify } from "util"
+import { exec } from "child_process"
 
 import { getMediaCreationTime } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
+import { FfprobeStream } from "@/types/ffprobe"
 
 // Промисифицируем ffprobe
 const ffprobeAsync = promisify(ffprobe)
+const execAsync = promisify(exec)
+
+const PROXY_SETTINGS = {
+  width: 640,
+  height: 360,
+  bitrate: "1000k",
+  preset: "veryfast",
+}
+
+async function generateProxyFile(sourcePath: string): Promise<string | null> {
+  try {
+    const proxyFileName = `proxy-${path.basename(sourcePath)}`
+    const proxyPath = path.join(process.cwd(), "public", "proxies", proxyFileName)
+
+    // Проверяем, существует ли уже прокси-файл
+    try {
+      await fs.access(proxyPath)
+      // console.log(`[API] Прокси-файл уже существует: ${proxyPath}`)
+      return `/proxies/${proxyFileName}`
+    } catch {
+      // Файл не существует, продолжаем генерацию
+    }
+
+    // Создаем директорию для прокси, если её нет
+    const proxyDir = path.dirname(proxyPath)
+    await fs.mkdir(proxyDir, { recursive: true })
+
+    // Генерируем прокси с помощью ffmpeg
+    const ffmpegCommand = `ffmpeg -i "${sourcePath}" -vf "scale=${PROXY_SETTINGS.width}:${PROXY_SETTINGS.height}" -c:v libx264 -preset ${PROXY_SETTINGS.preset} -b:v ${PROXY_SETTINGS.bitrate} -c:a aac "${proxyPath}"`
+
+    console.log(`[API] Генерирую прокси: ${ffmpegCommand}`)
+    await execAsync(ffmpegCommand)
+
+    return `/proxies/${proxyFileName}`
+  } catch (error) {
+    console.error("[API] Ошибка при генерации прокси:", error)
+    return null
+  }
+}
 
 export default async function handler(
   _req: NextApiRequest,
@@ -24,182 +65,109 @@ export default async function handler(
 
     console.log("[API] Читаю директорию:", mediaDir)
     const videoFiles = await fs.readdir(mediaDir)
-    console.log("[API] Найдено файлов:", videoFiles)
+    // console.log("[API] Найдено файлов:", videoFiles)
 
-    const videoExtensions = [
-      ".mp4",
-      ".mov",
-      ".avi",
-      ".mkv",
-      ".webm",
-      ".insv",
-      ".mp3",
-      ".wav",
-      ".aac",
-      ".ogg",
-      ".flac",
-      ".jpg",
-      ".jpeg",
-      ".png",
-      ".gif",
-      ".webp",
-    ]
+    const mediaPromises = videoFiles.map(async (filename) => {
+      const filePath = path.join(mediaDir, filename)
+      const stats = await fs.stat(filePath)
+      const fileType = path.extname(filename).toLowerCase()
 
-    console.log("[API] Фильтрую файлы по расширениям...")
-    const mediaFiles = videoFiles
-      .map((file) => ({ dir: mediaDir, file }))
-      .filter(({ file }) => {
-        const isValid =
-          !file.startsWith(".") && videoExtensions.includes(path.extname(file).toLowerCase())
-        console.log(`[API] Файл ${file}: ${isValid ? "валидный" : "невалидный"}`)
-        return isValid
-      })
-
-    console.log("[API] Прошли фильтрацию:", mediaFiles)
-
-    const thumbnailsDir = path.join(process.cwd(), "public", "thumbnails")
-    await fs.mkdir(thumbnailsDir, { recursive: true })
-
-    console.log("[API] Начинаю анализ файлов...")
-    const mediaPromises = mediaFiles.map(async ({ dir, file }) => {
-      try {
-        const filePath = path.join(dir, file)
-        console.log(`[API] Обрабатываю файл: ${filePath}`)
-
-        const thumbnailName = `${path.parse(file).name}.jpg`
-
-        try {
-          console.log(`[API] Запускаю ffprobe для ${file}...`)
-          const probeData = (await ffprobeAsync(filePath)) as FfprobeData
-          console.log(`[API] ffprobe успешно для ${file}`)
-
-          const isVideo = probeData.streams.some((stream) => stream.codec_type === "video")
-          const fileExt = path.extname(file).toLowerCase()
-          const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt)
-          const startTime = getMediaCreationTime(probeData)
-          const duration = probeData.format.duration || 0
-
-          // console.log(`[API] Данные файла ${file}:`, {
-          //   isVideo,
-          //   isImage,
-          //   startTime,
-          //   duration,
-          //   hasStreams: probeData.streams?.length || 0,
-          // })
-
-          // console.log(probeData.format)
-
-          return {
-            id: nanoid(),
-            name: file,
-            path: `/media/${file}`,
-            thumbnail: isVideo && !isImage ? `/thumbnails/${thumbnailName}` : undefined,
-            probeData,
-            startTime,
-            endTime: startTime + duration,
-            duration,
-            isVideo: isImage ? false : isVideo,
-            isImage,
-          }
-        } catch (probeError) {
-          console.error(`[API] Ошибка ffprobe для ${file}:`, probeError)
-
-          // Проверяем, является ли файл изображением
-          const fileExt = path.extname(file).toLowerCase()
-          const isImage = [".jpg", ".jpeg", ".png", ".gif", ".webp"].includes(fileExt)
-
-          if (isImage) {
-            return {
-              id: nanoid(),
-              name: file,
-              path: `/media/${file}`,
-              startTime: 0,
-              endTime: 0,
-              duration: 0,
-              isVideo: false,
-              isImage: true,
-              probeData: {
-                format: {
-                  duration: 0,
-                  size: 0,
-                  bit_rate: 0,
-                  filename: file,
-                  nb_streams: 1,
-                  format_name: "image",
-                  format_long_name: "image",
-                  start_time: 0,
-                  tags: {},
-                },
-                streams: [
-                  {
-                    codec_type: "video",
-                    codec_name: "image",
-                    width: 1920,
-                    height: 1080,
-                    duration: 0,
-                    codec_tag: "0",
-                    codec_tag_string: "",
-                    index: 0,
-                  },
-                ],
-                chapters: [],
-              } as unknown as FfprobeData,
-            }
-          }
-
-          // Если не смогли получить метаданные, создаем минимальный объект
-          return {
-            id: nanoid(),
-            name: file,
-            path: `/media/${file}`,
-            probeData: {
-              format: {
-                duration: 0,
-                size: 0,
-                bit_rate: 0,
-                filename: file,
-                nb_streams: 1,
-                format_name: "unknown",
-                format_long_name: "unknown",
-                start_time: 0,
-                tags: {},
-              },
-              streams: [
-                {
-                  codec_type: "video",
-                  codec_name: "unknown",
-                  width: 1920,
-                  height: 1080,
-                  duration: 0,
-                  codec_tag: "0",
-                  codec_tag_string: "",
-                  index: 0,
-                },
-              ],
-              chapters: [],
-            } as unknown as FfprobeData,
-            startTime: 0,
-            endTime: 0,
-            duration: 0,
-            isVideo: true,
+      // Для изображений
+      if ([".jpg", ".jpeg", ".png", ".gif", ".webp", ".heic", ".heif", ".arw", "hif", "hevc"].includes(fileType)) {
+        return {
+          id: path.basename(filename, path.extname(filename)),
+          name: filename,
+          path: `/media/${filename}`,
+          size: stats.size,
+          isImage: true,
+          probeData: {
+            streams: [],
+            format: {
+              size: stats.size,
+              bit_rate: 0,
+            },
           }
         }
-      } catch (error) {
-        console.error(`[API] Ошибка обработки файла ${file}:`, error)
-        return null
       }
+
+      // Для аудио файлов
+      if ([".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac", ".alac"].includes(fileType)) {
+        try {
+          const probeData = await ffprobeAsync(filePath) as FfprobeData
+          const audioStream = probeData.streams.find((s: FfprobeStream) => s.codec_type === "audio")
+
+          return {
+            id: path.basename(filename, path.extname(filename)),
+            name: filename,
+            path: `/media/${filename}`,
+            size: stats.size,
+            isAudio: true,
+            isVideo: false,
+            duration: probeData.format.duration || 0,
+            probeData: {
+              streams: probeData.streams,
+              format: {
+                duration: probeData.format.duration || 0,
+                size: probeData.format.size || 0,
+                bit_rate: probeData.format.bit_rate || 0,
+              },
+            }
+          }
+        } catch (error) {
+          console.error(`[API] Ошибка при обработке аудио файла ${filename}:`, error)
+          return null
+        }
+      }
+
+      // Для видео файлов
+      if ([".mp4", ".mov", ".avi", ".mkv", ".webm", ".insv"].includes(fileType)) {
+        try {
+          const probeData = await ffprobeAsync(filePath) as FfprobeData
+
+          // Генерируем прокси-файл
+          const proxyPath = await generateProxyFile(filePath)
+
+          const mediaFile: MediaFile = {
+            id: path.basename(filename, path.extname(filename)),
+            name: filename,
+            path: `/media/${filename}`,
+            size: stats.size,
+            duration: probeData.format.duration || 0,
+            probeData: {
+              streams: probeData.streams,
+              format: {
+                duration: probeData.format.duration || 0,
+                size: probeData.format.size || 0,
+                bit_rate: probeData.format.bit_rate || 0,
+              },
+            },
+            isVideo: true,
+            isAudio: false,
+            proxy: proxyPath ? {
+              path: proxyPath,
+              width: PROXY_SETTINGS.width,
+              height: PROXY_SETTINGS.height,
+              bitrate: parseInt(PROXY_SETTINGS.bitrate),
+            } : undefined,
+          }
+
+          return mediaFile
+        } catch (error) {
+          console.error(`[API] Ошибка при обработке видео файла ${filename}:`, error)
+          return null
+        }
+      }
+
+      return null
     })
 
-    const media = (await Promise.all(mediaPromises)).filter((item) => item !== null)
-    console.log("[API] Обработано медиафайлов:", media.length)
-    console.log(
-      "[API] Возвращаю медиафайлы:",
-      media.map((m) => m.name),
-    )
+    const mediaFiles = await Promise.all(mediaPromises)
+    const validMediaFiles = mediaFiles.filter((file): file is MediaFile => file !== null)
 
-    res.status(200).json({ media })
+    console.log("[API] Успешно обработано файлов:", validMediaFiles.length)
+    res.status(200).json({ media: validMediaFiles })
   } catch (error) {
-    console.error("[API] Общая ошибка:", error)
+    console.error("[API] Ошибка при обработке медиафайлов:", error)
     res.status(500).json({ media: [] })
   }
 }

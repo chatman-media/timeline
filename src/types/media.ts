@@ -17,6 +17,12 @@ export interface MediaFile {
   createdAt?: string
   updatedAt?: string
   isAddedToTimeline?: boolean
+  proxy?: {
+    path: string
+    width: number
+    height: number
+    bitrate: number
+  }
 }
 
 export interface FileGroup {
