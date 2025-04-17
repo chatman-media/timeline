@@ -10,14 +10,14 @@ interface TimelineMarkProps {
 export function TimelineMark({ timestamp, position, markType, showValue }: TimelineMarkProps) {
   const getMarkHeight = () => {
     switch (markType) {
-      case "large":
-        return "h-6 bg-[#4a4a4a] dark:bg-[#aeaeae]"
-      case "medium":
-        return "h-4 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-80"
-      case "small":
-        return "h-3 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-70"
-      case "smallest":
-        return "h-2 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-50"
+    case "large":
+      return "h-6 bg-[#4a4a4a] dark:bg-[#aeaeae]"
+    case "medium":
+      return "h-4 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-80"
+    case "small":
+      return "h-3 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-70"
+    case "smallest":
+      return "h-2 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-50"
     }
   }
 

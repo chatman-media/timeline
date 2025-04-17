@@ -5,8 +5,10 @@ import { JSX } from "react"
 import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
 import { CameraCaptureDialog } from "@/components/dialogs/camera-capture-dialog"
 import { Button } from "@/components/ui/button"
+import { useMedia } from "@/hooks/use-media"
 import { useVideoPlayer } from "@/hooks/use-video-player"
 import { cn } from "@/lib/utils"
+import { useTimelineContext } from "@/providers"
 import { useMediaContext } from "@/providers/media-provider"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
@@ -14,8 +16,6 @@ import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { FileMetadata, MediaPreview, StatusBar } from ".."
-import { useTimelineContext } from "@/providers"
-import { useMedia } from "@/hooks/use-media"
 
 // Создаем глобальные переменные для кэширования видео и их состояния загрузки
 // Это позволит сохранять состояние между переключениями вкладок и режимов отображения
@@ -136,7 +136,7 @@ export const MediaFileList = memo(function MediaFileList({
   viewMode: initialViewMode = "list",
 }: {
   viewMode?: ViewMode
-}): JSX.Element {
+}) {
   const { includeFiles, includedFiles } = useMediaContext()
   const { isLoading, media } = useMedia()
   const { addMediaFiles } = useTimelineContext()
@@ -577,14 +577,14 @@ export const MediaFileList = memo(function MediaFileList({
       filterType === "all"
         ? media
         : media.filter((file: MediaFile) => {
-            if (filterType === "video" && file.probeData?.streams?.[0]?.codec_type === "video")
-              return true
-            if (filterType === "audio" && file.probeData?.streams?.[0]?.codec_type === "audio")
-              return true
-            if (filterType === "image" && file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i))
-              return true
-            return false
-          })
+          if (filterType === "video" && file.probeData?.streams?.[0]?.codec_type === "video")
+            return true
+          if (filterType === "audio" && file.probeData?.streams?.[0]?.codec_type === "audio")
+            return true
+          if (filterType === "image" && file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+            return true
+          return false
+        })
 
     // Затем сортировка
     return [...filtered].sort((a: MediaFile, b: MediaFile) => {
@@ -710,10 +710,10 @@ export const MediaFileList = memo(function MediaFileList({
 
         const date = timestamp
           ? new Date(timestamp * 1000).toLocaleDateString("ru-RU", {
-              day: "2-digit",
-              month: "long",
-              year: "numeric",
-            })
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
           : "Без даты"
 
         if (!groups[date]) {
@@ -959,85 +959,17 @@ export const MediaFileList = memo(function MediaFileList({
       const isAdded = Boolean(file.path && includedFiles.map((f) => f.path).includes(file.path))
 
       switch (viewMode) {
-        case "list":
-          return (
-            <div
-              key={fileId}
-              className={cn(
-                "flex items-center p-0 h-full",
-                "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
-                isAdded && "pointer-events-none",
-              )}
-            >
-              <div className="relative h-full flex-shrink-0 flex gap-1 mr-3">
-                <MediaPreview
-                  file={file}
-                  fileId={fileId}
-                  duration={duration}
-                  isAudio={isAudio}
-                  videoRefs={videoRefs}
-                  loadedVideos={loadedVideos}
-                  setLoadedVideos={setLoadedVideos}
-                  hoverTimes={hoverTimes}
-                  handleMouseMove={handleMouseMove}
-                  handlePlayPause={handlePlayPause}
-                  handleMouseLeave={handleMouseLeave}
-                  setPlayingFileId={setPlayingFileId}
-                  onAddMedia={handleAddMedia}
-                  isAdded={isAdded}
-                  size={previewSize}
-                  hideTime={true}
-                />
-              </div>
-              <FileMetadata file={file} size={previewSize} />
-            </div>
-          )
-
-        case "grid":
-          return (
-            <div
-              key={fileId}
-              className={cn(
-                "flex flex-col h-full w-full rounded-sm overflow-hidden",
-                isAdded && "pointer-events-none",
-              )}
-              style={{
-                width: `${((previewSize * 16) / 9).toFixed(0)}px`,
-              }}
-            >
-              <div className="relative flex-1 flex-col w-full flex-grow">
-                <MediaPreview
-                  file={file}
-                  fileId={fileId}
-                  duration={duration}
-                  isAudio={isAudio}
-                  videoRefs={videoRefs}
-                  loadedVideos={loadedVideos}
-                  setLoadedVideos={setLoadedVideos}
-                  hoverTimes={hoverTimes}
-                  handleMouseMove={handleMouseMove}
-                  handlePlayPause={handlePlayPause}
-                  handleMouseLeave={handleMouseLeave}
-                  setPlayingFileId={setPlayingFileId}
-                  onAddMedia={handleAddMedia}
-                  isAdded={isAdded}
-                  size={previewSize}
-                />
-              </div>
-              <div className="p-1 text-xs truncate">{file.name}</div>
-            </div>
-          )
-
-        case "thumbnails":
-          return (
-            <div
-              key={fileId}
-              className={cn(
-                "flex items-center p-0 h-full",
-                "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
-                isAdded && "pointer-events-none",
-              )}
-            >
+      case "list":
+        return (
+          <div
+            key={fileId}
+            className={cn(
+              "flex items-center p-0 h-full",
+              "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
+              isAdded && "pointer-events-none",
+            )}
+          >
+            <div className="relative h-full flex-shrink-0 flex gap-1 mr-3">
               <MediaPreview
                 file={file}
                 fileId={fileId}
@@ -1054,10 +986,78 @@ export const MediaFileList = memo(function MediaFileList({
                 onAddMedia={handleAddMedia}
                 isAdded={isAdded}
                 size={previewSize}
-                showFileName={true}
+                hideTime={true}
               />
             </div>
-          )
+            <FileMetadata file={file} size={previewSize} />
+          </div>
+        )
+
+      case "grid":
+        return (
+          <div
+            key={fileId}
+            className={cn(
+              "flex flex-col h-full w-full rounded-sm overflow-hidden",
+              isAdded && "pointer-events-none",
+            )}
+            style={{
+              width: `${((previewSize * 16) / 9).toFixed(0)}px`,
+            }}
+          >
+            <div className="relative flex-1 flex-col w-full flex-grow">
+              <MediaPreview
+                file={file}
+                fileId={fileId}
+                duration={duration}
+                isAudio={isAudio}
+                videoRefs={videoRefs}
+                loadedVideos={loadedVideos}
+                setLoadedVideos={setLoadedVideos}
+                hoverTimes={hoverTimes}
+                handleMouseMove={handleMouseMove}
+                handlePlayPause={handlePlayPause}
+                handleMouseLeave={handleMouseLeave}
+                setPlayingFileId={setPlayingFileId}
+                onAddMedia={handleAddMedia}
+                isAdded={isAdded}
+                size={previewSize}
+              />
+            </div>
+            <div className="p-1 text-xs truncate">{file.name}</div>
+          </div>
+        )
+
+      case "thumbnails":
+        return (
+          <div
+            key={fileId}
+            className={cn(
+              "flex items-center p-0 h-full",
+              "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
+              isAdded && "pointer-events-none",
+            )}
+          >
+            <MediaPreview
+              file={file}
+              fileId={fileId}
+              duration={duration}
+              isAudio={isAudio}
+              videoRefs={videoRefs}
+              loadedVideos={loadedVideos}
+              setLoadedVideos={setLoadedVideos}
+              hoverTimes={hoverTimes}
+              handleMouseMove={handleMouseMove}
+              handlePlayPause={handlePlayPause}
+              handleMouseLeave={handleMouseLeave}
+              setPlayingFileId={setPlayingFileId}
+              onAddMedia={handleAddMedia}
+              isAdded={isAdded}
+              size={previewSize}
+              showFileName={true}
+            />
+          </div>
+        )
       }
     }
 

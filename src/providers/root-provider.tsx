@@ -1,17 +1,18 @@
 "use client"
 
-import { ReactNode, useEffect } from "react"
-
-import { MediaProvider, ModalProvider, PlayerProvider, ProjectProvider, TimelineProvider } from "."
 import { createBrowserInspector } from "@statelyai/inspect"
+import { ReactNode, useEffect } from "react"
 import { createActor } from "xstate"
+
 import {
+  mediaMachine,
   modalMachine,
-  timelineMachine,
   playerMachine,
   projectMachine,
-  mediaMachine,
+  timelineMachine,
 } from "@/machines"
+
+import { MediaProvider, ModalProvider, PlayerProvider, ProjectProvider, TimelineProvider } from "."
 
 interface RootProviderProps {
   children: ReactNode

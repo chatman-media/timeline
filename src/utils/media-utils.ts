@@ -257,10 +257,10 @@ export const groupFilesByDate = (media: MediaFile[]): DateGroup[] => {
   const videoFilesByDate = media.reduce<Record<string, MediaFile[]>>((acc, file) => {
     const date = file.startTime
       ? new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        })
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      })
       : "Без даты"
 
     if (!acc[date]) {

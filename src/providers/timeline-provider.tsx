@@ -169,7 +169,7 @@ export const TimelineContext = React.createContext<{
   isSeeking: boolean
   isChangingCamera: boolean
   timeRanges: Record<string, TimeRange[]>
-} | null>(null)
+    } | null>(null)
 
 // Хук для использования контекста таймлайна
 export function useTimelineContext() {

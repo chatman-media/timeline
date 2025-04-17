@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 
 import { useMedia } from "@/hooks/use-media"
+import { useMediaContext } from "@/providers"
 
 import { TopNavBar } from "../layout"
 import { CameraRecording } from "../media-recording/camera-recording"
@@ -11,7 +12,6 @@ import {
   OptionsMediaEditor,
   VerticalMediaEditor,
 } from "./layouts"
-import { useMediaContext } from "@/providers"
 
 export function MediaEditor() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("default")

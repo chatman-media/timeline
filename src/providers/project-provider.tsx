@@ -10,7 +10,7 @@ import { ProjectSettings } from "@/types/project"
 
 export const ProjectContextType = createContext<
   (ProjectContext & ProjectContextEvents) | undefined
->(undefined)
+    >(undefined)
 
 interface ProjectProviderProps {
   children: React.ReactNode

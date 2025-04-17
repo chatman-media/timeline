@@ -36,10 +36,6 @@ export const calculateTimeRanges = (videos: MediaFile[]): TimeRange[] => {
     duration:
       Math.floor(sortedTimes[1] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND) -
       Math.floor(sortedTimes[0] / TIME_CONSTANTS.MILLISECONDS_IN_SECOND),
-    id: "",
-    trackId: "",
-    type: "video",
-    isSelected: false,
   }
 
   for (let i = 1; i < sortedTimes.length; i++) {

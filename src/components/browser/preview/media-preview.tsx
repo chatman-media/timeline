@@ -14,7 +14,7 @@ interface MediaPreviewProps {
   fileId: string
   duration: number
   isAudio: boolean
-  videoRefs: React.MutableRefObject<Record<string, HTMLVideoElement | null>>
+  videoRefs: React.RefObject<Record<string, HTMLVideoElement | null>>
   loadedVideos: Record<string, boolean>
   setLoadedVideos: (value: React.SetStateAction<Record<string, boolean>>) => void
   hoverTimes: Record<string, { [streamIndex: number]: number }>
@@ -115,7 +115,7 @@ export const MediaPreview = memo(function MediaPreview({
     const isVideo = stream.codec_type === "video"
     const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
     const isImage = file.isImage || (isVideo && !hasAudio && !duration)
-    const smallPadding = size < 100 ? "px-[2px] py-0" : "px-[4px] py-[2px]"
+    // const smallPadding = size < 100 ? "px-[2px] py-0" : "px-[4px] py-[2px]"
 
     return (
       <>
@@ -130,12 +130,12 @@ export const MediaPreview = memo(function MediaPreview({
           )} */}
         {file.probeData?.streams &&
           file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
-            <div
-              className={`absolute text-xs leading-[16px] left-1 top-[calc(50%-8px)] text-white bg-black/50 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
-            >
-              {index + 1}
-            </div>
-          )}
+          <div
+            className={`absolute text-xs leading-[16px] left-1 top-[calc(50%-8px)] text-white bg-black/50 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+          >
+            {index + 1}
+          </div>
+        )}
         {/* Иконка типа медиа */}
         <div
           className={`absolute ${
@@ -184,21 +184,18 @@ export const MediaPreview = memo(function MediaPreview({
         {file.probeData?.streams &&
           file.probeData.streams.filter((s) => s.codec_type === "audio").length > 0 &&
           !hideTime && (
-            <div
-              className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/50 rounded ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
-            >
-              {formatDuration(duration)}
-            </div>
-          )}
+          <div
+            className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/50 rounded ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+          >
+            {formatDuration(duration)}
+          </div>
+        )}
 
         <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
           <Music className="w-6 h-6 text-gray-500 dark:text-gray-400" />
         </div>
         <audio
           data-stream="0"
-          ref={(el) => {
-            if (el) videoRefs.current[`${fileId}-0`] = el as unknown as HTMLVideoElement
-          }}
           src={file.path}
           preload="auto"
           tabIndex={0}
@@ -232,12 +229,12 @@ export const MediaPreview = memo(function MediaPreview({
         {hoverTimes[fileId]?.[0] !== undefined &&
           hoverTimes[fileId]?.[0] !== null &&
           Number.isFinite(hoverTimes[fileId]?.[0]) && (
-            <PreviewTimeline
-              time={hoverTimes[fileId][0]}
-              duration={duration}
-              videoRef={videoRefs.current[`${fileId}-0`]}
-            />
-          )}
+          <PreviewTimeline
+            time={hoverTimes[fileId][0]}
+            duration={duration}
+            videoRef={videoRefs.current[`${fileId}-0`]}
+          />
+        )}
 
         {showFileName && (
           <div
@@ -391,24 +388,24 @@ export const MediaPreview = memo(function MediaPreview({
               {hoverTimes[fileId]?.[index] !== undefined &&
                 hoverTimes[fileId]?.[index] !== null &&
                 Number.isFinite(hoverTimes[fileId]?.[index]) && (
-                  <PreviewTimeline
-                    time={hoverTimes[fileId][index]}
-                    duration={duration}
-                    videoRef={videoRefs.current[`${fileId}-${index}`]}
-                  />
-                )}
+                <PreviewTimeline
+                  time={hoverTimes[fileId][index]}
+                  duration={duration}
+                  videoRef={videoRefs.current[`${fileId}-${index}`]}
+                />
+              )}
 
               {file.probeData?.streams &&
                 file.probeData.streams.filter(
                   (s) => s.codec_type === "video" || s.codec_type === "audio",
                 ).length > 1 &&
                 !hideTime && (
-                  <div
-                    className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/50 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
-                  >
-                    {formatDuration(duration)}
-                  </div>
-                )}
+                <div
+                  className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/50 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+                >
+                  {formatDuration(duration)}
+                </div>
+              )}
 
               {showFileName && (
                 <div

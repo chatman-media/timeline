@@ -1,11 +1,15 @@
 import { MediaFile } from "@/types/media"
 import { getFileType } from "@/utils/media-utils"
 
-export function hasAudioStream(file: MediaFile) {
-  return file.probeData?.streams?.some((stream) => stream.codec_type === "audio")
+export function hasAudioStream(file: MediaFile): boolean {
+  return file.probeData?.streams?.some((stream) => stream.codec_type === "audio") ?? false
 }
 
-export function getRemainingMediaCounts(media: MediaFile[], addedFiles: Set<string>) {
+export function getRemainingMediaCounts(media: MediaFile[], addedFiles: Set<string>): {
+  remainingVideoCount: number
+  remainingAudioCount: number
+  allFilesAdded: boolean
+} {
   const remainingVideoCount = media.filter(
     (f) => getFileType(f) === "video" && f.path && !addedFiles.has(f.path) && hasAudioStream(f),
   ).length
@@ -28,7 +32,7 @@ export function getRemainingMediaCounts(media: MediaFile[], addedFiles: Set<stri
 export function getRemainingFilesForDate(
   dateInfo: { date: string; files: MediaFile[] },
   addedFiles: Set<string>,
-) {
+): MediaFile[] {
   return dateInfo.files.filter(
     (file) => !file.path || (!addedFiles.has(file.path) && hasAudioStream(file)),
   )
@@ -37,7 +41,7 @@ export function getRemainingFilesForDate(
 export function getTopDateWithRemainingFiles(
   sortedDates: { date: string; files: MediaFile[] }[],
   addedFiles: Set<string>,
-) {
+): { date: string; files: MediaFile[]; remainingFiles: MediaFile[] } | undefined {
   const datesByFileCount = [...sortedDates].sort((a, b) => b.files.length - a.files.length)
 
   return datesByFileCount
