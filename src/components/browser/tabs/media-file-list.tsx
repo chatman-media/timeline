@@ -15,6 +15,7 @@ import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 import { Skeleton } from "../../ui/skeleton"
 import { FileMetadata, MediaPreview, StatusBar } from ".."
 import { useTimelineContext } from "@/providers"
+import { useMedia } from "@/hooks/use-media"
 
 // Создаем глобальные переменные для кэширования видео и их состояния загрузки
 // Это позволит сохранять состояние между переключениями вкладок и режимов отображения
@@ -136,7 +137,8 @@ export const MediaFileList = memo(function MediaFileList({
 }: {
   viewMode?: ViewMode
 }): JSX.Element {
-  const { isLoading, includeFiles, includedFiles, allMediaFiles: media } = useMediaContext()
+  const { includeFiles, includedFiles } = useMediaContext()
+  const { isLoading, media } = useMedia()
   const { addMediaFiles } = useTimelineContext()
   const addFilesToTimeline = useCallback(
     (files: MediaFile[]) => {
