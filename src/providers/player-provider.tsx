@@ -4,7 +4,7 @@ import { createContext, useContext } from "react"
 import { playerMachine } from "@/machines"
 import { MediaFile } from "@/types/media"
 import { TimelineVideo } from "@/types/timeline"
-
+import { browserInspector } from "./providers"
 interface PlayerContextType {
   video: MediaFile | null
   currentTime: number
@@ -40,7 +40,7 @@ interface PlayerProviderProps {
 }
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
-  const [state, send] = useMachine(playerMachine)
+  const [state, send] = useMachine(playerMachine, { inspect: browserInspector.inspect })
 
   return (
     <PlayerContext.Provider

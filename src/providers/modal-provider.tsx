@@ -2,6 +2,7 @@ import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
 import { modalMachine, ModalType } from "@/machines/modal-machine"
+import { browserInspector } from "./providers"
 
 interface ModalContextType {
   activeModal: ModalType
@@ -17,7 +18,7 @@ interface ModalProviderProps {
 }
 
 export function ModalProvider({ children }: ModalProviderProps) {
-  const [state, send] = useMachine(modalMachine)
+  const [state, send] = useMachine(modalMachine, { inspect: browserInspector.inspect })
 
   const activeModal = state.context.activeModal
   const isRecordModalOpen = state.context.activeModal === "record"

@@ -1,14 +1,17 @@
 "use client"
 
+import { createBrowserInspector } from "@statelyai/inspect"
 import { ReactNode } from "react"
 
 import { MediaProvider, ModalProvider, PlayerProvider, ProjectProvider, TimelineProvider } from "."
 
-interface RootProviderProps {
+interface ProvidersProps {
   children: ReactNode
 }
 
-export function RootProvider({ children }: RootProviderProps) {
+export const browserInspector = createBrowserInspector()
+
+export function Providers({ children }: ProvidersProps) {
 
   return (
     <MediaProvider>

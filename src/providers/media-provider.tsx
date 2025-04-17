@@ -3,6 +3,7 @@ import { createContext, useContext } from "react"
 
 import { mediaMachine, timelineMachine } from "@/machines"
 import { MediaFile } from "@/types/media"
+import { browserInspector } from "./providers"
 
 interface MediaContextType {
   isLoading: boolean
@@ -31,7 +32,7 @@ interface MediaProviderProps {
 }
 
 export function MediaProvider({ children }: MediaProviderProps) {
-  const [state, send] = useMachine(mediaMachine)
+  const [state, send] = useMachine(mediaMachine, { inspect: browserInspector.inspect })
   const [timelineState, timelineSend] = useMachine(timelineMachine)
 
   return (
