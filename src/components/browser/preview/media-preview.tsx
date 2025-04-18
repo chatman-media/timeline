@@ -115,19 +115,9 @@ export const MediaPreview = memo(function MediaPreview({
     const isVideo = stream.codec_type === "video"
     const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
     const isImage = file.isImage || (isVideo && !hasAudio && !duration)
-    // const smallPadding = size < 100 ? "px-[2px] py-0" : "px-[4px] py-[2px]"
 
     return (
       <>
-        {/* {file.probeData?.streams &&
-          file.probeData.streams.filter((s) => s.codec_type === "video").length > 0 && (
-            <div
-
-              className={`absolute left-1 top-[calc(50%-8px)] text-white bg-black/50 rounded ${smallPadding}`}
-            >
-              {index + 1}
-            </div>
-          )} */}
         {file.probeData?.streams &&
           file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
           <div

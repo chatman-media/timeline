@@ -104,16 +104,6 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
           left: `${positionPercent}%`,
         }}
       />
-      {/* <div
-        className="absolute bottom-0 text-xs bg-black/75 text-white px-1 rounded pointer-events-none z-20"
-        style={{
-          left: `${positionPercent}%`,
-          fontSize: "10px",
-          transform: "translateX(-50%)",
-        }}
-      >
-        {formatTime(displayTime, false)}
-      </div> */}
     </>
   )
 }
