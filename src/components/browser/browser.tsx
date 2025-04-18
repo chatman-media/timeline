@@ -13,7 +13,12 @@ import {
 } from "."
 
 export const TAB_TRIGGER_STYLES =
-  "text-xs text-gray-800 dark:bg-[#1b1a1f] border-none bg-gray-200 data-[state=active]:bg-secondary data-[state=active]:text-[#3ebfb2] dark:data-[state=active]:bg-secondary dark:data-[state=active]:text-[#3ebfb2] hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 border-1 border-transparent flex flex-col items-center justify-center gap-1 py-2 [&>svg]:data-[state=active]:text-[#3ebfb2] rounded-none"
+  "text-xs text-gray-800 dark:bg-[#1b1a1f] border-none " +
+  "bg-gray-200 data-[state=active]:bg-secondary data-[state=active]:text-[#38dacac3] " +
+  "dark:data-[state=active]:bg-secondary dark:data-[state=active]:text-[#38dac9] " +
+  "hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100 " +
+  "border-1 border-transparent flex flex-col items-center justify-center gap-1 py-2 " +
+  "[&>svg]:data-[state=active]:text-[#38dacac3] rounded-none"
 
 // Используем memo для предотвращения ненужных рендеров
 export const Browser = memo(function Browser() {

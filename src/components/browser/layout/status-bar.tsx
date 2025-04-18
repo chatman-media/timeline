@@ -8,7 +8,7 @@ interface StatusBarProps {
   media: MediaFile[]
   onAddAllVideoFiles: () => void
   onAddAllAudioFiles: () => void
-  onAddDateFiles: (date: string) => void
+  onAddDateFiles: (files: MediaFile[]) => void
   onAddAllFiles: () => void
   sortedDates: { date: string; files: MediaFile[] }[]
   addedFiles: MediaFile[]
@@ -36,9 +36,9 @@ export function StatusBar({
         <span className="px-1 flex items-center whitespace-nowrap gap-2">
           {remainingVideoCount > 0 && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7"
+              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-6 hover:bg-gray-300 bg-secondary"
               title="Добавить все видео"
               onClick={onAddAllVideoFiles}
             >
@@ -48,9 +48,9 @@ export function StatusBar({
           )}
           {remainingAudioCount > 0 && (
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
-              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7"
+              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-6 hover:bg-gray-300 bg-secondary"
               title="Добавить все аудио"
               onClick={onAddAllAudioFiles}
             >
@@ -60,20 +60,31 @@ export function StatusBar({
           )}
         </span>
       </div>
-      <div className="flex flex-col items-end justify-center gap-1 text-xs">
-        {topDateWithRemainingFiles && topDateWithRemainingFiles.remainingFiles.length > 0 && (
+      {topDateWithRemainingFiles && topDateWithRemainingFiles.remainingFiles.length > 0 && (
+      <div className="flex flex-row items-end justify-center gap-0 text-xs">
+        {/* <Button
+          variant="ghost"
+          size="sm"
+          className="text-xs flex items-center gap-1 cursor-pointer px-2 h-6 hover:bg-gray-300 bg-secondary"
+          title={`Пропустить дату`}
+          onClick={() => {}}
+        >
+          <SquareArrowDown size={10} className="" />
+        </Button> */}
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7"
+            className="text-xs flex items-center gap-1 cursor-pointer px-2 h-6 hover:bg-gray-300 bg-secondary"
             title={`Добавить видео за ${topDateWithRemainingFiles.date}`}
-            onClick={() => onAddDateFiles(topDateWithRemainingFiles.date)}
+            onClick={() => {
+              onAddDateFiles(topDateWithRemainingFiles.files)
+            }}
           >
             {`${topDateWithRemainingFiles.remainingFiles.length} видео ${topDateWithRemainingFiles.date}`}
             <CopyPlus size={10} className="" />
           </Button>
-        )}
       </div>
+        )}
       <div className="flex flex-col gap-0 items-end justify-center text-xs">
         {allFilesAdded ? (
           <div className="flex items-center gap-1 text-[#49a293] font-medium px-2">
@@ -81,9 +92,9 @@ export function StatusBar({
           </div>
         ) : (
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
-            className="text-xs flex items-center gap-1 cursor-pointer px-1 h-7"
+            className="text-xs flex items-center gap-1 cursor-pointer px-2 h-6 hover:bg-gray-300 bg-secondary"
             title="Добавить все файлы"
             onClick={onAddAllFiles}
           >

@@ -1,9 +1,10 @@
 import { memo, useCallback, useMemo } from "react"
 
 import { useTimelineContext } from "@/providers/timeline-provider"
-import { VideoTrack } from "./track/video-track"
+
 import { TimelineScale } from "./timeline-scale/timeline-scale"
 import { TimelineTracks } from "./timeline-tracks"
+import { VideoTrack } from "./track/video-track"
 
 interface TimelineContainerProps {
   startTime: number

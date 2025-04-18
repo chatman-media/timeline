@@ -247,7 +247,7 @@ export const MediaPreview = memo(function MediaPreview({
         {onAddMedia && (
           <div
             className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
-              isAdded ? "bg-[#3ebfb2]" : "bg-black/50 hover:bg-[#3ebfb2]"
+              isAdded ? "bg-[#38dacac3] dark:bg-[#38dac9]" : "bg-black/50 hover:bg-[#38dac9]"
             }`}
             onClick={(e) => {
               e.stopPropagation()
@@ -302,7 +302,7 @@ export const MediaPreview = memo(function MediaPreview({
           {onAddMedia && (
             <div
               className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
-                isAdded ? "bg-[#3ebfb2]" : "bg-black/50 hover:bg-[#3ebfb2]"
+                isAdded ? "bg-[#38dacac3] dark:bg-[#38dac9]" : "bg-black/50 hover:bg-[#38dac9]"
               }`}
               onClick={(e) => {
                 e.stopPropagation()
@@ -414,7 +414,7 @@ export const MediaPreview = memo(function MediaPreview({
               {onAddMedia && loadedVideos[`${fileId}-${index}`] && (
                 <div
                   className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
-                    isAdded ? "bg-[#3ebfb2]" : "bg-black/50 hover:bg-[#3ebfb2]"
+                    isAdded ? "bg-[#38dacac3] dark:bg-[#38dac9]" : "bg-black/50 hover:bg-[#38dac9]"
                   }`}
                   onClick={(e) => {
                     e.stopPropagation()

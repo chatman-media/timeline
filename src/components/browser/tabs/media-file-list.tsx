@@ -844,6 +844,10 @@ export const MediaFileList = memo(function MediaFileList({
     [media, addFilesToTimeline],
   )
 
+  const addDateFiles = useCallback((files: MediaFile[]) => {
+    addFilesToTimeline(files)
+  }, [addFilesToTimeline])
+
   const handleAddAllVideoFiles = useCallback(() => {
     const videoFiles = media.filter((file: MediaFile) =>
       file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "video"),
@@ -934,7 +938,7 @@ export const MediaFileList = memo(function MediaFileList({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-full overflow-hidden">
+      <div className="flex flex-col overflow-hidden">
         <div className="flex-1 p-3 pb-1">
           <Skeleton className="w-full h-8 rounded" />
         </div>
@@ -1186,7 +1190,7 @@ export const MediaFileList = memo(function MediaFileList({
           media={filteredAndSortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}
           onAddAllAudioFiles={handleAddAllAudioFiles}
-          onAddDateFiles={handleAddDateFiles}
+          onAddDateFiles={addDateFiles}
           onAddAllFiles={handleAddAllFiles}
           sortedDates={sortedDates}
           addedFiles={includedFiles}
