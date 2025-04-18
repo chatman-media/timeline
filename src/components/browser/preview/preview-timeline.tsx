@@ -10,15 +10,7 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
   const animationRef = useRef<number | undefined>(undefined)
   const [displayTime, setDisplayTime] = useState(time)
   const lastTimeRef = useRef<number>(time)
-
-  // Эффект для синхронизации с внешним временем при не проигрывании
-  useEffect(() => {
-    // Если не воспроизводится или нет ссылки на видео, используем переданное время
-    if (!videoRef || videoRef.paused) {
-      setDisplayTime(time)
-      lastTimeRef.current = time
-    }
-  }, [time, videoRef])
+  const [isVisible, setIsVisible] = useState(true)
 
   // Эффект для анимации движения индикатора во время проигрывания
   useEffect(() => {
@@ -45,39 +37,28 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
       animationRef.current = requestAnimationFrame(updatePosition)
     }
 
-    // Добавляем слушатели событий
-    const handlePlay = () => {
-      // Отменяем предыдущую анимацию, если она есть
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-      }
-      // Запускаем новую анимацию
-      animationRef.current = requestAnimationFrame(updatePosition)
+    const handleMouseEnter = () => {
+      setIsVisible(true)
     }
 
-    const handlePause = () => {
-      // Останавливаем анимацию
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current)
-        animationRef.current = undefined
-      }
-      // Устанавливаем последнее известное время
+    const handleMouseLeave = () => {
+      setIsVisible(false)
+    }
+
+    const handleMouseMove = () => {
+      updatePosition()
+    }
+
+    const handleTimeUpdate = () => {
       setDisplayTime(videoRef.currentTime)
       lastTimeRef.current = videoRef.currentTime
     }
 
-    const handleTimeUpdate = () => {
-      if (!videoRef.paused) {
-        setDisplayTime(videoRef.currentTime)
-        lastTimeRef.current = videoRef.currentTime
-      }
-    }
-
     // Регистрируем слушатели
-    videoRef.addEventListener("play", handlePlay)
-    videoRef.addEventListener("pause", handlePause)
+    videoRef.addEventListener("mouseenter", handleMouseEnter)
+    videoRef.addEventListener("mousemove", handleMouseMove)
+    videoRef.addEventListener("mouseleave", handleMouseLeave)
     videoRef.addEventListener("timeupdate", handleTimeUpdate)
-
     // Очистка при размонтировании
     return () => {
       if (animationRef.current) {
@@ -86,15 +67,17 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
 
       // Если videoRef все еще существует при размонтировании, удаляем слушатели
       if (videoRef) {
-        videoRef.removeEventListener("play", handlePlay)
-        videoRef.removeEventListener("pause", handlePause)
+        videoRef.removeEventListener("mouseenter", handleMouseEnter)
+        videoRef.removeEventListener("mouseleave", handleMouseLeave)
         videoRef.removeEventListener("timeupdate", handleTimeUpdate)
+        videoRef.removeEventListener("mousemove", handleMouseMove)
       }
     }
   }, [videoRef]) // Зависимость только от videoRef
 
   // Защита от деления на ноль
   const positionPercent = duration > 0 ? (displayTime / duration) * 100 : 0
+  if (positionPercent === 0 || !isVisible) return <></>
 
   return (
     <>
