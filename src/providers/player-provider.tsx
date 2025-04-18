@@ -61,7 +61,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         setVideos: (videos: Record<string, TimelineVideo>) => send({ type: "setVideos", videos }),
         setDuration: (duration: number) => send({ type: "setDuration", duration }),
         setVolume: (volume: number) => send({ type: "setVolume", volume }),
-        setVideoLoading: (isLoading: boolean) => send({ type: "setVideoLoading", isVideoLoading: isLoading }),
+        setVideoLoading: (isLoading: boolean) =>
+          send({ type: "setVideoLoading", isVideoLoading: isLoading }),
         setVideoReady: (isReady: boolean) => send({ type: "setVideoReady", isVideoReady: isReady }),
       }}
     >

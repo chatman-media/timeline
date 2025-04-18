@@ -17,12 +17,12 @@ export function TimelineMarks({
   subStep,
   isActive,
 }: TimelineMarksProps) {
-  console.log('TimelineMarks params:', {
+  console.log("TimelineMarks params:", {
     startTime,
     endTime,
     duration,
     timeStep,
-    subStep
+    subStep,
   })
 
   const marks = []
@@ -31,11 +31,11 @@ export function TimelineMarks({
   const level3Step = subStep / 5
   const level4Step = subStep / 10
 
-  console.log('TimelineMarks steps:', {
+  console.log("TimelineMarks steps:", {
     level1Step,
     level2Step,
     level3Step,
-    level4Step
+    level4Step,
   })
 
   const firstMark = Math.floor(startTime / level4Step) * level4Step
@@ -71,7 +71,7 @@ export function TimelineMarks({
     )
   }
 
-  console.log('TimelineMarks total marks:', marks.length)
+  console.log("TimelineMarks total marks:", marks.length)
 
   return <div className={`relative w-full h-8 ${isActive ? "" : "bg-muted/50"}`}>{marks}</div>
 }

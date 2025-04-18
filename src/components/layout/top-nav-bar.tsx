@@ -23,7 +23,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
-  
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value)
   }
@@ -189,7 +189,6 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           <span className="text-xs px-2">Экспорт</span>
           <Upload className="h-3.5 w-3.5" />
         </Button>
-
       </div>
       <ExportDialog open={isExportOpen} onOpenChange={setIsExportOpen} />
       <ProjectSettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />

@@ -121,7 +121,7 @@ export const createTracksFromFiles = (
   const videoFilesByDay = sortedVideoFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
     // Если нет startTime, используем текущее время
     const startTime = file.startTime || Date.now() / 1000
-    const date = new Date(startTime * 1000).toISOString().split('T')[0]
+    const date = new Date(startTime * 1000).toISOString().split("T")[0]
     if (!acc[date]) {
       acc[date] = []
     }
@@ -139,7 +139,8 @@ export const createTracksFromFiles = (
           (track) =>
             track.type === "video" &&
             track.videos?.some(
-              (v) => v.startTime && new Date(v.startTime * 1000).toISOString().split('T')[0] === date,
+              (v) =>
+                v.startTime && new Date(v.startTime * 1000).toISOString().split("T")[0] === date,
             ),
         )
         .map((track) => Number(track.index) || 0),
@@ -148,7 +149,8 @@ export const createTracksFromFiles = (
           (track) =>
             track.type === "video" &&
             track.videos?.some(
-              (v) => v.startTime && new Date(v.startTime * 1000).toISOString().split('T')[0] === date,
+              (v) =>
+                v.startTime && new Date(v.startTime * 1000).toISOString().split("T")[0] === date,
             ),
         )
         .map((track) => Number(track.index) || 0),
@@ -180,7 +182,7 @@ export const createTracksFromFiles = (
   // Аналогично для аудио файлов
   const audioFilesByDay = sortedAudioFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
     const startTime = file.startTime || Date.now() / 1000
-    const date = new Date(startTime * 1000).toISOString().split('T')[0]
+    const date = new Date(startTime * 1000).toISOString().split("T")[0]
     if (!acc[date]) {
       acc[date] = []
     }
@@ -197,7 +199,8 @@ export const createTracksFromFiles = (
           (track) =>
             track.type === "audio" &&
             track.videos?.some(
-              (v) => v.startTime && new Date(v.startTime * 1000).toISOString().split('T')[0] === date,
+              (v) =>
+                v.startTime && new Date(v.startTime * 1000).toISOString().split("T")[0] === date,
             ),
         )
         .map((track) => Number(track.index) || 0),
@@ -206,7 +209,8 @@ export const createTracksFromFiles = (
           (track) =>
             track.type === "audio" &&
             track.videos?.some(
-              (v) => v.startTime && new Date(v.startTime * 1000).toISOString().split('T')[0] === date,
+              (v) =>
+                v.startTime && new Date(v.startTime * 1000).toISOString().split("T")[0] === date,
             ),
         )
         .map((track) => Number(track.index) || 0),

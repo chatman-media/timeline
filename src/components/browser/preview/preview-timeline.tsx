@@ -9,7 +9,6 @@ interface PreviewTimelineProps {
 export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelineProps) {
   const animationRef = useRef<number | undefined>(undefined)
   const [displayTime, setDisplayTime] = useState(time)
-  const videoRefId = useRef<string | null>(null)
   const lastTimeRef = useRef<number>(time)
 
   // Эффект для синхронизации с внешним временем при не проигрывании

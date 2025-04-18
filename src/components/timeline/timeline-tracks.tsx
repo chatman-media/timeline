@@ -5,9 +5,5 @@ interface TimelineTracksProps {
 }
 
 export function TimelineTracks({ children }: TimelineTracksProps) {
-  return (
-    <div className="relative w-full">
-      {children}
-    </div>
-  )
+  return <div className="relative w-full">{children}</div>
 }

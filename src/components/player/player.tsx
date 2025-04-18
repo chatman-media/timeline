@@ -27,12 +27,5 @@ export function Player() {
     )
   }
 
-  return (
-    <video
-      className="h-full w-full bg-black"
-      src={video.path}
-      controls
-      autoPlay
-    />
-  )
-} 
+  return <video className="h-full w-full bg-black" src={video.path} controls autoPlay />
+}

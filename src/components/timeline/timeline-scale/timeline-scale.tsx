@@ -10,9 +10,9 @@ interface TimelineScaleProps {
 
 export function TimelineScale({ startTime, endTime, duration }: TimelineScaleProps) {
   const { zoomLevel } = useTimelineContext()
-  
-  console.log('TimelineScale zoomLevel:', zoomLevel)
-  
+
+  console.log("TimelineScale zoomLevel:", zoomLevel)
+
   // Определяем шаг в зависимости от масштаба
   let timeStep = 1
   if (zoomLevel > 5) {
@@ -26,9 +26,9 @@ export function TimelineScale({ startTime, endTime, duration }: TimelineScalePro
   } else {
     timeStep = 60 // При сильном уменьшении - 1 минута
   }
-  
-  console.log('TimelineScale timeStep:', timeStep)
-  
+
+  console.log("TimelineScale timeStep:", timeStep)
+
   // При увеличении масштаба делаем более мелкие деления
   const subStep = timeStep / (zoomLevel > 1 ? 5 : 2)
 

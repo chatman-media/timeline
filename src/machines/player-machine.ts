@@ -123,8 +123,8 @@ export const playerMachine = createMachine({
           actions: [
             assign({ video: ({ event }) => event.video }),
             assign({ isVideoLoading: true }),
-            assign({ isVideoReady: false })
-          ]
+            assign({ isVideoReady: false }),
+          ],
         },
         setCurrentTime: {
           actions: assign({ currentTime: ({ event }) => event.currentTime }),
@@ -159,12 +159,12 @@ export const playerMachine = createMachine({
       on: {
         setVideoReady: {
           target: "ready",
-          actions: assign({ isVideoReady: true, isVideoLoading: false })
+          actions: assign({ isVideoReady: true, isVideoLoading: false }),
         },
         setVideoLoading: {
-          actions: assign({ isVideoLoading: ({ event }) => event.isVideoLoading })
-        }
-      }
+          actions: assign({ isVideoLoading: ({ event }) => event.isVideoLoading }),
+        },
+      },
     },
     ready: {
       on: {
@@ -173,10 +173,10 @@ export const playerMachine = createMachine({
           actions: [
             assign({ video: ({ event }) => event.video }),
             assign({ isVideoLoading: true }),
-            assign({ isVideoReady: false })
-          ]
-        }
-      }
-    }
+            assign({ isVideoReady: false }),
+          ],
+        },
+      },
+    },
   },
 })

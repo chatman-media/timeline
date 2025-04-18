@@ -46,9 +46,9 @@ export function MediaProvider({ children }: MediaProviderProps) {
         removeMediaFiles: (files: MediaFile[]) => send({ type: "removeMediaFiles", files }),
         setIncludedFiles: (files: MediaFile[]) => send({ type: "setIncludedFiles", files }),
         includeFiles: (files: MediaFile[]) => {
-          console.log('MediaProvider includeFiles:', files)
+          console.log("MediaProvider includeFiles:", files)
           send({ type: "includeFiles", files })
-          console.log('MediaProvider sending to timeline:', files)
+          console.log("MediaProvider sending to timeline:", files)
           timelineSend({ type: "addMediaFiles", files })
         },
         unincludeFiles: (files: MediaFile[]) => {

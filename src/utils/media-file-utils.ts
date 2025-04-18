@@ -36,8 +36,12 @@ export function getRemainingFilesForDate(
   dateInfo: { date: string; files: MediaFile[] },
   addedFiles: Set<string>,
 ): MediaFile[] {
+  const isVideoWithAudio = (file: MediaFile) =>
+    file.probeData?.streams?.some((s) => s.codec_type === "video") &&
+    file.probeData?.streams?.some((s) => s.codec_type === "audio")
+
   return dateInfo.files.filter(
-    (file) => !file.path || (!addedFiles.has(file.path) && hasAudioStream(file)),
+    (file) => !file.path || (!addedFiles.has(file.path) && isVideoWithAudio(file)),
   )
 }
 
@@ -45,12 +49,22 @@ export function getTopDateWithRemainingFiles(
   sortedDates: { date: string; files: MediaFile[] }[],
   addedFiles: Set<string>,
 ): { date: string; files: MediaFile[]; remainingFiles: MediaFile[] } | undefined {
-  const datesByFileCount = [...sortedDates].sort((a, b) => b.files.length - a.files.length)
+  const isVideoWithAudio = (file: MediaFile) =>
+    file.probeData?.streams?.some((s) => s.codec_type === "video") &&
+    file.probeData?.streams?.some((s) => s.codec_type === "audio")
+
+  const datesByFileCount = [...sortedDates].sort((a, b) => {
+    const aCount = a.files.filter((f) => !addedFiles.has(f.path) && isVideoWithAudio(f)).length
+
+    const bCount = b.files.filter((f) => !addedFiles.has(f.path) && isVideoWithAudio(f)).length
+
+    return bCount - aCount
+  })
 
   return datesByFileCount
     .map((dateInfo) => ({
       ...dateInfo,
-      remainingFiles: getRemainingFilesForDate(dateInfo, addedFiles),
+      remainingFiles: getRemainingFilesForDate(dateInfo, addedFiles).filter(isVideoWithAudio),
     }))
     .find((dateInfo) => dateInfo.remainingFiles.length > 0)
 }

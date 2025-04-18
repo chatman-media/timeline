@@ -205,68 +205,68 @@ export const timelineMachine = createMachine({
     canUndo: false,
     canRedo: false,
     future: [],
-    loadedVideos: {}
+    loadedVideos: {},
   } as TimelineContext,
   types: {
     context: {} as TimelineContext,
-    events: {} as TimelineEvent
+    events: {} as TimelineEvent,
   },
   states: {
     idle: {
       on: {
         zoom: {
           actions: assign({
-            zoomLevel: ({ event }) => event.level
-          })
+            zoomLevel: ({ event }) => event.level,
+          }),
         },
         setActiveTrack: {
           actions: assign({
-            activeTrackId: ({ event }) => event.trackId
-          })
+            activeTrackId: ({ event }) => event.trackId,
+          }),
         },
         seek: {
           actions: assign({
-            isSeeking: true
-          })
+            isSeeking: true,
+          }),
         },
         setPlaying: {
           actions: assign({
-            isSeeking: false
-          })
+            isSeeking: false,
+          }),
         },
         setTrackVolume: {
           actions: assign({
             trackVolumes: ({ context, event }) => ({
               ...context.trackVolumes,
-              [event.trackId]: event.volume
-            })
-          })
+              [event.trackId]: event.volume,
+            }),
+          }),
         },
         setSeeking: {
           actions: assign({
-            isSeeking: ({ event }) => event.isSeeking
-          })
+            isSeeking: ({ event }) => event.isSeeking,
+          }),
         },
         setTimeRanges: {
           actions: assign({
-            timeRanges: ({ event }) => event.ranges
-          })
+            timeRanges: ({ event }) => event.ranges,
+          }),
         },
         setVideoRef: {
           actions: assign({
             videoRefs: ({ context, event }) => ({
               ...context.videoRefs,
-              [event.fileId]: event.video
-            })
-          })
+              [event.fileId]: event.video,
+            }),
+          }),
         },
         setLoadedVideo: {
           actions: assign({
             loadedVideos: ({ context, event }) => ({
               ...context.loadedVideos,
-              [event.fileId]: event.loaded
-            })
-          })
+              [event.fileId]: event.loaded,
+            }),
+          }),
         },
         preloadAllVideos: {
           actions: ({ context }) => {
@@ -275,7 +275,7 @@ export const timelineMachine = createMachine({
                 context.loadedVideos[fileId] = true
               }
             })
-          }
+          },
         },
         undo: {
           actions: assign(({ context }) => {
@@ -312,8 +312,8 @@ export const timelineMachine = createMachine({
         },
         setTracks: {
           actions: assign({
-            tracks: ({ event }) => event.tracks
-          })
+            tracks: ({ event }) => event.tracks,
+          }),
         },
       },
     },

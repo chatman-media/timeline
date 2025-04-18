@@ -31,7 +31,6 @@ interface TimelineContextType {
   videoRefs: Record<string, HTMLVideoElement | null>
   loadedVideos: Record<string, boolean>
 
-
   zoom: (level: number) => void
   undo: () => void
   redo: () => void
@@ -55,9 +54,7 @@ interface TimelineProviderProps {
   children: ReactNode
 }
 
-export function TimelineProvider({
-  children,
-}: TimelineProviderProps) {
+export function TimelineProvider({ children }: TimelineProviderProps) {
   const [state, setState] = useState<TimelineContextType | undefined>(undefined)
 
   const timelineActor = useMemo(() => createActor(timelineMachine), [])
@@ -71,10 +68,10 @@ export function TimelineProvider({
 
   const handleZoom = useCallback(
     (level: number) => {
-      console.log('TimelineProvider zoom:', level)
+      console.log("TimelineProvider zoom:", level)
       timelineActor.send({ type: "zoom", level })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const handleUndo = useCallback(() => {
@@ -89,14 +86,14 @@ export function TimelineProvider({
     (trackId: string) => {
       timelineActor.send({ type: "setActiveTrack", trackId })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const addMediaFiles = useCallback(
     (files: MediaFile[]) => {
       timelineActor.send({ type: "addMediaFiles", files })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const handleRemoveFromAddedFiles = useCallback(
@@ -105,56 +102,56 @@ export function TimelineProvider({
         timelineActor.send({ type: "removeFromAddedFiles", fileId })
       })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const handleSetPlaying = useCallback(
     (playing: boolean) => {
       timelineActor.send({ type: "setPlaying", playing })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const handleSeek = useCallback(
     (time: number) => {
       timelineActor.send({ type: "seek", time })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const handleSetTrackVolume = useCallback(
     (trackId: string, volume: number) => {
       timelineActor.send({ type: "setTrackVolume", trackId, volume })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const handleSetSeeking = useCallback(
     (isSeeking: boolean) => {
       timelineActor.send({ type: "setSeeking", isSeeking })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const handleSetTimeRanges = useCallback(
     (timeRanges: Record<string, TimeRange[]>) => {
       timelineActor.send({ type: "setTimeRanges", ranges: timeRanges })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const setVideoRef = useCallback(
     (fileId: string, video: HTMLVideoElement | null) => {
       timelineActor.send({ type: "setVideoRef", fileId, video })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const setLoadedVideo = useCallback(
     (fileId: string, loaded: boolean) => {
       timelineActor.send({ type: "setLoadedVideo", fileId, loaded })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   const preloadAllVideos = useCallback(() => {
@@ -165,14 +162,14 @@ export function TimelineProvider({
     (tracks: Track[]) => {
       timelineActor.send({ type: "setTracks", tracks })
     },
-    [timelineActor]
+    [timelineActor],
   )
 
   useEffect(() => {
     const subscription = timelineActor.subscribe((snapshot) => {
       setState((prev: TimelineContextType) => ({
         ...prev,
-        ...snapshot.context
+        ...snapshot.context,
       }))
     })
 

@@ -53,7 +53,6 @@ export interface Track {
   isLocked?: boolean
   isVisible?: boolean
 }
-  
 
 export interface TimelineTimeRange {
   id: string

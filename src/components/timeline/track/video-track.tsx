@@ -13,10 +13,13 @@ interface TimelineTrackProps {
   coordinates: {
     left: number
     width: number
-    videos: Record<string, {
-      left: number
-      width: number
-    }>
+    videos: Record<
+      string,
+      {
+        left: number
+        width: number
+      }
+    >
   }
 }
 
@@ -52,19 +55,19 @@ const TimelineTrack = memo(function TimelineTrack({
       setActiveTrack(track.id)
       setVideoLoading(true)
       setActiveVideo(video)
-      
+
       // Создаем временный элемент для проверки готовности видео
-      const tempVideo = document.createElement('video')
+      const tempVideo = document.createElement("video")
       tempVideo.src = video.path
-      
+
       tempVideo.onloadeddata = () => {
         setVideoReady(true)
         setVideoLoading(false)
       }
-      
+
       tempVideo.onerror = () => {
         setVideoLoading(false)
-        console.error('Failed to load video:', video.path)
+        console.error("Failed to load video:", video.path)
       }
     },
     [setActiveTrack, setActiveVideo, setVideoLoading, setVideoReady],
@@ -306,7 +309,12 @@ const TimelineTrack = memo(function TimelineTrack({
                                   display: coords.width < 16 ? "none" : "block",
                                 }}
                               >
-                                {formatTimeWithMilliseconds(video.startTime || 0, false, true, true)}
+                                {formatTimeWithMilliseconds(
+                                  video.startTime || 0,
+                                  false,
+                                  true,
+                                  true,
+                                )}
                               </div>
                               <div
                                 className="absolute bottom-0 right-0 text-xs text-gray-100 mb-[2px] mr-1 bg-[#033032] text-[11px] px-[3px]"

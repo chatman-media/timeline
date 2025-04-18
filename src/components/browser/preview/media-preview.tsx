@@ -141,8 +141,8 @@ export const MediaPreview = memo(function MediaPreview({
           className={`absolute ${
             isHorizontalVideo(stream.width || 0, stream.height || 0, parseRotation(stream.rotation))
               ? size > 100
-                ? "right-1 top-1"
-                : "right-0.5 top-0.5"
+                ? "left-1 bottom-1"
+                : "left-0.5 bottom-0.5"
               : "left-1/2 bottom-1 -translate-x-1/2"
           } text-white cursor-pointer bg-black/50 rounded p-0.5`}
         >
@@ -160,10 +160,10 @@ export const MediaPreview = memo(function MediaPreview({
                 parseRotation(stream.rotation),
               )
                 ? size > 100
-                  ? "right-[28px]"
-                  : "right-[20px]"
+                  ? "left-[28px]"
+                  : "left-[20px]"
                 : "left-[calc(50%-8px)]"
-            } bg-black/50 text-xs leading-[16px] rounded ${size > 100 ? "top-1" : "top-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} mr-0.5 font-medium text-white`}
+            } bg-black/50 text-xs leading-[16px] ${size > 100 ? "font-size-17" : "font-size-15"} rounded ${size > 100 ? "bottom-1" : "bottom-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} mr-0.5 text-white`}
           >
             {formatResolution(stream.width || 0, stream.height || 0)}
           </div>
@@ -185,7 +185,7 @@ export const MediaPreview = memo(function MediaPreview({
           file.probeData.streams.filter((s) => s.codec_type === "audio").length > 0 &&
           !hideTime && (
           <div
-            className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/50 rounded ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+            className={`absolute text-xs leading-[16px] ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white bg-black/50 rounded ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
           >
             {formatDuration(duration)}
           </div>
@@ -221,7 +221,7 @@ export const MediaPreview = memo(function MediaPreview({
 
         {/* Иконка типа медиа в правом верхнем углу */}
         <div
-          className={`absolute ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white cursor-pointer bg-black/50 rounded p-0.5`}
+          className={`absolute ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white cursor-pointer bg-black/50 rounded p-0.5`}
         >
           <Music size={size > 100 ? 16 : 12} />
         </div>
@@ -286,7 +286,7 @@ export const MediaPreview = memo(function MediaPreview({
 
           {/* Иконка типа медиа */}
           <div
-            className={`absolute ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white cursor-pointer bg-black/50 rounded p-0.5`}
+            className={`absolute ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white cursor-pointer bg-black/50 rounded p-0.5`}
           >
             <ImageIcon size={size > 100 ? 16 : 12} />
           </div>
@@ -397,7 +397,7 @@ export const MediaPreview = memo(function MediaPreview({
                 ).length > 1 &&
                 !hideTime && (
                 <div
-                  className={`absolute text-xs leading-[16px] ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white bg-black/50 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+                  className={`absolute text-xs leading-[16px] ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white bg-black/50 rounded  ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
                 >
                   {formatDuration(duration)}
                 </div>

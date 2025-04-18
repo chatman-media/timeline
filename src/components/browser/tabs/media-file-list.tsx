@@ -844,9 +844,12 @@ export const MediaFileList = memo(function MediaFileList({
     [media, addFilesToTimeline],
   )
 
-  const addDateFiles = useCallback((files: MediaFile[]) => {
-    addFilesToTimeline(files)
-  }, [addFilesToTimeline])
+  const addDateFiles = useCallback(
+    (files: MediaFile[]) => {
+      addFilesToTimeline(files)
+    },
+    [addFilesToTimeline],
+  )
 
   const handleAddAllVideoFiles = useCallback(() => {
     const videoFiles = media.filter((file: MediaFile) =>

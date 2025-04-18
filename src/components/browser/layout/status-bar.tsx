@@ -61,8 +61,8 @@ export function StatusBar({
         </span>
       </div>
       {topDateWithRemainingFiles && topDateWithRemainingFiles.remainingFiles.length > 0 && (
-      <div className="flex flex-row items-end justify-center gap-0 text-xs">
-        {/* <Button
+        <div className="flex flex-row items-end justify-center gap-0 text-xs">
+          {/* <Button
           variant="ghost"
           size="sm"
           className="text-xs flex items-center gap-1 cursor-pointer px-2 h-6 hover:bg-gray-300 bg-secondary"
@@ -83,8 +83,8 @@ export function StatusBar({
             {`${topDateWithRemainingFiles.remainingFiles.length} видео ${topDateWithRemainingFiles.date}`}
             <CopyPlus size={10} className="" />
           </Button>
-      </div>
-        )}
+        </div>
+      )}
       <div className="flex flex-col gap-0 items-end justify-center text-xs">
         {allFilesAdded ? (
           <div className="flex items-center gap-1 text-[#49a293] font-medium px-2">
