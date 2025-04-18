@@ -53,6 +53,31 @@ interface MediaToolbarProps {
   canDecreaseSize?: boolean
 }
 
+/**
+ * Компонент для управления медиа-инструментами
+ *
+ * @param viewMode - Режим просмотра (список, сетка, миниатюры)
+ * @param onViewModeChange - Callback для изменения режима просмотра
+ * @param onImport - Callback для импорта файлов
+ * @param onImportFile - Callback для импорта файлов
+ * @param onImportFolder - Callback для импорта папок
+ * @param onSort - Callback для сортировки
+ * @param onFilter - Callback для фильтрации
+ * @param onGroupBy - Callback для группировки
+ * @param onChangeOrder - Callback для изменения порядка сортировки
+ * @param sortOrder - Порядок сортировки (возрастание, убывание)
+ * @param currentSortBy - Текущий параметр сортировки
+ * @param currentFilterType - Текущий тип фильтра
+ * @param currentGroupBy - Текущий параметр группировки
+ * @param onRecord - Callback для записи
+ * @param onRecordCamera - Callback для записи с веб-камеры
+ * @param onRecordScreen - Callback для записи экрана
+ * @param onRecordVoice - Callback для записи голоса
+ * @param onIncreaseSize - Callback для увеличения размера превью
+ * @param onDecreaseSize - Callback для уменьшения размера превью
+ * @param canIncreaseSize - Флаг, указывающий на возможность увеличения размера превью
+ * @param canDecreaseSize - Флаг, указывающий на возможность уменьшения размера превью
+ */
 export function MediaToolbar({
   viewMode = "thumbnails",
   onViewModeChange,

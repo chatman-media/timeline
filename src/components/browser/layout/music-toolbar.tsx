@@ -37,6 +37,21 @@ interface MusicToolbarProps {
   currentFilterType?: string
 }
 
+/**
+ * Компонент для управления музыкальными инструментами
+ *
+ * @param viewMode - Режим просмотра (список, сетка, миниатюры)
+ * @param onViewModeChange - Callback для изменения режима просмотра
+ * @param onImport - Callback для импорта файлов
+ * @param onImportFile - Callback для импорта файлов
+ * @param onImportFolder - Callback для импорта папок
+ * @param onSort - Callback для сортировки
+ * @param onFilter - Callback для фильтрации
+ * @param onChangeOrder - Callback для изменения порядка сортировки
+ * @param sortOrder - Порядок сортировки (возрастание, убывание)
+ * @param currentSortBy - Текущий параметр сортировки
+ * @param currentFilterType - Текущий тип фильтра
+ */
 export function MusicToolbar({
   viewMode = "thumbnails",
   onViewModeChange,

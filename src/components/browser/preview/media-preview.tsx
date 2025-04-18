@@ -19,6 +19,21 @@ interface MediaPreviewProps {
 
 /**
  * Предварительный просмотр медиафайла
+ *
+ * Функционал:
+ * - Отображает превью медиафайла в зависимости от его типа
+ * - Поддерживает различные размеры и форматы
+ * - Опциональное отображение имени файла
+ * - Кнопка добавления с состояниями (добавлено/не добавлено)
+ * - Темная тема для UI элементов
+ *
+ * @param file - Объект медиафайла
+ * @param onAddMedia - Callback для добавления файла
+ * @param isAdded - Флаг, показывающий добавлен ли файл
+ * @param size - Размер превью в пикселях (по умолчанию 60)
+ * @param showFileName - Флаг для отображения имени файла
+ * @param hideTime - Флаг для скрытия времени
+ * @param dimensions - Соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9]
  */
 export const MediaPreview = memo(function MediaPreview({
   file,
@@ -29,9 +44,9 @@ export const MediaPreview = memo(function MediaPreview({
   hideTime = false,
   dimensions = [16, 9],
 }: MediaPreviewProps) {
-  if (file.isAudio) {
+  if (file.isVideo) {
     return (
-      <AudioPreview
+      <VideoPreview
         file={file}
         onAddMedia={onAddMedia}
         isAdded={isAdded}
@@ -43,9 +58,9 @@ export const MediaPreview = memo(function MediaPreview({
     )
   }
 
-  if (file.isVideo) {
+  if (file.isAudio) {
     return (
-      <VideoPreview
+      <AudioPreview
         file={file}
         onAddMedia={onAddMedia}
         isAdded={isAdded}

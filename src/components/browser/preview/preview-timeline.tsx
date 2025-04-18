@@ -6,6 +6,13 @@ interface PreviewTimelineProps {
   videoRef?: HTMLVideoElement | null | HTMLAudioElement | undefined
 }
 
+/**
+ * Компонент для отображения временной шкалы в предварительном просмотре медиафайлов
+ *
+ * @param time - Текущее время в секундах
+ * @param duration - Длительность видео в секундах
+ * @param videoRef - Ссылка на HTMLVideoElement или HTMLAudioElement
+ */
 export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelineProps) {
   const animationRef = useRef<number | undefined>(undefined)
   const [displayTime, setDisplayTime] = useState(time)

@@ -1,12 +1,10 @@
 import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { JSX } from "react"
 
 import { MediaToolbar } from "@/components/browser/layout/media-toolbar"
 import { CameraCaptureDialog } from "@/components/dialogs/camera-capture-dialog"
 import { Button } from "@/components/ui/button"
 import { useMedia } from "@/hooks/use-media"
-import { useVideoPlayer } from "@/hooks/use-video-player"
 import { cn } from "@/lib/utils"
 import { useTimelineContext } from "@/providers"
 import { useMediaContext } from "@/providers/media-provider"
@@ -16,11 +14,6 @@ import { getFileType, groupFilesByDate } from "@/utils/media-utils"
 
 import { Skeleton } from "../../ui/skeleton"
 import { FileMetadata, MediaPreview, StatusBar } from ".."
-
-// Создаем глобальные переменные для кэширования видео и их состояния загрузки
-// Это позволит сохранять состояние между переключениями вкладок и режимов отображения
-const globalVideoCache = new Map<string, HTMLVideoElement | null>()
-const globalLoadedVideosCache = new Map<string, boolean>()
 
 // Размеры превью, доступные для выбора
 const PREVIEW_SIZES = [60, 80, 100, 125, 150, 200, 250, 300, 400]
@@ -64,9 +57,9 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
       const parsedValue = parseInt(savedValue, 10)
       // Проверяем, что значение входит в допустимый диапазон
       if (PREVIEW_SIZES.includes(parsedValue)) {
-        // console.log(
-        //   `[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`,
-        // )
+        console.log(
+          `[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`,
+        )
         return parsedValue
       }
     }
@@ -148,12 +141,6 @@ export const MediaFileList = memo(function MediaFileList({
     [addMediaFiles],
   )
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
-
-  // Используем локальный ref для избежания повторных запросов в текущей сессии браузера
-  const localDataFetchedRef = useRef(false)
-
-  // Ref для отслеживания первого рендера при смене режима
-  const initialRenderRef = useRef(true)
 
   // Загружаем сохраненные настройки
   const savedSettings = loadSavedSettings()
@@ -240,12 +227,6 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Эффект для отслеживания изменения режима просмотра
   useEffect(() => {
-    // Пропускаем первый рендер (обрабатывается в эффекте выше)
-    if (initialRenderRef.current) {
-      initialRenderRef.current = false
-      return
-    }
-
     console.log(`[MediaFileList] View mode changed to ${viewMode}`)
 
     // Определяем размер по умолчанию для нового режима
@@ -266,16 +247,6 @@ export const MediaFileList = memo(function MediaFileList({
       updatePreviewSize(savedSize)
     }
   }, [viewMode, updatePreviewSize])
-
-  // console.log("[MediaFileList] Rendering with:", {
-  //   mediaCount: media.length,
-  //   isLoading,
-  //   hasAddedFiles: includedFiles.length > 0,
-  //   viewMode,
-  //   hasFetched: media.length > 0,
-  //   localFetched: localDataFetchedRef.current,
-  //   previewSize,
-  // })
 
   // Обработчики для MediaToolbar
   const handleViewModeChange = useCallback((mode: ViewMode) => {
@@ -466,115 +437,6 @@ export const MediaFileList = memo(function MediaFileList({
     [media],
   )
 
-  // Используем реф для хранения ссылок на элементы видео
-  // const videoRefsObj = useRef<Record<string, HTMLVideoElement | null>>({})
-
-  // // Создаем проксированный объект, который будет проксировать обращения к глобальному кэшу
-  // const videoRefs = useMemo(() => {
-  //   return {
-  //     current: new Proxy({} as Record<string, HTMLVideoElement | null>, {
-  //       get: (_, key: string) => {
-  //         return globalVideoCache.get(key) || null
-  //       },
-  //       set: (_, key: string, value: HTMLVideoElement | null) => {
-  //         if (value) {
-  //           globalVideoCache.set(key, value)
-  //           // Предзагружаем видео при добавлении в кэш
-  //           // value.load()
-  //           // Обновляем состояние загрузки без перерисовки
-  //           globalLoadedVideosCache.set(key, true)
-  //         }
-  //         return true
-  //       },
-  //     }),
-  //   }
-  // }, [])
-
-  // // Используем ref для loadedVideos вместо useState
-  // const loadedVideosRef = useRef<Record<string, boolean>>({})
-
-  // // Проксируем доступ к loadedVideos через глобальный кэш
-  // const loadedVideos = useMemo(() => {
-  //   return new Proxy({} as Record<string, boolean>, {
-  //     get: (_, key: string) => {
-  //       return globalLoadedVideosCache.get(key as string) || false
-  //     },
-  //     set: (_, key: string, value: boolean) => {
-  //       globalLoadedVideosCache.set(key as string, value)
-  //       loadedVideosRef.current[key] = value
-  //       return true
-  //     },
-  //   })
-  // }, [])
-
-  // const setLoadedVideos = useCallback((updater: React.SetStateAction<Record<string, boolean>>) => {
-  //   if (typeof updater === "function") {
-  //     const currentState: Record<string, boolean> = {}
-  //     globalLoadedVideosCache.forEach((value, key) => {
-  //       currentState[key] = value
-  //     })
-  //     const newState = updater(currentState)
-  //     Object.entries(newState).forEach(([key, value]) => {
-  //       globalLoadedVideosCache.set(key, value)
-  //       loadedVideosRef.current[key] = value
-  //     })
-  //   } else {
-  //     Object.entries(updater).forEach(([key, value]) => {
-  //       globalLoadedVideosCache.set(key, value)
-  //       loadedVideosRef.current[key] = value
-  //     })
-  //   }
-  // }, [])
-
-  // const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
-  //   {},
-  // )
-
-  // const handleMouseMove = useCallback(
-  //   (e: React.MouseEvent<HTMLDivElement>, fileId: string, duration: number, streamIndex = 0) => {
-  //     const mediaElement =
-  //       e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)?.parentElement ||
-  //       e.currentTarget
-  //     if (!mediaElement) return
-
-  //     const rect = mediaElement.getBoundingClientRect()
-  //     if (e.clientX < rect.left || e.clientX > rect.right) {
-  //       setHoverTimes((prev) => ({
-  //         ...prev,
-  //         [fileId]: {
-  //           ...(prev[fileId] || {}),
-  //           [streamIndex]: null as any,
-  //         },
-  //       }))
-  //       return
-  //     }
-
-  //     const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
-  //     const percentage = x / rect.width
-  //     const time = percentage * duration
-
-  //     if (Number.isFinite(time)) {
-  //       setHoverTimes((prev) => ({
-  //         ...prev,
-  //         [fileId]: {
-  //           ...(prev[fileId] || {}),
-  //           [streamIndex]: time,
-  //         },
-  //       }))
-  //       const videoElement = videoRefs.current[`${fileId}-${streamIndex}`]
-  //       if (videoElement) {
-  //         videoElement.currentTime = time
-  //       }
-  //     }
-  //   },
-  //   [videoRefs],
-  // )
-
-  // const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
-  //   videoRefs,
-  // })
-
-  // Используем useMemo для сортировки медиафайлов, чтобы не пересортировывать при каждом рендере
   // Фильтрация и сортировка
   const filteredAndSortedMedia = useMemo(() => {
     // Сначала фильтрация
@@ -924,21 +786,6 @@ export const MediaFileList = memo(function MediaFileList({
     [media, addFilesToTimeline],
   )
 
-  // // Функция для предзагрузки всех видео
-  // const preloadAllVideos = useCallback(() => {
-  //   Object.entries(videoRefs.current).forEach(([key, video]) => {
-  //     if (video && !loadedVideos[key]) {
-  //       video.load()
-  //       setLoadedVideos((prev) => ({ ...prev, [key]: true }))
-  //     }
-  //   })
-  // }, [videoRefs, loadedVideos])
-
-  // // Предзагружаем все видео при монтировании компонента
-  // useEffect(() => {
-  //   preloadAllVideos()
-  // }, [preloadAllVideos])
-
   if (isLoading) {
     return (
       <div className="flex flex-col overflow-hidden">
@@ -982,8 +829,6 @@ export const MediaFileList = memo(function MediaFileList({
 
     const renderFile = (file: MediaFile) => {
       const fileId = file.id || file.path || file.name
-      const duration = file.probeData?.format.duration || 1
-      const isAudio = getFileType(file) === "audio"
       const isAdded = Boolean(file.path && includedFiles.map((f) => f.path).includes(file.path))
 
       switch (viewMode) {
@@ -1022,7 +867,7 @@ export const MediaFileList = memo(function MediaFileList({
               width: `${((previewSize * 16) / 9).toFixed(0)}px`,
             }}
           >
-            <div className="relative flex-1 flex-col w-full flex-grow">
+            <div className="relative flex-1 flex-row w-full flex-grow">
               <MediaPreview
                 file={file}
                 onAddMedia={handleAddMedia}
@@ -1121,11 +966,6 @@ export const MediaFileList = memo(function MediaFileList({
       <div className="p-2 space-y-4">{groupedFiles.map((group, index) => renderGroup(group))}</div>
     )
   }
-
-  // console.log("[MediaFileList] Rendering media list with:", {
-  //   mediaCount: media.length,
-  //   filteredCount: filteredAndSortedMedia.length,
-  // })
 
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden">

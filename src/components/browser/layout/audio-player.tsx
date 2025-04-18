@@ -12,6 +12,17 @@ interface AudioPlayerProps {
   onAdd?: () => void
 }
 
+/**
+ * Компонент для воспроизведения аудиофайла
+ *
+ * @param title - Заголовок аудиофайла
+ * @param duration - Длительность аудиофайла
+ * @param coverUrl - URL обложки аудиофайла
+ * @param isPlaying - Флаг, указывающий на то, воспроизводится ли аудиофайл
+ * @param onPlay - Callback для воспроизведения аудиофайла
+ * @param onPause - Callback для паузы аудиофайла
+ * @param onAdd - Callback для добавления аудиофайла в список
+ */
 export function AudioPlayer({
   title,
   duration,

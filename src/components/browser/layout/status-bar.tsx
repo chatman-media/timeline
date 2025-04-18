@@ -14,6 +14,17 @@ interface StatusBarProps {
   addedFiles: MediaFile[]
 }
 
+/**
+ * Компонент для отображения статуса браузера
+ *
+ * @param media - Массив медиа-файлов
+ * @param onAddAllVideoFiles - Callback для добавления всех видеофайлов
+ * @param onAddAllAudioFiles - Callback для добавления всех аудиофайлов
+ * @param onAddDateFiles - Callback для добавления видеофайлов за определенную дату
+ * @param onAddAllFiles - Callback для добавления всех файлов
+ * @param sortedDates - Массив отсортированных дат и соответствующих им файлов
+ * @param addedFiles - Массив добавленных файлов
+ */
 export function StatusBar({
   media,
   onAddAllVideoFiles,

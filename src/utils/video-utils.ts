@@ -135,33 +135,28 @@ export const getNextVolumeState = (currentVolume: number): VolumeState => {
  * @returns Ширину контейнера
  */
 export const calculateWidth = (
-  widthValue: number,
-  heightValue: number,
-  size: number,
-  rotation?: number | string | undefined | null,
+  width: number,
+  height: number,
+  containerHeight: number,
+  rotation?: number,
+  totalStreams: number = 1
 ): number => {
-  // Для режима миниатюр рассчитываем с учетом реальных пропорций, но с ограничением
-  const maxAspectRatio = 2.35 // Максимальное соотношение 2.35:1 (широкоэкранное кино)
-  const defaultAspectRatio = 16 / 9 // По умолчанию 16:9
+  // Если нет размеров, возвращаем высоту контейнера
+  if (!width || !height) return containerHeight
 
-  // Учитываем поворот
-  const rotationNum = typeof rotation === "string" ? parseFloat(rotation) : rotation || 0
-  const isRotated = Math.abs(rotationNum) === 90 || Math.abs(rotationNum) === 270
-
-  // Если повернуто на 90 или 270 градусов, меняем местами ширину и высоту
-  const actualWidth = isRotated ? heightValue : widthValue
-  const actualHeight = isRotated ? widthValue : heightValue
-
-  if (!actualWidth || !actualHeight) {
-    return size * defaultAspectRatio
+  // Учитываем поворот видео
+  if (rotation === 90 || rotation === 270) {
+    [width, height] = [height, width]
   }
 
-  const aspectRatio = actualWidth / actualHeight
+  // Если больше одного потока, делим ширину пополам
+  // if (totalStreams > 1) {
+  //   return containerHeight * (16 / 9) / 2 // Делим 16:9 пополам для каждого потока
+  // }
 
-  // Ограничиваем соотношение сторон максимальным значением
-  const limitedRatio = Math.min(aspectRatio, maxAspectRatio)
-
-  return size * limitedRatio
+  // Для одного потока используем оригинальное соотношение сторон
+  const aspectRatio = width / height
+  return containerHeight * aspectRatio
 }
 
 /**
