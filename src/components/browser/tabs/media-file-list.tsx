@@ -467,112 +467,112 @@ export const MediaFileList = memo(function MediaFileList({
   )
 
   // Используем реф для хранения ссылок на элементы видео
-  const videoRefsObj = useRef<Record<string, HTMLVideoElement | null>>({})
+  // const videoRefsObj = useRef<Record<string, HTMLVideoElement | null>>({})
 
-  // Создаем проксированный объект, который будет проксировать обращения к глобальному кэшу
-  const videoRefs = useMemo(() => {
-    return {
-      current: new Proxy({} as Record<string, HTMLVideoElement | null>, {
-        get: (_, key: string) => {
-          return globalVideoCache.get(key) || null
-        },
-        set: (_, key: string, value: HTMLVideoElement | null) => {
-          if (value) {
-            globalVideoCache.set(key, value)
-            // Предзагружаем видео при добавлении в кэш
-            // value.load()
-            // Обновляем состояние загрузки без перерисовки
-            globalLoadedVideosCache.set(key, true)
-          }
-          return true
-        },
-      }),
-    }
-  }, [])
+  // // Создаем проксированный объект, который будет проксировать обращения к глобальному кэшу
+  // const videoRefs = useMemo(() => {
+  //   return {
+  //     current: new Proxy({} as Record<string, HTMLVideoElement | null>, {
+  //       get: (_, key: string) => {
+  //         return globalVideoCache.get(key) || null
+  //       },
+  //       set: (_, key: string, value: HTMLVideoElement | null) => {
+  //         if (value) {
+  //           globalVideoCache.set(key, value)
+  //           // Предзагружаем видео при добавлении в кэш
+  //           // value.load()
+  //           // Обновляем состояние загрузки без перерисовки
+  //           globalLoadedVideosCache.set(key, true)
+  //         }
+  //         return true
+  //       },
+  //     }),
+  //   }
+  // }, [])
 
-  // Используем ref для loadedVideos вместо useState
-  const loadedVideosRef = useRef<Record<string, boolean>>({})
+  // // Используем ref для loadedVideos вместо useState
+  // const loadedVideosRef = useRef<Record<string, boolean>>({})
 
-  // Проксируем доступ к loadedVideos через глобальный кэш
-  const loadedVideos = useMemo(() => {
-    return new Proxy({} as Record<string, boolean>, {
-      get: (_, key: string) => {
-        return globalLoadedVideosCache.get(key as string) || false
-      },
-      set: (_, key: string, value: boolean) => {
-        globalLoadedVideosCache.set(key as string, value)
-        loadedVideosRef.current[key] = value
-        return true
-      },
-    })
-  }, [])
+  // // Проксируем доступ к loadedVideos через глобальный кэш
+  // const loadedVideos = useMemo(() => {
+  //   return new Proxy({} as Record<string, boolean>, {
+  //     get: (_, key: string) => {
+  //       return globalLoadedVideosCache.get(key as string) || false
+  //     },
+  //     set: (_, key: string, value: boolean) => {
+  //       globalLoadedVideosCache.set(key as string, value)
+  //       loadedVideosRef.current[key] = value
+  //       return true
+  //     },
+  //   })
+  // }, [])
 
-  const setLoadedVideos = useCallback((updater: React.SetStateAction<Record<string, boolean>>) => {
-    if (typeof updater === "function") {
-      const currentState: Record<string, boolean> = {}
-      globalLoadedVideosCache.forEach((value, key) => {
-        currentState[key] = value
-      })
-      const newState = updater(currentState)
-      Object.entries(newState).forEach(([key, value]) => {
-        globalLoadedVideosCache.set(key, value)
-        loadedVideosRef.current[key] = value
-      })
-    } else {
-      Object.entries(updater).forEach(([key, value]) => {
-        globalLoadedVideosCache.set(key, value)
-        loadedVideosRef.current[key] = value
-      })
-    }
-  }, [])
+  // const setLoadedVideos = useCallback((updater: React.SetStateAction<Record<string, boolean>>) => {
+  //   if (typeof updater === "function") {
+  //     const currentState: Record<string, boolean> = {}
+  //     globalLoadedVideosCache.forEach((value, key) => {
+  //       currentState[key] = value
+  //     })
+  //     const newState = updater(currentState)
+  //     Object.entries(newState).forEach(([key, value]) => {
+  //       globalLoadedVideosCache.set(key, value)
+  //       loadedVideosRef.current[key] = value
+  //     })
+  //   } else {
+  //     Object.entries(updater).forEach(([key, value]) => {
+  //       globalLoadedVideosCache.set(key, value)
+  //       loadedVideosRef.current[key] = value
+  //     })
+  //   }
+  // }, [])
 
-  const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
-    {},
-  )
+  // const [hoverTimes, setHoverTimes] = useState<Record<string, { [streamIndex: number]: number }>>(
+  //   {},
+  // )
 
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>, fileId: string, duration: number, streamIndex = 0) => {
-      const mediaElement =
-        e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)?.parentElement ||
-        e.currentTarget
-      if (!mediaElement) return
+  // const handleMouseMove = useCallback(
+  //   (e: React.MouseEvent<HTMLDivElement>, fileId: string, duration: number, streamIndex = 0) => {
+  //     const mediaElement =
+  //       e.currentTarget.querySelector(`[data-stream="${streamIndex}"]`)?.parentElement ||
+  //       e.currentTarget
+  //     if (!mediaElement) return
 
-      const rect = mediaElement.getBoundingClientRect()
-      if (e.clientX < rect.left || e.clientX > rect.right) {
-        setHoverTimes((prev) => ({
-          ...prev,
-          [fileId]: {
-            ...(prev[fileId] || {}),
-            [streamIndex]: null as any,
-          },
-        }))
-        return
-      }
+  //     const rect = mediaElement.getBoundingClientRect()
+  //     if (e.clientX < rect.left || e.clientX > rect.right) {
+  //       setHoverTimes((prev) => ({
+  //         ...prev,
+  //         [fileId]: {
+  //           ...(prev[fileId] || {}),
+  //           [streamIndex]: null as any,
+  //         },
+  //       }))
+  //       return
+  //     }
 
-      const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
-      const percentage = x / rect.width
-      const time = percentage * duration
+  //     const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left))
+  //     const percentage = x / rect.width
+  //     const time = percentage * duration
 
-      if (Number.isFinite(time)) {
-        setHoverTimes((prev) => ({
-          ...prev,
-          [fileId]: {
-            ...(prev[fileId] || {}),
-            [streamIndex]: time,
-          },
-        }))
-        const videoElement = videoRefs.current[`${fileId}-${streamIndex}`]
-        if (videoElement) {
-          videoElement.currentTime = time
-        }
-      }
-    },
-    [videoRefs],
-  )
+  //     if (Number.isFinite(time)) {
+  //       setHoverTimes((prev) => ({
+  //         ...prev,
+  //         [fileId]: {
+  //           ...(prev[fileId] || {}),
+  //           [streamIndex]: time,
+  //         },
+  //       }))
+  //       const videoElement = videoRefs.current[`${fileId}-${streamIndex}`]
+  //       if (videoElement) {
+  //         videoElement.currentTime = time
+  //       }
+  //     }
+  //   },
+  //   [videoRefs],
+  // )
 
-  const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
-    videoRefs,
-  })
+  // const { setPlayingFileId, handlePlayPause, handleMouseLeave } = useVideoPlayer({
+  //   videoRefs,
+  // })
 
   // Используем useMemo для сортировки медиафайлов, чтобы не пересортировывать при каждом рендере
   // Фильтрация и сортировка
@@ -921,23 +921,23 @@ export const MediaFileList = memo(function MediaFileList({
         addFilesToTimeline([file])
       }
     },
-    [media, addFilesToTimeline, videoRefs],
+    [media, addFilesToTimeline],
   )
 
-  // Функция для предзагрузки всех видео
-  const preloadAllVideos = useCallback(() => {
-    Object.entries(videoRefs.current).forEach(([key, video]) => {
-      if (video && !loadedVideos[key]) {
-        video.load()
-        setLoadedVideos((prev) => ({ ...prev, [key]: true }))
-      }
-    })
-  }, [videoRefs, loadedVideos])
+  // // Функция для предзагрузки всех видео
+  // const preloadAllVideos = useCallback(() => {
+  //   Object.entries(videoRefs.current).forEach(([key, video]) => {
+  //     if (video && !loadedVideos[key]) {
+  //       video.load()
+  //       setLoadedVideos((prev) => ({ ...prev, [key]: true }))
+  //     }
+  //   })
+  // }, [videoRefs, loadedVideos])
 
-  // Предзагружаем все видео при монтировании компонента
-  useEffect(() => {
-    preloadAllVideos()
-  }, [preloadAllVideos])
+  // // Предзагружаем все видео при монтировании компонента
+  // useEffect(() => {
+  //   preloadAllVideos()
+  // }, [preloadAllVideos])
 
   if (isLoading) {
     return (
@@ -1000,17 +1000,6 @@ export const MediaFileList = memo(function MediaFileList({
             <div className="relative h-full flex-shrink-0 flex gap-1 mr-3">
               <MediaPreview
                 file={file}
-                fileId={fileId}
-                duration={duration}
-                isAudio={isAudio}
-                videoRefs={videoRefs}
-                loadedVideos={loadedVideos}
-                setLoadedVideos={setLoadedVideos}
-                hoverTimes={hoverTimes}
-                handleMouseMove={handleMouseMove}
-                handlePlayPause={handlePlayPause}
-                handleMouseLeave={handleMouseLeave}
-                setPlayingFileId={setPlayingFileId}
                 onAddMedia={handleAddMedia}
                 isAdded={isAdded}
                 size={previewSize}
@@ -1036,17 +1025,6 @@ export const MediaFileList = memo(function MediaFileList({
             <div className="relative flex-1 flex-col w-full flex-grow">
               <MediaPreview
                 file={file}
-                fileId={fileId}
-                duration={duration}
-                isAudio={isAudio}
-                videoRefs={videoRefs}
-                loadedVideos={loadedVideos}
-                setLoadedVideos={setLoadedVideos}
-                hoverTimes={hoverTimes}
-                handleMouseMove={handleMouseMove}
-                handlePlayPause={handlePlayPause}
-                handleMouseLeave={handleMouseLeave}
-                setPlayingFileId={setPlayingFileId}
                 onAddMedia={handleAddMedia}
                 isAdded={isAdded}
                 size={previewSize}
@@ -1068,17 +1046,6 @@ export const MediaFileList = memo(function MediaFileList({
           >
             <MediaPreview
               file={file}
-              fileId={fileId}
-              duration={duration}
-              isAudio={isAudio}
-              videoRefs={videoRefs}
-              loadedVideos={loadedVideos}
-              setLoadedVideos={setLoadedVideos}
-              hoverTimes={hoverTimes}
-              handleMouseMove={handleMouseMove}
-              handlePlayPause={handlePlayPause}
-              handleMouseLeave={handleMouseLeave}
-              setPlayingFileId={setPlayingFileId}
               onAddMedia={handleAddMedia}
               isAdded={isAdded}
               size={previewSize}

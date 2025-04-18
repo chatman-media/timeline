@@ -24,7 +24,6 @@ export function useMedia() {
         return Boolean(file.isVideo || file.isAudio || file.isImage)
       })
 
-      // Сохраняем валидные медиа-файлы в состояние
       setMedia(validMedia)
       return validMedia
     } catch (error) {

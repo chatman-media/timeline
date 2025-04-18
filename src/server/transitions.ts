@@ -7,7 +7,7 @@ export async function generateTransition(
   targetVideo: string,
   transition: TransitionEffect,
   params: Record<string, any>,
-) {
+): Promise<{ status: "success" | "error"; outputPath?: string; error?: string }> {
   const outputPath = `output_${Date.now()}.mp4`
 
   // Получаем информацию о видео через ffprobe
@@ -37,7 +37,7 @@ export async function generateTransition(
 }
 
 // Вспомогательная функция для получения информации о видео
-async function getVideoInfo(videoPath: string) {
+async function getVideoInfo(videoPath: string): Promise<any> {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(videoPath, (err, metadata) => {
       if (err) reject(err)

@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react"
 interface PreviewTimelineProps {
   time: number
   duration: number
-  videoRef?: HTMLVideoElement | null
+  videoRef?: HTMLVideoElement | null | HTMLAudioElement | undefined
 }
 
 export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelineProps) {
@@ -73,7 +73,7 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
         videoRef.removeEventListener("mousemove", handleMouseMove)
       }
     }
-  }, [videoRef]) // Зависимость только от videoRef
+  }, [videoRef]) // Убираем displayTime из зависимостей
 
   // Защита от деления на ноль
   const positionPercent = duration > 0 ? (displayTime / duration) * 100 : 0

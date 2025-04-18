@@ -125,3 +125,53 @@ export const getNextVolumeState = (currentVolume: number): VolumeState => {
   if (currentVolume === VolumeState.HALF) return VolumeState.MUTED
   return VolumeState.FULL
 }
+
+/**
+ * Вычисляет ширину контейнера с учетом ограничений соотношения сторон
+ * @param widthValue - Ширина видео
+ * @param heightValue - Высота видео
+ * @param size - Размер контейнера
+ * @param rotation - Поворот видео
+ * @returns Ширину контейнера
+ */
+export const calculateWidth = (
+  widthValue: number,
+  heightValue: number,
+  size: number,
+  rotation?: number | string | undefined | null,
+): number => {
+  // Для режима миниатюр рассчитываем с учетом реальных пропорций, но с ограничением
+  const maxAspectRatio = 2.35 // Максимальное соотношение 2.35:1 (широкоэкранное кино)
+  const defaultAspectRatio = 16 / 9 // По умолчанию 16:9
+
+  // Учитываем поворот
+  const rotationNum = typeof rotation === "string" ? parseFloat(rotation) : rotation || 0
+  const isRotated = Math.abs(rotationNum) === 90 || Math.abs(rotationNum) === 270
+
+  // Если повернуто на 90 или 270 градусов, меняем местами ширину и высоту
+  const actualWidth = isRotated ? heightValue : widthValue
+  const actualHeight = isRotated ? widthValue : heightValue
+
+  if (!actualWidth || !actualHeight) {
+    return size * defaultAspectRatio
+  }
+
+  const aspectRatio = actualWidth / actualHeight
+
+  // Ограничиваем соотношение сторон максимальным значением
+  const limitedRatio = Math.min(aspectRatio, maxAspectRatio)
+
+  return size * limitedRatio
+}
+
+/**
+ * Парсит поворот
+ * @param rotation - Поворот
+ * @returns Поворот
+ */
+export const parseRotation = (rotation?: string | number): number | undefined => {
+  if (rotation === undefined) return undefined
+  if (typeof rotation === "number") return rotation
+  const parsed = parseInt(rotation, 10)
+  return isNaN(parsed) ? undefined : parsed
+}

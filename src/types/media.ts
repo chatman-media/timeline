@@ -23,6 +23,13 @@ export interface MediaFile {
     height: number
     bitrate: number
   }
+  lrv?: {
+    path: string
+    width: number
+    height: number
+    duration: number
+    probeData?: FfprobeData
+  }
 }
 
 export interface FileGroup {

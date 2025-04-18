@@ -38,27 +38,25 @@ export function getRemainingFilesForDate(
   dateInfo: { date: string; files: MediaFile[] },
   addedFiles: Set<string>,
 ): MediaFile[] {
-  const isVideoWithAudio = (file: MediaFile) => {
+  const isVideoWithAudio = (file: MediaFile): boolean => {
     const hasVideo = file.probeData?.streams?.some((s) => s.codec_type === "video")
     const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
     console.log(`[getRemainingFilesForDate] ${file.name}: video=${hasVideo}, audio=${hasAudio}`)
-    return hasVideo && hasAudio
+    return !!hasVideo
   }
 
-  return dateInfo.files.filter(
-    (file) => !addedFiles.has(file.path) && isVideoWithAudio(file)
-  )
+  return dateInfo.files.filter((file) => !addedFiles.has(file.path) && isVideoWithAudio(file))
 }
 
 export function getTopDateWithRemainingFiles(
   sortedDates: { date: string; files: MediaFile[] }[],
   addedFiles: Set<string>,
 ): { date: string; files: MediaFile[]; remainingFiles: MediaFile[] } | undefined {
-  const isVideoWithAudio = (file: MediaFile) => {
+  const isVideoWithAudio = (file: MediaFile): boolean => {
     const hasVideo = file.probeData?.streams?.some((s) => s.codec_type === "video")
     const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
     console.log(`[getTopDateWithRemainingFiles] ${file.name}: video=${hasVideo}, audio=${hasAudio}`)
-    return hasVideo && hasAudio
+    return !!hasVideo
   }
 
   const datesByFileCount = [...sortedDates].sort((a, b) => {
@@ -71,15 +69,15 @@ export function getTopDateWithRemainingFiles(
     .map((dateInfo) => ({
       ...dateInfo,
       remainingFiles: dateInfo.files.filter(
-        (file) => !addedFiles.has(file.path) && isVideoWithAudio(file)
+        (file) => !addedFiles.has(file.path) && isVideoWithAudio(file),
       ),
     }))
     .find((dateInfo) => dateInfo.remainingFiles.length > 0)
 
-  console.log('[getTopDateWithRemainingFiles] Result:', {
+  console.log("[getTopDateWithRemainingFiles] Result:", {
     date: result?.date,
     remainingFilesCount: result?.remainingFiles.length,
-    files: result?.remainingFiles.map(f => f.name)
+    files: result?.remainingFiles.map((f) => f.name),
   })
 
   return result

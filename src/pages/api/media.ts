@@ -25,7 +25,10 @@ const PROXY_SETTINGS = {
 
 async function generateProxyFile(sourcePath: string): Promise<string | null> {
   try {
-    const proxyFileName = `proxy-${path.basename(sourcePath)}`
+    // Изменяем расширение на .mp4 для прокси-файла
+    const sourceExt = path.extname(sourcePath)
+    const sourceBaseName = path.basename(sourcePath, sourceExt)
+    const proxyFileName = `proxy-${sourceBaseName}.mp4`
     const proxyPath = path.join(process.cwd(), "public", "proxies", proxyFileName)
 
     // Проверяем, существует ли уже прокси-файл
@@ -64,10 +67,20 @@ export default async function handler(
     await fs.mkdir(mediaDir, { recursive: true })
 
     console.log("[API] Читаю директорию:", mediaDir)
-    const videoFiles = await fs.readdir(mediaDir)
+    const allFiles = await fs.readdir(mediaDir)
     // console.log("[API] Найдено файлов:", videoFiles)
 
-    const mediaPromises = videoFiles.map(async (filename) => {
+    // Создаем Map для хранения LRV файлов
+    const lrvFiles = new Map<string, string>()
+    // Сначала собираем все LRV файлы
+    allFiles.forEach((filename) => {
+      if (filename.toLowerCase().endsWith(".lrv")) {
+        const baseFileName = filename.slice(0, -4) // убираем .lrv
+        lrvFiles.set(baseFileName, filename)
+      }
+    })
+
+    const mediaPromises = allFiles.map(async (filename) => {
       const filePath = path.join(mediaDir, filename)
       const stats = await fs.stat(filePath)
       const fileType = path.extname(filename).toLowerCase()
@@ -83,8 +96,8 @@ export default async function handler(
           ".heic",
           ".heif",
           ".arw",
-          "hif",
-          "hevc",
+          ".hif",
+          ".hevc",
         ].includes(fileType)
       ) {
         return {
@@ -146,6 +159,27 @@ export default async function handler(
             `[API] Время создания файла ${filename}: ${new Date(creationTime * 1000).toISOString()}`,
           )
 
+          // Проверяем наличие LRV файла
+          const baseFileName = path.basename(filename, fileType)
+          const lrvFileName = lrvFiles.get(baseFileName)
+          let lrvData = null
+
+          if (lrvFileName) {
+            const lrvPath = path.join(mediaDir, lrvFileName)
+            try {
+              const lrvProbeData = (await ffprobeAsync(lrvPath)) as FfprobeData
+              lrvData = {
+                path: `/media/${lrvFileName}`,
+                width: lrvProbeData.streams[0]?.width || 0,
+                height: lrvProbeData.streams[0]?.height || 0,
+                duration: lrvProbeData.format.duration || 0,
+                probeData: lrvProbeData,
+              }
+            } catch (error) {
+              console.error(`[API] Ошибка при обработке LRV файла ${lrvFileName}:`, error)
+            }
+          }
+
           const mediaFile: MediaFile = {
             id: path.basename(filename, path.extname(filename)),
             name: filename,
@@ -171,7 +205,10 @@ export default async function handler(
                 bitrate: parseInt(PROXY_SETTINGS.bitrate),
               }
               : undefined,
+            lrv: lrvData ?? undefined,
           }
+
+          console.log(`[API] probeData.streams: ${JSON.stringify(probeData.streams)}`)
 
           return mediaFile
         } catch (error) {
