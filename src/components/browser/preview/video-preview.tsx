@@ -3,7 +3,6 @@ import { memo, useCallback, useRef, useState } from "react"
 
 import { formatDuration, formatResolution } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
-import { isHorizontalVideo } from "@/utils/media-utils"
 import { calculateWidth, parseRotation } from "@/utils/video-utils"
 
 import { PreviewTimeline } from ".."
@@ -19,6 +18,8 @@ interface VideoPreviewProps {
   /** Соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9] */
   dimensions?: [number, number]
 }
+
+const ICON_SIZES = [3.5, 4, 5]
 
 /**
  * Предварительный просмотр видеофайла
@@ -51,19 +52,20 @@ export const VideoPreview = memo(function VideoPreview({
   const [isPlaying, setIsPlaying] = useState(false)
   const [hoverTime, setHoverTime] = useState<number | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
-  const videoRef = useRef<HTMLVideoElement>(null)
+  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({})
 
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+    (e: React.MouseEvent<HTMLDivElement>, streamIndex: number) => {
       const rect = e.currentTarget.getBoundingClientRect()
       const x = e.clientX - rect.left
       const percentage = x / rect.width
       const newTime = percentage * (file.duration || 0)
       setHoverTime(newTime)
 
-      // Только обновляем время без остановки воспроизведения
-      if (videoRef.current) {
-        videoRef.current.currentTime = newTime
+      const videoRef = videoRefs.current[streamIndex]
+      if (videoRef) {
+        console.log("Setting time:", newTime, "for stream:", streamIndex)
+        videoRef.currentTime = newTime
       }
     },
     [file.duration],
@@ -72,8 +74,8 @@ export const VideoPreview = memo(function VideoPreview({
   const handleMouseLeave = useCallback(() => {
     setHoverTime(null)
     // При уходе мыши останавливаем воспроизведение
-    if (videoRef.current && isPlaying) {
-      videoRef.current.pause()
+    if (videoRefs.current[0] && isPlaying) {
+      videoRefs.current[0]?.pause()
       setIsPlaying(false)
     }
   }, [isPlaying])
@@ -84,17 +86,20 @@ export const VideoPreview = memo(function VideoPreview({
   }, [])
 
   const handlePlayPause = useCallback(
-    (e: React.MouseEvent) => {
+    (e: React.MouseEvent, streamIndex: number) => {
       e.preventDefault()
-      if (!videoRef.current) return
+      const videoRef = videoRefs.current[streamIndex]
+      if (!videoRef) return
+
+      console.log("Play/Pause clicked for stream:", streamIndex, "current state:", isPlaying)
 
       if (isPlaying) {
-        videoRef.current.pause()
+        videoRef.pause()
       } else {
         if (hoverTime !== null) {
-          videoRef.current.currentTime = hoverTime
+          videoRef.currentTime = hoverTime
         }
-        videoRef.current.play()
+        videoRef.play()
       }
       setIsPlaying(!isPlaying)
     },
@@ -105,144 +110,183 @@ export const VideoPreview = memo(function VideoPreview({
     <>
       {file.probeData?.streams
         ?.filter((stream) => stream.codec_type === "video")
-        .map((stream, index) => (
-          <div
-            key={index}
-            className="flex-shrink-0 relative"
-            style={{
-              height: `${size}px`,
-              width: `${calculateWidth(
-                stream.width || 0,
-                stream.height || 0,
-                size,
-                parseRotation(stream.rotation),
-              )}px`,
-            }}
-            onClick={handlePlayPause}
-          >
+        .map((stream, index) => {
+          console.log(
+            "Rendering stream:",
+            index,
+            "with URL:",
+            file.lrv?.path ||
+              file.proxy?.path ||
+              (file.path.endsWith(".insv") ? `${file.path}?stream=${index}` : file.path),
+          )
+          return (
             <div
-              className="relative w-full h-full"
-              onMouseMove={handleMouseMove}
-              onMouseLeave={handleMouseLeave}
-              onMouseEnter={handleMouseEnter}
+              key={index}
+              className="flex-shrink-0 relative"
+              style={{
+                height: `${size}px`,
+                width: `${calculateWidth(
+                  stream.width || 0,
+                  stream.height || 0,
+                  size,
+                  parseRotation(stream.rotation),
+                )}px`,
+              }}
+              onClick={(e) => handlePlayPause(e, index)}
             >
-              <video
-                ref={videoRef}
-                src={file.lrv?.path || file.proxy?.path || file.path}
-                preload="auto"
-                tabIndex={0}
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover focus:outline-none"
-                style={{
-                  transition: "opacity 0.2s ease-in-out",
-                }}
-                onEnded={() => {
-                  setIsPlaying(false)
-                }}
-                onPlay={(e) => {
-                  const video = e.currentTarget
-                  const currentTime = hoverTime
-                  if (currentTime !== undefined && currentTime !== null) {
-                    video.currentTime = currentTime
-                  }
-                }}
-                onError={(e) => {
-                  console.error("Video error:", e)
-                }}
-                onKeyDown={(e) => {
-                  if (e.code === "Space") {
-                    e.preventDefault()
-                    handlePlayPause(e as unknown as React.MouseEvent)
-                  }
-                }}
-                onLoadedData={() => setIsLoaded(true)}
-              />
-
-              {/* Номер в серии потоков если их больше одного */}
-              {file.probeData?.streams &&
-                file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
-                <div
-                  className={`absolute text-xs pointer-events-none leading-[16px] ${
-                    size > 100
-                      ? "bottom-1 left-[58px]"
-                      : size < 100
-                        ? "hidden"
-                        : "bottom-0.5 left-[42px]"
-                  } text-white bg-black/50 rounded-xs ${
-                    size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                  }`}
-                >
-                  {stream.index + 1}
-                </div>
-              )}
-
-              {/* Продолжительность видео */}
-              {!hideTime && (
-                <div
-                  className={`absolute text-xs pointer-events-none leading-[16px] ${
-                    size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"
-                  } text-white bg-black/50 rounded-xs ${
-                    size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                  }`}
-                >
-                  {formatDuration(file.duration || 0)}
-                </div>
-              )}
-
-              {/* Иконка видео */}
               <div
-                className={`absolute pointer-events-none ${
-                  size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"
-                } text-white bg-black/50 rounded-xs p-0.5`}
+                className="relative w-full h-full"
+                onMouseMove={(e) => handleMouseMove(e, index)}
+                onMouseLeave={handleMouseLeave}
+                onMouseEnter={handleMouseEnter}
               >
-                <Film size={size > 100 ? 16 : 12} />
-              </div>
+                <video
+                  ref={(el) => {
+                    videoRefs.current[index] = el
+                  }}
+                  src={
+                    file.lrv?.path ||
+                    file.proxy?.path ||
+                    (file.path.endsWith(".insv") ? `${file.path}?stream=${index}` : file.path)
+                  }
+                  preload="auto"
+                  tabIndex={0}
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover focus:outline-none"
+                  style={{
+                    transition: "opacity 0.2s ease-in-out",
+                  }}
+                  onEnded={() => {
+                    console.log("Video ended for stream:", index)
+                    setIsPlaying(false)
+                  }}
+                  onPlay={(e) => {
+                    console.log("Video playing for stream:", index)
+                    const video = e.currentTarget
+                    const currentTime = hoverTime
+                    if (currentTime !== undefined && currentTime !== null) {
+                      video.currentTime = currentTime
+                    }
+                  }}
+                  onTimeUpdate={(e) => {
+                    console.log(
+                      "Time update for stream:",
+                      index,
+                      "current time:",
+                      e.currentTarget.currentTime,
+                    )
+                  }}
+                  onError={(e) => {
+                    console.error("Video error for stream:", index, e)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.code === "Space") {
+                      e.preventDefault()
+                      handlePlayPause(e as unknown as React.MouseEvent, index)
+                    }
+                  }}
+                  onLoadedData={() => {
+                    console.log("Video loaded for stream:", index)
+                    setIsLoaded(true)
+                  }}
+                />
 
-              {/* Разрешение видео */}
-              {isLoaded && (
+                {/* Номер в серии потоков если их больше одного */}
+                {file.probeData?.streams &&
+                  file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
+                  <div
+                    className={`absolute text-xs pointer-events-none leading-[16px] ${
+                      size > 100
+                        ? "bottom-1 left-[58px]"
+                        : size < 100
+                          ? "hidden"
+                          : "bottom-0.5 left-[42px]"
+                    } text-white bg-black/50 rounded-xs ${
+                      size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
+                    }`}
+                  >
+                    {stream.index + 1}
+                  </div>
+                )}
+
+                {/* Продолжительность видео */}
+                {!hideTime && (
+                  <div
+                    className={`absolute text-xs pointer-events-none leading-[16px] ${
+                      size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"
+                    } text-white bg-black/50 rounded-xs ${
+                      size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
+                    }`}
+                  >
+                    {formatDuration(file.duration || 0)}
+                  </div>
+                )}
+
+                {/* Иконка видео */}
                 <div
                   className={`absolute pointer-events-none ${
-                    size > 100 ? "left-[28px]" : "left-[22px]"
-                  } bg-black/50 text-xs leading-[16px] rounded-xs ${size > 100 ? "bottom-1" : "bottom-0.5"} ${
-                    size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                  } mr-0.5 text-white`}
-                  style={{
-                    fontSize: size > 100 ? "14px" : "12px",
-                  }}
+                    size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"
+                  } text-white bg-black/50 rounded-xs p-0.5`}
                 >
-                  {formatResolution(stream.width || 0, stream.height || 0)}
+                  <Film size={size > 100 ? 16 : 12} />
                 </div>
-              )}
 
-              {/* Таймлайн видео */}
-              {hoverTime !== null && Number.isFinite(hoverTime) && (
-                <PreviewTimeline
-                  time={hoverTime}
-                  duration={file.duration || 0}
-                  videoRef={videoRef.current}
-                />
-              )}
+                {/* Разрешение видео */}
+                {isLoaded && (
+                  <div
+                    className={`absolute pointer-events-none ${
+                      size > 100 ? "left-[28px]" : "left-[22px]"
+                    } bg-black/50 text-xs leading-[16px] rounded-xs ${size > 100 ? "bottom-1" : "bottom-0.5"} ${
+                      size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
+                    } mr-0.5 text-white`}
+                    style={{
+                      fontSize: size > 100 ? "14px" : "12px",
+                    }}
+                  >
+                    {formatResolution(stream.width || 0, stream.height || 0)}
+                  </div>
+                )}
 
-              {/* Имя файла */}
-              {showFileName && (
-                <div
-                  className={`absolute font-medium ${size > 100 ? "top-1" : "top-0.5"} ${
-                    size > 100 ? "left-1" : "left-0.5"
-                  } ${
-                    size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                  } text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
-                >
-                  {file.name}
-                </div>
-              )}
+                {/* Таймлайн видео */}
+                {hoverTime !== null && Number.isFinite(hoverTime) && (
+                  <PreviewTimeline
+                    time={hoverTime}
+                    duration={file.duration || 0}
+                    videoRef={videoRefs.current[index]}
+                  />
+                )}
 
-              {/* Кнопка добавления */}
-              {onAddMedia && isLoaded && (
-                <AddMediaButton file={file} onAddMedia={onAddMedia} isAdded={isAdded} size={size} />
-              )}
+                {/* Имя файла */}
+                {showFileName && (
+                  <div
+                    className={`absolute font-medium ${size > 100 ? "top-1" : "top-0.5"} ${
+                      size > 100 ? "left-1" : "left-0.5"
+                    } ${
+                      size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
+                    } text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+                  >
+                    {file.name}
+                  </div>
+                )}
+
+                {/* Кнопка добавления */}
+                {onAddMedia &&
+                  isLoaded &&
+                  index ===
+                    (file.probeData?.streams?.filter((s) => s.codec_type === "video")?.length ||
+                      0) -
+                      1 && (
+                  <AddMediaButton
+                    file={file}
+                    onAddMedia={onAddMedia}
+                    isAdded={isAdded}
+                    size={size}
+                  />
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
     </>
   )
 })
