@@ -174,7 +174,7 @@ export const parseRotation = (rotation?: string | number): number | undefined =>
 export function calculateAdaptiveWidth(
   width: number,
   isMultipleStreams: boolean,
-  displayAspectRatio?: string
+  displayAspectRatio?: string,
 ): string {
   if (isMultipleStreams) {
     return `${(width / 9) * 8}px`
@@ -190,9 +190,9 @@ export function calculateAdaptiveWidth(
 
   // Для широкоформатного видео (2.35:1 или близко к этому)
   if (ratio > 2) {
-    return `${width * (16/9) / ratio}px`
+    return `${(width * (16 / 9)) / ratio}px`
   }
-  
+
   // Для вертикального видео (например, 9:16)
   if (w < h) {
     return `${(width * 16 * 16) / 9 / 9}px`

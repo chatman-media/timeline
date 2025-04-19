@@ -5,7 +5,7 @@ import { memo, useCallback, useRef, useState } from "react"
 import { formatDuration, formatResolution } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
 import { isHorizontalVideo } from "@/utils/media-utils"
-import { calculateWidth, parseRotation, calculateAdaptiveWidth } from "@/utils/video-utils"
+import { calculateAdaptiveWidth,calculateWidth, parseRotation } from "@/utils/video-utils"
 
 import { PreviewTimeline } from ".."
 import { AddMediaButton } from "./add-media-button"
@@ -142,18 +142,25 @@ export const VideoPreview = memo(function VideoPreview({
             const adptivedWidth = calculateAdaptiveWidth(
               width,
               isMultipleStreams,
-              stream.display_aspect_ratio
+              stream.display_aspect_ratio,
             )
             const [w, h] = stream.display_aspect_ratio?.split(":").map(Number)
             const ratio = w / h
-          
+
             return (
               <div
                 key={index}
                 className="flex-shrink-0 relative"
                 style={{
                   height: `${size}px`,
-                  width: (ratio > 1 ? (ignoreRatio ? width : adptivedWidth) : (isMultipleStreams && ignoreRatio ? width : adptivedWidth))
+                  width:
+                    ratio > 1
+                      ? ignoreRatio
+                        ? width
+                        : adptivedWidth
+                      : isMultipleStreams && ignoreRatio
+                        ? width
+                        : adptivedWidth,
                 }}
                 onClick={(e) => handlePlayPause(e, index)}
               >
