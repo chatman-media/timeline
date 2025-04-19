@@ -39,24 +39,39 @@ export const formatDuration = (seconds: number, afterComa = 3, showHours = false
 // Добавим вспомогательную функцию для форматирования разрешения
 export const formatResolution = (width: number, height: number) => {
   const pixels = width * height
-
-  // Определение стандартов разрешения для 6K и 8K
-  if (pixels >= 33177600) return "8K" // 7680x4320 = 33,177,600 pixels
-  if (pixels >= 19906560) return "6K" // 6144x3240 = 19,906,560 pixels
-
-  // Для 4K и ниже используем существующую логику с K-значениями
-  if (pixels >= 2073600) {
-    const k = pixels / (2000 * 1000)
-    // Значения K только до 4K
-    const kValues = [1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4, 2.7, 3.0, 3.2, 3.4, 3.6, 3.8, 4.0]
-    const closestK = kValues.reduce((prev, curr) =>
-      Math.abs(curr - k) < Math.abs(prev - k) ? curr : prev,
-    )
-    return `${closestK}K`
+  if (height > width) {
+    ;[width, height] = [height, width]
   }
+  console.log(`[formatResolution] width: ${width}, height: ${height}, pixels: ${pixels}`)
 
-  if (pixels >= 2073600) return "1080p" // 1920x1080
-  if (pixels >= 921600) return "720p" // 1280x720
+  // 1920 × 1080 (FHD)
+  if (width === 1920 && height === 1080) return "FHD"
+  // 2048 × 1080 (DCI 2K)
+  if (width === 2048 && height === 1080) return "DCI 2K"
+  // 2560 × 1440 (QHD)
+  if (width === 2560 && height === 1440) return "QHD"
+  // 3200 × 1800 (QHD+)
+  if (width === 3200 && height === 1800) return "QHD+"
+  // 3840 × 2160 (4K UHD)
+  if (width === 3840 && height === 2160) return "UHD"
+  // 4096 × 2160 (DCI 4K)
+  if (width === 4096 && height === 2160) return "DCI 4K"
+  // 5120 × 2880 = 14,745,600 pixels
+  if (width === 5120 && height === 2880) return "5K"
+  // 6144 × 3240 = 19,906,560 pixels
+  if (width === 6144 && height === 3240) return "6K"
+  // 7680 × 4320 = 33,177,600 pixels
+  if (width === 7680 && height === 4320) return "8K UHD"
+  // 7680 × 3264 = 25,280,000 pixels
+  if (pixels >= 24576000) return "8K UHD" // 7680x3264
+  if (pixels >= 19906560) return "6K" // 6144x3240
+  // 5120 × 2880 = 14,745,600 pixels
+  if (pixels >= 14745600) return "5K"
+  if (pixels >= 8294400) return "UHD" // 3840x2160
+  if (pixels >= 6048000) return "QHD+" // 3240x1800
+  if (pixels >= 4147200) return "QHD" // 2560x1440
+  if (pixels >= 2073600) return "FHD" // 1920x1080
+  if (pixels >= 921600) return "HD" // 1280x720
   return "SD"
 }
 

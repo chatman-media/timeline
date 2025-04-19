@@ -4,7 +4,6 @@ import {
   formatBitrate,
   formatDuration,
   formatFileSize,
-  formatResolution,
   formatTimeWithMilliseconds,
 } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
@@ -52,7 +51,8 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
                     {videoStream.width}x{videoStream.height}
                   </span>
                   <span className="text-gray-700 dark:text-gray-200 ml-3">
-                    {((videoStream.width * videoStream.height) / 1000000).toFixed(1)} MP
+                    {(((videoStream.width || 0) * (videoStream.height || 0)) / 1000000).toFixed(1)}{" "}
+                    MP
                   </span>
                   <span className="text-gray-700 dark:text-gray-200 ml-3">
                     {getAspectRatio(videoStream)}
