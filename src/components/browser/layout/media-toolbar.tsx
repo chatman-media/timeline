@@ -6,7 +6,7 @@ import {
   Filter,
   Folder,
   Grid,
-  Grid2x2,
+  LayoutDashboard,
   LayoutList,
   ListFilterPlus,
   Mic,
@@ -259,7 +259,7 @@ export function MediaToolbar({
                   )}
                   onClick={() => onViewModeChange("thumbnails")}
                 >
-                  <Grid2x2 size={16} />
+                  <LayoutDashboard size={16} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Миниатюры</TooltipContent>
