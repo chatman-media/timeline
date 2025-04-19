@@ -58,10 +58,13 @@ export const calculateRealDimensions = (
  * @param rotation - Угол поворота (опционально)
  * @returns true если видео горизонтальное
  */
-export const isHorizontalVideo = (width: number, height: number, rotation?: number): boolean => {
-  if (rotation && (Math.abs(rotation) === 90 || Math.abs(rotation) === 270)) {
-    return height > width
+export function isHorizontalVideo(width: number, height: number, rotation?: number): boolean {
+  // Если видео повернуто на 90 или 270 градусов, меняем местами ширину и высоту
+  if (rotation === 90 || rotation === -90 || rotation === 270) {
+    ;[width, height] = [height, width]
   }
+
+  // Видео считается горизонтальным, если его ширина больше высоты
   return width > height
 }
 

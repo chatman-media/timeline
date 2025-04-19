@@ -134,29 +134,26 @@ export const getNextVolumeState = (currentVolume: number): VolumeState => {
  * @param rotation - Поворот видео
  * @returns Ширину контейнера
  */
-export const calculateWidth = (
+export function calculateWidth(
   width: number,
   height: number,
   containerHeight: number,
   rotation?: number,
-  totalStreams: number = 1
-): number => {
+  totalStreams: number = 1,
+): number {
   // Если нет размеров, возвращаем высоту контейнера
   if (!width || !height) return containerHeight
 
-  // Учитываем поворот видео
+  // Для повернутого видео меняем местами ширину и высоту
+  let aspectRatio = width / height
   if (rotation === 90 || rotation === 270) {
-    [width, height] = [height, width]
+    aspectRatio = height / width
   }
 
-  // Если больше одного потока, делим ширину пополам
-  // if (totalStreams > 1) {
-  //   return containerHeight * (16 / 9) / 2 // Делим 16:9 пополам для каждого потока
-  // }
+  // Базовая ширина на основе соотношения сторон
+  const baseWidth = containerHeight * aspectRatio
 
-  // Для одного потока используем оригинальное соотношение сторон
-  const aspectRatio = width / height
-  return containerHeight * aspectRatio
+  return baseWidth
 }
 
 /**
@@ -169,4 +166,37 @@ export const parseRotation = (rotation?: string | number): number | undefined =>
   if (typeof rotation === "number") return rotation
   const parsed = parseInt(rotation, 10)
   return isNaN(parsed) ? undefined : parsed
+}
+
+/**
+ * Рассчитывает адаптивную ширину для видео с учетом соотношения сторон и режима отображения
+ */
+export function calculateAdaptiveWidth(
+  width: number,
+  isMultipleStreams: boolean,
+  displayAspectRatio?: string
+): string {
+  if (isMultipleStreams) {
+    return `${(width / 9) * 8}px`
+  }
+
+  // Если нет соотношения сторон, возвращаем обычную ширину
+  if (!displayAspectRatio) {
+    return `${width}px`
+  }
+
+  const [w, h] = displayAspectRatio.split(":").map(Number)
+  const ratio = w / h
+
+  // Для широкоформатного видео (2.35:1 или близко к этому)
+  if (ratio > 2) {
+    return `${width * (16/9) / ratio}px`
+  }
+  
+  // Для вертикального видео (например, 9:16)
+  if (w < h) {
+    return `${(width * 16 * 16) / 9 / 9}px`
+  }
+
+  return `${width}px`
 }

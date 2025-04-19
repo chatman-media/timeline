@@ -17,16 +17,17 @@ if (!dayjs.isDuration) {
 dayjs.extend(utc)
 dayjs.extend(timezone)
 
-export const formatDuration = (seconds: number, afterComa = 3): string => {
+export const formatDuration = (seconds: number, afterComa = 3, showHours = false): string => {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   const secs = Math.floor(seconds % 60)
   const ms = Math.floor((seconds % 1) * 1000)
 
-  const timeString =
-    hours > 0
-      ? `${hours}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
-      : `${minutes}:${secs.toString().padStart(2, "0")}`
+  if (showHours) {
+    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}${afterComa > 0 ? `:${ms.toString().padStart(3, "0").substring(0, afterComa)}` : ""}`
+  }
+
+  const timeString = `${minutes}:${secs.toString().padStart(2, "0")}`
 
   if (afterComa === 0) {
     return timeString

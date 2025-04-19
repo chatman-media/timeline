@@ -1,9 +1,11 @@
+import { log } from "console"
 import { Film } from "lucide-react"
 import { memo, useCallback, useRef, useState } from "react"
 
 import { formatDuration, formatResolution } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
-import { calculateWidth, parseRotation } from "@/utils/video-utils"
+import { isHorizontalVideo } from "@/utils/media-utils"
+import { calculateWidth, parseRotation, calculateAdaptiveWidth } from "@/utils/video-utils"
 
 import { PreviewTimeline } from ".."
 import { AddMediaButton } from "./add-media-button"
@@ -17,6 +19,8 @@ interface VideoPreviewProps {
   hideTime?: boolean
   /** Соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9] */
   dimensions?: [number, number]
+  /** Флаг для игнорирования соотношения сторон (по умолчанию false) */
+  ignoreRatio?: boolean
 }
 
 const ICON_SIZES = [3.5, 4, 5]
@@ -39,6 +43,7 @@ const ICON_SIZES = [3.5, 4, 5]
  * @param showFileName - Флаг для отображения имени файла (по умолчанию false)
  * @param hideTime - Флаг для скрытия времени (по умолчанию false)
  * @param dimensions - Соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9]
+ * @param ignoreRatio - Флаг для игнорирования соотношения сторон (по умолчанию false)
  */
 export const VideoPreview = memo(function VideoPreview({
   file,
@@ -48,6 +53,7 @@ export const VideoPreview = memo(function VideoPreview({
   showFileName = false,
   hideTime = false,
   dimensions,
+  ignoreRatio = false,
 }: VideoPreviewProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [hoverTime, setHoverTime] = useState<number | null>(null)
@@ -108,7 +114,7 @@ export const VideoPreview = memo(function VideoPreview({
 
   return (
     <>
-      <div className="flex flex-row w-full h-full">
+      <div className="flex items-center justify-center w-full h-full">
         {file.probeData?.streams
           ?.filter((stream) => stream.codec_type === "video")
           .map((stream, index) => {
@@ -121,7 +127,9 @@ export const VideoPreview = memo(function VideoPreview({
                 (file.path.endsWith(".insv") ? `${file.path}?stream=${index}` : file.path),
             )
 
-            const videoStreams = file.probeData?.streams?.filter((s) => s.codec_type === "video") ?? []
+            console.log(file.probeData?.streams)
+            const videoStreams =
+              file.probeData?.streams?.filter((s) => s.codec_type === "video") ?? []
             const isMultipleStreams = videoStreams?.length > 1
             const width = calculateWidth(
               stream.width || 0,
@@ -131,14 +139,21 @@ export const VideoPreview = memo(function VideoPreview({
               videoStreams?.length || 1,
             )
 
-
+            const adptivedWidth = calculateAdaptiveWidth(
+              width,
+              isMultipleStreams,
+              stream.display_aspect_ratio
+            )
+            const [w, h] = stream.display_aspect_ratio?.split(":").map(Number)
+            const ratio = w / h
+          
             return (
               <div
                 key={index}
                 className="flex-shrink-0 relative"
                 style={{
                   height: `${size}px`,
-                  width: isMultipleStreams ? `${width / 9*8}px` : `${width}px`,
+                  width: (ratio > 1 ? (ignoreRatio ? width : adptivedWidth) : (isMultipleStreams && ignoreRatio ? width : adptivedWidth))
                 }}
                 onClick={(e) => handlePlayPause(e, index)}
               >
@@ -154,7 +169,7 @@ export const VideoPreview = memo(function VideoPreview({
                     }}
                     src={
                       file.lrv?.path ||
-                      file.proxy?.path ||
+                      // file.proxy?.path ||
                       (file.path.endsWith(".insv") ? `${file.path}?stream=${index}` : file.path)
                     }
                     preload="auto"
@@ -222,7 +237,7 @@ export const VideoPreview = memo(function VideoPreview({
                   )}
 
                   {/* Продолжительность видео */}
-                  {!hideTime && (
+                  {!hideTime && !(isMultipleStreams && index === 0) && (
                     <div
                       className={`absolute text-xs pointer-events-none leading-[16px] ${
                         size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"
@@ -230,7 +245,7 @@ export const VideoPreview = memo(function VideoPreview({
                         size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
                       }`}
                     >
-                      {formatDuration(file.duration || 0)}
+                      {formatDuration(file.duration || 0, 0, true)}
                     </div>
                   )}
 
@@ -269,13 +284,13 @@ export const VideoPreview = memo(function VideoPreview({
                   )}
 
                   {/* Имя файла */}
-                  {showFileName && (
+                  {showFileName && !(isMultipleStreams && index !== 0) && (
                     <div
                       className={`absolute font-medium ${size > 100 ? "top-1" : "top-0.5"} ${
                         size > 100 ? "left-1" : "left-0.5"
                       } ${
                         size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                      } text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+                      } text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 ${isMultipleStreams ? "max-w-[100%]" : "max-w-[60%]"}`}
                     >
                       {file.name}
                     </div>

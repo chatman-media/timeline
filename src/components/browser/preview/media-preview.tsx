@@ -15,6 +15,8 @@ interface MediaPreviewProps {
   hideTime?: boolean
   /** Соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9] */
   dimensions?: [number, number]
+  /** Флаг для игнорирования соотношения сторон (по умолчанию false) */
+  ignoreRatio?: boolean
 }
 
 /**
@@ -34,6 +36,7 @@ interface MediaPreviewProps {
  * @param showFileName - Флаг для отображения имени файла
  * @param hideTime - Флаг для скрытия времени
  * @param dimensions - Соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9]
+ * @param ignoreRatio - Флаг для игнорирования соотношения сторон (по умолчанию false)
  */
 export const MediaPreview = memo(function MediaPreview({
   file,
@@ -43,6 +46,7 @@ export const MediaPreview = memo(function MediaPreview({
   showFileName = false,
   hideTime = false,
   dimensions = [16, 9],
+  ignoreRatio = false,
 }: MediaPreviewProps) {
   if (file.isVideo) {
     return (
@@ -54,6 +58,7 @@ export const MediaPreview = memo(function MediaPreview({
         showFileName={showFileName}
         hideTime={hideTime}
         dimensions={dimensions}
+        ignoreRatio={ignoreRatio}
       />
     )
   }

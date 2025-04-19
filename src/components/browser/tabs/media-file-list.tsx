@@ -849,6 +849,7 @@ export const MediaFileList = memo(function MediaFileList({
                 isAdded={isAdded}
                 size={previewSize}
                 hideTime={true}
+                ignoreRatio={true}
               />
             </div>
             <FileMetadata file={file} size={previewSize} />
@@ -867,7 +868,7 @@ export const MediaFileList = memo(function MediaFileList({
               width: `${((previewSize * 16) / 9).toFixed(0)}px`,
             }}
           >
-            <div className="relative flex-1 flex-row w-full flex-grow">
+            <div className="relative flex-1 flex-row w-full flex-grow bg-gray-200 dark:bg-gray-700">
               <MediaPreview
                 file={file}
                 onAddMedia={handleAddMedia}
@@ -895,6 +896,7 @@ export const MediaFileList = memo(function MediaFileList({
               isAdded={isAdded}
               size={previewSize}
               showFileName={true}
+              ignoreRatio={true}
             />
           </div>
         )
