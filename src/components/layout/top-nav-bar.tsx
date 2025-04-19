@@ -52,7 +52,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <ThemeToggle />
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="cursor-pointer" variant="ghost" size="icon" title="Макет">
+            <Button className="cursor-pointer hover:bg-secondary" variant="ghost" size="icon" title="Макет">
               <Layout className="h-3.5 w-3.5" />
             </Button>
           </PopoverTrigger>
@@ -65,7 +65,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           </PopoverContent>
         </Popover>
         <Button
-          className="cursor-pointer p-0 h-6 w-6"
+          className="cursor-pointer p-0 h-6 w-6 hover:bg-secondary"
           variant="ghost"
           size="icon"
           title="Быстрые клавиши"
@@ -75,7 +75,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
       </div>
       <div className="flex items-center gap-2">
         <Button
-          className="cursor-pointer p-0 h-6 w-6"
+          className="cursor-pointer p-0 h-6 w-6 hover:bg-secondary"
           variant="ghost"
           size="icon"
           title="Настройки"
@@ -85,7 +85,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         </Button>
         <Button
           className={cn(
-            "cursor-pointer p-0 h-6 w-6",
+            "cursor-pointer p-0 h-6 w-6 hover:bg-secondary",
             isDirty ? "opacity-50 hover:opacity-50" : "opacity-100 hover:bg-accent",
           )}
           variant="ghost"
