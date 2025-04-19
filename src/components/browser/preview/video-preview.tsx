@@ -1,5 +1,5 @@
 import { Film } from "lucide-react"
-import { memo, useCallback, useRef, useState } from "react"
+import { memo, useCallback, useRef, useState, useEffect } from "react"
 
 import { formatDuration, formatResolution } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
@@ -54,7 +54,17 @@ export const VideoPreview = memo(function VideoPreview({
   const [isPlaying, setIsPlaying] = useState(false)
   const [hoverTime, setHoverTime] = useState<number | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
-  const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({})
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
+
+  // Создаем стабильные ключи для рефов
+  useEffect(() => {
+    const videoStreams = file.probeData?.streams?.filter((s) => s.codec_type === "video") ?? []
+    videoStreams.forEach(stream => {
+      if (!videoRefs.current[`stream-${stream.index}`]) {
+        videoRefs.current[`stream-${stream.index}`] = null
+      }
+    })
+  }, [file.probeData?.streams])
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>, streamIndex: number) => {
@@ -64,7 +74,7 @@ export const VideoPreview = memo(function VideoPreview({
       const newTime = percentage * (file.duration || 0)
       setHoverTime(newTime)
 
-      const videoRef = videoRefs.current[streamIndex]
+      const videoRef = videoRefs.current[`stream-${streamIndex}`]
       if (videoRef) {
         console.log("Setting time:", newTime, "for stream:", streamIndex)
         videoRef.currentTime = newTime
@@ -76,8 +86,8 @@ export const VideoPreview = memo(function VideoPreview({
   const handleMouseLeave = useCallback(() => {
     setHoverTime(null)
     // При уходе мыши останавливаем воспроизведение
-    if (videoRefs.current[0] && isPlaying) {
-      videoRefs.current[0]?.pause()
+    if (videoRefs.current[`stream-0`] && isPlaying) {
+      videoRefs.current[`stream-0`]?.pause()
       setIsPlaying(false)
     }
   }, [isPlaying])
@@ -90,7 +100,7 @@ export const VideoPreview = memo(function VideoPreview({
   const handlePlayPause = useCallback(
     (e: React.MouseEvent, streamIndex: number) => {
       e.preventDefault()
-      const videoRef = videoRefs.current[streamIndex]
+      const videoRef = videoRefs.current[`stream-${streamIndex}`]
       if (!videoRef) return
 
       console.log("Play/Pause clicked for stream:", streamIndex, "current state:", isPlaying)
@@ -136,7 +146,7 @@ export const VideoPreview = memo(function VideoPreview({
 
             return (
               <div
-                key={index}
+                key={stream.index}
                 className="flex-shrink-0 relative"
                 style={{
                   height: `${size}px`,
@@ -159,27 +169,23 @@ export const VideoPreview = memo(function VideoPreview({
                 >
                   <video
                     ref={(el) => {
-                      console.log(videoRefs)
-                      videoRefs.current[index] = el
+                      const refKey = `stream-${stream.index}`
+                      videoRefs.current[refKey] = el
                     }}
-                    src={file.path}
+                    src={`${file.path}#t=${stream.index}`}
                     preload="auto"
                     tabIndex={0}
                     playsInline
                     className="absolute inset-0 w-full h-full focus:outline-none"
                     style={{
                       transition: "opacity 0.2s ease-in-out",
-                      height: "100%",
-                      width: "100%",
-                      // objectFit: isMultipleStreams ? "contain" : "cover",
-                      // aspectRatio: isMultipleStreams ? "16/9" : "auto",
                     }}
                     onEnded={() => {
-                      console.log("Video ended for stream:", index)
+                      console.log("Video ended for stream:", stream.index)
                       setIsPlaying(false)
                     }}
                     onPlay={(e) => {
-                      console.log("Video playing for stream:", index)
+                      console.log("Video playing for stream:", stream.index)
                       const video = e.currentTarget
                       const currentTime = hoverTime
                       if (currentTime !== undefined && currentTime !== null) {
@@ -189,22 +195,22 @@ export const VideoPreview = memo(function VideoPreview({
                     onTimeUpdate={(e) => {
                       console.log(
                         "Time update for stream:",
-                        index,
+                        stream.index,
                         "current time:",
                         e.currentTarget.currentTime,
                       )
                     }}
                     onError={(e) => {
-                      console.error("Video error for stream:", index, e)
+                      console.error("Video error for stream:", stream.index, e)
                     }}
                     onKeyDown={(e) => {
                       if (e.code === "Space") {
                         e.preventDefault()
-                        handlePlayPause(e as unknown as React.MouseEvent, index)
+                        handlePlayPause(e as unknown as React.MouseEvent, stream.index)
                       }
                     }}
                     onLoadedData={() => {
-                      console.log("Video loaded for stream:", index)
+                      console.log("Video loaded for stream:", stream.index)
                       setIsLoaded(true)
                     }}
                   />
@@ -270,7 +276,7 @@ export const VideoPreview = memo(function VideoPreview({
                     <PreviewTimeline
                       time={hoverTime}
                       duration={file.duration || 0}
-                      videoRef={videoRefs.current[index]}
+                      videoRef={videoRefs.current[`stream-${stream.index}`]}
                     />
                   )}
 
