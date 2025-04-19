@@ -265,22 +265,6 @@ export const VideoPreview = memo(function VideoPreview({
                     }}
                   />
 
-                  {/* Номер в серии потоков если их больше одного */}
-                  {isMultipleStreams && (
-                    <div
-                      className={cn(
-                        "absolute text-xs pointer-events-none font-medium text-white bg-black/50 rounded-xs leading-[16px] bottom-[calc(50%-8px)]",
-                        size > 100 ? "right-1" : size < 100 ? "hidden" : "right-[2px]",
-                        size > 100 ? "px-[7px] py-[2px]" : "px-[5px] py-0",
-                      )}
-                      style={{
-                        fontSize: size > 100 ? "13px" : "11px",
-                      }}
-                    >
-                      {stream.index + 1}
-                    </div>
-                  )}
-
                   {/* Продолжительность видео */}
                   {!hideTime && !(isMultipleStreams && stream.index === 0) && (
                     <div
