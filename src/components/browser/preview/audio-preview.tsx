@@ -57,6 +57,10 @@ export const AudioPreview = memo(function AudioPreview({
       const percentage = x / rect.width
       const newTime = percentage * (file.duration || 0)
       setHoverTime(newTime)
+
+      if (audioRef.current) {
+        audioRef.current.currentTime = newTime
+      }
     },
     [file.duration],
   )
@@ -81,6 +85,15 @@ export const AudioPreview = memo(function AudioPreview({
 
   const handleMouseLeave = useCallback(() => {
     setHoverTime(null)
+    if (audioRef.current && isPlaying) {
+      audioRef.current.pause()
+      setIsPlaying(false)
+    }
+  }, [isPlaying])
+
+  const handleMouseEnter = useCallback(() => {
+    // При входе мыши ничего не делаем с воспроизведением
+    // Оно будет начинаться только по клику
   }, [])
 
   return (
@@ -90,6 +103,7 @@ export const AudioPreview = memo(function AudioPreview({
       onMouseMove={handleMouseMove}
       onClick={handlePlayPause}
       onMouseLeave={handleMouseLeave}
+      onMouseEnter={handleMouseEnter}
     >
       {!hideTime && (
         <div
@@ -121,7 +135,6 @@ export const AudioPreview = memo(function AudioPreview({
             handlePlayPause(e as unknown as React.MouseEvent)
           }
         }}
-        onMouseEnter={(e) => e.currentTarget.focus()}
       />
 
       <div

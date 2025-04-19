@@ -1,10 +1,8 @@
-import { log } from "console"
 import { Film } from "lucide-react"
 import { memo, useCallback, useRef, useState } from "react"
 
 import { formatDuration, formatResolution } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
-import { isHorizontalVideo } from "@/utils/media-utils"
 import { calculateAdaptiveWidth,calculateWidth, parseRotation } from "@/utils/video-utils"
 
 import { PreviewTimeline } from ".."
@@ -17,9 +15,7 @@ interface VideoPreviewProps {
   size?: number
   showFileName?: boolean
   hideTime?: boolean
-  /** Соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9] */
   dimensions?: [number, number]
-  /** Флаг для игнорирования соотношения сторон (по умолчанию false) */
   ignoreRatio?: boolean
 }
 
@@ -42,7 +38,7 @@ const ICON_SIZES = [3.5, 4, 5]
  * @param size - Размер превью в пикселях (по умолчанию 60)
  * @param showFileName - Флаг для отображения имени файла (по умолчанию false)
  * @param hideTime - Флаг для скрытия времени (по умолчанию false)
- * @param dimensions - Соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9]
+ * @param dimensions - Фиксированное соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9]
  * @param ignoreRatio - Флаг для игнорирования соотношения сторон (по умолчанию false)
  */
 export const VideoPreview = memo(function VideoPreview({
@@ -118,16 +114,7 @@ export const VideoPreview = memo(function VideoPreview({
         {file.probeData?.streams
           ?.filter((stream) => stream.codec_type === "video")
           .map((stream, index) => {
-            console.log(
-              "Rendering stream:",
-              index,
-              "with URL:",
-              file.lrv?.path ||
-                file.proxy?.path ||
-                (file.path.endsWith(".insv") ? `${file.path}?stream=${index}` : file.path),
-            )
 
-            console.log(file.probeData?.streams)
             const videoStreams =
               file.probeData?.streams?.filter((s) => s.codec_type === "video") ?? []
             const isMultipleStreams = videoStreams?.length > 1
@@ -172,13 +159,10 @@ export const VideoPreview = memo(function VideoPreview({
                 >
                   <video
                     ref={(el) => {
+                      console.log(videoRefs)
                       videoRefs.current[index] = el
                     }}
-                    src={
-                      file.lrv?.path ||
-                      // file.proxy?.path ||
-                      (file.path.endsWith(".insv") ? `${file.path}?stream=${index}` : file.path)
-                    }
+                    src={file.path}
                     preload="auto"
                     tabIndex={0}
                     playsInline
