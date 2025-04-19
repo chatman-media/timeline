@@ -23,6 +23,7 @@ export interface FfprobeStream {
   // deno-lint-ignore no-explicit-any
   [key: string]: any
   index: number
+  streamKey?: string
   codec_name?: string | undefined
   codec_long_name?: string | undefined
   profile?: number | undefined

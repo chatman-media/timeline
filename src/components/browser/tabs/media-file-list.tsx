@@ -934,7 +934,7 @@ export const MediaFileList = memo(function MediaFileList({
             <Button
               variant="outline"
               size="sm"
-              className="text-xs flex items-center gap-1 cursor-pointer px-1 h-7"
+              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7 hover:bg-[#dddbdd] dark:hover:bg-[#45444b] border-[#dddbdd] dark:border-[#45444b]"
               onClick={() => {
                 // Фильтруем файлы - изображения не добавляем на таймлайн
                 console.log("[renderGroup] Group files:", group.files)
@@ -947,7 +947,7 @@ export const MediaFileList = memo(function MediaFileList({
                 }
               }}
             >
-              <span className="text-xs px-1">Добавить</span>
+              <span className="text-xs px-1">Добавить все</span>
               <CopyPlus className="h-3 w-3 mr-1" />
             </Button>
           </div>

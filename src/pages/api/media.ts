@@ -3,7 +3,6 @@ import process from "node:process"
 
 import { exec } from "child_process"
 import { ffprobe, FfprobeData } from "fluent-ffmpeg"
-import { nanoid } from "nanoid"
 import type { NextApiRequest, NextApiResponse } from "next"
 import path from "path"
 import { promisify } from "util"
@@ -23,38 +22,58 @@ const PROXY_SETTINGS = {
   preset: "veryfast",
 }
 
-async function generateProxyFile(sourcePath: string): Promise<string | null> {
+async function generateProxyFile(
+  sourcePath: string,
+  stream?: FfprobeStream,
+): Promise<string | null> {
   try {
     // Изменяем расширение на .mp4 для прокси-файла
     const sourceExt = path.extname(sourcePath)
     const sourceBaseName = path.basename(sourcePath, sourceExt)
-    const proxyFileName = `proxy-${sourceBaseName}.mp4`
+    const isINSV = sourceExt.toLowerCase() === ".insv"
+
+    // Для INSV файлов добавляем индекс потока в имя прокси
+    const proxyFileName =
+      isINSV && stream
+        ? `proxy-${sourceBaseName}-stream${stream.index}.mp4`
+        : `proxy-${sourceBaseName}.mp4`
+
     const proxyPath = path.join(process.cwd(), "public", "proxies", proxyFileName)
 
     // Проверяем, существует ли уже прокси-файл
     try {
       await fs.access(proxyPath)
-      // console.log(`[API] Прокси-файл уже существует: ${proxyPath}`)
+      console.log(`[API] Прокси-файл уже существует: ${proxyPath}`)
       return `/proxies/${proxyFileName}`
     } catch {
       // Файл не существует, продолжаем генерацию
+      console.log(`[API] Прокси-файл не найден, начинаем генерацию: ${proxyPath}`)
     }
 
     // Создаем директорию для прокси, если её нет
     const proxyDir = path.dirname(proxyPath)
     await fs.mkdir(proxyDir, { recursive: true })
 
+    // Для INSV файлов выбираем конкретный поток
+    const streamMap = isINSV && stream ? `-map 0:${stream.index}` : ""
+
     // Генерируем прокси с помощью ffmpeg
-    const ffmpegCommand = `ffmpeg -i "${sourcePath}" -vf "scale=${PROXY_SETTINGS.width}:${PROXY_SETTINGS.height}" -c:v libx264 -preset ${PROXY_SETTINGS.preset} -b:v ${PROXY_SETTINGS.bitrate} -c:a aac "${proxyPath}"`
+    const ffmpegCommand = `ffmpeg -i "${sourcePath}" ${streamMap} -vf "scale=${PROXY_SETTINGS.width}:${PROXY_SETTINGS.height}" -c:v libx264 -preset ${PROXY_SETTINGS.preset} -b:v ${PROXY_SETTINGS.bitrate} -c:a aac "${proxyPath}"`
 
     console.log(`[API] Генерирую прокси: ${ffmpegCommand}`)
     await execAsync(ffmpegCommand)
 
+    console.log(`[API] Прокси успешно сгенерирован: ${proxyPath}`)
     return `/proxies/${proxyFileName}`
   } catch (error) {
     console.error("[API] Ошибка при генерации прокси:", error)
     return null
   }
+}
+
+// Для INSV файлов нужно создать уникальные ключи для каждого потока
+function generateStreamKey(filename: string, streamIndex: number): string {
+  return `${filename.split(".")[0]}-stream-${streamIndex}`
 }
 
 export default async function handler(
@@ -120,7 +139,6 @@ export default async function handler(
       if ([".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac", ".alac"].includes(fileType)) {
         try {
           const probeData = (await ffprobeAsync(filePath)) as FfprobeData
-          const audioStream = probeData.streams.find((s: FfprobeStream) => s.codec_type === "audio")
 
           return {
             id: path.basename(filename, path.extname(filename)),
@@ -150,8 +168,66 @@ export default async function handler(
         try {
           const probeData = (await ffprobeAsync(filePath)) as FfprobeData
 
-          // Генерируем прокси-файл
-          const proxyPath = await generateProxyFile(filePath)
+          // Добавляем уникальные ключи для каждого потока
+          probeData.streams = probeData.streams.map((stream) => ({
+            ...stream,
+            streamKey: generateStreamKey(filename, stream.index),
+          }))
+
+          // Для INSV файлов генерируем отдельные прокси для каждого видеопотока
+          const proxyPaths: { [key: string]: string | undefined } = {}
+
+          if (fileType === ".insv") {
+            // TODO: Не удалять, генерация прокси для INSV файлов
+            // const videoStreams = probeData.streams.filter(s => s.codec_type === 'video')
+            // for (const stream of videoStreams) {
+            //   // Запускаем проверку и генерацию прокси асинхронно
+            //   const proxyFileName = `proxy-${path.basename(filename, fileType)}-stream${stream.index}.mp4`
+            //   const proxyPath = `/proxies/${proxyFileName}`
+            //   // Сразу устанавливаем путь к прокси
+            //   proxyPaths[stream.streamKey!] = proxyPath
+            //   // В фоне проверяем и генерируем прокси
+            //   fs.access(path.join(process.cwd(), "public", proxyPath))
+            //     .then(() => {
+            //       console.log(`[API] Прокси-файл уже существует: ${proxyPath}`)
+            //     })
+            //     .catch(() => {
+            //       console.log(`[API] Прокси-файл не найден, начинаем генерацию: ${proxyPath}`)
+            //       // generateProxyFile(filePath, stream)
+            //       //   .then(proxyPath => {
+            //       //     if (proxyPath) {
+            //       //       console.log(`[API] Прокси сгенерирован: ${proxyPath}`)
+            //       //     }
+            //       //   })
+            //       //   .catch(error => {
+            //       //     console.error('[API] Ошибка при генерации прокси:', error)
+            //       //   })
+            //     })
+            // }
+          } else {
+            // // Запускаем проверку и генерацию прокси асинхронно
+            // const proxyFileName = `proxy-${path.basename(filename, fileType)}.mp4`
+            // const proxyPath = `/proxies/${proxyFileName}`
+            // // Сразу устанавливаем путь к прокси
+            // proxyPaths['default'] = proxyPath
+            // // В фоне проверяем и генерируем прокси
+            // fs.access(path.join(process.cwd(), "public", proxyPath))
+            //   .then(() => {
+            //     console.log(`[API] Прокси-файл уже существует: ${proxyPath}`)
+            //   })
+            //   .catch(() => {
+            //     console.log(`[API] Прокси-файл не найден, начинаем генерацию: ${proxyPath}`)
+            //     // generateProxyFile(filePath)
+            //     //   .then(proxyPath => {
+            //     //     if (proxyPath) {
+            //     //       console.log(`[API] Прокси сгенерирован: ${proxyPath}`)
+            //     //     }
+            //     //   })
+            //     //   .catch(error => {
+            //     //     console.error('[API] Ошибка при генерации прокси:', error)
+            //     //   })
+            //   })
+          }
 
           // Получаем время создания файла из метаданных
           const creationTime = getMediaCreationTime(probeData)
@@ -197,14 +273,25 @@ export default async function handler(
             },
             isVideo: true,
             isAudio: false,
-            proxy: proxyPath
-              ? {
-                path: proxyPath,
-                width: PROXY_SETTINGS.width,
-                height: PROXY_SETTINGS.height,
-                bitrate: parseInt(PROXY_SETTINGS.bitrate),
-              }
-              : undefined,
+            proxies:
+              fileType === ".insv"
+                ? Object.entries(proxyPaths).map(([key, path]) => ({
+                  streamKey: key,
+                  path: path || "",
+                  width: PROXY_SETTINGS.width,
+                  height: PROXY_SETTINGS.height,
+                  bitrate: parseInt(PROXY_SETTINGS.bitrate),
+                }))
+                : undefined,
+            proxy:
+              !fileType.endsWith(".insv") && proxyPaths["default"]
+                ? {
+                  path: proxyPaths["default"] || "",
+                  width: PROXY_SETTINGS.width,
+                  height: PROXY_SETTINGS.height,
+                  bitrate: parseInt(PROXY_SETTINGS.bitrate),
+                }
+                : undefined,
             lrv: lrvData ?? undefined,
           }
 

@@ -7,7 +7,7 @@ import {
   Folder,
   Grid,
   Grid2x2,
-  List,
+  LayoutList,
   ListFilterPlus,
   Mic,
   Monitor,
@@ -136,7 +136,7 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#e8e8e8] dark:bg-[#3e3c49]"
+          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#dddbdd] dark:bg-[#45444b]"
           onClick={onImport}
         >
           {/* <Import size={12} /> */}
@@ -145,7 +145,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFile()
@@ -159,7 +159,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFolder()
@@ -176,7 +176,7 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#e8e8e8] dark:bg-[#3e3c49]"
+          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#dddbdd] dark:bg-[#45444b]"
           onClick={onRecord}
         >
           <span className="text-xs px-2">Запись</span>
@@ -184,7 +184,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordCamera()
@@ -198,7 +198,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordScreen()
@@ -212,7 +212,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordVoice()
@@ -237,25 +237,8 @@ export function MediaToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-1 ml-3 cursor-pointer",
-                    viewMode === "list" ? "bg-[#cfcdcd] dark:bg-[#625f74]" : "",
-                  )}
-                  onClick={() => onViewModeChange("list")}
-                >
-                  <List size={16} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Список</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    "h-6 w-6 mr-1 cursor-pointer",
-                    viewMode === "grid" ? "bg-[#cfcdcd] dark:bg-[#625f74]" : "",
+                    "h-6 w-6 mr-0 ml-3 cursor-pointer",
+                    viewMode === "grid" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                   )}
                   onClick={() => onViewModeChange("grid")}
                 >
@@ -271,8 +254,8 @@ export function MediaToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-1 cursor-pointer",
-                    viewMode === "thumbnails" ? "bg-[#cfcdcd] dark:bg-[#625f74]" : "",
+                    "h-6 w-6 mr-0 cursor-pointer",
+                    viewMode === "thumbnails" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                   )}
                   onClick={() => onViewModeChange("thumbnails")}
                 >
@@ -280,6 +263,22 @@ export function MediaToolbar({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Миниатюры</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "h-6 w-6 mr-1 cursor-pointer",
+                    viewMode === "list" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                  )}
+                  onClick={() => onViewModeChange("list")}
+                >
+                  <LayoutList size={16} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Список</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
@@ -331,7 +330,14 @@ export function MediaToolbar({
             <DropdownMenu>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-6 h-6 cursor-pointer">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "w-6 h-6 cursor-pointer",
+                      internalSortBy !== "name" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                    )}
+                  >
                     <SortDesc size={16} />
                   </Button>
                 </DropdownMenuTrigger>
@@ -376,7 +382,14 @@ export function MediaToolbar({
             <DropdownMenu>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-6 h-6 cursor-pointer">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "w-6 h-6 cursor-pointer",
+                      internalFilterType !== "all" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                    )}
+                  >
                     <Filter size={16} />
                   </Button>
                 </DropdownMenuTrigger>
@@ -419,7 +432,14 @@ export function MediaToolbar({
             <DropdownMenu>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-6 h-6 cursor-pointer">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "w-6 h-6 cursor-pointer",
+                      internalGroupBy !== "none" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                    )}
+                  >
                     <ListFilterPlus size={16} />
                   </Button>
                 </DropdownMenuTrigger>

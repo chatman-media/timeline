@@ -1,4 +1,4 @@
-import { FfprobeData } from "./ffprobe"
+import { FfprobeData, FfprobeStream } from "./ffprobe"
 import { TimeRange } from "./time-range"
 
 export interface MediaFile {
@@ -23,12 +23,32 @@ export interface MediaFile {
     height: number
     bitrate: number
   }
+  proxies?: Array<{
+    path: string
+    width: number
+    height: number
+    bitrate: number
+    streamKey: string
+  }>
   lrv?: {
     path: string
     width: number
     height: number
     duration: number
     probeData?: FfprobeData
+  }
+  insv?: {
+    leftLens: {
+      stream: FfprobeStream
+      width: number
+      height: number
+    }
+    rightLens: {
+      stream: FfprobeStream
+      width: number
+      height: number
+    }
+    isStitched: boolean
   }
 }
 

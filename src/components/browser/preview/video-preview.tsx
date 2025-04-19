@@ -1,9 +1,10 @@
 import { Film } from "lucide-react"
-import { memo, useCallback, useRef, useState, useEffect } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 
 import { formatDuration, formatResolution } from "@/lib/utils"
+import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
-import { calculateAdaptiveWidth,calculateWidth, parseRotation } from "@/utils/video-utils"
+import { calculateAdaptiveWidth, calculateWidth, parseRotation } from "@/utils/video-utils"
 
 import { PreviewTimeline } from ".."
 import { AddMediaButton } from "./add-media-button"
@@ -59,24 +60,26 @@ export const VideoPreview = memo(function VideoPreview({
   // Создаем стабильные ключи для рефов
   useEffect(() => {
     const videoStreams = file.probeData?.streams?.filter((s) => s.codec_type === "video") ?? []
-    videoStreams.forEach(stream => {
-      if (!videoRefs.current[`stream-${stream.index}`]) {
-        videoRefs.current[`stream-${stream.index}`] = null
+    videoStreams.forEach((stream) => {
+      const key = stream.streamKey || `stream-${stream.index}`
+      if (!videoRefs.current[key]) {
+        videoRefs.current[key] = null
       }
     })
   }, [file.probeData?.streams])
 
   const handleMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>, streamIndex: number) => {
+    (e: React.MouseEvent<HTMLDivElement>, stream: FfprobeStream) => {
       const rect = e.currentTarget.getBoundingClientRect()
       const x = e.clientX - rect.left
       const percentage = x / rect.width
       const newTime = percentage * (file.duration || 0)
       setHoverTime(newTime)
 
-      const videoRef = videoRefs.current[`stream-${streamIndex}`]
+      const key = stream.streamKey || `stream-${stream.index}`
+      const videoRef = videoRefs.current[key]
       if (videoRef) {
-        console.log("Setting time:", newTime, "for stream:", streamIndex)
+        console.log("Setting time:", newTime, "for stream:", stream.index)
         videoRef.currentTime = newTime
       }
     },
@@ -86,8 +89,9 @@ export const VideoPreview = memo(function VideoPreview({
   const handleMouseLeave = useCallback(() => {
     setHoverTime(null)
     // При уходе мыши останавливаем воспроизведение
-    if (videoRefs.current[`stream-0`] && isPlaying) {
-      videoRefs.current[`stream-0`]?.pause()
+    const firstStreamKey = Object.keys(videoRefs.current)[0]
+    if (videoRefs.current[firstStreamKey] && isPlaying) {
+      videoRefs.current[firstStreamKey]?.pause()
       setIsPlaying(false)
     }
   }, [isPlaying])
@@ -98,12 +102,13 @@ export const VideoPreview = memo(function VideoPreview({
   }, [])
 
   const handlePlayPause = useCallback(
-    (e: React.MouseEvent, streamIndex: number) => {
+    (e: React.MouseEvent, stream: FfprobeStream) => {
       e.preventDefault()
-      const videoRef = videoRefs.current[`stream-${streamIndex}`]
+      const key = stream.streamKey || `stream-${stream.index}`
+      const videoRef = videoRefs.current[key]
       if (!videoRef) return
 
-      console.log("Play/Pause clicked for stream:", streamIndex, "current state:", isPlaying)
+      console.log("Play/Pause clicked for stream:", stream.index, "current state:", isPlaying)
 
       if (isPlaying) {
         videoRef.pause()
@@ -118,13 +123,57 @@ export const VideoPreview = memo(function VideoPreview({
     [isPlaying, hoverTime],
   )
 
+  // Функция для получения URL видео для конкретного потока
+  const getVideoUrl = useCallback(
+    (stream: FfprobeStream) => {
+      // Для INSV файлов с массивом прокси
+      if (file.name.toLowerCase().endsWith(".insv") && Array.isArray(file.proxies)) {
+        const proxyForStream = file.proxies.find((p) => p.streamKey === stream.streamKey)
+        if (proxyForStream && proxyForStream.path) {
+          // Проверяем, существует ли прокси
+          const proxyUrl = proxyForStream.path
+          const video = videoRefs.current[stream.streamKey || `stream-${stream.index}`]
+          if (video) {
+            // Пробуем загрузить прокси
+            video.src = proxyUrl
+            video.onerror = () => {
+              // Если прокси не загрузился, используем оригинал
+              video.src = file.path
+            }
+          }
+          return proxyUrl
+        }
+        return file.path
+      }
+
+      // Для обычных файлов с одним прокси
+      if (file.proxy?.path) {
+        const proxyUrl = file.proxy.path
+        const video = videoRefs.current["default"]
+        if (video) {
+          // Пробуем загрузить прокси
+          video.src = proxyUrl
+          video.onerror = () => {
+            // Если прокси не загрузился, используем оригинал
+            video.src = file.path
+          }
+        }
+        return proxyUrl
+      }
+
+      // Для файлов без прокси
+      return file.path
+    },
+    [file],
+  )
+
   return (
     <>
       <div className="flex items-center justify-center w-full h-full">
         {file.probeData?.streams
           ?.filter((stream) => stream.codec_type === "video")
-          .map((stream, index) => {
-
+          .map((stream) => {
+            const key = stream.streamKey || `stream-${stream.index}`
             const videoStreams =
               file.probeData?.streams?.filter((s) => s.codec_type === "video") ?? []
             const isMultipleStreams = videoStreams?.length > 1
@@ -141,12 +190,14 @@ export const VideoPreview = memo(function VideoPreview({
               isMultipleStreams,
               stream.display_aspect_ratio,
             )
-            const [w, h] = stream.display_aspect_ratio?.split(":").map(Number)
-            const ratio = w / h
+
+            // Исправляем проблему с деструктуризацией
+            const aspectRatio = stream.display_aspect_ratio?.split(":").map(Number) || [16, 9]
+            const ratio = aspectRatio[0] / aspectRatio[1]
 
             return (
               <div
-                key={stream.index}
+                key={key}
                 className="flex-shrink-0 relative"
                 style={{
                   height: `${size}px`,
@@ -159,20 +210,19 @@ export const VideoPreview = memo(function VideoPreview({
                         ? width
                         : adptivedWidth,
                 }}
-                onClick={(e) => handlePlayPause(e, index)}
+                onClick={(e) => handlePlayPause(e, stream)}
               >
                 <div
                   className="relative w-full h-full"
-                  onMouseMove={(e) => handleMouseMove(e, index)}
+                  onMouseMove={(e) => handleMouseMove(e, stream)}
                   onMouseLeave={handleMouseLeave}
                   onMouseEnter={handleMouseEnter}
                 >
                   <video
                     ref={(el) => {
-                      const refKey = `stream-${stream.index}`
-                      videoRefs.current[refKey] = el
+                      videoRefs.current[key] = el
                     }}
-                    src={`${file.path}#t=${stream.index}`}
+                    src={getVideoUrl(stream)}
                     preload="auto"
                     tabIndex={0}
                     playsInline
@@ -206,7 +256,7 @@ export const VideoPreview = memo(function VideoPreview({
                     onKeyDown={(e) => {
                       if (e.code === "Space") {
                         e.preventDefault()
-                        handlePlayPause(e as unknown as React.MouseEvent, stream.index)
+                        handlePlayPause(e as unknown as React.MouseEvent, stream)
                       }
                     }}
                     onLoadedData={() => {
@@ -224,7 +274,7 @@ export const VideoPreview = memo(function VideoPreview({
                           ? "bottom-1 left-[58px]"
                           : size < 100
                             ? "hidden"
-                            : "bottom-0.5 left-[42px]"
+                            : "bottom-0.5 left-[46px]"
                       } text-white bg-black/50 rounded-xs ${
                         size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
                       }`}
@@ -234,7 +284,7 @@ export const VideoPreview = memo(function VideoPreview({
                   )}
 
                   {/* Продолжительность видео */}
-                  {!hideTime && !(isMultipleStreams && index === 0) && (
+                  {!hideTime && !(isMultipleStreams && stream.index === 0) && (
                     <div
                       className={`absolute text-xs pointer-events-none leading-[16px] ${
                         size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"
@@ -262,7 +312,7 @@ export const VideoPreview = memo(function VideoPreview({
                         size > 100 ? "left-[28px]" : "left-[22px]"
                       } bg-black/50 text-xs leading-[16px] rounded-xs ${size > 100 ? "bottom-1" : "bottom-0.5"} ${
                         size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                      } mr-0.5 text-white`}
+                      } text-white`}
                       style={{
                         fontSize: size > 100 ? "14px" : "12px",
                       }}
@@ -276,12 +326,12 @@ export const VideoPreview = memo(function VideoPreview({
                     <PreviewTimeline
                       time={hoverTime}
                       duration={file.duration || 0}
-                      videoRef={videoRefs.current[`stream-${stream.index}`]}
+                      videoRef={videoRefs.current[key]}
                     />
                   )}
 
                   {/* Имя файла */}
-                  {showFileName && !(isMultipleStreams && index !== 0) && (
+                  {showFileName && !(isMultipleStreams && stream.index !== 0) && (
                     <div
                       className={`absolute font-medium ${size > 100 ? "top-1" : "top-0.5"} ${
                         size > 100 ? "left-1" : "left-0.5"
@@ -296,7 +346,7 @@ export const VideoPreview = memo(function VideoPreview({
                   {/* Кнопка добавления */}
                   {onAddMedia &&
                     isLoaded &&
-                    index ===
+                    stream.index ===
                       (file.probeData?.streams?.filter((s) => s.codec_type === "video")?.length ||
                         0) -
                         1 && (
