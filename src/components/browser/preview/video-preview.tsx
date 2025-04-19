@@ -1,7 +1,7 @@
 import { Film } from "lucide-react"
 import { memo, useCallback, useEffect, useRef, useState } from "react"
 
-import { formatDuration, formatResolution } from "@/lib/utils"
+import { cn, formatDuration, formatResolution } from "@/lib/utils"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
 import { calculateAdaptiveWidth, calculateWidth, parseRotation } from "@/utils/video-utils"
@@ -266,18 +266,16 @@ export const VideoPreview = memo(function VideoPreview({
                   />
 
                   {/* Номер в серии потоков если их больше одного */}
-                  {file.probeData?.streams &&
-                    file.probeData.streams.filter((s) => s.codec_type === "video").length > 1 && (
+                  {isMultipleStreams && (
                     <div
-                      className={`absolute text-xs pointer-events-none leading-[16px] ${
-                        size > 100
-                          ? "bottom-1 left-[58px]"
-                          : size < 100
-                            ? "hidden"
-                            : "bottom-0.5 left-[46px]"
-                      } text-white bg-black/50 rounded-xs ${
-                        size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                      }`}
+                      className={cn(
+                        "absolute text-xs pointer-events-none font-medium text-white bg-black/50 rounded-xs leading-[16px] bottom-[calc(50%-8px)]",
+                        size > 100 ? "right-1" : size < 100 ? "hidden" : "right-[2px]",
+                        size > 100 ? "px-[7px] py-[2px]" : "px-[5px] py-0",
+                      )}
+                      style={{
+                        fontSize: size > 100 ? "13px" : "11px",
+                      }}
                     >
                       {stream.index + 1}
                     </div>
@@ -286,27 +284,34 @@ export const VideoPreview = memo(function VideoPreview({
                   {/* Продолжительность видео */}
                   {!hideTime && !(isMultipleStreams && stream.index === 0) && (
                     <div
-                      className={`absolute text-xs pointer-events-none leading-[16px] ${
-                        size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"
-                      } text-white bg-black/50 rounded-xs ${
-                        size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                      }`}
+                      className={cn(
+                        "absolute text-xs pointer-events-none leading-[16px] text-white bg-black/50 rounded-xs",
+                        size > 100
+                          ? "right-1 top-1 px-[4px] py-[2px]"
+                          : "right-0.5 top-0.5 px-0.5 py-0",
+                      )}
+                      style={{
+                        fontSize: size > 100 ? "13px" : "11px",
+                      }}
                     >
                       {formatDuration(file.duration || 0, 0, true)}
                     </div>
                   )}
 
                   {/* Иконка видео */}
-                  <div
-                    className={`absolute pointer-events-none ${
-                      size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"
-                    } text-white bg-black/50 rounded-xs p-0.5`}
-                  >
-                    <Film size={size > 100 ? 16 : 12} />
-                  </div>
+                  {!(isMultipleStreams && stream.index !== 0) && (
+                    <div
+                      className={cn(
+                        "absolute pointer-events-none text-white bg-black/50 rounded-xs p-0.5",
+                        size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5",
+                      )}
+                    >
+                      <Film size={size > 100 ? 16 : 12} />
+                    </div>
+                  )}
 
                   {/* Разрешение видео */}
-                  {isLoaded && (
+                  {isLoaded && !(isMultipleStreams && stream.index !== 0) && (
                     <div
                       className={`absolute pointer-events-none ${
                         size > 100 ? "left-[28px]" : "left-[22px]"
@@ -314,7 +319,7 @@ export const VideoPreview = memo(function VideoPreview({
                         size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
                       } text-white`}
                       style={{
-                        fontSize: size > 100 ? "14px" : "12px",
+                        fontSize: size > 100 ? "13px" : "11px",
                       }}
                     >
                       {formatResolution(stream.width || 0, stream.height || 0)}

@@ -685,27 +685,6 @@ export const MediaFileList = memo(function MediaFileList({
     // }
   }, [media, addFilesToTimeline])
 
-  const handleAddDateFiles = useCallback(
-    (targetDate: string) => {
-      const dateFiles = media.filter((file: MediaFile) => {
-        if (!file.startTime) return false
-        const fileDate = new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        })
-        return fileDate === targetDate
-      })
-      console.log("[handleAddDateFiles] Date files:", dateFiles)
-
-      const files = dateFiles.filter((file: MediaFile) => file.path)
-      if (files.length > 0) {
-        addFilesToTimeline(files)
-      }
-    },
-    [media, addFilesToTimeline],
-  )
-
   const addDateFiles = useCallback(
     (files: MediaFile[]) => {
       addFilesToTimeline(files)
@@ -868,7 +847,7 @@ export const MediaFileList = memo(function MediaFileList({
               width: `${((previewSize * 16) / 9).toFixed(0)}px`,
             }}
           >
-            <div className="relative flex-1 flex-row w-full flex-grow bg-gray-200 dark:bg-gray-700">
+            <div className="relative flex-1 flex-row w-full flex-grow bg-gray-200 dark:bg-[#2f2d38]/50">
               <MediaPreview
                 file={file}
                 onAddMedia={handleAddMedia}
@@ -876,7 +855,14 @@ export const MediaFileList = memo(function MediaFileList({
                 size={previewSize}
               />
             </div>
-            <div className="p-1 text-xs truncate">{file.name}</div>
+            <div
+              className="p-1 text-xs truncate"
+              style={{
+                fontSize: previewSize > 100 ? "13px" : "12px",
+              }}
+            >
+              {file.name}
+            </div>
           </div>
         )
 
@@ -947,7 +933,7 @@ export const MediaFileList = memo(function MediaFileList({
                 }
               }}
             >
-              <span className="text-xs px-1">Добавить все</span>
+              <span className="text-xs px-1">Добавить</span>
               <CopyPlus className="h-3 w-3 mr-1" />
             </Button>
           </div>

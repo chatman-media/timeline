@@ -1,3 +1,4 @@
+import { FfprobeStream } from "@/types/ffprobe"
 import type { MediaFile } from "@/types/media"
 import type { TimeRange } from "@/types/time-range"
 
@@ -65,12 +66,14 @@ export const calculateTimeRanges = (videos: MediaFile[]): TimeRange[] => {
  * @example
  * const ratio = getAspectRatio({ width: 1920, height: 1080 }); // "16:9"
  */
-export const getAspectRatio = (stream?: {
-  display_aspect_ratio?: string
-  width?: number
-  height?: number
-}): string | null => {
+export const getAspectRatio = (stream?: FfprobeStream): string | null => {
   if (!stream) return null
+
+  console.log("[getAspectRatio] stream:", stream)
+
+  if (stream.display_aspect_ratio === "960:409") {
+    return `2.35:1`
+  }
 
   // Если есть display_aspect_ratio и он не "N/A"
   if (stream.display_aspect_ratio && stream.display_aspect_ratio !== "N/A") {

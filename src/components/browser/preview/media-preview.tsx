@@ -13,9 +13,7 @@ interface MediaPreviewProps {
   size?: number
   showFileName?: boolean
   hideTime?: boolean
-  /** Соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9] */
   dimensions?: [number, number]
-  /** Флаг для игнорирования соотношения сторон (по умолчанию false) */
   ignoreRatio?: boolean
 }
 

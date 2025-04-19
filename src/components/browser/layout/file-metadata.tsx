@@ -1,6 +1,12 @@
 import { memo } from "react"
 
-import { formatDuration, formatFileSize, formatTimeWithMilliseconds } from "@/lib/utils"
+import {
+  formatBitrate,
+  formatDuration,
+  formatFileSize,
+  formatResolution,
+  formatTimeWithMilliseconds,
+} from "@/lib/utils"
 import { MediaFile } from "@/types/media"
 import { getAspectRatio, getFps } from "@/utils/video-utils"
 
@@ -23,7 +29,12 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
       <div className="flex justify-between w-full p-2">
         <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">{file.name}</p>
         {file.isVideo && file.probeData?.format.duration && (
-          <p className="text-xs flex-shrink-0">{formatDuration(file.probeData.format.duration)}</p>
+          <p
+            className="font-medium flex-shrink-0"
+            style={{ fontSize: size > 100 ? `13px` : "12px" }}
+          >
+            {formatDuration(file.probeData.format.duration)}
+          </p>
         )}
       </div>
 
@@ -37,11 +48,20 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
             <p className="text-xs truncate flex justify-between items-center">
               {videoStream && (
                 <span>
-                  <span className="text-gray-700 dark:text-gray-200 ml-2">
+                  <span className="text-gray-700 dark:text-gray-200 ml-3">
+                    {videoStream.width}x{videoStream.height}
+                  </span>
+                  <span className="text-gray-700 dark:text-gray-200 ml-3">
+                    {((videoStream.width * videoStream.height) / 1000000).toFixed(1)} MP
+                  </span>
+                  <span className="text-gray-700 dark:text-gray-200 ml-3">
                     {getAspectRatio(videoStream)}
                   </span>
+                  <span className="text-gray-700 dark:text-gray-200 ml-3">
+                    {formatBitrate(Number(videoStream?.bit_rate))}
+                  </span>
                   {getFps(videoStream) && (
-                    <span className="ml-2 text-gray-700 dark:text-gray-200 ml-2">
+                    <span className="text-gray-700 dark:text-gray-200 ml-3">
                       {getFps(videoStream)} fps
                     </span>
                   )}
