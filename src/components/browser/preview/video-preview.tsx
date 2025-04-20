@@ -169,7 +169,7 @@ export const VideoPreview = memo(function VideoPreview({
 
   return (
     <>
-      <div className="flex items-center justify-center w-full h-full">
+      <div className={cn("flex items-center justify-center w-full h-full")}>
         {file.probeData?.streams
           ?.filter((stream) => stream.codec_type === "video")
           .map((stream) => {
@@ -226,7 +226,10 @@ export const VideoPreview = memo(function VideoPreview({
                     preload="auto"
                     tabIndex={0}
                     playsInline
-                    className="absolute inset-0 w-full h-full focus:outline-none"
+                    className={cn(
+                      "absolute inset-0 w-full h-full focus:outline-none",
+                      isAdded ? "opacity-50" : "",
+                    )}
                     style={{
                       transition: "opacity 0.2s ease-in-out",
                     }}
