@@ -53,7 +53,7 @@ export const ImagePreview = memo(function ImagePreview({
     >
       {showFileName && (
         <div
-          className={`absolute font-medium top-0.5 left-0.5 ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+          className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
           style={{
             fontSize: size > 100 ? "13px" : "11px",
           }}
@@ -67,7 +67,7 @@ export const ImagePreview = memo(function ImagePreview({
       </div>
 
       <div
-        className={`absolute ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white cursor-pointer bg-black/50 rounded p-0.5`}
+        className={`absolute ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white cursor-pointer bg-black/50 rounded-xs p-0.5`}
       >
         <Image size={size > 100 ? 16 : 12} />
       </div>

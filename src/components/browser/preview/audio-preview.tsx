@@ -165,20 +165,6 @@ export const AudioPreview = memo(function AudioPreview({
       onClick={handlePlayPause}
       onMouseLeave={handleMouseLeave}
     >
-      {!hideTime && (
-        <div
-          className={cn(
-            "absolute pointer-events-none leading-[16px] text-white bg-black/50 rounded-xs",
-            size > 100 ? "right-1 top-1 px-[4px] py-[2px]" : "right-0.5 top-0.5 px-0.5 py-0",
-          )}
-          style={{
-            fontSize: size > 100 ? "13px" : "11px",
-          }}
-        >
-          {formatDuration(file.duration || 0, 0, true)}
-        </div>
-      )}
-
       <audio
         ref={audioRef}
         src={file.path}

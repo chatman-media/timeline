@@ -22,6 +22,7 @@ interface FileMetadataProps {
  */
 export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: FileMetadataProps) {
   const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
+  console.log(file)
 
   return (
     <div className="grid grid-rows-2 w-full overflow-hidden" style={{ height: `${size}px` }}>
@@ -34,6 +35,16 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
           >
             {formatDuration(file.probeData.format.duration)}
           </p>
+        )}
+
+        {file.isImage && file.createdAt && (
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-200 flex-shrink-0 whitespace-nowrap">
+            {new Date(file.createdAt).toLocaleDateString("ru-RU", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
         )}
       </div>
 
