@@ -63,28 +63,8 @@ export function AudioPlayer({
 
       {/* Информация и контролы */}
       <div className="flex-1 min-w-0">
-        <div className="flex justify-between items-center">
-          <h3 className="text-sm font-medium truncate">{title}</h3>
-          <div className="flex items-center space-x-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onAdd}>
-              <Plus size={16} />
-            </Button>
-          </div>
-        </div>
-
         {/* Визуализация */}
         <div className="h-5 flex items-center justify-between">
-          <div className="w-full pr-12">
-            <div className="h-5 flex items-center gap-[2px]">
-              {Array.from({ length: 40 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="w-[2px] bg-gray-300 dark:bg-gray-600"
-                  style={{ height: `${Math.random() * 100}%` }}
-                />
-              ))}
-            </div>
-          </div>
           <span className="text-xs text-gray-500 absolute right-14">{duration}</span>
         </div>
       </div>

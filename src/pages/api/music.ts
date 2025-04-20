@@ -44,6 +44,7 @@ export default async function handler(
         const filePath = path.join(dir, file)
         const probeData = metadataCache.get(filePath) || (await ffprobeAsync(filePath))
         metadataCache.set(filePath, probeData as FfprobeData)
+        console.log(probeData)
 
         return {
           name: file,
