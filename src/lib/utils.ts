@@ -195,9 +195,9 @@ export function getMediaCreationTime(probeData: FfprobeData): number {
   // 1. Try to get from probeData metadata
   if (probeData?.format?.tags?.creation_time) {
     const time = new Date(probeData.format.tags.creation_time).getTime() / 1000
-    console.log(
-      `[getMediaCreationTime] Время из метаданных: ${new Date(time * 1000).toISOString()}`,
-    )
+    // console.log(
+    //   `[getMediaCreationTime] Время из метаданных: ${new Date(time * 1000).toISOString()}`,
+    // )
     return time
   }
 
@@ -207,9 +207,9 @@ export function getMediaCreationTime(probeData: FfprobeData): number {
     : null
   if (parsedDate) {
     const time = parsedDate.getTime() / 1000
-    console.log(
-      `[getMediaCreationTime] Время из имени файла: ${new Date(time * 1000).toISOString()}`,
-    )
+    // console.log(
+    //   `[getMediaCreationTime] Время из имени файла: ${new Date(time * 1000).toISOString()}`,
+    // )
     return time
   }
 

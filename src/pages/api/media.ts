@@ -80,12 +80,12 @@ export default async function handler(
   _req: NextApiRequest,
   res: NextApiResponse<{ media: MediaFile[] }>,
 ) {
-  console.log("[API] Начинаю обработку медиафайлов...")
+  // console.log("[API] Начинаю обработку медиафайлов...")
   try {
     const mediaDir = path.join(process.cwd(), "public", "media")
     await fs.mkdir(mediaDir, { recursive: true })
 
-    console.log("[API] Читаю директорию:", mediaDir)
+    // console.log("[API] Читаю директорию:", mediaDir)
     const allFiles = await fs.readdir(mediaDir)
     // console.log("[API] Найдено файлов:", videoFiles)
 
@@ -142,7 +142,7 @@ export default async function handler(
       if ([".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac", ".alac"].includes(fileType)) {
         try {
           const probeData = (await ffprobeAsync(filePath)) as FfprobeData
-          console.log(`[API] probeData.format.streams: ${JSON.stringify(probeData.streams)}`)
+          // console.log(`[API] probeData.format.streams: ${JSON.stringify(probeData.streams)}`)
           return {
             id: path.basename(filename, path.extname(filename)),
             name: filename,
@@ -234,9 +234,9 @@ export default async function handler(
 
           // Получаем время создания файла из метаданных
           const creationTime = getMediaCreationTime(probeData)
-          console.log(
-            `[API] Время создания файла ${filename}: ${new Date(creationTime * 1000).toISOString()}`,
-          )
+          // console.log(
+          //   `[API] Время создания файла ${filename}: ${new Date(creationTime * 1000).toISOString()}`,
+          // )
 
           // Проверяем наличие LRV файла
           const baseFileName = path.basename(filename, fileType)

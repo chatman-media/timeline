@@ -1,5 +1,6 @@
 import { Music } from "lucide-react"
-import { memo, useCallback, useRef, useState } from "react"
+import { memo, useCallback, useEffect,useRef, useState } from "react"
+import { LiveAudioVisualizer } from "react-audio-visualize"
 
 import { cn, formatDuration } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
@@ -49,6 +50,9 @@ export const AudioPreview = memo(function AudioPreview({
   const [hoverTime, setHoverTime] = useState<number | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -91,19 +95,75 @@ export const AudioPreview = memo(function AudioPreview({
     }
   }, [isPlaying])
 
-  const handleMouseEnter = useCallback(() => {
-    // При входе мыши ничего не делаем с воспроизведением
-    // Оно будет начинаться только по клику
+  useEffect(() => {
+    const audioElement = audioRef.current
+    if (!audioElement) return
+
+    let retryCount = 0
+    const maxRetries = 3
+    const retryDelay = 1000 // 1 секунда
+
+    const initAudioContext = () => {
+      try {
+        // Создаем контекст только один раз
+        if (!audioContextRef.current) {
+          audioContextRef.current = new AudioContext()
+        }
+
+        const audioContext = audioContextRef.current
+
+        // Создаем source только если его еще нет
+        if (!sourceRef.current) {
+          sourceRef.current = audioContext.createMediaElementSource(audioElement)
+        }
+
+        const destination = audioContext.createMediaStreamDestination()
+        sourceRef.current.connect(destination)
+        sourceRef.current.connect(audioContext.destination)
+
+        // Создаем MediaRecorder для визуализации
+        const recorder = new MediaRecorder(destination.stream)
+        setMediaRecorder(recorder)
+        recorder.start()
+      } catch (error) {
+        console.error("Error initializing audio context:", error)
+        if (retryCount < maxRetries) {
+          retryCount++
+          console.log(`Retrying initialization (${retryCount}/${maxRetries})...`)
+          setTimeout(initAudioContext, retryDelay)
+        }
+      }
+    }
+
+    // Ждем немного перед первой попыткой
+    setTimeout(initAudioContext, 100)
+
+    return () => {
+      if (mediaRecorder) {
+        mediaRecorder.stop()
+      }
+    }
+  }, [])
+
+  // Очистка при размонтировании компонента
+  useEffect(() => {
+    return () => {
+      if (sourceRef.current) {
+        sourceRef.current.disconnect()
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+      }
+    }
   }, [])
 
   return (
     <div
-      className={`h-full flex-shrink-0 relative`}
+      className={`h-full flex-shrink-0 bg-gray-200 dark:bg-gray-700 relative`}
       style={{ height: `${size}px`, width: `${(size * dimensions[0]) / dimensions[1]}px` }}
       onMouseMove={handleMouseMove}
       onClick={handlePlayPause}
       onMouseLeave={handleMouseLeave}
-      onMouseEnter={handleMouseEnter}
     >
       {!hideTime && (
         <div
@@ -118,10 +178,6 @@ export const AudioPreview = memo(function AudioPreview({
           {formatDuration(file.duration || 0, 0, true)}
         </div>
       )}
-
-      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-        <Music className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-      </div>
 
       <audio
         ref={audioRef}
@@ -143,12 +199,14 @@ export const AudioPreview = memo(function AudioPreview({
         }}
       />
 
+      {/* Иконка музыки */}
       <div
-        className={`absolute ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white cursor-pointer bg-black/50 rounded p-0.5`}
+        className={`absolute ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white cursor-pointer bg-black/50 rounded-xs p-0.5`}
       >
         <Music size={size > 100 ? 16 : 12} />
       </div>
 
+      {/* полоса времени */}
       {hoverTime !== null && Number.isFinite(hoverTime) && (
         <PreviewTimeline
           time={hoverTime}
@@ -157,6 +215,7 @@ export const AudioPreview = memo(function AudioPreview({
         />
       )}
 
+      {/* Имя файла */}
       {showFileName && (
         <div
           className={`absolute font-medium ${size > 100 ? "top-1" : "top-0.5"} ${
@@ -172,9 +231,37 @@ export const AudioPreview = memo(function AudioPreview({
         </div>
       )}
 
+      {/* кнопка добавления */}
       {onAddMedia && isLoaded && (
         <AddMediaButton file={file} onAddMedia={onAddMedia} isAdded={isAdded} size={size} />
       )}
+
+      {/* Аудио визуализация */}
+      <div
+        className="absolute top-0 left-0 right-0 pointer-events-none select-none"
+        style={{ height: `${size}px`, width: `${(size * dimensions[0]) / dimensions[1]}px` }}
+      >
+        {mediaRecorder && (
+          <LiveAudioVisualizer
+            mediaRecorder={mediaRecorder}
+            width={(size * dimensions[0]) / dimensions[1]}
+            height={size}
+            barWidth={1}
+            gap={0}
+            barColor="#38dac9"
+            backgroundColor="transparent"
+          />
+        )}
+      </div>
+
+      <audio
+        ref={audioRef}
+        src={file.path}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => setIsPlaying(false)}
+        style={{ display: "none" }}
+      />
     </div>
   )
 })
