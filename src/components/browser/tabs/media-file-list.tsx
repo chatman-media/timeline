@@ -816,8 +816,8 @@ export const MediaFileList = memo(function MediaFileList({
           <div
             key={fileId}
             className={cn(
-              "flex items-center p-0 h-full",
-              "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
+              "flex items-center p-0 h-full border border-transparent",
+              "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38] hover:border-[#38daca71] dark:hover:border-[#38dac9]",
               isAdded && "pointer-events-none",
             )}
           >
@@ -840,14 +840,15 @@ export const MediaFileList = memo(function MediaFileList({
           <div
             key={fileId}
             className={cn(
-              "flex flex-col h-full w-full rounded-sm overflow-hidden",
+              "flex flex-col h-full w-full rounded-xs overflow-hidden",
+              "border border-transparent bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38] hover:border-[#38daca71] dark:hover:border-[#38dac9]",
               isAdded && "pointer-events-none",
             )}
             style={{
               width: `${((previewSize * 16) / 9).toFixed(0)}px`,
             }}
           >
-            <div className="relative flex-1 flex-row w-full flex-grow bg-gray-200 dark:bg-[#2f2d38]/50">
+            <div className="relative flex-1 flex-row w-full flex-grow">
               <MediaPreview
                 file={file}
                 onAddMedia={handleAddMedia}
@@ -872,7 +873,7 @@ export const MediaFileList = memo(function MediaFileList({
             key={fileId}
             className={cn(
               "flex items-center p-0 h-full",
-              "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38]",
+              "border border-transparent bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38] hover:border-[#38daca71] dark:hover:border-[#38dac9]",
               isAdded && "pointer-events-none",
             )}
           >

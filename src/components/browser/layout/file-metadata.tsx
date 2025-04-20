@@ -28,12 +28,12 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
     <div className="grid grid-rows-2 w-full overflow-hidden" style={{ height: `${size}px` }}>
       <div className="flex justify-between w-full p-2">
         <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">{file.name}</p>
-        {file.isVideo && file.probeData?.format.duration && (
+        {!file.isImage && file.probeData?.format.duration && (
           <p
             className="font-medium flex-shrink-0"
             style={{ fontSize: size > 100 ? `13px` : "12px" }}
           >
-            {formatDuration(file.probeData.format.duration)}
+            {formatDuration(file.probeData.format.duration, 3, true)}
           </p>
         )}
 
