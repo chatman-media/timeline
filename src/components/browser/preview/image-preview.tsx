@@ -51,8 +51,19 @@ export const ImagePreview = memo(function ImagePreview({
       className={`h-full flex-shrink-0 relative`}
       style={{ height: `${size}px`, width: `${calculateWidth().toFixed(0)}px` }}
     >
+      {showFileName && (
+        <div
+          className={`absolute font-medium top-0.5 left-0.5 ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+          style={{
+            fontSize: size > 100 ? "13px" : "11px",
+          }}
+        >
+          {file.name}
+        </div>
+      )}
+
       <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-        <Image className="w-6 h-6 text-gray-500 dark:text-gray-400" />
+        <img src={file.path} alt={file.name} className="w-full h-full object-contain" />
       </div>
 
       <div
@@ -60,14 +71,6 @@ export const ImagePreview = memo(function ImagePreview({
       >
         <Image size={size > 100 ? 16 : 12} />
       </div>
-
-      {showFileName && (
-        <div
-          className={`absolute font-medium  ${size > 100 ? "" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
-        >
-          {file.name}
-        </div>
-      )}
 
       {onAddMedia && (
         <AddMediaButton file={file} onAddMedia={onAddMedia} isAdded={isAdded} size={size} />

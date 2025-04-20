@@ -330,6 +330,9 @@ export const VideoPreview = memo(function VideoPreview({
                       } ${
                         size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
                       } text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 ${isMultipleStreams ? "max-w-[100%]" : "max-w-[60%]"}`}
+                      style={{
+                        fontSize: size > 100 ? "13px" : "11px",
+                      }}
                     >
                       {file.name}
                     </div>

@@ -895,6 +895,19 @@ export const MediaFileList = memo(function MediaFileList({
         return null
       }
 
+      // если картинка то берем дату создания файла
+      if (group.files.some((file) => file.isImage)) {
+        group.title =
+          new Date(group.files.find((file) => file.isImage)?.createdAt || "").toLocaleDateString(
+            "ru-RU",
+            {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            },
+          ) || "Неизвестная дата"
+      }
+
       // Если нет заголовка и есть файлы, показываем их без группы
       if (!group.title) {
         return (

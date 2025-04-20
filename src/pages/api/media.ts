@@ -102,6 +102,7 @@ export default async function handler(
     const mediaPromises = allFiles.map(async (filename) => {
       const filePath = path.join(mediaDir, filename)
       const stats = await fs.stat(filePath)
+      // console.log(`[API] Статистика файла ${filename}:`, stats)
       const fileType = path.extname(filename).toLowerCase()
 
       // Для изображений
@@ -125,6 +126,8 @@ export default async function handler(
           path: `/media/${filename}`,
           size: stats.size,
           isImage: true,
+          stats,
+          createdAt: stats.birthtime,
           probeData: {
             streams: [],
             format: {
@@ -139,14 +142,14 @@ export default async function handler(
       if ([".mp3", ".wav", ".ogg", ".m4a", ".aac", ".flac", ".alac"].includes(fileType)) {
         try {
           const probeData = (await ffprobeAsync(filePath)) as FfprobeData
-
+          console.log(`[API] probeData.format.streams: ${JSON.stringify(probeData.streams)}`)
           return {
             id: path.basename(filename, path.extname(filename)),
             name: filename,
             path: `/media/${filename}`,
             size: stats.size,
             isAudio: true,
-            isVideo: false,
+            createdAt: stats.birthtime,
             duration: probeData.format.duration || 0,
             probeData: {
               streams: probeData.streams,
@@ -295,7 +298,7 @@ export default async function handler(
             lrv: lrvData ?? undefined,
           }
 
-          console.log(`[API] probeData.streams: ${JSON.stringify(probeData.streams)}`)
+          // console.log(`[API] probeData.streams: ${JSON.stringify(probeData.streams)}`)
 
           return mediaFile
         } catch (error) {
@@ -310,7 +313,7 @@ export default async function handler(
     const mediaFiles = await Promise.all(mediaPromises)
     const validMediaFiles = mediaFiles.filter((file): file is MediaFile => file !== null)
 
-    console.log("[API] Успешно обработано файлов:", validMediaFiles.length)
+    // console.log("[API] Успешно обработано файлов:", validMediaFiles.length)
     res.status(200).json({ media: validMediaFiles })
   } catch (error) {
     console.error("[API] Ошибка при обработке медиафайлов:", error)

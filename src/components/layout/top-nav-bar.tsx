@@ -52,7 +52,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <ThemeToggle />
         <Popover>
           <PopoverTrigger asChild>
-            <Button className="cursor-pointer hover:bg-secondary" variant="ghost" size="icon" title="Макет">
+            <Button
+              className="cursor-pointer hover:bg-secondary"
+              variant="ghost"
+              size="icon"
+              title="Макет"
+            >
               <Layout className="h-3.5 w-3.5" />
             </Button>
           </PopoverTrigger>

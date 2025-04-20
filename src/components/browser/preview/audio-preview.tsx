@@ -1,7 +1,7 @@
 import { Music } from "lucide-react"
 import { memo, useCallback, useRef, useState } from "react"
 
-import { formatDuration } from "@/lib/utils"
+import { cn, formatDuration } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
 
 import { PreviewTimeline } from ".."
@@ -107,9 +107,15 @@ export const AudioPreview = memo(function AudioPreview({
     >
       {!hideTime && (
         <div
-          className={`absolute text-xs leading-[16px] ${size > 100 ? "right-1 top-1" : "right-0.5 top-0.5"} text-white bg-black/50 rounded ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"}`}
+          className={cn(
+            "absolute pointer-events-none leading-[16px] text-white bg-black/50 rounded-xs",
+            size > 100 ? "right-1 top-1 px-[4px] py-[2px]" : "right-0.5 top-0.5 px-0.5 py-0",
+          )}
+          style={{
+            fontSize: size > 100 ? "13px" : "11px",
+          }}
         >
-          {formatDuration(file.duration || 0)}
+          {formatDuration(file.duration || 0, 0, true)}
         </div>
       )}
 
@@ -153,7 +159,14 @@ export const AudioPreview = memo(function AudioPreview({
 
       {showFileName && (
         <div
-          className={`absolute font-medium  ${size > 100 ? "" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+          className={`absolute font-medium ${size > 100 ? "top-1" : "top-0.5"} ${
+            size > 100 ? "left-1" : "left-0.5"
+          } ${
+            size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
+          } text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+          style={{
+            fontSize: size > 100 ? "13px" : "11px",
+          }}
         >
           {file.name}
         </div>
