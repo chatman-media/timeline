@@ -24,8 +24,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 
 interface MusicToolbarProps {
-  viewMode: "list" | "grid" | "thumbnails"
-  onViewModeChange: (mode: "list" | "grid" | "thumbnails") => void
+  viewMode: "list" | "thumbnails"
+  onViewModeChange: (mode: "list" | "thumbnails") => void
   onImport: () => void
   onImportFile: () => void
   onImportFolder: () => void
@@ -84,7 +84,7 @@ export function MusicToolbar({
   }, [currentFilterType])
 
   // Функции для обработки изменений
-  const handleViewModeChange = (mode: "list" | "grid" | "thumbnails") => {
+  const handleViewModeChange = (mode: "list" | "thumbnails") => {
     setInternalViewMode(mode)
     onViewModeChange(mode)
   }
@@ -170,23 +170,6 @@ export function MusicToolbar({
                   size="icon"
                   className={cn(
                     "h-6 w-6 mr-1 cursor-pointer",
-                    internalViewMode === "grid" && "bg-secondary text-secondary-foreground",
-                  )}
-                  onClick={() => handleViewModeChange("grid")}
-                >
-                  <Grid size={16} />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Сетка</TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    "h-6 w-6 mr-1 cursor-pointer",
                     internalViewMode === "thumbnails" && "bg-secondary text-secondary-foreground",
                   )}
                   onClick={() => handleViewModeChange("thumbnails")}
@@ -194,7 +177,7 @@ export function MusicToolbar({
                   <Grid2x2 size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Предпросмотр</TooltipContent>
+              <TooltipContent>Обложки</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
