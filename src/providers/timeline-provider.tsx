@@ -13,11 +13,12 @@ import { timelineMachine } from "@/machines/timeline-machine"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimeRange } from "@/types/time-range"
-
+import { Sector } from "@/types/timeline"
 interface TimelineContextType {
   isDirty: boolean
   zoomLevel: number
   timeRanges: Record<string, TimeRange[]>
+  sectors: Sector[]
   activeTrackId: string | null
   trackVolumes: Record<string, number>
   isSeeking: boolean
@@ -182,6 +183,7 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     isDirty: state?.isDirty,
     zoomLevel: state?.zoomLevel,
     timeRanges: state?.timeRanges,
+    sectors: state?.sectors,
     activeTrackId: state?.activeTrackId,
     trackVolumes: state?.trackVolumes,
     isSeeking: state?.isSeeking,

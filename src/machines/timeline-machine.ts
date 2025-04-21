@@ -3,6 +3,7 @@ import { assign, createMachine } from "xstate"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimeRange } from "@/types/time-range"
+import { Sector } from "@/types/timeline"
 import { createTracksFromFiles } from "@/utils/media-utils"
 
 interface TimelineContext {
@@ -14,6 +15,7 @@ interface TimelineContext {
   isSeeking: boolean
   isChangingCamera: boolean
   tracks: Track[]
+  sectors: Sector[]
   history: TimelineContext[]
   historyIndex: number
   future: TimelineContext[]
@@ -200,6 +202,7 @@ export const timelineMachine = createMachine({
     isChangingCamera: false,
     videoRefs: {},
     tracks: [],
+    sectors: [],
     history: [],
     historyIndex: -1,
     canUndo: false,
@@ -291,13 +294,13 @@ export const timelineMachine = createMachine({
         },
         addMediaFiles: {
           actions: assign(({ context, event }) => {
-            const newTracks = createTracksFromFiles(
+            const sectors = createTracksFromFiles(
               (event as addMediaFilesEvent).files,
               context.tracks.length,
               context.tracks,
             )
             return {
-              tracks: [...context.tracks, ...newTracks],
+              sectors: [...context.sectors, ...sectors],
               isDirty: true,
             }
           }),

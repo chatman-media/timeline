@@ -1,4 +1,4 @@
-import { MediaFile } from "./media"
+import { MediaFile, Track } from "./media"
 import { TimeRange } from "./time-range"
 
 // Базовые типы для временной шкалы
@@ -13,6 +13,11 @@ export interface VideoMetadata {
   fps: number
   channels?: number
   sampleRate?: number
+}
+
+export interface Sector {
+  tracks: Track[]
+  timeRanges: TimeRange[]
 }
 
 export interface TrackSliceState {

@@ -1,9 +1,8 @@
-import { memo, useCallback, useMemo } from "react"
+import { memo, useMemo } from "react"
 
 import { useTimelineContext } from "@/providers/timeline-provider"
 
 import { TimelineScale } from "./timeline-scale/timeline-scale"
-import { TimelineTracks } from "./timeline-tracks"
 import { VideoTrack } from "./track/video-track"
 
 interface TimelineContainerProps {
@@ -27,7 +26,7 @@ interface TrackCoordinates {
 
 export const TimelineContainer = memo(
   ({ startTime, endTime, duration }: TimelineContainerProps) => {
-    const { zoomLevel, tracks } = useTimelineContext()
+    const { tracks } = useTimelineContext()
 
     // Рассчитываем координаты для всех треков и видео
     const trackCoordinates = useMemo(() => {

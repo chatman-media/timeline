@@ -932,9 +932,9 @@ export const MediaFileList = memo(function MediaFileList({
           <div className="flex items-center justify-between mb-2 px-2">
             <h3 className="text-sm font-medium">{group.title}</h3>
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
-              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7 hover:bg-[#dddbdd] dark:hover:bg-[#45444b] border-[#dddbdd] dark:border-[#45444b]"
+              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] bg-[#dddbdd] dark:bg-[#45444b]"
               onClick={() => {
                 // Фильтруем файлы - изображения не добавляем на таймлайн
                 console.log("[renderGroup] Group files:", group.files)

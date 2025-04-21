@@ -1,6 +1,6 @@
 import { Browser } from "@/components/browser/browser"
 import { MediaPlayer } from "@/components/media-player/media-player"
-import { Timeline } from "@/components/timeline"
+import { TimelineLayout } from "@/components/timeline"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
 export function DefaultMediaEditor() {
@@ -30,7 +30,7 @@ export function DefaultMediaEditor() {
 
       <ResizablePanel defaultSize={50}>
         <div className="flex-1 h-full">
-          <Timeline />
+          <TimelineLayout />
         </div>
       </ResizablePanel>
     </ResizablePanelGroup>

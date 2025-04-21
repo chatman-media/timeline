@@ -47,7 +47,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
   }
 
   return (
-    <div className="flex items-center justify-between w-full py-[2px] px-1 bg-gray-200 dark:bg-[#1b1a1f] relative">
+    <div className="flex items-center justify-between w-full py-[2px] px-1 bg-gray-200 dark:bg-[#1b1a1f] border-b border relative">
       <div className="flex items-center h-6">
         <ThemeToggle />
         <Popover>

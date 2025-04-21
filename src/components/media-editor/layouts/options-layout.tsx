@@ -1,7 +1,7 @@
 import { Browser } from "@/components/browser"
 import { MediaPlayer } from "@/components/media-player"
 import { Options } from "@/components/options"
-import { Timeline } from "@/components/timeline"
+import { TimelineLayout } from "@/components/timeline"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 
 interface OptionsLayoutProps {}
@@ -35,7 +35,7 @@ export function OptionsMediaEditor({}: OptionsLayoutProps) {
           <ResizableHandle />
           <ResizablePanel defaultSize={50}>
             <div className="flex-1 relative h-full">
-              <Timeline />
+              <TimelineLayout />
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>

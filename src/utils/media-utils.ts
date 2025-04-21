@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid"
 
 import type { FileGroup, MediaFile, Track } from "@/types/media"
+import { TimeRange } from "@/types/time-range"
 
 import { calculateTimeRanges } from "./video-utils"
 
@@ -95,6 +96,19 @@ export const getGroupedFiles = (files: MediaFile[]): Record<string, MediaFile[]>
   )
 }
 
+interface Sector {
+  tracks: Track[]
+  timeRanges: TimeRange[]
+}
+
+const tracks: Track[] = []
+const sectors: Sector[] = [
+  {
+    tracks: [],
+    timeRanges: [],
+  },
+]
+
 /**
  * Создает треки из медиафайлов
  * @param files - Массив медиафайлов
@@ -105,24 +119,23 @@ export const createTracksFromFiles = (
   files: MediaFile[],
   currentTracksLength: number,
   existingTracks: Track[] = [],
-): Track[] => {
+): Sector[] => {
   // Разделяем файлы на видео и аудио
   const videoFiles = files.filter((file) =>
     file.probeData?.streams?.some((stream) => stream.codec_type === "video"),
   )
   const audioFiles = files.filter(
-    (file) => !file.probeData?.streams?.some((stream) => stream.codec_type === "video"),
+    (file) => !file.probeData?.streams?.some((stream) => stream.codec_type === "audio"),
   )
-
-  const tracks: Track[] = []
 
   // Сортируем файлы по времени начала
   const sortedVideoFiles = [...videoFiles].sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
   const sortedAudioFiles = [...audioFiles].sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
 
-  // Группируем видео по дням для правильной нумерации
+  const sectors: Sector[] = []
+
+  // Группируем видео по дням
   const videoFilesByDay = sortedVideoFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
-    // Если нет startTime, используем текущее время
     const startTime = file.startTime || Date.now() / 1000
     const date = new Date(startTime * 1000).toISOString().split("T")[0]
     if (!acc[date]) {
@@ -159,9 +172,16 @@ export const createTracksFromFiles = (
         .map((track) => Number(track.index) || 0),
     )
 
+    // Создаем один сектор для всех файлов дня
+    const sector: Sector = {
+      tracks: [],
+      timeRanges: [],
+    }
+
+    // Группируем файлы и создаем треки
     const groupedVideoFiles = getGroupedFiles(dayFiles)
     Object.values(groupedVideoFiles).forEach((groupFiles, index) => {
-      tracks.push({
+      sector.tracks.push({
         id: nanoid(),
         name: `Видео ${maxVideoIndex + index + 1}`,
         type: "video",
@@ -180,6 +200,10 @@ export const createTracksFromFiles = (
         isVisible: true,
       })
     })
+
+    // Обновляем timeRanges сектора
+    sector.timeRanges = calculateTimeRanges(dayFiles)
+    sectors.push(sector)
   })
 
   // Аналогично для аудио файлов
@@ -219,9 +243,15 @@ export const createTracksFromFiles = (
         .map((track) => Number(track.index) || 0),
     )
 
+    // Создаем один сектор для всех аудио файлов дня
+    const sector: Sector = {
+      tracks: [],
+      timeRanges: [],
+    }
+
     const groupedAudioFiles = getGroupedFiles(dayFiles)
     Object.values(groupedAudioFiles).forEach((groupFiles, index) => {
-      tracks.push({
+      sector.tracks.push({
         id: nanoid(),
         name: `Аудио ${maxAudioIndex + index + 1}`,
         type: "audio",
@@ -232,7 +262,6 @@ export const createTracksFromFiles = (
           (groupFiles[groupFiles.length - 1].startTime || 0) +
           (groupFiles[groupFiles.length - 1].duration || 0),
         combinedDuration: groupFiles.reduce((total, file) => total + (file.duration || 0), 0),
-        timeRanges: calculateTimeRanges(groupFiles),
         index: maxAudioIndex + index + 1,
         volume: 1,
         isMuted: false,
@@ -240,9 +269,13 @@ export const createTracksFromFiles = (
         isVisible: true,
       })
     })
+
+    // Обновляем timeRanges сектора
+    sector.timeRanges = calculateTimeRanges(dayFiles)
+    sectors.push(sector)
   })
 
-  return tracks
+  return sectors
 }
 
 /**

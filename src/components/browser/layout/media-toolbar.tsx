@@ -136,7 +136,7 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#dddbdd] dark:bg-[#45444b]"
+          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#dddbdd] hover:bg-[#cdcdcd] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]/70"
           onClick={onImport}
         >
           {/* <Import size={12} /> */}
@@ -145,7 +145,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
+                  className="cursor-pointer p-1 rounded-sm hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFile()
@@ -159,7 +159,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
+                  className="cursor-pointer hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] p-1 rounded-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFolder()
@@ -176,7 +176,7 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#dddbdd] dark:bg-[#45444b]"
+          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#dddbdd] hover:bg-[#cdcdcd] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]/70"
           onClick={onRecord}
         >
           <span className="text-xs px-2">Запись</span>
@@ -184,7 +184,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
+                  className="cursor-pointer hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] p-1 rounded-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordCamera()
@@ -198,7 +198,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
+                  className="cursor-pointer hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] p-1 rounded-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordScreen()
@@ -212,7 +212,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-[#6d6a72] p-1 rounded-sm"
+                  className="cursor-pointer hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] p-1 rounded-sm"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordVoice()
