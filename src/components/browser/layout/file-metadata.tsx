@@ -25,12 +25,12 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
   console.log(file)
 
   return (
-    <div className="grid grid-rows-2 w-full overflow-hidden" style={{ height: `${size}px` }}>
-      <div className="flex justify-between w-full p-2">
-        <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100">{file.name}</p>
+    <div className="grid w-full grid-rows-2 overflow-hidden" style={{ height: `${size}px` }}>
+      <div className="flex w-full justify-between p-2">
+        <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{file.name}</p>
         {!file.isImage && file.probeData?.format.duration && (
           <p
-            className="font-medium flex-shrink-0"
+            className="flex-shrink-0 font-medium"
             style={{ fontSize: size > 100 ? `13px` : "12px" }}
           >
             {formatDuration(file.probeData.format.duration, 3, true)}
@@ -38,7 +38,7 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
         )}
 
         {file.isImage && file.createdAt && (
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-200 flex-shrink-0 whitespace-nowrap">
+          <span className="flex-shrink-0 text-sm font-medium whitespace-nowrap text-gray-700 dark:text-gray-200">
             {new Date(file.createdAt).toLocaleDateString("ru-RU", {
               year: "numeric",
               month: "long",
@@ -49,30 +49,30 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
       </div>
 
       {file.isVideo ? (
-        <div className="flex items-end w-full p-2">
-          <span className="text-xs text-gray-700 dark:text-gray-200 flex-shrink-0 whitespace-nowrap">
+        <div className="flex w-full items-end p-2">
+          <span className="flex-shrink-0 text-xs whitespace-nowrap text-gray-700 dark:text-gray-200">
             {formatTimeWithMilliseconds(file.startTime || 0, true, true, false)}
           </span>
 
-          <div className="flex-1 min-w-0 ml-2 overflow-hidden">
-            <p className="text-xs truncate flex justify-between items-center">
+          <div className="ml-2 min-w-0 flex-1 overflow-hidden">
+            <p className="flex items-center justify-between truncate text-xs">
               {videoStream && (
                 <span>
-                  <span className="text-gray-700 dark:text-gray-200 ml-3">
+                  <span className="ml-3 text-gray-700 dark:text-gray-200">
                     {videoStream.width}x{videoStream.height}
                   </span>
-                  <span className="text-gray-700 dark:text-gray-200 ml-3">
+                  <span className="ml-3 text-gray-700 dark:text-gray-200">
                     {(((videoStream.width || 0) * (videoStream.height || 0)) / 1000000).toFixed(1)}{" "}
                     MP
                   </span>
-                  <span className="text-gray-700 dark:text-gray-200 ml-3">
+                  <span className="ml-3 text-gray-700 dark:text-gray-200">
                     {getAspectRatio(videoStream)}
                   </span>
-                  <span className="text-gray-700 dark:text-gray-200 ml-3">
+                  <span className="ml-3 text-gray-700 dark:text-gray-200">
                     {formatBitrate(Number(videoStream?.bit_rate))}
                   </span>
                   {getFps(videoStream) && (
-                    <span className="text-gray-700 dark:text-gray-200 ml-3">
+                    <span className="ml-3 text-gray-700 dark:text-gray-200">
                       {getFps(videoStream)} fps
                     </span>
                   )}
@@ -82,15 +82,15 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
           </div>
 
           {file.probeData?.format.size && (
-            <p className="text-xs text-gray-700 dark:text-gray-200 flex-shrink-0 whitespace-nowrap ml-2">
+            <p className="ml-2 flex-shrink-0 text-xs whitespace-nowrap text-gray-700 dark:text-gray-200">
               {formatFileSize(file.probeData.format.size)}
             </p>
           )}
         </div>
       ) : (
-        <div className="flex justify-end items-end w-full p-2">
+        <div className="flex w-full items-end justify-end p-2">
           {file.probeData?.format.size && (
-            <p className="text-xs text-gray-700 dark:text-gray-200 flex-shrink-0 whitespace-nowrap">
+            <p className="flex-shrink-0 text-xs whitespace-nowrap text-gray-700 dark:text-gray-200">
               {formatFileSize(file.probeData.format.size)}
             </p>
           )}

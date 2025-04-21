@@ -351,8 +351,8 @@ export function MediaPlayer() {
   const isTimeInRange = currentTime >= videoStartTime.current && currentTime <= videoEndTime
 
   return (
-    <div className="relative h-full flex flex-col">
-      <div className="flex-1 relative bg-black">
+    <div className="relative flex h-full flex-col">
+      <div className="relative flex-1 bg-black">
         {isTimeInRange ? (
           <video
             ref={(el) => {
@@ -361,7 +361,7 @@ export function MediaPlayer() {
               }
             }}
             src={video.path}
-            className="absolute inset-0 w-full h-full object-contain"
+            className="absolute inset-0 h-full w-full object-contain"
             onClick={handlePlayPause}
             playsInline
             preload="auto"
@@ -374,7 +374,7 @@ export function MediaPlayer() {
             // }}
           />
         ) : (
-          <div className="absolute inset-0 w-full h-full bg-black" />
+          <div className="absolute inset-0 h-full w-full bg-black" />
         )}
       </div>
       <PlayerControls currentTime={currentTime} />

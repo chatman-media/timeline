@@ -105,15 +105,15 @@ export function MusicToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 cursor-pointer px-1"
+          className="flex cursor-pointer items-center gap-1 px-1 text-xs"
           onClick={onImport}
         >
-          <span className="text-xs px-2">Импорт</span>
+          <span className="px-2 text-xs">Импорт</span>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-gray-300 dark:hover:bg-gray-500"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFile()
@@ -127,7 +127,7 @@ export function MusicToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-gray-300 dark:hover:bg-gray-500 p-1 rounded-sm"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-gray-300 dark:hover:bg-gray-500"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFolder()
@@ -145,14 +145,14 @@ export function MusicToolbar({
       <div className="flex items-end gap-2">
         {/* Кнопки режима отображения */}
         <TooltipProvider>
-          <div className="flex rounded-md overflow-hidden">
+          <div className="flex overflow-hidden rounded-md">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-1 cursor-pointer",
+                    "mr-1 h-6 w-6 cursor-pointer",
                     internalViewMode === "list" && "bg-secondary text-secondary-foreground",
                   )}
                   onClick={() => handleViewModeChange("list")}
@@ -169,7 +169,7 @@ export function MusicToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-1 cursor-pointer",
+                    "mr-1 h-6 w-6 cursor-pointer",
                     internalViewMode === "thumbnails" && "bg-secondary text-secondary-foreground",
                   )}
                   onClick={() => handleViewModeChange("thumbnails")}
@@ -185,7 +185,7 @@ export function MusicToolbar({
         {/* Sort Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-6 h-6 mr-1 cursor-pointer">
+            <Button variant="ghost" size="sm" className="mr-1 h-6 w-6 cursor-pointer">
               <SortDesc size={16} />
             </Button>
           </DropdownMenuTrigger>
@@ -220,7 +220,7 @@ export function MusicToolbar({
         {/* Filter Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="w-6 h-6 cursor-pointer">
+            <Button variant="ghost" size="sm" className="h-6 w-6 cursor-pointer">
               <Filter size={16} />
             </Button>
           </DropdownMenuTrigger>

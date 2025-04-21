@@ -159,8 +159,11 @@ export const AudioPreview = memo(function AudioPreview({
 
   return (
     <div
-      className={`h-full flex-shrink-0 bg-gray-200 dark:bg-gray-700 relative`}
-      style={{ height: `${size}px`, width: `${(size * dimensions[0]) / dimensions[1]}px` }}
+      className={`relative h-full flex-shrink-0 bg-gray-200 dark:bg-gray-700`}
+      style={{
+        height: `${size}px`,
+        width: `${(size * dimensions[0]) / dimensions[1]}px`,
+      }}
       onMouseMove={handleMouseMove}
       onClick={handlePlayPause}
       onMouseLeave={handleMouseLeave}
@@ -170,7 +173,7 @@ export const AudioPreview = memo(function AudioPreview({
         src={file.path}
         preload="auto"
         tabIndex={0}
-        className="absolute inset-0 w-full h-full focus:outline-none pointer-events-none"
+        className="pointer-events-none absolute inset-0 h-full w-full focus:outline-none"
         onEnded={() => {
           setIsPlaying(false)
         }}
@@ -187,7 +190,7 @@ export const AudioPreview = memo(function AudioPreview({
 
       {/* Иконка музыки */}
       <div
-        className={`absolute ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white cursor-pointer bg-black/50 rounded-xs p-0.5`}
+        className={`absolute ${size > 100 ? "bottom-1 left-1" : "bottom-0.5 left-0.5"} cursor-pointer rounded-xs bg-black/50 p-0.5 text-white`}
       >
         <Music size={size > 100 ? 16 : 12} />
       </div>
@@ -208,7 +211,7 @@ export const AudioPreview = memo(function AudioPreview({
             size > 100 ? "left-1" : "left-0.5"
           } ${
             size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-          } text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+          } line-clamp-1 max-w-[calc(60%)] rounded-xs bg-black/50 text-xs leading-[16px] text-white`}
           style={{
             fontSize: size > 100 ? "13px" : "11px",
           }}
@@ -224,8 +227,11 @@ export const AudioPreview = memo(function AudioPreview({
 
       {/* Аудио визуализация */}
       <div
-        className="absolute top-0 left-0 right-0 pointer-events-none select-none"
-        style={{ height: `${size}px`, width: `${(size * dimensions[0]) / dimensions[1]}px` }}
+        className="pointer-events-none absolute top-0 right-0 left-0 select-none"
+        style={{
+          height: `${size}px`,
+          width: `${(size * dimensions[0]) / dimensions[1]}px`,
+        }}
       >
         {mediaRecorder && (
           <LiveAudioVisualizer

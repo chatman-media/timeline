@@ -1,15 +1,15 @@
-import '@testing-library/jest-dom'
+import "@testing-library/jest-dom"
 
 // Добавляем глобальное определение React для Vitest, чтобы можно было использовать vi.spyOn(React, 'useState')
-import * as React from 'react'
-import { vi } from 'vitest'
+import * as React from "react"
+import { vi } from "vitest"
 global.React = React
 
 // Мокируем matchMedia, если он не определен
-if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
-  Object.defineProperty(window, 'matchMedia', {
+if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
+  Object.defineProperty(window, "matchMedia", {
     writable: true,
-    value: vi.fn().mockImplementation(query => ({
+    value: vi.fn().mockImplementation((query) => ({
       matches: false,
       media: query,
       onchange: null,
@@ -23,8 +23,8 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
 }
 
 // Мокируем screen, если он не определен
-if (typeof window !== 'undefined' && !window.screen) {
-  Object.defineProperty(window, 'screen', {
+if (typeof window !== "undefined" && !window.screen) {
+  Object.defineProperty(window, "screen", {
     writable: true,
     value: {
       width: 1440,
@@ -34,9 +34,9 @@ if (typeof window !== 'undefined' && !window.screen) {
 }
 
 // Мокируем devicePixelRatio, если он не определен
-if (typeof window !== 'undefined' && !window.devicePixelRatio) {
-  Object.defineProperty(window, 'devicePixelRatio', {
+if (typeof window !== "undefined" && !window.devicePixelRatio) {
+  Object.defineProperty(window, "devicePixelRatio", {
     writable: true,
     value: 1,
   })
-} 
+}

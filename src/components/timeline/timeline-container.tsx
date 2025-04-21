@@ -80,7 +80,7 @@ export const TimelineContainer = memo(
     }, [tracks, startTime, duration])
 
     return (
-      <div className="flex flex-col w-full h-full">
+      <div className="flex h-full w-full flex-col">
         <TimelineScale startTime={startTime} endTime={endTime} duration={duration} />
         <div className="relative w-full">
           {tracks.map((track, index) => (

@@ -397,7 +397,9 @@ export function CameraCaptureDialog({
       console.error("MediaRecorder не поддерживает данный формат:", e)
       try {
         // Пробуем другой формат
-        mediaRecorderRef.current = new MediaRecorder(streamRef.current, { mimeType: "video/webm" })
+        mediaRecorderRef.current = new MediaRecorder(streamRef.current, {
+          mimeType: "video/webm",
+        })
       } catch (e) {
         console.error("MediaRecorder не поддерживается браузером:", e)
         return
@@ -566,24 +568,24 @@ export function CameraCaptureDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="sm:max-w-[500px] bg-[#18181B] text-white border-[#333] p-0 overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b border-[#333]">
+      <DialogContent className="overflow-hidden border-[#333] bg-[#18181B] p-0 text-white sm:max-w-[500px]">
+        <div className="flex items-center justify-between border-b border-[#333] p-4">
           <h2 className="text-lg font-semibold">Захват видео</h2>
         </div>
 
         <div className="p-4">
           {/* Отображаем ошибки и статус разрешений */}
           {permissionStatus === "pending" && (
-            <div className="text-sm mb-4 text-center">
+            <div className="mb-4 text-center text-sm">
               Запрашиваем доступ к камере и микрофону...
             </div>
           )}
 
           {permissionStatus === "denied" && (
-            <div className="text-sm mb-4 bg-red-900/50 p-3 rounded-md text-red-100">
+            <div className="mb-4 rounded-md bg-red-900/50 p-3 text-sm text-red-100">
               {errorMessage}
               <div className="mt-2">
-                <Button className="bg-red-600 hover:bg-red-700 w-full" onClick={requestPermissions}>
+                <Button className="w-full bg-red-600 hover:bg-red-700" onClick={requestPermissions}>
                   Повторить запрос
                 </Button>
               </div>
@@ -591,10 +593,10 @@ export function CameraCaptureDialog({
           )}
 
           {permissionStatus === "error" && (
-            <div className="text-sm mb-4 bg-red-900/50 p-3 rounded-md text-red-100">
+            <div className="mb-4 rounded-md bg-red-900/50 p-3 text-sm text-red-100">
               {errorMessage}
               <div className="mt-2">
-                <Button className="bg-red-600 hover:bg-red-700 w-full" onClick={requestPermissions}>
+                <Button className="w-full bg-red-600 hover:bg-red-700" onClick={requestPermissions}>
                   Повторить
                 </Button>
               </div>
@@ -603,10 +605,10 @@ export function CameraCaptureDialog({
 
           {permissionStatus === "granted" && (
             <>
-              <div className="text-sm mb-4">Запись с веб-камеры</div>
+              <div className="mb-4 text-sm">Запись с веб-камеры</div>
 
               {/* Предпросмотр видео */}
-              <div className="relative mx-auto w-full max-w-[240px] h-[320px] bg-black mb-6 flex items-center justify-center overflow-hidden rounded-md border border-gray-800">
+              <div className="relative mx-auto mb-6 flex h-[320px] w-full max-w-[240px] items-center justify-center overflow-hidden rounded-md border border-gray-800 bg-black">
                 {!isDeviceReady && (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                     Инициализация камеры...
@@ -617,27 +619,27 @@ export function CameraCaptureDialog({
                   autoPlay
                   playsInline
                   muted
-                  className={`w-full h-full object-cover ${!isDeviceReady ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
+                  className={`h-full w-full object-cover ${!isDeviceReady ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
                 />
                 {showCountdown && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-white text-6xl font-bold">
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-6xl font-bold text-white">
                     {countdown}
                   </div>
                 )}
               </div>
 
               {/* Настройки устройств */}
-              <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-4 items-center mb-6">
+              <div className="mb-6 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-4">
                 <div className="text-sm text-gray-300">Устройство:</div>
                 <Select
                   value={selectedDevice}
                   onValueChange={setSelectedDevice}
                   disabled={isRecording || isLoadingCapabilities}
                 >
-                  <SelectTrigger className="bg-[#222] border-[#444] focus:ring-offset-0 focus:ring-0">
+                  <SelectTrigger className="border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#222] border-[#444]">
+                  <SelectContent className="border-[#444] bg-[#222]">
                     {devices.map(
                       (device) =>
                         device.deviceId && (
@@ -659,10 +661,10 @@ export function CameraCaptureDialog({
                   onValueChange={setSelectedAudioDevice}
                   disabled={isRecording || isLoadingCapabilities}
                 >
-                  <SelectTrigger className="bg-[#222] border-[#444] focus:ring-offset-0 focus:ring-0">
+                  <SelectTrigger className="border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#222] border-[#444]">
+                  <SelectContent className="border-[#444] bg-[#222]">
                     {audioDevices.map(
                       (device) =>
                         device.deviceId && (
@@ -682,7 +684,7 @@ export function CameraCaptureDialog({
                 <div>
                   {isLoadingCapabilities ? (
                     <div className="flex items-center text-xs text-gray-400">
-                      <div className="animate-spin h-4 w-4 border-2 border-[#0CC] border-t-transparent rounded-full mr-2"></div>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[#0CC] border-t-transparent"></div>
                       Определяем возможности...
                     </div>
                   ) : (
@@ -691,10 +693,10 @@ export function CameraCaptureDialog({
                       onValueChange={setSelectedResolution}
                       disabled={isRecording}
                     >
-                      <SelectTrigger className="bg-[#222] border-[#444] focus:ring-offset-0 focus:ring-0">
+                      <SelectTrigger className="border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#222] border-[#444] max-h-56 overflow-y-auto">
+                      <SelectContent className="max-h-56 overflow-y-auto border-[#444] bg-[#222]">
                         {availableResolutions.map(
                           (res) =>
                             res.label && (
@@ -712,7 +714,7 @@ export function CameraCaptureDialog({
                   )}
 
                   {supportedResolutions.length > 0 && (
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="mt-1 text-xs text-gray-400">
                       Поддерживается: {supportedResolutions.length} разрешений
                     </div>
                   )}
@@ -722,7 +724,7 @@ export function CameraCaptureDialog({
                 <div>
                   {isLoadingCapabilities ? (
                     <div className="flex items-center text-xs text-gray-400">
-                      <div className="animate-spin h-4 w-4 border-2 border-[#0CC] border-t-transparent rounded-full mr-2"></div>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[#0CC] border-t-transparent"></div>
                       Определяем возможности...
                     </div>
                   ) : (
@@ -731,10 +733,10 @@ export function CameraCaptureDialog({
                       onValueChange={(value) => setFrameRate(parseInt(value))}
                       disabled={isRecording}
                     >
-                      <SelectTrigger className="bg-[#222] border-[#444] focus:ring-offset-0 focus:ring-0">
+                      <SelectTrigger className="border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="bg-[#222] border-[#444]">
+                      <SelectContent className="border-[#444] bg-[#222]">
                         {supportedFrameRates.map((fps) => (
                           <SelectItem
                             key={fps.toString()}
@@ -749,7 +751,7 @@ export function CameraCaptureDialog({
                   )}
 
                   {supportedFrameRates.length > 0 && supportedFrameRates.length < 10 && (
-                    <div className="text-xs text-gray-400 mt-1">
+                    <div className="mt-1 text-xs text-gray-400">
                       Поддерживается: {supportedFrameRates.join(", ")} fps
                     </div>
                   )}
@@ -763,7 +765,7 @@ export function CameraCaptureDialog({
                     onChange={(e) => setCountdown(parseInt(e.target.value) || 3)}
                     min={1}
                     max={10}
-                    className="w-16 bg-[#222] border-[#444] text-center mr-2"
+                    className="mr-2 w-16 border-[#444] bg-[#222] text-center"
                     disabled={isRecording}
                   />
                   <span className="text-sm text-gray-300">сек</span>
@@ -772,25 +774,25 @@ export function CameraCaptureDialog({
 
               {/* Запись */}
               <div className="flex flex-col items-center">
-                <div className="flex items-center justify-center mb-4 gap-6">
+                <div className="mb-4 flex items-center justify-center gap-6">
                   {!isRecording ? (
                     <Button
-                      className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center mb-0 border-2 border-white"
+                      className="mb-0 flex h-20 w-20 items-center justify-center rounded-full border-2 border-white bg-red-500 hover:bg-red-600"
                       onClick={startCountdown}
                       disabled={!isDeviceReady}
                     >
-                      <div className="w-6 h-6 rounded-full bg-white animate-pulse" />
+                      <div className="h-6 w-6 animate-pulse rounded-full bg-white" />
                     </Button>
                   ) : (
                     <Button
-                      className="w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center mb-0 border-2 border-white"
+                      className="mb-0 flex h-20 w-20 items-center justify-center rounded-full border-2 border-white bg-red-500 hover:bg-red-600"
                       onClick={stopRecording}
                     >
-                      <div className="w-6 h-6 bg-white rounded" />
+                      <div className="h-6 w-6 rounded bg-white" />
                     </Button>
                   )}
                 </div>
-                <div className="text-xl font-mono">
+                <div className="font-mono text-xl">
                   Время записи: {formatRecordingTime(recordingTime)}
                 </div>
               </div>
@@ -798,8 +800,8 @@ export function CameraCaptureDialog({
           )}
         </div>
 
-        <div className="p-4 flex justify-end border-t border-[#333]">
-          <Button className="bg-[#0CC]  hover:bg-[#0AA] text-black" onClick={handleClose}>
+        <div className="flex justify-end border-t border-[#333] p-4">
+          <Button className="bg-[#0CC] text-black hover:bg-[#0AA]" onClick={handleClose}>
             OK
           </Button>
         </div>

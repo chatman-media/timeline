@@ -11,14 +11,16 @@ import { ProjectSettings } from "@/types/project"
 import { browserInspector } from "./providers"
 export const ProjectContextType = createContext<
   (ProjectContext & ProjectContextEvents) | undefined
-    >(undefined)
+>(undefined)
 
 interface ProjectProviderProps {
   children: React.ReactNode
 }
 
 export function ProjectProvider({ children }: ProjectProviderProps) {
-  const [state, send] = useMachine(projectMachine, { inspect: browserInspector.inspect })
+  const [state, send] = useMachine(projectMachine, {
+    inspect: browserInspector.inspect,
+  })
 
   return (
     <ProjectContextType.Provider

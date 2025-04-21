@@ -73,5 +73,5 @@ export function TimelineMarks({
 
   console.log("TimelineMarks total marks:", marks.length)
 
-  return <div className={`relative w-full h-8 ${isActive ? "" : "bg-muted/50"}`}>{marks}</div>
+  return <div className={`relative h-8 w-full ${isActive ? "" : "bg-muted/50"}`}>{marks}</div>
 }

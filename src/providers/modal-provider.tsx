@@ -19,7 +19,9 @@ interface ModalProviderProps {
 }
 
 export function ModalProvider({ children }: ModalProviderProps) {
-  const [state, send] = useMachine(modalMachine, { inspect: browserInspector.inspect })
+  const [state, send] = useMachine(modalMachine, {
+    inspect: browserInspector.inspect,
+  })
 
   const activeModal = state.context.activeModal
   const isRecordModalOpen = state.context.activeModal === "record"

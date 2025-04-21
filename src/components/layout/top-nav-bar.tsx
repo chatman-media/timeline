@@ -47,13 +47,13 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
   }
 
   return (
-    <div className="flex items-center justify-between w-full py-[2px] px-1 bg-gray-200 dark:bg-[#1b1a1f] border-b border relative">
-      <div className="flex items-center h-6">
+    <div className="relative flex w-full items-center justify-between border border-b bg-gray-200 px-1 py-[2px] dark:bg-[#1b1a1f]">
+      <div className="flex h-6 items-center">
         <ThemeToggle />
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              className="cursor-pointer hover:bg-secondary"
+              className="hover:bg-secondary cursor-pointer"
               variant="ghost"
               size="icon"
               title="Макет"
@@ -70,7 +70,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           </PopoverContent>
         </Popover>
         <Button
-          className="cursor-pointer p-0 h-6 w-6 hover:bg-secondary"
+          className="hover:bg-secondary h-6 w-6 cursor-pointer p-0"
           variant="ghost"
           size="icon"
           title="Быстрые клавиши"
@@ -80,7 +80,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
       </div>
       <div className="flex items-center gap-2">
         <Button
-          className="cursor-pointer p-0 h-6 w-6 hover:bg-secondary"
+          className="hover:bg-secondary h-6 w-6 cursor-pointer p-0"
           variant="ghost"
           size="icon"
           title="Настройки"
@@ -90,8 +90,8 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         </Button>
         <Button
           className={cn(
-            "cursor-pointer p-0 h-6 w-6 hover:bg-secondary",
-            isDirty ? "opacity-50 hover:opacity-50" : "opacity-100 hover:bg-accent",
+            "hover:bg-secondary h-6 w-6 cursor-pointer p-0",
+            isDirty ? "opacity-50 hover:opacity-50" : "hover:bg-accent opacity-100",
           )}
           variant="ghost"
           size="icon"
@@ -104,10 +104,10 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
 
         <div
           className={cn(
-            "relative group w-[200px] text-xs",
+            "group relative w-[200px] text-xs",
             isEditing
               ? "ring-1 ring-[#38dac9]"
-              : "group-hover:ring-1 group-hover:ring-[#38dac9] transition-colors",
+              : "transition-colors group-hover:ring-1 group-hover:ring-[#38dac9]",
           )}
           onClick={() => setIsEditing(true)}
         >
@@ -119,21 +119,21 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
               onChange={handleNameChange}
               onKeyDown={handleKeyDown}
               onBlur={() => setIsEditing(false)}
-              className="text-xs bg-transparent focus:outline-none w-full pl-[1px]"
+              className="w-full bg-transparent pl-[1px] text-xs focus:outline-none"
               autoFocus
             />
           ) : (
-            <span className="block truncate hover:border pl-[1px] hover:pl-[0px] hover:border-[#38dac9]">
+            <span className="block truncate pl-[1px] hover:border hover:border-[#38dac9] hover:pl-[0px]">
               {name}
             </span>
           )}
         </div>
       </div>
-      <div className="flex items-center space-x-0 h-6">
+      <div className="flex h-6 items-center space-x-0">
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              className="cursor-pointer p-0 h-6 w-6"
+              className="h-6 w-6 cursor-pointer p-0"
               variant="ghost"
               size="icon"
               title="Опубликовать"
@@ -152,7 +152,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              className="cursor-pointer p-0 h-6 w-6"
+              className="h-6 w-6 cursor-pointer p-0"
               variant="ghost"
               size="icon"
               title="Задачи монтажа"
@@ -179,7 +179,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <Button
           variant="ghost"
           size="icon"
-          className="cursor-pointer p-0 h-6 w-6"
+          className="h-6 w-6 cursor-pointer p-0"
           title="Настройки"
           onClick={() => setIsUserSettingsOpen(true)}
         >
@@ -188,10 +188,10 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <Button
           variant="outline"
           size="sm"
-          className="text-sm w-24 items-center h-6 gap-1 cursor-pointer px-1 bg-[#38dacac3] dark:bg-[#38dac9] hover:bg-[#38dac9] dark:hover:bg-[#38dac9] text-black hover:text-black"
+          className="h-6 w-24 cursor-pointer items-center gap-1 bg-[#38dacac3] px-1 text-sm text-black hover:bg-[#38dac9] hover:text-black dark:bg-[#38dac9] dark:hover:bg-[#38dac9]"
           onClick={handleExport}
         >
-          <span className="text-xs px-2">Экспорт</span>
+          <span className="px-2 text-xs">Экспорт</span>
           <Upload className="h-3.5 w-3.5" />
         </Button>
       </div>

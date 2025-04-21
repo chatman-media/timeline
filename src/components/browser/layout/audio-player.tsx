@@ -41,20 +41,20 @@ export function AudioPlayer({
   }
 
   return (
-    <div className="flex items-center p-2 bg-background border border-border rounded-md w-full max-w-md">
+    <div className="bg-background border-border flex w-full max-w-md items-center rounded-md border p-2">
       {/* Обложка */}
-      <div className="relative h-12 w-12 mr-3 rounded overflow-hidden flex-shrink-0">
+      <div className="relative mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded">
         {coverUrl ? (
           <img src={coverUrl} alt={title} className="h-full w-full object-cover" />
         ) : (
-          <div className="h-full w-full bg-blue-800 flex items-center justify-center">
-            <div className="absolute w-full h-0.5 bg-yellow-400 rotate-45 transform-origin-center" />
+          <div className="flex h-full w-full items-center justify-center bg-blue-800">
+            <div className="transform-origin-center absolute h-0.5 w-full rotate-45 bg-yellow-400" />
           </div>
         )}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute inset-0 bg-black/20 hover:bg-black/30 text-white"
+          className="absolute inset-0 bg-black/20 text-white hover:bg-black/30"
           onClick={handlePlayPause}
         >
           {isPlaying ? <Pause size={18} /> : <Play size={18} />}
@@ -62,10 +62,10 @@ export function AudioPlayer({
       </div>
 
       {/* Информация и контролы */}
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         {/* Визуализация */}
-        <div className="h-5 flex items-center justify-between">
-          <span className="text-xs text-gray-500 absolute right-14">{duration}</span>
+        <div className="flex h-5 items-center justify-between">
+          <span className="absolute right-14 text-xs text-gray-500">{duration}</span>
         </div>
       </div>
     </div>

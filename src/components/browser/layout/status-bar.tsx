@@ -42,14 +42,14 @@ export function StatusBar({
   const topDateWithRemainingFiles = getTopDateWithRemainingFiles(sortedDates, addedFilesSet)
 
   return (
-    <div className="flex justify-between items-center text-sm w-full p-2 gap-2">
+    <div className="flex w-full items-center justify-between gap-2 p-2 text-sm">
       <div className="flex flex-col items-end justify-center gap-0 text-xs">
-        <span className="px-1 flex items-center whitespace-nowrap gap-2">
+        <span className="flex items-center gap-2 px-1 whitespace-nowrap">
           {remainingVideoCount > 0 && (
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-xs rounded-sm cursor-pointer px-2 h-7 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] bg-secondary"
+              className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
               title="Добавить все видео"
               onClick={onAddAllVideoFiles}
             >
@@ -61,7 +61,7 @@ export function StatusBar({
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-xs rounded-sm cursor-pointer px-2 h-7 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] bg-secondary"
+              className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
               title="Добавить все аудио"
               onClick={onAddAllAudioFiles}
             >
@@ -85,7 +85,7 @@ export function StatusBar({
           <Button
             variant="ghost"
             size="sm"
-            className="flex items-center gap-1 text-xs rounded-sm cursor-pointer px-2 h-7 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] bg-secondary"
+            className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
             title={`Добавить видео за ${topDateWithRemainingFiles.date}`}
             onClick={() => {
               onAddDateFiles(topDateWithRemainingFiles.files)
@@ -96,20 +96,20 @@ export function StatusBar({
           </Button>
         </div>
       )}
-      <div className="flex flex-col gap-0 items-end justify-center text-xs">
+      <div className="flex flex-col items-end justify-center gap-0 text-xs">
         {allFilesAdded ? (
-          <div className="flex items-center gap-1 text-[#49a293] font-medium px-2">
+          <div className="flex items-center gap-1 px-2 font-medium text-[#49a293]">
             <span>Все файлы добавлены</span>
           </div>
         ) : (
           <Button
             variant="ghost"
             size="sm"
-            className="flex items-center gap-1 text-xs rounded-sm cursor-pointer px-2 h-7 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] bg-secondary"
+            className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
             title="Добавить все файлы"
             onClick={onAddAllFiles}
           >
-            <span className="text-xs px-1">Добавить все</span>
+            <span className="px-1 text-xs">Добавить все</span>
             <CopyPlus size={10} className="" />
           </Button>
         )}

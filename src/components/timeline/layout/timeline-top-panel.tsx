@@ -1,15 +1,20 @@
 import {
+  ArrowLeft,
   ArrowUpDown,
+  LayoutTemplate,
   Minus,
   MoveHorizontal,
   Plus,
+  Redo2,
   Scissors,
   SquareMousePointer,
   Trash2,
+  Undo2,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Track } from "@/types/media"
+import { Separator } from "@/components/ui/separator"
 
 interface TimelineTopPanelProps {
   isTrashActive?: boolean
@@ -49,7 +54,7 @@ export function TimelineTopPanel({
 }: TimelineTopPanelProps) {
   return (
     <div className="flex-shrink-0">
-      <div className="flex items-center justify-between px-2 py-1 border-b border-border">
+      <div className="border-border flex items-center justify-between border-b px-2 py-1">
         <div className="flex items-center gap-1">
           {/* <Popover>
             <PopoverTrigger asChild>
@@ -74,10 +79,35 @@ export function TimelineTopPanel({
           {/* Layout */}
           <button
             onClick={() => {}}
-            className="flex rounded-sm items-center justify-center w-8 h-8 opacity-50"
+            className="flex h-8 w-8 items-center justify-center rounded-sm opacity-50"
+          >
+            <LayoutTemplate size={16} />
+          </button>
+
+          {/* Mouse pointer */}
+          <button
+            onClick={() => {}}
+            className="flex h-8 w-8 items-center justify-center rounded-sm opacity-50"
           >
             <SquareMousePointer size={16} />
           </button>
+
+          {/* Back */}
+          <button
+            onClick={() => {}}
+            className="flex h-8 w-8 items-center justify-center rounded-sm opacity-50"
+          >
+            <Undo2 size={16} />
+          </button>
+
+          {/* Forward */}
+          <button
+            onClick={() => {}}
+            className="flex h-8 w-8 items-center justify-center rounded-sm opacity-50"
+          >
+            <Redo2 size={16} />
+          </button>
+
           {/* Delete track */}
           <button
             onClick={() => {
@@ -99,7 +129,7 @@ export function TimelineTopPanel({
             <Scissors size={16} className="rotate-270" />
           </button>
         </div>
-        <div className="flex items-center gap-2 p-2 z-10">
+        <div className="z-10 flex items-center gap-2 p-2">
           {/* Двунаправленная стрелка */}
           <button
             className={cn(
@@ -113,7 +143,7 @@ export function TimelineTopPanel({
           <button
             onClick={handleScaleDecrease}
             className={cn(
-              "w-4 h-4 flex items-center justify-center rounded-full bg-gray-800 hover:bg-[#45444b] text-gray-200 border-1 border-white cursor-pointer",
+              "flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border-1 border-white bg-gray-800 text-gray-200 hover:bg-[#45444b]",
               !isAbleToScaleDown && "pointer-events-none opacity-50",
             )}
           >
@@ -123,12 +153,12 @@ export function TimelineTopPanel({
           {/* Scale slider */}
           <div
             className={cn(
-              "relative w-24 h-1 rounded-full bg-gray-800 border border-white",
+              "relative h-1 w-24 rounded-full border border-white bg-gray-800",
               !isAbleToScale && "pointer-events-none opacity-50",
             )}
           >
             <div
-              className="absolute left-0 top-0 h-full bg-white rounded-full"
+              className="absolute top-0 left-0 h-full rounded-full bg-white"
               style={{ width: `${sliderValue}%` }}
             />
             <input
@@ -137,14 +167,14 @@ export function TimelineTopPanel({
               max={maxScale}
               value={String(sliderValue)}
               onChange={handleSliderChange}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
             />
           </div>
 
           <button
             onClick={handleScaleIncrease}
             className={cn(
-              "w-4 h-4 flex items-center justify-center rounded-full bg-gray-800 hover:bg-[#45444b] text-gray-200 border-1 border-white cursor-pointer",
+              "flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border-1 border-white bg-gray-800 text-gray-200 hover:bg-[#45444b]",
               !isAbleToScaleUp && "pointer-events-none opacity-50",
             )}
           >

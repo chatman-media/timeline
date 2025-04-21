@@ -3,7 +3,7 @@ export function ExitPointIcon({ className }: { className?: string }) {
     <svg
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
-      className={`${className} scale-x-[-1] translate-x-[-2px]`}
+      className={`${className} translate-x-[-2px] scale-x-[-1]`}
     >
       <path
         className="fill-current"

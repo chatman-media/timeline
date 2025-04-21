@@ -89,7 +89,7 @@ export function PreviewTimeline({ time, duration, videoRef }: PreviewTimelinePro
   return (
     <>
       <div
-        className="absolute top-0 bottom-0 w-[1px] bg-red-500 pointer-events-none z-10"
+        className="pointer-events-none absolute top-0 bottom-0 z-10 w-[1px] bg-red-500"
         style={{
           left: `${positionPercent}%`,
         }}

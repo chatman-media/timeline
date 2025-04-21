@@ -13,13 +13,13 @@ export function DefaultMediaEditor() {
       <ResizablePanel defaultSize={50} minSize={20} maxSize={80}>
         <ResizablePanelGroup direction="horizontal" autoSaveId="top-layout">
           <ResizablePanel defaultSize={40} minSize={10} maxSize={80}>
-            <div className="flex-1 relative h-full">
+            <div className="relative h-full flex-1">
               <Browser />
             </div>
           </ResizablePanel>
           <ResizableHandle />
           <ResizablePanel defaultSize={60} minSize={20} maxSize={90}>
-            <div className="flex-1 h-full">
+            <div className="h-full flex-1">
               <MediaPlayer />
             </div>
           </ResizablePanel>
@@ -29,7 +29,7 @@ export function DefaultMediaEditor() {
       <ResizableHandle />
 
       <ResizablePanel defaultSize={50}>
-        <div className="flex-1 h-full">
+        <div className="h-full flex-1">
           <TimelineLayout />
         </div>
       </ResizablePanel>

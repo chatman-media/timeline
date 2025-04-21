@@ -52,37 +52,37 @@ export function TrackControls({
   )
 
   return (
-    <div className="flex items-center gap-2 px-2 py-1 bg-[#012325] border-r border-gray-800 w-[200px]">
+    <div className="flex w-[200px] items-center gap-2 border-r border-gray-800 bg-[#012325] px-2 py-1">
       <button
         onClick={handleVisibilityToggle}
-        className="p-1 hover:bg-gray-700 rounded"
+        className="rounded p-1 hover:bg-gray-700"
         title={isVisible ? "Скрыть трек" : "Показать трек"}
       >
-        {isVisible ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+        {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
       </button>
 
       <button
         onClick={handleLockToggle}
-        className="p-1 hover:bg-gray-700 rounded"
+        className="rounded p-1 hover:bg-gray-700"
         title={isLocked ? "Разблокировать трек" : "Заблокировать трек"}
       >
-        {isLocked ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+        {isLocked ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
       </button>
 
       {!isVideoTrack && (
-        <div className="flex items-center gap-2 flex-1">
+        <div className="flex flex-1 items-center gap-2">
           <button
             onClick={handleVolumeToggle}
-            className="p-1 hover:bg-gray-700 rounded shrink-0"
+            className="shrink-0 rounded p-1 hover:bg-gray-700"
             title={isMuted ? "Включить звук" : "Выключить звук"}
           >
             {isMuted ? (
-              <VolumeX className="w-4 h-4 text-gray-500" />
+              <VolumeX className="h-4 w-4 text-gray-500" />
             ) : (
-              <Volume2 className="w-4 h-4 text-gray-300" />
+              <Volume2 className="h-4 w-4 text-gray-300" />
             )}
           </button>
-          <div className="flex items-center gap-2 flex-1 min-w-[100px]">
+          <div className="flex min-w-[100px] flex-1 items-center gap-2">
             <Slider
               value={[isMuted ? 0 : volume]}
               min={0}
@@ -91,14 +91,14 @@ export function TrackControls({
               onValueChange={handleVolumeChange}
               className="w-full [&_[data-orientation=horizontal]]:h-0.5"
             />
-            <span className="text-xs text-gray-300 w-[30px] text-right">
+            <span className="w-[30px] text-right text-xs text-gray-300">
               {isMuted ? 0 : volume}
             </span>
           </div>
         </div>
       )}
 
-      <div className="text-sm text-gray-300 truncate shrink-0">
+      <div className="shrink-0 truncate text-sm text-gray-300">
         {isVideoTrack ? `Видео ${track.index}` : `Аудио ${track.index}`}
       </div>
     </div>

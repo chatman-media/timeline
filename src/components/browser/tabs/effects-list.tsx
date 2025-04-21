@@ -21,15 +21,15 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
       videoElement.style.filter = ""
 
       switch (effectType) {
-      case "blur":
-        videoElement.style.filter = "blur(5px)"
-        break
-      case "brightness":
-        videoElement.style.filter = "brightness(1.5)"
-        break
-      case "speed":
-        videoElement.playbackRate = 2
-        break
+        case "blur":
+          videoElement.style.filter = "blur(5px)"
+          break
+        case "brightness":
+          videoElement.style.filter = "brightness(1.5)"
+          break
+        case "speed":
+          videoElement.playbackRate = 2
+          break
       }
 
       videoElement.play()
@@ -58,7 +58,7 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
 
   return (
     <div
-      className="relative w-24 h-24 overflow-hidden rounded-md cursor-pointer bg-black"
+      className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-md bg-black"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       onClick={onClick}
@@ -66,12 +66,12 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
       <video
         ref={videoRef}
         src="/vex2.mp4"
-        className="absolute left-1/2 top-1/2 w-full h-full object-cover -translate-x-1/2 -translate-y-1/2"
+        className="absolute top-1/2 left-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 object-cover"
         muted
         playsInline
         preload="auto"
       />
-      <div className="absolute bottom-0 left-0 right-0 p-2 text-xs text-white bg-black/50">
+      <div className="absolute right-0 bottom-0 left-0 bg-black/50 p-2 text-xs text-white">
         {effectType === "blur" && "Размытие"}
         {effectType === "brightness" && "Яркость"}
         {effectType === "speed" && "Скорость"}
@@ -90,12 +90,12 @@ export function EffectsList() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="space-y-1 p-3 pr-1 pl-1">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div className="relative w-[50%]">
             <input
               type="text"
               placeholder="Поиск..."
-              className="w-full px-3 py-1 text-sm bg-transparent border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              className="focus:ring-primary w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm focus:ring-2 focus:outline-none dark:border-gray-700"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />

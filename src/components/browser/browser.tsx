@@ -33,31 +33,31 @@ export const Browser = memo(function Browser() {
       value={activeTab}
       onValueChange={handleTabChange}
       defaultValue="media"
-      className="flex flex-col items-stretch w-full h-full overflow-hidden"
+      className="flex h-full w-full flex-col items-stretch overflow-hidden"
     >
-      <TabsList className="bg-transparent h-[50px] flex-shrink-0 justify-start border-none p-0">
+      <TabsList className="h-[50px] flex-shrink-0 justify-start border-none bg-transparent p-0">
         <TabsTrigger value="media" className={TAB_TRIGGER_STYLES}>
-          <Image className="w-4 h-4" />
+          <Image className="h-4 w-4" />
           <span>Медиатека</span>
         </TabsTrigger>
         <TabsTrigger value="music" className={TAB_TRIGGER_STYLES}>
-          <Music className="w-4 h-4" />
+          <Music className="h-4 w-4" />
           <span>Музыка</span>
         </TabsTrigger>
         <TabsTrigger value="transitions" className={TAB_TRIGGER_STYLES}>
-          <FlipHorizontal2 className="w-4 h-4" />
+          <FlipHorizontal2 className="h-4 w-4" />
           <span>Переходы</span>
         </TabsTrigger>
         <TabsTrigger value="effects" className={TAB_TRIGGER_STYLES}>
-          <Sparkles className="w-4 h-4" />
+          <Sparkles className="h-4 w-4" />
           <span>Эффекты</span>
         </TabsTrigger>
         <TabsTrigger value="filters" className={TAB_TRIGGER_STYLES}>
-          <Blend className="w-4 h-4" />
+          <Blend className="h-4 w-4" />
           <span>Фильтры</span>
         </TabsTrigger>
         <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
-          <Type className="w-4 h-4" />
+          <Type className="h-4 w-4" />
           <span>Титры</span>
         </TabsTrigger>
         {/* <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
@@ -65,26 +65,26 @@ export const Browser = memo(function Browser() {
           <span>Стикеры</span>
         </TabsTrigger> */}
         <TabsTrigger value="templates" className={TAB_TRIGGER_STYLES}>
-          <Layout className="w-4 h-4" />
+          <Layout className="h-4 w-4" />
           <span>Шаблоны</span>
         </TabsTrigger>
       </TabsList>
-      <TabsContent value="media" className="flex-1 overflow-hidden bg-secondary m-0">
+      <TabsContent value="media" className="bg-secondary m-0 flex-1 overflow-hidden">
         <MediaFileList />
       </TabsContent>
-      <TabsContent value="music" className="flex-1 overflow-hidden bg-secondary m-0">
+      <TabsContent value="music" className="bg-secondary m-0 flex-1 overflow-hidden">
         <MusicFileList />
       </TabsContent>
-      <TabsContent value="transitions" className="flex-1 overflow-hidden bg-secondary m-0">
+      <TabsContent value="transitions" className="bg-secondary m-0 flex-1 overflow-hidden">
         <TransitionsList />
       </TabsContent>
-      <TabsContent value="effects" className="flex-1 overflow-hidden bg-secondary m-0">
+      <TabsContent value="effects" className="bg-secondary m-0 flex-1 overflow-hidden">
         <EffectsList />
       </TabsContent>
-      <TabsContent value="subtitles" className="flex-1 overflow-hidden bg-secondary m-0">
+      <TabsContent value="subtitles" className="bg-secondary m-0 flex-1 overflow-hidden">
         <SubtitlesList />
       </TabsContent>
-      <TabsContent value="filters" className="flex-1 overflow-hidden bg-secondary m-0">
+      <TabsContent value="filters" className="bg-secondary m-0 flex-1 overflow-hidden">
         <FiltersList />
       </TabsContent>
       {/* <TabsContent value="stickers" className="flex-1 overflow-hidden">

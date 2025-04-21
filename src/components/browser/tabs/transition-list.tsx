@@ -44,23 +44,23 @@ const TransitionPreview = ({
 
       transitionTimeoutRef.current = setTimeout(() => {
         switch (transitionType) {
-        case "zoom":
-          sourceVideo.style.transform = "scale(2) translate(-25%, -25%)"
-          sourceVideo.style.opacity = "0"
-          targetVideo.style.opacity = "1"
-          targetVideo.style.transform = "scale(1) translate(-50%, -50%)"
-          break
+          case "zoom":
+            sourceVideo.style.transform = "scale(2) translate(-25%, -25%)"
+            sourceVideo.style.opacity = "0"
+            targetVideo.style.opacity = "1"
+            targetVideo.style.transform = "scale(1) translate(-50%, -50%)"
+            break
 
-        case "fade":
-          sourceVideo.style.opacity = "0"
-          targetVideo.style.opacity = "1"
-          break
+          case "fade":
+            sourceVideo.style.opacity = "0"
+            targetVideo.style.opacity = "1"
+            break
 
-        case "slide":
-          sourceVideo.style.transform = "translate(-150%, -50%)"
-          targetVideo.style.transform = "translate(-50%, -50%)"
-          targetVideo.style.opacity = "1"
-          break
+          case "slide":
+            sourceVideo.style.transform = "translate(-150%, -50%)"
+            targetVideo.style.transform = "translate(-50%, -50%)"
+            targetVideo.style.opacity = "1"
+            break
         }
 
         targetVideo.play()
@@ -99,7 +99,7 @@ const TransitionPreview = ({
 
   return (
     <div
-      className="relative w-24 h-24 overflow-hidden rounded-md cursor-pointer bg-black"
+      className="relative h-24 w-24 cursor-pointer overflow-hidden rounded-md bg-black"
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
       onClick={onClick}
@@ -107,7 +107,7 @@ const TransitionPreview = ({
       <video
         ref={sourceVideoRef}
         src={sourceVideo.path}
-        className="absolute left-1/2 top-1/2 w-full h-full object-cover transition-all duration-1000 origin-center"
+        className="absolute top-1/2 left-1/2 h-full w-full origin-center object-cover transition-all duration-1000"
         muted
         playsInline
         preload="auto"
@@ -115,12 +115,12 @@ const TransitionPreview = ({
       <video
         ref={targetVideoRef}
         src={targetVideo.path}
-        className="absolute left-1/2 top-1/2 w-full h-full object-cover opacity-0 transition-all duration-1000 origin-center"
+        className="absolute top-1/2 left-1/2 h-full w-full origin-center object-cover opacity-0 transition-all duration-1000"
         muted
         playsInline
         preload="auto"
       />
-      <div className="absolute bottom-0 left-0 right-0 p-2 text-xs text-white bg-black/50">
+      <div className="absolute right-0 bottom-0 left-0 bg-black/50 p-2 text-xs text-white">
         {transitionType === "zoom" && "Зум"}
         {transitionType === "fade" && "Затухание"}
         {transitionType === "slide" && "Слайд"}
@@ -153,12 +153,12 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
 
   return (
     <div className="h-full overflow-y-auto p-3">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="relative w-[50%]">
           <input
             type="text"
             placeholder="Поиск..."
-            className="w-full px-3 py-1 text-sm bg-transparent border border-gray-200 dark:border-gray-700 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            className="focus:ring-primary w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm focus:ring-2 focus:outline-none dark:border-gray-700"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

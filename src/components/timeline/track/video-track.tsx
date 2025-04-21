@@ -75,9 +75,9 @@ const TimelineTrack = memo(function TimelineTrack({
 
   return (
     <div className="flex" ref={containerRef}>
-      <div className="w-full h-full">
+      <div className="h-full w-full">
         <div
-          className="h-full relative"
+          className="relative h-full"
           style={{
             left: `${coordinates.left}%`,
             width: `${coordinates.width}%`,
@@ -97,9 +97,9 @@ const TimelineTrack = memo(function TimelineTrack({
             }}
           >
             <div className="slice--parent bg-[#014a4f]">
-              <div className="absolute h-full w-full timline-border">
+              <div className="timline-border absolute h-full w-full">
                 <div className="flex h-full w-full flex-col justify-start">
-                  <div className="flex relative">
+                  <div className="relative flex">
                     {track.videos?.map((video) => {
                       const coords = coordinates.videos[video.id]
                       if (!coords) return null
@@ -119,24 +119,24 @@ const TimelineTrack = memo(function TimelineTrack({
                           >
                             <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
                               <div
-                                className="h-full w-full video-metadata flex flex-row justify-between items-start text-xs text-white truncate p-1 py-[3px] rounded border border-gray-800 hover:border-gray-100 dark:hover:border-gray-100 dark:border-gray-800 m-0"
+                                className="video-metadata m-0 flex h-full w-full flex-row items-start justify-between truncate rounded border border-gray-800 p-1 py-[3px] text-xs text-white hover:border-gray-100 dark:border-gray-800 dark:hover:border-gray-100"
                                 style={{
                                   backgroundColor: "#004346",
                                   lineHeight: "13px",
                                 }}
                               >
-                                <span className="dark:bg-[#033032] px-1 rounded mr-1 text-xs whitespace-nowrap">
+                                <span className="mr-1 rounded px-1 text-xs whitespace-nowrap dark:bg-[#033032]">
                                   {video.probeData?.streams[0]?.codec_name?.startsWith("a")
                                     ? "Аудио"
                                     : "Видео"}{" "}
                                   {track.index}
                                 </span>
-                                <span className="bg-[#033032] px-1 rounded mr-1 whitespace-nowrap truncate max-w-[120px]">
+                                <span className="mr-1 max-w-[120px] truncate rounded bg-[#033032] px-1 whitespace-nowrap">
                                   {video.name}
                                 </span>
-                                <div className="w-full p-0 m-0 flex space-x-2 justify-end text-xs text-white overflow-hidden">
+                                <div className="m-0 flex w-full justify-end space-x-2 overflow-hidden p-0 text-xs text-white">
                                   {video.probeData?.streams?.[0]?.codec_type === "video" ? (
-                                    <div className="flex flex-row video-metadata truncate text-xs text-white px-1 rounded">
+                                    <div className="video-metadata flex flex-row truncate rounded px-1 text-xs text-white">
                                       {video.probeData?.streams[0]?.codec_name && (
                                         <span className="mr-1 font-medium">
                                           {video.probeData.streams[0].codec_name.toUpperCase()}
@@ -266,7 +266,7 @@ const TimelineTrack = memo(function TimelineTrack({
                                       )}
                                     </div>
                                   ) : (
-                                    <div className="flex flex-row video-metadata truncate text-xs text-white bg-[#033032] px-1">
+                                    <div className="video-metadata flex flex-row truncate bg-[#033032] px-1 text-xs text-white">
                                       {video.probeData?.streams[0]?.codec_name && (
                                         <span className="mr-1 font-medium">
                                           {video.probeData.streams[0].codec_name}
@@ -304,7 +304,7 @@ const TimelineTrack = memo(function TimelineTrack({
                                 </div>
                               </div>
                               <div
-                                className="absolute bottom-0 left-0 text-xs text-gray-100 mb-[2px] ml-1 bg-[#033032] text-[11px] px-[3px]"
+                                className="absolute bottom-0 left-0 mb-[2px] ml-1 bg-[#033032] px-[3px] text-xs text-[11px] text-gray-100"
                                 style={{
                                   display: coords.width < 16 ? "none" : "block",
                                 }}
@@ -317,7 +317,7 @@ const TimelineTrack = memo(function TimelineTrack({
                                 )}
                               </div>
                               <div
-                                className="absolute bottom-0 right-0 text-xs text-gray-100 mb-[2px] mr-1 bg-[#033032] text-[11px] px-[3px]"
+                                className="absolute right-0 bottom-0 mr-1 mb-[2px] bg-[#033032] px-[3px] text-xs text-[11px] text-gray-100"
                                 style={{
                                   display: coords.width < 16 ? "none" : "block",
                                 }}

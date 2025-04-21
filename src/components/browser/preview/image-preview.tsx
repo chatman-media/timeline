@@ -48,12 +48,12 @@ export const ImagePreview = memo(function ImagePreview({
 
   return (
     <div
-      className={`h-full flex-shrink-0 relative`}
+      className={`relative h-full flex-shrink-0`}
       style={{ height: `${size}px`, width: `${calculateWidth().toFixed(0)}px` }}
     >
       {showFileName && (
         <div
-          className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 max-w-[calc(60%)]`}
+          className={`absolute font-medium ${size > 100 ? "top-1 left-1" : "top-0.5 left-0.5"} ${size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"} line-clamp-1 max-w-[calc(60%)] rounded-xs bg-black/50 text-xs leading-[16px] text-white`}
           style={{
             fontSize: size > 100 ? "13px" : "11px",
           }}
@@ -62,12 +62,12 @@ export const ImagePreview = memo(function ImagePreview({
         </div>
       )}
 
-      <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-        <img src={file.path} alt={file.name} className="w-full h-full object-contain" />
+      <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-gray-700">
+        <img src={file.path} alt={file.name} className="h-full w-full object-contain" />
       </div>
 
       <div
-        className={`absolute ${size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5"} text-white cursor-pointer bg-black/50 rounded-xs p-0.5`}
+        className={`absolute ${size > 100 ? "bottom-1 left-1" : "bottom-0.5 left-0.5"} cursor-pointer rounded-xs bg-black/50 p-0.5 text-white`}
       >
         <Image size={size > 100 ? 16 : 12} />
       </div>

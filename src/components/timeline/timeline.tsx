@@ -371,13 +371,13 @@ export function Timeline() {
   }
 
   return (
-    <div className="flex flex-col w-full h-full">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-border">
+    <div className="flex h-full w-full flex-col">
+      <div className="border-border flex items-center justify-between border-b px-4 py-2">
         <div className="flex items-center gap-2">
           <button
             onClick={undo}
             disabled={!canUndo}
-            className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-gray-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             title="Отменить"
           >
             <Undo2 size={16} />
@@ -385,7 +385,7 @@ export function Timeline() {
           <button
             onClick={redo}
             disabled={!canRedo}
-            className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-gray-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
             title="Повторить"
           >
             <Redo2 size={16} />
@@ -410,7 +410,7 @@ export function Timeline() {
                 removeFiles(filesToRemove)
               }
             }}
-            className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
           >
             <Trash2 size={16} />
           </button>
@@ -434,25 +434,25 @@ export function Timeline() {
                 removeFiles(filesToRemove)
               }
             }}
-            className="flex items-center justify-center w-8 h-8 text-gray-300 hover:text-white hover:bg-gray-700 rounded-md transition-colors"
+            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
           >
             <Scissors size={16} className="rotate-90" />
           </button>
         </div>
         <TimelineControls />
       </div>
-      <div className="relative w-full h-full overflow-x-auto overflow-y-auto">
+      <div className="relative h-full w-full overflow-x-auto overflow-y-auto">
         {[...sections].map((section) => (
           <div
             key={section.date}
             className={`relative mb-4 ${section.date === activeDate ? "" : "opacity-50"} timeline-section`}
           >
             <div className="relative">
-              <div className="w-full text-left text-xs mb-1 ml-2 flex items-center justify-between">
+              <div className="mb-1 ml-2 flex w-full items-center justify-between text-left text-xs">
                 <div>{formatSectionDate(section.date)}</div>
                 <button
                   onClick={() => handleDeleteSection(section.date)}
-                  className="mr-2 text-gray-400 hover:text-red-500 transition-colors"
+                  className="mr-2 text-gray-400 transition-colors hover:text-red-500"
                   title="Удалить секцию"
                 >
                   <X className="h-4 w-4" />

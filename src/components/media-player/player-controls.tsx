@@ -244,7 +244,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   console.log("[PlayerControls] Rendering with currentTime:", currentTime)
 
   return (
-    <div className="w-full flex flex-col">
+    <div className="flex w-full flex-col">
       {/* Прогресс-бар и время */}
       <div className="px-4 py-2">
         <div className="flex items-center gap-2">
@@ -258,75 +258,75 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="cursor-pointer"
             />
           </div>
-          <span className="text-xs bg-white dark:bg-black text-black dark:text-white rounded-md px-1">
+          <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
             {formatTime(Math.max(0, currentTime))}
           </span>
           <span className="mb-[3px]">/</span>
-          <span className="text-xs bg-white dark:bg-black text-black dark:text-white rounded-md px-1">
+          <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
             {formatTime(video?.duration || 0)}
           </span>
         </div>
       </div>
 
-      <div className="w-full h-full p-1">
-        <div className="flex items-center justify-between border border-white rounded-md">
+      <div className="h-full w-full p-1">
+        <div className="flex items-center justify-between rounded-md border border-white">
           <div className="flex items-center gap-2">
             <Button
-              className="cursor-pointer h-8 w-8"
+              className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
               title="Первый кадр"
               onClick={handleChevronFirst}
               disabled={isFirstFrame || isPlaying}
             >
-              <ChevronFirst className="w-6 h-6" />
+              <ChevronFirst className="h-6 w-6" />
             </Button>
 
             <Button
-              className="cursor-pointer h-8 w-8"
+              className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
               title="Предыдущий кадр"
               onClick={handleSkipBackward}
               disabled={isFirstFrame || isPlaying}
             >
-              <StepBack className="w-6 h-6" />
+              <StepBack className="h-6 w-6" />
             </Button>
 
             <Button
-              className="cursor-pointer h-8 w-8"
+              className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
               title={isPlaying ? "Пауза" : "Воспроизвести"}
               onClick={handlePlayPause}
             >
-              {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6" />}
+              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
             </Button>
 
             <Button
-              className="cursor-pointer h-8 w-8"
+              className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
               title="Следующий кадр"
               onClick={handleSkipForward}
               disabled={isLastFrame || isPlaying}
             >
-              <StepForward className="w-6 h-6" />
+              <StepForward className="h-6 w-6" />
             </Button>
 
             <Button
-              className="cursor-pointer h-8 w-8"
+              className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
               title="Последний кадр"
               onClick={handleChevronLast}
               disabled={isLastFrame || isPlaying}
             >
-              <ChevronLast className="w-6 h-6" />
+              <ChevronLast className="h-6 w-6" />
             </Button>
 
             <Button
-              className={"cursor-pointer h-8 w-8"}
+              className={"h-8 w-8 cursor-pointer"}
               variant="ghost"
               size="icon"
               title={isRecording ? "Остановить запись" : "Начать запись"}
@@ -334,9 +334,9 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
             >
               <CircleDot
                 className={cn(
-                  "w-4 h-4",
+                  "h-4 w-4",
                   isRecording
-                    ? "text-red-500 hover:text-red-600 animate-pulse"
+                    ? "animate-pulse text-red-500 hover:text-red-600"
                     : "text-white hover:text-gray-300",
                 )}
               />
@@ -345,52 +345,52 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
           <div className="flex items-center gap-2">
             <Button
-              className="cursor-pointer h-6 w-6"
+              className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
               title="Точка входа"
               onClick={() => {}}
             >
-              <EntryPointIcon className="w-4 h-4" />
+              <EntryPointIcon className="h-4 w-4" />
             </Button>
             <Button
-              className="cursor-pointer h-6 w-6"
+              className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
               title="Точка выхода"
               onClick={() => {}}
             >
-              <ExitPointIcon className="w-4 h-4" />
+              <ExitPointIcon className="h-4 w-4" />
             </Button>
             <Button
-              className="cursor-pointer h-6 w-6"
+              className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
               title="Настройки"
               onClick={() => {}}
             >
-              <MonitorCog className="w-4 h-4" />
+              <MonitorCog className="h-4 w-4" />
             </Button>
 
             <Button
-              className="cursor-pointer h-6 w-6"
+              className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
               title="Сделать снимок"
               onClick={() => {}}
             >
-              <Camera className="w-4 h-4" />
+              <Camera className="h-4 w-4" />
             </Button>
 
             <div className="flex items-center gap-2">
               <Button
-                className="cursor-pointer h-6 w-6"
+                className="h-6 w-6 cursor-pointer"
                 variant="ghost"
                 size="icon"
                 title={volume === 0 ? "Включить звук" : "Выключить звук"}
                 onClick={handleToggleMute}
               >
-                {volume === 0 ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </Button>
               <div className="w-20">
                 <Slider
@@ -405,13 +405,13 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
             </div>
 
             <Button
-              className="cursor-pointer h-6 w-6"
+              className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
               title={isFullscreen ? "Выйти из полноэкранного режима" : "Полноэкранный режим"}
               onClick={handleFullscreen}
             >
-              <Maximize2 className="w-4 h-4" />
+              <Maximize2 className="h-4 w-4" />
             </Button>
           </div>
         </div>

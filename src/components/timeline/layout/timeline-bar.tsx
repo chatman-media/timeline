@@ -76,11 +76,11 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
   return (
     <div
       id="timeline-bar-container"
-      className="absolute top-0 left-0 right-0 h-full"
+      className="absolute top-0 right-0 left-0 h-full"
       style={{ height }}
     >
       <div
-        className="absolute top-0 bottom-0 w-[3px] z-[100] flex flex-col items-center cursor-col-resize group"
+        className="group absolute top-0 bottom-0 z-[100] flex w-[3px] cursor-col-resize flex-col items-center"
         style={{
           left: position,
           transform: "translateX(-50%)",
@@ -88,20 +88,20 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
         }}
         onMouseDown={handleMouseDown}
       >
-        <div className="h-full w-[1px] bg-primary group-hover:bg-primary group-active:bg-primary/90 transition-colors">
-          <div className="absolute top-0 w-3 h-5 -translate-x-[5px] overflow-visible">
+        <div className="bg-primary group-hover:bg-primary group-active:bg-primary/90 h-full w-[1px] transition-colors">
+          <div className="absolute top-0 h-5 w-3 -translate-x-[5px] overflow-visible">
             <svg
               viewBox="0 0 24 24"
-              className="w-full h-full fill-primary drop-shadow-lg"
+              className="fill-primary h-full w-full drop-shadow-lg"
               style={{ filter: "drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))" }}
             >
               <path d="M12 4L4 15h16L12 4z" />
             </svg>
           </div>
-          <div className="absolute bottom-0 w-3 h-5 -translate-x-[5px] overflow-visible rotate-180">
+          <div className="absolute bottom-0 h-5 w-3 -translate-x-[5px] rotate-180 overflow-visible">
             <svg
               viewBox="0 0 24 24"
-              className="w-full h-full fill-primary drop-shadow-lg"
+              className="fill-primary h-full w-full drop-shadow-lg"
               style={{ filter: "drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))" }}
             >
               <path d="M12 4L4 15h16L12 4z" />

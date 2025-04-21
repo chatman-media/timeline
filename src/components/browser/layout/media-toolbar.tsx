@@ -136,16 +136,16 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#dddbdd] hover:bg-[#cdcdcd] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]/70"
+          className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#cdcdcd] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]/70"
           onClick={onImport}
         >
           {/* <Import size={12} /> */}
-          <span className="text-xs px-2">Импорт</span>
+          <span className="px-2 text-xs">Импорт</span>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer p-1 rounded-sm hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFile()
@@ -159,7 +159,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] p-1 rounded-sm"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFolder()
@@ -176,15 +176,15 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="text-xs flex items-center gap-1 cursor-pointer px-1 bg-[#dddbdd] hover:bg-[#cdcdcd] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]/70"
+          className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#cdcdcd] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]/70"
           onClick={onRecord}
         >
-          <span className="text-xs px-2">Запись</span>
+          <span className="px-2 text-xs">Запись</span>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] p-1 rounded-sm"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordCamera()
@@ -198,7 +198,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] p-1 rounded-sm"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordScreen()
@@ -212,7 +212,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] p-1 rounded-sm"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordVoice()
@@ -230,14 +230,14 @@ export function MediaToolbar({
       <div className="flex items-center space-x-2">
         {/* Кнопки переключения режимов просмотра */}
         <TooltipProvider>
-          <div className="flex rounded-md overflow-hidden mr-2">
+          <div className="mr-2 flex overflow-hidden rounded-md">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-0 ml-3 cursor-pointer",
+                    "mr-0 ml-3 h-6 w-6 cursor-pointer",
                     viewMode === "grid" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                   )}
                   onClick={() => onViewModeChange("grid")}
@@ -254,7 +254,7 @@ export function MediaToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-0 cursor-pointer",
+                    "mr-0 h-6 w-6 cursor-pointer",
                     viewMode === "thumbnails" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                   )}
                   onClick={() => onViewModeChange("thumbnails")}
@@ -270,7 +270,7 @@ export function MediaToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-1 cursor-pointer",
+                    "mr-1 h-6 w-6 cursor-pointer",
                     viewMode === "list" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                   )}
                   onClick={() => onViewModeChange("list")}
@@ -285,15 +285,15 @@ export function MediaToolbar({
 
         {/* Кнопки изменения размера */}
         <TooltipProvider>
-          <div className="flex rounded-md overflow-hidden mr-2">
+          <div className="mr-2 flex overflow-hidden rounded-md">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-1 cursor-pointer",
-                    !canDecreaseSize && "opacity-50 cursor-not-allowed",
+                    "mr-1 h-6 w-6 cursor-pointer",
+                    !canDecreaseSize && "cursor-not-allowed opacity-50",
                   )}
                   onClick={onDecreaseSize}
                   disabled={!canDecreaseSize}
@@ -310,8 +310,8 @@ export function MediaToolbar({
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "h-6 w-6 mr-1 cursor-pointer",
-                    !canIncreaseSize && "opacity-50 cursor-not-allowed",
+                    "mr-1 h-6 w-6 cursor-pointer",
+                    !canIncreaseSize && "cursor-not-allowed opacity-50",
                   )}
                   onClick={onIncreaseSize}
                   disabled={!canIncreaseSize}
@@ -334,7 +334,7 @@ export function MediaToolbar({
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "w-6 h-6 cursor-pointer",
+                      "h-6 w-6 cursor-pointer",
                       internalSortBy !== "name" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                     )}
                   >
@@ -386,7 +386,7 @@ export function MediaToolbar({
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "w-6 h-6 cursor-pointer",
+                      "h-6 w-6 cursor-pointer",
                       internalFilterType !== "all" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                     )}
                   >
@@ -436,7 +436,7 @@ export function MediaToolbar({
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "w-6 h-6 cursor-pointer",
+                      "h-6 w-6 cursor-pointer",
                       internalGroupBy !== "none" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                     )}
                   >

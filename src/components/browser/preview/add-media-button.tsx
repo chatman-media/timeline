@@ -33,7 +33,7 @@ export const AddMediaButton = memo(function AddMediaButton({
 
   return (
     <div
-      className={`absolute right-1 bottom-1 text-white rounded-full p-1 cursor-pointer z-10 ${
+      className={`absolute right-1 bottom-1 z-10 cursor-pointer rounded-full p-1 text-white ${
         isAdded ? "bg-[#38dacac3] dark:bg-[#38dac9]" : "bg-[#38dac9]/50 hover:bg-[#38dac9]"
       }`}
       onClick={(e) => {
@@ -43,9 +43,9 @@ export const AddMediaButton = memo(function AddMediaButton({
       title={isAdded ? "Добавлено" : "Добавить"}
     >
       {isAdded ? (
-        <Check className={size > 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
+        <Check className={size > 100 ? "h-4 w-4" : "h-3 w-3"} strokeWidth={3} />
       ) : (
-        <Plus className={size > 100 ? "w-4 h-4" : "w-3 h-3"} strokeWidth={3} />
+        <Plus className={size > 100 ? "h-4 w-4" : "h-3 w-3"} strokeWidth={3} />
       )}
     </div>
   )

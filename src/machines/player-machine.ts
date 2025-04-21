@@ -136,7 +136,9 @@ export const playerMachine = createMachine({
           actions: assign({ isSeeking: ({ event }) => event.isSeeking }),
         },
         setIsChangingCamera: {
-          actions: assign({ isChangingCamera: ({ event }) => event.isChangingCamera }),
+          actions: assign({
+            isChangingCamera: ({ event }) => event.isChangingCamera,
+          }),
         },
         setIsRecording: {
           actions: assign({ isRecording: ({ event }) => event.isRecording }),
@@ -162,7 +164,9 @@ export const playerMachine = createMachine({
           actions: assign({ isVideoReady: true, isVideoLoading: false }),
         },
         setVideoLoading: {
-          actions: assign({ isVideoLoading: ({ event }) => event.isVideoLoading }),
+          actions: assign({
+            isVideoLoading: ({ event }) => event.isVideoLoading,
+          }),
         },
       },
     },

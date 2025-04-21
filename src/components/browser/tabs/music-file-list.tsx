@@ -128,7 +128,7 @@ export function MusicFileList() {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       <MusicToolbar
         viewMode={viewMode}
         onViewModeChange={handleViewModeChange}
@@ -150,10 +150,10 @@ export function MusicFileList() {
               {musicFiles.map((file) => (
                 <div
                   key={file.path}
-                  className="flex items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer group"
+                  className="group flex cursor-pointer items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   <div className="relative">
-                    <div className="w-8 h-8 flex-shrink-0 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center cursor-pointer">
+                    <div className="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded bg-gray-200 dark:bg-gray-700">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="16"
@@ -173,23 +173,23 @@ export function MusicFileList() {
                     </div>
                     <button
                       onClick={(e) => handlePlayPause(e, file)}
-                      className={`absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded cursor-pointer ${
+                      className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded bg-black/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100 ${
                         activeFile?.path === file.path ? "opacity-100" : ""
                       }`}
                     >
                       {activeFile?.path === file.path && isPlaying ? (
-                        <Pause className="w-4 h-4 text-white" />
+                        <Pause className="h-4 w-4 text-white" />
                       ) : (
-                        <Play className="w-4 h-4 text-white" />
+                        <Play className="h-4 w-4 text-white" />
                       )}
                     </button>
                   </div>
-                  <div className="flex-1 min-w-0 p-1">
-                    <div className="flex justify-between items-center">
-                      <p className="text-sm font-medium truncate text-gray-900 dark:text-gray-100 max-w-[300px]">
+                  <div className="min-w-0 flex-1 p-1">
+                    <div className="flex items-center justify-between">
+                      <p className="max-w-[300px] truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                         {file.name}
                       </p>
-                      <p className="text-xs text-gray-900 dark:text-gray-100 min-w-12 text-right">
+                      <p className="min-w-12 text-right text-xs text-gray-900 dark:text-gray-100">
                         {file.probeData?.format.size && (
                           <span className="text-gray-500 dark:text-gray-400">
                             {formatFileSize(file.probeData.format.size)}
@@ -197,8 +197,8 @@ export function MusicFileList() {
                         )}
                       </p>
                     </div>
-                    <div className="flex justify-between items-center truncate">
-                      <div className="text-xs text-gray-500 w-[330px] truncate">
+                    <div className="flex items-center justify-between truncate">
+                      <div className="w-[330px] truncate text-xs text-gray-500">
                         {file.probeData?.format.duration && (
                           <span>{formatTime(file.probeData.format.duration)}</span>
                         )}
@@ -211,11 +211,11 @@ export function MusicFileList() {
                     </div>
                   </div>
                   <button
-                    className="p-1 mr-4 rounded bg-gray-500 hover:bg-gray-800 border border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-800 dark:border-gray-600 hover:dark:border-gray-300 transition-all duration-200 cursor-pointer text-white hover:text-white dark:text-gray-500 dark:hover:text-gray-200"
+                    className="mr-4 cursor-pointer rounded border border-gray-700 bg-gray-500 p-1 text-white transition-all duration-200 hover:bg-gray-800 hover:text-white dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500 hover:dark:border-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-200"
                     title="Добавить"
                     onClick={(e) => handleAdd(e, file)}
                   >
-                    <Plus className="w-5 h-5" />
+                    <Plus className="h-5 w-5" />
                   </button>
                 </div>
               ))}
@@ -224,11 +224,11 @@ export function MusicFileList() {
         )}
 
         {viewMode === "thumbnails" && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 p-4">
+          <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {musicFiles.map((file) => (
-              <div key={file.path} className="relative group cursor-pointer">
-                <div className="bg-gray-100 dark:bg-gray-800 aspect-square rounded-lg flex items-center justify-center overflow-hidden">
-                  <div className="w-full h-full flex items-center justify-center">
+              <div key={file.path} className="group relative cursor-pointer">
+                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                  <div className="flex h-full w-full items-center justify-center">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
                       width="48"
@@ -248,29 +248,29 @@ export function MusicFileList() {
                   </div>
                   <button
                     onClick={(e) => handlePlayPause(e, file)}
-                    className={`absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-lg cursor-pointer ${
+                    className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded-lg bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100 ${
                       activeFile?.path === file.path ? "opacity-100" : ""
                     }`}
                   >
                     {activeFile?.path === file.path && isPlaying ? (
-                      <Pause className="w-12 h-12 text-white" />
+                      <Pause className="h-12 w-12 text-white" />
                     ) : (
-                      <Play className="w-12 h-12 text-white" />
+                      <Play className="h-12 w-12 text-white" />
                     )}
                   </button>
                 </div>
                 <div className="mt-2">
-                  <p className="text-sm font-medium truncate">{file.name}</p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="truncate text-sm font-medium">{file.name}</p>
+                  <p className="truncate text-xs text-gray-500">
                     {file.probeData?.format.duration && formatTime(file.probeData.format.duration)}
                   </p>
                 </div>
                 <button
-                  className="absolute top-2 right-2 p-1 rounded-full bg-gray-800/70 hover:bg-gray-800 transition-all duration-200 cursor-pointer text-white opacity-0 group-hover:opacity-100"
+                  className="absolute top-2 right-2 cursor-pointer rounded-full bg-gray-800/70 p-1 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-gray-800"
                   title="Добавить"
                   onClick={(e) => handleAdd(e, file)}
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="h-4 w-4" />
                 </button>
               </div>
             ))}

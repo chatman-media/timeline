@@ -444,14 +444,14 @@ export const MediaFileList = memo(function MediaFileList({
       filterType === "all"
         ? media
         : media.filter((file: MediaFile) => {
-          if (filterType === "video" && file.probeData?.streams?.[0]?.codec_type === "video")
-            return true
-          if (filterType === "audio" && file.probeData?.streams?.[0]?.codec_type === "audio")
-            return true
-          if (filterType === "image" && file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i))
-            return true
-          return false
-        })
+            if (filterType === "video" && file.probeData?.streams?.[0]?.codec_type === "video")
+              return true
+            if (filterType === "audio" && file.probeData?.streams?.[0]?.codec_type === "audio")
+              return true
+            if (filterType === "image" && file.name?.match(/\.(jpg|jpeg|png|gif|webp)$/i))
+              return true
+            return false
+          })
 
     // Затем сортировка
     return [...filtered].sort((a: MediaFile, b: MediaFile) => {
@@ -577,10 +577,10 @@ export const MediaFileList = memo(function MediaFileList({
 
         const date = timestamp
           ? new Date(timestamp * 1000).toLocaleDateString("ru-RU", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          })
+              day: "2-digit",
+              month: "long",
+              year: "numeric",
+            })
           : "Без даты"
 
         if (!groups[date]) {
@@ -769,16 +769,16 @@ export const MediaFileList = memo(function MediaFileList({
     return (
       <div className="flex flex-col overflow-hidden">
         <div className="flex-1 p-3 pb-1">
-          <Skeleton className="w-full h-8 rounded" />
+          <Skeleton className="h-8 w-full rounded" />
         </div>
-        <div className="p-4 space-y-4">
+        <div className="space-y-4 p-4">
           {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="flex items-center gap-3 p-0 pr-2 rounded-md">
+            <div key={index} className="flex items-center gap-3 rounded-md p-0 pr-2">
               <div className="h-[100px] w-[170px]">
                 <Skeleton className="h-full w-full rounded" />
               </div>
-              <div className="flex-1 h-[90px] items-center">
-                <Skeleton className="h-4 w-3/4 mb-3" />
+              <div className="h-[90px] flex-1 items-center">
+                <Skeleton className="mb-3 h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
               </div>
             </div>
@@ -811,82 +811,82 @@ export const MediaFileList = memo(function MediaFileList({
       const isAdded = Boolean(file.path && includedFiles.map((f) => f.path).includes(file.path))
 
       switch (viewMode) {
-      case "list":
-        return (
-          <div
-            key={fileId}
-            className={cn(
-              "flex items-center p-0 h-full border border-transparent",
-              "bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38] hover:border-[#38daca71] dark:hover:border-[#38dac9]",
-              isAdded && "pointer-events-none",
-            )}
-          >
-            <div className="relative h-full flex-shrink-0 flex gap-1 mr-3">
+        case "list":
+          return (
+            <div
+              key={fileId}
+              className={cn(
+                "flex h-full items-center border border-transparent p-0",
+                "bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#38dac9] dark:hover:bg-[#2f2d38]",
+                isAdded && "pointer-events-none",
+              )}
+            >
+              <div className="relative mr-3 flex h-full flex-shrink-0 gap-1">
+                <MediaPreview
+                  file={file}
+                  onAddMedia={handleAddMedia}
+                  isAdded={isAdded}
+                  size={previewSize}
+                  hideTime={true}
+                  ignoreRatio={true}
+                />
+              </div>
+              <FileMetadata file={file} size={previewSize} />
+            </div>
+          )
+
+        case "grid":
+          return (
+            <div
+              key={fileId}
+              className={cn(
+                "flex h-full w-full flex-col overflow-hidden rounded-xs",
+                "border border-transparent bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#38dac9] dark:hover:bg-[#2f2d38]",
+                isAdded && "pointer-events-none",
+              )}
+              style={{
+                width: `${((previewSize * 16) / 9).toFixed(0)}px`,
+              }}
+            >
+              <div className="relative w-full flex-1 flex-grow flex-row">
+                <MediaPreview
+                  file={file}
+                  onAddMedia={handleAddMedia}
+                  isAdded={isAdded}
+                  size={previewSize}
+                />
+              </div>
+              <div
+                className="truncate p-1 text-xs"
+                style={{
+                  fontSize: previewSize > 100 ? "13px" : "12px",
+                }}
+              >
+                {file.name}
+              </div>
+            </div>
+          )
+
+        case "thumbnails":
+          return (
+            <div
+              key={fileId}
+              className={cn(
+                "flex h-full items-center p-0",
+                "border border-transparent bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#38dac9] dark:hover:bg-[#2f2d38]",
+                isAdded && "pointer-events-none",
+              )}
+            >
               <MediaPreview
                 file={file}
                 onAddMedia={handleAddMedia}
                 isAdded={isAdded}
                 size={previewSize}
-                hideTime={true}
+                showFileName={true}
                 ignoreRatio={true}
               />
             </div>
-            <FileMetadata file={file} size={previewSize} />
-          </div>
-        )
-
-      case "grid":
-        return (
-          <div
-            key={fileId}
-            className={cn(
-              "flex flex-col h-full w-full rounded-xs overflow-hidden",
-              "border border-transparent bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38] hover:border-[#38daca71] dark:hover:border-[#38dac9]",
-              isAdded && "pointer-events-none",
-            )}
-            style={{
-              width: `${((previewSize * 16) / 9).toFixed(0)}px`,
-            }}
-          >
-            <div className="relative flex-1 flex-row w-full flex-grow">
-              <MediaPreview
-                file={file}
-                onAddMedia={handleAddMedia}
-                isAdded={isAdded}
-                size={previewSize}
-              />
-            </div>
-            <div
-              className="p-1 text-xs truncate"
-              style={{
-                fontSize: previewSize > 100 ? "13px" : "12px",
-              }}
-            >
-              {file.name}
-            </div>
-          </div>
-        )
-
-      case "thumbnails":
-        return (
-          <div
-            key={fileId}
-            className={cn(
-              "flex items-center p-0 h-full",
-              "border border-transparent bg-white dark:bg-[#25242b] hover:bg-gray-100 dark:hover:bg-[#2f2d38] hover:border-[#38daca71] dark:hover:border-[#38dac9]",
-              isAdded && "pointer-events-none",
-            )}
-          >
-            <MediaPreview
-              file={file}
-              onAddMedia={handleAddMedia}
-              isAdded={isAdded}
-              size={previewSize}
-              showFileName={true}
-              ignoreRatio={true}
-            />
-          </div>
-        )
+          )
       }
     }
 
@@ -916,9 +916,9 @@ export const MediaFileList = memo(function MediaFileList({
             key="ungrouped"
             className={
               viewMode === "grid"
-                ? "flex flex-wrap gap-3 items-left"
+                ? "items-left flex flex-wrap gap-3"
                 : viewMode === "thumbnails"
-                  ? "flex flex-wrap gap-3 justify-between"
+                  ? "flex flex-wrap justify-between gap-3"
                   : "space-y-1"
             }
           >
@@ -929,12 +929,12 @@ export const MediaFileList = memo(function MediaFileList({
 
       return (
         <div key={group.title} className="mb-4">
-          <div className="flex items-center justify-between mb-2 px-2">
+          <div className="mb-2 flex items-center justify-between px-2">
             <h3 className="text-sm font-medium">{group.title}</h3>
             <Button
               variant="secondary"
               size="sm"
-              className="text-xs flex items-center gap-1 cursor-pointer px-2 h-7 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] bg-[#dddbdd] dark:bg-[#45444b]"
+              className="flex h-7 cursor-pointer items-center gap-1 bg-[#dddbdd] px-2 text-xs hover:bg-[#38dac9] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]"
               onClick={() => {
                 // Фильтруем файлы - изображения не добавляем на таймлайн
                 console.log("[renderGroup] Group files:", group.files)
@@ -947,14 +947,14 @@ export const MediaFileList = memo(function MediaFileList({
                 }
               }}
             >
-              <span className="text-xs px-1">Добавить</span>
-              <CopyPlus className="h-3 w-3 mr-1" />
+              <span className="px-1 text-xs">Добавить</span>
+              <CopyPlus className="mr-1 h-3 w-3" />
             </Button>
           </div>
           <div
             className={
               viewMode === "grid" || viewMode === "thumbnails"
-                ? "flex flex-wrap gap-3 items-left"
+                ? "items-left flex flex-wrap gap-3"
                 : "space-y-1"
             }
           >
@@ -965,12 +965,12 @@ export const MediaFileList = memo(function MediaFileList({
     }
 
     return (
-      <div className="p-2 space-y-4">{groupedFiles.map((group, index) => renderGroup(group))}</div>
+      <div className="space-y-4 p-2">{groupedFiles.map((group, index) => renderGroup(group))}</div>
     )
   }
 
   return (
-    <div className="flex flex-col flex-1 h-full overflow-hidden">
+    <div className="flex h-full flex-1 flex-col overflow-hidden">
       <MediaToolbar
         viewMode={viewMode as ViewMode}
         onViewModeChange={handleViewModeChange}
@@ -994,10 +994,10 @@ export const MediaFileList = memo(function MediaFileList({
         canIncreaseSize={canIncreaseSize}
         canDecreaseSize={canDecreaseSize}
       />
-      <div className="flex-1 p-0 min-h-0 dark:bg-[#1b1a1f] overflow-y-auto scrollbar-hide hover:scrollbar-default">
+      <div className="scrollbar-hide hover:scrollbar-default min-h-0 flex-1 overflow-y-auto p-0 dark:bg-[#1b1a1f]">
         {renderContent()}
       </div>
-      <div className="flex-shrink-0 transition-all duration-200 ease-in-out p-0 m-0">
+      <div className="m-0 flex-shrink-0 p-0 transition-all duration-200 ease-in-out">
         <StatusBar
           media={filteredAndSortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}

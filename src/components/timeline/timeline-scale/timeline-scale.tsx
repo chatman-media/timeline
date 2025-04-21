@@ -33,7 +33,7 @@ export function TimelineScale({ startTime, endTime, duration }: TimelineScalePro
   const subStep = timeStep / (zoomLevel > 1 ? 5 : 2)
 
   return (
-    <div className="relative w-full flex flex-col mb-[13px]">
+    <div className="relative mb-[13px] flex w-full flex-col">
       <div className="h-0.5 w-full" style={{ background: "rgb(47, 61, 62)", height: "1px" }} />
       <TimelineMarks
         startTime={startTime}

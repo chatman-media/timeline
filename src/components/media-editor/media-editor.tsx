@@ -52,7 +52,7 @@ export function MediaEditor() {
   }
 
   return (
-    <div className="flex h-screen flex-col p-0 m-0">
+    <div className="m-0 flex h-screen flex-col p-0">
       <TopNavBar
         onLayoutChange={changeLayout}
         layoutMode={layoutMode as LayoutMode}

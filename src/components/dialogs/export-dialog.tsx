@@ -22,31 +22,31 @@ interface ExportDialogProps {
 export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[800px] h-[600px] flex flex-col bg-background">
+      <DialogContent className="bg-background flex h-[600px] flex-col sm:max-w-[800px]">
         <DialogHeader className="bg-background">
           <DialogTitle>Экспорт</DialogTitle>
         </DialogHeader>
-        <Tabs defaultValue="local" className="w-full flex-1 flex flex-col">
-          <TabsList className="w-full justify-start bg-muted p-0 h-10">
-            <TabsTrigger value="local" className="rounded-none data-[state=active]:bg-background">
+        <Tabs defaultValue="local" className="flex w-full flex-1 flex-col">
+          <TabsList className="bg-muted h-10 w-full justify-start p-0">
+            <TabsTrigger value="local" className="data-[state=active]:bg-background rounded-none">
               Местный
             </TabsTrigger>
-            <TabsTrigger value="device" className="rounded-none data-[state=active]:bg-background">
+            <TabsTrigger value="device" className="data-[state=active]:bg-background rounded-none">
               Устройство
             </TabsTrigger>
-            <TabsTrigger value="social" className="rounded-none data-[state=active]:bg-background">
+            <TabsTrigger value="social" className="data-[state=active]:bg-background rounded-none">
               Социальные сети
             </TabsTrigger>
-            <TabsTrigger value="dvd" className="rounded-none data-[state=active]:bg-background">
+            <TabsTrigger value="dvd" className="data-[state=active]:bg-background rounded-none">
               DVD
             </TabsTrigger>
           </TabsList>
 
-          <div className="flex-1 overflow-y-auto bg-background">
+          <div className="bg-background flex-1 overflow-y-auto">
             <TabsContent value="local" className="mt-4 px-6">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  <div className="w-full aspect-video bg-muted rounded-lg flex items-center justify-center">
+                  <div className="bg-muted flex aspect-video w-full items-center justify-center rounded-lg">
                     <div className="text-muted-foreground">Обложка</div>
                   </div>
                   <Button variant="outline" className="w-full">
@@ -57,7 +57,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label>Настройки вывода</Label>
-                    <div className="grid grid-cols-[1fr,auto] gap-2 items-center">
+                    <div className="grid grid-cols-[1fr,auto] items-center gap-2">
                       <Input placeholder="Имя" defaultValue="Без названия 1" />
                       <Button variant="ghost" size="icon">
                         <Info className="h-4 w-4" />
@@ -152,7 +152,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Label>Продвинутое сжатие</Label>
-                        <Info className="h-4 w-4 text-muted-foreground" />
+                        <Info className="text-muted-foreground h-4 w-4" />
                       </div>
                       <Switch />
                     </div>
@@ -160,7 +160,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Label>Резервное копирование в облако</Label>
-                        <Info className="h-4 w-4 text-muted-foreground" />
+                        <Info className="text-muted-foreground h-4 w-4" />
                       </div>
                       <Switch />
                     </div>
@@ -168,7 +168,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Label>Включить кодирование видео с ускорением GPU</Label>
-                        <Info className="h-4 w-4 text-muted-foreground" />
+                        <Info className="text-muted-foreground h-4 w-4" />
                       </div>
                       <Switch defaultChecked />
                     </div>
@@ -184,25 +184,25 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
             <TabsContent value="social" className="mt-4 px-6">
               <div className="grid grid-cols-[250px,1fr] gap-6">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 p-2 rounded hover:bg-accent cursor-pointer">
-                    <img src="/youtube.svg" className="w-6 h-6" alt="YouTube" />
+                  <div className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded p-2">
+                    <img src="/youtube.svg" className="h-6 w-6" alt="YouTube" />
                     <div>
                       <div>YouTube</div>
-                      <div className="text-xs text-muted-foreground">Вход не выполнен</div>
+                      <div className="text-muted-foreground text-xs">Вход не выполнен</div>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 p-2 rounded hover:bg-accent cursor-pointer">
-                    <img src="/tiktok.svg" className="w-6 h-6" alt="TikTok" />
+                  <div className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded p-2">
+                    <img src="/tiktok.svg" className="h-6 w-6" alt="TikTok" />
                     <div>
                       <div>TikTok</div>
-                      <div className="text-xs text-muted-foreground">Вход не выполнен</div>
+                      <div className="text-muted-foreground text-xs">Вход не выполнен</div>
                     </div>
                   </div>
                   {/* Другие соц. сети */}
                 </div>
                 <div className="flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <img src="/youtube-big.svg" className="w-24 h-24 mx-auto" alt="YouTube" />
+                  <div className="space-y-4 text-center">
+                    <img src="/youtube-big.svg" className="mx-auto h-24 w-24" alt="YouTube" />
                     <div>
                       Войдите в свою учетную запись YouTube для получения дополнительной информации.
                     </div>
@@ -218,7 +218,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
           </div>
         </Tabs>
 
-        <div className="flex justify-between items-center mt-6 px-6 py-4 border-t bg-background">
+        <div className="bg-background mt-6 flex items-center justify-between border-t px-6 py-4">
           <div className="flex items-center gap-2">
             <input type="checkbox" id="use-last-settings" />
             <label htmlFor="use-last-settings" className="text-sm">

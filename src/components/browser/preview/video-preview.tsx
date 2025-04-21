@@ -169,7 +169,7 @@ export const VideoPreview = memo(function VideoPreview({
 
   return (
     <>
-      <div className={cn("flex items-center justify-center w-full h-full")}>
+      <div className={cn("flex h-full w-full items-center justify-center")}>
         {file.probeData?.streams
           ?.filter((stream) => stream.codec_type === "video")
           .map((stream) => {
@@ -198,7 +198,7 @@ export const VideoPreview = memo(function VideoPreview({
             return (
               <div
                 key={key}
-                className="flex-shrink-0 relative"
+                className="relative flex-shrink-0"
                 style={{
                   height: `${size}px`,
                   width:
@@ -213,7 +213,7 @@ export const VideoPreview = memo(function VideoPreview({
                 onClick={(e) => handlePlayPause(e, stream)}
               >
                 <div
-                  className="relative w-full h-full"
+                  className="relative h-full w-full"
                   onMouseMove={(e) => handleMouseMove(e, stream)}
                   onMouseLeave={handleMouseLeave}
                   onMouseEnter={handleMouseEnter}
@@ -227,7 +227,7 @@ export const VideoPreview = memo(function VideoPreview({
                     tabIndex={0}
                     playsInline
                     className={cn(
-                      "absolute inset-0 w-full h-full focus:outline-none",
+                      "absolute inset-0 h-full w-full focus:outline-none",
                       isAdded ? "opacity-50" : "",
                     )}
                     style={{
@@ -272,10 +272,10 @@ export const VideoPreview = memo(function VideoPreview({
                   {!hideTime && !(isMultipleStreams && stream.index === 0) && (
                     <div
                       className={cn(
-                        "absolute text-xs pointer-events-none leading-[16px] text-white bg-black/50 rounded-xs",
+                        "pointer-events-none absolute rounded-xs bg-black/50 text-xs leading-[16px] text-white",
                         size > 100
-                          ? "right-1 top-1 px-[4px] py-[2px]"
-                          : "right-0.5 top-0.5 px-0.5 py-0",
+                          ? "top-1 right-1 px-[4px] py-[2px]"
+                          : "top-0.5 right-0.5 px-0.5 py-0",
                       )}
                       style={{
                         fontSize: size > 100 ? "13px" : "11px",
@@ -289,8 +289,8 @@ export const VideoPreview = memo(function VideoPreview({
                   {!(isMultipleStreams && stream.index !== 0) && (
                     <div
                       className={cn(
-                        "absolute pointer-events-none text-white bg-black/50 rounded-xs p-0.5",
-                        size > 100 ? "left-1 bottom-1" : "left-0.5 bottom-0.5",
+                        "pointer-events-none absolute rounded-xs bg-black/50 p-0.5 text-white",
+                        size > 100 ? "bottom-1 left-1" : "bottom-0.5 left-0.5",
                       )}
                     >
                       <Film size={size > 100 ? 16 : 12} />
@@ -300,9 +300,9 @@ export const VideoPreview = memo(function VideoPreview({
                   {/* Разрешение видео */}
                   {isLoaded && !(isMultipleStreams && stream.index !== 0) && (
                     <div
-                      className={`absolute pointer-events-none ${
+                      className={`pointer-events-none absolute ${
                         size > 100 ? "left-[28px]" : "left-[22px]"
-                      } bg-black/50 text-xs leading-[16px] rounded-xs ${size > 100 ? "bottom-1" : "bottom-0.5"} ${
+                      } rounded-xs bg-black/50 text-xs leading-[16px] ${size > 100 ? "bottom-1" : "bottom-0.5"} ${
                         size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
                       } text-white`}
                       style={{
@@ -329,7 +329,7 @@ export const VideoPreview = memo(function VideoPreview({
                         size > 100 ? "left-1" : "left-0.5"
                       } ${
                         size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                      } text-xs bg-black/50 text-white rounded-xs leading-[16px] line-clamp-1 ${isMultipleStreams ? "max-w-[100%]" : "max-w-[60%]"}`}
+                      } line-clamp-1 rounded-xs bg-black/50 text-xs leading-[16px] text-white ${isMultipleStreams ? "max-w-[100%]" : "max-w-[60%]"}`}
                       style={{
                         fontSize: size > 100 ? "13px" : "11px",
                       }}
@@ -345,13 +345,13 @@ export const VideoPreview = memo(function VideoPreview({
                       (file.probeData?.streams?.filter((s) => s.codec_type === "video")?.length ||
                         0) -
                         1 && (
-                    <AddMediaButton
-                      file={file}
-                      onAddMedia={onAddMedia}
-                      isAdded={isAdded}
-                      size={size}
-                    />
-                  )}
+                      <AddMediaButton
+                        file={file}
+                        onAddMedia={onAddMedia}
+                        isAdded={isAdded}
+                        size={size}
+                      />
+                    )}
                 </div>
               </div>
             )

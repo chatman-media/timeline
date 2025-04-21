@@ -6,6 +6,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "test": "vitest",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
@@ -102,6 +103,8 @@
     "node-mocks-http": "^1.16.2",
     "playwright": "^1.52.0",
     "postcss": "^8.5.3",
+    "prettier": "^3.5.3",
+    "prettier-plugin-tailwindcss": "^0.6.11",
     "storybook": "^8.6.12",
     "tailwindcss": "4.1.4",
     "typescript": "^5.8.3",

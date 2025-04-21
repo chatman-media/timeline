@@ -33,7 +33,9 @@ interface MediaProviderProps {
 }
 
 export function MediaProvider({ children }: MediaProviderProps) {
-  const [state, send] = useMachine(mediaMachine, { inspect: browserInspector.inspect })
+  const [state, send] = useMachine(mediaMachine, {
+    inspect: browserInspector.inspect,
+  })
   const [timelineState, timelineSend] = useMachine(timelineMachine)
 
   return (

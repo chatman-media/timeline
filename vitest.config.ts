@@ -8,10 +8,10 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
     coverage: {
-      reporter: ['text', 'json', 'html'],
+      reporter: ["text", "json", "html"],
     },
     browser: {
-      name: 'chrome',
+      name: "chrome",
       enabled: false,
     },
   },
@@ -20,4 +20,4 @@ export default defineConfig({
       "@": "/src",
     },
   },
-}) 
+})

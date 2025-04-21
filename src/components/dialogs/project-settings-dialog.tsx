@@ -27,18 +27,18 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="dark:bg-[#1b1a1f] rounded-sm [&>button]:hidden">
+      <DialogContent className="rounded-sm dark:bg-[#1b1a1f] [&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className=" text-center text-md">Настройки проекта</DialogTitle>
+          <DialogTitle className="text-md text-center">Настройки проекта</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col space-y-6 py-1">
-          <div className="flex justify-end items-center">
-            <Label className="text-xs mr-2">Соотношение сторон:</Label>
+          <div className="flex items-center justify-end">
+            <Label className="mr-2 text-xs">Соотношение сторон:</Label>
             <Select
               value={settings.aspectRatio}
               onValueChange={(value: AspectRatio) => updateSettings({ aspectRatio: value })}
             >
-              <SelectTrigger className="w-[300px] ">
+              <SelectTrigger className="w-[300px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
@@ -70,13 +70,13 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             </Select>
           </div>
 
-          <div className="flex justify-end items-center">
-            <Label className="text-xs mr-2">Разрешение:</Label>
+          <div className="flex items-center justify-end">
+            <Label className="mr-2 text-xs">Разрешение:</Label>
             <Select
               value={settings.resolution}
               onValueChange={(value: Resolution) => updateSettings({ resolution: value })}
             >
-              <SelectTrigger className="w-[300px] ">
+              <SelectTrigger className="w-[300px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
@@ -99,13 +99,13 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             </Select>
           </div>
 
-          <div className="flex justify-end items-center">
-            <Label className="text-xs mr-2">Частота кадров:</Label>
+          <div className="flex items-center justify-end">
+            <Label className="mr-2 text-xs">Частота кадров:</Label>
             <Select
               value={settings.frameRate}
               onValueChange={(value: FrameRate) => updateSettings({ frameRate: value })}
             >
-              <SelectTrigger className="w-[300px] ">
+              <SelectTrigger className="w-[300px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
@@ -137,13 +137,13 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             </Select>
           </div>
 
-          <div className="flex justify-end items-center">
-            <Label className="text-xs mr-2">Цветовое пространство:</Label>
+          <div className="flex items-center justify-end">
+            <Label className="mr-2 text-xs">Цветовое пространство:</Label>
             <Select
               value={settings.colorSpace}
               onValueChange={(value: ColorSpace) => updateSettings({ colorSpace: value })}
             >
-              <SelectTrigger className="w-[300px] ">
+              <SelectTrigger className="w-[300px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
@@ -176,7 +176,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
           </Button>
           <Button
             variant="default"
-            className="flex-1 bg-[#00CCC0] cursor-pointer hover:bg-[#00AAA0] text-black"
+            className="flex-1 cursor-pointer bg-[#00CCC0] text-black hover:bg-[#00AAA0]"
             onClick={() => {
               onOpenChange(false)
             }}

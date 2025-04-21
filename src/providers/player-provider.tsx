@@ -43,7 +43,9 @@ interface PlayerProviderProps {
 }
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
-  const [state, send] = useMachine(playerMachine, { inspect: browserInspector.inspect })
+  const [state, send] = useMachine(playerMachine, {
+    inspect: browserInspector.inspect,
+  })
 
   return (
     <PlayerContext.Provider
