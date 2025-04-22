@@ -44,23 +44,23 @@ const TransitionPreview = ({
 
       transitionTimeoutRef.current = setTimeout(() => {
         switch (transitionType) {
-          case "zoom":
-            sourceVideo.style.transform = "scale(2) translate(-25%, -25%)"
-            sourceVideo.style.opacity = "0"
-            targetVideo.style.opacity = "1"
-            targetVideo.style.transform = "scale(1) translate(-50%, -50%)"
-            break
+        case "zoom":
+          sourceVideo.style.transform = "scale(2) translate(-25%, -25%)"
+          sourceVideo.style.opacity = "0"
+          targetVideo.style.opacity = "1"
+          targetVideo.style.transform = "scale(1) translate(-50%, -50%)"
+          break
 
-          case "fade":
-            sourceVideo.style.opacity = "0"
-            targetVideo.style.opacity = "1"
-            break
+        case "fade":
+          sourceVideo.style.opacity = "0"
+          targetVideo.style.opacity = "1"
+          break
 
-          case "slide":
-            sourceVideo.style.transform = "translate(-150%, -50%)"
-            targetVideo.style.transform = "translate(-50%, -50%)"
-            targetVideo.style.opacity = "1"
-            break
+        case "slide":
+          sourceVideo.style.transform = "translate(-150%, -50%)"
+          targetVideo.style.transform = "translate(-50%, -50%)"
+          targetVideo.style.opacity = "1"
+          break
         }
 
         targetVideo.play()

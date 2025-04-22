@@ -1,8 +1,8 @@
 import { CopyPlus } from "lucide-react"
 
+import { getRemainingMediaCounts, getTopDateWithRemainingFiles } from "@/browser/utils/media-files"
 import { Button } from "@/components/ui/button"
 import { MediaFile } from "@/types/media"
-import { getRemainingMediaCounts, getTopDateWithRemainingFiles } from "@/browser/utils/media-files"
 
 interface StatusBarProps {
   media: MediaFile[]

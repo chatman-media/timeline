@@ -1,15 +1,13 @@
 import { Keyboard, Layout, ListTodo, Save, Send, Settings, Upload, UserCog } from "lucide-react"
 import { useEffect, useState } from "react"
 
-import { ProjectSettingsDialog } from "@/components/dialogs/project-settings-dialog"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { ExportDialog, ProjectSettingsDialog } from "@/dialogs"
 import { useProject } from "@/machines/project-machine"
-
-import { ExportDialog } from ".."
-import { ThemeToggle } from "../layout/theme-toggle"
-import { LayoutMode, LayoutPreviews } from "../media-editor"
+import { LayoutMode, LayoutPreviews } from "@/media-editor"
+import { ThemeToggle } from "./theme-toggle"
 
 interface TopNavBarProps {
   onLayoutChange: (mode: LayoutMode) => void

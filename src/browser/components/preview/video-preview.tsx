@@ -345,13 +345,13 @@ export const VideoPreview = memo(function VideoPreview({
                       (file.probeData?.streams?.filter((s) => s.codec_type === "video")?.length ||
                         0) -
                         1 && (
-                      <AddMediaButton
-                        file={file}
-                        onAddMedia={onAddMedia}
-                        isAdded={isAdded}
-                        size={size}
-                      />
-                    )}
+                    <AddMediaButton
+                      file={file}
+                      onAddMedia={onAddMedia}
+                      isAdded={isAdded}
+                      size={size}
+                    />
+                  )}
                 </div>
               </div>
             )

@@ -279,21 +279,21 @@ export default async function handler(
             proxies:
               fileType === ".insv"
                 ? Object.entries(proxyPaths).map(([key, path]) => ({
-                    streamKey: key,
-                    path: path || "",
-                    width: PROXY_SETTINGS.width,
-                    height: PROXY_SETTINGS.height,
-                    bitrate: parseInt(PROXY_SETTINGS.bitrate),
-                  }))
+                  streamKey: key,
+                  path: path || "",
+                  width: PROXY_SETTINGS.width,
+                  height: PROXY_SETTINGS.height,
+                  bitrate: parseInt(PROXY_SETTINGS.bitrate),
+                }))
                 : undefined,
             proxy:
               !fileType.endsWith(".insv") && proxyPaths["default"]
                 ? {
-                    path: proxyPaths["default"] || "",
-                    width: PROXY_SETTINGS.width,
-                    height: PROXY_SETTINGS.height,
-                    bitrate: parseInt(PROXY_SETTINGS.bitrate),
-                  }
+                  path: proxyPaths["default"] || "",
+                  width: PROXY_SETTINGS.width,
+                  height: PROXY_SETTINGS.height,
+                  bitrate: parseInt(PROXY_SETTINGS.bitrate),
+                }
                 : undefined,
             lrv: lrvData ?? undefined,
           }

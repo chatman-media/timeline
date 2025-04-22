@@ -1,8 +1,8 @@
 import { useCallback } from "react"
 
-import { CameraCaptureDialog } from "@/components/dialogs/camera-capture-dialog"
-import { useModalContext } from "@/providers/modal-provider"
+import { useModalContext } from "@/dialogs/services/modal-provider"
 import { MediaFile } from "@/types/media"
+import { CameraCaptureDialog } from "@/dialogs"
 
 export function CameraRecording() {
   const { isRecordModalOpen, handleCloseModal } = useModalContext()
