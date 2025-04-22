@@ -1,4 +1,3 @@
-export * from "./media-provider"
 export * from "./modal-provider"
 export * from "./player-provider"
 export * from "./project-provider"

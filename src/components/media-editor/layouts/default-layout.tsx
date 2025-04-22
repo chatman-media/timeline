@@ -1,4 +1,4 @@
-import { Browser } from "@/components/browser/browser"
+import { Browser } from "@/browser/components/browser"
 import { MediaPlayer } from "@/components/media-player/media-player"
 import { TimelineLayout } from "@/components/timeline"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"

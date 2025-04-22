@@ -1,4 +1,3 @@
-export * from "./browser"
 export * from "./dialogs"
 export * from "./icons"
 export * from "./layout"

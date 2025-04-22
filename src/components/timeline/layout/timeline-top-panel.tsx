@@ -1,6 +1,4 @@
 import {
-  ArrowLeft,
-  ArrowUpDown,
   LayoutTemplate,
   Minus,
   MoveHorizontal,
@@ -14,7 +12,6 @@ import {
 
 import { cn } from "@/lib/utils"
 import { Track } from "@/types/media"
-import { Separator } from "@/components/ui/separator"
 
 interface TimelineTopPanelProps {
   isTrashActive?: boolean

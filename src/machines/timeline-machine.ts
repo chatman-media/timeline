@@ -3,8 +3,7 @@ import { assign, createMachine } from "xstate"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimeRange } from "@/types/time-range"
-import { Sector } from "@/types/timeline"
-import { createTracksFromFiles } from "@/utils/media-utils"
+import { Sector, createTracksFromFiles } from "@/browser/utils/media-files"
 
 interface TimelineContext {
   isDirty: boolean
@@ -296,7 +295,6 @@ export const timelineMachine = createMachine({
           actions: assign(({ context, event }) => {
             const sectors = createTracksFromFiles(
               (event as addMediaFilesEvent).files,
-              context.tracks.length,
               context.tracks,
             )
             return {

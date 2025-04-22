@@ -1,10 +1,10 @@
 import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
-import { mediaMachine, timelineMachine } from "@/machines"
+import { timelineMachine } from "@/machines"
 import { MediaFile } from "@/types/media"
-
-import { browserInspector } from "./providers"
+import { browserInspector } from "@/providers"
+import { mediaMachine } from "./media-machine"
 
 interface MediaContextType {
   isLoading: boolean
@@ -36,7 +36,7 @@ export function MediaProvider({ children }: MediaProviderProps) {
   const [state, send] = useMachine(mediaMachine, {
     inspect: browserInspector.inspect,
   })
-  const [timelineState, timelineSend] = useMachine(timelineMachine)
+  const [_, timelineSend] = useMachine(timelineMachine)
 
   return (
     <MediaContext.Provider

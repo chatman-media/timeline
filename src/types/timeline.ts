@@ -15,11 +15,6 @@ export interface VideoMetadata {
   sampleRate?: number
 }
 
-export interface Sector {
-  tracks: Track[]
-  timeRanges: TimeRange[]
-}
-
 export interface TrackSliceState {
   id: string
   x: number

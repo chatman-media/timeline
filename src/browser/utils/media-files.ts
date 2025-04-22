@@ -1,9 +1,7 @@
-import { nanoid } from "nanoid"
-
-import type { FileGroup, MediaFile, Track } from "@/types/media"
+import { MediaFile, Track } from "@/types/media"
 import { TimeRange } from "@/types/time-range"
-
-import { calculateTimeRanges } from "./video-utils"
+import { calculateTimeRanges } from "@/utils/video-utils"
+import { nanoid } from "nanoid"
 
 // Типы для улучшения типизации
 interface VideoStream {
@@ -22,6 +20,122 @@ interface Dimensions {
 interface DateGroup {
   date: string
   files: MediaFile[]
+}
+
+export interface Sector {
+  tracks: Track[]
+  timeRanges: TimeRange[]
+}
+
+export function hasAudioStream(file: MediaFile): boolean {
+  const hasAudio = file.probeData?.streams?.some((stream) => stream.codec_type === "audio") ?? false
+  console.log(`[hasAudioStream] ${file.name}:`, hasAudio)
+  return hasAudio
+}
+
+/**
+ * Определяет тип медиафайла
+ * @param file - Медиафайл
+ * @returns "video" или "audio" или "image"
+ */
+export const getFileType = (file: MediaFile): "video" | "audio" | "image" => {
+  const hasVideoStream = file.probeData?.streams?.some((stream) => stream.codec_type === "video")
+  if (file.isImage) return "image"
+  if (hasVideoStream) return "video"
+  return "audio"
+}
+
+export function getRemainingMediaCounts(
+  media: MediaFile[],
+  addedFiles: Set<string>,
+): {
+  remainingVideoCount: number
+  remainingAudioCount: number
+  allFilesAdded: boolean
+} {
+  const remainingVideoCount = media.filter(
+    (f) => getFileType(f) === "video" && f.path && !addedFiles.has(f.path) && hasAudioStream(f),
+  ).length
+
+  const remainingAudioCount = media.filter(
+    (f) => getFileType(f) === "audio" && f.path && !addedFiles.has(f.path) && hasAudioStream(f),
+  ).length
+
+  const allFilesAdded =
+    media.length > 0 &&
+    media.filter(hasAudioStream).every((file) => file.path && addedFiles.has(file.path))
+
+  return {
+    remainingVideoCount,
+    remainingAudioCount,
+    allFilesAdded,
+  }
+}
+
+export function getTopDateWithRemainingFiles(
+  sortedDates: { date: string; files: MediaFile[] }[],
+  addedFiles: Set<string>,
+): { date: string; files: MediaFile[]; remainingFiles: MediaFile[] } | undefined {
+  const isVideoWithAudio = (file: MediaFile): boolean => {
+    const hasVideo = file.probeData?.streams?.some((s) => s.codec_type === "video")
+    const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
+    console.log(`[getTopDateWithRemainingFiles] ${file.name}: video=${hasVideo}, audio=${hasAudio}`)
+    return !!hasVideo
+  }
+
+  const datesByFileCount = [...sortedDates].sort((a, b) => {
+    const aCount = a.files.filter((f) => !addedFiles.has(f.path) && isVideoWithAudio(f)).length
+    const bCount = b.files.filter((f) => !addedFiles.has(f.path) && isVideoWithAudio(f)).length
+    return bCount - aCount
+  })
+
+  const result = datesByFileCount
+    .map((dateInfo) => ({
+      ...dateInfo,
+      remainingFiles: dateInfo.files.filter(
+        (file) => !addedFiles.has(file.path) && isVideoWithAudio(file),
+      ),
+    }))
+    .find((dateInfo) => dateInfo.remainingFiles.length > 0)
+
+  console.log("[getTopDateWithRemainingFiles] Result:", {
+    date: result?.date,
+    remainingFilesCount: result?.remainingFiles.length,
+    files: result?.remainingFiles.map((f) => f.name),
+  })
+
+  return result
+}
+
+/**
+ * Группирует файлы по дате создания
+ * @param media - Массив медиафайлов
+ * @returns Массив групп файлов по датам
+ */
+export const groupFilesByDate = (media: MediaFile[]): DateGroup[] => {
+  const videoFilesByDate = media.reduce<Record<string, MediaFile[]>>((acc, file) => {
+    const date = file.startTime
+      ? new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        })
+      : "Без даты"
+
+    if (!acc[date]) {
+      acc[date] = []
+    }
+    acc[date].push(file)
+    return acc
+  }, {})
+
+  return Object.entries(videoFilesByDate)
+    .sort(([a], [b]) => {
+      if (a === "Без даты") return 1
+      if (b === "Без даты") return -1
+      return new Date(b).getTime() - new Date(a).getTime()
+    })
+    .map(([date, files]) => ({ date, files }))
 }
 
 /**
@@ -96,28 +210,13 @@ export const getGroupedFiles = (files: MediaFile[]): Record<string, MediaFile[]>
   )
 }
 
-interface Sector {
-  tracks: Track[]
-  timeRanges: TimeRange[]
-}
-
-const tracks: Track[] = []
-const sectors: Sector[] = [
-  {
-    tracks: [],
-    timeRanges: [],
-  },
-]
-
 /**
  * Создает треки из медиафайлов
  * @param files - Массив медиафайлов
- * @param currentTracksLength - Текущее количество треков
  * @returns Массив созданных треков
  */
 export const createTracksFromFiles = (
   files: MediaFile[],
-  currentTracksLength: number,
   existingTracks: Track[] = [],
 ): Sector[] => {
   // Разделяем файлы на видео и аудио
@@ -127,6 +226,7 @@ export const createTracksFromFiles = (
   const audioFiles = files.filter(
     (file) => !file.probeData?.streams?.some((stream) => stream.codec_type === "audio"),
   )
+  const tracks: Track[] = []
 
   // Сортируем файлы по времени начала
   const sortedVideoFiles = [...videoFiles].sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
@@ -276,115 +376,4 @@ export const createTracksFromFiles = (
   })
 
   return sectors
-}
-
-/**
- * Получает последовательные файлы из группы
- * @param files - Массив медиафайлов
- * @returns Массив последовательных файлов
- */
-export const getSequentialFiles = (files: MediaFile[]): MediaFile[] => {
-  const groups = getGroupedFiles(files)
-  return Object.values(groups)
-    .filter((group) => group.length >= 2)
-    .flat()
-}
-
-/**
- * Группирует файлы по дате создания
- * @param media - Массив медиафайлов
- * @returns Массив групп файлов по датам
- */
-export const groupFilesByDate = (media: MediaFile[]): DateGroup[] => {
-  const videoFilesByDate = media.reduce<Record<string, MediaFile[]>>((acc, file) => {
-    const date = file.startTime
-      ? new Date(file.startTime * 1000).toLocaleDateString("ru-RU", {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        })
-      : "Без даты"
-
-    if (!acc[date]) {
-      acc[date] = []
-    }
-    acc[date].push(file)
-    return acc
-  }, {})
-
-  return Object.entries(videoFilesByDate)
-    .sort(([a], [b]) => {
-      if (a === "Без даты") return 1
-      if (b === "Без даты") return -1
-      return new Date(b).getTime() - new Date(a).getTime()
-    })
-    .map(([date, files]) => ({ date, files }))
-}
-
-/**
- * Определяет тип медиафайла
- * @param file - Медиафайл
- * @returns "video" или "audio" или "image"
- */
-export const getFileType = (file: MediaFile): "video" | "audio" | "image" => {
-  const hasVideoStream = file.probeData?.streams?.some((stream) => stream.codec_type === "video")
-  if (file.isImage) return "image"
-  if (hasVideoStream) return "video"
-  return "audio"
-}
-
-/**
- * Подготавливает группы файлов для интерфейса
- * @param files - Массив медиафайлов
- * @returns Объект с группами файлов
- */
-export const prepareFileGroups = (files: MediaFile[]): Record<string, FileGroup> => {
-  const groups: Record<string, FileGroup> = {
-    videos: {
-      id: "all-videos",
-      title: "Все видео",
-      fileIds: files.filter((f) => getFileType(f) === "video").map((f) => f.id),
-      type: "video",
-      count: files.filter((f) => getFileType(f) === "video").length,
-      totalDuration: 0,
-      totalSize: 0,
-    },
-    audio: {
-      id: "all-audio",
-      title: "Все аудио",
-      fileIds: files.filter((f) => getFileType(f) === "audio").map((f) => f.id),
-      type: "audio",
-      count: files.filter((f) => getFileType(f) === "audio").length,
-      totalDuration: 0,
-      totalSize: 0,
-    },
-    images: {
-      id: "all-images",
-      title: "Все изображения",
-      fileIds: files.filter((f) => getFileType(f) === "image").map((f) => f.id),
-      type: "image",
-      count: files.filter((f) => getFileType(f) === "image").length,
-      totalDuration: 0,
-      totalSize: 0,
-    },
-  }
-
-  const sequentialGroups = getGroupedFiles(files)
-
-  Object.entries(sequentialGroups)
-    .filter(([, groupFiles]) => groupFiles.length > 1)
-    .forEach(([key, groupFiles]) => {
-      groups[`sequential-${key}`] = {
-        id: `sequential-${key}`,
-        title: `Группа ${key}`,
-        fileIds: groupFiles.map((f) => f.id),
-        type: "sequential",
-        count: groupFiles.length,
-        totalDuration: 0,
-        totalSize: 0,
-        videosPerSeries: groupFiles.length,
-      }
-    })
-
-  return groups
 }

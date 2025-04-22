@@ -2,7 +2,7 @@ import { Pause, Play, Plus } from "lucide-react"
 import type { MouseEvent } from "react"
 import { useEffect, useRef, useState } from "react"
 
-import { MusicToolbar } from "@/components/browser/layout/music-toolbar"
+import { MusicToolbar } from "@/browser/components/layout/music-toolbar"
 import { formatFileSize, formatTime } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
 

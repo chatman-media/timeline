@@ -1,4 +1,4 @@
-import { Browser } from "@/components/browser/browser"
+import { Browser } from "@/browser/components/browser"
 import { MediaPlayer } from "@/components/media-player/media-player"
 import { Options } from "@/components/options"
 import { TimelineLayout } from "@/components/timeline"

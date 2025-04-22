@@ -3,7 +3,8 @@
 import { createBrowserInspector } from "@statelyai/inspect"
 import { ReactNode } from "react"
 
-import { MediaProvider, ModalProvider, PlayerProvider, ProjectProvider, TimelineProvider } from "."
+import { ModalProvider, PlayerProvider, ProjectProvider, TimelineProvider } from "."
+import { MediaProvider } from "@/browser"
 
 interface ProvidersProps {
   children: ReactNode

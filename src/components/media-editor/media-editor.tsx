@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react"
 
-import { useMedia } from "@/hooks/use-media"
-import { useMediaContext } from "@/providers"
-
 import { TopNavBar } from "../layout"
 import { CameraRecording } from "../media-recording/camera-recording"
 import {
@@ -16,15 +13,6 @@ import {
 export function MediaEditor() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("default")
   const [hasExternalDisplay, setHasExternalDisplay] = useState(false)
-  const { setAllMediaFiles } = useMediaContext()
-
-  const { media, isLoading } = useMedia()
-  useEffect(() => {
-    if (media.length > 0) {
-      setAllMediaFiles(media)
-      console.log("[MediaEditor] Media:", media)
-    }
-  }, [media])
 
   useEffect(() => {
     const checkExternalDisplay = () => {
