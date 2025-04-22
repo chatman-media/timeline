@@ -1,8 +1,8 @@
 import { Browser } from "@/browser/components"
-import { TimelineLayout } from "@/timeline/components"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { MediaPlayer } from "@/media-player/components"
 import { Options } from "@/options"
+import { TimelineLayout } from "@/timeline/components"
 
 interface OptionsLayoutProps {}
 

@@ -1,11 +1,11 @@
 import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
-import { MediaFile } from "@/types/media"
 import { browserInspector } from "@/media-editor/providers"
+import { timelineMachine } from "@/timeline/services"
+import { MediaFile } from "@/types/media"
 
 import { mediaMachine } from "./media-machine"
-import { timelineMachine } from "@/timeline/services"
 
 interface MediaContextType {
   isLoading: boolean

@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useProject } from "@/machines/project-machine"
+import { useProject } from "@/project-settings/project-machine"
 import { AspectRatio, ColorSpace, FrameRate, Resolution } from "@/types/project"
 
 interface ProjectSettingsDialogProps {

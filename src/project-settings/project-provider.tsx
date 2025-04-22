@@ -1,14 +1,13 @@
 import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
+import { browserInspector } from "@/media-editor/providers"
 import {
   type ProjectContext,
   type ProjectContextEvents,
   projectMachine,
-} from "@/machines/project-machine"
+} from "@/project-settings/project-machine"
 import { ProjectSettings } from "@/types/project"
-
-import { browserInspector } from "@/media-editor/providers"
 
 export const ProjectContextType = createContext<
   (ProjectContext & ProjectContextEvents) | undefined

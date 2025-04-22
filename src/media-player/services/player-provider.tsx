@@ -1,11 +1,11 @@
 import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
+import { browserInspector } from "@/media-editor/providers"
 import { MediaFile } from "@/types/media"
 import { TimelineVideo } from "@/types/timeline"
 
 import { playerMachine } from "."
-import { browserInspector } from "@/media-editor/providers"
 
 interface PlayerContextType {
   video: MediaFile | null

@@ -9,11 +9,11 @@ import React, {
 } from "react"
 import { createActor } from "xstate"
 
+import { Sector } from "@/browser"
 import { timelineMachine } from "@/timeline/services/timeline-machine"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimeRange } from "@/types/time-range"
-import { Sector } from "@/browser"
 
 interface TimelineContextType {
   isDirty: boolean

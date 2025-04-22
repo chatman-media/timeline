@@ -6,6 +6,7 @@ import { MediaToolbar } from "@/browser/components/layout/media-toolbar"
 import { useMedia } from "@/browser/hooks/use-media"
 import { getFileType, groupFilesByDate } from "@/browser/utils/media-files"
 import { Button } from "@/components/ui/button"
+import { CameraCaptureDialog } from "@/dialogs"
 import { cn } from "@/lib/utils"
 import { useTimelineContext } from "@/timeline/services"
 import { FfprobeStream } from "@/types/ffprobe"
@@ -13,7 +14,6 @@ import { MediaFile } from "@/types/media"
 
 import { Skeleton } from "../../../components/ui/skeleton"
 import { FileMetadata, MediaPreview, StatusBar } from ".."
-import { CameraCaptureDialog } from "@/dialogs"
 
 // Размеры превью, доступные для выбора
 const PREVIEW_SIZES = [60, 80, 100, 125, 150, 200, 250, 300, 400]

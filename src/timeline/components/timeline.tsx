@@ -10,13 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { usePlayerContext } from "@/media-player"
 import { useTimelineContext } from "@/timeline/services/timeline-provider"
 import { MediaFile, Track } from "@/types/media"
 
 import { TimelineBar } from "./layout/timeline-bar"
 import { TimelineControls } from "./layout/timeline-controls"
 import { TimelineContainer } from "./timeline-container"
-import { usePlayerContext } from "@/media-player"
 
 // Добавляю функцию для форматирования даты секции
 function formatSectionDate(dateString: string): string {

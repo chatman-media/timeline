@@ -3,10 +3,11 @@ import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
 import { ExportDialog, ProjectSettingsDialog } from "@/dialogs"
-import { useProject } from "@/machines/project-machine"
+import { cn } from "@/lib/utils"
 import { LayoutMode, LayoutPreviews } from "@/media-editor"
+import { useProject } from "@/project-settings/project-machine"
+
 import { ThemeToggle } from "./theme-toggle"
 
 interface TopNavBarProps {

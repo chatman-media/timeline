@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react"
 
+import { TopNavBar } from "@/components/layout"
+import { CameraRecording } from "@/components/media-recording/camera-recording"
+
 import {
   DefaultMediaEditor,
   DualMediaEditor,
@@ -7,9 +10,6 @@ import {
   OptionsMediaEditor,
   VerticalMediaEditor,
 } from "./layouts"
-
-import { CameraRecording } from "@/components/media-recording/camera-recording"
-import { TopNavBar } from "@/components/layout"
 
 export function MediaEditor() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("default")

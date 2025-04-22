@@ -1,6 +1,0 @@
-includeSubNodeModules: true
-
-files:
-  - build
-  - from: '.next/standalone/demo/'
-    to: '.next/standalone/demo/'
