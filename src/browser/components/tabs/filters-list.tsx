@@ -19,9 +19,6 @@ export function FiltersList() {
               key={index}
               className="group relative aspect-video cursor-pointer overflow-hidden rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
             >
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="h-full w-full bg-gradient-to-b from-transparent to-gray-200 dark:to-gray-700" />
-              </div>
               <div className="absolute right-2 bottom-2 left-2">
                 <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                   Фильтр {index + 1}

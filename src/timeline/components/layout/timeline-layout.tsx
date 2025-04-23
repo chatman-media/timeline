@@ -84,7 +84,7 @@ export function TimelineLayout() {
                       key={index}
                       // ширина должна быть равна самому длинному треку в секторе
                       className={cn(
-                        "h-[50px] w-[220px] flex-shrink-0 rounded-lg bg-[#033032] bg-gradient-to-br",
+                        "h-[50px] w-[220px] flex-shrink-0 rounded-lg bg-[#033032]",
                       )}
                       style={{ width: `${track.combinedDuration * 5}px` }}
                     >
