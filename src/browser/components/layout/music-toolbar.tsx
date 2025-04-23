@@ -37,6 +37,7 @@ interface MusicToolbarProps {
   sortOrder?: "asc" | "desc"
   currentSortBy?: string
   currentFilterType?: string
+  availableExtensions: string[]
 }
 
 /**
@@ -70,6 +71,7 @@ export function MusicToolbar({
   sortOrder = "desc",
   currentSortBy = "date",
   currentFilterType = "all",
+  availableExtensions,
 }: MusicToolbarProps) {
   // Внутренний стейт для управления текущим выбором
   const [internalViewMode, setInternalViewMode] = useState(viewMode)
@@ -150,7 +152,7 @@ export function MusicToolbar({
         <Input
           type="search"
           placeholder="Поиск"
-          className="h-6 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500 mr-5"
+          className="mr-5 h-6 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500"
           style={{
             backgroundColor: "transparent",
           }}
@@ -200,75 +202,82 @@ export function MusicToolbar({
         </TooltipProvider>
 
         {/* Sort Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="mr-1 h-6 w-6 cursor-pointer">
-              <SortDesc size={16} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent className="space-y-1" align="end">
-            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("name")}>
-              <div className="flex items-center gap-2">
-                {internalSortBy === "name" && <Check className="h-4 w-4" />}
-                <span>По имени</span>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("date")}>
-              <div className="flex items-center gap-2">
-                {internalSortBy === "date" && <Check className="h-4 w-4" />}
-                <span>По дате</span>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("size")}>
-              <div className="flex items-center gap-2">
-                {internalSortBy === "size" && <Check className="h-4 w-4" />}
-                <span>По размеру</span>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("duration")}>
-              <div className="flex items-center gap-2">
-                {internalSortBy === "duration" && <Check className="h-4 w-4" />}
-                <span>По длительности</span>
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <TooltipProvider>
+          <Tooltip>
+            <DropdownMenu>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="mr-1 h-6 w-6 cursor-pointer">
+                    <SortDesc size={16} />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Сортировка</TooltipContent>
+              <DropdownMenuContent className="space-y-1" align="end">
+                <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("name")}>
+                  <div className="flex items-center gap-2">
+                    {internalSortBy === "name" && <Check className="h-4 w-4" />}
+                    <span>По имени</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("date")}>
+                  <div className="flex items-center gap-2">
+                    {internalSortBy === "date" && <Check className="h-4 w-4" />}
+                    <span>По дате</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("size")}>
+                  <div className="flex items-center gap-2">
+                    {internalSortBy === "size" && <Check className="h-4 w-4" />}
+                    <span>По размеру</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="h-6 cursor-pointer"
+                  onClick={() => handleSort("duration")}
+                >
+                  <div className="flex items-center gap-2">
+                    {internalSortBy === "duration" && <Check className="h-4 w-4" />}
+                    <span>По длительности</span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Filter Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-6 w-6 cursor-pointer">
-              <Filter size={16} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleFilter("all")}>
-              <div className="flex items-center gap-2">
-                {internalFilterType === "all" && <Check className="h-4 w-4" />}
-                <span>Все файлы</span>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => handleFilter("mp3")}>
-              <div className="flex items-center gap-2">
-                {internalFilterType === "mp3" && <Check className="h-4 w-4" />}
-                <span>MP3</span>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleFilter("wav")}>
-              <div className="flex items-center gap-2">
-                {internalFilterType === "wav" && <Check className="h-4 w-4" />}
-                <span>WAV</span>
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleFilter("ogg")}>
-              <div className="flex items-center gap-2">
-                {internalFilterType === "ogg" && <Check className="h-4 w-4" />}
-                <span>OGG</span>
-              </div>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <TooltipProvider>
+          <Tooltip>
+            <DropdownMenu>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 w-6 cursor-pointer">
+                    <Filter size={16} />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Фильтр</TooltipContent>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleFilter("all")}>
+                  <div className="flex items-center gap-2">
+                    {internalFilterType === "all" && <Check className="h-4 w-4" />}
+                    <span>Все файлы</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {availableExtensions.map((extension) => (
+                  <DropdownMenuItem key={extension} onClick={() => handleFilter(extension)}>
+                    <div className="flex items-center gap-2">
+                      {internalFilterType === extension && <Check className="h-4 w-4" />}
+                      <span>{extension.toUpperCase()}</span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Tooltip>
+        </TooltipProvider>
 
         {/* Кнопка изменения порядка сортировки */}
         <TooltipProvider>

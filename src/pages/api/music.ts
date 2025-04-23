@@ -17,15 +17,11 @@ export default async function handler(
 ) {
   res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate")
   try {
-    const page = Number(req.query.page) || 1
-    const limit = Number(req.query.limit) || 10
-    const offset = (page - 1) * limit
-
     const musicDir = path.join(process.cwd(), "public", "music")
     await fs.mkdir(musicDir, { recursive: true })
     const musicFiles = await fs.readdir(musicDir)
 
-    // Фильтруем файлы и применяем пагинацию
+    // Фильтруем файлы
     const filteredFiles = musicFiles
       .map((file) => ({ dir: musicDir, file, type: "music" }))
       .filter(({ file }) => {
@@ -36,15 +32,13 @@ export default async function handler(
       })
 
     const totalFiles = filteredFiles.length
-    const paginatedFiles = filteredFiles.slice(offset, offset + limit)
 
-    // Обрабатываем выбранную часть файлов
-    const mediaPromises = paginatedFiles.map(async ({ dir, file, type }) => {
+    // Обрабатываем все файлы
+    const mediaPromises = filteredFiles.map(async ({ dir, file, type }) => {
       try {
         const filePath = path.join(dir, file)
         const probeData = metadataCache.get(filePath) || (await ffprobeAsync(filePath))
         metadataCache.set(filePath, probeData as FfprobeData)
-        console.log(probeData)
 
         return {
           name: file,

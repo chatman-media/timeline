@@ -2,27 +2,21 @@ import { assign, createMachine, fromPromise } from "xstate"
 
 import { MediaFile } from "@/types/media"
 
-type MusicContext = {
+interface MusicContext {
   musicFiles: MediaFile[]
   filteredFiles: MediaFile[]
   searchQuery: string
-  page: number
-  hasMore: boolean
-  isLoading: boolean
-  isLoadingMore: boolean
   sortBy: string
   sortOrder: "asc" | "desc"
   filterType: string
   viewMode: "list" | "thumbnails"
+  availableExtensions: string[]
+  error?: string
 }
 
 type SearchEvent = {
   type: "SEARCH"
   query: string
-}
-
-type LoadMoreEvent = {
-  type: "LOAD_MORE"
 }
 
 type SortEvent = {
@@ -50,7 +44,6 @@ type RetryEvent = {
 
 type MusicEvent =
   | SearchEvent
-  | LoadMoreEvent
   | SortEvent
   | FilterEvent
   | ChangeOrderEvent
@@ -58,27 +51,77 @@ type MusicEvent =
   | RetryEvent
 
 type FetchInput = {
-  page: number
-  sortBy: string
-  sortOrder: "asc" | "desc"
-  filterType: string
+  // пустой тип, так как параметры не нужны
 }
 
 type FetchOutput = {
   media: MediaFile[]
-  total: number
 }
 
-const filterFiles = (files: MediaFile[], query: string) => {
-  if (!query.trim()) return files
-  return files.filter((file) => file.name.toLowerCase().includes(query.toLowerCase()))
+const sortFiles = (files: MediaFile[], sortBy: string, sortOrder: "asc" | "desc") => {
+  return [...files].sort((a, b) => {
+    let comparison = 0
+
+    switch (sortBy) {
+    case "name":
+      comparison = a.name.localeCompare(b.name)
+      break
+    case "duration":
+      comparison = (a.probeData?.format.duration || 0) - (b.probeData?.format.duration || 0)
+      break
+    case "size":
+      comparison = (a.probeData?.format.size || 0) - (b.probeData?.format.size || 0)
+      break
+    case "genre":
+      const genreA = String(a.probeData?.format.tags?.genre || "")
+      const genreB = String(b.probeData?.format.tags?.genre || "")
+      comparison = genreA.localeCompare(genreB)
+      break
+    default:
+      comparison = 0
+    }
+
+    return sortOrder === "asc" ? comparison : -comparison
+  })
 }
 
-const fetchMusicFiles = fromPromise<FetchInput, FetchOutput>(async ({ input }) => {
-  const { page, sortBy, sortOrder, filterType } = input
-  const response = await fetch(
-    `/api/music?page=${page}&limit=20&sort=${sortBy}&order=${sortOrder}&filter=${filterType}`,
-  )
+const filterFiles = (files: MediaFile[], searchQuery: string, filterType: string) => {
+  let filtered = files
+  console.log("Всего файлов:", files.length)
+
+  // Фильтрация по типу файла
+  if (filterType !== "all") {
+    filtered = filtered.filter((file) => {
+      const extension = file.name.split(".").pop()?.toLowerCase()
+      return extension === filterType
+    })
+    console.log("После фильтрации по типу:", filtered.length)
+  }
+
+  // Фильтрация по поисковому запросу
+  if (searchQuery) {
+    const query = searchQuery.toLowerCase()
+    filtered = filtered.filter(
+      (file) =>
+        file.name.toLowerCase().includes(query) ||
+        String(file.probeData?.format.tags?.title || "")
+          .toLowerCase()
+          .includes(query) ||
+        String(file.probeData?.format.tags?.artist || "")
+          .toLowerCase()
+          .includes(query) ||
+        String(file.probeData?.format.tags?.genre || "")
+          .toLowerCase()
+          .includes(query),
+    )
+    console.log("После фильтрации по поиску:", filtered.length)
+  }
+
+  return filtered
+}
+
+const fetchMusicFiles = fromPromise<FetchOutput, FetchInput>(async () => {
+  const response = await fetch(`/api/music`)
   const data = await response.json()
   return data
 })
@@ -90,14 +133,11 @@ export const musicMachine = createMachine({
     musicFiles: [],
     filteredFiles: [],
     searchQuery: "",
-    page: 1,
-    hasMore: true,
-    isLoading: true,
-    isLoadingMore: false,
     sortBy: "name",
     sortOrder: "desc",
     filterType: "all",
     viewMode: "list",
+    availableExtensions: [],
   } as MusicContext,
   types: {
     context: {} as MusicContext,
@@ -108,25 +148,39 @@ export const musicMachine = createMachine({
       invoke: {
         id: "fetchFiles",
         src: fetchMusicFiles,
-        input: ({ context }) => ({
-          page: context.page,
-          sortBy: context.sortBy,
-          sortOrder: context.sortOrder,
-          filterType: context.filterType,
-        }),
+        input: () => ({}),
         onDone: {
           target: "success",
-          actions: assign(({ event, context }) => ({
-            musicFiles: event.output.media,
-            filteredFiles: filterFiles(event.output.media, context.searchQuery),
-            hasMore: event.output.media.length > 0 && event.output.media.length === 20,
-            isLoading: false,
-          })),
+          actions: assign({
+            musicFiles: ({ event }) => {
+              console.log("Получено файлов из API:", event.output.media.length)
+              return event.output.media
+            },
+            filteredFiles: ({ event, context }) => {
+              const filtered = filterFiles(
+                event.output.media,
+                context.searchQuery,
+                context.filterType,
+              )
+              console.log("Итоговое количество файлов:", filtered.length)
+              return sortFiles(filtered, context.sortBy, context.sortOrder)
+            },
+            availableExtensions: ({ event }) => {
+              const extensions = new Set<string>()
+              event.output.media.forEach((file: MediaFile) => {
+                const extension = file.name.split(".").pop()?.toLowerCase()
+                if (extension) {
+                  extensions.add(extension)
+                }
+              })
+              return Array.from(extensions).sort()
+            },
+          }),
         },
         onError: {
           target: "error",
           actions: assign({
-            isLoading: false,
+            error: ({ event }) => String(event.error),
           }),
         },
       },
@@ -134,81 +188,47 @@ export const musicMachine = createMachine({
     success: {
       on: {
         SEARCH: {
-          target: "searching",
-          actions: assign(({ event, context }) => ({
-            searchQuery: event.query,
-            filteredFiles: filterFiles(context.musicFiles, event.query),
-          })),
-        },
-        LOAD_MORE: {
-          target: "loadingMore",
+          actions: assign({
+            searchQuery: ({ event }) => event.query,
+            filteredFiles: ({ context, event }) => {
+              const filtered = filterFiles(context.musicFiles, event.query, context.filterType)
+              return sortFiles(filtered, context.sortBy, context.sortOrder)
+            },
+          }),
         },
         SORT: {
-          target: "loading",
-          actions: assign(({ event }) => ({
-            sortBy: event.sortBy,
-            page: 1,
-          })),
+          actions: assign({
+            sortBy: ({ event }) => event.sortBy,
+            filteredFiles: ({ context, event }) => {
+              return sortFiles(context.filteredFiles, event.sortBy, context.sortOrder)
+            },
+          }),
         },
         FILTER: {
-          target: "loading",
-          actions: assign(({ event }) => ({
-            filterType: event.filterType,
-            page: 1,
-          })),
+          actions: assign({
+            filterType: ({ event }) => event.filterType,
+            filteredFiles: ({ context, event }) => {
+              const filtered = filterFiles(
+                context.musicFiles,
+                context.searchQuery,
+                event.filterType,
+              )
+              return sortFiles(filtered, context.sortBy, context.sortOrder)
+            },
+          }),
         },
         CHANGE_ORDER: {
-          target: "loading",
-          actions: assign(({ context }) => ({
-            sortOrder: context.sortOrder === "asc" ? "desc" : ("asc" as "asc" | "desc"),
-            page: 1,
-          })),
+          actions: assign({
+            sortOrder: ({ context }) => (context.sortOrder === "asc" ? "desc" : "asc"),
+            filteredFiles: ({ context }) => {
+              const newOrder = context.sortOrder === "asc" ? "desc" : "asc"
+              return sortFiles(context.filteredFiles, context.sortBy, newOrder)
+            },
+          }),
         },
         CHANGE_VIEW_MODE: {
           actions: assign(({ event }) => ({
             viewMode: event.mode,
-          })),
-        },
-      },
-    },
-    loadingMore: {
-      invoke: {
-        id: "fetchMoreFiles",
-        src: fetchMusicFiles,
-        input: ({ context }) => ({
-          page: context.page + 1,
-          sortBy: context.sortBy,
-          sortOrder: context.sortOrder,
-          filterType: context.filterType,
-        }),
-        onDone: {
-          target: "success",
-          actions: assign(({ context, event }) => {
-            const newFiles = [...context.musicFiles, ...event.output.media]
-            return {
-              musicFiles: newFiles,
-              filteredFiles: filterFiles(newFiles, context.searchQuery),
-              hasMore: event.output.media.length > 0 && event.output.media.length === 20,
-              isLoadingMore: false,
-              page: context.page + 1,
-            }
-          }),
-        },
-        onError: {
-          target: "error",
-          actions: assign({
-            isLoadingMore: false,
-          }),
-        },
-      },
-    },
-    searching: {
-      on: {
-        SEARCH: {
-          target: "searching",
-          actions: assign(({ event, context }) => ({
-            searchQuery: event.query,
-            filteredFiles: filterFiles(context.musicFiles, event.query),
           })),
         },
       },

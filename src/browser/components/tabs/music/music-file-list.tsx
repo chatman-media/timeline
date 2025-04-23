@@ -1,42 +1,32 @@
-import { useMachine } from "@xstate/react"
 import { Pause, Play, Plus } from "lucide-react"
 import type { MouseEvent } from "react"
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 
 import { MusicToolbar } from "@/browser/components/layout/music-toolbar"
 import { formatFileSize, formatTime } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
 
-import { musicMachine } from "./music-machine"
+import { useMusicMachine } from "./use-music-machine"
 
 export function MusicFileList() {
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const audioRef = useState<HTMLAudioElement | null>(null)
-  const loaderRef = useRef<HTMLDivElement>(null)
 
-  const [state, send] = useMachine(musicMachine)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const target = entries[0]
-        if (target.isIntersecting && state.context.hasMore && !state.context.isLoadingMore) {
-          send({ type: "LOAD_MORE" })
-        }
-      },
-      {
-        threshold: 0.5,
-        rootMargin: "100px",
-      },
-    )
-
-    if (loaderRef.current) {
-      observer.observe(loaderRef.current)
-    }
-
-    return () => observer.disconnect()
-  }, [state.context.hasMore, state.context.isLoadingMore, send])
+  const {
+    filteredFiles,
+    searchQuery,
+    sortBy,
+    sortOrder,
+    filterType,
+    viewMode,
+    availableExtensions,
+    search,
+    sort,
+    filter,
+    changeOrder,
+    changeViewMode,
+  } = useMusicMachine()
 
   const handlePlayPause = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
@@ -58,22 +48,6 @@ export function MusicFileList() {
     }
   }
 
-  const handleViewModeChange = (mode: "list" | "thumbnails") => {
-    send({ type: "CHANGE_VIEW_MODE", mode })
-  }
-
-  const handleSort = (newSortBy: string) => {
-    send({ type: "SORT", sortBy: newSortBy })
-  }
-
-  const handleFilter = (newFilterType: string) => {
-    send({ type: "FILTER", filterType: newFilterType })
-  }
-
-  const handleChangeOrder = () => {
-    send({ type: "CHANGE_ORDER" })
-  }
-
   const handleImport = () => {
     console.log("Импорт файлов")
   }
@@ -90,30 +64,29 @@ export function MusicFileList() {
     console.log(e, file)
   }
 
-  const files = state.context.filteredFiles
-
   return (
     <div className="flex h-full flex-col">
       <MusicToolbar
-        viewMode={state.context.viewMode}
-        onViewModeChange={handleViewModeChange}
-        searchQuery={state.context.searchQuery}
-        setSearchQuery={(query) => send({ type: "SEARCH", query })}
+        viewMode={viewMode}
+        onViewModeChange={changeViewMode}
+        searchQuery={searchQuery}
+        setSearchQuery={search}
         onImport={handleImport}
         onImportFile={handleImportFile}
         onImportFolder={handleImportFolder}
-        onSort={handleSort}
-        onFilter={handleFilter}
-        onChangeOrder={handleChangeOrder}
-        sortOrder={state.context.sortOrder}
-        currentSortBy={state.context.sortBy}
-        currentFilterType={state.context.filterType}
+        onSort={sort}
+        onFilter={filter}
+        onChangeOrder={changeOrder}
+        sortOrder={sortOrder}
+        currentSortBy={sortBy}
+        currentFilterType={filterType}
+        availableExtensions={availableExtensions}
       />
       <div className="flex-1 overflow-y-auto">
-        {state.context.viewMode === "list" && (
+        {viewMode === "list" && (
           <div className="h-full overflow-y-auto">
             <div className="space-y-1">
-              {files.map((file) => (
+              {filteredFiles.map((file) => (
                 <div
                   key={file.path}
                   className="group flex cursor-pointer items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -186,22 +159,12 @@ export function MusicFileList() {
                 </div>
               ))}
             </div>
-            {state.context.searchQuery === "" && (
-              <div ref={loaderRef} className="p-2 pt-0 text-center">
-                {state.context.isLoadingMore && (
-                  <p className="text-sm text-gray-500">Загрузка...</p>
-                )}
-                {!state.context.hasMore && files.length > 0 && (
-                  <p className="text-sm text-gray-500">Больше файлов нет</p>
-                )}
-              </div>
-            )}
           </div>
         )}
 
-        {state.context.viewMode === "thumbnails" && (
+        {viewMode === "thumbnails" && (
           <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {files.map((file) => (
+            {filteredFiles.map((file) => (
               <div key={file.path} className="group relative cursor-pointer">
                 <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
                   <div className="flex h-full w-full items-center justify-center">
