@@ -292,7 +292,7 @@ export function MusicFileList() {
                 </div>
               </div>
             ) : (
-              <div className="flex w-full flex-wrap gap-3">
+              <div className="flex w-full flex-wrap gap-3 p-2">
                 {files.map((file) => (
                   <div key={file.path} className="group relative cursor-pointer">
                     <div className="flex h-15 w-[260px] items-center overflow-hidden rounded-lg border border-transparent bg-gray-100 hover:bg-gray-100 dark:bg-[#25242b] dark:group-hover:bg-[#25242b] dark:hover:border-[#35d1c1]">
