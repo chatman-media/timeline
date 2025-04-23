@@ -82,6 +82,7 @@ export function MusicToolbar({
 }: MusicToolbarProps) {
   // Внутренний стейт для управления текущим выбором
   const [internalViewMode, setInternalViewMode] = useState(viewMode)
+  const [internalGroupBy, setInternalGroupBy] = useState(currentGroupBy)
   const [internalSortBy, setInternalSortBy] = useState(currentSortBy)
   const [internalFilterType, setInternalFilterType] = useState(currentFilterType)
 
@@ -98,6 +99,10 @@ export function MusicToolbar({
     setInternalFilterType(currentFilterType)
   }, [currentFilterType])
 
+  useEffect(() => {
+    setInternalGroupBy(currentGroupBy)
+  }, [currentGroupBy])
+
   // Функции для обработки изменений
   const handleViewModeChange = (mode: "list" | "thumbnails") => {
     setInternalViewMode(mode)
@@ -105,7 +110,6 @@ export function MusicToolbar({
   }
 
   const handleSort = (sortBy: string) => {
-    setInternalSortBy(sortBy)
     onSort(sortBy)
   }
 
@@ -218,7 +222,12 @@ export function MusicToolbar({
             <DropdownMenu>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 cursor-pointer">
+                  <Button variant="ghost" size="sm"
+                  className={cn(
+                    "h-6 w-6 cursor-pointer",
+                    internalSortBy !== "name" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                  )}
+                  >
                     <SortDesc size={16} />
                   </Button>
                 </DropdownMenuTrigger>
@@ -281,7 +290,12 @@ export function MusicToolbar({
             <DropdownMenu>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 w-6 cursor-pointer">
+                  <Button variant="ghost" size="sm"
+                                      className={cn(
+                                        "h-6 w-6 cursor-pointer",
+                                        internalFilterType !== "all" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                                      )}
+                  >
                     <Filter size={16} />
                   </Button>
                 </DropdownMenuTrigger>
@@ -319,7 +333,7 @@ export function MusicToolbar({
                     size="icon"
                     className={cn(
                       "h-6 w-6 cursor-pointer",
-                      currentGroupBy !== "none" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                      internalGroupBy !== "none" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                     )}
                   >
                     <ListFilterPlus size={16} />
@@ -330,26 +344,26 @@ export function MusicToolbar({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleGroupBy("none")}>
                   <div className="flex items-center gap-2">
-                    {currentGroupBy === "none" && <Check className="h-4 w-4" />}
+                    {internalGroupBy === "none" && <Check className="h-4 w-4" />}
                     <span>Не группировать</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleGroupBy("artist")}>
                   <div className="flex items-center gap-2">
-                    {currentGroupBy === "artist" && <Check className="h-4 w-4" />}
+                    {internalGroupBy === "artist" && <Check className="h-4 w-4" />}
                     <span>По артисту</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleGroupBy("genre")}>
                   <div className="flex items-center gap-2">
-                    {currentGroupBy === "genre" && <Check className="h-4 w-4" />}
+                    {internalGroupBy === "genre" && <Check className="h-4 w-4" />}
                     <span>По жанру</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleGroupBy("album")}>
                   <div className="flex items-center gap-2">
-                    {currentGroupBy === "album" && <Check className="h-4 w-4" />}
+                    {internalGroupBy === "album" && <Check className="h-4 w-4" />}
                     <span>По альбому</span>
                   </div>
                 </DropdownMenuItem>
