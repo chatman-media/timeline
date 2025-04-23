@@ -1,7 +1,7 @@
 import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles, Type } from "lucide-react"
 import { memo, useState } from "react"
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   EffectsList,
   FiltersList,
@@ -21,7 +21,7 @@ export const TAB_TRIGGER_STYLES =
 
 // Используем memo для предотвращения ненужных рендеров
 export const Browser = memo(function Browser() {
-  const [activeTab, setActiveTab] = useState("media")
+  const [activeTab, setActiveTab] = useState("transitions")
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)
