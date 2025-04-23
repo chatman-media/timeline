@@ -1,9 +1,9 @@
-import { CirclePause, CirclePlay, Music, Pause, Play, Plus } from "lucide-react"
+import { CirclePause, CirclePlay, Pause, Play } from "lucide-react"
 import type { MouseEvent } from "react"
-import { useMemo, useState } from "react"
+import { useMemo, useRef, useState } from "react"
 
 import { MusicToolbar } from "@/browser/components/layout/music-toolbar"
-import { formatFileSize, formatTime } from "@/lib/utils"
+import { cn, formatFileSize, formatTime } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
 
 import { AddMediaButton } from "../../preview/add-media-button"
@@ -12,7 +12,10 @@ import { useMusicMachine } from "./use-music-machine"
 export function MusicFileList() {
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const audioRef = useState<HTMLAudioElement | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  // const audioContextRef = useRef<AudioContext | null>(null)
+  // const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
+  // const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
 
   const {
     filteredFiles,
@@ -30,6 +33,48 @@ export function MusicFileList() {
     groupBy,
     changeGroupBy,
   } = useMusicMachine()
+
+  // useEffect(() => {
+  //   if (!audioRef.current) return
+
+  //   const initAudioContext = async () => {
+  //     try {
+  //       if (!audioContextRef.current) {
+  //         audioContextRef.current = new AudioContext()
+  //       }
+
+  //       const audioContext = audioContextRef.current
+
+  //       if (!sourceRef.current) {
+  //         sourceRef.current = audioContext.createMediaElementSource(audioRef.current)
+  //       }
+
+  //       const destination = audioContext.createMediaStreamDestination()
+  //       sourceRef.current.connect(destination)
+  //       sourceRef.current.connect(audioContext.destination)
+
+  //       const recorder = new MediaRecorder(destination.stream)
+  //       recorder.start()
+  //       setMediaRecorder(recorder)
+  //     } catch (error) {
+  //       console.error("Error initializing audio context:", error)
+  //     }
+  //   }
+
+  //   initAudioContext()
+
+  //   return () => {
+  //     if (mediaRecorder) {
+  //       mediaRecorder.stop()
+  //     }
+  //     if (sourceRef.current) {
+  //       sourceRef.current.disconnect()
+  //     }
+  //     if (audioContextRef.current) {
+  //       audioContextRef.current.close()
+  //     }
+  //   }
+  // }, [activeFile])
 
   const groupedFiles = useMemo(() => {
     if (groupBy === "none") {
@@ -103,19 +148,25 @@ export function MusicFileList() {
 
     if (activeFile?.path === file.path) {
       setIsPlaying(!isPlaying)
-      if (audioRef[0]) {
-        isPlaying ? audioRef[0].pause() : audioRef[0].play()
+      if (audioRef.current) {
+        isPlaying ? audioRef.current.pause() : audioRef.current.play()
       }
     } else {
-      if (audioRef[0]) {
-        audioRef[0].pause()
+      if (audioRef.current) {
+        audioRef.current.pause()
+        audioRef.current.removeEventListener("ended", handleAudioEnd)
       }
       const audio = new Audio(file.path)
-      audioRef[1](audio)
+      audio.addEventListener("ended", handleAudioEnd)
+      audioRef.current = audio
       audio.play()
       setActiveFile(file)
       setIsPlaying(true)
     }
+  }
+
+  const handleAudioEnd = () => {
+    setIsPlaying(false)
   }
 
   const handleImport = () => {
@@ -164,9 +215,8 @@ export function MusicFileList() {
                   {files.map((file) => (
                     <div
                       key={file.path}
-                      className="group relative flex cursor-pointer items-center gap-1 p-0 hover:bg-gray-100 dark:bg-[#25242b] dark:hover:bg-gray-800"
+                      className="group relative flex cursor-pointer items-center gap-1 rounded-sm border border-transparent p-0 hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-gray-800"
                     >
-                      {/* <Waveform audioUrl={file.path} /> */}
                       <div className="relative">
                         <div className="flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded">
                           <button
@@ -242,64 +292,69 @@ export function MusicFileList() {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              <div className="flex w-full flex-wrap gap-3">
                 {files.map((file) => (
                   <div key={file.path} className="group relative cursor-pointer">
-                    <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                      <div className="flex h-full w-full items-center justify-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="48"
-                          height="48"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-gray-400 dark:text-gray-500"
+                    <div className="flex h-15 w-[260px] items-center overflow-hidden rounded-lg border border-transparent bg-gray-100 hover:bg-gray-100 dark:bg-[#25242b] dark:group-hover:bg-[#25242b] dark:hover:border-[#35d1c1]">
+                      {/* Левая часть с кнопкой play */}
+                      <div className="flex h-full w-12 items-center justify-center">
+                        <button
+                          onClick={(e) => handlePlayPause(e, file)}
+                          className={`flex h-full w-full cursor-pointer items-center justify-center ${
+                            activeFile?.path === file.path ? "opacity-100" : ""
+                          }`}
                         >
-                          <path d="M9 18V5l12-2v13" />
-                          <circle cx="6" cy="18" r="3" />
-                          <circle cx="18" cy="16" r="3" />
-                        </svg>
+                          {activeFile?.path === file.path && isPlaying ? (
+                            <Pause
+                              className={cn(
+                                "h-5 w-5 text-white opacity-50 group-hover:opacity-100",
+                              )}
+                              strokeWidth={1.5}
+                            />
+                          ) : (
+                            <Play
+                              className="h-5 w-5 text-white opacity-50 group-hover:opacity-100"
+                              strokeWidth={1.5}
+                            />
+                          )}
+                        </button>
                       </div>
-                      <button
+
+                      {/* Правая часть с информацией */}
+                      <div
+                        className="flex flex-1 flex-col justify-between gap-5 px-0 py-0 pr-10"
                         onClick={(e) => handlePlayPause(e, file)}
-                        className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded-lg bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100 ${
-                          activeFile?.path === file.path ? "opacity-100" : ""
-                        }`}
                       >
-                        {activeFile?.path === file.path && isPlaying ? (
-                          <Pause className="h-12 w-12 text-white" />
-                        ) : (
-                          <Play className="h-12 w-12 text-white" />
-                        )}
-                      </button>
+                        <div className="absolute top-1 right-1">
+                          {/* {activeFile?.path === file.path && mediaRecorder && isPlaying && (
+                            <LiveAudioVisualizer
+                              mediaRecorder={mediaRecorder}
+                              width={30}
+                              height={20}
+                              barWidth={1}
+                              gap={1}
+                              barColor="#35d1c1"
+                            backgroundColor="transparent"
+                          />
+                          )} */}
+                        </div>
+                        <p className="w-[170px] truncate text-xs font-medium">
+                          {file.probeData?.format.tags?.title || file.name}
+                        </p>
+                        <div className="flex w-[170px] items-center justify-between">
+                          <span className="max-w-[140px] truncate text-xs text-gray-500">
+                            {file.probeData?.format.tags?.artist || ""}
+                          </span>
+                          {file.probeData?.format.duration && (
+                            <span className="text-xs whitespace-nowrap text-gray-500">
+                              {formatTime(file.probeData.format.duration)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <AddMediaButton file={file} size={120} onAddMedia={handleAdd} />
                     </div>
-                    <div className="mt-2">
-                      <p className="truncate text-sm font-medium">
-                        {file.probeData?.format.tags?.title || file.name}
-                      </p>
-                      <p className="truncate text-xs text-gray-500">
-                        {file.probeData?.format.tags?.artist && (
-                          <span>{file.probeData.format.tags.artist}</span>
-                        )}
-                        {file.probeData?.format.tags?.date && (
-                          <span className="ml-2">{file.probeData.format.tags.date}</span>
-                        )}
-                        {file.probeData?.format.duration && (
-                          <span className="ml-2">{formatTime(file.probeData.format.duration)}</span>
-                        )}
-                      </p>
-                    </div>
-                    <button
-                      className="absolute top-2 right-2 cursor-pointer rounded-full bg-gray-800/70 p-1 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-gray-800"
-                      title="Добавить в плейлист"
-                      onClick={(e) => handleAdd(e, file)}
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
                   </div>
                 ))}
               </div>

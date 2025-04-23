@@ -187,7 +187,7 @@ export function MusicToolbar({
                   size="icon"
                   className={cn(
                     "mr-1 h-6 w-6 cursor-pointer",
-                    internalViewMode === "list" && "bg-secondary text-secondary-foreground",
+                    internalViewMode === "list" && "bg-[#dddbdd] dark:bg-[#45444b]",
                   )}
                   onClick={() => handleViewModeChange("list")}
                 >
@@ -204,7 +204,7 @@ export function MusicToolbar({
                   size="icon"
                   className={cn(
                     "mr-1 h-6 w-6 cursor-pointer",
-                    internalViewMode === "thumbnails" && "bg-secondary text-secondary-foreground",
+                    internalViewMode === "thumbnails" && "bg-[#dddbdd] dark:bg-[#45444b]",
                   )}
                   onClick={() => handleViewModeChange("thumbnails")}
                 >
@@ -222,11 +222,13 @@ export function MusicToolbar({
             <DropdownMenu>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm"
-                  className={cn(
-                    "h-6 w-6 cursor-pointer",
-                    internalSortBy !== "name" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "h-6 w-6 cursor-pointer",
+                      internalSortBy !== "name" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                    )}
                   >
                     <SortDesc size={16} />
                   </Button>
@@ -290,11 +292,13 @@ export function MusicToolbar({
             <DropdownMenu>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm"
-                                      className={cn(
-                                        "h-6 w-6 cursor-pointer",
-                                        internalFilterType !== "all" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
-                                      )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={cn(
+                      "h-6 w-6 cursor-pointer",
+                      internalFilterType !== "all" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                    )}
                   >
                     <Filter size={16} />
                   </Button>

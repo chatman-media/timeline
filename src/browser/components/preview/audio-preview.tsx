@@ -99,20 +99,14 @@ export const AudioPreview = memo(function AudioPreview({
     const audioElement = audioRef.current
     if (!audioElement) return
 
-    let retryCount = 0
-    const maxRetries = 3
-    const retryDelay = 1000 // 1 секунда
-
     const initAudioContext = () => {
       try {
-        // Создаем контекст только один раз
         if (!audioContextRef.current) {
           audioContextRef.current = new AudioContext()
         }
 
         const audioContext = audioContextRef.current
 
-        // Создаем source только если его еще нет
         if (!sourceRef.current) {
           sourceRef.current = audioContext.createMediaElementSource(audioElement)
         }
@@ -121,33 +115,20 @@ export const AudioPreview = memo(function AudioPreview({
         sourceRef.current.connect(destination)
         sourceRef.current.connect(audioContext.destination)
 
-        // Создаем MediaRecorder для визуализации
         const recorder = new MediaRecorder(destination.stream)
         setMediaRecorder(recorder)
         recorder.start()
       } catch (error) {
         console.error("Error initializing audio context:", error)
-        if (retryCount < maxRetries) {
-          retryCount++
-          console.log(`Retrying initialization (${retryCount}/${maxRetries})...`)
-          setTimeout(initAudioContext, retryDelay)
-        }
       }
     }
 
-    // Ждем немного перед первой попыткой
     setTimeout(initAudioContext, 100)
 
     return () => {
       if (mediaRecorder) {
         mediaRecorder.stop()
       }
-    }
-  }, [])
-
-  // Очистка при размонтировании компонента
-  useEffect(() => {
-    return () => {
       if (sourceRef.current) {
         sourceRef.current.disconnect()
       }
@@ -174,12 +155,8 @@ export const AudioPreview = memo(function AudioPreview({
         preload="auto"
         tabIndex={0}
         className="pointer-events-none absolute inset-0 h-full w-full focus:outline-none"
-        onEnded={() => {
-          setIsPlaying(false)
-        }}
-        onLoadedMetadata={() => {
-          setIsLoaded(true)
-        }}
+        onEnded={() => setIsPlaying(false)}
+        onLoadedMetadata={() => setIsLoaded(true)}
         onKeyDown={(e) => {
           if (e.code === "Space") {
             e.preventDefault()
@@ -245,15 +222,6 @@ export const AudioPreview = memo(function AudioPreview({
           />
         )}
       </div>
-
-      <audio
-        ref={audioRef}
-        src={file.path}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
-        style={{ display: "none" }}
-      />
     </div>
   )
 })
