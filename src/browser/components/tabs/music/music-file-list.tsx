@@ -1,6 +1,6 @@
 import { Pause, Play, Plus } from "lucide-react"
 import type { MouseEvent } from "react"
-import { useState } from "react"
+import { useMemo,useState } from "react"
 
 import { MusicToolbar } from "@/browser/components/layout/music-toolbar"
 import { formatFileSize, formatTime } from "@/lib/utils"
@@ -26,7 +26,27 @@ export function MusicFileList() {
     filter,
     changeOrder,
     changeViewMode,
+    groupBy,
+    changeGroupBy,
   } = useMusicMachine()
+
+  const groupedFiles = useMemo(() => {
+    if (groupBy === "none") {
+      return { "": filteredFiles }
+    }
+
+    return filteredFiles.reduce(
+      (acc, file) => {
+        const key = file.probeData?.format.tags?.[groupBy] || "Неизвестно"
+        if (!acc[key]) {
+          acc[key] = []
+        }
+        acc[key].push(file)
+        return acc
+      },
+      {} as Record<string, MediaFile[]>,
+    )
+  }, [filteredFiles, groupBy])
 
   const handlePlayPause = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
@@ -81,140 +101,160 @@ export function MusicFileList() {
         currentSortBy={sortBy}
         currentFilterType={filterType}
         availableExtensions={availableExtensions}
+        currentGroupBy={groupBy}
+        onGroupBy={changeGroupBy}
       />
       <div className="flex-1 overflow-y-auto">
-        {viewMode === "list" && (
-          <div className="h-full overflow-y-auto">
-            <div className="space-y-1">
-              {filteredFiles.map((file) => (
-                <div
-                  key={file.path}
-                  className="group flex cursor-pointer items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
-                >
-                  <div className="relative">
-                    <div className="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded bg-gray-200 dark:bg-gray-700">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="text-gray-500 dark:text-gray-400"
+        {Object.entries(groupedFiles).map(([group, files]) => (
+          <div key={group} className="mb-4">
+            {group && <h2 className="mb-2 px-4 text-lg font-semibold">{group}</h2>}
+            {viewMode === "list" ? (
+              <div className="h-full overflow-y-auto">
+                <div className="space-y-1">
+                  {files.map((file) => (
+                    <div
+                      key={file.path}
+                      className="group flex cursor-pointer items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    >
+                      <div className="relative">
+                        <div className="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded bg-gray-200 dark:bg-gray-700">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-gray-500 dark:text-gray-400"
+                          >
+                            <path d="M9 18V5l12-2v13" />
+                            <circle cx="6" cy="18" r="3" />
+                            <circle cx="18" cy="16" r="3" />
+                          </svg>
+                        </div>
+                        <button
+                          onClick={(e) => handlePlayPause(e, file)}
+                          className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded bg-black/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100 ${
+                            activeFile?.path === file.path ? "opacity-100" : ""
+                          }`}
+                        >
+                          {activeFile?.path === file.path && isPlaying ? (
+                            <Pause className="h-4 w-4 text-white" />
+                          ) : (
+                            <Play className="h-4 w-4 text-white" />
+                          )}
+                        </button>
+                      </div>
+                      <div className="min-w-0 flex-1 p-1">
+                        <div className="flex items-center justify-between">
+                          <p className="max-w-[300px] truncate text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {file.probeData?.format.tags?.title || file.name}
+                          </p>
+                          <p className="min-w-12 text-right text-xs text-gray-900 dark:text-gray-100">
+                            {file.probeData?.format.size && (
+                              <span className="text-gray-500 dark:text-gray-400">
+                                {formatFileSize(file.probeData.format.size)}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between truncate">
+                          <div className="w-[330px] truncate text-xs text-gray-500">
+                            {file.probeData?.format.duration && (
+                              <span>{formatTime(file.probeData.format.duration)}</span>
+                            )}
+                            {file.probeData?.format.tags?.artist && (
+                              <span className="ml-4 text-gray-500 dark:text-gray-400">
+                                {file.probeData.format.tags.artist}
+                              </span>
+                            )}
+                            {file.probeData?.format.tags?.date && (
+                              <span className="ml-4 text-gray-500 dark:text-gray-400">
+                                {file.probeData.format.tags.date}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <button
+                        className="mr-4 cursor-pointer rounded border border-gray-700 bg-gray-500 p-1 text-white transition-all duration-200 hover:bg-gray-800 hover:text-white dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500 hover:dark:border-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-200"
+                        title="Добавить в плейлист"
+                        onClick={(e) => handleAdd(e, file)}
                       >
-                        <path d="M9 18V5l12-2v13" />
-                        <circle cx="6" cy="18" r="3" />
-                        <circle cx="18" cy="16" r="3" />
-                      </svg>
+                        <Plus className="h-5 w-5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                {files.map((file) => (
+                  <div key={file.path} className="group relative cursor-pointer">
+                    <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
+                      <div className="flex h-full w-full items-center justify-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="48"
+                          height="48"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-gray-400 dark:text-gray-500"
+                        >
+                          <path d="M9 18V5l12-2v13" />
+                          <circle cx="6" cy="18" r="3" />
+                          <circle cx="18" cy="16" r="3" />
+                        </svg>
+                      </div>
+                      <button
+                        onClick={(e) => handlePlayPause(e, file)}
+                        className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded-lg bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100 ${
+                          activeFile?.path === file.path ? "opacity-100" : ""
+                        }`}
+                      >
+                        {activeFile?.path === file.path && isPlaying ? (
+                          <Pause className="h-12 w-12 text-white" />
+                        ) : (
+                          <Play className="h-12 w-12 text-white" />
+                        )}
+                      </button>
+                    </div>
+                    <div className="mt-2">
+                      <p className="truncate text-sm font-medium">
+                        {file.probeData?.format.tags?.title || file.name}
+                      </p>
+                      <p className="truncate text-xs text-gray-500">
+                        {file.probeData?.format.tags?.artist && (
+                          <span>{file.probeData.format.tags.artist}</span>
+                        )}
+                        {file.probeData?.format.tags?.date && (
+                          <span className="ml-2">{file.probeData.format.tags.date}</span>
+                        )}
+                        {file.probeData?.format.duration && (
+                          <span className="ml-2">{formatTime(file.probeData.format.duration)}</span>
+                        )}
+                      </p>
                     </div>
                     <button
-                      onClick={(e) => handlePlayPause(e, file)}
-                      className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded bg-black/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100 ${
-                        activeFile?.path === file.path ? "opacity-100" : ""
-                      }`}
+                      className="absolute top-2 right-2 cursor-pointer rounded-full bg-gray-800/70 p-1 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-gray-800"
+                      title="Добавить в плейлист"
+                      onClick={(e) => handleAdd(e, file)}
                     >
-                      {activeFile?.path === file.path && isPlaying ? (
-                        <Pause className="h-4 w-4 text-white" />
-                      ) : (
-                        <Play className="h-4 w-4 text-white" />
-                      )}
+                      <Plus className="h-4 w-4" />
                     </button>
                   </div>
-                  <div className="min-w-0 flex-1 p-1">
-                    <div className="flex items-center justify-between">
-                      <p className="max-w-[300px] truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {file.name}
-                      </p>
-                      <p className="min-w-12 text-right text-xs text-gray-900 dark:text-gray-100">
-                        {file.probeData?.format.size && (
-                          <span className="text-gray-500 dark:text-gray-400">
-                            {formatFileSize(file.probeData.format.size)}
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <div className="flex items-center justify-between truncate">
-                      <div className="w-[330px] truncate text-xs text-gray-500">
-                        {file.probeData?.format.duration && (
-                          <span>{formatTime(file.probeData.format.duration)}</span>
-                        )}
-                        {file.probeData?.format.tags?.title && (
-                          <span className="ml-4 text-gray-500 dark:text-gray-400">
-                            {file.probeData.format.tags.title}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    className="mr-4 cursor-pointer rounded border border-gray-700 bg-gray-500 p-1 text-white transition-all duration-200 hover:bg-gray-800 hover:text-white dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500 hover:dark:border-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                    title="Добавить"
-                    onClick={(e) => handleAdd(e, file)}
-                  >
-                    <Plus className="h-5 w-5" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {viewMode === "thumbnails" && (
-          <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {filteredFiles.map((file) => (
-              <div key={file.path} className="group relative cursor-pointer">
-                <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                  <div className="flex h-full w-full items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="48"
-                      height="48"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="text-gray-400 dark:text-gray-500"
-                    >
-                      <path d="M9 18V5l12-2v13" />
-                      <circle cx="6" cy="18" r="3" />
-                      <circle cx="18" cy="16" r="3" />
-                    </svg>
-                  </div>
-                  <button
-                    onClick={(e) => handlePlayPause(e, file)}
-                    className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded-lg bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100 ${
-                      activeFile?.path === file.path ? "opacity-100" : ""
-                    }`}
-                  >
-                    {activeFile?.path === file.path && isPlaying ? (
-                      <Pause className="h-12 w-12 text-white" />
-                    ) : (
-                      <Play className="h-12 w-12 text-white" />
-                    )}
-                  </button>
-                </div>
-                <div className="mt-2">
-                  <p className="truncate text-sm font-medium">{file.name}</p>
-                  <p className="truncate text-xs text-gray-500">
-                    {file.probeData?.format.duration && formatTime(file.probeData.format.duration)}
-                  </p>
-                </div>
-                <button
-                  className="absolute top-2 right-2 cursor-pointer rounded-full bg-gray-800/70 p-1 text-white opacity-0 transition-all duration-200 group-hover:opacity-100 hover:bg-gray-800"
-                  title="Добавить"
-                  onClick={(e) => handleAdd(e, file)}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        )}
+        ))}
       </div>
     </div>
   )

@@ -7,6 +7,7 @@ import {
   Folder,
   Grid2x2,
   List,
+  ListFilterPlus,
   SortDesc,
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
@@ -34,9 +35,11 @@ interface MusicToolbarProps {
   onSort: (sortBy: string) => void
   onFilter: (filterType: string) => void
   onChangeOrder?: () => void
+  onGroupBy?: (groupBy: "none" | "artist" | "genre" | "album") => void
   sortOrder?: "asc" | "desc"
   currentSortBy?: string
   currentFilterType?: string
+  currentGroupBy?: string
   availableExtensions: string[]
 }
 
@@ -53,9 +56,11 @@ interface MusicToolbarProps {
  * @param onSort - Callback для сортировки
  * @param onFilter - Callback для фильтрации
  * @param onChangeOrder - Callback для изменения порядка сортировки
+ * @param onGroupBy - Callback для группировки
  * @param sortOrder - Порядок сортировки (возрастание, убывание)
  * @param currentSortBy - Текущий параметр сортировки
  * @param currentFilterType - Текущий тип фильтра
+ * @param currentGroupBy - Текущая группировка
  */
 export function MusicToolbar({
   viewMode = "thumbnails",
@@ -68,9 +73,11 @@ export function MusicToolbar({
   onSort,
   onFilter,
   onChangeOrder = () => {},
+  onGroupBy = () => {},
   sortOrder = "desc",
   currentSortBy = "date",
   currentFilterType = "all",
+  currentGroupBy = "none",
   availableExtensions,
 }: MusicToolbarProps) {
   // Внутренний стейт для управления текущим выбором
@@ -105,6 +112,10 @@ export function MusicToolbar({
   const handleFilter = (filterType: string) => {
     setInternalFilterType(filterType)
     onFilter(filterType)
+  }
+
+  const handleGroupBy = (groupBy: "none" | "artist" | "genre" | "album") => {
+    onGroupBy(groupBy)
   }
 
   return (
@@ -207,7 +218,7 @@ export function MusicToolbar({
             <DropdownMenu>
               <TooltipTrigger asChild>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="mr-1 h-6 w-6 cursor-pointer">
+                  <Button variant="ghost" size="sm" className="h-6 w-6 cursor-pointer">
                     <SortDesc size={16} />
                   </Button>
                 </DropdownMenuTrigger>
@@ -218,6 +229,24 @@ export function MusicToolbar({
                   <div className="flex items-center gap-2">
                     {internalSortBy === "name" && <Check className="h-4 w-4" />}
                     <span>По имени</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="h-6 cursor-pointer"
+                  onClick={() => handleSort("title")}
+                >
+                  <div className="flex items-center gap-2">
+                    {internalSortBy === "title" && <Check className="h-4 w-4" />}
+                    <span>По заголовку</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="h-6 cursor-pointer"
+                  onClick={() => handleSort("artist")}
+                >
+                  <div className="flex items-center gap-2">
+                    {internalSortBy === "artist" && <Check className="h-4 w-4" />}
+                    <span>По артисту</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("date")}>
@@ -274,6 +303,56 @@ export function MusicToolbar({
                     </div>
                   </DropdownMenuItem>
                 ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </Tooltip>
+        </TooltipProvider>
+
+        {/* Group Dropdown */}
+        <TooltipProvider>
+          <Tooltip>
+            <DropdownMenu>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-6 w-6 cursor-pointer",
+                      currentGroupBy !== "none" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                    )}
+                  >
+                    <ListFilterPlus size={16} />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Группировка</TooltipContent>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleGroupBy("none")}>
+                  <div className="flex items-center gap-2">
+                    {currentGroupBy === "none" && <Check className="h-4 w-4" />}
+                    <span>Не группировать</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleGroupBy("artist")}>
+                  <div className="flex items-center gap-2">
+                    {currentGroupBy === "artist" && <Check className="h-4 w-4" />}
+                    <span>По артисту</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGroupBy("genre")}>
+                  <div className="flex items-center gap-2">
+                    {currentGroupBy === "genre" && <Check className="h-4 w-4" />}
+                    <span>По жанру</span>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleGroupBy("album")}>
+                  <div className="flex items-center gap-2">
+                    {currentGroupBy === "album" && <Check className="h-4 w-4" />}
+                    <span>По альбому</span>
+                  </div>
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </Tooltip>

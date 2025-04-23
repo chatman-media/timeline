@@ -10,6 +10,7 @@ interface MusicContext {
   sortOrder: "asc" | "desc"
   filterType: string
   viewMode: "list" | "thumbnails"
+  groupBy: "none" | "artist" | "genre" | "album"
   availableExtensions: string[]
   error?: string
 }
@@ -38,6 +39,11 @@ type ChangeViewModeEvent = {
   mode: "list" | "thumbnails"
 }
 
+type ChangeGroupByEvent = {
+  type: "CHANGE_GROUP_BY"
+  groupBy: "none" | "artist" | "genre" | "album"
+}
+
 type RetryEvent = {
   type: "RETRY"
 }
@@ -48,6 +54,7 @@ type MusicEvent =
   | FilterEvent
   | ChangeOrderEvent
   | ChangeViewModeEvent
+  | ChangeGroupByEvent
   | RetryEvent
 
 type FetchInput = {
@@ -64,7 +71,24 @@ const sortFiles = (files: MediaFile[], sortBy: string, sortOrder: "asc" | "desc"
 
     switch (sortBy) {
     case "name":
-      comparison = a.name.localeCompare(b.name)
+      const nameA = String(a.probeData?.format.tags?.TOPE || a.name)
+      const nameB = String(b.probeData?.format.tags?.TOPE || b.name)
+      comparison = nameA.localeCompare(nameB)
+      break
+    case "title":
+      const titleA = String(a.probeData?.format.tags?.title || a.name)
+      const titleB = String(b.probeData?.format.tags?.title || b.name)
+      comparison = titleA.localeCompare(titleB)
+      break
+    case "artist":
+      const artistA = String(a.probeData?.format.tags?.artist || "")
+      const artistB = String(b.probeData?.format.tags?.artist || "")
+      comparison = artistA.localeCompare(artistB)
+      break
+    case "date":
+      const dateA = new Date(a.probeData?.format.tags?.date || "1970-01-01")
+      const dateB = new Date(b.probeData?.format.tags?.date || "1970-01-01")
+      comparison = dateA.getTime() - dateB.getTime()
       break
     case "duration":
       comparison = (a.probeData?.format.duration || 0) - (b.probeData?.format.duration || 0)
@@ -134,9 +158,10 @@ export const musicMachine = createMachine({
     filteredFiles: [],
     searchQuery: "",
     sortBy: "name",
-    sortOrder: "desc",
+    sortOrder: "asc",
     filterType: "all",
     viewMode: "list",
+    groupBy: "none",
     availableExtensions: [],
   } as MusicContext,
   types: {
@@ -230,6 +255,11 @@ export const musicMachine = createMachine({
           actions: assign(({ event }) => ({
             viewMode: event.mode,
           })),
+        },
+        CHANGE_GROUP_BY: {
+          actions: assign({
+            groupBy: ({ event }) => event.groupBy,
+          }),
         },
       },
     },

@@ -13,6 +13,7 @@ export function useMusicMachine() {
     sortOrder,
     filterType,
     viewMode,
+    groupBy,
     availableExtensions,
     error,
   } = state.context
@@ -41,6 +42,10 @@ export function useMusicMachine() {
     send({ type: "CHANGE_VIEW_MODE", mode })
   }
 
+  const changeGroupBy = (groupBy: "none" | "artist" | "genre" | "album") => {
+    send({ type: "CHANGE_GROUP_BY", groupBy })
+  }
+
   const retry = () => {
     send({ type: "RETRY" })
   }
@@ -54,6 +59,7 @@ export function useMusicMachine() {
     sortOrder,
     filterType,
     viewMode,
+    groupBy,
     availableExtensions,
     error,
     isPlaying,
@@ -66,6 +72,7 @@ export function useMusicMachine() {
     filter,
     changeOrder,
     changeViewMode,
+    changeGroupBy,
     retry,
   }
 }

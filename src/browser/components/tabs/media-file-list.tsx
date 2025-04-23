@@ -532,6 +532,7 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Группируем файлы
   const groupedFiles = useMemo<GroupedMediaFiles[]>(() => {
+    console.log("[groupedFiles] Group by:", groupBy)
     if (groupBy === "none") {
       return [{ title: "", files: filteredAndSortedMedia }]
     }
@@ -896,21 +897,7 @@ export const MediaFileList = memo(function MediaFileList({
         return null
       }
 
-      // если картинка то берем дату создания файла
-      if (group.files.some((file) => file.isImage)) {
-        group.title =
-          new Date(group.files.find((file) => file.isImage)?.createdAt || "").toLocaleDateString(
-            "ru-RU",
-            {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            },
-          ) || "Неизвестная дата"
-      }
-
-      // Если нет заголовка и есть файлы, показываем их без группы
-      if (!group.title) {
+      if (!group.title || group.title === "") {
         return (
           <div
             key="ungrouped"
