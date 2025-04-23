@@ -1,4 +1,4 @@
-import { Music, Pause, Play, Plus } from "lucide-react"
+import { CirclePause, CirclePlay, Music, Pause, Play, Plus } from "lucide-react"
 import type { MouseEvent } from "react"
 import { useMemo, useState } from "react"
 
@@ -154,20 +154,21 @@ export function MusicFileList() {
         currentGroupBy={groupBy}
         onGroupBy={changeGroupBy}
       />
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto p-1 dark:bg-[#1b1a1f]">
         {Object.entries(groupedFiles).map(([group, files]) => (
-          <div key={group} className="mb-4">
+          <div key={group} className="">
             {group && <h2 className="mb-2 px-4 text-lg font-semibold">{group}</h2>}
             {viewMode === "list" ? (
-              <div className="h-full overflow-y-auto">
+              <div key={group} className="h-full overflow-y-hidden">
                 <div className="space-y-1">
                   {files.map((file) => (
                     <div
                       key={file.path}
-                      className="group relative flex cursor-pointer items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="group relative flex cursor-pointer items-center gap-1 p-0 hover:bg-gray-100 dark:bg-[#25242b] dark:hover:bg-gray-800"
                     >
+                      {/* <Waveform audioUrl={file.path} /> */}
                       <div className="relative">
-                        <div className="flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded bg-gray-200 dark:bg-gray-700">
+                        <div className="flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded">
                           <button
                             onClick={(e) => handlePlayPause(e, file)}
                             className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded bg-black/30 opacity-50 transition-opacity duration-200 group-hover:opacity-100 ${
@@ -175,14 +176,17 @@ export function MusicFileList() {
                             }`}
                           >
                             {activeFile?.path === file.path && isPlaying ? (
-                              <Pause className="h-4 w-4 text-white" />
+                              <CirclePause className="h-6 w-6 text-white" />
                             ) : (
-                              <Play className="h-4 w-4 text-white" />
+                              <CirclePlay className="h-6 w-6 text-white" />
                             )}
                           </button>
                         </div>
                       </div>
-                      <div className="flex h-12 min-w-0 flex-1 flex-col justify-between p-1">
+                      <div
+                        className="flex h-12 min-w-0 flex-1 flex-col justify-between p-1"
+                        onClick={(e) => handlePlayPause(e, file)}
+                      >
                         <div className="flex items-center justify-between">
                           <p className="max-w-[300px] truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                             {file.probeData?.format.tags?.title || file.name}

@@ -159,7 +159,7 @@ export const AudioPreview = memo(function AudioPreview({
 
   return (
     <div
-      className={`relative h-full flex-shrink-0 bg-gray-200 dark:bg-gray-700`}
+      className={`group relative h-full flex-shrink-0 bg-gray-200 dark:bg-gray-700`}
       style={{
         height: `${size}px`,
         width: `${(size * dimensions[0]) / dimensions[1]}px`,

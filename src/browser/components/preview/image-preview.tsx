@@ -48,7 +48,7 @@ export const ImagePreview = memo(function ImagePreview({
 
   return (
     <div
-      className={`relative h-full flex-shrink-0`}
+      className={`group relative h-full flex-shrink-0`}
       style={{ height: `${size}px`, width: `${calculateWidth().toFixed(0)}px` }}
     >
       {showFileName && (

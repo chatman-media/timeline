@@ -842,7 +842,7 @@ export const MediaFileList = memo(function MediaFileList({
           <div
             key={fileId}
             className={cn(
-              "flex h-full items-center border border-transparent p-0",
+              "group flex h-full items-center border border-transparent p-0",
               "bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
               isAdded && "pointer-events-none",
             )}

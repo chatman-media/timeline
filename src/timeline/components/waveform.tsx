@@ -36,6 +36,25 @@ function Waveform({ audioUrl }: WaveformProps) {
           throw new Error("Received empty audio blob")
         }
 
+        // Проверяем тип аудиофайла
+        if (!blob.type.startsWith("audio/")) {
+          throw new Error(`Invalid audio type: ${blob.type}`)
+        }
+
+        // Проверяем поддерживаемые форматы
+        const supportedFormats = [
+          "audio/mpeg",
+          "audio/wav",
+          "audio/ogg",
+          "audio/webm",
+          "audio/x-aiff",
+        ]
+        if (!supportedFormats.includes(blob.type)) {
+          throw new Error(
+            `Unsupported audio format: ${blob.type}. Supported formats: ${supportedFormats.join(", ")}`,
+          )
+        }
+
         setAudioBlob(blob)
       } catch (error: unknown) {
         if (error instanceof Error && error.name === "AbortError") {
@@ -68,12 +87,23 @@ function Waveform({ audioUrl }: WaveformProps) {
         progressColor: "#383351",
         url: audioUrl,
         normalize: true,
-        height: 40,
+        height: 20,
         barWidth: 1,
-        barGap: 0,
+        barGap: 1,
         cursorWidth: 0,
         hideScrollbar: true,
-        backend: "MediaElement",
+        backend: "WebAudio",
+        audioRate: 1,
+        barRadius: 0,
+        blobMimeType: "audio/x-aiff",
+        fetchParams: {
+          cache: "default",
+          mode: "cors",
+          method: "GET",
+          credentials: "same-origin",
+          redirect: "follow",
+          referrer: "client",
+        },
       })
 
       wavesurferRef.current.on("ready", () => {
@@ -98,7 +128,12 @@ function Waveform({ audioUrl }: WaveformProps) {
     }
   }, [audioBlob])
 
-  return <div ref={containerRef} className="z-11 h-full" />
+  return (
+    <div
+      ref={containerRef}
+      className="absolute top-[24px] right-[68px] bottom-[0] left-[48px] z-11 h-full"
+    />
+  )
 }
 
 Waveform.displayName = "Waveform"
