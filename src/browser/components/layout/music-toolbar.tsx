@@ -107,7 +107,7 @@ export function MusicToolbar({
 
   return (
     <div className="flex items-center justify-between px-2 py-2">
-      <div className="flex items-center gap-2">
+      <div className="flex w-[calc(100%-100px)] items-center gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -148,8 +148,12 @@ export function MusicToolbar({
         </Button>
 
         <Input
+          type="search"
           placeholder="Поиск"
-          className="h-6 w-full text-xs"
+          className="h-6 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500 mr-5"
+          style={{
+            backgroundColor: "transparent",
+          }}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
