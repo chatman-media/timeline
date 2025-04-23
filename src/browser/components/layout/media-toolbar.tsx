@@ -136,16 +136,15 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#cdcdcd] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]/70"
+          className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#d1d1d1] dark:bg-[#45444b] dark:hover:bg-[#dddbdd]/25"
           onClick={onImport}
         >
-          {/* <Import size={12} /> */}
           <span className="px-2 text-xs">Импорт</span>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#efefef] dark:hover:bg-[#dddbdd]/25"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFile()
@@ -159,7 +158,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#efefef] dark:hover:bg-[#dddbdd]/25"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFolder()
@@ -176,7 +175,7 @@ export function MediaToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#cdcdcd] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]/70"
+          className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#d1d1d1] dark:bg-[#45444b] dark:hover:bg-[#dddbdd]/25"
           onClick={onRecord}
         >
           <span className="px-2 text-xs">Запись</span>
@@ -184,7 +183,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#efefef] dark:hover:bg-[#dddbdd]/25"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordCamera()
@@ -198,7 +197,7 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#efefef] dark:hover:bg-[#dddbdd]/25"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordScreen()
@@ -212,13 +211,13 @@ export function MediaToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer rounded-sm p-1 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#efefef] dark:hover:bg-[#dddbdd]/25"
                   onClick={(e) => {
                     e.stopPropagation()
                     onRecordVoice()
                   }}
                 >
-                  <Mic size={12} />
+                  <Mic size={12} className="" />
                 </div>
               </TooltipTrigger>
               <TooltipContent>Запись голоса</TooltipContent>

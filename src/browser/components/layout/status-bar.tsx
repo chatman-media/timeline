@@ -49,7 +49,7 @@ export function StatusBar({
             <Button
               variant="ghost"
               size="sm"
-              className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+              className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1]"
               title="Добавить все видео"
               onClick={onAddAllVideoFiles}
             >
@@ -61,7 +61,7 @@ export function StatusBar({
             <Button
               variant="ghost"
               size="sm"
-              className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+              className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1]"
               title="Добавить все аудио"
               onClick={onAddAllAudioFiles}
             >
@@ -76,7 +76,7 @@ export function StatusBar({
           {/* <Button
           variant="ghost"
           size="sm"
-          className="flex items-center gap-1 text-xs rounded-sm cursor-pointer px-2 h-7 hover:bg-[#38dac9] dark:hover:bg-[#38dacaae] bg-secondary"
+          className="flex items-center gap-1 text-xs rounded-sm cursor-pointer px-2 h-7 hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1] bg-secondary"
           title={`Пропустить дату`}
           onClick={() => {}}
         >
@@ -85,7 +85,7 @@ export function StatusBar({
           <Button
             variant="ghost"
             size="sm"
-            className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+            className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1]"
             title={`Добавить видео за ${topDateWithRemainingFiles.date}`}
             onClick={() => {
               onAddDateFiles(topDateWithRemainingFiles.files)
@@ -105,7 +105,7 @@ export function StatusBar({
           <Button
             variant="ghost"
             size="sm"
-            className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dac9] dark:hover:bg-[#38dacaae]"
+            className="bg-secondary flex h-7 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1]"
             title="Добавить все файлы"
             onClick={onAddAllFiles}
           >

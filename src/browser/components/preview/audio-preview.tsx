@@ -240,7 +240,7 @@ export const AudioPreview = memo(function AudioPreview({
             height={size}
             barWidth={1}
             gap={0}
-            barColor="#38dac9"
+            barColor="#35d1c1"
             backgroundColor="transparent"
           />
         )}

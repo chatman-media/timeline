@@ -817,7 +817,7 @@ export const MediaFileList = memo(function MediaFileList({
             key={fileId}
             className={cn(
               "flex h-full items-center border border-transparent p-0",
-              "bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#38dac9] dark:hover:bg-[#2f2d38]",
+              "bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
               isAdded && "pointer-events-none",
             )}
           >
@@ -841,14 +841,14 @@ export const MediaFileList = memo(function MediaFileList({
             key={fileId}
             className={cn(
               "flex h-full w-full flex-col overflow-hidden rounded-xs",
-              "border border-transparent bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#38dac9] dark:hover:bg-[#2f2d38]",
+              "border border-transparent bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
               isAdded && "pointer-events-none",
             )}
             style={{
               width: `${((previewSize * 16) / 9).toFixed(0)}px`,
             }}
           >
-            <div className="relative w-full flex-1 flex-grow flex-row">
+            <div className="group relative w-full flex-1 flex-grow flex-row">
               <MediaPreview
                 file={file}
                 onAddMedia={handleAddMedia}
@@ -873,7 +873,7 @@ export const MediaFileList = memo(function MediaFileList({
             key={fileId}
             className={cn(
               "flex h-full items-center p-0",
-              "border border-transparent bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#38dac9] dark:hover:bg-[#2f2d38]",
+              "border border-transparent bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
               isAdded && "pointer-events-none",
             )}
           >
@@ -934,7 +934,7 @@ export const MediaFileList = memo(function MediaFileList({
             <Button
               variant="secondary"
               size="sm"
-              className="flex h-7 cursor-pointer items-center gap-1 bg-[#dddbdd] px-2 text-xs hover:bg-[#38dac9] dark:bg-[#45444b] dark:hover:bg-[#38dacaae]"
+              className="flex h-7 cursor-pointer items-center gap-1 rounded-sm bg-[#dddbdd] px-2 text-xs hover:bg-[#38dacac3] dark:bg-[#45444b] dark:hover:bg-[#35d1c1]"
               onClick={() => {
                 // Фильтруем файлы - изображения не добавляем на таймлайн
                 console.log("[renderGroup] Group files:", group.files)

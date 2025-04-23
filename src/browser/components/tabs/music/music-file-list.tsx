@@ -1,3 +1,4 @@
+import { useMachine } from "@xstate/react"
 import { Pause, Play, Plus } from "lucide-react"
 import type { MouseEvent } from "react"
 import { useEffect, useRef, useState } from "react"
@@ -6,60 +7,22 @@ import { MusicToolbar } from "@/browser/components/layout/music-toolbar"
 import { formatFileSize, formatTime } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
 
+import { musicMachine } from "./music-machine"
+
 export function MusicFileList() {
-  const [musicFiles, setMusicFiles] = useState<MediaFile[]>([])
-  const [, setIsLoading] = useState(true)
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
-  const [page, setPage] = useState(1)
-  const [hasMore, setHasMore] = useState(true)
   const audioRef = useState<HTMLAudioElement | null>(null)
   const loaderRef = useRef<HTMLDivElement>(null)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [viewMode, setViewMode] = useState<"list" | "thumbnails">("list")
-  const [sortBy, setSortBy] = useState<string>("name")
-  const [filterType, setFilterType] = useState<string>("all")
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc")
 
-  const fetchMusicFiles = async (pageNum: number) => {
-    try {
-      setIsLoadingMore(true)
-      const response = await fetch(
-        `/api/music?page=${pageNum}&limit=20&sort=${sortBy}&order=${sortOrder}&filter=${filterType}`,
-      )
-      const data = await response.json()
-
-      if (pageNum === 1) {
-        setMusicFiles(data.media)
-      } else {
-        setMusicFiles((prev) => [...prev, ...data.media])
-      }
-
-      setHasMore(musicFiles.length + data.media.length < data.total)
-    } catch (error) {
-      console.error("Error fetching music files:", error)
-    } finally {
-      setIsLoading(false)
-      setIsLoadingMore(false)
-    }
-  }
-
-  useEffect(() => {
-    setPage(1)
-    fetchMusicFiles(1)
-  }, [sortBy, sortOrder, filterType])
-
-  useEffect(() => {
-    fetchMusicFiles(1)
-  }, [])
+  const [state, send] = useMachine(musicMachine)
 
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         const target = entries[0]
-        if (target.isIntersecting && hasMore && !isLoadingMore) {
-          setPage((prev) => prev + 1)
-          fetchMusicFiles(page + 1)
+        if (target.isIntersecting && state.context.hasMore && !state.context.isLoadingMore) {
+          send({ type: "LOAD_MORE" })
         }
       },
       {
@@ -73,7 +36,7 @@ export function MusicFileList() {
     }
 
     return () => observer.disconnect()
-  }, [hasMore, isLoadingMore, page])
+  }, [state.context.hasMore, state.context.isLoadingMore, send])
 
   const handlePlayPause = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
@@ -96,19 +59,19 @@ export function MusicFileList() {
   }
 
   const handleViewModeChange = (mode: "list" | "thumbnails") => {
-    setViewMode(mode)
+    send({ type: "CHANGE_VIEW_MODE", mode })
   }
 
   const handleSort = (newSortBy: string) => {
-    setSortBy(newSortBy)
+    send({ type: "SORT", sortBy: newSortBy })
   }
 
   const handleFilter = (newFilterType: string) => {
-    setFilterType(newFilterType)
+    send({ type: "FILTER", filterType: newFilterType })
   }
 
   const handleChangeOrder = () => {
-    setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+    send({ type: "CHANGE_ORDER" })
   }
 
   const handleImport = () => {
@@ -127,27 +90,30 @@ export function MusicFileList() {
     console.log(e, file)
   }
 
+  const files = state.context.filteredFiles
+
   return (
     <div className="flex h-full flex-col">
       <MusicToolbar
-        viewMode={viewMode}
+        viewMode={state.context.viewMode}
         onViewModeChange={handleViewModeChange}
+        searchQuery={state.context.searchQuery}
+        setSearchQuery={(query) => send({ type: "SEARCH", query })}
         onImport={handleImport}
         onImportFile={handleImportFile}
         onImportFolder={handleImportFolder}
         onSort={handleSort}
         onFilter={handleFilter}
         onChangeOrder={handleChangeOrder}
-        sortOrder={sortOrder}
-        currentSortBy={sortBy}
-        currentFilterType={filterType}
+        sortOrder={state.context.sortOrder}
+        currentSortBy={state.context.sortBy}
+        currentFilterType={state.context.filterType}
       />
-      {/* {activeFile && renderAudioPlayer()} */}
       <div className="flex-1 overflow-y-auto">
-        {viewMode === "list" && (
+        {state.context.viewMode === "list" && (
           <div className="h-full overflow-y-auto">
             <div className="space-y-1">
-              {musicFiles.map((file) => (
+              {files.map((file) => (
                 <div
                   key={file.path}
                   className="group flex cursor-pointer items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
@@ -220,12 +186,22 @@ export function MusicFileList() {
                 </div>
               ))}
             </div>
+            {state.context.searchQuery === "" && (
+              <div ref={loaderRef} className="p-2 pt-0 text-center">
+                {state.context.isLoadingMore && (
+                  <p className="text-sm text-gray-500">Загрузка...</p>
+                )}
+                {!state.context.hasMore && files.length > 0 && (
+                  <p className="text-sm text-gray-500">Больше файлов нет</p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {viewMode === "thumbnails" && (
+        {state.context.viewMode === "thumbnails" && (
           <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {musicFiles.map((file) => (
+            {files.map((file) => (
               <div key={file.path} className="group relative cursor-pointer">
                 <div className="flex aspect-square items-center justify-center overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
                   <div className="flex h-full w-full items-center justify-center">
@@ -276,13 +252,6 @@ export function MusicFileList() {
             ))}
           </div>
         )}
-
-        <div ref={loaderRef} className="p-2 pt-0 text-center">
-          {isLoadingMore && <p className="text-sm text-gray-500">Загрузка...</p>}
-          {!hasMore && musicFiles.length > 0 && (
-            <p className="text-sm text-gray-500">Больше файлов нет</p>
-          )}
-        </div>
       </div>
     </div>
   )

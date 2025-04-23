@@ -34,7 +34,7 @@ export const AddMediaButton = memo(function AddMediaButton({
   return (
     <div
       className={`absolute right-1 bottom-1 z-10 cursor-pointer rounded-full p-1 text-white ${
-        isAdded ? "bg-[#38dacac3] dark:bg-[#38dac9]" : "bg-[#38dac9]/50 hover:bg-[#38dac9]"
+        isAdded ? "bg-[#38dacac3]/62 dark:bg-[#35d1c1]/62" : "bg-[#2f2d38] hover:bg-[#35d1c1]"
       }`}
       onClick={(e) => {
         e.stopPropagation()

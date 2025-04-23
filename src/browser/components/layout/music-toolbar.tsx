@@ -5,7 +5,6 @@ import {
   File,
   Filter,
   Folder,
-  Grid,
   Grid2x2,
   List,
   SortDesc,
@@ -20,12 +19,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 interface MusicToolbarProps {
   viewMode: "list" | "thumbnails"
   onViewModeChange: (mode: "list" | "thumbnails") => void
+  searchQuery: string
+  setSearchQuery: (query: string) => void
   onImport: () => void
   onImportFile: () => void
   onImportFolder: () => void
@@ -42,6 +44,8 @@ interface MusicToolbarProps {
  *
  * @param viewMode - Режим просмотра (список, сетка, миниатюры)
  * @param onViewModeChange - Callback для изменения режима просмотра
+ * @param searchQuery - Текущий запрос поиска
+ * @param setSearchQuery - Callback для установки запроса поиска
  * @param onImport - Callback для импорта файлов
  * @param onImportFile - Callback для импорта файлов
  * @param onImportFolder - Callback для импорта папок
@@ -55,6 +59,8 @@ interface MusicToolbarProps {
 export function MusicToolbar({
   viewMode = "thumbnails",
   onViewModeChange,
+  searchQuery = "",
+  setSearchQuery,
   onImport,
   onImportFile,
   onImportFolder,
@@ -105,7 +111,7 @@ export function MusicToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="flex cursor-pointer items-center gap-1 px-1 text-xs"
+          className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#d1d1d1] dark:bg-[#45444b] dark:hover:bg-[#dddbdd]/25"
           onClick={onImport}
         >
           <span className="px-2 text-xs">Импорт</span>
@@ -113,7 +119,7 @@ export function MusicToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer rounded-sm p-1 hover:bg-gray-300 dark:hover:bg-gray-500"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#dddbdd] dark:hover:bg-[#dddbdd]/25"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFile()
@@ -127,7 +133,7 @@ export function MusicToolbar({
             <Tooltip>
               <TooltipTrigger asChild>
                 <div
-                  className="cursor-pointer rounded-sm p-1 hover:bg-gray-300 dark:hover:bg-gray-500"
+                  className="cursor-pointer rounded-sm p-1 hover:bg-[#dddbdd] dark:hover:bg-[#dddbdd]/25"
                   onClick={(e) => {
                     e.stopPropagation()
                     onImportFolder()
@@ -140,6 +146,13 @@ export function MusicToolbar({
             </Tooltip>
           </div>
         </Button>
+
+        <Input
+          placeholder="Поиск"
+          className="h-6 w-full text-xs"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <div className="flex items-end gap-2">

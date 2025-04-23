@@ -52,12 +52,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              className="hover:bg-secondary cursor-pointer"
+              className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
               variant="ghost"
               size="icon"
               title="Макет"
             >
-              <Layout className="h-3.5 w-3.5" />
+              <Layout className="h-5 w-5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-[400px] p-2" sideOffset={0}>
@@ -69,27 +69,27 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           </PopoverContent>
         </Popover>
         <Button
-          className="hover:bg-secondary h-6 w-6 cursor-pointer p-0"
+          className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
           variant="ghost"
           size="icon"
           title="Быстрые клавиши"
         >
-          <Keyboard className="h-3.5 w-3.5" />
+          <Keyboard className="h-5 w-5" />
         </Button>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center">
         <Button
-          className="hover:bg-secondary h-6 w-6 cursor-pointer p-0"
+          className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
           variant="ghost"
           size="icon"
           title="Настройки"
           onClick={() => setIsSettingsOpen(true)}
         >
-          <Settings className="h-3.5 w-3.5" />
+          <Settings className="h-5 w-5" />
         </Button>
         <Button
           className={cn(
-            "hover:bg-secondary h-6 w-6 cursor-pointer p-0",
+            "hover:bg-secondary h-7 w-7 cursor-pointer p-0",
             isDirty ? "opacity-50 hover:opacity-50" : "hover:bg-accent opacity-100",
           )}
           variant="ghost"
@@ -98,15 +98,15 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           onClick={handleSave}
           disabled={isDirty}
         >
-          <Save className="h-3.5 w-3.5" />
+          <Save className="h-5 w-5" />
         </Button>
 
         <div
           className={cn(
-            "group relative w-[200px] text-xs",
+            "group relative ml-1 w-[200px] text-xs",
             isEditing
-              ? "ring-1 ring-[#38dac9]"
-              : "transition-colors group-hover:ring-1 group-hover:ring-[#38dac9]",
+              ? "ring-1 ring-[#35d1c1]"
+              : "transition-colors group-hover:ring-1 group-hover:ring-[#35d1c1]",
           )}
           onClick={() => setIsEditing(true)}
         >
@@ -122,7 +122,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
               autoFocus
             />
           ) : (
-            <span className="block truncate pl-[1px] hover:border hover:border-[#38dac9] hover:pl-[0px]">
+            <span className="block truncate pl-[1px] hover:border hover:border-[#35d1c1] hover:pl-[0px]">
               {name}
             </span>
           )}
@@ -132,12 +132,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              className="h-6 w-6 cursor-pointer p-0"
+              className="h-7 w-7 cursor-pointer p-0"
               variant="ghost"
               size="icon"
               title="Опубликовать"
             >
-              <Send className="h-3.5 w-3.5" />
+              <Send className="h-5 w-5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64" sideOffset={0}>
@@ -151,12 +151,12 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <Popover>
           <PopoverTrigger asChild>
             <Button
-              className="h-6 w-6 cursor-pointer p-0"
+              className="h-7 w-7 cursor-pointer p-0"
               variant="ghost"
               size="icon"
               title="Задачи монтажа"
             >
-              <ListTodo className="h-3.5 w-3.5" />
+              <ListTodo className="h-5 w-5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64" sideOffset={0}>
@@ -169,29 +169,29 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         {/* <Button
           variant="ghost"
           size="icon"
-          className="cursor-pointer p-0 h-6 w-6"
+          className="cursor-pointer p-0 h-7 w-7"
           title="Экспорт"
           onClick={() => setIsExportOpen(true)}
         >
-          <Upload className="h-3.5 w-3.5" />
+          <Upload className="h-5 w-5" />
         </Button> */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 cursor-pointer p-0"
+          className="mr-1 h-7 w-7 cursor-pointer p-0"
           title="Настройки"
           onClick={() => setIsUserSettingsOpen(true)}
         >
-          <UserCog className="h-3.5 w-3.5" />
+          <UserCog className="h-5 w-5" />
         </Button>
         <Button
           variant="outline"
           size="sm"
-          className="h-6 w-24 cursor-pointer items-center gap-1 bg-[#38dacac3] px-1 text-sm text-black hover:bg-[#38dac9] hover:text-black dark:bg-[#38dac9] dark:hover:bg-[#38dac9]"
+          className="h-6 w-24 cursor-pointer items-center gap-1 bg-[#38dacac3] px-1 text-sm text-black hover:bg-[#35d1c1] hover:text-black dark:bg-[#35d1c1] dark:hover:bg-[#35d1c1]"
           onClick={handleExport}
         >
           <span className="px-2 text-xs">Экспорт</span>
-          <Upload className="h-3.5 w-3.5" />
+          <Upload className="h-5 w-5" />
         </Button>
       </div>
       <ExportDialog open={isExportOpen} onOpenChange={setIsExportOpen} />
