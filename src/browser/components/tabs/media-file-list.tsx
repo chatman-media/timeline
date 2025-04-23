@@ -557,6 +557,12 @@ export const MediaFileList = memo(function MediaFileList({
 
       return Object.entries(groups)
         .filter(([, files]) => files.length > 0)
+        .sort(([a], [b]) => {
+          if (sortOrder === "asc") {
+            return a.localeCompare(b)
+          }
+          return b.localeCompare(a)
+        })
         .map(([type, files]) => ({
           title: type === "video" ? "Видео" : type === "audio" ? "Аудио" : "Изображения",
           files,
@@ -594,7 +600,9 @@ export const MediaFileList = memo(function MediaFileList({
         .sort(([a], [b]) => {
           if (a === "Без даты") return 1
           if (b === "Без даты") return -1
-          return new Date(b).getTime() - new Date(a).getTime()
+          const dateA = new Date(a)
+          const dateB = new Date(b)
+          return sortOrder === "asc" ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime()
         })
         .map(([date, files]) => ({
           title: date,
@@ -642,8 +650,23 @@ export const MediaFileList = memo(function MediaFileList({
         }
       })
 
+      const groupOrder = [
+        "noDuration",
+        "veryShort",
+        "short",
+        "medium",
+        "long",
+        "veryLong",
+        "extraLong",
+      ]
+
       return Object.entries(groups)
         .filter(([, files]) => files.length > 0)
+        .sort(([a], [b]) => {
+          const indexA = groupOrder.indexOf(a)
+          const indexB = groupOrder.indexOf(b)
+          return sortOrder === "asc" ? indexA - indexB : indexB - indexA
+        })
         .map(([type, files]) => ({
           title:
             type === "noDuration"
@@ -664,7 +687,7 @@ export const MediaFileList = memo(function MediaFileList({
     }
 
     return [{ title: "", files: filteredAndSortedMedia }]
-  }, [filteredAndSortedMedia, groupBy])
+  }, [filteredAndSortedMedia, groupBy, sortOrder])
 
   // Мемоизируем другие вычисления
   const sortedDates = useMemo(() => groupFilesByDate(media), [media])

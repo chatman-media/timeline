@@ -35,7 +35,7 @@ export function MusicFileList() {
       return { "": filteredFiles }
     }
 
-    return filteredFiles.reduce(
+    const groups = filteredFiles.reduce(
       (acc, file) => {
         const key = file.probeData?.format.tags?.[groupBy] || "Неизвестно"
         if (!acc[key]) {
@@ -46,7 +46,56 @@ export function MusicFileList() {
       },
       {} as Record<string, MediaFile[]>,
     )
-  }, [filteredFiles, groupBy])
+
+    // Сортируем группы
+    const sortedGroups = Object.entries(groups).sort(([a], [b]) => {
+      if (sortOrder === "asc") {
+        return a.localeCompare(b)
+      }
+      return b.localeCompare(a)
+    })
+
+    // Сортируем файлы внутри групп
+    return Object.fromEntries(
+      sortedGroups.map(([group, files]) => [
+        group,
+        files.sort((a, b) => {
+          let comparison = 0
+          switch (sortBy) {
+            case "name":
+              const nameA = String(a.probeData?.format.tags?.TOPE || a.name)
+              const nameB = String(b.probeData?.format.tags?.TOPE || b.name)
+              comparison = nameA.localeCompare(nameB)
+              break
+            case "title":
+              const titleA = String(a.probeData?.format.tags?.title || a.name)
+              const titleB = String(b.probeData?.format.tags?.title || b.name)
+              comparison = titleA.localeCompare(titleB)
+              break
+            case "artist":
+              const artistA = String(a.probeData?.format.tags?.artist || "")
+              const artistB = String(b.probeData?.format.tags?.artist || "")
+              comparison = artistA.localeCompare(artistB)
+              break
+            case "date":
+              const dateA = new Date(a.probeData?.format.tags?.date || "1970-01-01")
+              const dateB = new Date(b.probeData?.format.tags?.date || "1970-01-01")
+              comparison = dateA.getTime() - dateB.getTime()
+              break
+            case "duration":
+              comparison = (a.probeData?.format.duration || 0) - (b.probeData?.format.duration || 0)
+              break
+            case "size":
+              comparison = (a.probeData?.format.size || 0) - (b.probeData?.format.size || 0)
+              break
+            default:
+              comparison = 0
+          }
+          return sortOrder === "asc" ? comparison : -comparison
+        }),
+      ]),
+    )
+  }, [filteredFiles, groupBy, sortBy, sortOrder])
 
   const handlePlayPause = (e: React.MouseEvent, file: MediaFile) => {
     e.stopPropagation()
