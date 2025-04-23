@@ -602,7 +602,9 @@ export const MediaFileList = memo(function MediaFileList({
           if (b === "Без даты") return -1
           const dateA = new Date(a)
           const dateB = new Date(b)
-          return sortOrder === "asc" ? dateA.getTime() - dateB.getTime() : dateB.getTime() - dateA.getTime()
+          return sortOrder === "asc"
+            ? dateA.getTime() - dateB.getTime()
+            : dateB.getTime() - dateA.getTime()
         })
         .map(([date, files]) => ({
           title: date,

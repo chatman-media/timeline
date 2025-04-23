@@ -1,11 +1,12 @@
-import { Pause, Play, Plus } from "lucide-react"
+import { Music, Pause, Play, Plus } from "lucide-react"
 import type { MouseEvent } from "react"
-import { useMemo,useState } from "react"
+import { useMemo, useState } from "react"
 
 import { MusicToolbar } from "@/browser/components/layout/music-toolbar"
 import { formatFileSize, formatTime } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
 
+import { AddMediaButton } from "../../preview/add-media-button"
 import { useMusicMachine } from "./use-music-machine"
 
 export function MusicFileList() {
@@ -62,34 +63,34 @@ export function MusicFileList() {
         files.sort((a, b) => {
           let comparison = 0
           switch (sortBy) {
-            case "name":
-              const nameA = String(a.probeData?.format.tags?.TOPE || a.name)
-              const nameB = String(b.probeData?.format.tags?.TOPE || b.name)
-              comparison = nameA.localeCompare(nameB)
-              break
-            case "title":
-              const titleA = String(a.probeData?.format.tags?.title || a.name)
-              const titleB = String(b.probeData?.format.tags?.title || b.name)
-              comparison = titleA.localeCompare(titleB)
-              break
-            case "artist":
-              const artistA = String(a.probeData?.format.tags?.artist || "")
-              const artistB = String(b.probeData?.format.tags?.artist || "")
-              comparison = artistA.localeCompare(artistB)
-              break
-            case "date":
-              const dateA = new Date(a.probeData?.format.tags?.date || "1970-01-01")
-              const dateB = new Date(b.probeData?.format.tags?.date || "1970-01-01")
-              comparison = dateA.getTime() - dateB.getTime()
-              break
-            case "duration":
-              comparison = (a.probeData?.format.duration || 0) - (b.probeData?.format.duration || 0)
-              break
-            case "size":
-              comparison = (a.probeData?.format.size || 0) - (b.probeData?.format.size || 0)
-              break
-            default:
-              comparison = 0
+          case "name":
+            const nameA = String(a.probeData?.format.tags?.TOPE || a.name)
+            const nameB = String(b.probeData?.format.tags?.TOPE || b.name)
+            comparison = nameA.localeCompare(nameB)
+            break
+          case "title":
+            const titleA = String(a.probeData?.format.tags?.title || a.name)
+            const titleB = String(b.probeData?.format.tags?.title || b.name)
+            comparison = titleA.localeCompare(titleB)
+            break
+          case "artist":
+            const artistA = String(a.probeData?.format.tags?.artist || "")
+            const artistB = String(b.probeData?.format.tags?.artist || "")
+            comparison = artistA.localeCompare(artistB)
+            break
+          case "date":
+            const dateA = new Date(a.probeData?.format.tags?.date || "1970-01-01")
+            const dateB = new Date(b.probeData?.format.tags?.date || "1970-01-01")
+            comparison = dateA.getTime() - dateB.getTime()
+            break
+          case "duration":
+            comparison = (a.probeData?.format.duration || 0) - (b.probeData?.format.duration || 0)
+            break
+          case "size":
+            comparison = (a.probeData?.format.size || 0) - (b.probeData?.format.size || 0)
+            break
+          default:
+            comparison = 0
           }
           return sortOrder === "asc" ? comparison : -comparison
         }),
@@ -129,7 +130,7 @@ export function MusicFileList() {
     console.log("Импорт папки")
   }
 
-  const handleAdd = (e: MouseEvent<HTMLButtonElement>, file: MediaFile) => {
+  const handleAdd = (e: MouseEvent, file: MediaFile) => {
     console.log(e, file)
   }
 
@@ -163,41 +164,25 @@ export function MusicFileList() {
                   {files.map((file) => (
                     <div
                       key={file.path}
-                      className="group flex cursor-pointer items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      className="group relative flex cursor-pointer items-center gap-3 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
                     >
                       <div className="relative">
-                        <div className="flex h-8 w-8 flex-shrink-0 cursor-pointer items-center justify-center rounded bg-gray-200 dark:bg-gray-700">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-gray-500 dark:text-gray-400"
+                        <div className="flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded bg-gray-200 dark:bg-gray-700">
+                          <button
+                            onClick={(e) => handlePlayPause(e, file)}
+                            className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded bg-black/30 opacity-50 transition-opacity duration-200 group-hover:opacity-100 ${
+                              activeFile?.path === file.path ? "opacity-100" : ""
+                            }`}
                           >
-                            <path d="M9 18V5l12-2v13" />
-                            <circle cx="6" cy="18" r="3" />
-                            <circle cx="18" cy="16" r="3" />
-                          </svg>
+                            {activeFile?.path === file.path && isPlaying ? (
+                              <Pause className="h-4 w-4 text-white" />
+                            ) : (
+                              <Play className="h-4 w-4 text-white" />
+                            )}
+                          </button>
                         </div>
-                        <button
-                          onClick={(e) => handlePlayPause(e, file)}
-                          className={`absolute inset-0 flex cursor-pointer items-center justify-center rounded bg-black/30 opacity-0 transition-opacity duration-200 group-hover:opacity-100 ${
-                            activeFile?.path === file.path ? "opacity-100" : ""
-                          }`}
-                        >
-                          {activeFile?.path === file.path && isPlaying ? (
-                            <Pause className="h-4 w-4 text-white" />
-                          ) : (
-                            <Play className="h-4 w-4 text-white" />
-                          )}
-                        </button>
                       </div>
-                      <div className="min-w-0 flex-1 p-1">
+                      <div className="flex h-12 min-w-0 flex-1 flex-col justify-between p-1">
                         <div className="flex items-center justify-between">
                           <p className="max-w-[300px] truncate text-sm font-medium text-gray-900 dark:text-gray-100">
                             {file.probeData?.format.tags?.title || file.name}
@@ -210,31 +195,44 @@ export function MusicFileList() {
                             )}
                           </p>
                         </div>
-                        <div className="flex items-center justify-between truncate">
-                          <div className="w-[330px] truncate text-xs text-gray-500">
-                            {file.probeData?.format.duration && (
-                              <span>{formatTime(file.probeData.format.duration)}</span>
-                            )}
+                        <div className="flex items-center justify-between truncate pr-7">
+                          <div className="w-full truncate text-xs text-gray-500">
                             {file.probeData?.format.tags?.artist && (
-                              <span className="ml-4 text-gray-500 dark:text-gray-400">
+                              <span className="mr-4 text-gray-500 dark:text-gray-400">
                                 {file.probeData.format.tags.artist}
                               </span>
                             )}
-                            {file.probeData?.format.tags?.date && (
-                              <span className="ml-4 text-gray-500 dark:text-gray-400">
-                                {file.probeData.format.tags.date}
+                            {file.probeData?.format.tags?.album && (
+                              <span className="mr-4 text-gray-500 dark:text-gray-400">
+                                {file.probeData.format.tags.album}
                               </span>
+                            )}
+                            {/* {file.probeData?.format.tags?.title && (
+                              <span className="mr-4 text-gray-500 dark:text-gray-400">
+                                {file.probeData.format.tags.title}
+                              </span>
+                            )} */}
+                            {file.probeData?.format.tags?.genre && (
+                              <span className="mr-4 text-gray-500 dark:text-gray-400">
+                                {file.probeData.format.tags.genre}
+                              </span>
+                            )}
+                            {(file.probeData?.format.tags?.date ||
+                              file.probeData?.format.tags?.TDOR) && (
+                              <span className="mr-4 text-gray-500 dark:text-gray-400">
+                                {file.probeData.format.tags.date || file.probeData.format.tags.TDOR}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="w-20 truncate text-right text-xs text-gray-500">
+                            {file.probeData?.format.duration && (
+                              <span>{formatTime(file.probeData.format.duration)}</span>
                             )}
                           </div>
                         </div>
                       </div>
-                      <button
-                        className="mr-4 cursor-pointer rounded border border-gray-700 bg-gray-500 p-1 text-white transition-all duration-200 hover:bg-gray-800 hover:text-white dark:border-gray-600 dark:bg-gray-800 dark:text-gray-500 hover:dark:border-gray-300 dark:hover:bg-gray-800 dark:hover:text-gray-200"
-                        title="Добавить в плейлист"
-                        onClick={(e) => handleAdd(e, file)}
-                      >
-                        <Plus className="h-5 w-5" />
-                      </button>
+                      <AddMediaButton file={file} onAddMedia={handleAdd} />
                     </div>
                   ))}
                 </div>
