@@ -40,7 +40,6 @@ export default async function handler(
         const probeData = metadataCache.get(filePath) || (await ffprobeAsync(filePath))
         metadataCache.set(filePath, probeData as FfprobeData)
 
-        if (file.toLowerCase().endsWith(".mp3")) console.log(probeData.format.tags)
         return {
           name: file,
           path: `/${type}/${file}`,

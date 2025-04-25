@@ -33,7 +33,7 @@ export const AddMediaButton = memo(function AddMediaButton({
 
   return (
     <div
-      className={`absolute ${size > 100 ? "right-1 bottom-1" : "right-0.5 bottom-0.5"} z-10 cursor-pointer rounded-full p-1 text-white ${
+      className={`absolute ${size > 100 ? "right-[5px] bottom-1" : "right-1 bottom-0.5"} z-10 cursor-pointer rounded-full p-1 text-white ${
         isAdded
           ? "bg-[#38dacac3]/62 dark:bg-[#35d1c1]/62"
           : "bg-[#2f2d38] group-hover:bg-[#35d1c1]/75 hover:bg-[#35d1c1] dark:group-hover:bg-[#35d1c1]/75 dark:hover:bg-[#35d1c1]"

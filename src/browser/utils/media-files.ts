@@ -30,7 +30,7 @@ export interface Sector {
 
 export function hasAudioStream(file: MediaFile): boolean {
   const hasAudio = file.probeData?.streams?.some((stream) => stream.codec_type === "audio") ?? false
-  console.log(`[hasAudioStream] ${file.name}:`, hasAudio)
+  // console.log(`[hasAudioStream] ${file.name}:`, hasAudio)
   return hasAudio
 }
 
@@ -80,7 +80,7 @@ export function getTopDateWithRemainingFiles(
   const isVideoWithAudio = (file: MediaFile): boolean => {
     const hasVideo = file.probeData?.streams?.some((s) => s.codec_type === "video")
     const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
-    console.log(`[getTopDateWithRemainingFiles] ${file.name}: video=${hasVideo}, audio=${hasAudio}`)
+    // console.log(`[getTopDateWithRemainingFiles] ${file.name}: video=${hasVideo}, audio=${hasAudio}`)
     return !!hasVideo
   }
 
@@ -98,12 +98,6 @@ export function getTopDateWithRemainingFiles(
       ),
     }))
     .find((dateInfo) => dateInfo.remainingFiles.length > 0)
-
-  console.log("[getTopDateWithRemainingFiles] Result:", {
-    date: result?.date,
-    remainingFilesCount: result?.remainingFiles.length,
-    files: result?.remainingFiles.map((f) => f.name),
-  })
 
   return result
 }

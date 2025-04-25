@@ -65,7 +65,7 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
     >
       <video
         ref={videoRef}
-        src="/vex2.mp4"
+        src="/t1.mp4"
         className="absolute top-1/2 left-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 object-cover"
         muted
         playsInline

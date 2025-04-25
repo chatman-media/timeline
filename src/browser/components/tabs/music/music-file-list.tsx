@@ -215,7 +215,7 @@ export function MusicFileList() {
                   {files.map((file) => (
                     <div
                       key={file.path}
-                      className="group relative flex cursor-pointer items-center gap-1 rounded-sm border border-transparent p-0 hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-gray-800"
+                      className="group relative flex cursor-pointer items-center gap-1 rounded-sm border border-transparent p-0 hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]"
                     >
                       <div className="relative">
                         <div className="flex h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded">
@@ -295,7 +295,7 @@ export function MusicFileList() {
               <div className="flex w-full flex-wrap gap-3 p-2">
                 {files.map((file) => (
                   <div key={file.path} className="group relative cursor-pointer">
-                    <div className="flex h-15 w-[260px] items-center overflow-hidden rounded-lg border border-transparent bg-gray-100 hover:bg-gray-100 dark:bg-[#25242b] dark:group-hover:bg-[#25242b] dark:hover:border-[#35d1c1]">
+                    <div className="flex h-15 w-[260px] items-center overflow-hidden rounded-lg border border-transparent bg-gray-100 hover:bg-gray-100 dark:bg-[#25242b] dark:group-hover:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]">
                       {/* Левая часть с кнопкой play */}
                       <div className="flex h-full w-12 items-center justify-center">
                         <button

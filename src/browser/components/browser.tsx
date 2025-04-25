@@ -2,6 +2,7 @@ import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles, Type } from "lu
 import { memo, useState } from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
 import {
   EffectsList,
   FiltersList,
@@ -17,7 +18,7 @@ export const TAB_TRIGGER_STYLES =
   "dark:data-[state=active]:bg-secondary dark:data-[state=active]:text-[#35d1c1] " +
   "hover:text-gray-800 dark:text-gray-400 dark:hover:bg-secondary dark:hover:text-gray-100 " +
   "border-1 border-transparent flex flex-col items-center justify-center gap-1 py-2 " +
-  "[&>svg]:data-[state=active]:text-[#38dacac3] rounded-none"
+  "[&>svg]:data-[state=active]:text-[#38dacac3] cursor-pointer data-[state=active]:cursor-default rounded-none"
 
 // Используем memo для предотвращения ненужных рендеров
 export const Browser = memo(function Browser() {

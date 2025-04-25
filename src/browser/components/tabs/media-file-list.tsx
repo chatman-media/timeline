@@ -2,17 +2,18 @@ import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useMediaContext } from "@/browser"
+import { NoFiles } from "@/browser/components/layout"
 import { MediaToolbar } from "@/browser/components/layout/media-toolbar"
 import { useMedia } from "@/browser/hooks/use-media"
 import { getFileType, groupFilesByDate } from "@/browser/utils/media-files"
 import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
 import { CameraCaptureDialog } from "@/dialogs"
 import { cn } from "@/lib/utils"
 import { useTimelineContext } from "@/timeline/services"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
 
-import { Skeleton } from "../../../components/ui/skeleton"
 import { FileMetadata, MediaPreview, StatusBar } from ".."
 
 // Размеры превью, доступные для выбора
@@ -57,9 +58,9 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
       const parsedValue = parseInt(savedValue, 10)
       // Проверяем, что значение входит в допустимый диапазон
       if (PREVIEW_SIZES.includes(parsedValue)) {
-        console.log(
-          `[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`,
-        )
+        // console.log(
+        //   `[MediaFileList] Loading saved size ${parsedValue} for mode ${mode} from key ${storageKey}`,
+        // )
         return parsedValue
       }
     }
@@ -67,7 +68,7 @@ const getSavedSize = (mode: string, defaultSize: number): number => {
     console.error("[MediaFileList] Error reading from localStorage:", error)
   }
 
-  console.log(`[MediaFileList] No saved size for mode ${mode}, using default ${defaultSize}`)
+  // console.log(`[MediaFileList] No saved size for mode ${mode}, using default ${defaultSize}`)
   return defaultSize
 }
 
@@ -202,7 +203,7 @@ export const MediaFileList = memo(function MediaFileList({
     // Очистим localStorage для тестирования
     // clearAllSavedSizes(); // Раскомментировать для сброса всех сохраненных размеров
 
-    console.log("[MediaFileList] Initial mount, viewMode:", viewMode)
+    // console.log("[MediaFileList] Initial mount, viewMode:", viewMode)
 
     // Определяем размер по умолчанию для текущего режима
     let defaultSize = DEFAULT_SIZE
@@ -215,19 +216,19 @@ export const MediaFileList = memo(function MediaFileList({
 
     // Применяем минимальные ограничения
     if (savedSize < MIN_SIZE) {
-      console.log(
-        `[MediaFileList] Initial size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`,
-      )
+      // console.log(
+      //   `[MediaFileList] Initial size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`,
+      // )
       updatePreviewSize(MIN_SIZE)
     } else {
-      console.log(`[MediaFileList] Setting initial size to ${savedSize} for mode ${viewMode}`)
+      // console.log(`[MediaFileList] Setting initial size to ${savedSize} for mode ${viewMode}`)
       updatePreviewSize(savedSize)
     }
   }, []) // Выполняется только при монтировании
 
   // Эффект для отслеживания изменения режима просмотра
   useEffect(() => {
-    console.log(`[MediaFileList] View mode changed to ${viewMode}`)
+    // console.log(`[MediaFileList] View mode changed to ${viewMode}`)
 
     // Определяем размер по умолчанию для нового режима
     let defaultSize = DEFAULT_SIZE
@@ -240,7 +241,7 @@ export const MediaFileList = memo(function MediaFileList({
 
     // Применяем минимальные ограничения
     if (savedSize < MIN_SIZE) {
-      console.log(`[MediaFileList] Saved size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`)
+      // console.log(`[MediaFileList] Saved size ${savedSize} is below minimum ${MIN_SIZE}, adjusting`)
       updatePreviewSize(MIN_SIZE)
     } else {
       // console.log(`[MediaFileList] Loading saved size ${savedSize} for mode ${viewMode}`)
@@ -532,7 +533,7 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Группируем файлы
   const groupedFiles = useMemo<GroupedMediaFiles[]>(() => {
-    console.log("[groupedFiles] Group by:", groupBy)
+    // console.log("[groupedFiles] Group by:", groupBy)
     if (groupBy === "none") {
       return [{ title: "", files: filteredAndSortedMedia }]
     }
@@ -815,12 +816,7 @@ export const MediaFileList = memo(function MediaFileList({
   }
 
   if (!media?.length) {
-    console.log("[MediaFileList] No media available")
-    return (
-      <div className="p-4">
-        <p className="text-sm text-gray-500">Нет доступных файлов</p>
-      </div>
-    )
+    return <NoFiles />
   }
 
   // Функция для отображения различных стилей просмотра
@@ -903,14 +899,16 @@ export const MediaFileList = memo(function MediaFileList({
               isAdded && "pointer-events-none",
             )}
           >
-            <MediaPreview
-              file={file}
-              onAddMedia={handleAddMedia}
-              isAdded={isAdded}
-              size={previewSize}
-              showFileName={true}
-              ignoreRatio={true}
-            />
+            <div className="group relative w-full flex-1 flex-grow flex-row">
+              <MediaPreview
+                file={file}
+                onAddMedia={handleAddMedia}
+                isAdded={isAdded}
+                size={previewSize}
+                showFileName={true}
+                ignoreRatio={true}
+              />
+            </div>
           </div>
         )
       }
@@ -949,7 +947,7 @@ export const MediaFileList = memo(function MediaFileList({
               className="flex h-7 cursor-pointer items-center gap-1 rounded-sm bg-[#dddbdd] px-2 text-xs hover:bg-[#38dacac3] dark:bg-[#45444b] dark:hover:bg-[#35d1c1]"
               onClick={() => {
                 // Фильтруем файлы - изображения не добавляем на таймлайн
-                console.log("[renderGroup] Group files:", group.files)
+                // console.log("[renderGroup] Group files:", group.files)
                 const nonImageFiles = group.files.filter((file) => !file.isImage)
                 const imageFiles = group.files.filter((file) => file.isImage)
 

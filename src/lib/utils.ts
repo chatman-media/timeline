@@ -42,7 +42,7 @@ export const formatResolution = (width: number, height: number) => {
   if (height > width) {
     ;[width, height] = [height, width]
   }
-  console.log(`[formatResolution] width: ${width}, height: ${height}, pixels: ${pixels}`)
+  // console.log(`[formatResolution] width: ${width}, height: ${height}, pixels: ${pixels}`)
 
   // 1920 × 1080 (FHD)
   if (width === 1920 && height === 1080) return "FHD"
