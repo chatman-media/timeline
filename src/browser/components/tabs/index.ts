@@ -1,4 +1,4 @@
-export * from "./effects-list"
+export * from "./effects"
 export * from "./filters-list"
 export * from "./media-file-list"
 export * from "./music"
