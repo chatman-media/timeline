@@ -1,4 +1,4 @@
-import { useCallback,useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Input } from "@/components/ui/input"
 import { MediaFile } from "@/types/media"
@@ -206,7 +206,7 @@ const TransitionPreview = ({
   return (
     <div className="flex flex-col items-center">
       <div
-        className="flex h-24 w-24 cursor-pointer overflow-hidden rounded-md bg-[#1a1a1a]"
+        className="flex h-24 w-24 cursor-pointer overflow-hidden rounded-xs bg-[#1a1a1a]"
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
         onClick={onClick}
