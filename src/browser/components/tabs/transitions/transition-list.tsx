@@ -12,7 +12,6 @@ interface TransitionPreviewProps {
     | "slide"
     | "scale"
     | "rotate"
-    | "blur"
     | "flip"
     | "push"
     | "squeeze"
@@ -23,6 +22,7 @@ interface TransitionPreviewProps {
     | "shutter"
     | "bounce"
     | "swirl"
+    | "dissolve"
   onClick: () => void
 }
 
@@ -53,13 +53,15 @@ const TransitionPreview = ({
     sourceVideo.style.opacity = "1"
     sourceVideo.style.filter = "blur(0px) wave(0, 0%, 0%)"
     sourceVideo.style.clipPath = "none"
-    sourceVideo.style.transition = "all 1s ease"
+    sourceVideo.style.transition = "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)"
+    sourceVideo.style.mixBlendMode = "normal"
 
     targetVideo.style.opacity = "0"
     targetVideo.style.transform = "scale(1)"
     targetVideo.style.filter = "blur(0px)"
     targetVideo.style.clipPath = "none"
-    targetVideo.style.transition = "all 1s ease"
+    targetVideo.style.transition = "all 0.8s cubic-bezier(0.4, 0, 0.2, 1)"
+    targetVideo.style.mixBlendMode = "normal"
   }, [])
 
   const startTransition = useCallback(() => {
@@ -98,12 +100,6 @@ const TransitionPreview = ({
         sourceVideo.style.transform = "rotate(180deg) scale(0.5)"
         sourceVideo.style.opacity = "0"
         targetVideo.style.transform = "rotate(0deg) scale(1)"
-        break
-
-      case "blur":
-        sourceVideo.style.filter = "blur(20px)"
-        sourceVideo.style.opacity = "0"
-        targetVideo.style.filter = "blur(0px)"
         break
 
       case "flip":
@@ -159,6 +155,12 @@ const TransitionPreview = ({
         sourceVideo.style.transform = "rotate(1080deg) scale(0)"
         sourceVideo.style.opacity = "0"
         sourceVideo.style.transition = "all 1s cubic-bezier(0.4, 0, 0.2, 1)"
+        break
+
+      case "dissolve":
+        sourceVideo.style.mixBlendMode = "multiply"
+        targetVideo.style.mixBlendMode = "screen"
+        sourceVideo.style.opacity = "0"
         break
       }
 
@@ -285,14 +287,6 @@ const transitions = [
     },
   },
   {
-    id: "blur",
-    type: "blur" as const,
-    labels: {
-      ru: "Размытие",
-      en: "Blur",
-    },
-  },
-  {
     id: "flip",
     type: "flip" as const,
     labels: {
@@ -370,6 +364,14 @@ const transitions = [
     labels: {
       ru: "Вихрь",
       en: "Swirl",
+    },
+  },
+  {
+    id: "dissolve",
+    type: "dissolve" as const,
+    labels: {
+      ru: "Растворение",
+      en: "Dissolve",
     },
   },
 ]
