@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react"
 
 import { Input } from "@/components/ui/input"
-import { VideoEffect } from "@/types/effects"
+
 import { effects } from "."
+import { VideoEffect } from "./effects"
 
 interface EffectPreviewProps {
   effectType: VideoEffect["type"]
@@ -129,7 +130,6 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
           playsInline
           preload="auto"
         />
-
       </div>
       <div className="mt-1 text-xs text-gray-300">
         {effects.find((e) => e.type === effectType)?.labels.ru}

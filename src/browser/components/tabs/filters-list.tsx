@@ -1,38 +1,305 @@
-export function FiltersList() {
+import { useEffect,useRef, useState } from "react"
+
+import { Input } from "@/components/ui/input"
+
+export interface VideoFilter {
+  id: string
+  name: string
+  labels: {
+    ru: string
+    en: string
+  }
+  params: {
+    brightness?: number
+    contrast?: number
+    saturation?: number
+    gamma?: number
+    temperature?: number
+    tint?: number
+  }
+}
+
+const filters: VideoFilter[] = [
+  {
+    id: "s-log",
+    name: "S-Log",
+    labels: {
+      ru: "S-Log",
+      en: "S-Log",
+    },
+    params: {
+      brightness: 0.1,
+      contrast: 0.8,
+      saturation: 0.9,
+      gamma: 1.2,
+    },
+  },
+  {
+    id: "d-log",
+    name: "D-Log",
+    labels: {
+      ru: "D-Log",
+      en: "D-Log",
+    },
+    params: {
+      brightness: 0.05,
+      contrast: 0.85,
+      saturation: 0.95,
+      gamma: 1.1,
+    },
+  },
+  {
+    id: "v-log",
+    name: "V-Log",
+    labels: {
+      ru: "V-Log",
+      en: "V-Log",
+    },
+    params: {
+      brightness: 0.15,
+      contrast: 0.75,
+      saturation: 0.85,
+      gamma: 1.3,
+    },
+  },
+  {
+    id: "hlg",
+    name: "HLG",
+    labels: {
+      ru: "HLG",
+      en: "HLG",
+    },
+    params: {
+      brightness: 0.2,
+      contrast: 0.9,
+      saturation: 1.1,
+      gamma: 1.4,
+    },
+  },
+  {
+    id: "rec709",
+    name: "Rec.709",
+    labels: {
+      ru: "Rec.709",
+      en: "Rec.709",
+    },
+    params: {
+      brightness: 0,
+      contrast: 1,
+      saturation: 1,
+      gamma: 1,
+    },
+  },
+  {
+    id: "rec2020",
+    name: "Rec.2020",
+    labels: {
+      ru: "Rec.2020",
+      en: "Rec.2020",
+    },
+    params: {
+      brightness: 0.1,
+      contrast: 1.1,
+      saturation: 1.2,
+      gamma: 1.1,
+    },
+  },
+  {
+    id: "cinestyle",
+    name: "CineStyle",
+    labels: {
+      ru: "CineStyle",
+      en: "CineStyle",
+    },
+    params: {
+      brightness: 0.05,
+      contrast: 0.9,
+      saturation: 0.8,
+      gamma: 1.15,
+    },
+  },
+  {
+    id: "flat",
+    name: "Flat",
+    labels: {
+      ru: "Flat",
+      en: "Flat",
+    },
+    params: {
+      brightness: 0,
+      contrast: 0.7,
+      saturation: 0.7,
+      gamma: 1,
+    },
+  },
+  {
+    id: "neutral",
+    name: "Neutral",
+    labels: {
+      ru: "Нейтральный",
+      en: "Neutral",
+    },
+    params: {
+      brightness: 0,
+      contrast: 1,
+      saturation: 1,
+      gamma: 1,
+    },
+  },
+  {
+    id: "portrait",
+    name: "Portrait",
+    labels: {
+      ru: "Портрет",
+      en: "Portrait",
+    },
+    params: {
+      brightness: 0.1,
+      contrast: 1.1,
+      saturation: 0.9,
+      gamma: 1.05,
+      temperature: 10,
+      tint: 5,
+    },
+  },
+  {
+    id: "landscape",
+    name: "Landscape",
+    labels: {
+      ru: "Пейзаж",
+      en: "Landscape",
+    },
+    params: {
+      brightness: 0.05,
+      contrast: 1.2,
+      saturation: 1.3,
+      gamma: 1.1,
+      temperature: -5,
+      tint: -2,
+    },
+  },
+]
+
+interface FilterPreviewProps {
+  filter: VideoFilter
+  onClick: () => void
+}
+
+const FilterPreview = ({ filter, onClick }: FilterPreviewProps) => {
+  const [isHovering, setIsHovering] = useState(false)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const timeoutRef = useRef<NodeJS.Timeout>(null)
+
+  const getFilterStyle = () => {
+    const { brightness, contrast, saturation, gamma, temperature, tint } = filter.params
+    const filters = []
+
+    if (brightness !== undefined) filters.push(`brightness(${1 + brightness})`)
+    if (contrast !== undefined) filters.push(`contrast(${contrast})`)
+    if (saturation !== undefined) filters.push(`saturate(${saturation})`)
+    if (gamma !== undefined) filters.push(`gamma(${gamma})`)
+    if (temperature !== undefined) filters.push(`sepia(${temperature}%)`)
+    if (tint !== undefined) filters.push(`hue-rotate(${tint}deg)`)
+
+    return filters.join(" ")
+  }
+
+  useEffect(() => {
+    if (!videoRef.current) return
+    const videoElement = videoRef.current
+
+    const applyFilter = () => {
+      videoElement.currentTime = 0
+      videoElement.style.filter = getFilterStyle()
+      videoElement.play()
+
+      timeoutRef.current = setTimeout(() => {
+        if (isHovering) {
+          applyFilter()
+        }
+      }, 2000)
+    }
+
+    if (isHovering) {
+      applyFilter()
+    } else {
+      videoElement.pause()
+      videoElement.currentTime = 0
+      videoElement.style.filter = ""
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [isHovering, filter])
+
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="space-y-1 p-3 pr-1 pl-1">
-        <div className="mb-4 flex items-center justify-between">
-          <div className="relative w-[50%]">
-            <input
-              type="text"
-              placeholder="Поиск..."
-              className="focus:ring-primary w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm focus:ring-2 focus:outline-none dark:border-gray-700"
+    <div className="flex flex-col items-center">
+      <div
+        className="relative h-24 w-24 cursor-pointer rounded-xs bg-black"
+        onMouseEnter={() => setIsHovering(true)}
+        onMouseLeave={() => setIsHovering(false)}
+        onClick={onClick}
+      >
+        <video
+          ref={videoRef}
+          src="/t1.mp4"
+          className="absolute top-1/2 left-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 rounded-xs object-cover"
+          muted
+          playsInline
+          preload="auto"
+        />
+      </div>
+      <div className="mt-1 text-xs text-gray-300">
+        {filters.find((f) => f.id === filter.id)?.labels.ru}
+      </div>
+    </div>
+  )
+}
+
+export function FiltersList() {
+  const [searchQuery, setSearchQuery] = useState("")
+  const [activeFilter, setActiveFilter] = useState<VideoFilter | null>(null)
+
+  const filteredFilters = filters.filter((filter) => {
+    const searchLower = searchQuery.toLowerCase()
+    return (
+      filter.labels.ru.toLowerCase().includes(searchLower) ||
+      filter.labels.en.toLowerCase().includes(searchLower) ||
+      filter.name.toLowerCase().includes(searchLower)
+    )
+  })
+
+  const handleFilterClick = (filter: VideoFilter) => {
+    setActiveFilter(filter)
+    console.log("Applying filter:", filter.name, filter.params)
+  }
+
+  return (
+    <div className="flex h-full flex-1 flex-col">
+      <div className="flex items-center justify-between border-b border-gray-800 p-3 pb-1 pl-4">
+        <Input
+          type="search"
+          placeholder="Поиск"
+          className="mr-5 h-6 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500"
+          style={{
+            backgroundColor: "transparent",
+          }}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      <div className="p-3">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3">
+          {filteredFilters.map((filter) => (
+            <FilterPreview
+              key={filter.id}
+              filter={filter}
+              onClick={() => handleFilterClick(filter)}
             />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {/* Заглушки для фильтров */}
-          {Array.from({ length: 2 }).map((_, index) => (
-            <div
-              key={index}
-              className="group relative aspect-video cursor-pointer overflow-hidden rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
-            >
-              <div className="absolute right-2 bottom-2 left-2">
-                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  Фильтр {index + 1}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Описание фильтра</div>
-              </div>
-            </div>
           ))}
-        </div>
-
-        <div className="mt-6">
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            Перетащите фильтр на клип на таймлайне, чтобы применить его
-          </p>
         </div>
       </div>
     </div>

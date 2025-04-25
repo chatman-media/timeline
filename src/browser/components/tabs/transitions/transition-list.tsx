@@ -398,7 +398,7 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
   return (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-gray-800 p-3 pb-1 pl-4">
-      <Input
+        <Input
           type="search"
           placeholder="Поиск"
           className="mr-5 h-6 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500"

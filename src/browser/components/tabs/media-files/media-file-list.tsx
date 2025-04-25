@@ -1,8 +1,8 @@
 import { CopyPlus } from "lucide-react"
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useState } from "react"
 
-import { useMediaContext } from "@/browser"
-import { NoFiles } from "@/browser/components/layout"
+import { MediaPreview, useMediaContext } from "@/browser"
+import { FileMetadata, NoFiles, StatusBar } from "@/browser/components/layout"
 import { MediaToolbar } from "@/browser/components/layout/media-toolbar"
 import { useMedia } from "@/browser/hooks/use-media"
 import { getFileType, groupFilesByDate } from "@/browser/utils/media-files"
@@ -13,8 +13,6 @@ import { cn } from "@/lib/utils"
 import { useTimelineContext } from "@/timeline/services"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
-
-import { FileMetadata, MediaPreview, StatusBar } from ".."
 
 // Размеры превью, доступные для выбора
 const PREVIEW_SIZES = [60, 80, 100, 125, 150, 200, 250, 300, 400]

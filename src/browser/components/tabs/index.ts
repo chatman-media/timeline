@@ -1,6 +1,6 @@
 export * from "./effects"
 export * from "./filters-list"
-export * from "./media-file-list"
+export * from "./media-files"
 export * from "./music"
 export * from "./stickers-list"
 export * from "./subtitles-list"
