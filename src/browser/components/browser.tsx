@@ -56,10 +56,10 @@ export const Browser = memo(function Browser() {
           <Blend className="h-4 w-4" />
           <span>Фильтры</span>
         </TabsTrigger>
-        <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
+        {/* <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
           <Type className="h-4 w-4" />
           <span>Титры</span>
-        </TabsTrigger>
+        </TabsTrigger> */}
         {/* <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
           <Sticker className="w-4 h-4" />
           <span>Стикеры</span>
@@ -81,9 +81,9 @@ export const Browser = memo(function Browser() {
       <TabsContent value="effects" className="bg-secondary m-0 flex-1 overflow-hidden">
         <EffectsList />
       </TabsContent>
-      <TabsContent value="subtitles" className="bg-secondary m-0 flex-1 overflow-hidden">
+      {/* <TabsContent value="subtitles" className="bg-secondary m-0 flex-1 overflow-hidden">
         <SubtitlesList />
-      </TabsContent>
+      </TabsContent> */}
       <TabsContent value="filters" className="bg-secondary m-0 flex-1 overflow-hidden">
         <FiltersList />
       </TabsContent>

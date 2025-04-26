@@ -383,8 +383,8 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
     target: { path: "t2.mp4" } as MediaFile,
   }
 
-  console.log("Transitions:", transitions)
-  console.log("Demo videos:", demoVideos)
+  // console.log("Transitions:", transitions)
+  // console.log("Demo videos:", demoVideos)
 
   const filteredTransitions = transitions.filter((transition) => {
     const searchLower = searchQuery.toLowerCase()
