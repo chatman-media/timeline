@@ -83,7 +83,7 @@
     "@types/fluent-ffmpeg": "^2.1.27",
     "@types/formidable": "^3.4.5",
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^22.15.0",
+    "@types/node": "^22.15.2",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@typescript-eslint/eslint-plugin": "^8.31.0",
