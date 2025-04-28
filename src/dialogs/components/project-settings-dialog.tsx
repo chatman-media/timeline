@@ -15,7 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useProject } from "@/project-settings/project-machine"
-import { AspectRatio, ColorSpace, FrameRate, Resolution } from "@/types/project"
+import { ASPECT_RATIOS, ColorSpace, FrameRate, Resolution } from "@/types/project"
 
 interface ProjectSettingsDialogProps {
   open: boolean
@@ -35,37 +35,20 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
           <div className="flex items-center justify-end">
             <Label className="mr-2 text-xs">Соотношение сторон:</Label>
             <Select
-              value={settings.aspectRatio}
-              onValueChange={(value: AspectRatio) => updateSettings({ aspectRatio: value })}
+              value={settings.aspectRatio.label}
+              onValueChange={(value: string) =>
+                updateSettings({ aspectRatio: ASPECT_RATIOS.find((item) => item.label === value)! })
+              }
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
-                <SelectItem value="16:9" className="">
-                  16:9 (Широкоэкранный)
-                </SelectItem>
-                <SelectItem value="9:16" className="">
-                  9:16 (Портрет)
-                </SelectItem>
-                <SelectItem value="1:1" className="">
-                  1:1 (Instagram)
-                </SelectItem>
-                <SelectItem value="4:3" className="">
-                  4:3 (Стандарт)
-                </SelectItem>
-                <SelectItem value="4:5" className="">
-                  4:5 (Вертикальный)
-                </SelectItem>
-                <SelectItem value="21:9" className="">
-                  21:9 (Кинотеатр)
-                </SelectItem>
-                <SelectItem value="3:4" className="">
-                  3:4 (Бизнес)
-                </SelectItem>
-                <SelectItem value="custom" className="">
-                  Пользовательское
-                </SelectItem>
+                {ASPECT_RATIOS.map((item) => (
+                  <SelectItem key={item.label} value={item.label} className="">
+                    {item.label} {item.textLabel ? `(${item.textLabel})` : ""}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
