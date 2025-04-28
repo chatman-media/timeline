@@ -1,7 +1,49 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { Minus, Plus, ZoomIn, ZoomOut } from "lucide-react"
 
 import { Input } from "@/components/ui/input"
 import { MediaFile } from "@/types/media"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
+
+// Размеры превью, доступные для выбора
+const PREVIEW_SIZES = [60, 80, 100, 125, 150, 200, 250, 300, 400]
+const DEFAULT_SIZE = 100
+const MIN_SIZE = 60
+
+// Ключ для localStorage
+const STORAGE_KEY = "timeline-transitions-preview-size"
+
+// Функция для загрузки сохраненного размера из localStorage
+const getSavedSize = (): number => {
+  if (typeof window === "undefined") return DEFAULT_SIZE
+
+  try {
+    const savedValue = localStorage.getItem(STORAGE_KEY)
+    if (savedValue) {
+      const parsedValue = parseInt(savedValue, 10)
+      if (PREVIEW_SIZES.includes(parsedValue)) {
+        return parsedValue
+      }
+    }
+  } catch (error) {
+    console.error("[TransitionsList] Error reading from localStorage:", error)
+  }
+
+  return DEFAULT_SIZE
+}
+
+// Функция для сохранения размера в localStorage
+const saveSize = (size: number): void => {
+  if (typeof window === "undefined") return
+
+  try {
+    localStorage.setItem(STORAGE_KEY, size.toString())
+  } catch (error) {
+    console.error("[TransitionsList] Error saving to localStorage:", error)
+  }
+}
 
 interface TransitionPreviewProps {
   sourceVideo: MediaFile
@@ -24,6 +66,7 @@ interface TransitionPreviewProps {
     | "swirl"
     | "dissolve"
   onClick: () => void
+  size: number
 }
 
 const TransitionPreview = ({
@@ -31,6 +74,7 @@ const TransitionPreview = ({
   targetVideo,
   transitionType,
   onClick,
+  size,
 }: TransitionPreviewProps) => {
   const [isHovering, setIsHovering] = useState(false)
   const [isError, setIsError] = useState(false)
@@ -206,7 +250,8 @@ const TransitionPreview = ({
   return (
     <div className="flex flex-col items-center">
       <div
-        className="flex h-24 w-24 cursor-pointer overflow-hidden rounded-xs bg-[#1a1a1a]"
+        className="flex cursor-pointer overflow-hidden rounded-xs bg-[#1a1a1a]"
+        style={{ width: `${size}px`, height: `${size}px` }}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
         onClick={onClick}
@@ -216,7 +261,7 @@ const TransitionPreview = ({
             Ошибка загрузки видео
           </div>
         ) : (
-          <div className="relative flex h-24 w-24 cursor-pointer items-center justify-center rounded-md">
+          <div className="relative flex h-full w-full cursor-pointer items-center justify-center rounded-md">
             <video
               ref={sourceVideoRef}
               src={sourceVideo.path}
@@ -378,13 +423,43 @@ const transitions = [
 
 export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void }) {
   const [searchQuery, setSearchQuery] = useState("")
+  const [previewSize, setPreviewSize] = useState(DEFAULT_SIZE)
+  const [isSizeLoaded, setIsSizeLoaded] = useState(false)
   const demoVideos = {
     source: { path: "t1.mp4" } as MediaFile,
     target: { path: "t2.mp4" } as MediaFile,
   }
 
-  // console.log("Transitions:", transitions)
-  // console.log("Demo videos:", demoVideos)
+  // Загружаем размер после монтирования компонента
+  useEffect(() => {
+    setPreviewSize(getSavedSize())
+    setIsSizeLoaded(true)
+  }, [])
+
+  // Обертка для setPreviewSize, которая также сохраняет размер в localStorage
+  const updatePreviewSize = useCallback((size: number) => {
+    setPreviewSize(size)
+    saveSize(size)
+  }, [])
+
+  // Обработчики для изменения размера превью
+  const handleIncreaseSize = useCallback(() => {
+    const currentIndex = PREVIEW_SIZES.indexOf(previewSize)
+    if (currentIndex < PREVIEW_SIZES.length - 1) {
+      updatePreviewSize(PREVIEW_SIZES[currentIndex + 1])
+    }
+  }, [previewSize, updatePreviewSize])
+
+  const handleDecreaseSize = useCallback(() => {
+    const currentIndex = PREVIEW_SIZES.indexOf(previewSize)
+    if (currentIndex > 0 && PREVIEW_SIZES[currentIndex - 1] >= MIN_SIZE) {
+      updatePreviewSize(PREVIEW_SIZES[currentIndex - 1])
+    }
+  }, [previewSize, updatePreviewSize])
+
+  // Проверка возможности увеличения/уменьшения размера
+  const canIncreaseSize = PREVIEW_SIZES.indexOf(previewSize) < PREVIEW_SIZES.length - 1
+  const canDecreaseSize = PREVIEW_SIZES.indexOf(previewSize) > 0 && PREVIEW_SIZES[PREVIEW_SIZES.indexOf(previewSize) - 1] >= MIN_SIZE
 
   const filteredTransitions = transitions.filter((transition) => {
     const searchLower = searchQuery.toLowerCase()
@@ -408,17 +483,60 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        <div className="flex items-center gap-1">
+          {/* Кнопки изменения размера */}
+          <TooltipProvider>
+            <div className="mr-2 flex overflow-hidden rounded-md">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "mr-1 h-6 w-6 cursor-pointer",
+                      !canDecreaseSize && "cursor-not-allowed opacity-50",
+                    )}
+                    onClick={handleDecreaseSize}
+                    disabled={!canDecreaseSize}
+                  >
+                    <ZoomOut size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Уменьшить превью</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "mr-1 h-6 w-6 cursor-pointer",
+                      !canIncreaseSize && "cursor-not-allowed opacity-50",
+                    )}
+                    onClick={handleIncreaseSize}
+                    disabled={!canIncreaseSize}
+                  >
+                    <ZoomIn size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Увеличить превью</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        </div>
       </div>
 
-      {/* <video src={demoVideos.source.path}></video> */}
-
       <div className="flex-1 overflow-y-auto p-3">
-        {filteredTransitions.length === 0 ? (
+        {!isSizeLoaded ? (
+          <div className="flex h-full items-center justify-center text-gray-500">
+          </div>
+        ) : filteredTransitions.length === 0 ? (
           <div className="flex h-full items-center justify-center text-gray-500">
             Переходы не найдены
           </div>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(0,calc(var(--preview-size)+12px)))] gap-2" style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}>
             {filteredTransitions.map((transition) => (
               <TransitionPreview
                 key={transition.id}
@@ -426,6 +544,7 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
                 targetVideo={demoVideos.target}
                 transitionType={transition.type}
                 onClick={() => onSelect?.(transition.id)}
+                size={previewSize}
               />
             ))}
           </div>
