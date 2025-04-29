@@ -73,8 +73,7 @@ export const ASPECT_RATIOS: AspectRatio[] = [
       name: "custom",
     },
   },
-];
-
+]
 
 export interface ProjectSettings {
   aspectRatio: AspectRatio
@@ -90,19 +89,17 @@ export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
   colorSpace: "sdr",
 }
 
-
 // "16:9" | "9:16" | "1:1" | "4:3" | "4:5" | "21:9" | "custom"
 
 export interface AspectRatio {
-  label: string;
-  textLabel: string;
-  value: AspectRatioValue;
-  description: string;
+  label: string
+  textLabel: string
+  value: AspectRatioValue
+  description: string
 }
 
 interface AspectRatioValue {
-  width: number;
-  height: number;
-  name: string;
+  width: number
+  height: number
+  name: string
 }
-

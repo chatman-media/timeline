@@ -4,6 +4,7 @@ import { createBrowserInspector } from "@statelyai/inspect"
 import { ReactNode } from "react"
 
 import { MediaProvider } from "@/browser"
+import { UserSettingsProvider } from "@/browser/providers/user-settings-provider"
 import { ModalProvider } from "@/dialogs"
 import { PlayerProvider } from "@/media-player"
 import { ProjectProvider } from "@/project-settings/project-provider"
@@ -21,11 +22,13 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <MediaProvider>
       <ProjectProvider>
-        <PlayerProvider>
-          <ModalProvider>
-            <TimelineProvider>{children}</TimelineProvider>
-          </ModalProvider>
-        </PlayerProvider>
+        <UserSettingsProvider>
+          <PlayerProvider>
+            <ModalProvider>
+              <TimelineProvider>{children}</TimelineProvider>
+            </ModalProvider>
+          </PlayerProvider>
+        </UserSettingsProvider>
       </ProjectProvider>
     </MediaProvider>
   )

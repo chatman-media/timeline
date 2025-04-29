@@ -1,5 +1,5 @@
 export * from "./effects"
-export * from "./filters-list"
+export * from "./filters/filter-list"
 export * from "./media-files"
 export * from "./music"
 export * from "./stickers-list"

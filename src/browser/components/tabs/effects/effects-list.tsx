@@ -1,16 +1,21 @@
+import { ZoomIn, ZoomOut } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
-import { effects } from "."
-import { VideoEffect } from "./effects"
+import { usePreviewSize } from "../../preview/preview-sizes"
+import { effects, type VideoEffect } from "."
 
 interface EffectPreviewProps {
   effectType: VideoEffect["type"]
   onClick: () => void
+  size: number
 }
 
-const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
+const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
   const [isHovering, setIsHovering] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>(null)
@@ -117,7 +122,8 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
   return (
     <div className="flex flex-col items-center">
       <div
-        className="relative h-24 w-24 cursor-pointer rounded-xs bg-black"
+        className="relative cursor-pointer rounded-xs bg-black"
+        style={{ width: `${size}px`, height: `${size}px` }}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
         onClick={onClick}
@@ -140,6 +146,15 @@ const EffectPreview = ({ effectType, onClick }: EffectPreviewProps) => {
 
 export function EffectsList() {
   const [searchQuery, setSearchQuery] = useState("")
+
+  const {
+    previewSize,
+    isSizeLoaded,
+    handleIncreaseSize,
+    handleDecreaseSize,
+    canIncreaseSize,
+    canDecreaseSize,
+  } = usePreviewSize("EFFECTS_AND_FILTERS")
 
   const filteredEffects = effects.filter((effect) => {
     const searchLower = searchQuery.toLowerCase()
@@ -167,18 +182,72 @@ export function EffectsList() {
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        <div className="flex items-center gap-1">
+          {/* Кнопки изменения размера */}
+          <TooltipProvider>
+            <div className="mr-2 flex overflow-hidden rounded-md">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "mr-1 h-6 w-6 cursor-pointer",
+                      !canDecreaseSize && "cursor-not-allowed opacity-50",
+                    )}
+                    onClick={handleDecreaseSize}
+                    disabled={!canDecreaseSize}
+                  >
+                    <ZoomOut size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Уменьшить превью</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "mr-1 h-6 w-6 cursor-pointer",
+                      !canIncreaseSize && "cursor-not-allowed opacity-50",
+                    )}
+                    onClick={handleIncreaseSize}
+                    disabled={!canIncreaseSize}
+                  >
+                    <ZoomIn size={16} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Увеличить превью</TooltipContent>
+              </Tooltip>
+            </div>
+          </TooltipProvider>
+        </div>
       </div>
 
-      <div className="p-3">
-        <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-3">
-          {filteredEffects.map((effect) => (
-            <EffectPreview
-              key={effect.id}
-              effectType={effect.type}
-              onClick={() => handleEffectClick(effect)}
-            />
-          ))}
-        </div>
+      <div className="flex-1 overflow-y-auto p-3">
+        {!isSizeLoaded ? (
+          <div className="flex h-full items-center justify-center text-gray-500" />
+        ) : filteredEffects.length === 0 ? (
+          <div className="flex h-full items-center justify-center text-gray-500">
+            Эффекты не найдены
+          </div>
+        ) : (
+          <div
+            className="grid grid-cols-[repeat(auto-fill,minmax(0,calc(var(--preview-size)+12px)))] gap-2"
+            style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
+          >
+            {filteredEffects.map((effect) => (
+              <EffectPreview
+                key={effect.id}
+                effectType={effect.type}
+                onClick={() => handleEffectClick(effect)}
+                size={previewSize}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )

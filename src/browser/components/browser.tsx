@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import {
   EffectsList,
-  FiltersList,
+  FilterList,
   MediaFileList,
   MusicFileList,
   SubtitlesList,
@@ -85,7 +85,7 @@ export const Browser = memo(function Browser() {
         <SubtitlesList />
       </TabsContent> */}
       <TabsContent value="filters" className="bg-secondary m-0 flex-1 overflow-hidden">
-        <FiltersList />
+        <FilterList />
       </TabsContent>
       {/* <TabsContent value="stickers" className="flex-1 overflow-hidden">
         <StickersList />

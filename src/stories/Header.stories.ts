@@ -53,7 +53,7 @@ export const LoggedIn: Story = {
     await expect(header).toBeInTheDocument()
     await expect(canvas.getByText("Jane Doe")).toBeInTheDocument()
     await expect(canvas.getByRole("img", { name: "Jane Doe" })).toBeInTheDocument()
-    
+
     const logoutButton = canvas.getByRole("button", { name: /logout/i })
     await userEvent.click(logoutButton)
   },
@@ -64,11 +64,11 @@ export const LoggedOut: Story = {
     const canvas = within(canvasElement)
     const header = canvas.getByRole("banner")
     await expect(header).toBeInTheDocument()
-    
+
     const loginButton = canvas.getByRole("button", { name: /login/i })
     await expect(loginButton).toBeInTheDocument()
     await userEvent.click(loginButton)
-    
+
     const signupButton = canvas.getByRole("button", { name: /sign up/i })
     await expect(signupButton).toBeInTheDocument()
     await userEvent.click(signupButton)
