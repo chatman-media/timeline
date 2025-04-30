@@ -1,6 +1,7 @@
 import { memo, useMemo } from "react"
 
-import { useTimelineContext } from "@/timeline/services/timeline-provider"
+import { useTimeline } from "@/timeline/services"
+import { Track } from "@/types/media"
 
 import { TimelineScale } from "./timeline-scale/timeline-scale"
 import { VideoTrack } from "./track/video-track"
@@ -26,12 +27,12 @@ interface TrackCoordinates {
 
 export const TimelineContainer = memo(
   ({ startTime, endTime, duration }: TimelineContainerProps) => {
-    const { tracks } = useTimelineContext()
+    const { tracks } = useTimeline()
 
     // Рассчитываем координаты для всех треков и видео
     const trackCoordinates = useMemo(() => {
       return tracks.reduce(
-        (acc, track) => {
+        (acc: Record<string, TrackCoordinates>, track: Track) => {
           if (!track.videos || track.videos.length === 0) {
             return acc
           }

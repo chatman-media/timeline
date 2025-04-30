@@ -19,7 +19,7 @@ import { ExitPointIcon } from "@/components/icons/exit-point"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
-import { useTimelineContext } from "@/timeline/services"
+import { useTimeline } from "@/timeline/services"
 
 import { usePlayerContext } from ".."
 
@@ -28,7 +28,7 @@ interface PlayerControlsProps {
 }
 
 export function PlayerControls({ currentTime }: PlayerControlsProps) {
-  const { tracks, activeTrackId } = useTimelineContext()
+  const { tracks, activeTrackId } = useTimeline()
   const {
     isPlaying,
     setIsPlaying,
@@ -195,7 +195,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     if (!activeTrack) return
 
     // Находим первое видео в треке
-    const firstVideo = activeTrack.videos[0]
+    const firstVideo = activeTrack.videos?.[0]
     if (!firstVideo) return
 
     const startTime = firstVideo.startTime || 0

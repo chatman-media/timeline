@@ -1,16 +1,15 @@
 import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
 
-import { MediaPreview, useMediaContext } from "@/browser"
+import { MediaPreview } from "@/browser"
 import { FileMetadata, NoFiles, StatusBar } from "@/browser/components/layout"
 import { MediaToolbar } from "@/browser/components/layout/media-toolbar"
-import { useMedia } from "@/browser/hooks/use-media"
+import { useMedia } from "@/browser/services"
 import { getFileType, groupFilesByDate } from "@/browser/utils/media-files"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CameraCaptureDialog } from "@/dialogs"
 import { cn } from "@/lib/utils"
-import { useTimelineContext } from "@/timeline/services"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
 
@@ -129,16 +128,15 @@ export const MediaFileList = memo(function MediaFileList({
 }: {
   viewMode?: ViewMode
 }) {
-  const { includeFiles, includedFiles } = useMediaContext()
-  const { isLoading, media } = useMedia()
-  const { addMediaFiles } = useTimelineContext()
-  const addFilesToTimeline = useCallback(
-    (files: MediaFile[]) => {
-      includeFiles(files)
-      addMediaFiles(files)
-    },
-    [addMediaFiles],
-  )
+  const {
+    isLoading,
+    allMediaFiles: media,
+    includedFiles,
+    addFilesToTimeline,
+    isFileAdded,
+    areAllFilesAdded,
+  } = useMedia()
+
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
 
   // Загружаем сохраненные настройки
@@ -697,17 +695,9 @@ export const MediaFileList = memo(function MediaFileList({
   // Заменяем все остальные вызовы rootStore.send
   const handleAddAllFiles = useCallback(() => {
     const nonImageFiles = media.filter((file: MediaFile) => !file.isImage)
-    const imageFiles = media.filter((file: MediaFile) => !file.isImage)
-
     if (nonImageFiles.length > 0) {
       addFilesToTimeline(nonImageFiles)
-      return
     }
-
-    // const files = media.filter((file: MediaFile) => file.path)
-    // if (files.length > 0) {
-    //   addFilesToTimeline(files)
-    // }
   }, [media, addFilesToTimeline])
 
   const addDateFiles = useCallback(
@@ -721,10 +711,8 @@ export const MediaFileList = memo(function MediaFileList({
     const videoFiles = media.filter((file: MediaFile) =>
       file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "video"),
     )
-
     if (videoFiles.length > 0) {
       addFilesToTimeline(videoFiles)
-      return
     }
   }, [media, addFilesToTimeline])
 
@@ -734,10 +722,8 @@ export const MediaFileList = memo(function MediaFileList({
         !file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "video") &&
         file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "audio"),
     )
-
     if (audioFiles.length > 0) {
       addFilesToTimeline(audioFiles)
-      return
     }
   }, [media, addFilesToTimeline])
 
@@ -765,15 +751,11 @@ export const MediaFileList = memo(function MediaFileList({
       e.stopPropagation()
       console.log("[handleAddMedia] Adding media file:", file.name)
 
-      // Проверяем, не добавлен ли файл уже в addedFiles
-      if (!file.path || includedFiles.map((f) => f.path).includes(file.path)) {
+      // Проверяем, не добавлен ли файл уже
+      if (isFileAdded(file)) {
         console.log(`[handleAddMedia] Файл ${file.name} уже добавлен в медиафайлы`)
         return
       }
-
-      // Останавливаем все видео в текущей группе
-      const fileId = file.id || file.path || file.name
-      console.log("[handleAddMedia] File ID:", fileId)
 
       // Проверяем, является ли файл изображением
       if (file.isImage) {
@@ -781,54 +763,20 @@ export const MediaFileList = memo(function MediaFileList({
         return
       }
 
-      // Отмечаем файл как добавленный
+      // Добавляем файл на таймлайн
       if (file.path) {
         console.log("[handleAddMedia] Вызываем addFilesToTimeline с файлом:", file)
         addFilesToTimeline([file])
       }
     },
-    [media, addFilesToTimeline],
+    [addFilesToTimeline, isFileAdded],
   )
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col overflow-hidden">
-        <div className="flex-1 p-3 pb-1">
-          <Skeleton className="h-8 w-full rounded" />
-        </div>
-        <div className="space-y-4 p-4">
-          {Array.from({ length: 5 }).map((_, index) => (
-            <div key={index} className="flex items-center gap-3 rounded-md p-0 pr-2">
-              <div className="h-[100px] w-[170px]">
-                <Skeleton className="h-full w-full rounded" />
-              </div>
-              <div className="h-[90px] flex-1 items-center">
-                <Skeleton className="mb-3 h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (!media?.length) {
-    return <NoFiles />
-  }
-
-  // Функция для отображения различных стилей просмотра
-  const renderContent = () => {
-    // Если нет данных или идет загрузка
-    if (filteredAndSortedMedia.length === 0) {
-      return (
-        <div className="p-4 text-center text-gray-400 dark:text-gray-500">Нет медиа-файлов</div>
-      )
-    }
-
-    const renderFile = (file: MediaFile) => {
+  // Мемоизируем функцию рендеринга файла
+  const renderFile = useCallback(
+    (file: MediaFile) => {
       const fileId = file.id || file.path || file.name
-      const isAdded = Boolean(file.path && includedFiles.map((f) => f.path).includes(file.path))
+      const isAdded = isFileAdded(file)
 
       switch (viewMode) {
       case "list":
@@ -861,7 +809,7 @@ export const MediaFileList = memo(function MediaFileList({
             key={fileId}
             className={cn(
               "flex h-full w-full flex-col overflow-hidden rounded-xs",
-              "border border-transparent bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
+              "border border-transparent bg-white hover:border-[#38dacac3] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
               isAdded && "pointer-events-none",
             )}
             style={{
@@ -893,7 +841,7 @@ export const MediaFileList = memo(function MediaFileList({
             key={fileId}
             className={cn(
               "flex h-full items-center p-0",
-              "border border-transparent bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
+              "border border-transparent bg-white hover:border-[#38dacac3] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
               isAdded && "pointer-events-none",
             )}
           >
@@ -910,13 +858,20 @@ export const MediaFileList = memo(function MediaFileList({
           </div>
         )
       }
-    }
+    },
+    [viewMode, previewSize, isFileAdded, handleAddMedia],
+  )
 
-    const renderGroup = (group: { title: string; files: MediaFile[] }) => {
+  // Мемоизируем функцию рендеринга группы
+  const renderGroup = useCallback(
+    (group: { title: string; files: MediaFile[] }) => {
       // Не показываем группу, если в ней нет файлов
       if (group.files.length === 0) {
         return null
       }
+
+      // Проверяем, все ли файлы в группе уже добавлены
+      const allFilesAdded = areAllFilesAdded(group.files)
 
       if (!group.title || group.title === "") {
         return (
@@ -942,10 +897,12 @@ export const MediaFileList = memo(function MediaFileList({
             <Button
               variant="secondary"
               size="sm"
-              className="flex h-7 cursor-pointer items-center gap-1 rounded-sm bg-[#dddbdd] px-2 text-xs hover:bg-[#38dacac3] dark:bg-[#45444b] dark:hover:bg-[#35d1c1]"
+              className={cn(
+                "flex h-7 cursor-pointer items-center gap-1 rounded-sm bg-[#dddbdd] px-2 text-xs hover:bg-[#38dacac3] dark:bg-[#45444b] dark:hover:bg-[#35d1c1]",
+                allFilesAdded && "cursor-not-allowed opacity-50",
+              )}
               onClick={() => {
                 // Фильтруем файлы - изображения не добавляем на таймлайн
-                // console.log("[renderGroup] Group files:", group.files)
                 const nonImageFiles = group.files.filter((file) => !file.isImage)
                 const imageFiles = group.files.filter((file) => file.isImage)
 
@@ -954,8 +911,9 @@ export const MediaFileList = memo(function MediaFileList({
                   addFilesToTimeline(nonImageFiles)
                 }
               }}
+              disabled={allFilesAdded}
             >
-              <span className="px-1 text-xs">Добавить</span>
+              <span className="px-1 text-xs">{allFilesAdded ? "Добавлено" : "Добавить"}</span>
               <CopyPlus className="mr-1 h-3 w-3" />
             </Button>
           </div>
@@ -970,11 +928,46 @@ export const MediaFileList = memo(function MediaFileList({
           </div>
         </div>
       )
+    },
+    [viewMode, areAllFilesAdded, addFilesToTimeline, renderFile],
+  )
+
+  // Функция рендеринга контента
+  const renderContent = useCallback(() => {
+    if (filteredAndSortedMedia.length === 0) {
+      return (
+        <div className="p-4 text-center text-gray-400 dark:text-gray-500">Нет медиа-файлов</div>
+      )
     }
 
+    return <div className="space-y-4 p-2">{groupedFiles.map((group) => renderGroup(group))}</div>
+  }, [filteredAndSortedMedia, groupedFiles, renderGroup])
+
+  if (isLoading || !media || media.length === 0) {
     return (
-      <div className="space-y-4 p-2">{groupedFiles.map((group, index) => renderGroup(group))}</div>
+      <div className="flex flex-col overflow-hidden">
+        <div className="flex-1 p-3 pb-1">
+          <Skeleton className="h-8 w-full rounded" />
+        </div>
+        <div className="space-y-4 p-4">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <div key={index} className="flex items-center gap-3 rounded-md p-0 pr-2">
+              <div className="h-[100px] w-[170px]">
+                <Skeleton className="h-full w-full rounded" />
+              </div>
+              <div className="h-[90px] flex-1 items-center">
+                <Skeleton className="mb-3 h-4 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     )
+  }
+
+  if (!isLoading && !media) {
+    return <NoFiles />
   }
 
   return (

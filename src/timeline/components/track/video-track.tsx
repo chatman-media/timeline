@@ -2,7 +2,7 @@ import { memo, useCallback, useRef } from "react"
 
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { usePlayerContext } from "@/media-player"
-import { useTimelineContext } from "@/timeline/services/timeline-provider"
+import { useTimeline } from "@/timeline/services"
 import { Track } from "@/types/media"
 
 interface TimelineTrackProps {
@@ -28,7 +28,7 @@ const TimelineTrack = memo(function TimelineTrack({
   index,
   coordinates,
 }: TimelineTrackProps) {
-  const { activeTrackId, setActiveTrack } = useTimelineContext()
+  const { activeTrackId, setActiveTrack } = useTimeline()
   const { setVideo: setActiveVideo, setVideoLoading, setVideoReady } = usePlayerContext()
   const containerRef = useRef<HTMLDivElement>(null)
 

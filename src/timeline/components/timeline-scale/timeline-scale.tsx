@@ -1,4 +1,4 @@
-import { useTimelineContext } from "@/timeline/services/timeline-provider"
+import { useTimeline } from "@/timeline/services"
 
 import { TimelineMarks } from "."
 
@@ -9,7 +9,7 @@ interface TimelineScaleProps {
 }
 
 export function TimelineScale({ startTime, endTime, duration }: TimelineScaleProps) {
-  const { zoomLevel } = useTimelineContext()
+  const { zoomLevel } = useTimeline()
 
   console.log("TimelineScale zoomLevel:", zoomLevel)
 

@@ -21,10 +21,7 @@ export const browserInspector = createBrowserInspector({
 // Создаем композитный провайдер для уменьшения вложенности
 const composeProviders = (...providers: React.ComponentType<{ children: ReactNode }>[]) => {
   return ({ children }: { children: ReactNode }) => {
-    return providers.reduceRight(
-      (child, Provider) => <Provider>{child}</Provider>,
-      children
-    )
+    return providers.reduceRight((child, Provider) => <Provider>{child}</Provider>, children)
   }
 }
 
@@ -35,7 +32,7 @@ const AppProvider = composeProviders(
   UserSettingsProvider,
   PlayerProvider,
   ModalProvider,
-  TimelineProvider
+  TimelineProvider,
 )
 
 export function Providers({ children }: ProvidersProps) {

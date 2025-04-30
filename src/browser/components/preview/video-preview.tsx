@@ -79,7 +79,7 @@ export const VideoPreview = memo(function VideoPreview({
       const key = stream.streamKey || `stream-${stream.index}`
       const videoRef = videoRefs.current[key]
       if (videoRef) {
-        console.log("Setting time:", newTime, "for stream:", stream.index)
+        // console.log("Setting time:", newTime, "for stream:", stream.index)
         videoRef.currentTime = newTime
       }
     },

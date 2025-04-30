@@ -181,7 +181,7 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
   }, [timelineActor])
 
   const value = {
-    isDirty: state?.isDirty,
+    isDirty: state?.isDirty ?? false,
     zoomLevel: state?.zoomLevel,
     timeRanges: state?.timeRanges,
     sectors: state?.sectors,
@@ -217,7 +217,7 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
   return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>
 }
 
-export function useTimelineContext() {
+export function useTimeline() {
   const context = useContext(TimelineContext)
   if (!context) {
     throw new Error("useTimelineContext must be used within a TimelineProvider")

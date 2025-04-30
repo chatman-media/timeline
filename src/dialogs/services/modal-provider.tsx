@@ -22,18 +22,17 @@ export function ModalProvider({ children }: ModalProviderProps) {
     inspect: browserInspector.inspect,
   })
 
-  const value = useMemo(() => ({
-    activeModal: state.context.activeModal,
-    isRecordModalOpen: state.context.activeModal === "record",
-    handleOpenModal: (modal: ModalType) => send({ type: "OPEN", modal }),
-    handleCloseModal: () => send({ type: "CLOSE" }),
-  }), [state.context, send])
-
-  return (
-    <ModalContext.Provider value={value}>
-      {children}
-    </ModalContext.Provider>
+  const value = useMemo(
+    () => ({
+      activeModal: state.context.activeModal,
+      isRecordModalOpen: state.context.activeModal === "record",
+      handleOpenModal: (modal: ModalType) => send({ type: "OPEN", modal }),
+      handleCloseModal: () => send({ type: "CLOSE" }),
+    }),
+    [state.context, send],
   )
+
+  return <ModalContext.Provider value={value}>{children}</ModalContext.Provider>
 }
 
 export function useModalContext() {

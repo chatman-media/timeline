@@ -1,6 +1,6 @@
 import { Minus, Plus } from "lucide-react"
 
-import { useTimelineContext } from "@/timeline/services/timeline-provider"
+import { useTimeline } from "@/timeline/services"
 
 interface TimelineControlsProps {
   minScale?: number
@@ -8,7 +8,7 @@ interface TimelineControlsProps {
 }
 
 export function TimelineControls({ minScale = 0.001, maxScale = 18 }: TimelineControlsProps) {
-  const { zoomLevel, zoom: handleZoom } = useTimelineContext()
+  const { zoomLevel, zoom: handleZoom } = useTimeline()
 
   console.log("TimelineControls initial zoomLevel:", zoomLevel)
 

@@ -13,26 +13,27 @@ interface ProjectProviderProps {
   children: React.ReactNode
 }
 
-const ProjectContextType = createContext<(ProjectContext & ProjectContextEvents) | undefined>(undefined)
+const ProjectContextType = createContext<(ProjectContext & ProjectContextEvents) | undefined>(
+  undefined,
+)
 
 export function ProjectProvider({ children }: ProjectProviderProps) {
   const [state, send] = useMachine(projectMachine, {
     inspect: browserInspector.inspect,
   })
 
-  const value = useMemo(() => ({
-    ...state.context,
-    setName: (name: string) => send({ type: "SET_NAME", name }),
-    setDirty: (isDirty: boolean) => send({ type: "SET_DIRTY", isDirty }),
-    updateSettings: (settings: ProjectSettings) => send({ type: "UPDATE_SETTINGS", settings }),
-    resetSettings: () => send({ type: "RESET_SETTINGS" }),
-  }), [state.context, send])
-
-  return (
-    <ProjectContextType.Provider value={value}>
-      {children}
-    </ProjectContextType.Provider>
+  const value = useMemo(
+    () => ({
+      ...state.context,
+      setName: (name: string) => send({ type: "SET_NAME", name }),
+      setDirty: (isDirty: boolean) => send({ type: "SET_DIRTY", isDirty }),
+      updateSettings: (settings: ProjectSettings) => send({ type: "UPDATE_SETTINGS", settings }),
+      resetSettings: () => send({ type: "RESET_SETTINGS" }),
+    }),
+    [state.context, send],
   )
+
+  return <ProjectContextType.Provider value={value}>{children}</ProjectContextType.Provider>
 }
 
 export function useProjectContext() {

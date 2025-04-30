@@ -24,160 +24,33 @@ interface TimelineContext {
   loadedVideos: Record<string, boolean>
 }
 
-type ZoomEvent = {
-  type: "zoom"
-  level: number
-}
-
-type SetTimeRangesEvent = {
-  type: "setTimeRanges"
-  ranges: Record<string, TimeRange[]>
-}
-
-type SetLayoutModeEvent = {
-  type: "setLayoutMode"
-  mode: string
-}
-
-type SetMontageSchemaEvent = {
-  type: "setMontageSchema"
-  schema: any[]
-}
-
-type SetCurrentTimeEvent = {
-  type: "setTime"
-  time: number
-}
-
-type SetPlayingEvent = {
-  type: "setPlaying"
-  playing: boolean
-}
-
-type SetRecordingEvent = {
-  type: "setRecording"
-  recording: boolean
-}
-
-type SetActiveVideoEvent = {
-  type: "setActiveVideo"
-  videoId: string | null
-}
-
-type SeekEvent = {
-  type: "seek"
-  time: number
-}
-
-type SetDurationEvent = {
-  type: "setDuration"
-  duration: number
-}
-
-type SetActiveTrackEvent = {
-  type: "setActiveTrack"
-  trackId: string | null
-}
-
-type SetVolumeEvent = {
-  type: "setVolume"
-  volume: number
-}
-
-type SetTrackVolumeEvent = {
-  type: "setTrackVolume"
-  trackId: string
-  volume: number
-}
-
-type SetSeekingEvent = {
-  type: "setSeeking"
-  isSeeking: boolean
-}
-
-type ResetChangingCameraEvent = {
-  type: "resetChangingCamera"
-}
-
-type UndoEvent = {
-  type: "undo"
-}
-
-type RedoEvent = {
-  type: "redo"
-}
-
-type SetLayoutEvent = {
-  type: "setLayout"
-  layout: string
-}
-
-type addMediaFilesEvent = {
-  type: "addMediaFiles"
-  files: MediaFile[]
-}
-
-type RemoveFromAddedFilesEvent = {
-  type: "removeFromAddedFiles"
-  fileId: string
-}
-
-type StopRecordingSchemaEvent = {
-  type: "stopRecordingSchema"
-}
-
-type StartRecordingSchemaEvent = {
-  type: "startRecordingSchema"
-  trackId: string
-  time: number
-}
-
-type SetVideoRefEvent = {
-  type: "setVideoRef"
-  fileId: string
-  video: HTMLVideoElement | null
-}
-
-type SetLoadedVideoEvent = {
-  type: "setLoadedVideo"
-  fileId: string
-  loaded: boolean
-}
-
-type PreloadAllVideosEvent = {
-  type: "preloadAllVideos"
-}
-
-type SetTracksEvent = {
-  type: "setTracks"
-  tracks: Track[]
-}
-
 type TimelineEvent =
-  | ZoomEvent
-  | SetLayoutModeEvent
-  | SetCurrentTimeEvent
-  | SetPlayingEvent
-  | SetRecordingEvent
-  | SetActiveVideoEvent
-  | SeekEvent
-  | SetActiveTrackEvent
-  | SetTrackVolumeEvent
-  | SetSeekingEvent
-  | ResetChangingCameraEvent
-  | UndoEvent
-  | RedoEvent
-  | SetLayoutEvent
-  | addMediaFilesEvent
-  | RemoveFromAddedFilesEvent
-  | StopRecordingSchemaEvent
-  | StartRecordingSchemaEvent
-  | SetTimeRangesEvent
-  | SetVideoRefEvent
-  | SetLoadedVideoEvent
-  | PreloadAllVideosEvent
-  | SetTracksEvent
-  | SetVolumeEvent
+  | { type: "zoom"; level: number }
+  | { type: "setTimeRanges"; ranges: Record<string, TimeRange[]> }
+  | { type: "setLayoutMode"; mode: string }
+  | { type: "setMontageSchema"; schema: any[] }
+  | { type: "setTime"; time: number }
+  | { type: "setPlaying"; playing: boolean }
+  | { type: "setRecording"; recording: boolean }
+  | { type: "setActiveVideo"; videoId: string | null }
+  | { type: "seek"; time: number }
+  | { type: "setDuration"; duration: number }
+  | { type: "setActiveTrack"; trackId: string | null }
+  | { type: "setVolume"; volume: number }
+  | { type: "setTrackVolume"; trackId: string; volume: number }
+  | { type: "setSeeking"; isSeeking: boolean }
+  | { type: "resetChangingCamera" }
+  | { type: "undo" }
+  | { type: "redo" }
+  | { type: "setLayout"; layout: string }
+  | { type: "addMediaFiles"; files: MediaFile[] }
+  | { type: "removeFromAddedFiles"; fileId: string }
+  | { type: "stopRecordingSchema" }
+  | { type: "startRecordingSchema"; trackId: string; time: number }
+  | { type: "setVideoRef"; fileId: string; video: HTMLVideoElement | null }
+  | { type: "setLoadedVideo"; fileId: string; loaded: boolean }
+  | { type: "preloadAllVideos" }
+  | { type: "setTracks"; tracks: Track[] }
 
 export const timelineMachine = createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QBcCWBbMAbVA7MAdKhFmAMQBaA8lQLIDaADALqKgAOA9rKmp7mxAAPRAFoA7AFYCjAGwBGWZMbKATABZxGyQBoQAT0SyAnKoIBmdbIWXJqgBzjj5gL4u9aTDnxES5WGDIACoYYABKAIa4MLBMrEggXDx8AgkiCOb28gSO9uaqjPJO9uryqnqGCOKyjASSWZn2ksrG8ubGbh6h3oTEpGQAygCiQQD6QWEAggDCANKjAGpUADIAqrRDcYJJvKj8guny6vYWhaXGdir2jMayFUbmsgRtGlrG4uaMjObinSCe2DwvT8gxGo2GQ1mAEkAHIAcS2CR2KQOYkUxgI70U9hs4nEDXs9wQklk5me8m+qkeSgc6j+AJ6vn6YSGwzG0wAEpN4bC4aNppMNlNERxuLt9mlEJkngpxPJ5MYvqSqXcDEZVNlSUplOZJJ88q53P9ukCmf5ApMAMZoABuYCCACcIpaANYixJilGS4llZ7qBzmCmvOWqyqWWqPdr+0rYhz0k0+PrkVYwgAiVHdyL2qVA6VE8jsBDx1Q1x3y6kkxiJ0ZkjBxdgcBcs9njXlNSbILPTmc92dRCHzeQICkk8iy+Out2MhLVCADBFUsiabWuON1j1bgMTIIiEAgtEgqAiADFUKRYixtr2JbnEMYMdZ1Cp1Jp1LcvuYiaoNJi9WU5IG2iOJujIdiytBUAsQyjMeYR0KMkypqmQypjBULLKyPbJH23r+kSZQnG+97To29gOJIvx-LgnAQHAggMkCV7YTewhiFSmoFmORT2JOJgzpUohPF8wlvkqhSqO8IHtn4THijmrEIG0GLFrqSiOHIeL4WUZIOOI6jmI805WB0bguEAA */
@@ -187,26 +60,18 @@ export const timelineMachine = createMachine({
     isDirty: false,
     zoomLevel: 1,
     timeRanges: {},
-    montageSchema: [],
-    currentTime: 0,
-    isPlaying: false,
-    isRecordingSchema: false,
-    activeVideoId: null,
-    videos: {},
-    duration: 0,
     activeTrackId: null,
-    volume: 1,
     trackVolumes: {},
     isSeeking: false,
     isChangingCamera: false,
-    videoRefs: {},
     tracks: [],
     sectors: [],
     history: [],
     historyIndex: -1,
+    future: [],
     canUndo: false,
     canRedo: false,
-    future: [],
+    videoRefs: {},
     loadedVideos: {},
   } as TimelineContext,
   types: {
@@ -293,22 +158,30 @@ export const timelineMachine = createMachine({
         },
         addMediaFiles: {
           actions: assign(({ context, event }) => {
-            const sectors = createTracksFromFiles(
-              (event as addMediaFilesEvent).files,
-              context.tracks,
-            )
+            console.log("Timeline machine received addMediaFiles event:", event.files)
+
+            // Создаем новые сектора из файлов
+            const newSectors = createTracksFromFiles(event.files, context.tracks)
+            console.log("Creating new sectors:", newSectors)
+
             return {
-              sectors: [...context.sectors, ...sectors],
+              sectors: [...context.sectors, ...newSectors],
               isDirty: true,
             }
           }),
         },
         removeFromAddedFiles: {
           actions: assign({
-            tracks: ({ context, event }) =>
-              context.tracks.filter(
-                (track) => track.id !== (event as RemoveFromAddedFilesEvent).fileId,
-              ),
+            sectors: ({ context, event }) => {
+              // Удаляем трек из всех секторов
+              const updatedSectors = context.sectors.map((sector) => ({
+                ...sector,
+                tracks: sector.tracks.filter((track) => track.id !== event.fileId),
+              }))
+
+              // Удаляем пустые сектора
+              return updatedSectors.filter((sector) => sector.tracks.length > 0)
+            },
           }),
         },
         setTracks: {

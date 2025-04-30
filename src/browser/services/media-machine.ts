@@ -1,89 +1,107 @@
-import { assign, createMachine } from "xstate"
+import { assign, createMachine, fromPromise } from "xstate"
 
 import { MediaFile } from "@/types/media"
 
-export interface MediaContext {
+interface MediaContext {
   allMediaFiles: MediaFile[]
-  // files that are included in the project
   includedFiles: MediaFile[]
-  includedFilePaths: string[]
-
-  unavailableFiles: MediaFile[]
+  error: string | null
   isLoading: boolean
+  unavailableFiles: MediaFile[]
 }
 
-const initialMediaContext: MediaContext = {
-  allMediaFiles: [],
-  includedFiles: [],
-  includedFilePaths: [],
-  unavailableFiles: [],
-  isLoading: false,
-}
+type MediaEvent =
+  | { type: "INCLUDE_FILES"; files: MediaFile[] }
+  | { type: "REMOVE_FILE"; path: string }
+  | { type: "CLEAR_FILES" }
+  | { type: "setAllMediaFiles"; files: MediaFile[] }
+  | { type: "addMediaFiles"; files: MediaFile[] }
+  | { type: "removeMediaFiles"; files: MediaFile[] }
+  | { type: "setIncludedFiles"; files: MediaFile[] }
+  | { type: "setUnavailableFiles"; files: MediaFile[] }
+  | { type: "setLoading"; loading: boolean }
+  | { type: "FETCH_MEDIA" }
+  | { type: "RELOAD" }
 
-type SetLoadingEvent = {
-  type: "setLoading"
-  loading: boolean
-}
+const fetchMedia = fromPromise(async () => {
+  const response = await fetch("/api/media")
+  if (!response.ok) {
+    throw new Error(`Ошибка загрузки медиафайлов: ${response.status} ${response.statusText}`)
+  }
+  const data = await response.json()
 
-type SetAllMediaFilesEvent = {
-  type: "setAllMediaFiles"
-  files: MediaFile[]
-}
+  if (!data || typeof data !== "object" || !("media" in data)) {
+    throw new Error("Некорректный формат данных от сервера")
+  }
 
-type AddMediaFilesEvent = {
-  type: "addMediaFiles"
-  files: MediaFile[]
-}
+  const files = data.media
+  if (!Array.isArray(files)) {
+    throw new Error("Некорректный формат данных от сервера")
+  }
 
-type RemoveMediaFilesEvent = {
-  type: "removeMediaFiles"
-  files: MediaFile[]
-}
+  const validFiles = files.filter(
+    (file) => file && typeof file === "object" && (file.isVideo || file.isAudio || file.isImage),
+  )
 
-type SetIncludedFilesEvent = {
-  type: "setIncludedFiles"
-  files: MediaFile[]
-}
+  if (validFiles.length === 0) {
+    console.warn("Не найдено валидных медиафайлов")
+  }
 
-type IncludeFilesEvent = {
-  type: "includeFiles"
-  files: MediaFile[]
-}
-
-type UnincludeFilesEvent = {
-  type: "unincludeFiles"
-  files: MediaFile[]
-}
-
-type SetUnavailableFilesEvent = {
-  type: "setUnavailableFiles"
-  files: MediaFile[]
-}
-
-export type MediaEvent =
-  | SetLoadingEvent
-  | SetAllMediaFilesEvent
-  | AddMediaFilesEvent
-  | RemoveMediaFilesEvent
-  | SetIncludedFilesEvent
-  | IncludeFilesEvent
-  | UnincludeFilesEvent
-  | SetUnavailableFilesEvent
+  return validFiles
+})
 
 export const mediaMachine = createMachine({
   id: "media",
   initial: "idle",
-  context: initialMediaContext,
-  types: {
-    context: {} as MediaContext,
-    events: {} as MediaEvent,
-  },
+  context: {
+    allMediaFiles: [],
+    includedFiles: [],
+    error: null,
+    isLoading: false,
+    unavailableFiles: [],
+  } as MediaContext,
   states: {
     idle: {
       on: {
-        setLoading: {
+        FETCH_MEDIA: "loading",
+      },
+    },
+    loading: {
+      entry: assign({ isLoading: true, error: null }),
+      invoke: {
+        src: fetchMedia,
+        onDone: {
+          target: "loaded",
           actions: assign({
-            isLoading: ({ event }) => event.loading,
+            allMediaFiles: ({ event }) => event.output,
+            isLoading: false,
+          }),
+        },
+        onError: {
+          target: "error",
+          actions: assign({
+            error: ({ event }) => (event.error as Error).message,
+            isLoading: false,
+          }),
+        },
+      },
+    },
+    loaded: {
+      on: {
+        INCLUDE_FILES: {
+          actions: assign({
+            includedFiles: ({ context, event }) => [...context.includedFiles, ...event.files],
+          }),
+        },
+        REMOVE_FILE: {
+          actions: assign({
+            includedFiles: ({ context, event }) =>
+              context.includedFiles.filter((f) => f.path !== event.path),
+          }),
+        },
+        CLEAR_FILES: {
+          actions: assign({
+            includedFiles: [],
           }),
         },
         setAllMediaFiles: {
@@ -93,47 +111,42 @@ export const mediaMachine = createMachine({
         },
         addMediaFiles: {
           actions: assign({
-            allMediaFiles: ({ context, event: { files } }) => [...context.allMediaFiles, ...files],
+            allMediaFiles: ({ context, event }) => [...context.allMediaFiles, ...event.files],
           }),
         },
         removeMediaFiles: {
           actions: assign({
-            allMediaFiles: ({ context, event: { files } }) =>
-              context.allMediaFiles.filter((file) => !files.includes(file)),
+            allMediaFiles: ({ context, event }) =>
+              context.allMediaFiles.filter(
+                (f) => !event.files.some((e: MediaFile) => e.path === f.path),
+              ),
+            includedFiles: ({ context, event }) =>
+              context.includedFiles.filter(
+                (f) => !event.files.some((e: MediaFile) => e.path === f.path),
+              ),
           }),
         },
         setIncludedFiles: {
           actions: assign({
-            includedFiles: ({ event }) => {
-              console.log("setIncludedFiles", event.files)
-              return event.files
-            },
-          }),
-        },
-        includeFiles: {
-          actions: assign({
-            includedFiles: ({ context, event: { files } }) => [...context.includedFiles, ...files],
-            includedFilePaths: ({ context, event: { files } }) => [
-              ...context.includedFilePaths,
-              ...files.map((file) => file.path),
-            ],
-          }),
-        },
-        unincludeFiles: {
-          actions: ({ context, event: { files } }) => ({
-            ...context,
-            includedFiles: context.includedFiles.filter((file) => !files.includes(file)),
-            includedFilePaths: context.includedFilePaths.filter(
-              (path) => !files.some((file) => file.path === path),
-            ),
+            includedFiles: ({ event }) => event.files,
           }),
         },
         setUnavailableFiles: {
-          actions: ({ context, event: { files } }) => ({
-            ...context,
-            unavailableFiles: files,
+          actions: assign({
+            unavailableFiles: ({ event }) => event.files,
           }),
         },
+        setLoading: {
+          actions: assign({
+            isLoading: ({ event }) => event.loading,
+          }),
+        },
+        RELOAD: "loading",
+      },
+    },
+    error: {
+      on: {
+        RELOAD: "loading",
       },
     },
   },

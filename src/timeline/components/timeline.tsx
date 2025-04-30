@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { usePlayerContext } from "@/media-player"
-import { useTimelineContext } from "@/timeline/services/timeline-provider"
+import { useTimeline } from "@/timeline/services"
 import { MediaFile, Track } from "@/types/media"
 
 import { TimelineBar } from "./layout/timeline-bar"
@@ -56,7 +56,7 @@ function formatSectionDate(dateString: string): string {
 }
 
 export function Timeline() {
-  const context = useTimelineContext()
+  const context = useTimeline()
   if (!context) {
     throw new Error("Timeline must be used within a TimelineProvider")
   }

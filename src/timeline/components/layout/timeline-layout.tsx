@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils"
-import { useTimelineContext } from "@/timeline/services"
+import { useTimeline } from "@/timeline/services"
+import { MediaFile, Track } from "@/types/media"
 
 import { TimelineTopPanel } from "./timeline-top-panel"
 
 export function TimelineLayout() {
-  const { sectors } = useTimelineContext()
+  const { sectors } = useTimeline()
   console.log(sectors)
   return (
     <div className="flex h-full flex-col">
@@ -36,7 +37,7 @@ export function TimelineLayout() {
             {sectors?.map((sector, index) => (
               <div className="flex w-full flex-col gap-1 p-2">
                 <div className="z-10 h-[26px] w-full flex-shrink-0"></div>
-                {sector.tracks.map((track, index) => (
+                {sector.tracks.map((track: Track, index: number) => (
                   <div
                     className="min-h-[50px] w-full flex-1 bg-[#033032] p-2 text-sm"
                     style={{ height: `50px` }}
@@ -70,7 +71,9 @@ export function TimelineLayout() {
                   className="z-10 h-[30px] w-full flex-shrink-0 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
                   style={{
                     width: `${
-                      Math.max(...sector.tracks.map((t) => (t.endTime ?? 0) - (t.startTime ?? 0))) *
+                      Math.max(
+                        ...sector.tracks.map((t: Track) => (t.endTime ?? 0) - (t.startTime ?? 0)),
+                      ) *
                         5 +
                       8
                     }px`,
@@ -80,16 +83,16 @@ export function TimelineLayout() {
                 </div>
 
                 <div className="flex w-full flex-col gap-1 p-2">
-                  {sector.tracks.map((track, index) => (
+                  {sector.tracks.map((track: Track, index: number) => (
                     <div
                       key={index}
                       // ширина должна быть равна самому длинному треку в секторе
                       className={cn("h-[50px] w-[220px] flex-shrink-0 rounded-lg bg-[#033032]")}
-                      style={{ width: `${track.combinedDuration * 5}px` }}
+                      style={{ width: `${(track.combinedDuration ?? 0) * 5}px` }}
                     >
                       <div className="h-full flex-1 justify-between text-sm">
                         {track.name}
-                        {track.videos.map((video, index) => (
+                        {track.videos?.map((video: MediaFile, index: number) => (
                           <div key={index}>{video.name}</div>
                         ))}
                       </div>
