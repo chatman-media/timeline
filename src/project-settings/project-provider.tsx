@@ -1,5 +1,5 @@
 import { useMachine } from "@xstate/react"
-import { createContext, useContext } from "react"
+import { createContext, useContext, useMemo } from "react"
 
 import { browserInspector } from "@/media-editor/providers"
 import {
@@ -9,29 +9,27 @@ import {
 } from "@/project-settings/project-machine"
 import { ProjectSettings } from "@/types/project"
 
-export const ProjectContextType = createContext<
-  (ProjectContext & ProjectContextEvents) | undefined
-    >(undefined)
-
 interface ProjectProviderProps {
   children: React.ReactNode
 }
+
+const ProjectContextType = createContext<(ProjectContext & ProjectContextEvents) | undefined>(undefined)
 
 export function ProjectProvider({ children }: ProjectProviderProps) {
   const [state, send] = useMachine(projectMachine, {
     inspect: browserInspector.inspect,
   })
 
+  const value = useMemo(() => ({
+    ...state.context,
+    setName: (name: string) => send({ type: "SET_NAME", name }),
+    setDirty: (isDirty: boolean) => send({ type: "SET_DIRTY", isDirty }),
+    updateSettings: (settings: ProjectSettings) => send({ type: "UPDATE_SETTINGS", settings }),
+    resetSettings: () => send({ type: "RESET_SETTINGS" }),
+  }), [state.context, send])
+
   return (
-    <ProjectContextType.Provider
-      value={{
-        ...state.context,
-        setName: (name: string) => send({ type: "SET_NAME", name }),
-        setDirty: (isDirty: boolean) => send({ type: "SET_DIRTY", isDirty }),
-        updateSettings: (settings: ProjectSettings) => send({ type: "UPDATE_SETTINGS", settings }),
-        resetSettings: () => send({ type: "RESET_SETTINGS" }),
-      }}
-    >
+    <ProjectContextType.Provider value={value}>
       {children}
     </ProjectContextType.Provider>
   )

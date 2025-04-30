@@ -1,5 +1,5 @@
 import { useMachine } from "@xstate/react"
-import { createContext, useContext } from "react"
+import { createContext, useContext, useMemo } from "react"
 
 import { modalMachine, ModalType } from "@/dialogs/services/modal-machine"
 import { browserInspector } from "@/media-editor/providers"
@@ -11,37 +11,26 @@ interface ModalContextType {
   handleCloseModal: () => void
 }
 
-const ModalContext = createContext<ModalContextType | undefined>(undefined)
-
 interface ModalProviderProps {
   children: React.ReactNode
 }
+
+const ModalContext = createContext<ModalContextType | undefined>(undefined)
 
 export function ModalProvider({ children }: ModalProviderProps) {
   const [state, send] = useMachine(modalMachine, {
     inspect: browserInspector.inspect,
   })
 
-  const activeModal = state.context.activeModal
-  const isRecordModalOpen = state.context.activeModal === "record"
-
-  const handleOpenModal = (modal: ModalType) => {
-    send({ type: "OPEN", modal })
-  }
-
-  const handleCloseModal = () => {
-    send({ type: "CLOSE" })
-  }
+  const value = useMemo(() => ({
+    activeModal: state.context.activeModal,
+    isRecordModalOpen: state.context.activeModal === "record",
+    handleOpenModal: (modal: ModalType) => send({ type: "OPEN", modal }),
+    handleCloseModal: () => send({ type: "CLOSE" }),
+  }), [state.context, send])
 
   return (
-    <ModalContext.Provider
-      value={{
-        activeModal,
-        isRecordModalOpen,
-        handleOpenModal,
-        handleCloseModal,
-      }}
-    >
+    <ModalContext.Provider value={value}>
       {children}
     </ModalContext.Provider>
   )
@@ -49,7 +38,7 @@ export function ModalProvider({ children }: ModalProviderProps) {
 
 export function useModalContext() {
   const context = useContext(ModalContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useModalContext must be used within a ModalProvider")
   }
   return context

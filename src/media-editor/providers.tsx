@@ -18,18 +18,26 @@ export const browserInspector = createBrowserInspector({
   autoStart: false,
 })
 
+// Создаем композитный провайдер для уменьшения вложенности
+const composeProviders = (...providers: React.ComponentType<{ children: ReactNode }>[]) => {
+  return ({ children }: { children: ReactNode }) => {
+    return providers.reduceRight(
+      (child, Provider) => <Provider>{child}</Provider>,
+      children
+    )
+  }
+}
+
+// Создаем единый провайдер из всех контекстов
+const AppProvider = composeProviders(
+  MediaProvider,
+  ProjectProvider,
+  UserSettingsProvider,
+  PlayerProvider,
+  ModalProvider,
+  TimelineProvider
+)
+
 export function Providers({ children }: ProvidersProps) {
-  return (
-    <MediaProvider>
-      <ProjectProvider>
-        <UserSettingsProvider>
-          <PlayerProvider>
-            <ModalProvider>
-              <TimelineProvider>{children}</TimelineProvider>
-            </ModalProvider>
-          </PlayerProvider>
-        </UserSettingsProvider>
-      </ProjectProvider>
-    </MediaProvider>
-  )
+  return <AppProvider>{children}</AppProvider>
 }

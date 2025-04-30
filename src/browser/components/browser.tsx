@@ -22,7 +22,7 @@ export const TAB_TRIGGER_STYLES =
 
 // Используем memo для предотвращения ненужных рендеров
 export const Browser = memo(function Browser() {
-  const [activeTab, setActiveTab] = useState("transitions")
+  const [activeTab, setActiveTab] = useState("media")
 
   const handleTabChange = (value: string) => {
     setActiveTab(value)

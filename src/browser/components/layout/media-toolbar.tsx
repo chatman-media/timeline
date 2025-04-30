@@ -282,7 +282,9 @@ export function MediaToolbar({
           </div>
         </TooltipProvider>
 
-        {/* Кнопки изменения размера */}
+        {/* Кнопки изменения размера 
+        TODO: Добавить анимацию при наведении
+        */}
         <TooltipProvider>
           <div className="mr-2 flex overflow-hidden rounded-md">
             <Tooltip>
