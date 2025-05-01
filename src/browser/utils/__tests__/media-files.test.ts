@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { mockMediaFiles,mockVideoData } from "@/tests/mocks/video.data"
+import { mockMediaFiles, mockVideoData } from "@/tests/mocks/video.data"
 import type { MediaFile } from "@/types/media"
 
 import { createTracksFromFiles, getGroupedFiles } from "../media-files"

@@ -919,7 +919,7 @@ export const MediaFileList = memo(function MediaFileList({
               variant="secondary"
               size="sm"
               className={cn(
-                "flex h-7 cursor-pointer items-center gap-1 rounded-sm bg-[#dddbdd] px-2 text-xs hover:bg-[#38dacac3] dark:bg-[#45444b] dark:hover:bg-[#35d1c1]",
+                "flex h-7 cursor-pointer items-center gap-1 rounded-sm bg-[#dddbdd] px-2 text-xs hover:bg-[#38dacac3] dark:bg-[#45444b] dark:hover:bg-[#35d1c1] dark:hover:text-black",
                 allFilesAdded && "cursor-not-allowed opacity-50",
               )}
               onClick={() => {
