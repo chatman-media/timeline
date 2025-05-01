@@ -3,7 +3,7 @@
 import { createBrowserInspector } from "@statelyai/inspect"
 import { ReactNode } from "react"
 
-import { MediaProvider } from "@/browser"
+import { MediaProvider } from "@/browser/providers/media-provider"
 import { UserSettingsProvider } from "@/browser/providers/user-settings-provider"
 import { ModalProvider } from "@/dialogs"
 import { PlayerProvider } from "@/media-player"

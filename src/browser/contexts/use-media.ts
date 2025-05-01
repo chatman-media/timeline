@@ -1,6 +1,6 @@
 import { useContext } from "react"
 
-import { MediaContext } from ".."
+import { MediaContext } from "../providers"
 
 export function useMedia() {
   const context = useContext(MediaContext)
