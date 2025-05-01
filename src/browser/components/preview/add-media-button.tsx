@@ -1,7 +1,6 @@
 import { Check, Plus } from "lucide-react"
 import { memo } from "react"
 
-import { cn } from "@/lib/utils"
 import { MediaFile } from "@/types/media"
 
 interface AddMediaButtonProps {
@@ -35,7 +34,7 @@ export const AddMediaButton = memo(function AddMediaButton({
   const iconSize = size > 100 ? "h-4 w-4" : "h-3 w-3"
   return (
     <div
-      className={`absolute ${size > 100 ? "right-[5px] bottom-1" : "right-1 bottom-0.5"} z-10 cursor-pointer rounded-full p-1 text-white ${
+      className={`absolute ${size > 100 ? "right-[5px] bottom-1" : "right-1 bottom-0.5"} z-10 cursor-pointer rounded-full p-1 text-white dark:hover:text-black ${
         isAdded
           ? "bg-[#38dacac3]/62 dark:bg-[#35d1c1]/62"
           : "bg-[#2f2d38] group-hover:bg-[#35d1c1]/75 hover:bg-[#35d1c1] dark:group-hover:bg-[#35d1c1]/75 dark:hover:bg-[#35d1c1]"
@@ -49,7 +48,7 @@ export const AddMediaButton = memo(function AddMediaButton({
       {isAdded ? (
         <Check className={iconSize} strokeWidth={3} />
       ) : (
-        <Plus className={cn(iconSize, "dark:hover:text-black")} strokeWidth={3} />
+        <Plus className={iconSize} strokeWidth={3} />
       )}
     </div>
   )

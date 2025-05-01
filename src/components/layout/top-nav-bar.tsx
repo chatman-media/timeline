@@ -187,7 +187,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
         <Button
           variant="outline"
           size="sm"
-          className="h-[26px] w-24 cursor-pointer items-center gap-1 border-none bg-[#38dacac3] px-1 text-sm text-black hover:bg-[#35d1c1] hover:text-black dark:bg-[#35d1c1] dark:hover:bg-[#35d1c1]"
+          className="h-6 w-24 cursor-pointer items-center gap-1 border-none bg-[#38dacac3] px-1 text-sm text-black hover:bg-[#35d1c1] hover:text-black dark:bg-[#35d1c1] dark:hover:bg-[#35d1c1]"
           onClick={handleExport}
         >
           <span className="px-2 text-xs">Экспорт</span>
