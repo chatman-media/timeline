@@ -1,4 +1,4 @@
-import { assign, createMachine, fromPromise } from "xstate"
+import { assign, createMachine, fromPromise, sendParent } from "xstate"
 
 import { MediaFile } from "@/types/media"
 
@@ -22,6 +22,7 @@ type MediaEvent =
   | { type: "setLoading"; loading: boolean }
   | { type: "FETCH_MEDIA" }
   | { type: "RELOAD" }
+  | { type: "SEND_TO_TIMELINE"; files: MediaFile[] }
 
 const fetchMedia = fromPromise(async () => {
   const response = await fetch("/api/media")
@@ -89,9 +90,21 @@ export const mediaMachine = createMachine({
     loaded: {
       on: {
         INCLUDE_FILES: {
-          actions: assign({
-            includedFiles: ({ context, event }) => [...context.includedFiles, ...event.files],
-          }),
+          actions: [
+            assign({
+              includedFiles: ({ context, event }) => [...context.includedFiles, ...event.files],
+            }),
+            ({ event }) => {
+              console.log("Sending to timeline:", event.files)
+              return sendParent({ type: "addMediaFiles", files: event.files })
+            },
+          ],
+        },
+        SEND_TO_TIMELINE: {
+          actions: ({ event }) => {
+            console.log("Sending to timeline via SEND_TO_TIMELINE:", event.files)
+            return sendParent({ type: "addMediaFiles", files: event.files })
+          },
         },
         REMOVE_FILE: {
           actions: assign({

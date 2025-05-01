@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { CameraCaptureDialog } from "@/dialogs"
 import { cn } from "@/lib/utils"
+import { useTimeline } from "@/timeline/services"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
 
@@ -132,10 +133,12 @@ export const MediaFileList = memo(function MediaFileList({
     isLoading,
     allMediaFiles: media,
     includedFiles,
-    addFilesToTimeline,
+    includeFiles,
     isFileAdded,
     areAllFilesAdded,
   } = useMedia()
+
+  const { addMediaFiles: timelineAddMediaFiles } = useTimeline()
 
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
 
@@ -176,6 +179,24 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Состояние для размера превью с учетом режима просмотра
   const [previewSize, setPreviewSize] = useState<number>(actualInitialSize)
+
+  const addFilesToTimeline = (files: MediaFile[]) => {
+    const newFiles = files.filter(
+      (file) => !includedFiles.map((file: MediaFile) => file.path).includes(file.path),
+    )
+    console.log("Adding files to timeline:", {
+      allFiles: files,
+      newFiles,
+      includedFiles: includedFiles.map((file: MediaFile) => file.path),
+    })
+    if (newFiles.length > 0) {
+      // Сначала добавляем в медиа
+      includeFiles(newFiles)
+      // Затем добавляем на таймлайн
+      console.log("Sending files to timeline machine:", newFiles)
+      timelineAddMediaFiles(newFiles)
+    }
+  }
 
   // Обертка для setPreviewSize, которая также сохраняет размер в localStorage
   const updatePreviewSize = useCallback(

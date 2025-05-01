@@ -24,6 +24,8 @@ interface DateGroup {
 }
 
 export interface Sector {
+  id: string
+  name: string
   tracks: Track[]
   timeRanges: TimeRange[]
 }
@@ -269,6 +271,8 @@ export const createTracksFromFiles = (
 
     // Создаем один сектор для всех файлов дня
     const sector: Sector = {
+      id: nanoid(),
+      name: `Сектор ${date}`,
       tracks: [],
       timeRanges: [],
     }
@@ -340,6 +344,8 @@ export const createTracksFromFiles = (
 
     // Создаем один сектор для всех аудио файлов дня
     const sector: Sector = {
+      id: nanoid(),
+      name: `Сектор ${date}`,
       tracks: [],
       timeRanges: [],
     }
