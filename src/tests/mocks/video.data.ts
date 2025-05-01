@@ -814,7 +814,6 @@ export const mockMediaFiles = mockVideoData.map((data) => ({
   id: `V${Math.floor(Math.random() * 1000)}`,
   name: data.format.filename.split("/").pop() || "",
   path: `/media/${data.format.filename.split("/").pop()}`,
-  thumbnail: null,
   probeData: data,
   isVideo: data.streams.some((stream) => stream.codec_type === "video"),
 }))

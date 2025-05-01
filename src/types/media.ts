@@ -5,7 +5,6 @@ export interface MediaFile {
   id: string
   name: string
   path: string
-  thumbnail?: string
   probeData?: FfprobeData
   startTime?: number
   endTime?: number

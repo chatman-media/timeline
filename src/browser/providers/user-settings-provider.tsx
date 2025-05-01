@@ -1,6 +1,6 @@
 import { createActorContext } from "@xstate/react"
 
-import { userSettingsMachine } from "../machines/user-settings"
+import { userSettingsMachine } from "../machines/user-settings-machine"
 
 export const UserSettingsContext = createActorContext(userSettingsMachine)
 

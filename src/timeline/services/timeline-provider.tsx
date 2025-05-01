@@ -1,19 +1,14 @@
-import React, {
-  createContext,
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react"
-import { createActor } from "xstate"
+import { useActorRef, useSelector } from "@xstate/react"
+import { get } from "idb-keyval"
+import React, { createContext, ReactNode, useContext, useEffect } from "react"
 
 import { Sector } from "@/browser"
-import { timelineMachine } from "@/timeline/services/timeline-machine"
+import { type TimelineContext, timelineMachine } from "@/timeline/services/timeline-machine"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimeRange } from "@/types/time-range"
+
+const TIMELINE_STORAGE_KEY = "timeline-state"
 
 interface TimelineContextType {
   isDirty: boolean
@@ -25,13 +20,12 @@ interface TimelineContextType {
   isSeeking: boolean
   isChangingCamera: boolean
   tracks: Track[]
-  history: TimelineContextType[]
-  historyIndex: number
-  future: TimelineContextType[]
   canUndo: boolean
   canRedo: boolean
   videoRefs: Record<string, HTMLVideoElement | null>
   loadedVideos: Record<string, boolean>
+  previousStates: TimelineContext[]
+  currentStateIndex: number
 
   zoom: (level: number) => void
   undo: () => void
@@ -50,177 +44,161 @@ interface TimelineContextType {
   preloadAllVideos: () => void
 }
 
-const TimelineContext = createContext<TimelineContextType | null>(null)
-
 interface TimelineProviderProps {
   children: ReactNode
 }
 
-export function TimelineProvider({ children }: TimelineProviderProps) {
-  const [state, setState] = useState<TimelineContextType | undefined>(undefined)
-
-  const timelineActor = useMemo(() => createActor(timelineMachine), [])
-
-  useEffect(() => {
-    timelineActor.start()
-    return () => {
-      timelineActor.stop()
-    }
-  }, [timelineActor])
-
-  const handleZoom = useCallback(
-    (level: number) => {
-      console.log("TimelineProvider zoom:", level)
-      timelineActor.send({ type: "zoom", level })
-    },
-    [timelineActor],
-  )
-
-  const handleUndo = useCallback(() => {
-    timelineActor.send({ type: "undo" })
-  }, [timelineActor])
-
-  const handleRedo = useCallback(() => {
-    timelineActor.send({ type: "redo" })
-  }, [timelineActor])
-
-  const setActiveTrack = useCallback(
-    (trackId: string) => {
-      timelineActor.send({ type: "setActiveTrack", trackId })
-    },
-    [timelineActor],
-  )
-
-  const addMediaFiles = useCallback(
-    (files: MediaFile[]) => {
-      timelineActor.send({ type: "addMediaFiles", files })
-    },
-    [timelineActor],
-  )
-
-  const handleRemoveFromAddedFiles = useCallback(
-    (fileIds: string[]) => {
-      fileIds.forEach((fileId) => {
-        timelineActor.send({ type: "removeFromAddedFiles", fileId })
-      })
-    },
-    [timelineActor],
-  )
-
-  const handleSetPlaying = useCallback(
-    (playing: boolean) => {
-      timelineActor.send({ type: "setPlaying", playing })
-    },
-    [timelineActor],
-  )
-
-  const handleSeek = useCallback(
-    (time: number) => {
-      timelineActor.send({ type: "seek", time })
-    },
-    [timelineActor],
-  )
-
-  const handleSetTrackVolume = useCallback(
-    (trackId: string, volume: number) => {
-      timelineActor.send({ type: "setTrackVolume", trackId, volume })
-    },
-    [timelineActor],
-  )
-
-  const handleSetSeeking = useCallback(
-    (isSeeking: boolean) => {
-      timelineActor.send({ type: "setSeeking", isSeeking })
-    },
-    [timelineActor],
-  )
-
-  const handleSetTimeRanges = useCallback(
-    (timeRanges: Record<string, TimeRange[]>) => {
-      timelineActor.send({ type: "setTimeRanges", ranges: timeRanges })
-    },
-    [timelineActor],
-  )
-
-  const setVideoRef = useCallback(
-    (fileId: string, video: HTMLVideoElement | null) => {
-      timelineActor.send({ type: "setVideoRef", fileId, video })
-    },
-    [timelineActor],
-  )
-
-  const setLoadedVideo = useCallback(
-    (fileId: string, loaded: boolean) => {
-      timelineActor.send({ type: "setLoadedVideo", fileId, loaded })
-    },
-    [timelineActor],
-  )
-
-  const preloadAllVideos = useCallback(() => {
-    timelineActor.send({ type: "preloadAllVideos" })
-  }, [timelineActor])
-
-  const setTracks = useCallback(
-    (tracks: Track[]) => {
-      timelineActor.send({ type: "setTracks", tracks })
-    },
-    [timelineActor],
-  )
-
-  useEffect(() => {
-    const subscription = timelineActor.subscribe((snapshot) => {
-      setState((prev: TimelineContextType) => ({
-        ...prev,
-        ...snapshot.context,
-      }))
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [timelineActor])
-
-  const value = {
-    isDirty: state?.isDirty ?? false,
-    zoomLevel: state?.zoomLevel,
-    timeRanges: state?.timeRanges,
-    sectors: state?.sectors,
-    activeTrackId: state?.activeTrackId,
-    trackVolumes: state?.trackVolumes,
-    isSeeking: state?.isSeeking,
-    isChangingCamera: state?.isChangingCamera,
-    tracks: state?.tracks,
-    history: state?.history,
-    historyIndex: state?.historyIndex,
-    future: state?.future,
-    canUndo: state?.canUndo,
-    canRedo: state?.canRedo,
-    videoRefs: state?.videoRefs,
-    loadedVideos: state?.loadedVideos,
-    zoom: handleZoom,
-    undo: handleUndo,
-    redo: handleRedo,
-    setActiveTrack,
-    setTracks,
-    seek: handleSeek,
-    removeFiles: handleRemoveFromAddedFiles,
-    addMediaFiles,
-    setPlaying: handleSetPlaying,
-    setTrackVolume: handleSetTrackVolume,
-    setSeeking: handleSetSeeking,
-    setTimeRanges: handleSetTimeRanges,
-    setVideoRef,
-    setLoadedVideo,
-    preloadAllVideos,
-  }
-
-  return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>
-}
+const TimelineContext = createContext<TimelineContextType | null>(null)
 
 export function useTimeline() {
   const context = useContext(TimelineContext)
   if (!context) {
-    throw new Error("useTimelineContext must be used within a TimelineProvider")
+    throw new Error("useTimeline must be used within a TimelineProvider")
   }
   return context
+}
+
+export function TimelineProvider({ children }: TimelineProviderProps) {
+  const timelineActor = useActorRef(timelineMachine)
+  const state = useSelector(timelineActor, (state) => state.context)
+  const send = timelineActor.send
+
+  // Загружаем сохраненное состояние при монтировании
+  useEffect(() => {
+    const loadPersistedState = async () => {
+      try {
+        const persistedState = await get(TIMELINE_STORAGE_KEY)
+        if (persistedState) {
+          send({ type: "RESTORE_STATE", state: persistedState })
+        }
+      } catch (error) {
+        console.error("Failed to load persisted timeline state:", error)
+      }
+    }
+
+    loadPersistedState()
+
+    return () => {
+      timelineActor.stop()
+    }
+  }, [timelineActor, send])
+
+  const handleZoom = React.useCallback(
+    (level: number) => {
+      send({ type: "ZOOM", level })
+    },
+    [send],
+  )
+
+  const handleUndo = React.useCallback(() => {
+    send({ type: "UNDO" })
+  }, [send])
+
+  const handleRedo = React.useCallback(() => {
+    send({ type: "REDO" })
+  }, [send])
+
+  const setActiveTrack = React.useCallback(
+    (trackId: string) => {
+      send({ type: "SET_ACTIVE_TRACK", trackId })
+    },
+    [send],
+  )
+
+  const handleSetTracks = React.useCallback(
+    (tracks: Track[]) => {
+      send({ type: "SET_TRACKS", tracks })
+    },
+    [send],
+  )
+
+  const handleSeek = React.useCallback(
+    (time: number) => {
+      send({ type: "SEEK", time })
+    },
+    [send],
+  )
+
+  const handleRemoveFromAddedFiles = React.useCallback(
+    (fileIds: string[]) => {
+      fileIds.forEach((fileId) => {
+        send({ type: "REMOVE_MEDIA_FILE", fileId })
+      })
+    },
+    [send],
+  )
+
+  const handleAddMediaFiles = React.useCallback(
+    (files: MediaFile[]) => {
+      send({ type: "ADD_MEDIA_FILES", files })
+    },
+    [send],
+  )
+
+  const handleSetPlaying = React.useCallback(
+    (playing: boolean) => {
+      send({ type: playing ? "PLAY" : "PAUSE" })
+    },
+    [send],
+  )
+
+  const handleSetTrackVolume = React.useCallback(
+    (trackId: string, volume: number) => {
+      send({ type: "SET_TRACK_VOLUME", trackId, volume })
+    },
+    [send],
+  )
+
+  const handleSetSeeking = React.useCallback(
+    (isSeeking: boolean) => {
+      send({ type: "SET_SEEKING", isSeeking })
+    },
+    [send],
+  )
+
+  const handleSetTimeRanges = React.useCallback(
+    (timeRanges: Record<string, TimeRange[]>) => {
+      send({ type: "SET_TIME_RANGES", ranges: timeRanges })
+    },
+    [send],
+  )
+
+  const handleSetVideoRef = React.useCallback(
+    (fileId: string, video: HTMLVideoElement | null) => {
+      send({ type: "SET_VIDEO_REF", fileId, video })
+    },
+    [send],
+  )
+
+  const handleSetLoadedVideo = React.useCallback(
+    (fileId: string, loaded: boolean) => {
+      send({ type: "SET_LOADED_VIDEO", fileId, loaded })
+    },
+    [send],
+  )
+
+  const handlePreloadAllVideos = React.useCallback(() => {
+    send({ type: "PRELOAD_ALL_VIDEOS" })
+  }, [send])
+
+  const value: TimelineContextType = {
+    ...state,
+    zoom: handleZoom,
+    undo: handleUndo,
+    redo: handleRedo,
+    setTracks: handleSetTracks,
+    setActiveTrack,
+    seek: handleSeek,
+    removeFiles: handleRemoveFromAddedFiles,
+    addMediaFiles: handleAddMediaFiles,
+    setPlaying: handleSetPlaying,
+    setTrackVolume: handleSetTrackVolume,
+    setSeeking: handleSetSeeking,
+    setTimeRanges: handleSetTimeRanges,
+    setVideoRef: handleSetVideoRef,
+    setLoadedVideo: handleSetLoadedVideo,
+    preloadAllVideos: handlePreloadAllVideos,
+  }
+
+  return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>
 }

@@ -35,10 +35,11 @@ export function TimelineLayout() {
             }}
           >
             {sectors?.map((sector, index) => (
-              <div className="flex w-full flex-col gap-1 p-2">
+              <div key={index} className="flex w-full flex-col gap-1 p-2">
                 <div className="z-10 h-[26px] w-full flex-shrink-0"></div>
-                {sector.tracks.map((track: Track, index: number) => (
+                {sector.tracks.map((track: Track, i: number) => (
                   <div
+                    key={i}
                     className="min-h-[50px] w-full flex-1 bg-[#033032] p-2 text-sm"
                     style={{ height: `50px` }}
                   >
@@ -62,6 +63,7 @@ export function TimelineLayout() {
           >
             {sectors?.map((sector, index) => (
               <div
+                key={index}
                 className="flex-shrink-0 overflow-x-auto overflow-y-hidden"
                 style={{
                   height: `${57 + sector.tracks.length * 54}px`,

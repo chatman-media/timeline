@@ -1,10 +1,11 @@
 {
   "extends": [
     "next/core-web-vitals",
-    "next/typescript",
-    "plugin:storybook/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react-hooks/recommended"
   ],
   "plugins": [
+    "@typescript-eslint",
     "simple-import-sort"
   ],
   "rules": {
@@ -15,7 +16,14 @@
     "simple-import-sort/imports": "error",
     "simple-import-sort/exports": "error",
     "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-unused-vars": [
+      "error",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ],
     "@typescript-eslint/explicit-function-return-type": [
       "warn",
       {

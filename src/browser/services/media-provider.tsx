@@ -1,11 +1,11 @@
 import { useMachine } from "@xstate/react"
-import { createContext, useContext, useEffect } from "react"
+import { createContext, useEffect } from "react"
 
 import { MediaFile } from "@/types/media"
 
-import { mediaMachine } from "./media-machine"
+import { mediaMachine } from "../machines/media-machine"
 
-interface MediaContextType {
+export interface MediaContextType {
   allMediaFiles: MediaFile[]
   includedFiles: MediaFile[]
   error: string | null
@@ -18,7 +18,7 @@ interface MediaContextType {
   areAllFilesAdded: (files: MediaFile[]) => boolean
 }
 
-const MediaContext = createContext<MediaContextType | null>(null)
+export const MediaContext = createContext<MediaContextType | null>(null)
 
 export function MediaProvider({ children }: { children: React.ReactNode }) {
   const [mediaState, mediaSend] = useMachine(mediaMachine)
@@ -76,12 +76,4 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
   }
 
   return <MediaContext.Provider value={value}>{children}</MediaContext.Provider>
-}
-
-export function useMedia() {
-  const context = useContext(MediaContext)
-  if (!context) {
-    throw new Error("useMedia must be used within a MediaProvider")
-  }
-  return context
 }
