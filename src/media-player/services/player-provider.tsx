@@ -74,7 +74,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   )
 }
 
-export function usePlayerContext() {
+export function usePlayerContext(): PlayerContextType {
   const context = useContext(PlayerContext)
   if (!context) {
     throw new Error("usePlayerContext must be used within a PlayerProvider")

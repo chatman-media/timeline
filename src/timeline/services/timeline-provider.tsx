@@ -50,7 +50,7 @@ interface TimelineProviderProps {
 
 const TimelineContext = createContext<TimelineContextType | null>(null)
 
-export function useTimeline() {
+export function useTimeline(): TimelineContextType {
   const context = useContext(TimelineContext)
   if (!context) {
     throw new Error("useTimeline must be used within a TimelineProvider")
@@ -65,7 +65,7 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
 
   // Загружаем сохраненное состояние при монтировании
   useEffect(() => {
-    const loadPersistedState = async () => {
+    const loadPersistedState = async (): Promise<void> => {
       try {
         const persistedState = await get(TIMELINE_STORAGE_KEY)
         if (persistedState) {

@@ -1,4 +1,5 @@
 import { Pause, Play, Plus } from "lucide-react"
+import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 
@@ -45,7 +46,7 @@ export function AudioPlayer({
       {/* Обложка */}
       <div className="relative mr-3 h-12 w-12 flex-shrink-0 overflow-hidden rounded">
         {coverUrl ? (
-          <img src={coverUrl} alt={title} className="h-full w-full object-cover" />
+          <Image src={coverUrl} alt={title} className="h-full w-full object-cover" />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-blue-800">
             <div className="transform-origin-center absolute h-0.5 w-full rotate-45 bg-yellow-400" />

@@ -15,7 +15,7 @@ function Waveform({ audioUrl }: WaveformProps) {
   useEffect(() => {
     if (!audioUrl) return
 
-    async function fetchAudio() {
+    async function fetchAudio(): Promise<void> {
       try {
         // Отменяем предыдущий запрос, если он существует
         if (abortControllerRef.current) {

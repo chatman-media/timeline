@@ -60,7 +60,7 @@ export const userSettingsMachine = createMachine(
   },
   {
     actions: {
-      loadSettings: (context) => {
+      loadSettings: () => {
         const previewSizes = Object.entries(STORAGE_KEYS).reduce(
           (acc, [key, storageKey]) => {
             try {

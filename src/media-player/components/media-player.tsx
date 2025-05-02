@@ -14,9 +14,7 @@ export function MediaPlayer() {
     setCurrentTime,
     currentTime,
     isChangingCamera,
-    setIsChangingCamera,
     isRecording,
-    setIsRecording,
     videoRefs,
   } = usePlayerContext()
 
@@ -61,7 +59,7 @@ export function MediaPlayer() {
     videoStartTime.current = 0
 
     // Оптимизированный обработчик timeupdate
-    const onTimeUpdate = () => {
+    const onTimeUpdate = (): void => {
       // Проверяем время с последнего обновления, чтобы не вызывать слишком частые изменения состояния
       const now = performance.now()
       if (now - lastUpdateTimeRef.current < UPDATE_THRESHOLD) return
@@ -115,7 +113,7 @@ export function MediaPlayer() {
       }
     }
 
-    const handleError = (e: ErrorEvent) => {
+    const handleError = (e: ErrorEvent): void => {
       console.error("Video playback error:", e)
       setIsPlaying(false)
     }
@@ -124,7 +122,7 @@ export function MediaPlayer() {
     videoElement.addEventListener("timeupdate", onTimeUpdate)
     videoElement.addEventListener("error", handleError)
 
-    const playVideo = async () => {
+    const playVideo = async (): Promise<void> => {
       try {
         if (isPlaying) {
           if (isChangingCamera) {
@@ -148,7 +146,7 @@ export function MediaPlayer() {
               }
             } else {
               // Если видео не готово, добавляем слушатель для запуска, когда будет готово
-              const handleCanPlay = async () => {
+              const handleCanPlay = async (): Promise<void> => {
                 try {
                   await videoElement.play()
                 } catch (playErr: unknown) {
@@ -328,10 +326,10 @@ export function MediaPlayer() {
       })
     }
     // Для плавного воспроизведения не синхронизируем малые различия
-  }, [currentTime, video?.id, videoRefs, isSeeking, setIsSeeking, isChangingCamera])
+  }, [currentTime, video?.id, videoRefs, isSeeking, setIsSeeking, isChangingCamera, duration])
 
   useEffect(() => {
-    const handleKeyPress = (e: KeyboardEvent) => {
+    const handleKeyPress = (e: KeyboardEvent): void => {
       if (e.key.toLowerCase() === "p" && video?.id) {
         if (isPlaying) {
           setIsPlaying(false)

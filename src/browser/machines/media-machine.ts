@@ -2,7 +2,7 @@ import { assign, createMachine, fromPromise } from "xstate"
 
 import { MediaFile } from "@/types/media"
 
-interface MediaContext {
+export interface MediaContextType {
   allMediaFiles: MediaFile[]
   includedFiles: MediaFile[]
   error: string | null
@@ -10,7 +10,7 @@ interface MediaContext {
   unavailableFiles: MediaFile[]
 }
 
-type MediaEvent =
+export type MediaEventType =
   | { type: "INCLUDE_FILES"; files: MediaFile[] }
   | { type: "REMOVE_FILE"; path: string }
   | { type: "CLEAR_FILES" }
@@ -22,6 +22,8 @@ type MediaEvent =
   | { type: "setLoading"; loading: boolean }
   | { type: "FETCH_MEDIA" }
   | { type: "RELOAD" }
+
+export type MediaContextValue = MediaContextType & MediaEventType
 
 const fetchMedia = fromPromise(async () => {
   const response = await fetch("/api/media")
@@ -59,7 +61,7 @@ export const mediaMachine = createMachine({
     error: null,
     isLoading: false,
     unavailableFiles: [],
-  } as MediaContext,
+  } as MediaContextType,
   states: {
     idle: {
       on: {

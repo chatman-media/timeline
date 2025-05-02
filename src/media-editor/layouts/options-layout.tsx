@@ -4,9 +4,7 @@ import { MediaPlayer } from "@/media-player/components"
 import { Options } from "@/options"
 import { TimelineLayout } from "@/timeline/components"
 
-interface OptionsLayoutProps {}
-
-export function OptionsMediaEditor({}: OptionsLayoutProps) {
+export function OptionsMediaEditor() {
   return (
     <ResizablePanelGroup
       direction="horizontal"

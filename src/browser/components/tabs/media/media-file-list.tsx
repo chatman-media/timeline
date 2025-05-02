@@ -180,23 +180,26 @@ export const MediaFileList = memo(function MediaFileList({
   // Состояние для размера превью с учетом режима просмотра
   const [previewSize, setPreviewSize] = useState<number>(actualInitialSize)
 
-  const addFilesToTimeline = (files: MediaFile[]) => {
-    const newFiles = files.filter(
-      (file) => !includedFiles.map((file: MediaFile) => file.path).includes(file.path),
-    )
-    console.log("Adding files to timeline:", {
-      allFiles: files,
-      newFiles,
-      includedFiles: includedFiles.map((file: MediaFile) => file.path),
-    })
-    if (newFiles.length > 0) {
-      // Сначала добавляем в медиа
-      includeFiles(newFiles)
-      // Затем добавляем на таймлайн
-      console.log("Sending files to timeline machine:", newFiles)
-      timelineAddMediaFiles(newFiles)
-    }
-  }
+  const addFilesToTimeline = useCallback(
+    (files: MediaFile[]) => {
+      const newFiles = files.filter(
+        (file) => !includedFiles.map((file: MediaFile) => file.path).includes(file.path),
+      )
+      console.log("Adding files to timeline:", {
+        allFiles: files,
+        newFiles,
+        includedFiles: includedFiles.map((file: MediaFile) => file.path),
+      })
+      if (newFiles.length > 0) {
+        // Сначала добавляем в медиа
+        includeFiles(newFiles)
+        // Затем добавляем на таймлайн
+        console.log("Sending files to timeline machine:", newFiles)
+        timelineAddMediaFiles(newFiles)
+      }
+    },
+    [includedFiles, includeFiles, timelineAddMediaFiles],
+  )
 
   // Обертка для setPreviewSize, которая также сохраняет размер в localStorage
   const updatePreviewSize = useCallback(
@@ -400,60 +403,57 @@ export const MediaFileList = memo(function MediaFileList({
     // В будущем здесь будет логика для записи голоса
   }
 
-  const handleRecordedVideo = useCallback(
-    (blob: Blob, fileName: string) => {
-      console.log(`Получена запись видео: ${fileName}, размер: ${blob.size} байт`)
+  const handleRecordedVideo = useCallback((blob: Blob, fileName: string) => {
+    console.log(`Получена запись видео: ${fileName}, размер: ${blob.size} байт`)
 
-      // Создаем медиафайл из записанного блоба
-      const file = new File([blob], fileName, { type: "video/webm" })
+    // Создаем медиафайл из записанного блоба
+    const file = new File([blob], fileName, { type: "video/webm" })
 
-      // Создаем объект URL для просмотра видео
-      const fileUrl = URL.createObjectURL(file)
+    // Создаем объект URL для просмотра видео
+    const fileUrl = URL.createObjectURL(file)
 
-      // Получаем длительность видео
-      const videoElement = document.createElement("video")
-      videoElement.src = fileUrl
+    // Получаем длительность видео
+    const videoElement = document.createElement("video")
+    videoElement.src = fileUrl
 
-      videoElement.onloadedmetadata = () => {
-        const duration = videoElement.duration
+    videoElement.onloadedmetadata = () => {
+      const duration = videoElement.duration
 
-        // Создаем новый MediaFile объект
-        const newMediaFile: MediaFile = {
-          id: `recorded-${Date.now()}`,
-          name: fileName,
-          path: fileUrl,
-          size: blob.size,
-          startTime: 0,
-          duration: duration,
-          probeData: {
-            format: {
-              duration: duration,
-              filename: fileName,
-              format_name: "webm",
-              size: blob.size,
-            },
-            streams: [
-              {
-                codec_type: "video",
-                codec_name: "vp9",
-                width: videoElement.videoWidth,
-                height: videoElement.videoHeight,
-                r_frame_rate: "30/1",
-                index: 0,
-              },
-            ],
+      // Создаем новый MediaFile объект
+      const newMediaFile: MediaFile = {
+        id: `recorded-${Date.now()}`,
+        name: fileName,
+        path: fileUrl,
+        size: blob.size,
+        startTime: 0,
+        duration: duration,
+        probeData: {
+          format: {
+            duration: duration,
+            filename: fileName,
+            format_name: "webm",
+            size: blob.size,
           },
-        }
-
-        // Заменяем rootStore.send на handleSetMedia
-        // handleAddFiles([newMediaFile])
-
-        // Очищаем URL
-        URL.revokeObjectURL(fileUrl)
+          streams: [
+            {
+              codec_type: "video",
+              codec_name: "vp9",
+              width: videoElement.videoWidth,
+              height: videoElement.videoHeight,
+              r_frame_rate: "30/1",
+              index: 0,
+            },
+          ],
+        },
       }
-    },
-    [media],
-  )
+
+      // Заменяем rootStore.send на handleSetMedia
+      // handleAddFiles([newMediaFile])
+
+      // Очищаем URL
+      URL.revokeObjectURL(fileUrl)
+    }
+  }, [])
 
   // Фильтрация и сортировка
   const filteredAndSortedMedia = useMemo(() => {

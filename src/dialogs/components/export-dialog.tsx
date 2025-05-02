@@ -1,4 +1,5 @@
 import { Folder, Info } from "lucide-react"
+import Image from "next/image"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -185,14 +186,14 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
               <div className="grid grid-cols-[250px,1fr] gap-6">
                 <div className="space-y-2">
                   <div className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded p-2">
-                    <img src="/youtube.svg" className="h-6 w-6" alt="YouTube" />
+                    <Image src="/youtube.svg" className="h-6 w-6" alt="YouTube" />
                     <div>
                       <div>YouTube</div>
                       <div className="text-muted-foreground text-xs">Вход не выполнен</div>
                     </div>
                   </div>
                   <div className="hover:bg-accent flex cursor-pointer items-center gap-2 rounded p-2">
-                    <img src="/tiktok.svg" className="h-6 w-6" alt="TikTok" />
+                    <Image src="/tiktok.svg" className="h-6 w-6" alt="TikTok" />
                     <div>
                       <div>TikTok</div>
                       <div className="text-muted-foreground text-xs">Вход не выполнен</div>
@@ -202,7 +203,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                 </div>
                 <div className="flex items-center justify-center">
                   <div className="space-y-4 text-center">
-                    <img src="/youtube-big.svg" className="mx-auto h-24 w-24" alt="YouTube" />
+                    <Image src="/youtube-big.svg" className="mx-auto h-24 w-24" alt="YouTube" />
                     <div>
                       Войдите в свою учетную запись YouTube для получения дополнительной информации.
                     </div>

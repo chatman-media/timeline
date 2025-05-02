@@ -1,7 +1,3 @@
-import { MediaFile, Track } from "./media"
-import { TimeRange } from "./time-range"
-
-// Базовые типы для временной шкалы
 export interface VideoMetadata {
   filename: string
   codecName: string

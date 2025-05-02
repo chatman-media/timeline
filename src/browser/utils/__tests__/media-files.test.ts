@@ -12,28 +12,7 @@ describe("createTracksFromFiles", () => {
     path: `/path/to/${name}`,
     startTime,
     duration,
-    probeData: {
-      streams: [{ codec_type: "video", index: 0 }],
-      format: {
-        duration,
-        size: 1000,
-      },
-    },
-  })
-
-  const mockAudioFile = (name: string, startTime: number, duration: number): MediaFile => ({
-    id: `test-${name}`,
-    name,
-    path: `/path/to/${name}`,
-    startTime,
-    duration,
-    probeData: {
-      streams: [{ codec_type: "audio", index: 0 }],
-      format: {
-        duration,
-        size: 1000,
-      },
-    },
+    ...mockVideoData[0],
   })
 
   it("should create sectors for different days using real data", () => {

@@ -22,32 +22,32 @@ export function TrackControls({
   const [isMuted, setIsMuted] = useState(false)
   const [volume, setVolume] = useState(100)
 
-  const handleVisibilityToggle = () => {
+  const handleVisibilityToggle = (): void => {
     const newValue = !isVisible
     setIsVisible(newValue)
     onVisibilityChange?.(newValue)
   }
 
-  const handleLockToggle = () => {
+  const handleLockToggle = (): void => {
     const newValue = !isLocked
     setIsLocked(newValue)
     onLockChange?.(newValue)
   }
 
-  const handleVolumeToggle = () => {
+  const handleVolumeToggle = (): void => {
     const newValue = !isMuted
     setIsMuted(newValue)
     onVolumeChange?.(newValue ? 0 : volume)
   }
 
-  const handleVolumeChange = (value: number[]) => {
+  const handleVolumeChange = (value: number[]): void => {
     const newVolume = value[0]
     setVolume(newVolume)
     onVolumeChange?.(newVolume)
   }
 
   // Определяем, является ли трек видео или аудио
-  const isVideoTrack = track.videos.some((video) =>
+  const isVideoTrack = track.videos?.some((video) =>
     video.probeData?.streams?.some((stream) => stream.codec_type === "video"),
   )
 

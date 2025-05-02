@@ -29,7 +29,7 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
     }
 
     let lastTime = performance.now()
-    const animate = (now: number) => {
+    const animate = (now: number): void => {
       const deltaTime = (now - lastTime) / 1000 // в секундах
       lastTime = now
 
@@ -53,9 +53,9 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
     }
   }, [isPlaying, endTime, setTime, currentTime])
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>): void => {
     e.stopPropagation()
-    const onMouseMove = (e: MouseEvent) => {
+    const onMouseMove = (e: MouseEvent): void => {
       const rect = document.getElementById("timeline-bar-container")?.getBoundingClientRect()
       if (!rect) return
       const mouseX = e.clientX - rect.left
@@ -64,7 +64,7 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
       setTime(time)
     }
 
-    const onMouseUp = () => {
+    const onMouseUp = (): void => {
       document.removeEventListener("mousemove", onMouseMove)
       document.removeEventListener("mouseup", onMouseUp)
     }

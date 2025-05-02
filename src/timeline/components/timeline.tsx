@@ -130,7 +130,7 @@ export function Timeline() {
   }, [tracks])
 
   React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
       if (e.key === "Backspace" && activeTrackId) {
         const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
         setTracks(updatedTracks)
@@ -243,6 +243,7 @@ export function Timeline() {
     tracks,
     setTracks,
     setActiveTrack,
+    setIsRecording,
     isPlaying,
     isRecording,
     currentTime,
@@ -266,7 +267,7 @@ export function Timeline() {
         }
       }
     }
-  }, [sections])
+  }, [sections, setActiveDate, activeDate, seek])
 
   React.useEffect(() => {
     if (activeVideo) {
@@ -276,12 +277,12 @@ export function Timeline() {
     }
   }, [activeVideo])
 
-  const handleDeleteSection = (sectionDate: string) => {
+  const handleDeleteSection = (sectionDate: string): void => {
     setDeletingSectionDate(sectionDate)
     setDeleteDialogOpen(true)
   }
 
-  const confirmDeleteSection = () => {
+  const confirmDeleteSection = (): void => {
     if (!deletingSectionDate) return
 
     const isDeletingActiveSection = deletingSectionDate === activeDate

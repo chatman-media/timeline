@@ -82,7 +82,7 @@ export const projectMachine = createMachine({
   },
 })
 
-export function useProject() {
+export function useProject(): ProjectContext & ProjectContextEvents {
   const [state, send] = useMachine(projectMachine)
 
   return {

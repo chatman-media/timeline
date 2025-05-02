@@ -142,7 +142,6 @@ export function calculateWidth(
   height: number,
   containerHeight: number,
   rotation?: number,
-  totalStreams: number = 1,
 ): number {
   // Если нет размеров, возвращаем высоту контейнера
   if (!width || !height) return containerHeight

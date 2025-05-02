@@ -81,7 +81,7 @@ export function getTopDateWithRemainingFiles(
 ): { date: string; files: MediaFile[]; remainingFiles: MediaFile[] } | undefined {
   const isVideoWithAudio = (file: MediaFile): boolean => {
     const hasVideo = file.probeData?.streams?.some((s) => s.codec_type === "video")
-    const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
+    // const hasAudio = file.probeData?.streams?.some((s) => s.codec_type === "audio")
     // console.log(`[getTopDateWithRemainingFiles] ${file.name}: video=${hasVideo}, audio=${hasAudio}`)
     return !!hasVideo
   }

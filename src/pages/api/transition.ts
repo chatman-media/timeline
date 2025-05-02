@@ -37,7 +37,7 @@ export async function generateTransition(
 }
 
 // Вспомогательная функция для получения информации о видео
-async function getVideoInfo(videoPath: string) {
+async function getVideoInfo(videoPath: string): Promise<any> {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(videoPath, (err, metadata) => {
       if (err) reject(err)

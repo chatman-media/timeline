@@ -62,7 +62,7 @@ const initialContext: TimelineContext = {
   currentStateIndex: -1,
 }
 
-const persistState = ({ context }: { context: TimelineContext }) => {
+const persistState = ({ context }: { context: TimelineContext }): void => {
   try {
     localStorage.setItem("timeline-state", JSON.stringify(context))
   } catch (error) {
@@ -76,7 +76,7 @@ const addToHistory = ({
 }: {
   context: TimelineContext
   newState: Partial<TimelineContext>
-}) => {
+}): TimelineContext => {
   const newStates = context.previousStates.slice(0, context.currentStateIndex + 1)
   return {
     ...context,

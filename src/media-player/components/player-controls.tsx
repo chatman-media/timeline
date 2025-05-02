@@ -142,7 +142,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
         console.warn("Не удалось начать запись: отсутствует активный трек и активное видео")
       }
     }
-  }, [isRecording, setIsRecording, activeTrackId, video, currentTime])
+  }, [isRecording, setIsRecording, activeTrackId, video])
 
   // Оптимизированный handleTimeChange для коротких видео
   const handleTimeChange = useCallback(
@@ -227,7 +227,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   const isLastFrame = Math.abs(currentTime - videoEndTimeForLastFrame) < frameTime
 
   // Функция форматирования времени
-  const formatTime = (time: number) => {
+  const formatTime = (time: number): string => {
     // Добавим проверку на конечность числа
     if (!isFinite(time)) {
       console.warn("[formatTime] Received non-finite time:", time)

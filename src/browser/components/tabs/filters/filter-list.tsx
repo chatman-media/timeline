@@ -267,7 +267,7 @@ const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
 
 export function FilterList() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [activeFilter, setActiveFilter] = useState<VideoFilter | null>(null)
+  const [, setActiveFilter] = useState<VideoFilter | null>(null)
 
   const {
     previewSize,

@@ -16,7 +16,7 @@ export function MediaEditor() {
   const [hasExternalDisplay, setHasExternalDisplay] = useState(false)
 
   useEffect(() => {
-    const checkExternalDisplay = () => {
+    const checkExternalDisplay = (): void => {
       const isWideScreen = window.matchMedia("(min-width: 1920px)").matches
       const screenWidth = window.screen.width
       const pixelRatio = window.devicePixelRatio || 1
@@ -35,7 +35,7 @@ export function MediaEditor() {
     }
   }, [])
 
-  const changeLayout = (mode: LayoutMode) => {
+  const changeLayout = (mode: LayoutMode): void => {
     if (mode === "dual" && !hasExternalDisplay) return
     setLayoutMode(mode)
   }

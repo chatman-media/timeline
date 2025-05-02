@@ -27,7 +27,7 @@ export function TimelineControls({ minScale = 0.001, maxScale = 18 }: TimelineCo
     logStep,
   })
 
-  const handleScaleDecrease = () => {
+  const handleScaleDecrease = (): void => {
     const newLogScale = logCurrentScale - logStep
     const newScale = Math.exp(Math.max(newLogScale, logMinScale))
     console.log("TimelineControls decrease:", {
@@ -38,7 +38,7 @@ export function TimelineControls({ minScale = 0.001, maxScale = 18 }: TimelineCo
     handleZoom(newScale)
   }
 
-  const handleScaleIncrease = () => {
+  const handleScaleIncrease = (): void => {
     const newLogScale = logCurrentScale + logStep
     const newScale = Math.exp(Math.min(newLogScale, logMaxScale))
     console.log("TimelineControls increase:", {
@@ -49,7 +49,7 @@ export function TimelineControls({ minScale = 0.001, maxScale = 18 }: TimelineCo
     handleZoom(newScale)
   }
 
-  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const sliderValue = Number(e.target.value)
     const logScale = logMinScale + (sliderValue / 100) * (logMaxScale - logMinScale)
     const newScale = Math.exp(logScale)

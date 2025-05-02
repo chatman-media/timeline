@@ -1,24 +1,11 @@
 import { useMachine } from "@xstate/react"
 import { createContext, useEffect } from "react"
 
+import { mediaMachine } from "@/browser/machines/media-machine"
+import { MediaContextValue } from "@/browser/machines/media-machine"
 import { MediaFile } from "@/types/media"
 
-import { mediaMachine } from "../machines/media-machine"
-
-export interface MediaContextType {
-  allMediaFiles: MediaFile[]
-  includedFiles: MediaFile[]
-  error: string | null
-  isLoading: boolean
-  unavailableFiles: MediaFile[]
-  includeFiles: (files: MediaFile[]) => void
-  removeFile: (path: string) => void
-  clearFiles: () => void
-  isFileAdded: (file: MediaFile) => boolean
-  areAllFilesAdded: (files: MediaFile[]) => boolean
-}
-
-export const MediaContext = createContext<MediaContextType | null>(null)
+export const MediaContext = createContext<MediaContextValue | null>(null)
 
 export function MediaProvider({ children }: { children: React.ReactNode }) {
   const [mediaState, mediaSend] = useMachine(mediaMachine)
@@ -57,6 +44,11 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     mediaSend({ type: "CLEAR_FILES" })
   }
 
+  const reload = () => {
+    console.log("Reloading media files")
+    mediaSend({ type: "RELOAD" })
+  }
+
   const isFileAdded = (file: MediaFile) => includedFilePaths.includes(file.path)
 
   const areAllFilesAdded = (files: MediaFile[]) =>
@@ -73,6 +65,7 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     clearFiles,
     isFileAdded,
     areAllFilesAdded,
+    reload,
   }
 
   return <MediaContext.Provider value={value}>{children}</MediaContext.Provider>

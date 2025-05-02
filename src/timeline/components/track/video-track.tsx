@@ -23,11 +23,7 @@ interface TimelineTrackProps {
   }
 }
 
-const TimelineTrack = memo(function TimelineTrack({
-  track,
-  index,
-  coordinates,
-}: TimelineTrackProps) {
+const TimelineTrack = memo(function TimelineTrack({ track, coordinates }: TimelineTrackProps) {
   const { activeTrackId, setActiveTrack } = useTimeline()
   const { setVideo: setActiveVideo, setVideoLoading, setVideoReady } = usePlayerContext()
   const containerRef = useRef<HTMLDivElement>(null)

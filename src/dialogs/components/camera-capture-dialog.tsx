@@ -464,52 +464,52 @@ export function CameraCaptureDialog({
   }, [startRecording])
 
   // Создаем новую функцию для снимка с веб-камеры
-  const takeScreenshot = useCallback(() => {
-    if (!videoRef.current || !streamRef.current) return
+  // const takeScreenshot = useCallback(() => {
+  //   if (!videoRef.current || !streamRef.current) return
 
-    try {
-      // Создаем канвас размером с видео
-      const canvas = document.createElement("canvas")
-      const video = videoRef.current
+  //   try {
+  //     // Создаем канвас размером с видео
+  //     const canvas = document.createElement("canvas")
+  //     const video = videoRef.current
 
-      // Получаем размер видео с учетом разрешения камеры
-      const [width, height] = selectedResolution.split("x").map(Number)
-      canvas.width = width
-      canvas.height = height
+  //     // Получаем размер видео с учетом разрешения камеры
+  //     const [width, height] = selectedResolution.split("x").map(Number)
+  //     canvas.width = width
+  //     canvas.height = height
 
-      // Рисуем текущий кадр на канвасе
-      const ctx = canvas.getContext("2d")
-      if (!ctx) return
+  //     // Рисуем текущий кадр на канвасе
+  //     const ctx = canvas.getContext("2d")
+  //     if (!ctx) return
 
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+  //     ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-      // Конвертируем канвас в блоб
-      canvas.toBlob((blob) => {
-        if (!blob) return
+  //     // Конвертируем канвас в блоб
+  //     canvas.toBlob((blob) => {
+  //       if (!blob) return
 
-        // Создаем имя файла на основе текущего времени
-        const timestamp = new Date().toISOString().replace(/:/g, "-")
-        const fileName = `camera_snapshot_${timestamp}.png`
+  //       // Создаем имя файла на основе текущего времени
+  //       const timestamp = new Date().toISOString().replace(/:/g, "-")
+  //       const fileName = `camera_snapshot_${timestamp}.png`
 
-        // Создаем ссылку для скачивания
-        const link = document.createElement("a")
-        link.href = URL.createObjectURL(blob)
-        link.download = fileName
+  //       // Создаем ссылку для скачивания
+  //       const link = document.createElement("a")
+  //       link.href = URL.createObjectURL(blob)
+  //       link.download = fileName
 
-        // Добавляем невидимую ссылку в DOM, кликаем по ней и удаляем
-        document.body.appendChild(link)
-        link.click()
+  //       // Добавляем невидимую ссылку в DOM, кликаем по ней и удаляем
+  //       document.body.appendChild(link)
+  //       link.click()
 
-        // Небольшая задержка перед удалением ссылки
-        setTimeout(() => {
-          document.body.removeChild(link)
-          URL.revokeObjectURL(link.href)
-        }, 100)
-      }, "image/png")
-    } catch (error) {
-      console.error("Ошибка при создании снимка:", error)
-    }
-  }, [selectedResolution])
+  //       // Небольшая задержка перед удалением ссылки
+  //       setTimeout(() => {
+  //         document.body.removeChild(link)
+  //         URL.revokeObjectURL(link.href)
+  //       }, 100)
+  //     }, "image/png")
+  //   } catch (error) {
+  //     console.error("Ошибка при создании снимка:", error)
+  //   }
+  // }, [selectedResolution])
 
   // Обработчик закрытия модального окна
   const handleClose = useCallback(() => {

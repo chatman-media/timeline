@@ -36,7 +36,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   return <ProjectContextType.Provider value={value}>{children}</ProjectContextType.Provider>
 }
 
-export function useProjectContext() {
+export function useProjectContext(): ProjectContext & ProjectContextEvents {
   const context = useContext(ProjectContextType)
   if (!context) {
     throw new Error("useProjectContext must be used within a ProjectProvider")
