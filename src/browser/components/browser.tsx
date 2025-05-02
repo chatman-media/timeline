@@ -4,7 +4,7 @@ import { memo, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import {
-  EffectsList,
+  EffectList,
   FilterList,
   MediaFileList,
   MusicFileList,
@@ -79,7 +79,7 @@ export const Browser = memo(function Browser() {
         <TransitionsList />
       </TabsContent>
       <TabsContent value="effects" className="bg-secondary m-0 flex-1 overflow-hidden">
-        <EffectsList />
+        <EffectList />
       </TabsContent>
       {/* <TabsContent value="subtitles" className="bg-secondary m-0 flex-1 overflow-hidden">
         <SubtitlesList />

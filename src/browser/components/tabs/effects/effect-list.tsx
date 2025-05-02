@@ -144,7 +144,7 @@ const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
   )
 }
 
-export function EffectsList() {
+export function EffectList() {
   const [searchQuery, setSearchQuery] = useState("")
 
   const {

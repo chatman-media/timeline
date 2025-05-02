@@ -1,2 +1,2 @@
 export * from "./effects"
-export * from "./effects-list"
+export * from "./effect-list"
