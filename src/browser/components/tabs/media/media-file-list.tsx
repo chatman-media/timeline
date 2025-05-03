@@ -1,8 +1,7 @@
 import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
 
-import { MediaPreview } from "@/browser"
-import { useMedia } from "@/browser"
+import { MediaPreview, useMedia } from "@/browser"
 import { FileMetadata, NoFiles, StatusBar } from "@/browser/components/layout"
 import { MediaToolbar } from "@/browser/components/layout/media-toolbar"
 import { getFileType, groupFilesByDate } from "@/browser/utils/media-files"
@@ -1019,7 +1018,7 @@ export const MediaFileList = memo(function MediaFileList({
       <div className="scrollbar-hide hover:scrollbar-default min-h-0 flex-1 overflow-y-auto p-0 dark:bg-[#1b1a1f]">
         {renderContent()}
       </div>
-      <div className="m-0 flex-shrink-0 p-0 transition-all duration-200 ease-in-out">
+      <div className="m-0 flex-shrink-0 py-0.5 transition-all duration-200 ease-in-out">
         <StatusBar
           media={filteredAndSortedMedia}
           onAddAllVideoFiles={handleAddAllVideoFiles}

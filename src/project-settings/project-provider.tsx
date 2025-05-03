@@ -2,20 +2,24 @@ import { useMachine } from "@xstate/react"
 import { createContext, useContext, useMemo } from "react"
 
 import { browserInspector } from "@/media-editor/providers"
-import {
-  type ProjectContext,
-  type ProjectContextEvents,
-  projectMachine,
-} from "@/project-settings/project-machine"
+import { projectMachine } from "@/project-settings/project-machine"
 import { ProjectSettings } from "@/types/project"
 
 interface ProjectProviderProps {
   children: React.ReactNode
 }
 
-const ProjectContextType = createContext<(ProjectContext & ProjectContextEvents) | undefined>(
-  undefined,
-)
+type ProjectContextType = {
+  settings: ProjectSettings
+  name: string
+  isDirty: boolean
+  setName: (name: string) => void
+  setDirty: (isDirty: boolean) => void
+  updateSettings: (settings: ProjectSettings) => void
+  resetSettings: () => void
+}
+
+const ProjectContext = createContext<ProjectContextType | undefined>(undefined)
 
 export function ProjectProvider({ children }: ProjectProviderProps) {
   const [state, send] = useMachine(projectMachine, {
@@ -33,11 +37,11 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
     [state.context, send],
   )
 
-  return <ProjectContextType.Provider value={value}>{children}</ProjectContextType.Provider>
+  return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>
 }
 
-export function useProjectContext(): ProjectContext & ProjectContextEvents {
-  const context = useContext(ProjectContextType)
+export function useProjectContext(): ProjectContextType {
+  const context = useContext(ProjectContext)
   if (!context) {
     throw new Error("useProjectContext must be used within a ProjectProvider")
   }

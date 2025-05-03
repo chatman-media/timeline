@@ -2,7 +2,7 @@ import { assign, createMachine, fromPromise } from "xstate"
 
 import { MediaFile } from "@/types/media"
 
-export interface MediaContextType {
+export type MediaContextType = {
   allMediaFiles: MediaFile[]
   includedFiles: MediaFile[]
   error: string | null
@@ -22,8 +22,6 @@ export type MediaEventType =
   | { type: "setLoading"; loading: boolean }
   | { type: "FETCH_MEDIA" }
   | { type: "RELOAD" }
-
-export type MediaContextValue = MediaContextType & MediaEventType
 
 const fetchMedia = fromPromise(async () => {
   const response = await fetch("/api/media")

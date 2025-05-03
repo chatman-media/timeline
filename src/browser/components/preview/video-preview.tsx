@@ -182,7 +182,6 @@ export const VideoPreview = memo(function VideoPreview({
               stream.height || 0,
               size,
               parseRotation(stream.rotation),
-              videoStreams?.length || 1,
             )
 
             const adptivedWidth = calculateAdaptiveWidth(
