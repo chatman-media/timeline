@@ -1,81 +1,125 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@radix-ui/react-tooltip"
-import { ZoomIn, ZoomOut } from "lucide-react"
-import { useState } from "react"
-
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { cn } from "@/lib/utils"
-
+import { type JSX, useState, useEffect, useCallback } from "react"
 import { usePreviewSize } from "../../preview/preview-sizes"
+import { TemplateListToolbar } from "."
+import { useProject } from "@/media-editor/project-settings/project-provider"
 
 interface MediaTemplate {
   id: string
-  name: string
-  description: string
-  preview: string
+  split: "vertical" | "horizontal"
+  render: () => JSX.Element
 }
 
-const templates: MediaTemplate[] = [
-  {
-    id: "1",
-    name: "Template 1",
-    description: "Template 1 description",
-    preview: "https://via.placeholder.com/150",
-  },
-  {
-    id: "split-vertical-2",
-    name: "Разделенный экран 2",
-    description: "Два окна, разделённые по вертикали",
-    preview: "", // пока не нужен url, будет кастомный рендер
-  },
-]
+const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemplate[]> = {
+  landscape: [
+    {
+      id: "split-vertical-landscape",
+      split: "vertical",
+      render: () => (
+        <div className="flex h-full w-full">
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
+          <div className="h-full w-px bg-gray-600" />
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+        </div>
+      ),
+    },
+    {
+      id: "split-horizontal-landscape",
+      split: "horizontal",
+      render: () => (
+        <div className="flex h-full w-full flex-col">
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
+          <div className="w-full h-px bg-gray-600" />
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+        </div>
+      ),
+    },
+  ],
+  portrait: [
+    {
+      id: "split-vertical-portrait",
+      split: "vertical",
+      render: () => (
+        <div className="flex h-full w-full">
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
+          <div className="h-full w-px bg-gray-600" />
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+        </div>
+      ),
+    },
+    {
+      id: "split-horizontal-portrait",
+      split: "horizontal",
+      render: () => (
+        <div className="flex h-full w-full flex-col">
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
+          <div className="w-full h-px bg-gray-600" />
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+        </div>
+      ),
+    },
+  ],
+  square: [
+    {
+      id: "split-vertical-square",
+      split: "vertical",
+      render: () => (
+        <div className="flex h-full w-full">
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
+          <div className="h-full w-px bg-gray-600" />
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+        </div>
+      ),
+    },
+    {
+      id: "split-horizontal-square",
+      split: "horizontal",
+      render: () => (
+        <div className="flex h-full w-full flex-col">
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
+          <div className="w-full h-px bg-gray-600" />
+          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+        </div>
+      ),
+    },
+  ],
+}
+
+function mapAspectLabelToGroup(label: string): "landscape" | "square" | "portrait" {
+  if (label === "1:1") return "square"
+  if (label === "9:16" || label === "4:5") return "portrait"
+  return "landscape"
+}
 
 interface TemplatePreviewProps {
   template: MediaTemplate
   onClick: () => void
   size: number
+  dimensions: [number, number]
 }
 
-export function TemplatePreview({ template, onClick, size }: TemplatePreviewProps) {
-  // Для шаблона split-vertical-2 рисуем кастомно, остальные — плейсхолдер
-  if (template.id === "split-vertical-2") {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className="hover:border-primary flex flex-col items-center rounded-lg border border-gray-700 bg-gray-800 p-2 transition"
-        style={{ width: size, height: size * 0.6, minWidth: 120, minHeight: 72 }}
-      >
-        <div className="relative flex h-full w-full">
-          <div className="flex h-full w-1/2 items-center justify-center border-r border-gray-600 text-2xl text-gray-300">
-            1
-          </div>
-          <div className="flex h-full w-1/2 items-center justify-center text-2xl text-gray-300">
-            2
-          </div>
-        </div>
-        <span className="mt-2 text-xs text-gray-400">{template.name}</span>
-      </button>
-    )
+export function TemplatePreview({ template, onClick, size, dimensions }: TemplatePreviewProps) {
+  const calculateWidth = (): number => {
+    const [width, height] = dimensions
+    return Math.min((size * width) / height, size)
   }
-
-  // fallback для других шаблонов
   return (
-    <button
-      type="button"
+    <div
+      className="group relative h-full flex-shrink-0 cursor-pointer"
+      style={{ height: `${size}px`, width: `${calculateWidth().toFixed(0)}px`, maxWidth: `${size}px` }}
       onClick={onClick}
-      className="hover:border-primary flex flex-col items-center rounded-lg border border-gray-700 bg-gray-800 p-2 transition"
-      style={{ width: size, height: size * 0.6, minWidth: 120, minHeight: 72 }}
     >
-      <img src={template.preview} alt={template.name} className="h-full w-full object-cover" />
-      <span className="mt-2 text-xs text-gray-400">{template.name}</span>
-    </button>
+      {template.render()}
+    </div>
   )
 }
 
 export function TemplateList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [, setActiveTemplate] = useState<MediaTemplate | null>(null)
+  const [currentGroup, setCurrentGroup] = useState<"landscape" | "portrait" | "square">("landscape")
+  const [currentDimensions, setCurrentDimensions] = useState<[number, number]>([1920, 1080])
+  const [templates, setTemplates] = useState<MediaTemplate[]>([])
+  const { settings } = useProject()
 
   const {
     previewSize,
@@ -86,75 +130,46 @@ export function TemplateList() {
     canDecreaseSize,
   } = usePreviewSize("EFFECTS_AND_FILTERS")
 
+
+  // Эффект для инициализации и обновления шаблонов при монтировании компонента
+  useEffect(() => {
+    const group = mapAspectLabelToGroup(settings.aspectRatio.label)
+    const dimensions: [number, number] = [settings.aspectRatio.value.width, settings.aspectRatio.value.height]
+
+    setCurrentGroup(group)
+    setCurrentDimensions(dimensions)
+    setTemplates(TEMPLATE_MAP[group])
+
+    console.log("[TemplateList] Templates updated:", {
+      aspectRatio: settings.aspectRatio.label,
+      resolution: settings.resolution,
+      group,
+      dimensions,
+      width: settings.aspectRatio.value.width,
+      height: settings.aspectRatio.value.height
+    })
+  }, [settings.aspectRatio, settings.resolution])
+
   const filteredTemplates = templates.filter((template) => {
     const searchLower = searchQuery.toLowerCase()
-    return (
-      template.name.toLowerCase().includes(searchLower) ||
-      template.description.toLowerCase().includes(searchLower)
-    )
+    return template.id.toLowerCase().includes(searchLower)
   })
 
   const handleTemplateClick = (template: MediaTemplate) => {
     setActiveTemplate(template)
-    console.log("Applying template:", template.name, template.description)
+    console.log("Applying template:", template.id)
   }
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
-      <div className="flex items-center justify-between p-1">
-        <Input
-          type="search"
-          placeholder="Поиск"
-          className="mr-5 h-7 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500"
-          style={{
-            backgroundColor: "transparent",
-          }}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-        <div className="flex items-center gap-1">
-          {/* Кнопки изменения размера */}
-          <TooltipProvider>
-            <div className="mr-2 flex overflow-hidden rounded-md">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "mr-1 h-6 w-6 cursor-pointer",
-                      !canDecreaseSize && "cursor-not-allowed opacity-50",
-                    )}
-                    onClick={handleDecreaseSize}
-                    disabled={!canDecreaseSize}
-                  >
-                    <ZoomOut size={16} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Уменьшить превью</TooltipContent>
-              </Tooltip>
-
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "mr-1 h-6 w-6 cursor-pointer",
-                      !canIncreaseSize && "cursor-not-allowed opacity-50",
-                    )}
-                    onClick={handleIncreaseSize}
-                    disabled={!canIncreaseSize}
-                  >
-                    <ZoomIn size={16} />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Увеличить превью</TooltipContent>
-              </Tooltip>
-            </div>
-          </TooltipProvider>
-        </div>
-      </div>
+      <TemplateListToolbar
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        canDecreaseSize={canDecreaseSize}
+        canIncreaseSize={canIncreaseSize}
+        handleDecreaseSize={handleDecreaseSize}
+        handleIncreaseSize={handleIncreaseSize}
+      />
 
       <div className="flex-1 overflow-y-auto p-3">
         {!isSizeLoaded ? (
@@ -164,18 +179,26 @@ export function TemplateList() {
             Шаблоны не найдены
           </div>
         ) : (
-          <div
-            className="grid grid-cols-[repeat(auto-fill,minmax(0,calc(var(--preview-size)+12px)))] gap-2"
-            style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
-          >
-            {filteredTemplates.map((template) => (
-              <TemplatePreview
-                key={template.id}
-                template={template}
-                onClick={() => handleTemplateClick(template)}
-                size={previewSize}
-              />
-            ))}
+          <div>
+            <div className="mb-2 text-xs font-semibold text-gray-400">
+              {currentGroup === "landscape" && "Широкоэкранные"}
+              {currentGroup === "square" && "Квадратные"}
+              {currentGroup === "portrait" && "Вертикальные"}
+            </div>
+            <div
+              className="grid grid-cols-[repeat(auto-fill,minmax(0,calc(var(--preview-size)+12px)))] gap-2"
+              style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
+            >
+              {filteredTemplates.map((template) => (
+                <TemplatePreview
+                  key={template.id}
+                  template={template}
+                  onClick={() => handleTemplateClick(template)}
+                  size={previewSize}
+                  dimensions={currentDimensions}
+                />
+              ))}
+            </div>
           </div>
         )}
       </div>

@@ -72,7 +72,7 @@ export const getAspectRatio = (stream?: FfprobeStream): string | null => {
   console.log("[getAspectRatio] stream:", stream)
 
   if (stream.display_aspect_ratio === "960:409") {
-    return `2.35:1`
+    return "2.35:1"
   }
 
   // Если есть display_aspect_ratio и он не "N/A"

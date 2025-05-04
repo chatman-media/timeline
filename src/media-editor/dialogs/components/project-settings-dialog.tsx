@@ -14,8 +14,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useProject } from "@/media-editor/project-settings/project-machine"
-import { ASPECT_RATIOS, ColorSpace, FrameRate, Resolution } from "@/types/project"
+import { useProject } from "@/media-editor/project-settings/project-provider"
+import {
+  ASPECT_RATIOS,
+  type ColorSpace,
+  type FrameRate,
+  getResolutionsForAspectRatio,
+  getDefaultResolutionForAspectRatio,
+  type ResolutionOption
+} from "@/types/project"
+import { useEffect, useState } from "react"
 
 interface ProjectSettingsDialogProps {
   open: boolean
@@ -24,6 +32,61 @@ interface ProjectSettingsDialogProps {
 
 export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDialogProps) {
   const { settings, updateSettings } = useProject()
+  const [availableResolutions, setAvailableResolutions] = useState<ResolutionOption[]>([])
+
+  // Обновляем доступные разрешения при изменении соотношения сторон
+  useEffect(() => {
+    if (settings.aspectRatio) {
+      const resolutions = getResolutionsForAspectRatio(settings.aspectRatio.label)
+      setAvailableResolutions(resolutions)
+      console.log("[ProjectSettingsDialog] Доступные разрешения обновлены:", resolutions)
+    }
+  }, [settings.aspectRatio])
+
+  // Функция для обновления соотношения сторон и автоматического обновления разрешения
+  const handleAspectRatioChange = (value: string) => {
+    const newAspectRatio = ASPECT_RATIOS.find((item) => item.label === value)
+    if (newAspectRatio) {
+      // Получаем рекомендуемое разрешение для нового соотношения сторон
+      const recommendedResolution = getDefaultResolutionForAspectRatio(value)
+
+      // Обновляем настройки проекта с новым соотношением сторон и разрешением
+      const newSettings = {
+        ...settings,
+        aspectRatio: newAspectRatio,
+        resolution: recommendedResolution.value
+      };
+
+      // Обновляем размеры в соответствии с рекомендуемым разрешением
+      if (recommendedResolution) {
+        newSettings.aspectRatio = {
+          ...newSettings.aspectRatio,
+          value: {
+            ...newSettings.aspectRatio.value,
+            width: recommendedResolution.width,
+            height: recommendedResolution.height
+          }
+        };
+      }
+
+      // Применяем новые настройки
+      updateSettings(newSettings);
+
+      console.log("[ProjectSettingsDialog] Соотношение сторон изменено:", {
+        aspectRatio: newAspectRatio.label,
+        recommendedResolution: recommendedResolution.value,
+        width: recommendedResolution.width,
+        height: recommendedResolution.height
+      });
+
+      // Принудительно обновляем компоненты
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('resize'));
+        }
+      }, 50);
+    }
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -36,9 +99,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             <Label className="mr-2 text-xs">Соотношение сторон:</Label>
             <Select
               value={settings.aspectRatio.label}
-              onValueChange={(value: string) =>
-                updateSettings({ aspectRatio: ASPECT_RATIOS.find((item) => item.label === value)! })
-              }
+              onValueChange={handleAspectRatioChange}
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
@@ -57,27 +118,58 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             <Label className="mr-2 text-xs">Разрешение:</Label>
             <Select
               value={settings.resolution}
-              onValueChange={(value: Resolution) => updateSettings({ resolution: value })}
+              onValueChange={(value: string) => {
+                // Находим выбранное разрешение в списке доступных
+                const selectedResolution = availableResolutions.find(res => res.value === value);
+
+                if (selectedResolution) {
+                  // Создаем новые настройки с обновленным разрешением и размерами
+                  const newSettings = {
+                    ...settings,
+                    resolution: value,
+                    aspectRatio: {
+                      ...settings.aspectRatio,
+                      value: {
+                        ...settings.aspectRatio.value,
+                        width: selectedResolution.width,
+                        height: selectedResolution.height
+                      }
+                    }
+                  };
+
+                  // Применяем новые настройки
+                  updateSettings(newSettings);
+
+                  console.log("[ProjectSettingsDialog] Разрешение изменено:", {
+                    resolution: value,
+                    width: selectedResolution.width,
+                    height: selectedResolution.height
+                  });
+
+                  // Принудительно обновляем компоненты
+                  setTimeout(() => {
+                    if (typeof window !== 'undefined') {
+                      window.dispatchEvent(new Event('resize'));
+                    }
+                  }, 50);
+                } else {
+                  // Если разрешение не найдено, просто обновляем значение
+                  updateSettings({
+                    ...settings,
+                    resolution: value
+                  });
+                }
+              }}
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
-                <SelectItem value="1280x720" className="">
-                  1280x720 (HD)
-                </SelectItem>
-                <SelectItem value="1920x1080" className="">
-                  1920x1080 (Full HD)
-                </SelectItem>
-                <SelectItem value="3840x2160" className="">
-                  3840x2160 (4k UHD)
-                </SelectItem>
-                <SelectItem value="4096x2160" className="">
-                  4096x2160 (DCI 4k)
-                </SelectItem>
-                <SelectItem value="custom" className="">
-                  Пользовательское
-                </SelectItem>
+                {availableResolutions.map((option) => (
+                  <SelectItem key={option.value} value={option.value} className="">
+                    {option.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -86,7 +178,10 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             <Label className="mr-2 text-xs">Частота кадров:</Label>
             <Select
               value={settings.frameRate}
-              onValueChange={(value: FrameRate) => updateSettings({ frameRate: value })}
+              onValueChange={(value: FrameRate) => updateSettings({
+                ...settings,
+                frameRate: value
+              })}
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
@@ -124,7 +219,10 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             <Label className="mr-2 text-xs">Цветовое пространство:</Label>
             <Select
               value={settings.colorSpace}
-              onValueChange={(value: ColorSpace) => updateSettings({ colorSpace: value })}
+              onValueChange={(value: ColorSpace) => updateSettings({
+                ...settings,
+                colorSpace: value
+              })}
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
@@ -161,7 +259,48 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             variant="default"
             className="flex-1 cursor-pointer bg-[#00CCC0] text-black hover:bg-[#00AAA0]"
             onClick={() => {
-              onOpenChange(false)
+              // Force a refresh of the UI by triggering a small update to settings
+              // This ensures all components react to the settings changes
+              const currentSettings = { ...settings };
+
+              // Обновляем размеры в соответствии с текущим разрешением
+              // Это гарантирует, что шаблоны будут правильно отображаться
+              if (currentSettings.resolution) {
+                const resolutionParts = currentSettings.resolution.split('x');
+                if (resolutionParts.length === 2) {
+                  const width = Number.parseInt(resolutionParts[0], 10);
+                  const height = Number.parseInt(resolutionParts[1], 10);
+
+                  if (!Number.isNaN(width) && !Number.isNaN(height)) {
+                    // Обновляем размеры в соответствии с выбранным разрешением
+                    currentSettings.aspectRatio = {
+                      ...currentSettings.aspectRatio,
+                      value: {
+                        ...currentSettings.aspectRatio.value,
+                        width,
+                        height
+                      }
+                    };
+                  }
+                }
+              }
+
+              // This will trigger a re-render of all components that depend on settings
+              // and ensure the settings are saved to localStorage
+              updateSettings(currentSettings);
+
+              console.log("[ProjectSettingsDialog] Applied settings:", currentSettings);
+
+              // Закрываем диалог с небольшой задержкой, чтобы дать время обновиться всем компонентам
+              setTimeout(() => {
+                onOpenChange(false);
+
+                // Принудительно вызываем событие изменения размера окна,
+                // чтобы обновить все компоненты, которые зависят от размеров
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new Event('resize'));
+                }
+              }, 100);
             }}
           >
             OK

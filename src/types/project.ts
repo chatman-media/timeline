@@ -1,4 +1,11 @@
-export type Resolution = "1280x720" | "1920x1080" | "3840x2160" | "4096x2160" | "custom"
+export interface ResolutionOption {
+  value: string
+  label: string
+  width: number
+  height: number
+}
+
+export type Resolution = string
 export type FrameRate = "23.97" | "24" | "25" | "29.97" | "30" | "50" | "59.94" | "60"
 export type ColorSpace = "sdr" | "dci-p3" | "p3-d65" | "hdr-hlg" | "hdr-pq"
 
@@ -102,4 +109,78 @@ interface AspectRatioValue {
   width: number
   height: number
   name: string
+}
+
+// Разрешения для соотношения сторон 16:9
+export const RESOLUTIONS_16_9: ResolutionOption[] = [
+  { value: "1280x720", label: "1280x720 (HD)", width: 1280, height: 720 },
+  { value: "1920x1080", label: "1920x1080 (Full HD)", width: 1920, height: 1080 },
+  { value: "2560x1440", label: "2560x1440 (2K QHD)", width: 2560, height: 1440 },
+  { value: "3840x2160", label: "3840x2160 (4K UHD)", width: 3840, height: 2160 },
+]
+
+// Разрешения для соотношения сторон 9:16
+export const RESOLUTIONS_9_16: ResolutionOption[] = [
+  { value: "720x1280", label: "720x1280 (HD)", width: 720, height: 1280 },
+  { value: "1080x1920", label: "1080x1920 (Full HD)", width: 1080, height: 1920 },
+  { value: "1440x2560", label: "1440x2560 (2K QHD)", width: 1440, height: 2560 },
+  { value: "2160x3840", label: "2160x3840 (4K UHD)", width: 2160, height: 3840 },
+]
+
+// Разрешения для соотношения сторон 1:1
+export const RESOLUTIONS_1_1: ResolutionOption[] = [
+  { value: "720x720", label: "720x720", width: 720, height: 720 },
+  { value: "1080x1080", label: "1080x1080", width: 1080, height: 1080 },
+  { value: "1440x1440", label: "1440x1440", width: 1440, height: 1440 },
+  { value: "2160x2160", label: "2160x2160", width: 2160, height: 2160 },
+]
+
+// Разрешения для соотношения сторон 4:3
+export const RESOLUTIONS_4_3: ResolutionOption[] = [
+  { value: "960x720", label: "960x720", width: 960, height: 720 },
+  { value: "1440x1080", label: "1440x1080", width: 1440, height: 1080 },
+  { value: "1920x1440", label: "1920x1440", width: 1920, height: 1440 },
+  { value: "2880x2160", label: "2880x2160", width: 2880, height: 2160 },
+]
+
+// Разрешения для соотношения сторон 4:5
+export const RESOLUTIONS_4_5: ResolutionOption[] = [
+  { value: "864x1080", label: "864x1080", width: 864, height: 1080 },
+  { value: "1024x1280", label: "1024x1280", width: 1024, height: 1280 },
+  { value: "1536x1920", label: "1536x1920", width: 1536, height: 1920 },
+  { value: "2048x2560", label: "2048x2560", width: 2048, height: 2560 },
+]
+
+// Разрешения для соотношения сторон 21:9
+export const RESOLUTIONS_21_9: ResolutionOption[] = [
+  { value: "2560x1080", label: "2560x1080 (UltraWide)", width: 2560, height: 1080 },
+  { value: "3440x1440", label: "3440x1440 (UltraWide QHD)", width: 3440, height: 1440 },
+  { value: "5120x2160", label: "5120x2160 (UltraWide 5K)", width: 5120, height: 2160 },
+]
+
+// Функция для получения разрешений для конкретного соотношения сторон
+export function getResolutionsForAspectRatio(aspectRatioLabel: string): ResolutionOption[] {
+  switch (aspectRatioLabel) {
+    case "16:9":
+      return RESOLUTIONS_16_9
+    case "9:16":
+      return RESOLUTIONS_9_16
+    case "1:1":
+      return RESOLUTIONS_1_1
+    case "4:3":
+      return RESOLUTIONS_4_3
+    case "4:5":
+      return RESOLUTIONS_4_5
+    case "21:9":
+      return RESOLUTIONS_21_9
+    default:
+      return RESOLUTIONS_16_9 // По умолчанию возвращаем разрешения для 16:9
+  }
+}
+
+// Функция для получения рекомендуемого разрешения для соотношения сторон
+export function getDefaultResolutionForAspectRatio(aspectRatioLabel: string): ResolutionOption {
+  const resolutions = getResolutionsForAspectRatio(aspectRatioLabel)
+  // Возвращаем второе разрешение в списке (обычно Full HD или эквивалент)
+  return resolutions.length > 1 ? resolutions[1] : resolutions[0]
 }

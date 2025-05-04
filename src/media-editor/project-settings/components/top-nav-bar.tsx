@@ -5,10 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ExportDialog, ProjectSettingsDialog } from "@/media-editor/dialogs"
 import { cn } from "@/lib/utils"
-import { LayoutMode, LayoutPreviews } from "@/media-editor"
-import { useProject } from "@/media-editor/project-settings/project-machine"
-
 import { ThemeToggle } from "./theme-toggle"
+import { type LayoutMode, LayoutPreviews } from "@/media-editor/layouts"
+import { useProject } from "@/media-editor/project-settings/project-provider"
 
 interface TopNavBarProps {
   onLayoutChange: (mode: LayoutMode) => void

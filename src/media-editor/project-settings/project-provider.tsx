@@ -3,7 +3,7 @@ import { createContext, useContext, useMemo } from "react"
 
 import { browserInspector } from "@/media-editor/providers"
 import { projectMachine } from "@/media-editor/project-settings/project-machine"
-import { ProjectSettings } from "@/types/project"
+import type { ProjectSettings } from "@/types/project"
 
 interface ProjectProviderProps {
   children: React.ReactNode
@@ -40,7 +40,7 @@ export function ProjectProvider({ children }: ProjectProviderProps) {
   return <ProjectContext.Provider value={value}>{children}</ProjectContext.Provider>
 }
 
-export function useProjectContext(): ProjectContextType {
+export function useProject(): ProjectContextType {
   const context = useContext(ProjectContext)
   if (!context) {
     throw new Error("useProjectContext must be used within a ProjectProvider")

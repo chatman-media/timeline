@@ -1,7 +1,36 @@
-import { useMachine } from "@xstate/react"
 import { assign, createMachine } from "xstate"
 
-import { DEFAULT_PROJECT_SETTINGS, ProjectSettings } from "@/types/project"
+import { DEFAULT_PROJECT_SETTINGS, type ProjectSettings } from "@/types/project"
+
+// Key for storing project settings in localStorage
+const PROJECT_SETTINGS_STORAGE_KEY = "timeline-project-settings"
+
+// Function to load settings from localStorage
+const loadSavedSettings = (): ProjectSettings | null => {
+  if (typeof window === "undefined") return null
+
+  try {
+    const savedSettings = localStorage.getItem(PROJECT_SETTINGS_STORAGE_KEY)
+    if (savedSettings) {
+      return JSON.parse(savedSettings)
+    }
+  } catch (error) {
+    console.error("[ProjectMachine] Error loading settings from localStorage:", error)
+  }
+
+  return null
+}
+
+// Function to save settings to localStorage
+const saveSettings = (settings: ProjectSettings): void => {
+  if (typeof window === "undefined") return
+
+  try {
+    localStorage.setItem(PROJECT_SETTINGS_STORAGE_KEY, JSON.stringify(settings))
+  } catch (error) {
+    console.error("[ProjectMachine] Error saving settings to localStorage:", error)
+  }
+}
 
 export type ProjectContext = {
   settings: ProjectSettings
@@ -16,8 +45,11 @@ export type ProjectContextEvents = {
   resetSettings: () => void
 }
 
+// Initialize with saved settings or defaults
+const savedSettings = loadSavedSettings()
+
 export const initialProjectContext: ProjectContext = {
-  settings: DEFAULT_PROJECT_SETTINGS,
+  settings: savedSettings || DEFAULT_PROJECT_SETTINGS,
   name: "Без названия #1",
   isDirty: false,
 }
@@ -55,17 +87,34 @@ export const projectMachine = createMachine({
     idle: {
       on: {
         UPDATE_SETTINGS: {
-          actions: assign(({ context, event }) => ({
-            settings: {
-              ...context.settings,
-              ...(event as any).settings,
-            },
-          })),
+          actions: [
+            assign(({ context, event }) => {
+              const newSettings = {
+                ...context.settings,
+                ...(event as any).settings,
+              };
+
+              // Save settings to localStorage
+              saveSettings(newSettings);
+
+              return {
+                settings: newSettings,
+              };
+            }),
+          ],
         },
         RESET_SETTINGS: {
-          actions: assign({
-            ...initialProjectContext,
-          }),
+          actions: [
+            assign({
+              ...initialProjectContext,
+            }),
+            () => {
+              // Clear saved settings from localStorage
+              if (typeof window !== "undefined") {
+                localStorage.removeItem(PROJECT_SETTINGS_STORAGE_KEY);
+              }
+            },
+          ],
         },
         SET_NAME: {
           actions: assign({
@@ -81,18 +130,3 @@ export const projectMachine = createMachine({
     },
   },
 })
-
-export function useProject(): ProjectContext & ProjectContextEvents {
-  const [state, send] = useMachine(projectMachine)
-
-  return {
-    settings: state.context.settings,
-    name: state.context.name,
-    isDirty: state.context.isDirty,
-    updateSettings: (settings: Partial<ProjectSettings>) =>
-      send({ type: "UPDATE_SETTINGS", settings }),
-    resetSettings: () => send({ type: "RESET_SETTINGS" }),
-    setName: (name: string) => send({ type: "SET_NAME", name }),
-    setDirty: (isDirty: boolean) => send({ type: "SET_DIRTY", isDirty }),
-  }
-}
