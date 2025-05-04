@@ -1,8 +1,8 @@
 import { nanoid } from "nanoid"
 
-import { MediaFile, Track } from "@/types/media"
-import { TimeRange } from "@/types/time-range"
 import { calculateTimeRanges } from "@/lib/video-utils"
+import type { MediaFile, Track } from "@/types/media"
+import type { TimeRange } from "@/types/time-range"
 
 // Типы для улучшения типизации
 interface VideoStream {

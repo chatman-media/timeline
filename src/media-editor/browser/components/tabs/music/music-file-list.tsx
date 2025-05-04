@@ -2,8 +2,8 @@ import { CirclePause, CirclePlay, Pause, Play } from "lucide-react"
 import type { MouseEvent } from "react"
 import { useMemo, useRef, useState } from "react"
 
-import { AddMediaButton, MusicToolbar } from "@/media-editor/browser"
 import { cn, formatFileSize, formatTime } from "@/lib/utils"
+import { AddMediaButton, MusicToolbar } from "@/media-editor/browser"
 import { MediaFile } from "@/types/media"
 
 import { useMusicMachine } from "./use-music-machine"

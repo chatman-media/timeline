@@ -3,7 +3,10 @@ import { get } from "idb-keyval"
 import React, { createContext, ReactNode, useContext, useEffect } from "react"
 
 import { Sector } from "@/media-editor/browser"
-import { type TimelineContext, timelineMachine } from "@/media-editor/timeline/services/timeline-machine"
+import {
+  type TimelineContext,
+  timelineMachine,
+} from "@/media-editor/timeline/services/timeline-machine"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimeRange } from "@/types/time-range"

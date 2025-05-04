@@ -1,11 +1,11 @@
 import { ZoomIn, ZoomOut } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 
-import { usePreviewSize } from "@/media-editor/browser"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { usePreviewSize } from "@/media-editor/browser"
 
 import { effects, type VideoEffect } from "."
 

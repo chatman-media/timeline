@@ -2,9 +2,9 @@ import { Film } from "lucide-react"
 import { memo, useCallback, useEffect, useRef, useState } from "react"
 
 import { cn, formatDuration, formatResolution } from "@/lib/utils"
+import { calculateAdaptiveWidth, calculateWidth, parseRotation } from "@/lib/video-utils"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
-import { calculateAdaptiveWidth, calculateWidth, parseRotation } from "@/lib/video-utils"
 
 import { PreviewTimeline } from ".."
 import { AddMediaButton } from "../layout/add-media-button"

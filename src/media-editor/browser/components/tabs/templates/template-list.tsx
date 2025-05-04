@@ -1,7 +1,9 @@
-import { type JSX, useState, useEffect, useCallback } from "react"
+import { type JSX, useCallback, useEffect, useState } from "react"
+
+import { useProject } from "@/media-editor/project-settings/project-provider"
+
 import { usePreviewSize } from "../../preview/preview-sizes"
 import { TemplateListToolbar } from "."
-import { useProject } from "@/media-editor/project-settings/project-provider"
 
 interface MediaTemplate {
   id: string
@@ -16,9 +18,19 @@ const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemplate[]>
       split: "vertical",
       render: () => (
         <div className="flex h-full w-full">
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#23262b" }}
+          >
+            1
+          </div>
           <div className="h-full w-px bg-gray-600" />
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#2a2e36" }}
+          >
+            2
+          </div>
         </div>
       ),
     },
@@ -27,9 +39,19 @@ const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemplate[]>
       split: "horizontal",
       render: () => (
         <div className="flex h-full w-full flex-col">
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
-          <div className="w-full h-px bg-gray-600" />
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#23262b" }}
+          >
+            1
+          </div>
+          <div className="h-px w-full bg-gray-600" />
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#2a2e36" }}
+          >
+            2
+          </div>
         </div>
       ),
     },
@@ -40,9 +62,19 @@ const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemplate[]>
       split: "vertical",
       render: () => (
         <div className="flex h-full w-full">
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#23262b" }}
+          >
+            1
+          </div>
           <div className="h-full w-px bg-gray-600" />
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#2a2e36" }}
+          >
+            2
+          </div>
         </div>
       ),
     },
@@ -51,9 +83,19 @@ const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemplate[]>
       split: "horizontal",
       render: () => (
         <div className="flex h-full w-full flex-col">
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
-          <div className="w-full h-px bg-gray-600" />
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#23262b" }}
+          >
+            1
+          </div>
+          <div className="h-px w-full bg-gray-600" />
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#2a2e36" }}
+          >
+            2
+          </div>
         </div>
       ),
     },
@@ -64,9 +106,19 @@ const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemplate[]>
       split: "vertical",
       render: () => (
         <div className="flex h-full w-full">
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#23262b" }}
+          >
+            1
+          </div>
           <div className="h-full w-px bg-gray-600" />
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#2a2e36" }}
+          >
+            2
+          </div>
         </div>
       ),
     },
@@ -75,9 +127,19 @@ const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemplate[]>
       split: "horizontal",
       render: () => (
         <div className="flex h-full w-full flex-col">
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#23262b" }}>1</div>
-          <div className="w-full h-px bg-gray-600" />
-          <div className="flex flex-1 items-center justify-center text-gray-400 text-lg font-normal" style={{ background: "#2a2e36" }}>2</div>
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#23262b" }}
+          >
+            1
+          </div>
+          <div className="h-px w-full bg-gray-600" />
+          <div
+            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
+            style={{ background: "#2a2e36" }}
+          >
+            2
+          </div>
         </div>
       ),
     },
@@ -105,7 +167,11 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
   return (
     <div
       className="group relative h-full flex-shrink-0 cursor-pointer"
-      style={{ height: `${size}px`, width: `${calculateWidth().toFixed(0)}px`, maxWidth: `${size}px` }}
+      style={{
+        height: `${size}px`,
+        width: `${calculateWidth().toFixed(0)}px`,
+        maxWidth: `${size}px`,
+      }}
       onClick={onClick}
     >
       {template.render()}
@@ -130,11 +196,13 @@ export function TemplateList() {
     canDecreaseSize,
   } = usePreviewSize("EFFECTS_AND_FILTERS")
 
-
   // Эффект для инициализации и обновления шаблонов при монтировании компонента
   useEffect(() => {
     const group = mapAspectLabelToGroup(settings.aspectRatio.label)
-    const dimensions: [number, number] = [settings.aspectRatio.value.width, settings.aspectRatio.value.height]
+    const dimensions: [number, number] = [
+      settings.aspectRatio.value.width,
+      settings.aspectRatio.value.height,
+    ]
 
     setCurrentGroup(group)
     setCurrentDimensions(dimensions)
@@ -146,7 +214,7 @@ export function TemplateList() {
       group,
       dimensions,
       width: settings.aspectRatio.value.width,
-      height: settings.aspectRatio.value.height
+      height: settings.aspectRatio.value.height,
     })
   }, [settings.aspectRatio, settings.resolution])
 

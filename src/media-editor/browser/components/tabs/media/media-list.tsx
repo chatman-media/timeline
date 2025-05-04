@@ -1,6 +1,9 @@
 import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
 
+import { Button } from "@/components/ui/button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 import {
   FileMetadata,
   getFileType,
@@ -11,10 +14,7 @@ import {
   StatusBar,
   useMedia,
 } from "@/media-editor/browser"
-import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { CameraCaptureDialog } from "@/media-editor/dialogs"
-import { cn } from "@/lib/utils"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"

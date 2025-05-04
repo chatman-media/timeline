@@ -161,20 +161,20 @@ export const RESOLUTIONS_21_9: ResolutionOption[] = [
 // Функция для получения разрешений для конкретного соотношения сторон
 export function getResolutionsForAspectRatio(aspectRatioLabel: string): ResolutionOption[] {
   switch (aspectRatioLabel) {
-    case "16:9":
-      return RESOLUTIONS_16_9
-    case "9:16":
-      return RESOLUTIONS_9_16
-    case "1:1":
-      return RESOLUTIONS_1_1
-    case "4:3":
-      return RESOLUTIONS_4_3
-    case "4:5":
-      return RESOLUTIONS_4_5
-    case "21:9":
-      return RESOLUTIONS_21_9
-    default:
-      return RESOLUTIONS_16_9 // По умолчанию возвращаем разрешения для 16:9
+  case "16:9":
+    return RESOLUTIONS_16_9
+  case "9:16":
+    return RESOLUTIONS_9_16
+  case "1:1":
+    return RESOLUTIONS_1_1
+  case "4:3":
+    return RESOLUTIONS_4_3
+  case "4:5":
+    return RESOLUTIONS_4_5
+  case "21:9":
+    return RESOLUTIONS_21_9
+  default:
+    return RESOLUTIONS_16_9 // По умолчанию возвращаем разрешения для 16:9
   }
 }
 

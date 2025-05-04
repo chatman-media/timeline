@@ -1,5 +1,5 @@
-import { Browser } from "@/media-editor/browser/components/browser"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
+import { Browser } from "@/media-editor/browser/components/browser"
 import { MediaPlayer } from "@/media-editor/media-player/components"
 import { TimelineLayout } from "@/media-editor/timeline/components"
 

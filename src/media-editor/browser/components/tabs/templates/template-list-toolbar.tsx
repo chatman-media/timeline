@@ -1,9 +1,10 @@
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { ZoomIn, ZoomOut } from "lucide-react"
-import { cn } from "@/lib/utils"
 import type { ChangeEvent } from "react"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
 interface TemplateListToolbarProps {
   searchQuery: string
@@ -78,4 +79,4 @@ export function TemplateListToolbar({
       </div>
     </div>
   )
-} 
+}

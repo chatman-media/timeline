@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -19,11 +21,10 @@ import {
   ASPECT_RATIOS,
   type ColorSpace,
   type FrameRate,
-  getResolutionsForAspectRatio,
   getDefaultResolutionForAspectRatio,
-  type ResolutionOption
+  getResolutionsForAspectRatio,
+  type ResolutionOption,
 } from "@/types/project"
-import { useEffect, useState } from "react"
 
 interface ProjectSettingsDialogProps {
   open: boolean
@@ -54,8 +55,8 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
       const newSettings = {
         ...settings,
         aspectRatio: newAspectRatio,
-        resolution: recommendedResolution.value
-      };
+        resolution: recommendedResolution.value,
+      }
 
       // Обновляем размеры в соответствии с рекомендуемым разрешением
       if (recommendedResolution) {
@@ -64,27 +65,27 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
           value: {
             ...newSettings.aspectRatio.value,
             width: recommendedResolution.width,
-            height: recommendedResolution.height
-          }
-        };
+            height: recommendedResolution.height,
+          },
+        }
       }
 
       // Применяем новые настройки
-      updateSettings(newSettings);
+      updateSettings(newSettings)
 
       console.log("[ProjectSettingsDialog] Соотношение сторон изменено:", {
         aspectRatio: newAspectRatio.label,
         recommendedResolution: recommendedResolution.value,
         width: recommendedResolution.width,
-        height: recommendedResolution.height
-      });
+        height: recommendedResolution.height,
+      })
 
       // Принудительно обновляем компоненты
       setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new Event('resize'));
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("resize"))
         }
-      }, 50);
+      }, 50)
     }
   }
 
@@ -97,10 +98,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
         <div className="flex flex-col space-y-6 py-1">
           <div className="flex items-center justify-end">
             <Label className="mr-2 text-xs">Соотношение сторон:</Label>
-            <Select
-              value={settings.aspectRatio.label}
-              onValueChange={handleAspectRatioChange}
-            >
+            <Select value={settings.aspectRatio.label} onValueChange={handleAspectRatioChange}>
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
               </SelectTrigger>
@@ -120,7 +118,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
               value={settings.resolution}
               onValueChange={(value: string) => {
                 // Находим выбранное разрешение в списке доступных
-                const selectedResolution = availableResolutions.find(res => res.value === value);
+                const selectedResolution = availableResolutions.find((res) => res.value === value)
 
                 if (selectedResolution) {
                   // Создаем новые настройки с обновленным разрешением и размерами
@@ -132,32 +130,32 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                       value: {
                         ...settings.aspectRatio.value,
                         width: selectedResolution.width,
-                        height: selectedResolution.height
-                      }
-                    }
-                  };
+                        height: selectedResolution.height,
+                      },
+                    },
+                  }
 
                   // Применяем новые настройки
-                  updateSettings(newSettings);
+                  updateSettings(newSettings)
 
                   console.log("[ProjectSettingsDialog] Разрешение изменено:", {
                     resolution: value,
                     width: selectedResolution.width,
-                    height: selectedResolution.height
-                  });
+                    height: selectedResolution.height,
+                  })
 
                   // Принудительно обновляем компоненты
                   setTimeout(() => {
-                    if (typeof window !== 'undefined') {
-                      window.dispatchEvent(new Event('resize'));
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(new Event("resize"))
                     }
-                  }, 50);
+                  }, 50)
                 } else {
                   // Если разрешение не найдено, просто обновляем значение
                   updateSettings({
                     ...settings,
-                    resolution: value
-                  });
+                    resolution: value,
+                  })
                 }
               }}
             >
@@ -178,10 +176,12 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             <Label className="mr-2 text-xs">Частота кадров:</Label>
             <Select
               value={settings.frameRate}
-              onValueChange={(value: FrameRate) => updateSettings({
-                ...settings,
-                frameRate: value
-              })}
+              onValueChange={(value: FrameRate) =>
+                updateSettings({
+                  ...settings,
+                  frameRate: value,
+                })
+              }
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
@@ -219,10 +219,12 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             <Label className="mr-2 text-xs">Цветовое пространство:</Label>
             <Select
               value={settings.colorSpace}
-              onValueChange={(value: ColorSpace) => updateSettings({
-                ...settings,
-                colorSpace: value
-              })}
+              onValueChange={(value: ColorSpace) =>
+                updateSettings({
+                  ...settings,
+                  colorSpace: value,
+                })
+              }
             >
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
@@ -261,15 +263,15 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             onClick={() => {
               // Force a refresh of the UI by triggering a small update to settings
               // This ensures all components react to the settings changes
-              const currentSettings = { ...settings };
+              const currentSettings = { ...settings }
 
               // Обновляем размеры в соответствии с текущим разрешением
               // Это гарантирует, что шаблоны будут правильно отображаться
               if (currentSettings.resolution) {
-                const resolutionParts = currentSettings.resolution.split('x');
+                const resolutionParts = currentSettings.resolution.split("x")
                 if (resolutionParts.length === 2) {
-                  const width = Number.parseInt(resolutionParts[0], 10);
-                  const height = Number.parseInt(resolutionParts[1], 10);
+                  const width = Number.parseInt(resolutionParts[0], 10)
+                  const height = Number.parseInt(resolutionParts[1], 10)
 
                   if (!Number.isNaN(width) && !Number.isNaN(height)) {
                     // Обновляем размеры в соответствии с выбранным разрешением
@@ -278,29 +280,29 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                       value: {
                         ...currentSettings.aspectRatio.value,
                         width,
-                        height
-                      }
-                    };
+                        height,
+                      },
+                    }
                   }
                 }
               }
 
               // This will trigger a re-render of all components that depend on settings
               // and ensure the settings are saved to localStorage
-              updateSettings(currentSettings);
+              updateSettings(currentSettings)
 
-              console.log("[ProjectSettingsDialog] Applied settings:", currentSettings);
+              console.log("[ProjectSettingsDialog] Applied settings:", currentSettings)
 
               // Закрываем диалог с небольшой задержкой, чтобы дать время обновиться всем компонентам
               setTimeout(() => {
-                onOpenChange(false);
+                onOpenChange(false)
 
                 // Принудительно вызываем событие изменения размера окна,
                 // чтобы обновить все компоненты, которые зависят от размеров
-                if (typeof window !== 'undefined') {
-                  window.dispatchEvent(new Event('resize'));
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new Event("resize"))
                 }
-              }, 100);
+              }, 100)
             }}
           >
             OK

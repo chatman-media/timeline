@@ -92,14 +92,14 @@ export const projectMachine = createMachine({
               const newSettings = {
                 ...context.settings,
                 ...(event as any).settings,
-              };
+              }
 
               // Save settings to localStorage
-              saveSettings(newSettings);
+              saveSettings(newSettings)
 
               return {
                 settings: newSettings,
-              };
+              }
             }),
           ],
         },
@@ -111,7 +111,7 @@ export const projectMachine = createMachine({
             () => {
               // Clear saved settings from localStorage
               if (typeof window !== "undefined") {
-                localStorage.removeItem(PROJECT_SETTINGS_STORAGE_KEY);
+                localStorage.removeItem(PROJECT_SETTINGS_STORAGE_KEY)
               }
             },
           ],

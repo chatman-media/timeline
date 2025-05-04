@@ -3,11 +3,12 @@ import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ExportDialog, ProjectSettingsDialog } from "@/media-editor/dialogs"
 import { cn } from "@/lib/utils"
-import { ThemeToggle } from "./theme-toggle"
+import { ExportDialog, ProjectSettingsDialog } from "@/media-editor/dialogs"
 import { type LayoutMode, LayoutPreviews } from "@/media-editor/layouts"
 import { useProject } from "@/media-editor/project-settings/project-provider"
+
+import { ThemeToggle } from "./theme-toggle"
 
 interface TopNavBarProps {
   onLayoutChange: (mode: LayoutMode) => void

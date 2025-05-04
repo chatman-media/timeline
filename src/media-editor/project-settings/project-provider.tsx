@@ -1,8 +1,8 @@
 import { useMachine } from "@xstate/react"
 import { createContext, useContext, useMemo } from "react"
 
-import { browserInspector } from "@/media-editor/providers"
 import { projectMachine } from "@/media-editor/project-settings/project-machine"
+import { browserInspector } from "@/media-editor/providers"
 import type { ProjectSettings } from "@/types/project"
 
 interface ProjectProviderProps {
