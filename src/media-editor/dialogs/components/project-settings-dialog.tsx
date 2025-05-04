@@ -137,19 +137,6 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
 
                   // Применяем новые настройки
                   updateSettings(newSettings)
-
-                  console.log("[ProjectSettingsDialog] Разрешение изменено:", {
-                    resolution: value,
-                    width: selectedResolution.width,
-                    height: selectedResolution.height,
-                  })
-
-                  // Принудительно обновляем компоненты
-                  setTimeout(() => {
-                    if (typeof window !== "undefined") {
-                      window.dispatchEvent(new Event("resize"))
-                    }
-                  }, 50)
                 } else {
                   // Если разрешение не найдено, просто обновляем значение
                   updateSettings({

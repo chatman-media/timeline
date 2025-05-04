@@ -160,17 +160,38 @@ interface TemplatePreviewProps {
 }
 
 export function TemplatePreview({ template, onClick, size, dimensions }: TemplatePreviewProps) {
-  const calculateWidth = (): number => {
-    const [width, height] = dimensions
-    return Math.min((size * width) / height, size)
+  const [width, height] = dimensions
+
+  // Вычисляем размеры превью, сохраняя соотношение сторон
+  const calculateDimensions = (): { width: number; height: number } => {
+    // Для квадратных шаблонов используем одинаковую ширину и высоту
+    if (width === height) {
+      return { width: size, height: size }
+    }
+
+    // Для вертикальных шаблонов уменьшаем ширину пропорционально
+    if (height > width) {
+      const calculatedWidth = Math.min((size * width) / height, size)
+      return { width: calculatedWidth, height: size }
+    }
+
+    // Для горизонтальных шаблонов уменьшаем высоту пропорционально
+    const calculatedHeight = Math.min((size * height) / width, size)
+    return { width: size, height: calculatedHeight }
   }
+
+  const { width: previewWidth, height: previewHeight } = calculateDimensions()
+
+  const calculateWidth = (): number => {
+    return (size * width) / height
+  }
+
   return (
     <div
       className="group relative h-full flex-shrink-0 cursor-pointer"
       style={{
-        height: `${size}px`,
-        width: `${calculateWidth().toFixed(0)}px`,
-        maxWidth: `${size}px`,
+        height: `${previewHeight}px`,
+        width: `${previewWidth.toFixed(0)}px`,
       }}
       onClick={onClick}
     >
