@@ -3,12 +3,12 @@
 import { createBrowserInspector } from "@statelyai/inspect"
 import { ReactNode } from "react"
 
-import { MediaProvider } from "@/browser/providers/media-provider"
-import { UserSettingsProvider } from "@/browser/providers/user-settings-provider"
-import { ModalProvider } from "@/dialogs"
-import { PlayerProvider } from "@/media-player"
-import { ProjectProvider } from "@/project-settings/project-provider"
-import { TimelineProvider } from "@/timeline/services"
+import { MediaProvider } from "@/media-editor/browser/providers/media-provider"
+import { UserSettingsProvider } from "@/media-editor/browser/providers/user-settings-provider"
+import { ModalProvider } from "@/media-editor/dialogs"
+import { PlayerProvider } from "@/media-editor/media-player"
+import { ProjectProvider } from "@/media-editor/project-settings/project-provider"
+import { TimelineProvider } from "@/media-editor/timeline/services"
 
 interface ProvidersProps {
   children: ReactNode

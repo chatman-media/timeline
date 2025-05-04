@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createActor } from "xstate"
 
-import { timelineMachine } from "@/timeline/services"
+import { timelineMachine } from "@/media-editor/timeline/services"
 import { MediaFile } from "@/types/media"
 import { Track } from "@/types/media"
 

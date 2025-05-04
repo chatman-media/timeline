@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 import { createActor } from "xstate"
 
-import { mediaMachine } from "@/browser/machines/media-machine"
+import { mediaMachine } from "@/media-editor/browser/machines/media-machine"
 import { MediaFile } from "@/types/media"
 
 // Мок для fetch

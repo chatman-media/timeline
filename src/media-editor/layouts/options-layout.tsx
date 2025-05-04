@@ -1,8 +1,8 @@
-import { Browser } from "@/browser/components"
+import { Browser } from "@/media-editor/browser/components"
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
-import { MediaPlayer } from "@/media-player/components"
-import { Options } from "@/options"
-import { TimelineLayout } from "@/timeline/components"
+import { MediaPlayer } from "@/media-editor/media-player/components"
+import { Options } from "@/media-editor/options"
+import { TimelineLayout } from "@/media-editor/timeline/components"
 
 export function OptionsMediaEditor() {
   return (

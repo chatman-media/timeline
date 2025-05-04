@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 
-import { TopNavBar } from "@/components/layout"
-import { CameraRecording } from "@/components/media-recording/camera-recording"
+import { TopNavBar } from "@/media-editor/project-settings/components"
+import { CameraRecording } from "@/media-editor/dialogs/components/camera-recording"
 
 import {
   DefaultMediaEditor,
