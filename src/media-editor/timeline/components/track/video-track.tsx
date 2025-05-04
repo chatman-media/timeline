@@ -1,7 +1,7 @@
 import { memo, useCallback, useRef } from "react"
 
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
-import { usePlayerContext } from "@/media-player"
+import { usePlayerContext } from "@/media-editor/media-player"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { Track } from "@/types/media"
 

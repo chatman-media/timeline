@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef } from "react"
 
-import { usePlayerContext } from "@/media-player"
+import { usePlayerContext } from "@/media-editor/media-player"
 
 interface TimelineBarProps {
   startTime: number
