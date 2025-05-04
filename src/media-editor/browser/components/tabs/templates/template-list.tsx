@@ -4,147 +4,7 @@ import { useProject } from "@/media-editor/project-settings/project-provider"
 
 import { usePreviewSize } from "../../preview/preview-sizes"
 import { TemplateListToolbar } from "."
-
-interface MediaTemplate {
-  id: string
-  split: "vertical" | "horizontal"
-  render: () => JSX.Element
-}
-
-const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemplate[]> = {
-  landscape: [
-    {
-      id: "split-vertical-landscape",
-      split: "vertical",
-      render: () => (
-        <div className="flex h-full w-full">
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#23262b" }}
-          >
-            1
-          </div>
-          <div className="h-full w-px bg-gray-600" />
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#2a2e36" }}
-          >
-            2
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "split-horizontal-landscape",
-      split: "horizontal",
-      render: () => (
-        <div className="flex h-full w-full flex-col">
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#23262b" }}
-          >
-            1
-          </div>
-          <div className="h-px w-full bg-gray-600" />
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#2a2e36" }}
-          >
-            2
-          </div>
-        </div>
-      ),
-    },
-  ],
-  portrait: [
-    {
-      id: "split-vertical-portrait",
-      split: "vertical",
-      render: () => (
-        <div className="flex h-full w-full">
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#23262b" }}
-          >
-            1
-          </div>
-          <div className="h-full w-px bg-gray-600" />
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#2a2e36" }}
-          >
-            2
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "split-horizontal-portrait",
-      split: "horizontal",
-      render: () => (
-        <div className="flex h-full w-full flex-col">
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#23262b" }}
-          >
-            1
-          </div>
-          <div className="h-px w-full bg-gray-600" />
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#2a2e36" }}
-          >
-            2
-          </div>
-        </div>
-      ),
-    },
-  ],
-  square: [
-    {
-      id: "split-vertical-square",
-      split: "vertical",
-      render: () => (
-        <div className="flex h-full w-full">
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#23262b" }}
-          >
-            1
-          </div>
-          <div className="h-full w-px bg-gray-600" />
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#2a2e36" }}
-          >
-            2
-          </div>
-        </div>
-      ),
-    },
-    {
-      id: "split-horizontal-square",
-      split: "horizontal",
-      render: () => (
-        <div className="flex h-full w-full flex-col">
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#23262b" }}
-          >
-            1
-          </div>
-          <div className="h-px w-full bg-gray-600" />
-          <div
-            className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
-            style={{ background: "#2a2e36" }}
-          >
-            2
-          </div>
-        </div>
-      ),
-    },
-  ],
-}
+import { MediaTemplate, TEMPLATE_MAP } from "./templates"
 
 function mapAspectLabelToGroup(label: string): "landscape" | "square" | "portrait" {
   if (label === "1:1") return "square"
@@ -181,10 +41,6 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
   }
 
   const { width: previewWidth, height: previewHeight } = calculateDimensions()
-
-  const calculateWidth = (): number => {
-    return (size * width) / height
-  }
 
   return (
     <div
@@ -260,7 +116,7 @@ export function TemplateList() {
         handleIncreaseSize={handleIncreaseSize}
       />
 
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="scrollbar-hide hover:scrollbar-default min-h-0 flex-1 overflow-y-auto p-1 py-3 dark:bg-[#1b1a1f]">
         {!isSizeLoaded ? (
           <div className="flex h-full items-center justify-center text-gray-500" />
         ) : filteredTemplates.length === 0 ? (
@@ -274,20 +130,42 @@ export function TemplateList() {
               {currentGroup === "square" && "Квадратные"}
               {currentGroup === "portrait" && "Вертикальные"}
             </div>
-            <div
-              className="grid grid-cols-[repeat(auto-fill,minmax(0,calc(var(--preview-size)+12px)))] gap-2"
-              style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
-            >
-              {filteredTemplates.map((template) => (
-                <TemplatePreview
-                  key={template.id}
-                  template={template}
-                  onClick={() => handleTemplateClick(template)}
-                  size={previewSize}
-                  dimensions={currentDimensions}
-                />
-              ))}
-            </div>
+
+            {/* Группируем шаблоны по количеству экранов */}
+            {[2, 3].map((screenCount) => {
+              const templatesWithScreenCount = filteredTemplates.filter(
+                (template) => template.screens === screenCount,
+              )
+
+              if (templatesWithScreenCount.length === 0) return null
+
+              return (
+                <div key={screenCount} className="mb-6">
+                  <div className="mb-2 text-xs text-gray-500">
+                    {screenCount}{" "}
+                    {screenCount === 1
+                      ? "экран"
+                      : screenCount >= 2 && screenCount <= 4
+                        ? "экрана"
+                        : "экранов"}
+                  </div>
+                  <div
+                    className="grid grid-cols-[repeat(auto-fill,minmax(0,calc(var(--preview-size)+12px)))] gap-2"
+                    style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
+                  >
+                    {templatesWithScreenCount.map((template) => (
+                      <TemplatePreview
+                        key={template.id}
+                        template={template}
+                        onClick={() => handleTemplateClick(template)}
+                        size={previewSize}
+                        dimensions={currentDimensions}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
