@@ -411,8 +411,8 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
   })
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-gray-800 p-3 pb-1 pl-4">
+    <div className="flex h-full flex-1 flex-col overflow-hidden">
+      <div className="flex items-center justify-between p-1">
         <Input
           type="search"
           placeholder="Поиск"
@@ -467,7 +467,7 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="scrollbar-hide hover:scrollbar-default min-h-0 flex-1 overflow-y-auto p-1 py-3 dark:bg-[#1b1a1f]">
         {!isSizeLoaded ? (
           <div className="flex h-full items-center justify-center text-gray-500"></div>
         ) : filteredTransitions.length === 0 ? (

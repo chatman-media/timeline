@@ -5,9 +5,9 @@ export function StickersList() {
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="space-y-1 p-3 pr-1 pl-1">
-        <div className="mb-4 flex items-center justify-between">
+    <div className="flex h-full flex-1 flex-col overflow-hidden">
+      <div className="flex items-center justify-between p-1">
+
           <div className="relative w-[50%]">
             <input
               type="text"
@@ -18,7 +18,6 @@ export function StickersList() {
             />
             <Smile className="absolute top-1/2 right-2 h-4 w-4 -translate-y-1/2 transform text-gray-400" />
           </div>
-        </div>
 
         <div className="mt-6">
           <p className="text-sm text-gray-500 dark:text-gray-400">

@@ -100,8 +100,8 @@ export function TemplateList() {
   }
 
   return (
-    <div className="flex h-full flex-1 flex-col">
-      <div className="flex items-center justify-between border-b border-gray-800 p-3 pb-1 pl-4">
+    <div className="flex h-full flex-1 flex-col overflow-hidden">
+      <div className="flex items-center justify-between p-1">
         <Input
           type="search"
           placeholder="Поиск"

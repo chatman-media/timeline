@@ -3,9 +3,8 @@ import { useState } from "react"
 export function SubtitlesList() {
   const [searchQuery, setSearchQuery] = useState("")
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="space-y-1 p-3 pr-1 pl-1">
-        <div className="mb-4 flex items-center justify-between">
+    <div className="flex h-full flex-1 flex-col overflow-hidden">
+      <div className="flex items-center justify-between p-1">
           <div className="relative w-[50%]">
             <input
               type="text"
@@ -15,7 +14,6 @@ export function SubtitlesList() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-        </div>
       </div>
     </div>
   )
