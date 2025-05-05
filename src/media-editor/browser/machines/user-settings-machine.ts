@@ -7,10 +7,11 @@ export const MIN_SIZE = 60
 export const STORAGE_KEYS = {
   MEDIA: "timeline-media-preview-size",
   TRANSITIONS: "timeline-transitions-preview-size",
+  TEMPLATES: "timeline-templates-preview-size",
 } as const
 
-type PreviewSize = (typeof PREVIEW_SIZES)[number]
-type StorageKey = keyof typeof STORAGE_KEYS
+export type PreviewSize = (typeof PREVIEW_SIZES)[number]
+export type StorageKey = keyof typeof STORAGE_KEYS
 
 interface UserSettingsContext {
   previewSizes: Record<StorageKey, PreviewSize>
@@ -34,7 +35,7 @@ export const userSettingsMachine = createMachine(
       previewSizes: {
         MEDIA: DEFAULT_SIZE,
         TRANSITIONS: DEFAULT_SIZE,
-        TRANSITIONS: DEFAULT_SIZE,
+        TEMPLATES: DEFAULT_SIZE,
       },
       isLoaded: false,
     } as UserSettingsContext,
@@ -60,6 +61,14 @@ export const userSettingsMachine = createMachine(
   {
     actions: {
       loadSettings: () => {
+        // Создаем объект с значениями по умолчанию для всех ключей
+        const defaultPreviewSizes: Record<StorageKey, PreviewSize> = {
+          MEDIA: DEFAULT_SIZE,
+          TRANSITIONS: DEFAULT_SIZE,
+          TEMPLATES: DEFAULT_SIZE,
+        };
+
+        // Загружаем сохраненные значения из localStorage
         const previewSizes = Object.entries(STORAGE_KEYS).reduce(
           (acc, [key, storageKey]) => {
             try {
@@ -75,26 +84,43 @@ export const userSettingsMachine = createMachine(
             }
             return acc
           },
-          {} as Record<StorageKey, PreviewSize>,
+          // Начинаем с объекта значений по умолчанию
+          { ...defaultPreviewSizes } as Record<StorageKey, PreviewSize>,
         )
+
+        // Сохраняем значения по умолчанию в localStorage, если их там нет
+        Object.entries(STORAGE_KEYS).forEach(([key, storageKey]) => {
+          if (localStorage.getItem(storageKey) === null) {
+            try {
+              localStorage.setItem(storageKey, DEFAULT_SIZE.toString())
+            } catch (error) {
+              console.error(`Error saving default settings for ${key}:`, error)
+            }
+          }
+        });
 
         return {
           type: "SETTINGS_LOADED",
           previewSizes,
         }
       },
-      updateSettings: (context, event) => {
-        assign(context, {
-          previewSizes: event.previewSizes,
-          isLoaded: true,
-        })
-      },
-      updatePreviewSize: (context, event) => {
+      updateSettings: assign({
+        previewSizes: (_, event) => event.previewSizes,
+        isLoaded: (_) => true,
+      }),
+      updatePreviewSize: assign((context, event) => {
         if (event.type === "UPDATE_PREVIEW_SIZE") {
-          context.previewSizes[event.key] = event.size
+          return {
+            ...context,
+            previewSizes: {
+              ...context.previewSizes,
+              [event.key]: event.size
+            }
+          };
         }
-      },
-      saveToStorage: (context, event) => {
+        return context;
+      }),
+      saveToStorage: (_, event: any) => {
         if (event.type === "UPDATE_PREVIEW_SIZE") {
           try {
             localStorage.setItem(STORAGE_KEYS[event.key], event.size.toString())
