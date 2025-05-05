@@ -154,7 +154,7 @@ export function EffectList() {
     handleDecreaseSize,
     canIncreaseSize,
     canDecreaseSize,
-  } = usePreviewSize("EFFECTS_AND_FILTERS")
+  } = usePreviewSize("TRANSITIONS")
 
   const filteredEffects = effects.filter((effect) => {
     const searchLower = searchQuery.toLowerCase()

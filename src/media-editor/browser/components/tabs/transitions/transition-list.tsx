@@ -394,7 +394,7 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
     handleDecreaseSize,
     canIncreaseSize,
     canDecreaseSize,
-  } = usePreviewSize("EFFECTS_AND_FILTERS")
+  } = usePreviewSize("TRANSITIONS")
 
   const demoVideos = {
     source: { path: "t1.mp4" } as MediaFile,

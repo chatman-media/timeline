@@ -14,7 +14,6 @@ export const MIN_SIZE_SUBTITLES = 80
 export const MIN_SIZES = {
   MEDIA: MIN_SIZE,
   TRANSITIONS: MIN_SIZE_TRANSITIONS,
-  EFFECTS_AND_FILTERS: MIN_SIZE,
   SUBTITLES: MIN_SIZE_SUBTITLES,
   TEMPLATES: MIN_SIZE_TEMPLATES,
 } as const
@@ -23,7 +22,6 @@ export const MIN_SIZES = {
 export const STORAGE_KEYS = {
   MEDIA: "timeline-media-preview-size",
   TRANSITIONS: "timeline-transitions-preview-size",
-  EFFECTS_AND_FILTERS: "timeline-effects-and-filters-preview-size", // Общий ключ для эффектов и фильтров
   SUBTITLES: "timeline-subtitles-preview-size",
   TEMPLATES: "timeline-templates-preview-size",
 } as const

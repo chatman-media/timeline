@@ -7,7 +7,6 @@ export const MIN_SIZE = 60
 export const STORAGE_KEYS = {
   MEDIA: "timeline-media-preview-size",
   TRANSITIONS: "timeline-transitions-preview-size",
-  EFFECTS_AND_FILTERS: "timeline-effects-and-filters-preview-size",
 } as const
 
 type PreviewSize = (typeof PREVIEW_SIZES)[number]
@@ -35,7 +34,7 @@ export const userSettingsMachine = createMachine(
       previewSizes: {
         MEDIA: DEFAULT_SIZE,
         TRANSITIONS: DEFAULT_SIZE,
-        EFFECTS_AND_FILTERS: DEFAULT_SIZE,
+        TRANSITIONS: DEFAULT_SIZE,
       },
       isLoaded: false,
     } as UserSettingsContext,

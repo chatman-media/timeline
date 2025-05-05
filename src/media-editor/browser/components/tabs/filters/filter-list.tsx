@@ -100,7 +100,7 @@ export function FilterList() {
     handleDecreaseSize,
     canIncreaseSize,
     canDecreaseSize,
-  } = usePreviewSize("EFFECTS_AND_FILTERS")
+  } = usePreviewSize("TRANSITIONS")
 
   const filteredFilters = filters.filter((filter) => {
     const searchLower = searchQuery.toLowerCase()
