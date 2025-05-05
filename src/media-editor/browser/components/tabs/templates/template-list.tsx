@@ -127,7 +127,7 @@ export function TemplateList() {
         handleIncreaseSize={handleIncreaseSize}
       />
 
-      <div className="scrollbar-hide hover:scrollbar-default min-h-0 flex-1 overflow-y-auto p-1 py-3 dark:bg-[#1b1a1f]">
+      <div className="scrollbar-hide hover:scrollbar-default min-h-0 flex-1 overflow-y-auto p-3 dark:bg-[#1b1a1f]">
         {!isSizeLoaded ? (
           <div className="flex h-full items-center justify-center text-gray-500" />
         ) : filteredTemplates.length === 0 ? (
@@ -136,47 +136,21 @@ export function TemplateList() {
           </div>
         ) : (
           <div>
-            <div className="mb-2 text-xs font-semibold text-gray-400">
-              {currentGroup === "landscape" && "Широкоэкранные"}
-              {currentGroup === "square" && "Квадратные"}
-              {currentGroup === "portrait" && "Вертикальные"}
+            {/* Выводим все шаблоны без группировки */}
+            <div
+              className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4"
+              style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
+            >
+              {filteredTemplates.map((template) => (
+                <TemplatePreview
+                  key={template.id}
+                  template={template}
+                  onClick={() => handleTemplateClick(template)}
+                  size={previewSize}
+                  dimensions={currentDimensions}
+                />
+              ))}
             </div>
-
-            {/* Группируем шаблоны по количеству экранов */}
-            {[2, 3, 4].map((screenCount) => {
-              const templatesWithScreenCount = filteredTemplates.filter(
-                (template) => template.screens === screenCount,
-              )
-
-              if (templatesWithScreenCount.length === 0) return null
-
-              return (
-                <div key={screenCount} className="mb-6">
-                  <div className="mb-2 text-xs text-gray-500">
-                    {screenCount}{" "}
-                    {screenCount === 1
-                      ? "экран"
-                      : screenCount >= 2 && screenCount <= 4
-                        ? "экрана"
-                        : "экранов"}
-                  </div>
-                  <div
-                    className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4"
-                    style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
-                  >
-                    {templatesWithScreenCount.map((template) => (
-                      <TemplatePreview
-                        key={template.id}
-                        template={template}
-                        onClick={() => handleTemplateClick(template)}
-                        size={previewSize}
-                        dimensions={currentDimensions}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
           </div>
         )}
       </div>
