@@ -432,7 +432,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
 
           {/* Нижний правый экран */}
           <div
-            className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
               width: "50%",
@@ -632,7 +632,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
         <div className="relative h-full w-full">
           {/* Правая большая секция */}
           <div
-            className="absolute top-0 bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute top-0 right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
               width: "50%",
@@ -710,7 +710,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
 
           {/* Нижняя левая секция */}
           <div
-            className="absolute left-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
               width: "50%",
@@ -732,7 +732,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
         <div className="relative h-full w-full">
           {/* Верхняя секция */}
           <div
-            className="absolute top-0 left-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute top-0 right-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
               height: "50%",
@@ -810,7 +810,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
 
           {/* Нижняя правая секция */}
           <div
-            className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
               width: "33.33%",
@@ -1000,7 +1000,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
 
           {/* Нижняя секция */}
           <div
-            className="absolute bottom-0 left-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute right-0 bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
               height: "50%",
@@ -1426,7 +1426,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
 
           {/* Нижний правый экран */}
           <div
-            className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
               width: "50%",
@@ -1604,7 +1604,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
 
           {/* Нижняя правая секция */}
           <div
-            className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
               width: "33.33%",
@@ -1828,7 +1828,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
         <div className="relative h-full w-full">
           {/* Нижняя большая секция */}
           <div
-            className="absolute bottom-0 right-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute right-0 bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
               height: "50%",
@@ -2821,7 +2821,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
 
           {/* Нижняя секция */}
           <div
-            className="absolute bottom-0 left-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute right-0 bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
               height: "50%",
@@ -2845,7 +2845,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
         <div className="relative h-full w-full">
           {/* Правая большая секция */}
           <div
-            className="absolute top-0 bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute top-0 right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
               width: "50%",
@@ -2923,7 +2923,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
 
           {/* Нижняя левая секция */}
           <div
-            className="absolute left-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
               width: "50%",
@@ -2945,7 +2945,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
         <div className="relative h-full w-full">
           {/* Верхняя секция */}
           <div
-            className="absolute top-0 left-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute top-0 right-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
               height: "50%",
@@ -3023,7 +3023,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
 
           {/* Нижняя правая секция */}
           <div
-            className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
               width: "33.33%",

@@ -33,8 +33,8 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
     // и увеличиваем высоту пропорционально
     if (height > width) {
       // Используем 90% доступного пространства для лучшего отображения
-      const fixedWidth = size * 0.9;
-      const calculatedHeight = (fixedWidth * height) / width;
+      const fixedWidth = size * 0.9
+      const calculatedHeight = (fixedWidth * height) / width
       return { width: fixedWidth, height: calculatedHeight }
     }
 
@@ -46,16 +46,16 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
   const { height: previewHeight, width: previewWidth } = calculateDimensions()
 
   return (
-      <div
-        className="group relative cursor-pointer"
-        style={{
-          aspectRatio: `${width} / ${height}`,
-          height: `${previewHeight}px`,
-          width: `${previewWidth}px`,
-        }}
-        onClick={onClick}
-        >
-        {template.render()}
+    <div
+      className="group relative cursor-pointer"
+      style={{
+        aspectRatio: `${width} / ${height}`,
+        height: `${previewHeight}px`,
+        width: `${previewWidth}px`,
+      }}
+      onClick={onClick}
+    >
+      {template.render()}
     </div>
   )
 }

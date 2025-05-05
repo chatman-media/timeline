@@ -66,7 +66,7 @@ export const userSettingsMachine = createMachine(
           MEDIA: DEFAULT_SIZE,
           TRANSITIONS: DEFAULT_SIZE,
           TEMPLATES: DEFAULT_SIZE,
-        };
+        }
 
         // Загружаем сохраненные значения из localStorage
         const previewSizes = Object.entries(STORAGE_KEYS).reduce(
@@ -97,7 +97,7 @@ export const userSettingsMachine = createMachine(
               console.error(`Error saving default settings for ${key}:`, error)
             }
           }
-        });
+        })
 
         return {
           type: "SETTINGS_LOADED",
@@ -114,11 +114,11 @@ export const userSettingsMachine = createMachine(
             ...context,
             previewSizes: {
               ...context.previewSizes,
-              [event.key]: event.size
-            }
-          };
+              [event.key]: event.size,
+            },
+          }
         }
-        return context;
+        return context
       }),
       saveToStorage: (_, event: any) => {
         if (event.type === "UPDATE_PREVIEW_SIZE") {
