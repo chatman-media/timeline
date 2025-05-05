@@ -1,5 +1,5 @@
 import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles } from "lucide-react"
-import { memo, useState } from "react"
+import { memo, useState, useEffect } from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -12,6 +12,9 @@ import {
   TransitionsList,
 } from "."
 
+// Константа для ключа хранилища
+const STORAGE_KEY_ACTIVE_TAB = "browser-active-tab"
+
 export const TAB_TRIGGER_STYLES =
   "text-xs text-gray-800 dark:bg-[#1b1a1f] border-none " +
   "bg-gray-200 data-[state=active]:bg-secondary data-[state=active]:text-[#38dacac3] " +
@@ -22,10 +25,35 @@ export const TAB_TRIGGER_STYLES =
 
 // Используем memo для предотвращения ненужных рендеров
 export const Browser = memo(function Browser() {
+  // Используем useState с отложенной инициализацией для предотвращения ошибок гидратации
   const [activeTab, setActiveTab] = useState("media")
 
+  // Загружаем сохраненный таб из localStorage только на клиенте
+  useEffect(() => {
+    // Функция для загрузки сохраненного таба из localStorage
+    const getSavedActiveTab = (): string => {
+      try {
+        const savedTab = localStorage.getItem(STORAGE_KEY_ACTIVE_TAB)
+        return savedTab || "media"
+      } catch (error) {
+        return "media"
+      }
+    }
+
+    // Устанавливаем активный таб из localStorage
+    setActiveTab(getSavedActiveTab())
+  }, [])
+
+  // Обработчик изменения таба
   const handleTabChange = (value: string) => {
     setActiveTab(value)
+
+    // Сохраняем активный таб в localStorage
+    try {
+      localStorage.setItem(STORAGE_KEY_ACTIVE_TAB, value)
+    } catch (error) {
+      // Игнорируем ошибки
+    }
   }
 
   return (

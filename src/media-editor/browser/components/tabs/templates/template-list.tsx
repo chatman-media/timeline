@@ -1,9 +1,8 @@
-import { type JSX, useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import { useProject } from "@/media-editor/project-settings/project-provider"
-
-import { usePreviewSize } from "../../preview/preview-sizes"
-import { TemplateListToolbar } from "."
+import { usePreviewSize } from "@/media-editor/browser"
+import { TemplateListToolbar } from "@/media-editor/browser/components/tabs/templates"
 import { MediaTemplate, TEMPLATE_MAP } from "./templates"
 
 function mapAspectLabelToGroup(label: string): "landscape" | "square" | "portrait" {
@@ -103,6 +102,21 @@ export function TemplateList() {
     return template.id.toLowerCase().includes(searchLower)
   })
 
+  // Группируем шаблоны по количеству экранов
+  const groupedTemplates = filteredTemplates.reduce<Record<number, MediaTemplate[]>>((acc, template) => {
+    const screenCount = template.screens || 1
+    if (!acc[screenCount]) {
+      acc[screenCount] = []
+    }
+    acc[screenCount].push(template)
+    return acc
+  }, {})
+
+  // Получаем отсортированные ключи групп (количество экранов)
+  const sortedGroups = Object.keys(groupedTemplates)
+    .map(Number)
+    .sort((a, b) => a - b)
+
   const handleTemplateClick = (template: MediaTemplate) => {
     setActiveTemplate(template)
     console.log("Applying template:", template.id)
@@ -127,22 +141,29 @@ export function TemplateList() {
             Шаблоны не найдены
           </div>
         ) : (
-          <div>
-            {/* Выводим все шаблоны без группировки */}
-            <div
-              className="flex flex-1 flex-wrap gap-4"
-              style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
-            >
-              {filteredTemplates.map((template) => (
-                <TemplatePreview
-                  key={template.id}
-                  template={template}
-                  onClick={() => handleTemplateClick(template)}
-                  size={previewSize}
-                  dimensions={currentDimensions}
-                />
-              ))}
-            </div>
+          <div className="space-y-6">
+            {/* Выводим шаблоны, сгруппированные по количеству экранов */}
+            {sortedGroups.map((screenCount) => (
+              <div key={screenCount} className="mb-4">
+                <h3 className="mb-3 text-sm font-medium text-gray-400">
+                  {screenCount} {screenCount === 1 ? 'экран' : screenCount < 5 ? 'экрана' : 'экранов'}
+                </h3>
+                <div
+                  className="flex flex-wrap gap-4"
+                  style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
+                >
+                  {groupedTemplates[screenCount].map((template) => (
+                    <TemplatePreview
+                      key={template.id}
+                      template={template}
+                      onClick={() => handleTemplateClick(template)}
+                      size={previewSize}
+                      dimensions={currentDimensions}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
