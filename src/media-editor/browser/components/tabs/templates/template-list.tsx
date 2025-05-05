@@ -143,7 +143,7 @@ export function TemplateList() {
             </div>
 
             {/* Группируем шаблоны по количеству экранов */}
-            {[2, 3].map((screenCount) => {
+            {[2, 3, 4].map((screenCount) => {
               const templatesWithScreenCount = filteredTemplates.filter(
                 (template) => template.screens === screenCount,
               )
