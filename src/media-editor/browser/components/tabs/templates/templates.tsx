@@ -89,8 +89,8 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
       split: "diagonal",
       screens: 2,
       splitPoints: [
-        { x: 30, y: 0 }, // Начальная точка (30% от левого края, верх)
-        { x: 70, y: 100 }, // Конечная точка (70% от левого края, низ)
+        { x: 70, y: 0 }, // Начальная точка (70% от левого края, верх)
+        { x: 30, y: 100 }, // Конечная точка (30% от левого края, низ)
       ],
       render: () => (
         <div className="relative h-full w-full">
@@ -99,14 +99,14 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
-              clipPath: "polygon(0 0, 30% 0, 70% 100%, 0 100%)",
+              clipPath: "polygon(0 0, 70% 0, 30% 100%, 0 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               border: "1px solid rgba(156, 163, 175, 0.3)",
             }}
           >
-            <div style={{ position: "relative", left: "-15%" }}>1</div>
+            <div style={{ position: "relative", left: "-25%" }}>1</div>
           </div>
 
           {/* Второй экран (правый) */}
@@ -114,14 +114,14 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
-              clipPath: "polygon(30% 0, 100% 0, 100% 100%, 70% 100%)",
+              clipPath: "polygon(70% 0, 100% 0, 100% 100%, 30% 100%)",
               border: "1px solid rgba(156, 163, 175, 0.3)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <div style={{ position: "relative", left: "15%" }}>2</div>
+            <div style={{ position: "relative", left: "25%" }}>2</div>
           </div>
         </div>
       ),
@@ -457,7 +457,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
               border: "1px solid rgba(156, 163, 175, 0.3)",
             }}
           >
-            <div style={{ position: "relative", top: "-15%" }}>1</div>
+            <div style={{ position: "relative", top: "-25%" }}>1</div>
           </div>
 
           {/* Второй экран (нижний) */}
@@ -472,7 +472,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
               justifyContent: "center",
             }}
           >
-            <div style={{ position: "relative", top: "15%" }}>2</div>
+            <div style={{ position: "relative", top: "25%" }}>2</div>
           </div>
         </div>
       ),
@@ -808,7 +808,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
               border: "1px solid rgba(156, 163, 175, 0.3)",
             }}
           >
-            <div style={{ position: "relative", top: "-15%" }}>1</div>
+            <div style={{ position: "relative", top: "-25%" }}>1</div>
           </div>
 
           {/* Второй экран (нижний) */}
@@ -823,7 +823,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
               justifyContent: "center",
             }}
           >
-            <div style={{ position: "relative", top: "15%" }}>2</div>
+            <div style={{ position: "relative", top: "25%" }}>2</div>
           </div>
         </div>
       ),
@@ -834,8 +834,8 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
       split: "diagonal",
       screens: 2,
       splitPoints: [
-        { x: 30, y: 0 }, // Начальная точка (30% от левого края, верх)
-        { x: 70, y: 100 }, // Конечная точка (70% от левого края, низ)
+        { x: 70, y: 0 }, // Начальная точка (70% от левого края, верх)
+        { x: 30, y: 100 }, // Конечная точка (30% от левого края, низ)
       ],
       render: () => (
         <div className="relative h-full w-full">
@@ -844,14 +844,14 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
-              clipPath: "polygon(0 0, 30% 0, 70% 100%, 0 100%)",
+              clipPath: "polygon(0 0, 70% 0, 30% 100%, 0 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               border: "1px solid rgba(156, 163, 175, 0.3)",
             }}
           >
-            <div style={{ position: "relative", left: "-15%" }}>1</div>
+            <div style={{ position: "relative", left: "-25%" }}>1</div>
           </div>
 
           {/* Второй экран (правый) */}
@@ -859,14 +859,14 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
-              clipPath: "polygon(30% 0, 100% 0, 100% 100%, 70% 100%)",
+              clipPath: "polygon(70% 0, 100% 0, 100% 100%, 30% 100%)",
               border: "1px solid rgba(156, 163, 175, 0.3)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
             }}
           >
-            <div style={{ position: "relative", left: "15%" }}>2</div>
+            <div style={{ position: "relative", left: "25%" }}>2</div>
           </div>
         </div>
       ),
@@ -896,7 +896,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
               border: "1px solid rgba(156, 163, 175, 0.3)",
             }}
           >
-            <div style={{ position: "relative", left: "-15%", top: "-15%" }}>1</div>
+            <div style={{ position: "relative", left: "-25%", top: "-25%" }}>1</div>
           </div>
 
           {/* Верхний правый экран */}
@@ -911,7 +911,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
               border: "1px solid rgba(156, 163, 175, 0.3)",
             }}
           >
-            <div style={{ position: "relative", left: "15%", top: "-15%" }}>2</div>
+            <div style={{ position: "relative", left: "25%", top: "-25%" }}>2</div>
           </div>
 
           {/* Нижний левый экран */}
@@ -926,7 +926,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
               border: "1px solid rgba(156, 163, 175, 0.3)",
             }}
           >
-            <div style={{ position: "relative", left: "-15%", top: "15%" }}>3</div>
+            <div style={{ position: "relative", left: "-25%", top: "25%" }}>3</div>
           </div>
 
           {/* Нижний правый экран */}
@@ -941,7 +941,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
               border: "1px solid rgba(156, 163, 175, 0.3)",
             }}
           >
-            <div style={{ position: "relative", left: "15%", top: "15%" }}>4</div>
+            <div style={{ position: "relative", left: "25%", top: "25%" }}>4</div>
           </div>
 
           {/* Горизонтальная линия разделения */}

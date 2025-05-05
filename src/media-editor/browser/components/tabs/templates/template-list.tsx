@@ -29,10 +29,13 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
       return { width: size, height: size }
     }
 
-    // Для вертикальных шаблонов уменьшаем ширину пропорционально
+    // Для вертикальных шаблонов используем максимально возможную ширину
+    // и увеличиваем высоту пропорционально
     if (height > width) {
-      const calculatedWidth = Math.min((size * width) / height, size)
-      return { width: calculatedWidth, height: size }
+      // Используем 90% доступного пространства для лучшего отображения
+      const fixedWidth = size * 0.9;
+      const calculatedHeight = (fixedWidth * height) / width;
+      return { width: fixedWidth, height: calculatedHeight }
     }
 
     // Для горизонтальных шаблонов уменьшаем высоту пропорционально
@@ -40,18 +43,26 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
     return { width: size, height: calculatedHeight }
   }
 
-  const { width: previewWidth, height: previewHeight } = calculateDimensions()
+  const { height: previewHeight } = calculateDimensions()
 
   return (
     <div
-      className="group relative h-full flex-shrink-0 cursor-pointer"
-      style={{
-        height: `${previewHeight}px`,
-        width: `${previewWidth.toFixed(0)}px`,
-      }}
+      className="group relative flex-shrink-0 cursor-pointer flex items-center justify-center w-full h-full"
       onClick={onClick}
     >
-      {template.render()}
+      <div
+        className="relative w-full"
+        style={{
+          // Сохраняем соотношение сторон
+          aspectRatio: `${width} / ${height}`,
+          // Максимальная высота для контейнера
+          maxHeight: `${previewHeight}px`,
+          // Минимальная ширина для вертикальных шаблонов
+          minWidth: height > width ? '120px' : 'auto'
+        }}
+      >
+        {template.render()}
+      </div>
     </div>
   )
 }
@@ -150,7 +161,7 @@ export function TemplateList() {
                         : "экранов"}
                   </div>
                   <div
-                    className="grid grid-cols-[repeat(auto-fill,minmax(0,calc(var(--preview-size)+12px)))] gap-2"
+                    className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4"
                     style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
                   >
                     {templatesWithScreenCount.map((template) => (
