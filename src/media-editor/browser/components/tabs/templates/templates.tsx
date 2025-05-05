@@ -89,8 +89,8 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
       split: "diagonal",
       screens: 2,
       splitPoints: [
-        { x: 70, y: 0 }, // Начальная точка (70% от левого края, верх)
-        { x: 30, y: 100 }, // Конечная точка (30% от левого края, низ)
+        { x: 60, y: 0 }, // Начальная точка (60% от левого края, верх)
+        { x: 40, y: 100 }, // Конечная точка (40% от левого края, низ)
       ],
       render: () => (
         <div className="relative h-full w-full">
@@ -99,7 +99,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
-              clipPath: "polygon(0 0, 70% 0, 30% 100%, 0 100%)",
+              clipPath: "polygon(0 0, 60% 0, 40% 100%, 0 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -109,12 +109,21 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             <div style={{ position: "relative", left: "-25%" }}>1</div>
           </div>
 
+          {/* Линия разделения */}
+          <div
+            className="absolute inset-0 z-10 bg-gray-400"
+            style={{
+              clipPath: "polygon(59.8% 0, 60.2% 0, 40.2% 100%, 39.8% 100%)",
+              opacity: 0.3,
+            }}
+          />
+
           {/* Второй экран (правый) */}
           <div
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
-              clipPath: "polygon(70% 0, 100% 0, 100% 100%, 30% 100%)",
+              clipPath: "polygon(60% 0, 100% 0, 100% 100%, 40% 100%)",
               border: "1px solid rgba(156, 163, 175, 0.3)",
               display: "flex",
               alignItems: "center",
@@ -440,8 +449,8 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
       split: "diagonal",
       screens: 2,
       splitPoints: [
-        { x: 0, y: 30 }, // Начальная точка (левый край, 30% от верха)
-        { x: 100, y: 70 }, // Конечная точка (правый край, 70% от верха)
+        { x: 0, y: 40 }, // Начальная точка (левый край, 40% от верха)
+        { x: 100, y: 60 }, // Конечная точка (правый край, 60% от верха)
       ],
       render: () => (
         <div className="relative h-full w-full">
@@ -450,7 +459,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
-              clipPath: "polygon(0 0, 100% 0, 100% 70%, 0 30%)",
+              clipPath: "polygon(0 0, 100% 0, 100% 60%, 0 40%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -460,12 +469,21 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             <div style={{ position: "relative", top: "-25%" }}>1</div>
           </div>
 
+          {/* Линия разделения */}
+          <div
+            className="absolute inset-0 z-10 bg-gray-400"
+            style={{
+              clipPath: "polygon(0 39.8%, 0 40.2%, 100% 60.2%, 100% 59.8%)",
+              opacity: 0.3,
+            }}
+          />
+
           {/* Второй экран (нижний) */}
           <div
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
-              clipPath: "polygon(0 30%, 100% 70%, 100% 100%, 0 100%)",
+              clipPath: "polygon(0 40%, 100% 60%, 100% 100%, 0 100%)",
               border: "1px solid rgba(156, 163, 175, 0.3)",
               display: "flex",
               alignItems: "center",
@@ -791,8 +809,8 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
       split: "diagonal",
       screens: 2,
       splitPoints: [
-        { x: 0, y: 30 }, // Начальная точка (левый край, 30% от верха)
-        { x: 100, y: 70 }, // Конечная точка (правый край, 70% от верха)
+        { x: 0, y: 35 }, // Начальная точка (левый край, 35% от верха)
+        { x: 100, y: 65 }, // Конечная точка (правый край, 65% от верха)
       ],
       render: () => (
         <div className="relative h-full w-full">
@@ -801,7 +819,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
-              clipPath: "polygon(0 0, 100% 0, 100% 70%, 0 30%)",
+              clipPath: "polygon(0 0, 100% 0, 100% 65%, 0 35%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -811,12 +829,21 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             <div style={{ position: "relative", top: "-25%" }}>1</div>
           </div>
 
+          {/* Линия разделения */}
+          <div
+            className="absolute inset-0 z-10 bg-gray-400"
+            style={{
+              clipPath: "polygon(0 34.8%, 0 35.2%, 100% 65.2%, 100% 64.8%)",
+              opacity: 0.3,
+            }}
+          />
+
           {/* Второй экран (нижний) */}
           <div
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
-              clipPath: "polygon(0 30%, 100% 70%, 100% 100%, 0 100%)",
+              clipPath: "polygon(0 35%, 100% 65%, 100% 100%, 0 100%)",
               border: "1px solid rgba(156, 163, 175, 0.3)",
               display: "flex",
               alignItems: "center",
@@ -834,8 +861,8 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
       split: "diagonal",
       screens: 2,
       splitPoints: [
-        { x: 70, y: 0 }, // Начальная точка (70% от левого края, верх)
-        { x: 30, y: 100 }, // Конечная точка (30% от левого края, низ)
+        { x: 65, y: 0 }, // Начальная точка (65% от левого края, верх)
+        { x: 35, y: 100 }, // Конечная точка (35% от левого края, низ)
       ],
       render: () => (
         <div className="relative h-full w-full">
@@ -844,7 +871,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
-              clipPath: "polygon(0 0, 70% 0, 30% 100%, 0 100%)",
+              clipPath: "polygon(0 0, 65% 0, 35% 100%, 0 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
@@ -854,12 +881,21 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             <div style={{ position: "relative", left: "-25%" }}>1</div>
           </div>
 
+          {/* Линия разделения */}
+          <div
+            className="absolute inset-0 z-10 bg-gray-400"
+            style={{
+              clipPath: "polygon(64.8% 0, 65.2% 0, 35.2% 100%, 34.8% 100%)",
+              opacity: 0.3,
+            }}
+          />
+
           {/* Второй экран (правый) */}
           <div
             className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
-              clipPath: "polygon(70% 0, 100% 0, 100% 100%, 30% 100%)",
+              clipPath: "polygon(65% 0, 100% 0, 100% 100%, 35% 100%)",
               border: "1px solid rgba(156, 163, 175, 0.3)",
               display: "flex",
               alignItems: "center",
