@@ -1474,6 +1474,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
+              height: "25%",
               borderTop: "1px solid rgba(156, 163, 175, 0.3)",
               borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
               borderRight: "1px solid rgba(156, 163, 175, 0.3)",
@@ -1486,6 +1487,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
+              height: "25%",
               borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
               borderRight: "1px solid rgba(156, 163, 175, 0.3)",
             }}
@@ -1497,6 +1499,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
+              height: "25%",
               borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
               borderRight: "1px solid rgba(156, 163, 175, 0.3)",
             }}
@@ -1508,6 +1511,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
+              height: "25%",
               borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
               borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
               borderRight: "1px solid rgba(156, 163, 175, 0.3)",

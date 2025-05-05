@@ -33,9 +33,8 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
     // и увеличиваем высоту пропорционально
     if (height > width) {
       // Используем 90% доступного пространства для лучшего отображения
-      const fixedWidth = size * 0.9
-      const calculatedHeight = (fixedWidth * height) / width
-      return { width: fixedWidth, height: calculatedHeight }
+      const fixedWidth = size/height*width
+      return { width: fixedWidth, height: size }
     }
 
     // Для горизонтальных шаблонов уменьшаем высоту пропорционально
