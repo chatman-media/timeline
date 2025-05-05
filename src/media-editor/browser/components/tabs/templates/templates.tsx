@@ -61,6 +61,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#23262b",
+              height: "50%",
               borderTop: "1px solid rgba(156, 163, 175, 0.3)",
               borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
               borderRight: "1px solid rgba(156, 163, 175, 0.3)",
@@ -73,6 +74,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
             className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
             style={{
               background: "#2a2e36",
+              height: "50%",
               borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
               borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
               borderRight: "1px solid rgba(156, 163, 175, 0.3)",
@@ -340,6 +342,8 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
           <div
             className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
             style={{
+              width: "100%",
+              height: "33.33%",
               background: "#23262b",
               borderTop: "1px solid rgba(156, 163, 175, 0.3)",
               borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
@@ -352,6 +356,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
           <div
             className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
             style={{
+              height: "33.33%",
               background: "#2a2e36",
               borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
               borderRight: "1px solid rgba(156, 163, 175, 0.3)",
@@ -363,6 +368,7 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
           <div
             className="flex flex-1 items-center justify-center text-lg font-normal text-gray-400"
             style={{
+              height: "33.33%",
               background: "#23262b",
               borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
               borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
@@ -3117,7 +3123,5 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
         </div>
       ),
     },
-
-
   ],
 }

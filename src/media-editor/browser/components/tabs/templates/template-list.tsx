@@ -43,26 +43,19 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
     return { width: size, height: calculatedHeight }
   }
 
-  const { height: previewHeight } = calculateDimensions()
+  const { height: previewHeight, width: previewWidth } = calculateDimensions()
 
   return (
-    <div
-      className="group relative flex-shrink-0 cursor-pointer flex items-center justify-center w-full h-full"
-      onClick={onClick}
-    >
       <div
-        className="relative w-full"
+        className="group relative cursor-pointer"
         style={{
-          // Сохраняем соотношение сторон
           aspectRatio: `${width} / ${height}`,
-          // Максимальная высота для контейнера
-          maxHeight: `${previewHeight}px`,
-          // Минимальная ширина для вертикальных шаблонов
-          minWidth: height > width ? '120px' : 'auto'
+          height: `${previewHeight}px`,
+          width: `${previewWidth}px`,
         }}
-      >
+        onClick={onClick}
+        >
         {template.render()}
-      </div>
     </div>
   )
 }
@@ -70,7 +63,7 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
 export function TemplateList() {
   const [searchQuery, setSearchQuery] = useState("")
   const [, setActiveTemplate] = useState<MediaTemplate | null>(null)
-  const [currentGroup, setCurrentGroup] = useState<"landscape" | "portrait" | "square">("landscape")
+  const [, setCurrentGroup] = useState<"landscape" | "portrait" | "square">("landscape")
   const [currentDimensions, setCurrentDimensions] = useState<[number, number]>([1920, 1080])
   const [templates, setTemplates] = useState<MediaTemplate[]>([])
   const { settings } = useProject()
@@ -82,7 +75,7 @@ export function TemplateList() {
     handleDecreaseSize,
     canIncreaseSize,
     canDecreaseSize,
-  } = usePreviewSize("EFFECTS_AND_FILTERS")
+  } = usePreviewSize("TEMPLATES")
 
   // Эффект для инициализации и обновления шаблонов при монтировании компонента
   useEffect(() => {
@@ -138,7 +131,7 @@ export function TemplateList() {
           <div>
             {/* Выводим все шаблоны без группировки */}
             <div
-              className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4"
+              className="flex flex-1 flex-wrap gap-4"
               style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
             >
               {filteredTemplates.map((template) => (
