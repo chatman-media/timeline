@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
 
-import { useProject } from "@/media-editor/project-settings/project-provider"
 import { usePreviewSize } from "@/media-editor/browser"
 import { TemplateListToolbar } from "@/media-editor/browser/components/tabs/templates"
+import { useProject } from "@/media-editor/project-settings/project-provider"
+
 import { MediaTemplate, TEMPLATE_MAP } from "./templates"
 
 function mapAspectLabelToGroup(label: string): "landscape" | "square" | "portrait" {
@@ -32,7 +33,7 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
     // и увеличиваем высоту пропорционально
     if (height > width) {
       // Используем 90% доступного пространства для лучшего отображения
-      const fixedWidth = size/height*width
+      const fixedWidth = (size / height) * width
       return { width: fixedWidth, height: size }
     }
 
@@ -103,14 +104,17 @@ export function TemplateList() {
   })
 
   // Группируем шаблоны по количеству экранов
-  const groupedTemplates = filteredTemplates.reduce<Record<number, MediaTemplate[]>>((acc, template) => {
-    const screenCount = template.screens || 1
-    if (!acc[screenCount]) {
-      acc[screenCount] = []
-    }
-    acc[screenCount].push(template)
-    return acc
-  }, {})
+  const groupedTemplates = filteredTemplates.reduce<Record<number, MediaTemplate[]>>(
+    (acc, template) => {
+      const screenCount = template.screens || 1
+      if (!acc[screenCount]) {
+        acc[screenCount] = []
+      }
+      acc[screenCount].push(template)
+      return acc
+    },
+    {},
+  )
 
   // Получаем отсортированные ключи групп (количество экранов)
   const sortedGroups = Object.keys(groupedTemplates)
@@ -146,7 +150,8 @@ export function TemplateList() {
             {sortedGroups.map((screenCount) => (
               <div key={screenCount} className="mb-4">
                 <h3 className="mb-3 text-sm font-medium text-gray-400">
-                  {screenCount} {screenCount === 1 ? 'экран' : screenCount < 5 ? 'экрана' : 'экранов'}
+                  {screenCount}{" "}
+                  {screenCount === 1 ? "экран" : screenCount < 5 ? "экрана" : "экранов"}
                 </h3>
                 <div
                   className="flex flex-wrap gap-4"
