@@ -7,7 +7,7 @@ export const DEFAULT_SIZE = 100
 // Минимальные размеры для разных типов превью
 export const MIN_SIZE = 60
 export const MIN_SIZE_TEMPLATES = 100
-export const MIN_SIZE_TRANSITIONS = 80
+export const MIN_SIZE_TRANSITIONS = 100
 export const MIN_SIZE_SUBTITLES = 80
 
 // Максимальные размеры для разных типов превью
