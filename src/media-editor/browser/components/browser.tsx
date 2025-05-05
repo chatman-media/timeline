@@ -88,10 +88,6 @@ export const Browser = memo(function Browser() {
           <Type className="h-4 w-4" />
           <span>Титры</span>
         </TabsTrigger> */}
-        {/* <TabsTrigger value="stickers" className={TAB_TRIGGER_STYLES}>
-          <Sticker className="w-4 h-4" />
-          <span>Стикеры</span>
-        </TabsTrigger> */}
         <TabsTrigger value="templates" className={TAB_TRIGGER_STYLES}>
           <Layout className="h-4 w-4" />
           <span>Шаблоны</span>
