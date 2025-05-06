@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef } from "react"
+import React, { useMemo } from "react"
 
 import { usePlayerContext } from "@/media-editor/media-player"
 
@@ -9,8 +9,7 @@ interface TimelineBarProps {
 }
 
 export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
-  const { currentTime, setCurrentTime: setTime, isPlaying } = usePlayerContext()
-  const animationFrameRef = useRef<number | undefined>(undefined)
+  const { currentTime, setCurrentTime: setTime } = usePlayerContext()
 
   const position = useMemo(() => {
     if (currentTime < startTime) return "-5px"
@@ -19,39 +18,9 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
     return `${percent}%`
   }, [currentTime, startTime, endTime])
 
-  // Эффект для анимации бара во время воспроизведения
-  useEffect(() => {
-    if (!isPlaying) {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
-      }
-      return
-    }
-
-    let lastTime = performance.now()
-    const animate = (now: number): void => {
-      const deltaTime = (now - lastTime) / 1000 // в секундах
-      lastTime = now
-
-      const newTime = currentTime + deltaTime
-      // Если достигли конца секции, останавливаем анимацию
-      if (newTime >= endTime) {
-        setTime(endTime)
-        return
-      }
-      setTime(newTime)
-
-      animationFrameRef.current = requestAnimationFrame(animate)
-    }
-
-    animationFrameRef.current = requestAnimationFrame(animate)
-
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current)
-      }
-    }
-  }, [isPlaying, endTime, setTime, currentTime])
+  // Убираем эффект для анимации бара во время воспроизведения
+  // Теперь бар будет двигаться только за счет обновления currentTime из плеера
+  // Это предотвратит конфликты между разными источниками обновления времени
 
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>): void => {
     e.stopPropagation()
@@ -77,7 +46,7 @@ export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
     <div
       id="timeline-bar-container"
       className="absolute top-0 right-0 left-0 h-full"
-      style={{ height }}
+      style={{ height: height || "100%" }}
     >
       <div
         className="group absolute top-0 bottom-0 z-[100] flex w-[3px] cursor-col-resize flex-col items-center"

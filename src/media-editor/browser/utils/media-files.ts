@@ -1,5 +1,6 @@
 import { nanoid } from "nanoid"
 
+import { getCameraModel } from "@/lib/utils"
 import { calculateTimeRanges } from "@/lib/video-utils"
 import type { MediaFile, Track } from "@/types/media"
 import type { TimeRange } from "@/types/time-range"
@@ -208,6 +209,37 @@ export const getGroupedFiles = (files: MediaFile[]): Record<string, MediaFile[]>
 }
 
 /**
+ * Проверяет, пересекаются ли два временных интервала
+ * @param start1 - Начало первого интервала
+ * @param end1 - Конец первого интервала
+ * @param start2 - Начало второго интервала
+ * @param end2 - Конец второго интервала
+ * @returns true, если интервалы пересекаются, иначе false
+ */
+const doTimeRangesOverlap = (
+  start1: number,
+  end1: number,
+  start2: number,
+  end2: number,
+): boolean => {
+  // Если интервалы пересекаются, то начало одного должно быть меньше конца другого
+  // и начало другого должно быть меньше конца первого
+  const overlap = start1 < end2 && start2 < end1
+
+  // Добавим небольшой зазор (1 секунда) между видео, чтобы они не считались пересекающимися,
+  // если конец одного видео совпадает с началом другого
+  const overlapWithGap = start1 < end2 - 1 && start2 < end1 - 1
+
+  console.log(
+    `Time ranges overlap check: [${start1}-${end1}] and [${start2}-${end2}]: ${overlap}, with gap: ${overlapWithGap}`,
+  )
+
+  // Проверяем, пересекаются ли временные интервалы
+  // Если видео записаны в одно и то же время (с перекрытием), они должны быть на разных дорожках
+  return overlapWithGap
+}
+
+/**
  * Создает треки из медиафайлов
  * @param files - Массив медиафайлов
  * @returns Массив созданных треков
@@ -216,14 +248,33 @@ export const createTracksFromFiles = (
   files: MediaFile[],
   existingTracks: Track[] = [],
 ): Sector[] => {
+  console.log(
+    "createTracksFromFiles called with files:",
+    files.map((f) => f.name),
+  )
+  console.log(
+    "existingTracks:",
+    existingTracks.map((t) => t.name),
+  )
+
   // Разделяем файлы на видео и аудио
   const videoFiles = files.filter((file) =>
     file.probeData?.streams?.some((stream) => stream.codec_type === "video"),
   )
   const audioFiles = files.filter(
-    (file) => !file.probeData?.streams?.some((stream) => stream.codec_type === "audio"),
+    (file) =>
+      !file.probeData?.streams?.some((stream) => stream.codec_type === "video") &&
+      file.probeData?.streams?.some((stream) => stream.codec_type === "audio"),
   )
-  const tracks: Track[] = []
+
+  console.log(
+    "videoFiles:",
+    videoFiles.map((f) => f.name),
+  )
+  console.log(
+    "audioFiles:",
+    audioFiles.map((f) => f.name),
+  )
 
   // Сортируем файлы по времени начала
   const sortedVideoFiles = [...videoFiles].sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
@@ -235,6 +286,8 @@ export const createTracksFromFiles = (
   const videoFilesByDay = sortedVideoFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
     const startTime = file.startTime || Date.now() / 1000
     const date = new Date(startTime * 1000).toISOString().split("T")[0]
+    console.log(`File ${file.name} has date ${date} from startTime ${startTime}`)
+
     if (!acc[date]) {
       acc[date] = []
     }
@@ -242,67 +295,388 @@ export const createTracksFromFiles = (
     return acc
   }, {})
 
+  console.log(
+    "videoFilesByDay:",
+    Object.entries(videoFilesByDay).map(([date, files]) => ({
+      date,
+      filesCount: files.length,
+      files: files.map((f) => f.name),
+    })),
+  )
+
+  // Получаем существующие секторы и треки по дням
+  const existingSectorsByDay = existingTracks.reduce<
+    Record<string, { sector: Sector | null; tracks: Track[] }>
+  >((acc, track) => {
+    if (!track.videos || track.videos.length === 0) return acc
+
+    const startTime = track.videos[0].startTime || Date.now() / 1000
+    const date = new Date(startTime * 1000).toISOString().split("T")[0]
+
+    if (!acc[date]) {
+      acc[date] = { sector: null, tracks: [] }
+    }
+
+    acc[date].tracks.push(track)
+    return acc
+  }, {})
+
   // Обрабатываем видео файлы по дням
   Object.entries(videoFilesByDay).forEach(([date, dayFiles]) => {
-    // Определяем максимальный номер видеодорожки для этого дня
-    const maxVideoIndex = Math.max(
-      0,
-      ...tracks
-        .filter(
-          (track) =>
-            track.type === "video" &&
-            track.videos?.some(
-              (v) =>
-                v.startTime && new Date(v.startTime * 1000).toISOString().split("T")[0] === date,
-            ),
-        )
-        .map((track) => Number(track.index) || 0),
-      ...existingTracks
-        .filter(
-          (track) =>
-            track.type === "video" &&
-            track.videos?.some(
-              (v) =>
-                v.startTime && new Date(v.startTime * 1000).toISOString().split("T")[0] === date,
-            ),
-        )
-        .map((track) => Number(track.index) || 0),
-    )
+    console.log(`Processing ${dayFiles.length} video files for date ${date}`)
 
-    // Создаем один сектор для всех файлов дня
-    const sector: Sector = {
+    // Получаем существующие треки для этого дня или создаем новый сектор
+    const existingSector = existingSectorsByDay[date]?.sector
+    const existingDayTracks = existingSectorsByDay[date]?.tracks || []
+
+    console.log(`Existing sector for date ${date}: ${existingSector ? "yes" : "no"}`)
+    console.log(`Existing tracks for date ${date}: ${existingDayTracks.length}`)
+
+    // Создаем или используем существующий сектор для всех файлов дня
+    const sector: Sector = existingSector || {
       id: nanoid(),
       name: `Сектор ${date}`,
       tracks: [],
       timeRanges: [],
     }
 
-    // Группируем файлы и создаем треки
-    const groupedVideoFiles = getGroupedFiles(dayFiles)
-    Object.values(groupedVideoFiles).forEach((groupFiles, index) => {
-      sector.tracks.push({
-        id: nanoid(),
-        name: `Видео ${maxVideoIndex + index + 1}`,
-        type: "video",
-        isActive: false,
-        videos: groupFiles,
-        startTime: groupFiles[0].startTime || 0,
-        endTime:
-          (groupFiles[groupFiles.length - 1].startTime || 0) +
-          (groupFiles[groupFiles.length - 1].duration || 0),
-        combinedDuration: groupFiles.reduce((total, file) => total + (file.duration || 0), 0),
-        timeRanges: calculateTimeRanges(groupFiles),
-        index: maxVideoIndex + index + 1,
-        volume: 1,
-        isMuted: false,
-        isLocked: false,
-        isVisible: true,
-      })
-    })
+    console.log(`Using sector ${sector.name} with ${sector.tracks.length} tracks`)
+
+    // Обрабатываем каждый файл и добавляем его на подходящую дорожку
+    for (const file of dayFiles) {
+      const fileStartTime = file.startTime || 0
+      const fileDuration = file.duration || 0
+      const fileEndTime = fileStartTime + fileDuration
+
+      // Ищем подходящую дорожку среди существующих
+      let trackFound = false
+
+      // Создаем идентификатор камеры на основе разрешения
+      // Это более надежный способ определить, что видео сняты одной и той же камерой
+      let cameraId = null
+      let cameraName = null
+
+      // Получаем видеопоток из probeData
+      const videoStream = file.probeData?.streams?.find((stream) => stream.codec_type === "video")
+
+      // Пытаемся получить название модели камеры из метаданных
+      if (file.probeData) {
+        cameraName = getCameraModel(file.probeData)
+        console.log(`Extracted camera model for ${file.name}: ${cameraName || "unknown"}`)
+      }
+
+      // Используем разрешение как идентификатор камеры
+      if (videoStream && videoStream.width && videoStream.height) {
+        // Используем только разрешение для определения камеры
+        cameraId = `${videoStream.width}x${videoStream.height}`
+        console.log(`Using resolution as camera ID for ${file.name}: ${cameraId}`)
+      }
+
+      console.log(`Extracted camera ID for file ${file.name}: ${cameraId || "unknown"}`)
+
+      // Сначала проверяем существующие дорожки в порядке их индекса (сверху вниз)
+      const sortedTracks = [...existingDayTracks, ...sector.tracks]
+        .filter((track) => track.type === "video")
+        .sort((a, b) => (Number(a.index) || 0) - (Number(b.index) || 0))
+
+      // Логируем все дорожки с их ID камер для отладки
+      console.log("Available tracks with camera IDs:")
+      for (const track of sortedTracks) {
+        if (track.videos && track.videos.length > 0) {
+          let trackCameraId = null
+
+          // Проверяем имя дорожки
+          const trackNameMatch = track.name?.match(/Камера (\d+)/)
+          if (trackNameMatch) {
+            trackCameraId = trackNameMatch[1]
+          }
+
+          console.log(
+            `Track ${track.name}: Camera ID = ${trackCameraId || "unknown"}, Videos = ${track.videos.length}`,
+          )
+        }
+      }
+
+      for (const track of sortedTracks) {
+        // Проверяем, пересекается ли новый файл с существующими видео на этой дорожке
+        let hasOverlap = false
+
+        if (track.videos && track.videos.length > 0) {
+          // Проверяем, с какой камеры видео на этой дорожке
+          let trackCameraId = null
+          const trackVideo = track.videos[0]
+
+          // Сначала проверяем имя дорожки, если оно в формате "Камера X"
+          // Это имеет приоритет над другими методами определения ID камеры
+          const trackNameMatch = track.name?.match(/Камера (\d+)/)
+          if (trackNameMatch) {
+            // Используем номер камеры из имени дорожки
+            trackCameraId = trackNameMatch[1]
+            console.log(
+              `Using track name to determine camera ID for ${track.name}: ${trackCameraId}`,
+            )
+          }
+
+          // Если trackCameraId не был определен по имени дорожки,
+          // используем разрешение
+          if (!trackCameraId) {
+            // Получаем видеопоток из probeData
+            const trackVideoStream = trackVideo.probeData?.streams?.find(
+              (stream) => stream.codec_type === "video",
+            )
+
+            // Используем разрешение как идентификатор камеры
+            if (trackVideoStream && trackVideoStream.width && trackVideoStream.height) {
+              // Используем только разрешение для определения камеры
+              trackCameraId = `${trackVideoStream.width}x${trackVideoStream.height}`
+              console.log(
+                `Using resolution as track camera ID for ${trackVideo.name}: ${trackCameraId}`,
+              )
+            }
+          }
+
+          // Сначала проверяем временное перекрытие для всех видео
+          // Если видео не пересекаются по времени, они могут быть на одной дорожке
+          let hasTimeOverlap = false
+
+          for (const video of track.videos) {
+            const videoStartTime = video.startTime || 0
+            const videoDuration = video.duration || 0
+            const videoEndTime = videoStartTime + videoDuration
+
+            const overlap = doTimeRangesOverlap(
+              fileStartTime,
+              fileEndTime,
+              videoStartTime,
+              videoEndTime,
+            )
+            console.log(
+              `Checking overlap between file ${file.name} (${fileStartTime}-${fileEndTime}) and video ${video.name} (${videoStartTime}-${videoEndTime}): ${overlap}`,
+            )
+
+            if (overlap) {
+              hasTimeOverlap = true
+              break
+            }
+          }
+
+          // Если нет временного перекрытия, можно использовать эту дорожку
+          if (!hasTimeOverlap) {
+            hasOverlap = false
+            console.log(
+              `No time overlap for file ${file.name} on track ${track.name}, can use this track`,
+            )
+            break
+          }
+
+          // Если есть временное перекрытие, но это та же камера, все равно используем эту дорожку
+          // Видео с одной камеры всегда должны быть на одной дорожке
+          if (cameraId && trackCameraId && cameraId === trackCameraId) {
+            console.log(
+              `Same camera ID ${cameraId}, using track ${track.name} for file ${file.name} despite time overlap`,
+            )
+            hasOverlap = false // Нет перекрытия, используем ту же дорожку
+            break
+          }
+
+          // Если есть временное перекрытие и это разные камеры, нельзя использовать эту дорожку
+          hasOverlap = true
+        }
+
+        // Если нет пересечений, добавляем файл на эту дорожку
+        if (!hasOverlap) {
+          // Если это дорожка из существующего сектора, добавляем ее в текущий сектор
+          if (!sector.tracks.includes(track)) {
+            const updatedVideos = [...(track.videos || []), file]
+            sector.tracks.push({
+              ...track,
+              videos: updatedVideos,
+              startTime: Math.min(track.startTime || Infinity, fileStartTime),
+              endTime: Math.max(track.endTime || 0, fileEndTime),
+              combinedDuration: (track.combinedDuration || 0) + fileDuration,
+              timeRanges: calculateTimeRanges(updatedVideos),
+            })
+          } else {
+            // Обновляем существующую дорожку в текущем секторе
+            const trackIndex = sector.tracks.findIndex((t) => t.id === track.id)
+            if (trackIndex !== -1) {
+              const updatedVideos = [...(sector.tracks[trackIndex].videos || []), file]
+              sector.tracks[trackIndex] = {
+                ...sector.tracks[trackIndex],
+                videos: updatedVideos,
+                startTime: Math.min(sector.tracks[trackIndex].startTime || Infinity, fileStartTime),
+                endTime: Math.max(sector.tracks[trackIndex].endTime || 0, fileEndTime),
+                combinedDuration: (sector.tracks[trackIndex].combinedDuration || 0) + fileDuration,
+                timeRanges: calculateTimeRanges(updatedVideos),
+              }
+            }
+          }
+
+          trackFound = true
+          break
+        }
+      }
+
+      // Если не нашли подходящую дорожку, ищем самую раннюю дорожку без временного перекрытия
+      if (!trackFound) {
+        console.log(
+          `Track not found for file ${file.name}, looking for the earliest track without time overlap`,
+        )
+
+        // Сортируем дорожки по индексу (сверху вниз)
+        const tracksWithoutOverlap = []
+
+        // Проверяем все дорожки на временное перекрытие
+        for (const track of sortedTracks) {
+          if (track.videos && track.videos.length > 0) {
+            let hasOverlap = false
+
+            // Проверяем временное перекрытие со всеми видео на дорожке
+            for (const video of track.videos) {
+              const videoStartTime = video.startTime || 0
+              const videoDuration = video.duration || 0
+              const videoEndTime = videoStartTime + videoDuration
+
+              if (doTimeRangesOverlap(fileStartTime, fileEndTime, videoStartTime, videoEndTime)) {
+                hasOverlap = true
+                break
+              }
+            }
+
+            // Если нет перекрытия, добавляем дорожку в список подходящих
+            if (!hasOverlap) {
+              tracksWithoutOverlap.push(track)
+            }
+          }
+        }
+
+        // Если нашли дорожки без перекрытия, используем самую раннюю (с наименьшим индексом)
+        if (tracksWithoutOverlap.length > 0) {
+          // Сортируем по индексу и берем первую дорожку
+          const track = tracksWithoutOverlap.sort(
+            (a, b) => (Number(a.index) || 0) - (Number(b.index) || 0),
+          )[0]
+
+          console.log(`Found track without time overlap: ${track.name} for file ${file.name}`)
+
+          // Если это дорожка из существующего сектора, добавляем ее в текущий сектор
+          if (!sector.tracks.includes(track)) {
+            sector.tracks.push({
+              ...track,
+              videos: [...(track.videos || []), file],
+              startTime: Math.min(track.startTime || Infinity, fileStartTime),
+              endTime: Math.max(track.endTime || 0, fileEndTime),
+              combinedDuration: (track.combinedDuration || 0) + fileDuration,
+              timeRanges: calculateTimeRanges([...(track.videos || []), file]),
+            })
+          } else {
+            // Обновляем существующую дорожку в текущем секторе
+            const trackIndex = sector.tracks.findIndex((t) => t.id === track.id)
+            if (trackIndex !== -1) {
+              const updatedVideos = [...(sector.tracks[trackIndex].videos || []), file]
+              sector.tracks[trackIndex] = {
+                ...sector.tracks[trackIndex],
+                videos: updatedVideos,
+                startTime: Math.min(sector.tracks[trackIndex].startTime || Infinity, fileStartTime),
+                endTime: Math.max(sector.tracks[trackIndex].endTime || 0, fileEndTime),
+                combinedDuration: (sector.tracks[trackIndex].combinedDuration || 0) + fileDuration,
+                timeRanges: calculateTimeRanges(updatedVideos),
+              }
+            }
+          }
+
+          trackFound = true
+        }
+      }
+
+      // Если все еще не нашли подходящую дорожку, создаем новую
+      if (!trackFound) {
+        console.log(
+          `No suitable track found for file ${file.name} with camera ID ${cameraId || "unknown"}, creating a new track`,
+        )
+
+        // Определяем максимальный номер видеодорожки для этого дня
+        const maxVideoIndex = Math.max(
+          0,
+          ...sector.tracks
+            .filter((track) => track.type === "video")
+            .map((track) => Number(track.index) || 0),
+          ...existingDayTracks
+            .filter((track) => track.type === "video")
+            .map((track) => Number(track.index) || 0),
+        )
+
+        console.log(
+          `Creating new video track for file ${file.name} with index ${maxVideoIndex + 1}`,
+        )
+
+        // Находим максимальный номер камеры в текущем секторе
+        let maxCameraNumber = 0
+
+        // Ищем дорожки с названием "Камера X" и находим максимальный номер
+        for (const track of sector.tracks) {
+          const cameraMatch = track.name?.match(/Камера (\d+)/)
+          if (cameraMatch) {
+            const cameraNumber = parseInt(cameraMatch[1], 10)
+            if (cameraNumber > maxCameraNumber) {
+              maxCameraNumber = cameraNumber
+            }
+          }
+        }
+
+        // Создаем имя дорожки с учетом ID камеры
+        let trackName = `Видео ${maxVideoIndex + 1}`
+        let trackCameraName = null
+
+        if (cameraId) {
+          // Используем простую нумерацию камер
+          trackName = `Камера ${maxCameraNumber + 1}`
+
+          // Если есть название камеры из метаданных, сохраняем его
+          if (cameraName) {
+            trackCameraName = cameraName
+          }
+        }
+
+        // Создаем новую дорожку
+        sector.tracks.push({
+          id: nanoid(),
+          name: trackName,
+          type: "video",
+          isActive: false,
+          videos: [file],
+          startTime: fileStartTime,
+          endTime: fileEndTime,
+          combinedDuration: fileDuration,
+          timeRanges: calculateTimeRanges([file]),
+          index: maxVideoIndex + 1,
+          volume: 1,
+          isMuted: false,
+          isLocked: false,
+          isVisible: true,
+          cameraId: cameraId || undefined,
+          cameraName: trackCameraName || undefined,
+        })
+
+        console.log(`Sector ${sector.name} now has ${sector.tracks.length} tracks`)
+      }
+    }
 
     // Обновляем timeRanges сектора
     sector.timeRanges = calculateTimeRanges(dayFiles)
-    sectors.push(sector)
+
+    // Добавляем сектор в список, если он новый
+    if (!existingSector) {
+      sectors.push(sector)
+    } else {
+      // Обновляем существующий сектор в списке
+      const sectorIndex = sectors.findIndex((s) => s.id === existingSector?.id)
+      if (sectorIndex !== -1) {
+        sectors[sectorIndex] = sector
+      } else {
+        sectors.push(sector)
+      }
+    }
   })
 
   // Аналогично для аудио файлов
@@ -318,63 +692,146 @@ export const createTracksFromFiles = (
 
   // Обрабатываем аудио файлы по дням
   Object.entries(audioFilesByDay).forEach(([date, dayFiles]) => {
-    const maxAudioIndex = Math.max(
-      0,
-      ...tracks
-        .filter(
-          (track) =>
-            track.type === "audio" &&
-            track.videos?.some(
-              (v) =>
-                v.startTime && new Date(v.startTime * 1000).toISOString().split("T")[0] === date,
-            ),
-        )
-        .map((track) => Number(track.index) || 0),
-      ...existingTracks
-        .filter(
-          (track) =>
-            track.type === "audio" &&
-            track.videos?.some(
-              (v) =>
-                v.startTime && new Date(v.startTime * 1000).toISOString().split("T")[0] === date,
-            ),
-        )
-        .map((track) => Number(track.index) || 0),
-    )
+    // Получаем существующие треки для этого дня или создаем новый сектор
+    const existingSector = existingSectorsByDay[date]?.sector
+    const existingDayTracks = existingSectorsByDay[date]?.tracks || []
 
-    // Создаем один сектор для всех аудио файлов дня
-    const sector: Sector = {
+    // Создаем или используем существующий сектор для всех файлов дня
+    const sector: Sector = existingSector || {
       id: nanoid(),
       name: `Сектор ${date}`,
       tracks: [],
       timeRanges: [],
     }
 
-    const groupedAudioFiles = getGroupedFiles(dayFiles)
-    Object.values(groupedAudioFiles).forEach((groupFiles, index) => {
-      sector.tracks.push({
-        id: nanoid(),
-        name: `Аудио ${maxAudioIndex + index + 1}`,
-        type: "audio",
-        isActive: false,
-        videos: groupFiles,
-        startTime: groupFiles[0].startTime || 0,
-        endTime:
-          (groupFiles[groupFiles.length - 1].startTime || 0) +
-          (groupFiles[groupFiles.length - 1].duration || 0),
-        combinedDuration: groupFiles.reduce((total, file) => total + (file.duration || 0), 0),
-        index: maxAudioIndex + index + 1,
-        volume: 1,
-        isMuted: false,
-        isLocked: false,
-        isVisible: true,
-      })
-    })
+    // Обрабатываем каждый файл и добавляем его на подходящую дорожку
+    for (const file of dayFiles) {
+      const fileStartTime = file.startTime || 0
+      const fileDuration = file.duration || 0
+      const fileEndTime = fileStartTime + fileDuration
+
+      // Ищем подходящую дорожку среди существующих
+      let trackFound = false
+
+      // Сначала проверяем существующие дорожки в порядке их индекса (сверху вниз)
+      const sortedTracks = [...existingDayTracks, ...sector.tracks]
+        .filter((track) => track.type === "audio")
+        .sort((a, b) => (Number(a.index) || 0) - (Number(b.index) || 0))
+
+      for (const track of sortedTracks) {
+        // Проверяем, пересекается ли новый файл с существующими аудио на этой дорожке
+        let hasOverlap = false
+
+        if (track.videos) {
+          for (const audio of track.videos) {
+            const audioStartTime = audio.startTime || 0
+            const audioDuration = audio.duration || 0
+            const audioEndTime = audioStartTime + audioDuration
+
+            if (doTimeRangesOverlap(fileStartTime, fileEndTime, audioStartTime, audioEndTime)) {
+              hasOverlap = true
+              break
+            }
+          }
+        }
+
+        // Если нет пересечений, добавляем файл на эту дорожку
+        if (!hasOverlap) {
+          // Если это дорожка из существующего сектора, добавляем ее в текущий сектор
+          if (!sector.tracks.includes(track)) {
+            const updatedVideos = [...(track.videos || []), file]
+            sector.tracks.push({
+              ...track,
+              videos: updatedVideos,
+              startTime: Math.min(track.startTime || Infinity, fileStartTime),
+              endTime: Math.max(track.endTime || 0, fileEndTime),
+              combinedDuration: (track.combinedDuration || 0) + fileDuration,
+              timeRanges: calculateTimeRanges(updatedVideos),
+            })
+          } else {
+            // Обновляем существующую дорожку в текущем секторе
+            const trackIndex = sector.tracks.findIndex((t) => t.id === track.id)
+            if (trackIndex !== -1) {
+              const updatedVideos = [...(sector.tracks[trackIndex].videos || []), file]
+              sector.tracks[trackIndex] = {
+                ...sector.tracks[trackIndex],
+                videos: updatedVideos,
+                startTime: Math.min(sector.tracks[trackIndex].startTime || Infinity, fileStartTime),
+                endTime: Math.max(sector.tracks[trackIndex].endTime || 0, fileEndTime),
+                combinedDuration: (sector.tracks[trackIndex].combinedDuration || 0) + fileDuration,
+                timeRanges: calculateTimeRanges(updatedVideos),
+              }
+            }
+          }
+
+          trackFound = true
+          break
+        }
+      }
+
+      // Если не нашли подходящую дорожку, создаем новую
+      if (!trackFound) {
+        // Определяем максимальный номер аудиодорожки для этого дня
+        const maxAudioIndex = Math.max(
+          0,
+          ...sector.tracks
+            .filter((track) => track.type === "audio")
+            .map((track) => Number(track.index) || 0),
+          ...existingDayTracks
+            .filter((track) => track.type === "audio")
+            .map((track) => Number(track.index) || 0),
+        )
+
+        // Создаем новую дорожку
+        sector.tracks.push({
+          id: nanoid(),
+          name: `Аудио ${maxAudioIndex + 1}`,
+          type: "audio",
+          isActive: false,
+          videos: [file],
+          startTime: fileStartTime,
+          endTime: fileEndTime,
+          combinedDuration: fileDuration,
+          timeRanges: calculateTimeRanges([file]),
+          index: maxAudioIndex + 1,
+          volume: 1,
+          isMuted: false,
+          isLocked: false,
+          isVisible: true,
+        })
+      }
+    }
 
     // Обновляем timeRanges сектора
     sector.timeRanges = calculateTimeRanges(dayFiles)
-    sectors.push(sector)
+
+    // Добавляем сектор в список, если он новый
+    if (!existingSector) {
+      sectors.push(sector)
+    } else {
+      // Обновляем существующий сектор в списке
+      const sectorIndex = sectors.findIndex((s) => s.id === existingSector?.id)
+      if (sectorIndex !== -1) {
+        sectors[sectorIndex] = sector
+      } else {
+        sectors.push(sector)
+      }
+    }
   })
+
+  console.log(
+    "Created sectors:",
+    sectors.map((s) => ({
+      name: s.name,
+      tracksCount: s.tracks.length,
+      tracks: s.tracks.map((t) => ({
+        name: t.name,
+        type: t.type,
+        videosCount: t.videos?.length || 0,
+        videos: t.videos?.map((v) => v.name),
+      })),
+    })),
+  )
 
   return sectors
 }

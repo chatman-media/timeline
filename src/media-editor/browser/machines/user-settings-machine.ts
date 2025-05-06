@@ -12,7 +12,14 @@ export const STORAGE_KEYS = {
 } as const
 
 // Допустимые значения для активного таба
-export const BROWSER_TABS = ["media", "music", "transitions", "effects", "filters", "templates"] as const
+export const BROWSER_TABS = [
+  "media",
+  "music",
+  "transitions",
+  "effects",
+  "filters",
+  "templates",
+] as const
 export const DEFAULT_TAB = "media"
 
 export type PreviewSize = (typeof PREVIEW_SIZES)[number]
@@ -41,7 +48,11 @@ type UserSettingsLoadedEvent = {
   previewSizes: Record<"MEDIA" | "TRANSITIONS" | "TEMPLATES", PreviewSize>
   activeTab: BrowserTab
 }
-type UpdatePreviewSizeEvent = { type: "UPDATE_PREVIEW_SIZE"; key: "MEDIA" | "TRANSITIONS" | "TEMPLATES"; size: PreviewSize }
+type UpdatePreviewSizeEvent = {
+  type: "UPDATE_PREVIEW_SIZE"
+  key: "MEDIA" | "TRANSITIONS" | "TEMPLATES"
+  size: PreviewSize
+}
 type UpdateActiveTabEvent = { type: "UPDATE_ACTIVE_TAB"; tab: BrowserTab }
 
 export type UserSettingsEvent =
@@ -123,7 +134,12 @@ export const userSettingsMachine = createMachine(
 
           // Проверяем, что значение таба является допустимым
           if (savedTab) {
-            console.log("Checking if saved tab is valid:", savedTab, "includes:", BROWSER_TABS.includes(savedTab as BrowserTab))
+            console.log(
+              "Checking if saved tab is valid:",
+              savedTab,
+              "includes:",
+              BROWSER_TABS.includes(savedTab as BrowserTab),
+            )
 
             if (BROWSER_TABS.includes(savedTab as BrowserTab)) {
               activeTab = savedTab as BrowserTab
@@ -206,11 +222,12 @@ export const userSettingsMachine = createMachine(
       }),
       savePreviewSizeToStorage: (_, event: any) => {
         if (event.type === "UPDATE_PREVIEW_SIZE") {
-          const storageKey = event.key === "MEDIA"
-            ? STORAGE_KEYS.MEDIA
-            : event.key === "TRANSITIONS"
-              ? STORAGE_KEYS.TRANSITIONS
-              : STORAGE_KEYS.TEMPLATES
+          const storageKey =
+            event.key === "MEDIA"
+              ? STORAGE_KEYS.MEDIA
+              : event.key === "TRANSITIONS"
+                ? STORAGE_KEYS.TRANSITIONS
+                : STORAGE_KEYS.TEMPLATES
 
           try {
             localStorage.setItem(storageKey, event.size.toString())

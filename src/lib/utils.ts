@@ -228,3 +228,90 @@ export function getMediaCreationTime(probeData: FfprobeData): number {
   )
   return Math.floor(Date.now() / 1000)
 }
+
+/**
+ * Извлекает информацию о модели камеры из метаданных видео
+ * @param probeData Метаданные видео
+ * @returns Название модели камеры или null, если информация не найдена
+ */
+export function getCameraModel(probeData: FfprobeData): string | null {
+  // Проверяем различные поля метаданных, где может быть информация о камере
+
+  // 1. Проверяем теги формата
+  if (probeData?.format?.tags) {
+    const tags = probeData.format.tags
+
+    // Проверяем различные возможные теги для модели камеры
+    if (tags.make && tags.model) {
+      return `${tags.make} ${tags.model}`
+    }
+
+    if (tags.model) {
+      return tags.model as string
+    }
+
+    if (tags.make) {
+      return tags.make as string
+    }
+
+    // Проверяем compatible_brands, который может содержать информацию о производителе
+    if (tags.compatible_brands) {
+      const brands = (tags.compatible_brands as string).toLowerCase()
+
+      // Проверяем наличие известных брендов в строке compatible_brands
+      if (brands.includes("sony")) return "Sony"
+      if (brands.includes("apple")) return "iPhone"
+      if (brands.includes("gopro")) return "GoPro"
+      if (brands.includes("canon")) return "Canon"
+      if (brands.includes("nikon")) return "Nikon"
+      if (brands.includes("pana")) return "Panasonic"
+      if (brands.includes("olymp")) return "Olympus"
+      if (brands.includes("fuji")) return "Fujifilm"
+
+      // Если нашли какие-то бренды, но они не соответствуют известным,
+      // возвращаем саму строку compatible_brands для дальнейшего анализа
+      return `Camera (${tags.compatible_brands})`
+    }
+
+    if (tags.encoder) {
+      return tags.encoder as string
+    }
+
+    if (tags.handler_name) {
+      return tags.handler_name as string
+    }
+
+    if (tags.device_model) {
+      return tags.device_model as string
+    }
+  }
+
+  // 2. Проверяем теги видеопотока
+  const videoStream = probeData?.streams?.find((stream) => stream.codec_type === "video")
+  if (videoStream?.tags) {
+    const tags = videoStream.tags
+
+    if (tags.make && tags.model) {
+      return `${tags.make} ${tags.model}`
+    }
+
+    if (tags.model) {
+      return tags.model as string
+    }
+
+    if (tags.make) {
+      return tags.make as string
+    }
+
+    if (tags.encoder) {
+      return tags.encoder as string
+    }
+
+    if (tags.handler_name) {
+      return tags.handler_name as string
+    }
+  }
+
+  // 3. Если не нашли информацию о камере, возвращаем null
+  return null
+}

@@ -1,12 +1,22 @@
 import { cn } from "@/lib/utils"
-import { useTimeline } from "@/media-editor/timeline/services"
+import { TimelineTopPanel, useTimeline } from "@/media-editor/timeline/"
 import { MediaFile, Track } from "@/types/media"
-
-import { TimelineTopPanel } from "./timeline-top-panel"
 
 export function TimelineLayout() {
   const { sectors } = useTimeline()
-  console.log(sectors)
+
+  console.log(
+    "TimelineLayout rendering with sectors:",
+    sectors.map((s) => ({
+      name: s.name,
+      tracksCount: s.tracks.length,
+      tracks: s.tracks.map((t) => ({
+        name: t.name,
+        videosCount: t.videos?.length || 0,
+      })),
+    })),
+  )
+
   return (
     <div className="flex h-full flex-col">
       {/* Панель управления дорожками */}
@@ -34,21 +44,35 @@ export function TimelineLayout() {
               )}px`,
             }}
           >
-            {sectors?.map((sector, index) => (
-              <div key={index} className="flex w-full flex-col gap-1 p-2">
-                <div className="z-10 h-[26px] w-full flex-shrink-0"></div>
-                {sector.tracks.map((track: Track, i: number) => (
-                  <div
-                    key={i}
-                    className="min-h-[50px] w-full flex-1 bg-[#033032] p-2 text-sm"
-                    style={{ height: `50px` }}
-                  >
-                    {track.name}
-                  </div>
-                ))}
-                <div className="h-[11px] w-full flex-shrink-0"></div>
-              </div>
-            ))}
+            {sectors?.map((sector, index) => {
+              console.log(`Rendering sector ${sector.name} with ${sector.tracks.length} tracks`)
+              return (
+                <div key={index} className="flex w-full flex-col gap-1 p-2">
+                  <div className="z-10 h-[26px] w-full flex-shrink-0 font-bold">{sector.name}</div>
+                  {sector.tracks.map((track: Track, i: number) => {
+                    console.log(
+                      `Rendering track ${track.name} with ${track.videos?.length || 0} videos`,
+                    )
+                    return (
+                      <div
+                        key={i}
+                        className="min-h-[50px] w-full flex-1 bg-[#033032] p-2 text-sm"
+                        style={{ height: `50px` }}
+                      >
+                        <div className="flex flex-row justify-between">
+                          <div>{track.name}</div>
+                          <div className="font-bold">({track.videos?.length || 0} видео)</div>
+                        </div>
+                        <div className="truncate text-xs text-gray-400">
+                          {track.videos?.map((v) => v.name).join(", ")}
+                        </div>
+                      </div>
+                    )
+                  })}
+                  <div className="h-[11px] w-full flex-shrink-0"></div>
+                </div>
+              )
+            })}
           </div>
 
           {/* Правая часть со скроллом */}
@@ -92,11 +116,35 @@ export function TimelineLayout() {
                       className={cn("h-[50px] w-[220px] flex-shrink-0 rounded-lg bg-[#033032]")}
                       style={{ width: `${(track.combinedDuration ?? 0) * 5}px` }}
                     >
-                      <div className="h-full flex-1 justify-between text-sm">
-                        {track.name}
-                        {track.videos?.map((video: MediaFile, index: number) => (
-                          <div key={index}>{video.name}</div>
-                        ))}
+                      <div className="h-full flex-1 justify-between overflow-x-auto text-sm whitespace-nowrap">
+                        <div className="flex flex-row justify-between">
+                          <div className="font-bold">{track.name}</div>
+                          <div className="font-bold">({track.videos?.length || 0} видео)</div>
+                        </div>
+                        <div
+                          className="relative flex flex-row gap-2 overflow-x-auto"
+                          style={{ height: "30px" }}
+                        >
+                          {track.videos?.map((video: MediaFile, index: number) => (
+                            <div
+                              key={index}
+                              className="absolute rounded bg-[#044042] px-1"
+                              style={{
+                                left: `${(video.startTime || 0) * 5}px`,
+                                width: `${(video.duration || 0) * 5}px`,
+                                height: "30px",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
+                            >
+                              {video.name}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   ))}

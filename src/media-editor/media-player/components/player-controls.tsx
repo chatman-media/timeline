@@ -12,7 +12,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { EntryPointIcon } from "@/components/icons/entry-point"
 import { ExitPointIcon } from "@/components/icons/exit-point"
@@ -42,19 +42,55 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   } = usePlayerContext()
   const [isFullscreen, setIsFullscreen] = useState(false)
   const lastSaveTime = useRef(0)
-  const SAVE_INTERVAL = 5000 // Сохраняем каждые 5 секунд
+  const SAVE_INTERVAL = 3000 // Сохраняем каждые 3 секунды
 
-  // Сохраняем состояние периодически
+  // Временно отключаем сохранение состояния периодически
   useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now()
       if (now - lastSaveTime.current >= SAVE_INTERVAL) {
         lastSaveTime.current = now
+
+        // Логируем, что сохранение отключено
+        if (video) {
+          console.log("Player state persistence is temporarily disabled")
+
+          // Закомментированный код сохранения состояния
+          /*
+          // Вызываем функцию сохранения состояния через событие
+          const saveEvent = new CustomEvent('persist-player-state');
+          window.dispatchEvent(saveEvent);
+
+          // Также вызываем функцию сохранения напрямую через машину состояний
+          try {
+            // Динамически импортируем idb-keyval для сохранения состояния
+            import('idb-keyval').then(({ set }) => {
+              // Создаем копию состояния для сохранения, исключая videoRefs
+              const stateToSave = {
+                video,
+                currentTime,
+                duration: video.duration || 0,
+                volume,
+                isPlaying,
+                // Не сохраняем videoRefs, так как они содержат DOM-элементы
+                videoRefs: {}
+              };
+
+              // Сохраняем состояние в IndexedDB
+              set('player-state', stateToSave)
+                .then(() => console.log("Player state saved to IndexedDB"))
+                .catch(error => console.error("Failed to save player state:", error));
+            });
+          } catch (error) {
+            console.error("Error saving player state:", error);
+          }
+          */
+        }
       }
     }, SAVE_INTERVAL)
 
     return () => clearInterval(interval)
-  }, [])
+  }, [video])
 
   // Упрощаем handlePlayPause: только переключаем isPlaying
   const handlePlayPause = useCallback(() => {
@@ -164,15 +200,21 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       // Для коротких видео используем меньший порог изменения
       const timeChangeThreshold = isShortVideo ? 0.001 : 0.01
 
+      // Вычисляем локальное время для сравнения
+      const localTime =
+        currentTime > 365 * 24 * 60 * 60 && video.startTime
+          ? Math.max(0, currentTime - (video.startTime || 0))
+          : currentTime
+
       // Проверяем, существенно ли изменилось время
-      if (Math.abs(clampedTime - currentTime) < timeChangeThreshold) return
+      if (Math.abs(clampedTime - localTime) < timeChangeThreshold) return
 
       // Логируем только при значительных изменениях времени
-      if (Math.abs(clampedTime - currentTime) > 0.5) {
+      if (Math.abs(clampedTime - localTime) > 0.5) {
         console.log("[handleTimeChange] Значительное изменение времени:", {
-          currentTime: currentTime.toFixed(3),
+          currentTime: localTime.toFixed(3),
           clampedTime: clampedTime.toFixed(3),
-          delta: (clampedTime - currentTime).toFixed(3),
+          delta: (clampedTime - localTime).toFixed(3),
         })
       }
 
@@ -180,8 +222,29 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       // конфликтов с обновлениями от timeupdate
       setIsSeeking(true)
 
+      // Если текущее время - Unix timestamp, сохраняем только относительный прогресс
+      // и не меняем глобальное время
+      if (currentTime > 365 * 24 * 60 * 60) {
+        // Устанавливаем только флаг перемотки, чтобы синхронизировать видео
+        // Глобальное время (Unix timestamp) не меняем
+        console.log(
+          `[handleTimeChange] Установка относительного прогресса: ${clampedTime.toFixed(3)}`,
+        )
+        setIsSeeking(true)
+
+        // Завершаем обработку, не вызывая setCurrentTime
+        return
+      }
+
+      // Для обычного времени преобразуем относительное время в абсолютное
+      let newTime = clampedTime
+      if (video.startTime) {
+        newTime = video.startTime + clampedTime
+        console.log(`[handleTimeChange] Преобразование времени: ${clampedTime} -> ${newTime}`)
+      }
+
       // Устанавливаем новое время с пометкой, что источник - пользователь
-      setCurrentTime(clampedTime)
+      setCurrentTime(newTime)
     },
     [video, setCurrentTime, setIsSeeking, currentTime],
   )
@@ -242,31 +305,92 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`
   }
 
-  // Лог для проверки получаемого currentTime
-  console.log("[PlayerControls] Rendering with currentTime:", currentTime)
+  // Получаем videoRefs из контекста плеера на верхнем уровне компонента
+  const { videoRefs } = usePlayerContext()
+
+  // Используем состояние для хранения текущего времени воспроизведения
+  const [localDisplayTime, setLocalDisplayTime] = useState(0)
+
+  // Обновляем локальное время при воспроизведении
+  useEffect(() => {
+    if (!video?.id || !videoRefs[video.id]) return
+
+    const videoElement = videoRefs[video.id]
+
+    // Функция обновления времени
+    const updateTime = () => {
+      setLocalDisplayTime(videoElement.currentTime)
+    }
+
+    // Добавляем обработчик события timeupdate
+    if (isPlaying) {
+      videoElement.addEventListener("timeupdate", updateTime)
+    }
+
+    return () => {
+      videoElement.removeEventListener("timeupdate", updateTime)
+    }
+  }, [video?.id, videoRefs, isPlaying])
+
+  // Нормализуем currentTime для отображения, если это Unix timestamp
+  const displayTime = useMemo(() => {
+    if (currentTime > 365 * 24 * 60 * 60) {
+      // Если время больше года в секундах, это, вероятно, Unix timestamp
+      // Используем локальное время для отображения
+      return localDisplayTime
+    }
+    return currentTime
+  }, [currentTime, localDisplayTime])
+
+  // Ограничиваем логирование, чтобы не перегружать консоль
+  useEffect(() => {
+    console.log(
+      "[PlayerControls] Rendering with currentTime:",
+      currentTime,
+      "displayTime:",
+      displayTime,
+    )
+  }, [currentTime, displayTime])
 
   return (
     <div className="flex w-full flex-col">
       {/* Прогресс-бар и время */}
       <div className="px-4 py-2">
         <div className="flex items-center gap-2">
-          <div className="flex-1 bg-red-500">
-            <Slider
-              value={[Math.max(0, currentTime)]}
-              min={0}
-              max={video?.duration || 100}
-              step={0.001}
-              onValueChange={handleTimeChange}
-              className="cursor-pointer"
-            />
+          <div className="flex-1">
+            <div className="relative h-1 w-full rounded-full border border-white bg-gray-800">
+              <div
+                className="absolute top-0 left-0 h-full rounded-full bg-white"
+                style={{ width: `${(Math.max(0, displayTime) / (video?.duration || 100)) * 100}%` }}
+              />
+              <div
+                className="absolute top-1/2 h-[13px] w-[13px] -translate-y-1/2 rounded-full border border-white bg-white"
+                style={{
+                  left: `calc(${(Math.max(0, displayTime) / (video?.duration || 100)) * 100}% - 6px)`,
+                }}
+              />
+              <Slider
+                value={[Math.max(0, displayTime)]}
+                min={0}
+                max={video?.duration || 100}
+                step={0.001}
+                onValueChange={handleTimeChange}
+                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              />
+            </div>
           </div>
           <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
-            {formatTime(Math.max(0, currentTime))}
+            {formatTime(Math.max(0, displayTime))}
           </span>
           <span className="mb-[3px]">/</span>
           <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
             {formatTime(video?.duration || 0)}
           </span>
+
+          {/* Скрытый элемент для обновления компонента при воспроизведении */}
+          {currentTime > 365 * 24 * 60 * 60 && (
+            <span className="hidden">{localDisplayTime.toFixed(3)}</span>
+          )}
         </div>
       </div>
 
@@ -395,14 +519,24 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
               </Button>
               <div className="w-20">
-                <Slider
-                  value={[volume]}
-                  min={0}
-                  max={1}
-                  step={0.01}
-                  onValueChange={handleVolumeChange}
-                  className="cursor-pointer"
-                />
+                <div className="relative h-1 w-full rounded-full border border-white bg-gray-800">
+                  <div
+                    className="absolute top-0 left-0 h-full rounded-full bg-white"
+                    style={{ width: `${volume * 100}%` }}
+                  />
+                  <div
+                    className="absolute top-1/2 h-[11px] w-[11px] -translate-y-1/2 rounded-full border border-white bg-white"
+                    style={{ left: `calc(${volume * 100}% - 5px)` }}
+                  />
+                  <Slider
+                    value={[volume]}
+                    min={0}
+                    max={1}
+                    step={0.01}
+                    onValueChange={handleVolumeChange}
+                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                  />
+                </div>
               </div>
             </div>
 

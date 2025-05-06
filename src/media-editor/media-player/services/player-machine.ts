@@ -109,11 +109,40 @@ export type PlayerEvent =
   | SetVideoLoadingEvent
   | SetVideoReadyEvent
 
+// Функция для сохранения состояния плеера в IndexedDB - временно отключена
+const persistPlayerState = async (_: { context: PlayerContextType }): Promise<void> => {
+  // Временно отключаем сохранение состояния плеера
+  console.log("Player state persistence is temporarily disabled")
+
+  // Закомментированный код сохранения состояния
+  /*
+  try {
+    // Импортируем set из idb-keyval динамически, чтобы избежать проблем с SSR
+    const { set } = await import('idb-keyval');
+
+    // Создаем копию контекста для сохранения, исключая videoRefs, которые нельзя сериализовать
+    const stateToSave = {
+      ...context,
+      // Исключаем videoRefs, так как они содержат DOM-элементы, которые нельзя сериализовать
+      videoRefs: {}
+    };
+
+    // Сохраняем состояние в IndexedDB
+    await set('player-state', stateToSave);
+    console.log("Player state saved to IndexedDB");
+  } catch (error) {
+    console.error("Failed to save player state to IndexedDB:", error);
+  }
+  */
+}
+
 export const playerMachine = createMachine({
   /** @xstate-layout N4IgpgJg5mDOIC5QAcA2BDAnmATgOgEsJUwBiWMAFwBUCBbMAbQAYBdRFAe1gMoM4B2HEAA9EATgDMeAGwB2cTIAccgKwAaEJgkAWcXlVylARgBMqgL4XNaLLkLEyFSgElYABQyYCAqC3ZIIMjcvPxCgWIIRnhyMsZyxioaWohKqtJmltZBXvZEJORUbgDKYGAA1j5+bMLBPHyCwpGxmtpRqjKyCUlWNrn4+U5FsADCABbovlUj6Aw46P61IQ3hoJE6pq2IMjLMeKaJar05dgOOha6wAEpgAMacOBBVi4F1oY0R20p4kpKqUmotggOtJYh1zMdbNgzgVnAA1IhgTg3ABmsBeXHqYSaiDkOh+8kOyTaOnkP0ykP6DlhVARECRGKCy2xnwQ4j2Ol+-0kgJSCB5ezSAKyfVO1KGlDpSPRNVezI+a1SnUkxhkOmYMnMQNMeLw6s1IpO0PFFwAIgBXeYrRlvFY4hBKPY6uSSTm8trxOR4cTpCnZKF5c7wzioc0MG3y1aiVL4yTMUlJIEmAxWbICTj0+CvfpLLEK6MIAC0MiBxcpYsGufeUcixmMe1VCmU7sQ9dUxjwzBVENTQA */
   id: "player",
   initial: "idle",
   context: initialContext,
+  // Отключаем автоматическое сохранение состояния при инициализации
+  // entry: [persistPlayerState],
   states: {
     idle: {
       on: {
@@ -123,9 +152,12 @@ export const playerMachine = createMachine({
             assign({ video: ({ event }) => event.video }),
             assign({ isVideoLoading: true }),
             assign({ isVideoReady: false }),
+            // Отключаем сохранение состояния при изменении видео
+            // ({ context }) => persistPlayerState({ context }),
           ],
         },
         setCurrentTime: {
+          // Не вызываем persistPlayerState при обновлении currentTime для повышения производительности
           actions: assign({ currentTime: ({ event }) => event.currentTime }),
         },
         setIsPlaying: {
@@ -160,12 +192,46 @@ export const playerMachine = createMachine({
       on: {
         setVideoReady: {
           target: "ready",
-          actions: assign({ isVideoReady: true, isVideoLoading: false }),
+          actions: [
+            assign({ isVideoReady: true, isVideoLoading: false }),
+            // Отключаем сохранение состояния при изменении готовности видео
+            // ({ context }) => persistPlayerState({ context }),
+          ],
         },
         setVideoLoading: {
           actions: assign({
             isVideoLoading: ({ event }) => event.isVideoLoading,
           }),
+        },
+        setIsPlaying: {
+          actions: assign({ isPlaying: ({ event }) => event.isPlaying }),
+        },
+        setCurrentTime: {
+          // Не вызываем persistPlayerState при обновлении currentTime для повышения производительности
+          actions: assign({ currentTime: ({ event }) => event.currentTime }),
+        },
+        setIsSeeking: {
+          actions: assign({ isSeeking: ({ event }) => event.isSeeking }),
+        },
+        setIsChangingCamera: {
+          actions: assign({
+            isChangingCamera: ({ event }) => event.isChangingCamera,
+          }),
+        },
+        setIsRecording: {
+          actions: assign({ isRecording: ({ event }) => event.isRecording }),
+        },
+        setVideoRefs: {
+          actions: assign({ videoRefs: ({ event }) => event.videoRefs }),
+        },
+        setVideos: {
+          actions: assign({ videos: ({ event }) => event.videos }),
+        },
+        setDuration: {
+          actions: assign({ duration: ({ event }) => event.duration }),
+        },
+        setVolume: {
+          actions: assign({ volume: ({ event }) => event.volume }),
         },
       },
     },
@@ -177,7 +243,39 @@ export const playerMachine = createMachine({
             assign({ video: ({ event }) => event.video }),
             assign({ isVideoLoading: true }),
             assign({ isVideoReady: false }),
+            // Отключаем сохранение состояния при изменении видео
+            // ({ context }) => persistPlayerState({ context }),
           ],
+        },
+        setIsPlaying: {
+          actions: assign({ isPlaying: ({ event }) => event.isPlaying }),
+        },
+        setCurrentTime: {
+          // Не вызываем persistPlayerState при обновлении currentTime для повышения производительности
+          actions: assign({ currentTime: ({ event }) => event.currentTime }),
+        },
+        setIsSeeking: {
+          actions: assign({ isSeeking: ({ event }) => event.isSeeking }),
+        },
+        setIsChangingCamera: {
+          actions: assign({
+            isChangingCamera: ({ event }) => event.isChangingCamera,
+          }),
+        },
+        setIsRecording: {
+          actions: assign({ isRecording: ({ event }) => event.isRecording }),
+        },
+        setVideoRefs: {
+          actions: assign({ videoRefs: ({ event }) => event.videoRefs }),
+        },
+        setVideos: {
+          actions: assign({ videos: ({ event }) => event.videos }),
+        },
+        setDuration: {
+          actions: assign({ duration: ({ event }) => event.duration }),
+        },
+        setVolume: {
+          actions: assign({ volume: ({ event }) => event.volume }),
         },
       },
     },

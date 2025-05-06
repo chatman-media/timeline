@@ -20,10 +20,18 @@ const TIME_CONSTANTS = {
  * const ranges = calculateTimeRanges(videos);
  */
 export const calculateTimeRanges = (videos: MediaFile[]): TimeRange[] => {
+  console.log(
+    "calculateTimeRanges called with videos:",
+    videos.map((v) => v.name),
+  )
+
   const times = videos.flatMap((v: MediaFile) => {
     const startTime = (v.startTime || 0) * TIME_CONSTANTS.MILLISECONDS_IN_SECOND
     const duration = v.duration || 0
     const endTime = startTime + duration * TIME_CONSTANTS.MILLISECONDS_IN_SECOND
+    console.log(
+      `Video ${v.name}: startTime=${startTime / 1000}s, duration=${duration}s, endTime=${endTime / 1000}s`,
+    )
     return [startTime, endTime]
   })
 
@@ -55,6 +63,8 @@ export const calculateTimeRanges = (videos: MediaFile[]): TimeRange[] => {
     }
   }
   ranges.push(currentRange)
+
+  console.log("Calculated time ranges:", ranges)
 
   return ranges
 }

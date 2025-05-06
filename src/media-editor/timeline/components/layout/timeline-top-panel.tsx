@@ -129,11 +129,31 @@ export function TimelineTopPanel({
         <div className="z-10 flex items-center gap-2 p-2">
           {/* Двунаправленная стрелка */}
           <button
+            onClick={() => {
+              // Вызываем функцию fitToScreen через родительский компонент
+              if (isAbleToFitToTracks) {
+                // Получаем контейнер таймлайна
+                const timelineContainer = document.querySelector(".timeline-container")
+                if (timelineContainer) {
+                  // Получаем ширину контейнера
+                  const width = timelineContainer.clientWidth
+                  console.log(`MoveHorizontal button clicked, container width: ${width}px`)
+
+                  // Отправляем событие FIT_TO_SCREEN с шириной контейнера
+                  window.dispatchEvent(
+                    new CustomEvent("fit-to-screen", {
+                      detail: { width },
+                    }),
+                  )
+                }
+              }
+            }}
             className={cn(
               ICON_STYLE,
               "relative flex items-center justify-center",
               !isAbleToFitToTracks && "pointer-events-none opacity-50",
             )}
+            title="Масштабировать под ширину экрана"
           >
             <MoveHorizontal size={16} />
           </button>

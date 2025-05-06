@@ -1,7 +1,10 @@
 import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
-import { userSettingsMachine, BrowserTab } from "../machines/user-settings-machine"
+import {
+  BrowserTab,
+  userSettingsMachine,
+} from "@/media-editor/browser/machines/user-settings-machine"
 import { browserInspector } from "@/media-editor/providers"
 
 interface UserSettingsContextValue {

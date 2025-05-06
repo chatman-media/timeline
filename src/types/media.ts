@@ -62,17 +62,30 @@ export interface FileGroup {
   videosPerSeries?: number
 }
 
+export interface VideoSegment {
+  id: string
+  videoId: string
+  startTime: number
+  endTime: number
+  duration: number
+  isVisible?: boolean
+  isSelected?: boolean
+}
+
 export interface Track {
   id: string
   name?: string
   type?: "video" | "audio" | "image"
   isActive?: boolean
   videos?: MediaFile[]
+  segments?: VideoSegment[]
   startTime?: number
   endTime?: number
   combinedDuration?: number
   timeRanges?: TimeRange[]
   index: string | number
+  cameraId?: string
+  cameraName?: string // Пользовательское название камеры (например, "Sony Alpha")
 
   volume?: number
   isMuted?: boolean

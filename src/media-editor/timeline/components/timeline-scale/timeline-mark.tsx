@@ -23,11 +23,11 @@ export function TimelineMark({ timestamp, position, markType, showValue }: Timel
 
   return (
     <>
-      <div className="absolute flex h-full flex-col items-start" style={{ left: `${position}%` }}>
+      <div className="absolute flex h-full flex-col items-start" style={{ left: `${position}px` }}>
         <div className={`w-[1px] ${getMarkHeight()}`} />
         {showValue && (
           <span
-            className={`absolute top-4 mt-0 translate-x-[10px] transform text-[11px] whitespace-nowrap text-gray-900 dark:text-gray-100`}
+            className={`absolute top-4 mt-0 -translate-x-1/2 transform text-[11px] whitespace-nowrap text-gray-900 dark:text-gray-100`}
           >
             {formatTimeWithMilliseconds(timestamp, false, true, false)}
           </span>

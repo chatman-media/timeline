@@ -1,6 +1,5 @@
 import { useActorRef, useSelector } from "@xstate/react"
-import { get } from "idb-keyval"
-import React, { createContext, ReactNode, useContext, useEffect } from "react"
+import React, { createContext, ReactNode, useContext } from "react"
 
 import { Sector } from "@/media-editor/browser"
 import {
@@ -10,8 +9,6 @@ import {
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimeRange } from "@/types/time-range"
-
-const TIMELINE_STORAGE_KEY = "timeline-state"
 
 interface TimelineContextType {
   isDirty: boolean
@@ -31,6 +28,7 @@ interface TimelineContextType {
   currentStateIndex: number
 
   zoom: (level: number) => void
+  fitToScreen: (containerWidth: number) => void
   undo: () => void
   redo: () => void
   setTracks: (tracks: Track[]) => void
@@ -65,26 +63,6 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
   const timelineActor = useActorRef(timelineMachine)
   const state = useSelector(timelineActor, (state) => state.context)
   const send = timelineActor.send
-
-  // Загружаем сохраненное состояние при монтировании
-  useEffect(() => {
-    const loadPersistedState = async (): Promise<void> => {
-      try {
-        const persistedState = await get(TIMELINE_STORAGE_KEY)
-        if (persistedState) {
-          send({ type: "RESTORE_STATE", state: persistedState })
-        }
-      } catch (error) {
-        console.error("Failed to load persisted timeline state:", error)
-      }
-    }
-
-    loadPersistedState()
-
-    return () => {
-      timelineActor.stop()
-    }
-  }, [timelineActor, send])
 
   const handleZoom = React.useCallback(
     (level: number) => {
@@ -184,9 +162,17 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     send({ type: "PRELOAD_ALL_VIDEOS" })
   }, [send])
 
+  const handleFitToScreen = React.useCallback(
+    (containerWidth: number) => {
+      send({ type: "FIT_TO_SCREEN", containerWidth })
+    },
+    [send],
+  )
+
   const value: TimelineContextType = {
     ...state,
     zoom: handleZoom,
+    fitToScreen: handleFitToScreen,
     undo: handleUndo,
     redo: handleRedo,
     setTracks: handleSetTracks,

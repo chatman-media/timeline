@@ -3,12 +3,10 @@ import { memo, useMemo } from "react"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { Track } from "@/types/media"
 
-import { TimelineScale } from "./timeline-scale/timeline-scale"
 import { VideoTrack } from "./track/video-track"
 
 interface TimelineContainerProps {
   startTime: number
-  endTime: number
   duration: number
   children: React.ReactNode
 }
@@ -27,8 +25,8 @@ interface TrackCoordinates {
 
 export const TimelineContainer = memo(function TimelineContainer({
   startTime,
-  endTime,
   duration,
+  children,
 }: TimelineContainerProps) {
   const { tracks } = useTimeline()
 
@@ -83,20 +81,23 @@ export const TimelineContainer = memo(function TimelineContainer({
     )
   }, [tracks, startTime, duration])
 
+  // Получаем текущий уровень масштабирования из контекста
+  const { zoomLevel = 1 } = useTimeline()
+
   return (
     <div className="flex h-full w-full flex-col">
-      <TimelineScale startTime={startTime} endTime={endTime} duration={duration} />
       <div className="relative w-full">
-        {tracks.map((track, index) => (
-          <VideoTrack
-            key={track.id}
-            track={track}
-            index={index}
-            sectionStartTime={startTime}
-            sectionDuration={duration}
-            coordinates={trackCoordinates[track.id]}
-          />
-        ))}
+        {children ||
+          tracks.map((track, index) => (
+            <VideoTrack
+              key={track.id}
+              track={track}
+              index={index}
+              sectionStartTime={startTime}
+              sectionDuration={duration}
+              coordinates={trackCoordinates[track.id]}
+            />
+          ))}
       </div>
     </div>
   )

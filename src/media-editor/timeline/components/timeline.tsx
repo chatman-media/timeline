@@ -1,4 +1,3 @@
-import { Redo2, Scissors, Trash2, Undo2, X } from "lucide-react"
 import React, { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -10,13 +9,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { TimelineTopPanel } from "@/media-editor"
 import { usePlayerContext } from "@/media-editor/media-player"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile, Track } from "@/types/media"
 
 import { TimelineBar } from "./layout/timeline-bar"
-import { TimelineControls } from "./layout/timeline-controls"
-import { TimelineContainer } from "./timeline-container"
+import { TimelineScale } from "./timeline-scale/timeline-scale"
+import { VideoTrack } from "./track"
 
 // Добавляю функцию для форматирования даты секции
 function formatSectionDate(dateString: string): string {
@@ -63,16 +63,24 @@ export function Timeline() {
 
   const {
     tracks,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
+    // sectors используется только для отладки
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    sectors,
     activeTrackId,
     seek,
     setActiveTrack,
     setTracks,
     removeFiles,
+    zoomLevel,
+    zoom,
+    fitToScreen,
   } = context
+
+  // Состояние для редактирования названия трека
+  const [editingTrackId, setEditingTrackId] = useState<string | null>(null)
+  const [editingTrackName, setEditingTrackName] = useState<string>("")
+
+  // Отображаем треки и секторы на таймлайне
 
   const { isRecording, setIsRecording, setVideo, video, currentTime, isPlaying } =
     usePlayerContext()
@@ -81,9 +89,28 @@ export function Timeline() {
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const [deletingSectionDate, setDeletingSectionDate] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [containerWidth, setContainerWidth] = useState(3500)
+
+  // Реф для контейнера таймлайна
+  const timelineContainerRef = React.useRef<HTMLDivElement>(null)
+
+  // Реф для контейнера горизонтального скролла
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null)
 
   const sections = useMemo(() => {
-    if (!tracks || tracks.length === 0) return []
+    if (!tracks || tracks.length === 0) {
+      console.log("No tracks available for sections")
+      return []
+    }
+
+    console.log(
+      "Creating sections from tracks:",
+      tracks.map((t) => ({
+        name: t.name,
+        videosCount: t.videos?.length || 0,
+      })),
+    )
 
     const videosByDay = new Map<
       string,
@@ -96,12 +123,17 @@ export function Timeline() {
     >()
 
     tracks.forEach((track) => {
+      console.log(`Processing track ${track.name} with ${track.videos?.length || 0} videos`)
+
       track.videos?.forEach((video) => {
         const videoStart = video.startTime || 0
         const videoEnd = videoStart + (video.duration || 0)
         const date = new Date(videoStart * 1000).toISOString().split("T")[0]
 
+        console.log(`Video ${video.name}: date=${date}, start=${videoStart}, end=${videoEnd}`)
+
         if (!videosByDay.has(date)) {
+          console.log(`Creating new day entry for date ${date}`)
           videosByDay.set(date, {
             videos: [],
             tracks: [],
@@ -113,6 +145,7 @@ export function Timeline() {
         const dayData = videosByDay.get(date)!
         dayData.videos.push(video)
         if (!dayData.tracks.includes(track)) {
+          console.log(`Adding track ${track.name} to day ${date}`)
           dayData.tracks.push(track)
         }
         dayData.startTime = Math.min(dayData.startTime, videoStart)
@@ -120,13 +153,24 @@ export function Timeline() {
       })
     })
 
-    return Array.from(videosByDay.entries()).map(([date, data]) => ({
+    const result = Array.from(videosByDay.entries()).map(([date, data]) => ({
       date,
       startTime: data.startTime,
       endTime: data.endTime,
       duration: data.endTime - data.startTime,
       tracks: data.tracks,
     }))
+
+    console.log(
+      "Created sections:",
+      result.map((s) => ({
+        date: s.date,
+        tracksCount: s.tracks.length,
+        tracks: s.tracks.map((t) => t.name),
+      })),
+    )
+
+    return result
   }, [tracks])
 
   React.useEffect(() => {
@@ -160,29 +204,24 @@ export function Timeline() {
           if (isRecording && activeTrackId) {
             const currentTrack = tracks.find((track) => track.id === activeTrackId)
             if (currentTrack) {
-              const savedCurrentTime = currentTime
-              console.log(
-                `[Timeline] Сохраняем текущее время перед переключением: ${savedCurrentTime.toFixed(3)}`,
-              )
-
+              // Останавливаем запись
               setIsRecording(false)
 
               setTimeout(() => {
                 setActiveTrack(targetTrack.id)
 
-                const video = targetTrack.videos?.find((v) => {
-                  const startTime = v.startTime ?? 0
-                  const duration = v.duration ?? 0
-                  return startTime <= savedCurrentTime && startTime + duration >= savedCurrentTime
-                })
-
-                if (video) {
-                  setVideo(video)
-                } else if (targetTrack.videos?.length) {
-                  setVideo(targetTrack.videos[0])
+                // Всегда берем первое видео из трека и устанавливаем время на его начало
+                if (targetTrack.videos?.length) {
+                  const firstVideo = targetTrack.videos[0]
+                  setVideo(firstVideo)
+                  const videoStartTime = firstVideo.startTime ?? 0
+                  console.log(
+                    `[Timeline] Устанавливаем время на начало видео при записи: ${videoStartTime}`,
+                  )
+                  seek(videoStartTime)
                 }
 
-                seek(savedCurrentTime)
+                // Возобновляем запись
                 setIsRecording(true)
               }, 100)
               return
@@ -191,46 +230,13 @@ export function Timeline() {
 
           setActiveTrack(targetTrack.id)
 
-          if (isPlaying) {
-            const video = targetTrack.videos?.find((v) => {
-              const startTime = v.startTime ?? 0
-              const duration = v.duration ?? 0
-              return startTime <= currentTime && startTime + duration >= currentTime
-            })
-
-            if (video) {
-              setVideo(video)
-              if (
-                isFinite(currentTime) &&
-                currentTime >= 0 &&
-                currentTime <= (video.duration || 0)
-              ) {
-                seek(currentTime)
-              } else {
-                console.warn("[Timeline] Некорректное время при переключении дорожек:", currentTime)
-                seek(0)
-              }
-            } else if (targetTrack.videos?.length) {
-              const firstVideo = targetTrack.videos[0]
-              setVideo(firstVideo)
-              seek(firstVideo.startTime ?? 0)
-            }
-          } else {
-            if (targetTrack.videos?.length) {
-              const firstVideo = targetTrack.videos[0]
-              setVideo(firstVideo)
-
-              if (
-                isFinite(currentTime) &&
-                currentTime >= 0 &&
-                currentTime <= (firstVideo.duration || 0)
-              ) {
-                seek(currentTime)
-              } else {
-                console.warn("[Timeline] Некорректное время при переключении дорожек:", currentTime)
-                seek(firstVideo.startTime ?? 0)
-              }
-            }
+          // Всегда берем первое видео из трека и устанавливаем время на его начало
+          if (targetTrack.videos?.length) {
+            const firstVideo = targetTrack.videos[0]
+            setVideo(firstVideo)
+            const videoStartTime = firstVideo.startTime ?? 0
+            console.log(`[Timeline] Устанавливаем время на начало видео: ${videoStartTime}`)
+            seek(videoStartTime)
           }
         }
       }
@@ -274,12 +280,223 @@ export function Timeline() {
       const videoStartTime = activeVideo.startTime || 0
       const videoDate = new Date(videoStartTime * 1000).toDateString()
       setActiveDate(videoDate)
+
+      // Прокручиваем к активному видео при его изменении
+      setTimeout(scrollToVisibleVideos, 100)
     }
   }, [activeVideo])
 
+  // Эффект для обновления ширины контейнера
+  React.useEffect(() => {
+    const updateContainerWidth = () => {
+      if (timelineContainerRef.current) {
+        const width = timelineContainerRef.current.clientWidth
+        setContainerWidth(width)
+
+        // Принудительно обновляем компонент при изменении размера окна
+        // для пересчета ширины контейнера с содержимым таймлайна
+        forceUpdate()
+      }
+    }
+
+    // Функция для принудительного обновления компонента
+    const forceUpdate = () => {
+      // Используем небольшую задержку, чтобы DOM успел обновиться
+      setTimeout(() => {
+        setContainerWidth((prev) => prev + 0.001)
+      }, 10)
+    }
+
+    // Обновляем ширину при монтировании
+    updateContainerWidth()
+
+    // Обновляем ширину при изменении размера окна
+    window.addEventListener("resize", updateContainerWidth)
+
+    // Обработчик события fit-to-screen
+    const handleFitToScreenEvent = (event: CustomEvent) => {
+      const { width } = event.detail
+      console.log(`Received fit-to-screen event with width: ${width}`)
+
+      // Используем переданную ширину
+      if (width) {
+        console.log(`Fitting to screen with width: ${width}px`)
+
+        // Вычитаем ширину левой панели (200px)
+        const contentWidth = width - 200
+
+        fitToScreen(contentWidth)
+
+        // Принудительно обновляем компонент для пересчета ширины контейнера
+        setTimeout(() => {
+          // Обновляем ширину контейнера, чтобы вызвать перерисовку
+          setContainerWidth((prev) => prev + 0.001)
+
+          // Прокручиваем к видимой области с видео
+          scrollToVisibleVideos()
+        }, 100)
+      }
+    }
+
+    // Добавляем обработчик события fit-to-screen
+    window.addEventListener("fit-to-screen", handleFitToScreenEvent as EventListener)
+
+    return () => {
+      window.removeEventListener("resize", updateContainerWidth)
+      window.removeEventListener("fit-to-screen", handleFitToScreenEvent as EventListener)
+    }
+  }, [])
+
+  // Эффект для обновления ширины контейнера при изменении масштаба
+  React.useEffect(() => {
+    // Обновляем ширину контейнера при изменении масштаба
+    if (timelineContainerRef.current) {
+      // Используем небольшую задержку, чтобы DOM успел обновиться
+      setTimeout(() => {
+        setContainerWidth((prev) => prev + 0.001)
+      }, 10)
+    }
+  }, [zoomLevel])
+
+  // Обработчики для кнопок масштабирования
+  const handleScaleIncrease = () => {
+    // Максимальное приближение: примерно 2 секунды на всю ширину таймлайна
+    // При базовом масштабе 2px за секунду, для 2 секунд на 800px нужен zoomLevel = 200
+    const newZoomLevel = Math.min(zoomLevel * 1.5, 200)
+    zoom(newZoomLevel)
+
+    // Принудительно обновляем компонент для пересчета ширины контейнера
+    setTimeout(() => {
+      // Обновляем ширину контейнера, чтобы вызвать перерисовку
+      setContainerWidth((prev) => prev + 0.001)
+
+      // После изменения масштаба прокручиваем к видимой области
+      scrollToVisibleVideos()
+    }, 100)
+  }
+
+  const handleScaleDecrease = () => {
+    // Минимальное приближение: 24 часа (86400 секунд) на всю ширину таймлайна
+    // При базовом масштабе 2px за секунду, для 86400 секунд на 800px нужен zoomLevel = 0.005
+    const newZoomLevel = Math.max(zoomLevel * 0.67, 0.005)
+    zoom(newZoomLevel)
+
+    // Принудительно обновляем компонент для пересчета ширины контейнера
+    setTimeout(() => {
+      // Обновляем ширину контейнера, чтобы вызвать перерисовку
+      setContainerWidth((prev) => prev + 0.001)
+
+      // После изменения масштаба прокручиваем к видимой области
+      scrollToVisibleVideos()
+    }, 100)
+  }
+
+  // Функция для прокрутки к видимой области с видео
+  const scrollToVisibleVideos = () => {
+    if (!scrollContainerRef.current || !activeVideo) return
+
+    const videoStartTime = activeVideo.startTime || 0
+    const videoDuration = activeVideo.duration || 0
+
+    // Находим середину видео
+    const videoMiddleTime = videoStartTime + videoDuration / 2
+
+    // Находим активный сектор, содержащий видео
+    const activeSection = sections.find((section) =>
+      section.tracks.some((track) => track.videos?.some((video) => video.id === activeVideo.id)),
+    )
+
+    if (!activeSection) return
+
+    // Находим минимальное время начала видео в секторе
+    const minStartTime = Math.min(
+      ...activeSection.tracks.flatMap((track) =>
+        (track.videos || []).map((video) => video.startTime || 0),
+      ),
+      activeSection.startTime, // Используем startTime сектора как запасной вариант
+    )
+
+    // Рассчитываем позицию в пикселях относительно начала сектора
+    const pixelPosition = (videoMiddleTime - minStartTime) * 2 * zoomLevel
+
+    // Прокручиваем к этой позиции
+    scrollContainerRef.current.scrollLeft = Math.max(
+      0,
+      pixelPosition - scrollContainerRef.current.clientWidth / 2,
+    )
+
+    console.log(`Scrolled to video: ${activeVideo.name}, position: ${pixelPosition}px`)
+  }
+
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseFloat(e.target.value)
+
+    // Используем логарифмическую шкалу для более удобного управления масштабом
+    // Значение слайдера от 0 до 100 преобразуем в диапазон от 0.005 до 200
+    const minZoom = 0.005 // 24 часа на всю ширину
+    const maxZoom = 200 // 2 секунды на всю ширину
+
+    // Логарифмическое преобразование для более плавного изменения
+    const logMin = Math.log(minZoom)
+    const logMax = Math.log(maxZoom)
+    const scale = (logMax - logMin) / 100
+
+    const newZoomLevel = Math.exp(logMin + scale * value)
+
+    zoom(newZoomLevel)
+
+    // Принудительно обновляем компонент для пересчета ширины контейнера
+    setTimeout(() => {
+      // Обновляем ширину контейнера, чтобы вызвать перерисовку
+      setContainerWidth((prev) => prev + 0.001)
+
+      // После изменения масштаба прокручиваем к видимой области
+      scrollToVisibleVideos()
+    }, 100)
+  }
+
+  // Функция для удаления секции (будет использоваться в будущем)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDeleteSection = (sectionDate: string): void => {
     setDeletingSectionDate(sectionDate)
     setDeleteDialogOpen(true)
+  }
+
+  // Функция для начала редактирования названия трека
+  const handleEditTrackName = (track: Track): void => {
+    setEditingTrackId(track.id)
+    // Используем cameraName, если он есть, иначе используем name
+    setEditingTrackName(track.cameraName || track.name || "")
+  }
+
+  // Функция для сохранения нового названия трека
+  const handleSaveTrackName = (): void => {
+    if (!editingTrackId) return
+
+    const updatedTracks = tracks.map((track) => {
+      if (track.id === editingTrackId) {
+        return {
+          ...track,
+          // Обновляем cameraName вместо name
+          cameraName: editingTrackName || track.cameraName || track.name,
+        }
+      }
+      return track
+    })
+
+    setTracks(updatedTracks)
+    setEditingTrackId(null)
+  }
+
+  // Обработчик нажатия клавиши Enter при редактировании названия
+  const handleTrackNameKeyDown = (e: React.KeyboardEvent): void => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      handleSaveTrackName()
+    } else if (e.key === "Escape") {
+      e.preventDefault()
+      setEditingTrackId(null)
+    }
   }
 
   const confirmDeleteSection = (): void => {
@@ -355,9 +572,13 @@ export function Timeline() {
             setActiveTrack(nextSectionTracks[0].id)
 
             if (nextSectionTracks[0].videos?.length) {
-              setVideo(nextSectionTracks[0].videos[0])
-              const startTime = nextSectionTracks[0].videos[0].startTime || 0
-              seek(startTime)
+              const firstVideo = nextSectionTracks[0].videos[0]
+              setVideo(firstVideo)
+              const videoStartTime = firstVideo.startTime || 0
+              console.log(
+                `[Timeline] Устанавливаем время на начало видео при смене секции: ${videoStartTime}`,
+              )
+              seek(videoStartTime)
             }
           }
         }
@@ -373,107 +594,246 @@ export function Timeline() {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <div className="border-border flex items-center justify-between border-b px-4 py-2">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={undo}
-            disabled={!canUndo}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-gray-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            title="Отменить"
-          >
-            <Undo2 size={16} />
-          </button>
-          <button
-            onClick={redo}
-            disabled={!canRedo}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-gray-700 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-            title="Повторить"
-          >
-            <Redo2 size={16} />
-          </button>
-          <button
-            disabled={!activeTrackId}
-            onClick={() => {
-              const trackToDelete = tracks.find((track) => track.id === activeTrackId)
-              if (!trackToDelete) return
+      <TimelineTopPanel
+        tracks={tracks}
+        deleteTrack={() => {}}
+        cutTrack={() => {}}
+        handleScaleDecrease={handleScaleDecrease}
+        handleScaleIncrease={handleScaleIncrease}
+        handleSliderChange={handleSliderChange}
+        sliderValue={
+          // Обратное преобразование из zoomLevel в значение слайдера (0-100)
+          // Используем ту же логарифмическую шкалу
+          (() => {
+            const minZoom = 0.005
+            const maxZoom = 200
+            const logMin = Math.log(minZoom)
+            const logMax = Math.log(maxZoom)
+            const scale = (logMax - logMin) / 100
+            return Math.max(0, Math.min(100, (Math.log(zoomLevel) - logMin) / scale))
+          })()
+        }
+        maxScale={20000} // Увеличиваем максимальное значение слайдера
+        isAbleToScale={true}
+        isAbleToScaleUp={zoomLevel < 200} // Максимальное приближение
+        isAbleToScaleDown={zoomLevel > 0.005} // Минимальное отдаление
+        isAbleToFitToTracks={true}
+      />
 
-              const filesToRemove: string[] = []
-              trackToDelete.videos?.forEach((video) => {
-                if (video.path) {
-                  filesToRemove.push(video.path)
-                }
-              })
-
-              const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
-              setTracks(updatedTracks)
-
-              if (filesToRemove.length > 0) {
-                removeFiles(filesToRemove)
-              }
-            }}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
-          >
-            <Trash2 size={16} />
-          </button>
-          <button
-            disabled={!activeTrackId}
-            onClick={() => {
-              const trackToDelete = tracks.find((track) => track.id === activeTrackId)
-              if (!trackToDelete) return
-
-              const filesToRemove: string[] = []
-              trackToDelete.videos?.forEach((video) => {
-                if (video.path) {
-                  filesToRemove.push(video.path)
-                }
-              })
-
-              const updatedTracks = tracks.filter((track) => track.id !== activeTrackId)
-              setTracks(updatedTracks)
-
-              if (filesToRemove.length > 0) {
-                removeFiles(filesToRemove)
-              }
-            }}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-gray-300 transition-colors hover:bg-gray-700 hover:text-white"
-          >
-            <Scissors size={16} className="rotate-90" />
-          </button>
-        </div>
-        <TimelineControls />
-      </div>
-      <div className="relative h-full w-full overflow-x-auto overflow-y-auto">
-        {[...sections].map((section) => (
+      {/* Скроллируемый контент с разделением на левую и правую части */}
+      <div className="timeline-container flex-1 overflow-y-auto" ref={timelineContainerRef}>
+        <div className="flex h-full">
+          {/* Левая панель фиксированной ширины */}
           <div
-            key={section.date}
-            className={`relative mb-4 ${section.date === activeDate ? "" : "opacity-50"} timeline-section`}
+            className="sticky left-0 h-full min-h-full w-[200px] flex-shrink-0 border-r border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-900"
+            style={{
+              height: `${sections?.reduce(
+                (acc, sector) => acc + 57 + sector.tracks.length * 54,
+                0,
+              )}px`,
+            }}
           >
-            <div className="relative">
-              <div className="mb-1 ml-2 flex w-full items-center justify-between text-left text-xs">
-                <div>{formatSectionDate(section.date)}</div>
-                <button
-                  onClick={() => handleDeleteSection(section.date)}
-                  className="mr-2 text-gray-400 transition-colors hover:text-red-500"
-                  title="Удалить секцию"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+            {sections?.map((sector, index) => (
+              <div key={index} className="flex w-full flex-col gap-1 p-2">
+                <div className="z-10 h-[26px] w-full flex-shrink-0"></div>
+                {sector.tracks.map((track: Track, i: number) => (
+                  <div
+                    key={i}
+                    className="min-h-[72px] w-full flex-1 bg-[#033032] p-2 text-sm"
+                    style={{ height: `72px` }}
+                  >
+                    {editingTrackId === track.id ? (
+                      <input
+                        type="text"
+                        value={editingTrackName}
+                        onChange={(e) => setEditingTrackName(e.target.value)}
+                        onBlur={handleSaveTrackName}
+                        onKeyDown={handleTrackNameKeyDown}
+                        className="w-full border-none bg-transparent focus:outline-none"
+                        autoFocus
+                      />
+                    ) : (
+                      <div
+                        className="block cursor-pointer truncate pl-[1px] hover:border hover:border-[#35d1c1] hover:pl-[0px]"
+                        onClick={() => handleEditTrackName(track)}
+                        title="Нажмите для редактирования"
+                      >
+                        {track.cameraName ? track.cameraName : track.name}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div className="h-[11px] w-full flex-shrink-0"></div>
               </div>
-              <TimelineContainer
-                startTime={section.startTime}
-                endTime={section.endTime}
-                duration={section.duration}
+            ))}
+          </div>
+
+          {/* Правая часть со скроллом - теперь скролл только на родительском контейнере */}
+          <div
+            className="flex h-full w-full flex-col"
+            style={{
+              height: `${sections?.reduce(
+                (acc, sector) => acc + 61 + sector.tracks.length * 72,
+                0,
+              )}px`,
+            }}
+          >
+            {/* Контейнер для горизонтального скролла - общий для всех секторов */}
+            <div ref={scrollContainerRef} className="overflow-x-auto">
+              {/* Контейнер с фиксированной шириной для всего содержимого */}
+              <div
+                style={{
+                  width: `${Math.max(
+                    ...sections.flatMap((sector) => {
+                      // Находим максимальное время окончания видео в секторе
+                      const maxEndTime = Math.max(
+                        ...sector.tracks.flatMap((track) =>
+                          (track.videos || []).map(
+                            (video) => (video.startTime || 0) + (video.duration || 0),
+                          ),
+                        ),
+                        0, // Добавляем 0 как минимальное значение
+                      )
+
+                      // Находим минимальное время начала видео в секторе
+                      const minStartTime = Math.min(
+                        ...sector.tracks.flatMap((track) =>
+                          (track.videos || []).map((video) => video.startTime || 0),
+                        ),
+                        Infinity, // Добавляем Infinity как максимальное значение
+                      )
+
+                      // Вычисляем фактическую длительность всех видео в секторе
+                      const actualDuration =
+                        maxEndTime - (minStartTime === Infinity ? 0 : minStartTime)
+
+                      // Возвращаем ширину в пикселях
+                      return actualDuration * 2 * zoomLevel
+                    }),
+                    timelineContainerRef.current?.clientWidth
+                      ? timelineContainerRef.current.clientWidth - 200
+                      : 800,
+                  )}px`,
+                }}
               >
-                <TimelineBar
-                  startTime={section.startTime}
-                  endTime={section.endTime}
-                  height={section.tracks.length * 80 + 46}
-                />
-              </TimelineContainer>
+                {sections?.map((sector, index) => (
+                  <div
+                    key={index}
+                    className="flex-shrink-0"
+                    style={{
+                      height: `${61 + sector.tracks.length * 72}px`,
+                    }}
+                  >
+                    {/* Шкала времени */}
+                    <div className="relative z-10 h-[30px] w-full flex-shrink-0 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                      <TimelineScale
+                        startTime={sector.startTime}
+                        endTime={sector.endTime}
+                        duration={sector.endTime - sector.startTime}
+                      />
+                      <TimelineBar
+                        startTime={sector.startTime}
+                        endTime={sector.endTime}
+                        height={30}
+                      />
+                    </div>
+
+                    {/* Дорожки */}
+                    <div className="flex w-full flex-col gap-1 p-2">
+                      {sector.tracks.map((track: Track, index: number) => {
+                        // Рассчитываем координаты для VideoTrack
+                        const trackStartTime = track.startTime || 0
+                        const trackEndTime = track.endTime || 0
+                        const trackDuration = trackEndTime - trackStartTime
+
+                        // Рассчитываем координаты для каждого видео
+                        const videoCoordinates: Record<string, { left: number; width: number }> = {}
+                        if (track.videos) {
+                          // Находим минимальное время начала видео в секторе
+                          const minStartTime = Math.min(
+                            ...sector.tracks.flatMap((t) =>
+                              (t.videos || []).map((v) => v.startTime || 0),
+                            ),
+                            sector.startTime, // Используем startTime сектора как запасной вариант
+                          )
+
+                          // Находим максимальное время окончания видео в секторе
+                          const maxEndTime = Math.max(
+                            ...sector.tracks.flatMap((t) =>
+                              (t.videos || []).map((v) => (v.startTime || 0) + (v.duration || 0)),
+                            ),
+                            sector.endTime, // Используем endTime сектора как запасной вариант
+                          )
+
+                          // Общая ширина секции в пикселях (фактическая длительность всех видео)
+                          const sectionWidthPx = (maxEndTime - minStartTime) * 2 * zoomLevel
+
+                          track.videos.forEach((video) => {
+                            const videoStart = video.startTime || 0
+                            const videoDuration = video.duration || 0
+
+                            // Рассчитываем позицию и ширину в пикселях, затем конвертируем в проценты
+                            // Используем тот же масштаб, что и шкала времени: 2px за секунду * zoomLevel
+                            const pixelLeft = (videoStart - minStartTime) * 2 * zoomLevel
+                            const pixelWidth = videoDuration * 2 * zoomLevel
+
+                            // Конвертируем в проценты для CSS
+                            const left = (pixelLeft / sectionWidthPx) * 100
+                            const width = (pixelWidth / sectionWidthPx) * 100
+
+                            videoCoordinates[video.id] = { left, width }
+                          })
+                        }
+
+                        // Находим минимальное время начала видео в секторе
+                        const minStartTime = Math.min(
+                          ...sector.tracks.flatMap((t) =>
+                            (t.videos || []).map((v) => v.startTime || 0),
+                          ),
+                          sector.startTime, // Используем startTime сектора как запасной вариант
+                        )
+
+                        // Находим максимальное время окончания видео в секторе
+                        const maxEndTime = Math.max(
+                          ...sector.tracks.flatMap((t) =>
+                            (t.videos || []).map((v) => (v.startTime || 0) + (v.duration || 0)),
+                          ),
+                          sector.endTime, // Используем endTime сектора как запасной вариант
+                        )
+
+                        // Общая ширина секции в пикселях (фактическая длительность всех видео)
+                        const sectionWidthPx = (maxEndTime - minStartTime) * 2 * zoomLevel
+
+                        // Рассчитываем координаты трека
+                        const trackPixelLeft = (trackStartTime - minStartTime) * 2 * zoomLevel
+                        const trackPixelWidth = trackDuration * 2 * zoomLevel
+
+                        const coordinates = {
+                          left: (trackPixelLeft / sectionWidthPx) * 100,
+                          width: (trackPixelWidth / sectionWidthPx) * 100,
+                          videos: videoCoordinates,
+                        }
+
+                        return (
+                          <VideoTrack
+                            key={track.id || index}
+                            track={track}
+                            index={index}
+                            sectionStartTime={sector.startTime}
+                            sectionDuration={sector.endTime - sector.startTime}
+                            coordinates={coordinates}
+                          />
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
-        ))}
+        </div>
       </div>
+
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>

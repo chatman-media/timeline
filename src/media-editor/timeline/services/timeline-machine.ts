@@ -27,6 +27,7 @@ export type TimelineEvent =
   | { type: "PLAY" }
   | { type: "PAUSE" }
   | { type: "ZOOM"; level: number }
+  | { type: "FIT_TO_SCREEN"; containerWidth: number }
   | { type: "SET_TIME_RANGES"; ranges: Record<string, TimeRange[]> }
   | { type: "SET_ACTIVE_TRACK"; trackId: string | null }
   | { type: "SEEK"; time: number }
@@ -62,14 +63,6 @@ const initialContext: TimelineContext = {
   currentStateIndex: -1,
 }
 
-const persistState = ({ context }: { context: TimelineContext }): void => {
-  try {
-    localStorage.setItem("timeline-state", JSON.stringify(context))
-  } catch (error) {
-    console.error("Failed to persist timeline state:", error)
-  }
-}
-
 const addToHistory = ({
   context,
   newState,
@@ -97,7 +90,6 @@ export const timelineMachine = createMachine({
     context: {} as TimelineContext,
     events: {} as TimelineEvent,
   },
-  entry: [persistState],
   states: {
     idle: {
       on: {
@@ -111,7 +103,6 @@ export const timelineMachine = createMachine({
               ...initialContext,
               ...(event.type === "RESTORE_STATE" ? event.state : {}),
             })),
-            persistState,
           ],
         },
       },
@@ -157,6 +148,57 @@ export const timelineMachine = createMachine({
         }),
       ],
     },
+    FIT_TO_SCREEN: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "FIT_TO_SCREEN") return context
+
+          // Находим максимальную длительность среди всех секторов
+          let maxDuration = 0
+          context.sectors.forEach((sector) => {
+            const sectorDuration = Math.max(
+              ...sector.tracks.map((track) => track.combinedDuration || 0),
+              0, // Добавляем 0 как минимальное значение, чтобы избежать ошибок с пустыми массивами
+            )
+            maxDuration = Math.max(maxDuration, sectorDuration)
+          })
+
+          // Если нет секторов или треков, используем минимальную длительность
+          if (maxDuration === 0) {
+            maxDuration = 60 // Минимальная длительность 60 секунд
+          }
+
+          // Рассчитываем новый уровень масштаба
+          // Текущий масштаб: 2 пикселя за секунду
+          // Новый масштаб: containerWidth / maxDuration
+          const currentScale = 2 // пикселей за секунду
+          const containerWidth = event.containerWidth
+
+          // Добавляем небольшой отступ (10%), чтобы контент не был прижат к краям
+          const adjustedWidth = containerWidth * 0.9
+
+          const targetScale = adjustedWidth / maxDuration
+
+          // Преобразуем в уровень масштаба для zoomLevel
+          // zoomLevel = targetScale / currentScale
+          const newZoomLevel = targetScale / currentScale
+
+          // Ограничиваем минимальный и максимальный уровень масштаба
+          // Минимальный уровень: 0.005 (24 часа на всю ширину)
+          // Максимальный уровень: 200 (2 секунды на всю ширину)
+          const clampedZoomLevel = Math.max(0.005, Math.min(200, newZoomLevel))
+
+          console.log(
+            `Fitting to screen: maxDuration=${maxDuration}s, containerWidth=${containerWidth}px, adjustedWidth=${adjustedWidth}px, targetScale=${targetScale}, newZoomLevel=${newZoomLevel}, clampedZoomLevel=${clampedZoomLevel}`,
+          )
+
+          return addToHistory({
+            context,
+            newState: { zoomLevel: clampedZoomLevel },
+          })
+        }),
+      ],
+    },
     SET_TIME_RANGES: {
       actions: [
         assign(({ context, event }) =>
@@ -198,8 +240,90 @@ export const timelineMachine = createMachine({
         assign(({ context, event }) => {
           if (event.type !== "ADD_MEDIA_FILES") return context
 
+          console.log(
+            "ADD_MEDIA_FILES event received with files:",
+            event.files.map((f) => f.name),
+          )
+          console.log(
+            "Current context.tracks:",
+            context.tracks.map((t) => t.name),
+          )
+          console.log(
+            "Current context.sectors:",
+            context.sectors.map((s) => s.name),
+          )
+
           const newSectors = createTracksFromFiles(event.files, context.tracks)
-          const updatedSectors = [...(context.sectors || []), ...newSectors].map((sector) => ({
+          console.log(
+            "New sectors created:",
+            newSectors.map((s) => s.name),
+          )
+
+          // Объединяем секторы с одинаковыми датами
+          const sectorsByDate = new Map<string, Sector>()
+
+          // Сначала добавляем существующие секторы
+          context.sectors.forEach((sector) => {
+            const date = sector.name.replace("Сектор ", "")
+            sectorsByDate.set(date, sector)
+          })
+
+          // Затем добавляем или обновляем новые секторы
+          newSectors.forEach((sector) => {
+            const date = sector.name.replace("Сектор ", "")
+
+            if (sectorsByDate.has(date)) {
+              // Объединяем треки
+              const existingSector = sectorsByDate.get(date)!
+              const updatedTracks = [...existingSector.tracks]
+
+              // Добавляем новые треки
+              sector.tracks.forEach((newTrack) => {
+                // Проверяем, есть ли уже такой трек
+                const existingTrackIndex = updatedTracks.findIndex(
+                  (t) => t.type === newTrack.type && t.index === newTrack.index,
+                )
+
+                if (existingTrackIndex >= 0) {
+                  // Обновляем существующий трек
+                  updatedTracks[existingTrackIndex] = {
+                    ...updatedTracks[existingTrackIndex],
+                    videos: [
+                      ...(updatedTracks[existingTrackIndex].videos || []),
+                      ...(newTrack.videos || []),
+                    ],
+                    startTime: Math.min(
+                      updatedTracks[existingTrackIndex].startTime || Infinity,
+                      newTrack.startTime || Infinity,
+                    ),
+                    endTime: Math.max(
+                      updatedTracks[existingTrackIndex].endTime || 0,
+                      newTrack.endTime || 0,
+                    ),
+                    combinedDuration:
+                      (updatedTracks[existingTrackIndex].combinedDuration || 0) +
+                      (newTrack.combinedDuration || 0),
+                  }
+                } else {
+                  // Добавляем новый трек
+                  updatedTracks.push(newTrack)
+                }
+              })
+
+              // Обновляем сектор
+              sectorsByDate.set(date, {
+                ...existingSector,
+                tracks: updatedTracks,
+                timeRanges: [...(existingSector.timeRanges || []), ...(sector.timeRanges || [])],
+              })
+            } else {
+              // Добавляем новый сектор
+              sectorsByDate.set(date, sector)
+            }
+          })
+
+          // Преобразуем Map обратно в массив
+          const updatedSectors = Array.from(sectorsByDate.values()).map((sector) => ({
             ...sector,
             tracks: sector.tracks.map((track) => ({
               ...track,
@@ -208,9 +332,38 @@ export const timelineMachine = createMachine({
             })),
           }))
 
+          console.log(
+            "Final updated sectors:",
+            updatedSectors.map((s) => ({
+              name: s.name,
+              tracksCount: s.tracks.length,
+            })),
+          )
+
+          console.log(
+            "Updated sectors:",
+            updatedSectors.map((s) => ({
+              name: s.name,
+              tracksCount: s.tracks.length,
+            })),
+          )
+
+          // Обновляем также tracks для совместимости
+          const allTracks = updatedSectors.flatMap((sector) => sector.tracks)
+          console.log(
+            "Updating tracks in context:",
+            allTracks.map((t) => ({
+              name: t.name,
+              videosCount: t.videos?.length || 0,
+            })),
+          )
+
           return addToHistory({
             context,
-            newState: { sectors: updatedSectors },
+            newState: {
+              sectors: updatedSectors,
+              tracks: allTracks,
+            },
           })
         }),
       ],
