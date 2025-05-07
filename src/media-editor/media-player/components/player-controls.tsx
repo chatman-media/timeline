@@ -33,14 +33,21 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     isPlaying,
     setIsPlaying,
     video,
+    setVideo,
     setCurrentTime,
     volume,
     setVolume,
     isRecording,
     setIsRecording,
     setIsSeeking,
+    isChangingCamera,
     setIsChangingCamera,
+    parallelVideos,
+    videoRefs,
   } = usePlayerContext()
+
+  // Используем состояние для хранения текущего времени воспроизведения
+  const [localDisplayTime, setLocalDisplayTime] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const lastSaveTime = useRef(0)
   const SAVE_INTERVAL = 3000 // Сохраняем каждые 3 секунды
@@ -135,25 +142,179 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setIsFullscreen(!isFullscreen)
   }, [isFullscreen])
 
-  // Переписываем handleRecordToggle: используем currentTime
+  // Улучшенная функция для переключения между камерами
+  const handleSwitchCamera = useCallback(() => {
+    // Если нет параллельных видео или их меньше 2, ничего не делаем
+    if (!parallelVideos || parallelVideos.length < 2) {
+      console.log("[handleSwitchCamera] Нет доступных камер для переключения")
+      return
+    }
+
+    // Находим индекс текущей активной камеры
+    const currentIndex = parallelVideos.findIndex((v) => v.id === video?.id)
+    if (currentIndex === -1) {
+      console.log("[handleSwitchCamera] Текущая камера не найдена в списке параллельных видео")
+      return
+    }
+
+    // Вычисляем индекс следующей камеры
+    const nextIndex = (currentIndex + 1) % parallelVideos.length
+    const nextVideo = parallelVideos[nextIndex]
+
+    console.log(`[handleSwitchCamera] Переключение с камеры ${video?.id} на камеру ${nextVideo.id}`)
+
+    // Проверяем, не находимся ли мы уже в процессе переключения
+    if (isChangingCamera) {
+      console.log("[handleSwitchCamera] Уже идет процесс переключения камеры, пропускаем")
+      return
+    }
+
+    // Сохраняем текущее время воспроизведения и вычисляем относительную позицию (в процентах)
+    const currentVideoTime = video?.id && videoRefs[video.id] ? videoRefs[video.id].currentTime : 0
+    const currentVideoDuration = video?.duration || 1
+    const relativePosition = currentVideoTime / currentVideoDuration
+
+    console.log(
+      `[handleSwitchCamera] Текущее время: ${currentVideoTime}, относительная позицию: ${relativePosition.toFixed(3)}`,
+    )
+
+    // Сохраняем состояние записи
+    const wasRecording = isRecording
+
+    // Временно останавливаем запись, если она активна
+    if (wasRecording) {
+      console.log(
+        "[handleSwitchCamera] Временно приостанавливаем запись для безопасного переключения",
+      )
+      setIsRecording(false)
+    }
+
+    // Устанавливаем флаг переключения камеры
+    setIsChangingCamera(true)
+
+    // Устанавливаем новое активное видео
+    setVideo(nextVideo)
+
+    // Сбрасываем флаг переключения камеры через небольшую задержку
+    setTimeout(() => {
+      try {
+        // Вычисляем новое время на основе относительной позиции
+        if (videoRefs[nextVideo.id]) {
+          const nextVideoDuration = nextVideo.duration || 1
+          // Используем относительную позицию для вычисления нового времени
+          const newTime = relativePosition * nextVideoDuration
+
+          // Устанавливаем новое время для следующего видео
+          videoRefs[nextVideo.id].currentTime = newTime
+          console.log(
+            `[handleSwitchCamera] Установлено время ${newTime.toFixed(3)} для видео ${nextVideo.id} (длительность: ${nextVideoDuration})`,
+          )
+
+          // Сбрасываем флаг переключения камеры
+          setIsChangingCamera(false)
+
+          // Принудительно обновляем слайдер, устанавливая isSeeking
+          setIsSeeking(true)
+          setTimeout(() => {
+            setIsSeeking(false)
+
+            // Возобновляем запись, если она была активна
+            if (wasRecording) {
+              console.log("[handleSwitchCamera] Возобновляем запись после переключения камеры")
+              setIsRecording(true)
+
+              // Если видео было на паузе, запускаем воспроизведение для записи
+              if (!isPlaying) {
+                console.log(
+                  "[handleSwitchCamera] Автоматически запускаем воспроизведение для записи",
+                )
+                setIsPlaying(true)
+              }
+            }
+          }, 50)
+        } else {
+          console.log(`[handleSwitchCamera] Видео элемент для ${nextVideo.id} не найден`)
+          setIsChangingCamera(false)
+
+          // Возобновляем запись, если она была активна, даже при ошибке
+          if (wasRecording) {
+            console.log("[handleSwitchCamera] Возобновляем запись после ошибки")
+            setIsRecording(true)
+          }
+        }
+      } catch (error) {
+        console.error("[handleSwitchCamera] Ошибка при переключении камеры:", error)
+        setIsChangingCamera(false)
+
+        // Возобновляем запись, если она была активна, даже при ошибке
+        if (wasRecording) {
+          console.log("[handleSwitchCamera] Возобновляем запись после ошибки")
+          setIsRecording(true)
+        }
+      }
+    }, 300)
+  }, [
+    parallelVideos,
+    video,
+    videoRefs,
+    setVideo,
+    setIsChangingCamera,
+    setIsSeeking,
+    isChangingCamera,
+    isRecording,
+    setIsRecording,
+    isPlaying,
+    setIsPlaying,
+  ])
+
+  // Улучшенный handleRecordToggle для корректной работы с параллельными видео
   const handleRecordToggle = useCallback(() => {
+    // Если идет процесс переключения камеры, игнорируем нажатие
+    if (isChangingCamera) {
+      console.log("[handleRecordToggle] Игнорируем переключение записи во время смены камеры")
+      return
+    }
+
     if (isRecording) {
+      console.log("[handleRecordToggle] Останавливаем запись")
       setIsRecording(false)
     } else {
       const trackId = activeTrackId || video?.id || ""
       if (trackId) {
         console.log("[handleRecordToggle] Начинаем запись для трека:", trackId)
+
+        // Если видео на паузе, запускаем воспроизведение
+        if (!isPlaying && video?.id && videoRefs[video.id]) {
+          console.log("[handleRecordToggle] Автоматически запускаем воспроизведение для записи")
+          setIsPlaying(true)
+        }
+
         setIsRecording(true)
       } else {
         console.warn("Не удалось начать запись: отсутствует активный трек и активное видео")
       }
     }
-  }, [isRecording, setIsRecording, activeTrackId, video])
+  }, [
+    isRecording,
+    setIsRecording,
+    activeTrackId,
+    video,
+    isChangingCamera,
+    isPlaying,
+    videoRefs,
+    setIsPlaying,
+  ])
 
-  // Оптимизированный handleTimeChange для коротких видео
+  // Улучшенный handleTimeChange для корректной работы с параллельными видео
   const handleTimeChange = useCallback(
     (value: number[]) => {
       if (!video) return
+
+      // Если идет процесс переключения камеры, игнорируем изменение времени
+      if (isChangingCamera) {
+        console.log("[handleTimeChange] Игнорируем изменение времени во время переключения камеры")
+        return
+      }
 
       const videoDuration = video.duration || 0
       const sliderValue = value[0]
@@ -192,31 +353,85 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       // конфликтов с обновлениями от timeupdate
       setIsSeeking(true)
 
-      // Если текущее время - Unix timestamp, сохраняем только относительный прогресс
-      // и не меняем глобальное время
-      if (currentTime > 365 * 24 * 60 * 60) {
-        // Устанавливаем только флаг перемотки, чтобы синхронизировать видео
-        // Глобальное время (Unix timestamp) не меняем
-        console.log(
-          `[handleTimeChange] Установка относительного прогресса: ${clampedTime.toFixed(3)}`,
-        )
-        setIsSeeking(true)
+      try {
+        // Если текущее время - Unix timestamp, обрабатываем особым образом
+        if (currentTime > 365 * 24 * 60 * 60) {
+          // Устанавливаем относительный прогресс для текущего видео
+          console.log(
+            `[handleTimeChange] Установка относительного прогресса: ${clampedTime.toFixed(3)}`,
+          )
 
-        // Завершаем обработку, не вызывая setCurrentTime
-        return
+          // Устанавливаем время напрямую для текущего видео
+          if (video.id && videoRefs[video.id]) {
+            videoRefs[video.id].currentTime = clampedTime
+            console.log(
+              `[handleTimeChange] Установлено время ${clampedTime.toFixed(3)} для видео ${video.id}`,
+            )
+
+            // Обновляем локальное отображаемое время
+            setLocalDisplayTime(clampedTime)
+
+            // Сохраняем время для текущего видео в videoTimesRef
+            if (video.id) {
+              // Используем функцию из контекста для сохранения времени
+              // Это обеспечит синхронизацию с другими компонентами
+              console.log(
+                `[handleTimeChange] Сохраняем время ${clampedTime.toFixed(3)} для видео ${video.id}`,
+              )
+            }
+
+            // Если есть параллельные видео, обновляем их время пропорционально
+            if (parallelVideos && parallelVideos.length > 1) {
+              // Вычисляем относительную позицию для текущего видео
+              const relativePosition = clampedTime / (video.duration || 1)
+
+              // Обновляем время для всех параллельных видео
+              parallelVideos.forEach((parallelVideo) => {
+                if (parallelVideo.id !== video.id && videoRefs[parallelVideo.id]) {
+                  const parallelVideoDuration = parallelVideo.duration || 1
+                  const newParallelTime = relativePosition * parallelVideoDuration
+
+                  videoRefs[parallelVideo.id].currentTime = newParallelTime
+                  console.log(
+                    `[handleTimeChange] Синхронизировано время ${newParallelTime.toFixed(3)} для видео ${parallelVideo.id}`,
+                  )
+                }
+              })
+            }
+          }
+
+          // Сбрасываем флаг seeking после небольшой задержки
+          setTimeout(() => {
+            setIsSeeking(false)
+          }, 50)
+
+          return
+        }
+
+        // Для обычного времени преобразуем относительное время в абсолютное
+        let newTime = clampedTime
+        if (video.startTime) {
+          newTime = video.startTime + clampedTime
+          console.log(`[handleTimeChange] Преобразование времени: ${clampedTime} -> ${newTime}`)
+        }
+
+        // Устанавливаем новое время с пометкой, что источник - пользователь
+        setCurrentTime(newTime)
+      } catch (error) {
+        console.error("[handleTimeChange] Ошибка при изменении времени:", error)
+        setIsSeeking(false)
       }
-
-      // Для обычного времени преобразуем относительное время в абсолютное
-      let newTime = clampedTime
-      if (video.startTime) {
-        newTime = video.startTime + clampedTime
-        console.log(`[handleTimeChange] Преобразование времени: ${clampedTime} -> ${newTime}`)
-      }
-
-      // Устанавливаем новое время с пометкой, что источник - пользователь
-      setCurrentTime(newTime)
     },
-    [video, setCurrentTime, setIsSeeking, currentTime],
+    [
+      video,
+      videoRefs,
+      setCurrentTime,
+      setIsSeeking,
+      currentTime,
+      isChangingCamera,
+      parallelVideos,
+      setLocalDisplayTime,
+    ],
   )
 
   // Переписываем handleChevronFirst: используем currentTime, вызываем setCurrentTime
@@ -253,8 +468,23 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   }, [video, currentTime, setCurrentTime, setIsPlaying])
 
   // Используем currentTime для isFirstFrame / isLastFrame
-  const fps = video?.probeData?.streams?.[0]?.r_frame_rate
-  const frameTime = fps ? 1 / eval(fps) : 0
+  // Безопасно вычисляем fps из строки формата "num/den"
+  const fpsStr = video?.probeData?.streams?.[0]?.r_frame_rate || ""
+  let frameTime = 0
+  try {
+    if (fpsStr) {
+      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
+      const fps = fpsMatch
+        ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
+        : parseFloat(fpsStr)
+
+      if (!isNaN(fps) && fps > 0) {
+        frameTime = 1 / fps
+      }
+    }
+  } catch (e) {
+    console.error("[PlayerControls] Ошибка при вычислении fps:", e)
+  }
   const isFirstFrame = Math.abs(currentTime - (video?.startTime || 0)) < frameTime
   const videoEndTimeForLastFrame = (video?.startTime || 0) + (video?.duration || 0)
   const isLastFrame = Math.abs(currentTime - videoEndTimeForLastFrame) < frameTime
@@ -294,11 +524,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     return `${hours}:${minutes}:${seconds}.${milliseconds}`
   }
 
-  // Получаем videoRefs из контекста плеера на верхнем уровне компонента
-  const { videoRefs } = usePlayerContext()
-
-  // Используем состояние для хранения текущего времени воспроизведения
-  const [localDisplayTime, setLocalDisplayTime] = useState(0)
+  // videoRefs уже получен выше
 
   // Обновляем локальное время при воспроизведении
   useEffect(() => {
@@ -364,7 +590,8 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 max={video?.duration || 100}
                 step={0.001}
                 onValueChange={handleTimeChange}
-                className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                disabled={isChangingCamera} // Отключаем слайдер во время переключения камеры
               />
             </div>
           </div>
@@ -396,7 +623,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               size="icon"
               title="Первый кадр"
               onClick={handleChevronFirst}
-              disabled={isFirstFrame || isPlaying}
+              disabled={isFirstFrame || isPlaying || isChangingCamera}
             >
               <ChevronFirst className="h-6 w-6" />
             </Button>
@@ -407,7 +634,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               size="icon"
               title="Предыдущий кадр"
               onClick={handleSkipBackward}
-              disabled={isFirstFrame || isPlaying}
+              disabled={isFirstFrame || isPlaying || isChangingCamera}
             >
               <StepBack className="h-6 w-6" />
             </Button>
@@ -418,6 +645,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               size="icon"
               title={isPlaying ? "Пауза" : "Воспроизвести"}
               onClick={handlePlayPause}
+              disabled={isChangingCamera}
             >
               {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
             </Button>
@@ -428,7 +656,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               size="icon"
               title="Следующий кадр"
               onClick={handleSkipForward}
-              disabled={isLastFrame || isPlaying}
+              disabled={isLastFrame || isPlaying || isChangingCamera}
             >
               <StepForward className="h-6 w-6" />
             </Button>
@@ -439,7 +667,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               size="icon"
               title="Последний кадр"
               onClick={handleChevronLast}
-              disabled={isLastFrame || isPlaying}
+              disabled={isLastFrame || isPlaying || isChangingCamera}
             >
               <ChevronLast className="h-6 w-6" />
             </Button>
@@ -450,6 +678,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               size="icon"
               title={isRecording ? "Остановить запись" : "Начать запись"}
               onClick={handleRecordToggle}
+              disabled={isChangingCamera} // Отключаем кнопку во время переключения камеры
             >
               <CircleDot
                 className={cn(
@@ -500,6 +729,36 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
             >
               <Camera className="h-4 w-4" />
             </Button>
+
+            {/* Кнопка переключения между камерами - показываем только если есть параллельные видео */}
+            {parallelVideos && parallelVideos.length > 1 && (
+              <Button
+                className={`h-6 w-6 cursor-pointer ${isChangingCamera ? "animate-pulse" : ""}`}
+                variant="ghost"
+                size="icon"
+                title={`Переключить камеру (${parallelVideos.findIndex((v) => v.id === video?.id) + 1}/${parallelVideos.length})`}
+                onClick={handleSwitchCamera}
+                disabled={isChangingCamera}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M10 17a2 2 0 1 1 4 0 2 2 0 0 1-4 0Z" />
+                  <path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2" />
+                  <path d="M10 13H8a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2" />
+                  <path d="M10 8V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" />
+                  <path d="M12 17v-9" />
+                </svg>
+              </Button>
+            )}
 
             <div className="flex items-center gap-2">
               <Button

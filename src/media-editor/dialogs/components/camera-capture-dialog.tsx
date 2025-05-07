@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription,DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -51,7 +51,7 @@ export function CameraCaptureDialog({
   const [selectedResolution, setSelectedResolution] = useState<string>("1920x1080")
   const [frameRate, setFrameRate] = useState<number>(30)
   const [supportedFrameRates, setSupportedFrameRates] = useState<number[]>([])
-  const [countdown, setCountdown] = useState<number>(3)
+  const [countdown, setCountdown] = useState<number>(0)
   const [isRecording, setIsRecording] = useState<boolean>(false)
   const [showCountdown, setShowCountdown] = useState<boolean>(false)
   const [recordingTime, setRecordingTime] = useState<number>(0)
@@ -349,16 +349,23 @@ export function CameraCaptureDialog({
 
   // Инициализация потока с камеры
   const initCamera = useCallback(async () => {
-    if (!selectedDevice) return
+    if (!selectedDevice) {
+      console.log("Устройство не выбрано")
+      return
+    }
 
     try {
+      console.log("Инициализация камеры с устройством:", selectedDevice)
+
       // Останавливаем предыдущий поток, если есть
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
       }
 
       // Извлекаем выбранное разрешение
       const [width, height] = selectedResolution.split("x").map(Number)
+      console.log(`Запрашиваем разрешение: ${width}x${height}, частота кадров: ${frameRate}`)
 
       // Настраиваем ограничения для видео потока
       const constraints: MediaStreamConstraints = {
@@ -371,12 +378,28 @@ export function CameraCaptureDialog({
         audio: selectedAudioDevice ? { deviceId: { exact: selectedAudioDevice } } : false,
       }
 
+      console.log("Запрашиваем медиа-поток с ограничениями:", constraints)
       const stream = await navigator.mediaDevices.getUserMedia(constraints)
+      console.log("Поток получен:", stream)
       streamRef.current = stream
 
       if (videoRef.current) {
+        console.log("Устанавливаем srcObject для видео элемента")
         videoRef.current.srcObject = stream
-        setIsDeviceReady(true)
+
+        // Добавляем обработчик события loadedmetadata
+        videoRef.current.onloadedmetadata = () => {
+          console.log("Видео метаданные загружены, начинаем воспроизведение")
+          videoRef.current?.play().catch((e) => console.error("Ошибка воспроизведения:", e))
+          setIsDeviceReady(true)
+        }
+
+        // Добавляем обработчик ошибок
+        videoRef.current.onerror = (e) => {
+          console.error("Ошибка видео элемента:", e)
+        }
+      } else {
+        console.error("Ссылка на видео элемент отсутствует")
       }
     } catch (error) {
       console.error("Ошибка при инициализации камеры:", error)
@@ -445,23 +468,29 @@ export function CameraCaptureDialog({
     setRecordingTime(0)
   }, [])
 
-  // Начинаем обратный отсчет
+  // Начинаем обратный отсчет или сразу запись
   const startCountdown = useCallback(() => {
+    if (countdown <= 0) {
+      // Если обратный отсчет установлен в 0, сразу начинаем запись
+      startRecording()
+      return
+    }
+
+    // Иначе запускаем обратный отсчет
     setShowCountdown(true)
-    setCountdown(3)
+    let currentCount = countdown
 
     const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer)
-          setShowCountdown(false)
-          startRecording()
-          return 0
-        }
-        return prev - 1
-      })
+      currentCount -= 1
+      setCountdown(currentCount)
+
+      if (currentCount <= 0) {
+        clearInterval(timer)
+        setShowCountdown(false)
+        startRecording()
+      }
     }, 1000)
-  }, [startRecording])
+  }, [countdown, startRecording])
 
   // Создаем новую функцию для снимка с веб-камеры
   // const takeScreenshot = useCallback(() => {
@@ -568,10 +597,13 @@ export function CameraCaptureDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <DialogContent className="overflow-hidden border-[#333] bg-[#18181B] p-0 text-white sm:max-w-[500px]">
-        <div className="flex items-center justify-between border-b border-[#333] p-4">
-          <h2 className="text-lg font-semibold">Захват видео</h2>
-        </div>
+      <DialogContent
+        className="overflow-hidden border-[#333] bg-[#18181B] p-0 text-white sm:max-w-[500px]"
+        aria-describedby="camera-capture-description"
+      >
+        <DialogTitle className="border-b border-[#333] p-4 text-lg font-semibold">
+          Захват видео
+        </DialogTitle>
 
         <div className="p-4">
           {/* Отображаем ошибки и статус разрешений */}
@@ -605,10 +637,15 @@ export function CameraCaptureDialog({
 
           {permissionStatus === "granted" && (
             <>
-              <div className="mb-4 text-sm">Запись с веб-камеры</div>
+              <DialogDescription
+                id="camera-capture-description"
+                className="mb-4 text-sm text-white"
+              >
+                Запись с веб-камеры
+              </DialogDescription>
 
               {/* Предпросмотр видео */}
-              <div className="relative mx-auto mb-6 flex h-[320px] w-full max-w-[240px] items-center justify-center overflow-hidden rounded-md border border-gray-800 bg-black">
+              <div className="relative mx-auto mb-6 flex h-[320px] w-full max-w-[400px] items-center justify-center rounded-md border border-gray-800 bg-black">
                 {!isDeviceReady && (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-400">
                     Инициализация камеры...
@@ -619,9 +656,15 @@ export function CameraCaptureDialog({
                   autoPlay
                   playsInline
                   muted
-                  className={`h-full w-full object-cover ${!isDeviceReady ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "contain",
+                  }}
+                  className={`${!isDeviceReady ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
                 />
-                {showCountdown && (
+                {showCountdown && countdown > 0 && (
                   <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-6xl font-bold text-white">
                     {countdown}
                   </div>
@@ -777,22 +820,22 @@ export function CameraCaptureDialog({
                 <div className="mb-4 flex items-center justify-center gap-6">
                   {!isRecording ? (
                     <Button
-                      className="mb-0 flex h-20 w-20 items-center justify-center rounded-full border-2 border-white bg-red-500 hover:bg-red-600"
+                      className="mb-0 flex h-14 w-14 items-center justify-center rounded-full border border-white bg-red-500 hover:bg-red-600"
                       onClick={startCountdown}
                       disabled={!isDeviceReady}
                     >
-                      <div className="h-6 w-6 animate-pulse rounded-full bg-white" />
+                      <div className="h-4 w-4 animate-pulse rounded-full bg-white" />
                     </Button>
                   ) : (
                     <Button
-                      className="mb-0 flex h-20 w-20 items-center justify-center rounded-full border-2 border-white bg-red-500 hover:bg-red-600"
+                      className="mb-0 flex h-14 w-14 items-center justify-center rounded-full border border-white bg-red-500 hover:bg-red-600"
                       onClick={stopRecording}
                     >
-                      <div className="h-6 w-6 rounded bg-white" />
+                      <div className="h-4 w-4 rounded bg-white" />
                     </Button>
                   )}
                 </div>
-                <div className="font-mono text-xl">
+                <div className="font-mono text-lg">
                   Время записи: {formatRecordingTime(recordingTime)}
                 </div>
               </div>

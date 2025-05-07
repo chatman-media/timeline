@@ -18,6 +18,10 @@ export interface PlayerContextType {
 
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
+
+  // Новые поля для поддержки параллельных видео
+  parallelVideos: MediaFile[] // Список всех параллельных видео, которые должны воспроизводиться одновременно
+  activeVideoId: string | null // ID активного видео, которое отображается
 }
 
 const initialContext: PlayerContextType = {
@@ -33,6 +37,8 @@ const initialContext: PlayerContextType = {
   videos: {},
   duration: 0,
   volume: 1,
+  parallelVideos: [],
+  activeVideoId: null,
 }
 
 type SetCurrentTimeEvent = {
@@ -95,6 +101,16 @@ type SetVideoReadyEvent = {
   isVideoReady: boolean
 }
 
+type SetParallelVideosEvent = {
+  type: "setParallelVideos"
+  parallelVideos: MediaFile[]
+}
+
+type SetActiveVideoIdEvent = {
+  type: "setActiveVideoId"
+  activeVideoId: string | null
+}
+
 export type PlayerEvent =
   | SetCurrentTimeEvent
   | SetIsPlayingEvent
@@ -108,6 +124,8 @@ export type PlayerEvent =
   | SetVideoEvent
   | SetVideoLoadingEvent
   | SetVideoReadyEvent
+  | SetParallelVideosEvent
+  | SetActiveVideoIdEvent
 
 // Функция для сохранения состояния плеера в IndexedDB - временно отключена
 const persistPlayerState = async (_: { context: PlayerContextType }): Promise<void> => {
@@ -183,6 +201,12 @@ export const playerMachine = createMachine({
         setVolume: {
           actions: assign({ volume: ({ event }) => event.volume }),
         },
+        setParallelVideos: {
+          actions: assign({ parallelVideos: ({ event }) => event.parallelVideos }),
+        },
+        setActiveVideoId: {
+          actions: assign({ activeVideoId: ({ event }) => event.activeVideoId }),
+        },
       },
     },
     loading: {
@@ -229,6 +253,12 @@ export const playerMachine = createMachine({
         setVolume: {
           actions: assign({ volume: ({ event }) => event.volume }),
         },
+        setParallelVideos: {
+          actions: assign({ parallelVideos: ({ event }) => event.parallelVideos }),
+        },
+        setActiveVideoId: {
+          actions: assign({ activeVideoId: ({ event }) => event.activeVideoId }),
+        },
       },
     },
     ready: {
@@ -272,6 +302,12 @@ export const playerMachine = createMachine({
         },
         setVolume: {
           actions: assign({ volume: ({ event }) => event.volume }),
+        },
+        setParallelVideos: {
+          actions: assign({ parallelVideos: ({ event }) => event.parallelVideos }),
+        },
+        setActiveVideoId: {
+          actions: assign({ activeVideoId: ({ event }) => event.activeVideoId }),
         },
       },
     },

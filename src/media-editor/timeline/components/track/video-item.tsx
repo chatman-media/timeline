@@ -23,12 +23,15 @@ export const VideoItem = memo(function VideoItem({
   trackStartTime,
   // trackEndTime не используется, но оставляем в интерфейсе для совместимости
 }: VideoItemProps) {
-  const { activeTrackId, setActiveTrack, setVideoRef, seek } = useTimeline()
+  const { activeTrackId, setActiveTrack, setVideoRef, seek, tracks } = useTimeline()
   const {
     video: activeVideo,
     setVideo: setActiveVideo,
     setVideoLoading,
     setVideoReady,
+    setParallelVideos,
+    setActiveVideoId,
+    parallelVideos,
   } = usePlayerContext()
 
   // Создаем реф для видео элемента
@@ -80,7 +83,44 @@ export const VideoItem = memo(function VideoItem({
         // Устанавливаем состояние загрузки
         setVideoLoading(true)
 
-        // Устанавливаем активное видео (минимальную версию)
+        // Находим все параллельные видео (видео с того же времени, но с разных камер)
+        // Для этого нам нужно найти все видео, которые имеют тот же startTime
+        const allParallelVideos = findParallelVideos(video)
+
+        // Если есть параллельные видео, устанавливаем их в контекст
+        if (allParallelVideos.length > 1) {
+          console.log(`[VideoItem] Найдено ${allParallelVideos.length} параллельных видео`)
+
+          // Создаем минимальные версии всех параллельных видео
+          const minimalParallelVideos = allParallelVideos.map((v) => ({
+            id: v.id,
+            name: v.name,
+            path: v.path,
+            duration: v.duration,
+            startTime: v.startTime || 0,
+            isVideo: true,
+            isAudio: false,
+            isImage: false,
+          }))
+
+          // Устанавливаем параллельные видео в контекст
+          setParallelVideos(minimalParallelVideos)
+
+          // Устанавливаем активное видео ID
+          setActiveVideoId(video.id)
+
+          console.log(
+            `[VideoItem] Установлены параллельные видео:`,
+            minimalParallelVideos.map((v) => v.id).join(", "),
+          )
+        } else {
+          // Если параллельных видео нет, используем стандартный подход
+          console.log(`[VideoItem] Параллельных видео не найдено, используем стандартный подход`)
+          setParallelVideos([minimalVideo])
+          setActiveVideoId(video.id)
+        }
+
+        // Устанавливаем активное видео (минимальную версию) для обратной совместимости
         setActiveVideo(minimalVideo)
 
         // Всегда устанавливаем текущее время на начало видео
@@ -108,6 +148,7 @@ export const VideoItem = memo(function VideoItem({
           setVideoLoading(false)
         }
       } catch (error) {
+        console.error("[VideoItem] Ошибка при обработке клика:", error)
         setVideoLoading(false)
       }
     },
@@ -121,8 +162,47 @@ export const VideoItem = memo(function VideoItem({
       activeVideo?.id,
       seek,
       minimalVideo,
+      setParallelVideos,
+      setActiveVideoId,
     ],
   )
+
+  // Функция для поиска параллельных видео (видео с того же времени, но с разных камер)
+  const findParallelVideos = (currentVideo: MediaFile): MediaFile[] => {
+    // Если нет startTime, возвращаем только текущее видео
+    if (currentVideo.startTime === undefined) {
+      return [currentVideo]
+    }
+
+    // Используем треки, которые уже получены на верхнем уровне компонента
+    // Это избегает вызова хука внутри функции
+    const allTracks = tracks
+
+    // Массив для хранения параллельных видео
+    const parallelVideos: MediaFile[] = [currentVideo]
+
+    // Ищем видео с тем же startTime на других треках
+    for (const t of allTracks) {
+      // Пропускаем текущий трек
+      if (t.id === activeTrackId) continue
+
+      // Ищем видео с тем же startTime на этом треке
+      const matchingVideos =
+        t.videos?.filter(
+          (v: MediaFile) =>
+            v.startTime !== undefined && Math.abs(v.startTime - (currentVideo.startTime || 0)) < 1, // Допускаем разницу в 1 секунду
+        ) || []
+
+      // Добавляем найденные видео в массив
+      parallelVideos.push(...matchingVideos)
+    }
+
+    console.log(
+      `[findParallelVideos] Найдено ${parallelVideos.length} параллельных видео для ${currentVideo.id}`,
+    )
+
+    return parallelVideos
+  }
 
   // Рассчитываем позицию и ширину видео
   const videoStart = video.startTime || 0

@@ -25,6 +25,10 @@ interface PlayerContextType {
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
 
+  // Новые поля для поддержки параллельных видео
+  parallelVideos: MediaFile[] // Список всех параллельных видео, которые должны воспроизводиться одновременно
+  activeVideoId: string | null // ID активного видео, которое отображается
+
   setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) => void
   setVideo: (video: MediaFile) => void
   setVideos: (videos: Record<string, TimelineVideo>) => void
@@ -37,6 +41,10 @@ interface PlayerContextType {
   setIsRecording: (isRecording: boolean) => void
   setVideoLoading: (isLoading: boolean) => void
   setVideoReady: (isReady: boolean) => void
+
+  // Новые методы для управления параллельными видео
+  setParallelVideos: (videos: MediaFile[]) => void
+  setActiveVideoId: (videoId: string | null) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined)
@@ -102,6 +110,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         setVideoLoading: (isLoading: boolean) =>
           send({ type: "setVideoLoading", isVideoLoading: isLoading }),
         setVideoReady: (isReady: boolean) => send({ type: "setVideoReady", isVideoReady: isReady }),
+        setParallelVideos: (parallelVideos: MediaFile[]) =>
+          send({ type: "setParallelVideos", parallelVideos }),
+        setActiveVideoId: (activeVideoId: string | null) =>
+          send({ type: "setActiveVideoId", activeVideoId }),
       }}
     >
       {children}

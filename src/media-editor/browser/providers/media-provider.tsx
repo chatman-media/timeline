@@ -23,7 +23,6 @@ export const MediaContext = createContext<MediaContextType | null>(null)
 
 export function MediaProvider({ children }: { children: React.ReactNode }) {
   const [mediaState, mediaSend] = useMachine(mediaMachine)
-  // const { addMediaFiles: timelineAddMediaFiles } = useTimeline()
 
   // Добавляем логирование при изменении состояния
   useEffect(() => {
