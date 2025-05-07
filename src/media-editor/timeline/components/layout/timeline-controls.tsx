@@ -5,61 +5,56 @@ import { useTimeline } from "@/media-editor/timeline/services"
 interface TimelineControlsProps {
   minScale?: number
   maxScale?: number
+  sectorDate?: string
 }
 
-export function TimelineControls({ minScale = 0.001, maxScale = 18 }: TimelineControlsProps) {
+export function TimelineControls({
+  minScale = 0.001,
+  maxScale = 18,
+  sectorDate,
+}: TimelineControlsProps) {
   const { zoomLevel, zoom: handleZoom } = useTimeline()
 
-  console.log("TimelineControls initial zoomLevel:", zoomLevel)
+  // Получаем текущий масштаб для сектора или общий масштаб
+  const currentZoomLevel = zoomLevel || 1
+
+  // Если указан sectorDate, отправляем событие для изменения масштаба сектора
+  const handleSectorZoom = (newScale: number) => {
+    if (sectorDate) {
+      // Отправляем событие для обновления масштаба сектора
+      window.dispatchEvent(
+        new CustomEvent("sector-zoom-change", {
+          detail: { sectorDate, zoomLevel: newScale },
+        }),
+      )
+    } else {
+      // Используем общий масштаб
+      handleZoom(newScale)
+    }
+  }
 
   const logMinScale = Math.log(minScale)
   const logMaxScale = Math.log(maxScale)
-  const logCurrentScale = Math.log(zoomLevel || 1)
+  const logCurrentScale = Math.log(currentZoomLevel)
   const logStep = (logMaxScale - logMinScale) / 100
-
-  console.log("TimelineControls scale values:", {
-    minScale,
-    maxScale,
-    currentScale: zoomLevel,
-    logMinScale,
-    logMaxScale,
-    logCurrentScale,
-    logStep,
-  })
 
   const handleScaleDecrease = (): void => {
     const newLogScale = logCurrentScale - logStep
     const newScale = Math.exp(Math.max(newLogScale, logMinScale))
-    console.log("TimelineControls decrease:", {
-      newLogScale,
-      newScale,
-      currentScale: zoomLevel,
-    })
-    handleZoom(newScale)
+    handleSectorZoom(newScale)
   }
 
   const handleScaleIncrease = (): void => {
     const newLogScale = logCurrentScale + logStep
     const newScale = Math.exp(Math.min(newLogScale, logMaxScale))
-    console.log("TimelineControls increase:", {
-      newLogScale,
-      newScale,
-      currentScale: zoomLevel,
-    })
-    handleZoom(newScale)
+    handleSectorZoom(newScale)
   }
 
   const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     const sliderValue = Number(e.target.value)
     const logScale = logMinScale + (sliderValue / 100) * (logMaxScale - logMinScale)
     const newScale = Math.exp(logScale)
-    console.log("TimelineControls slider:", {
-      sliderValue,
-      logScale,
-      newScale,
-      currentScale: zoomLevel,
-    })
-    handleZoom(newScale)
+    handleSectorZoom(newScale)
   }
 
   const sliderValue =

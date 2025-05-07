@@ -8,16 +8,17 @@ interface TimelineMarkProps {
 }
 
 export function TimelineMark({ timestamp, position, markType, showValue }: TimelineMarkProps) {
+  // Функция для определения высоты и стиля метки в зависимости от её типа
   const getMarkHeight = () => {
     switch (markType) {
     case "large":
-      return "h-6 bg-[#4a4a4a] dark:bg-[#aeaeae]"
+      return "h-6 bg-[#4a4a4a] dark:bg-[#aeaeae]" // Высокие метки для основных делений
     case "medium":
-      return "h-4 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-80"
+      return "h-4 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-80" // Средние метки
     case "small":
-      return "h-3 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-70"
+      return "h-3 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-70" // Малые метки
     case "smallest":
-      return "h-2 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-50"
+      return "h-2 bg-[#4a4a4a] dark:bg-[#aeaeae] opacity-50" // Самые маленькие метки
     }
   }
 

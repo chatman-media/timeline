@@ -1528,6 +1528,501 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
       ),
     },
 
+    // Шаблон с 9 экранами (3x3)
+    {
+      id: "split-grid-3x3-landscape",
+      split: "custom",
+      screens: 9,
+      render: () => (
+        <div className="relative h-full w-full">
+          {/* Верхний ряд */}
+          {/* Верхний левый экран */}
+          <div
+            className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            1
+          </div>
+
+          {/* Верхний средний экран */}
+          <div
+            className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "33.33%",
+              height: "33.33%",
+              left: "33.33%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            2
+          </div>
+
+          {/* Верхний правый экран */}
+          <div
+            className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            3
+          </div>
+
+          {/* Средний ряд */}
+          {/* Средний левый экран */}
+          <div
+            className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "33.33%",
+              height: "33.33%",
+              top: "33.33%",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            4
+          </div>
+
+          {/* Средний средний экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              top: "33.33%",
+              left: "33.33%",
+            }}
+          >
+            5
+          </div>
+
+          {/* Средний правый экран */}
+          <div
+            className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "33.33%",
+              height: "33.33%",
+              top: "33.33%",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            6
+          </div>
+
+          {/* Нижний ряд */}
+          {/* Нижний левый экран */}
+          <div
+            className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            7
+          </div>
+
+          {/* Нижний средний экран */}
+          <div
+            className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "33.33%",
+              height: "33.33%",
+              left: "33.33%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            8
+          </div>
+
+          {/* Нижний правый экран */}
+          <div
+            className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            9
+          </div>
+
+          {/* Горизонтальные линии разделения */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "33.33%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "66.66%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Вертикальные линии разделения */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "33.33%",
+              opacity: 0.3,
+            }}
+          />
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "66.66%",
+              opacity: 0.3,
+            }}
+          />
+        </div>
+      ),
+    },
+
+    // Шаблон с 16 экранами (4x4) для широкоэкранного формата
+    {
+      id: "split-grid-4x4-landscape",
+      split: "custom",
+      screens: 16,
+      render: () => (
+        <div className="relative h-full w-full">
+          {/* Первый ряд */}
+          {/* 1-й экран (верхний левый) */}
+          <div
+            className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            1
+          </div>
+
+          {/* 2-й экран */}
+          <div
+            className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              left: "25%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            2
+          </div>
+
+          {/* 3-й экран */}
+          <div
+            className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              left: "50%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            3
+          </div>
+
+          {/* 4-й экран (верхний правый) */}
+          <div
+            className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            4
+          </div>
+
+          {/* Второй ряд */}
+          {/* 5-й экран */}
+          <div
+            className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              top: "25%",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            5
+          </div>
+
+          {/* 6-й экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              top: "25%",
+              left: "25%",
+            }}
+          >
+            6
+          </div>
+
+          {/* 7-й экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              top: "25%",
+              left: "50%",
+            }}
+          >
+            7
+          </div>
+
+          {/* 8-й экран */}
+          <div
+            className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              top: "25%",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            8
+          </div>
+
+          {/* Третий ряд */}
+          {/* 9-й экран */}
+          <div
+            className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              top: "50%",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            9
+          </div>
+
+          {/* 10-й экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              top: "50%",
+              left: "25%",
+            }}
+          >
+            10
+          </div>
+
+          {/* 11-й экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              top: "50%",
+              left: "50%",
+            }}
+          >
+            11
+          </div>
+
+          {/* 12-й экран */}
+          <div
+            className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              top: "50%",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            12
+          </div>
+
+          {/* Четвертый ряд */}
+          {/* 13-й экран (нижний левый) */}
+          <div
+            className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            13
+          </div>
+
+          {/* 14-й экран */}
+          <div
+            className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              left: "25%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            14
+          </div>
+
+          {/* 15-й экран */}
+          <div
+            className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              left: "50%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            15
+          </div>
+
+          {/* 16-й экран (нижний правый) */}
+          <div
+            className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            16
+          </div>
+
+          {/* Горизонтальные линии разделения */}
+          {/* Горизонтальная линия 1 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "25%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Горизонтальная линия 2 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "50%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Горизонтальная линия 3 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "75%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Вертикальные линии разделения */}
+          {/* Вертикальная линия 1 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "25%",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Вертикальная линия 2 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "50%",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Вертикальная линия 3 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "75%",
+              opacity: 0.3,
+            }}
+          />
+        </div>
+      ),
+    },
+
     // Шаблон с 8 экранами (4x2)
     {
       id: "split-grid-4x2-landscape",
@@ -3292,6 +3787,501 @@ export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemp
         </div>
       ),
     },
+    // Шаблон с 9 экранами (3x3) для вертикального формата
+    {
+      id: "split-grid-3x3-portrait",
+      split: "custom",
+      screens: 9,
+      render: () => (
+        <div className="relative h-full w-full">
+          {/* Верхний ряд */}
+          {/* Верхний левый экран */}
+          <div
+            className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            1
+          </div>
+
+          {/* Верхний средний экран */}
+          <div
+            className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "33.33%",
+              height: "33.33%",
+              left: "33.33%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            2
+          </div>
+
+          {/* Верхний правый экран */}
+          <div
+            className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            3
+          </div>
+
+          {/* Средний ряд */}
+          {/* Средний левый экран */}
+          <div
+            className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "33.33%",
+              height: "33.33%",
+              top: "33.33%",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            4
+          </div>
+
+          {/* Средний средний экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              top: "33.33%",
+              left: "33.33%",
+            }}
+          >
+            5
+          </div>
+
+          {/* Средний правый экран */}
+          <div
+            className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "33.33%",
+              height: "33.33%",
+              top: "33.33%",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            6
+          </div>
+
+          {/* Нижний ряд */}
+          {/* Нижний левый экран */}
+          <div
+            className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            7
+          </div>
+
+          {/* Нижний средний экран */}
+          <div
+            className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "33.33%",
+              height: "33.33%",
+              left: "33.33%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            8
+          </div>
+
+          {/* Нижний правый экран */}
+          <div
+            className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "33.33%",
+              height: "33.33%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            9
+          </div>
+
+          {/* Горизонтальные линии разделения */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "33.33%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "66.66%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Вертикальные линии разделения */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "33.33%",
+              opacity: 0.3,
+            }}
+          />
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "66.66%",
+              opacity: 0.3,
+            }}
+          />
+        </div>
+      ),
+    },
+
+    // Шаблон с 16 экранами (4x4) для вертикального формата
+    {
+      id: "split-grid-4x4-portrait",
+      split: "custom",
+      screens: 16,
+      render: () => (
+        <div className="relative h-full w-full">
+          {/* Первый ряд */}
+          {/* 1-й экран (верхний левый) */}
+          <div
+            className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            1
+          </div>
+
+          {/* 2-й экран */}
+          <div
+            className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              left: "25%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            2
+          </div>
+
+          {/* 3-й экран */}
+          <div
+            className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              left: "50%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            3
+          </div>
+
+          {/* 4-й экран (верхний правый) */}
+          <div
+            className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            4
+          </div>
+
+          {/* Второй ряд */}
+          {/* 5-й экран */}
+          <div
+            className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              top: "25%",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            5
+          </div>
+
+          {/* 6-й экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              top: "25%",
+              left: "25%",
+            }}
+          >
+            6
+          </div>
+
+          {/* 7-й экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              top: "25%",
+              left: "50%",
+            }}
+          >
+            7
+          </div>
+
+          {/* 8-й экран */}
+          <div
+            className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              top: "25%",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            8
+          </div>
+
+          {/* Третий ряд */}
+          {/* 9-й экран */}
+          <div
+            className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              top: "50%",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            9
+          </div>
+
+          {/* 10-й экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              top: "50%",
+              left: "25%",
+            }}
+          >
+            10
+          </div>
+
+          {/* 11-й экран */}
+          <div
+            className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              top: "50%",
+              left: "50%",
+            }}
+          >
+            11
+          </div>
+
+          {/* 12-й экран */}
+          <div
+            className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              top: "50%",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            12
+          </div>
+
+          {/* Четвертый ряд */}
+          {/* 13-й экран (нижний левый) */}
+          <div
+            className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+              borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            13
+          </div>
+
+          {/* 14-й экран */}
+          <div
+            className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              left: "25%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            14
+          </div>
+
+          {/* 15-й экран */}
+          <div
+            className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#2a2e36",
+              width: "25%",
+              height: "25%",
+              left: "50%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            15
+          </div>
+
+          {/* 16-й экран (нижний правый) */}
+          <div
+            className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+            style={{
+              background: "#23262b",
+              width: "25%",
+              height: "25%",
+              borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+              borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+            }}
+          >
+            16
+          </div>
+
+          {/* Горизонтальные линии разделения */}
+          {/* Горизонтальная линия 1 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "25%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Горизонтальная линия 2 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "50%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Горизонтальная линия 3 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: "75%",
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Вертикальные линии разделения */}
+          {/* Вертикальная линия 1 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "25%",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Вертикальная линия 2 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "50%",
+              opacity: 0.3,
+            }}
+          />
+
+          {/* Вертикальная линия 3 */}
+          <div
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: "75%",
+              opacity: 0.3,
+            }}
+          />
+        </div>
+      ),
+    },
+
     {
       id: "split-diagonal-cross-portrait",
       split: "diagonal",

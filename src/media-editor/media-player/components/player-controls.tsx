@@ -39,6 +39,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     isRecording,
     setIsRecording,
     setIsSeeking,
+    setIsChangingCamera,
   } = usePlayerContext()
   const [isFullscreen, setIsFullscreen] = useState(false)
   const lastSaveTime = useRef(0)
@@ -50,51 +51,20 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       const now = Date.now()
       if (now - lastSaveTime.current >= SAVE_INTERVAL) {
         lastSaveTime.current = now
-
-        // Логируем, что сохранение отключено
-        if (video) {
-          console.log("Player state persistence is temporarily disabled")
-
-          // Закомментированный код сохранения состояния
-          /*
-          // Вызываем функцию сохранения состояния через событие
-          const saveEvent = new CustomEvent('persist-player-state');
-          window.dispatchEvent(saveEvent);
-
-          // Также вызываем функцию сохранения напрямую через машину состояний
-          try {
-            // Динамически импортируем idb-keyval для сохранения состояния
-            import('idb-keyval').then(({ set }) => {
-              // Создаем копию состояния для сохранения, исключая videoRefs
-              const stateToSave = {
-                video,
-                currentTime,
-                duration: video.duration || 0,
-                volume,
-                isPlaying,
-                // Не сохраняем videoRefs, так как они содержат DOM-элементы
-                videoRefs: {}
-              };
-
-              // Сохраняем состояние в IndexedDB
-              set('player-state', stateToSave)
-                .then(() => console.log("Player state saved to IndexedDB"))
-                .catch(error => console.error("Failed to save player state:", error));
-            });
-          } catch (error) {
-            console.error("Error saving player state:", error);
-          }
-          */
-        }
       }
     }, SAVE_INTERVAL)
 
     return () => clearInterval(interval)
   }, [video])
 
-  // Упрощаем handlePlayPause: только переключаем isPlaying
+  // Улучшаем handlePlayPause: НЕ устанавливаем флаг isChangingCamera при переключении
   const handlePlayPause = useCallback(() => {
     if (!video) return
+
+    // Не устанавливаем флаг isChangingCamera при переключении между паузой и воспроизведением,
+    // так как это приводит к сбросу времени
+    console.log("[handlePlayPause] Переключение воспроизведения")
+
     setIsPlaying(!isPlaying)
   }, [isPlaying, setIsPlaying, video])
 
@@ -289,11 +259,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   const videoEndTimeForLastFrame = (video?.startTime || 0) + (video?.duration || 0)
   const isLastFrame = Math.abs(currentTime - videoEndTimeForLastFrame) < frameTime
 
-  // Функция форматирования времени
-  const formatTime = (time: number): string => {
+  // Функция форматирования относительного времени
+  const formatRelativeTime = (time: number): string => {
     // Добавим проверку на конечность числа
     if (!isFinite(time)) {
-      console.warn("[formatTime] Received non-finite time:", time)
+      console.warn("[formatRelativeTime] Received non-finite time:", time)
       return "00:00:00.000"
     }
     // Используем Math.max для гарантии неотрицательного значения
@@ -303,6 +273,25 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     const seconds = Math.floor(absTime % 60)
     const milliseconds = Math.floor((absTime % 1) * 1000)
     return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`
+  }
+
+  // Функция форматирования абсолютного времени сектора
+  const formatSectorTime = (time: number, startTime?: number): string => {
+    // Если нет startTime или это не Unix timestamp, используем относительное время
+    if (!startTime || startTime < 365 * 24 * 60 * 60) {
+      return formatRelativeTime(time)
+    }
+
+    // Преобразуем Unix timestamp в объект Date
+    const date = new Date((startTime + time) * 1000)
+
+    // Форматируем время в формате HH:MM:SS.mmm
+    const hours = date.getHours().toString().padStart(2, "0")
+    const minutes = date.getMinutes().toString().padStart(2, "0")
+    const seconds = date.getSeconds().toString().padStart(2, "0")
+    const milliseconds = date.getMilliseconds().toString().padStart(3, "0")
+
+    return `${hours}:${minutes}:${seconds}.${milliseconds}`
   }
 
   // Получаем videoRefs из контекста плеера на верхнем уровне компонента
@@ -380,11 +369,15 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
             </div>
           </div>
           <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
-            {formatTime(Math.max(0, displayTime))}
+            {currentTime > 365 * 24 * 60 * 60
+              ? formatSectorTime(Math.max(0, displayTime), video?.startTime)
+              : formatRelativeTime(Math.max(0, displayTime))}
           </span>
           <span className="mb-[3px]">/</span>
           <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
-            {formatTime(video?.duration || 0)}
+            {currentTime > 365 * 24 * 60 * 60
+              ? formatSectorTime(video?.duration || 0, video?.startTime)
+              : formatRelativeTime(video?.duration || 0)}
           </span>
 
           {/* Скрытый элемент для обновления компонента при воспроизведении */}

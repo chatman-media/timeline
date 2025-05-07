@@ -43,6 +43,7 @@ interface TimelineContextType {
   setVideoRef: (fileId: string, video: HTMLVideoElement | null) => void
   setLoadedVideo: (fileId: string, loaded: boolean) => void
   preloadAllVideos: () => void
+  setIsChangingCamera: (isChangingCamera: boolean) => void
 }
 
 interface TimelineProviderProps {
@@ -169,6 +170,13 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [send],
   )
 
+  const handleSetIsChangingCamera = React.useCallback(
+    (isChangingCamera: boolean) => {
+      send({ type: "SET_CHANGING_CAMERA", isChangingCamera })
+    },
+    [send],
+  )
+
   const value: TimelineContextType = {
     ...state,
     zoom: handleZoom,
@@ -187,6 +195,7 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     setVideoRef: handleSetVideoRef,
     setLoadedVideo: handleSetLoadedVideo,
     preloadAllVideos: handlePreloadAllVideos,
+    setIsChangingCamera: handleSetIsChangingCamera,
   }
 
   return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>

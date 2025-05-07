@@ -1,9 +1,6 @@
 import { useMachine } from "@xstate/react"
-import { set } from "idb-keyval"
-import { createContext, useContext, useEffect } from "react"
+import { createContext, useContext } from "react"
 
-// Отключаем импорт инспектора для предотвращения ошибок сериализации
-// import { browserInspector } from "@/media-editor/providers"
 import { MediaFile } from "@/types/media"
 import { TimelineVideo } from "@/types/timeline"
 
@@ -52,39 +49,39 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   // Отключаем инспектор XState для предотвращения ошибок сериализации
   const [state, send] = useMachine(playerMachine)
 
-  // Временно отключаем загрузку и сохранение состояния плеера
-  useEffect(() => {
-    // Очищаем существующие данные в localStorage и IndexedDB
-    const clearPersistedState = async (): Promise<void> => {
-      try {
-        // Очищаем данные в localStorage
-        localStorage.removeItem("player-state")
-        console.log("Temporarily disabled player state persistence in localStorage")
+  // // Временно отключаем загрузку и сохранение состояния плеера
+  // useEffect(() => {
+  //   // Очищаем существующие данные в localStorage и IndexedDB
+  //   const clearPersistedState = async (): Promise<void> => {
+  //     try {
+  //       // Очищаем данные в localStorage
+  //       localStorage.removeItem("player-state")
+  //       console.log("Temporarily disabled player state persistence in localStorage")
 
-        // Очищаем данные в IndexedDB
-        await set(PLAYER_STORAGE_KEY, null)
-        console.log("Temporarily disabled player state persistence in IndexedDB")
-      } catch (error) {
-        console.error("Failed to clear persisted player state:", error)
-      }
-    }
+  //       // Очищаем данные в IndexedDB
+  //       await set(PLAYER_STORAGE_KEY, null)
+  //       console.log("Temporarily disabled player state persistence in IndexedDB")
+  //     } catch (error) {
+  //       console.error("Failed to clear persisted player state:", error)
+  //     }
+  //   }
 
-    // Очищаем сохраненное состояние
-    clearPersistedState()
+  //   // Очищаем сохраненное состояние
+  //   clearPersistedState()
 
-    // Создаем обработчик события сохранения состояния, который ничего не делает
-    const handlePersistState = (): void => {
-      console.log("Player state persistence is temporarily disabled")
-    }
+  //   // Создаем обработчик события сохранения состояния, который ничего не делает
+  //   const handlePersistState = (): void => {
+  //     console.log("Player state persistence is temporarily disabled")
+  //   }
 
-    // Добавляем обработчик события сохранения состояния
-    window.addEventListener("persist-player-state", handlePersistState)
+  //   // Добавляем обработчик события сохранения состояния
+  //   window.addEventListener("persist-player-state", handlePersistState)
 
-    return () => {
-      // Удаляем обработчик события при размонтировании
-      window.removeEventListener("persist-player-state", handlePersistState)
-    }
-  }, [])
+  //   return () => {
+  //     // Удаляем обработчик события при размонтировании
+  //     window.removeEventListener("persist-player-state", handlePersistState)
+  //   }
+  // }, [])
 
   return (
     <PlayerContext.Provider

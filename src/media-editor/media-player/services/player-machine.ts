@@ -137,11 +137,9 @@ const persistPlayerState = async (_: { context: PlayerContextType }): Promise<vo
 }
 
 export const playerMachine = createMachine({
-  /** @xstate-layout N4IgpgJg5mDOIC5QAcA2BDAnmATgOgEsJUwBiWMAFwBUCBbMAbQAYBdRFAe1gMoM4B2HEAA9EATgDMeAGwB2cTIAccgKwAaEJgkAWcXlVylARgBMqgL4XNaLLkLEyFSgElYABQyYCAqC3ZIIMjcvPxCgWIIRnhyMsZyxioaWohKqtJmltZBXvZEJORUbgDKYGAA1j5+bMLBPHyCwpGxmtpRqjKyCUlWNrn4+U5FsADCABbovlUj6Aw46P61IQ3hoJE6pq2IMjLMeKaJar05dgOOha6wAEpgAMacOBBVi4F1oY0R20p4kpKqUmotggOtJYh1zMdbNgzgVnAA1IhgTg3ABmsBeXHqYSaiDkOh+8kOyTaOnkP0ykP6DlhVARECRGKCy2xnwQ4j2Ol+-0kgJSCB5ezSAKyfVO1KGlDpSPRNVezI+a1SnUkxhkOmYMnMQNMeLw6s1IpO0PFFwAIgBXeYrRlvFY4hBKPY6uSSTm8trxOR4cTpCnZKF5c7wzioc0MG3y1aiVL4yTMUlJIEmAxWbICTj0+CvfpLLEK6MIAC0MiBxcpYsGufeUcixmMe1VCmU7sQ9dUxjwzBVENTQA */
   id: "player",
   initial: "idle",
   context: initialContext,
-  // Отключаем автоматическое сохранение состояния при инициализации
   // entry: [persistPlayerState],
   states: {
     idle: {
@@ -157,7 +155,6 @@ export const playerMachine = createMachine({
           ],
         },
         setCurrentTime: {
-          // Не вызываем persistPlayerState при обновлении currentTime для повышения производительности
           actions: assign({ currentTime: ({ event }) => event.currentTime }),
         },
         setIsPlaying: {
@@ -207,7 +204,6 @@ export const playerMachine = createMachine({
           actions: assign({ isPlaying: ({ event }) => event.isPlaying }),
         },
         setCurrentTime: {
-          // Не вызываем persistPlayerState при обновлении currentTime для повышения производительности
           actions: assign({ currentTime: ({ event }) => event.currentTime }),
         },
         setIsSeeking: {

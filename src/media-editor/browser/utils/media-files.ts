@@ -29,6 +29,10 @@ export interface Sector {
   name: string
   tracks: Track[]
   timeRanges: TimeRange[]
+  zoomLevel?: number
+  scrollPosition?: number
+  startTime: number
+  endTime: number
 }
 
 export function hasAudioStream(file: MediaFile): boolean {
@@ -338,6 +342,10 @@ export const createTracksFromFiles = (
       name: `Сектор ${date}`,
       tracks: [],
       timeRanges: [],
+      startTime: 0,
+      endTime: 0,
+      zoomLevel: 1,
+      scrollPosition: 0,
     }
 
     console.log(`Using sector ${sector.name} with ${sector.tracks.length} tracks`)
@@ -365,11 +373,15 @@ export const createTracksFromFiles = (
         console.log(`Extracted camera model for ${file.name}: ${cameraName || "unknown"}`)
       }
 
-      // Используем разрешение как идентификатор камеры
+      // Используем разрешение как идентификатор камеры, если доступно
       if (videoStream && videoStream.width && videoStream.height) {
         // Используем только разрешение для определения камеры
         cameraId = `${videoStream.width}x${videoStream.height}`
         console.log(`Using resolution as camera ID for ${file.name}: ${cameraId}`)
+      } else {
+        // Если разрешение не определено, используем уникальный идентификатор
+        cameraId = `camera-${nanoid(6)}`
+        console.log(`Using generated camera ID for ${file.name}: ${cameraId}`)
       }
 
       console.log(`Extracted camera ID for file ${file.name}: ${cameraId || "unknown"}`)
@@ -418,7 +430,7 @@ export const createTracksFromFiles = (
           }
 
           // Если trackCameraId не был определен по имени дорожки,
-          // используем разрешение
+          // используем разрешение или генерируем уникальный ID
           if (!trackCameraId) {
             // Получаем видеопоток из probeData
             const trackVideoStream = trackVideo.probeData?.streams?.find(
@@ -431,6 +443,12 @@ export const createTracksFromFiles = (
               trackCameraId = `${trackVideoStream.width}x${trackVideoStream.height}`
               console.log(
                 `Using resolution as track camera ID for ${trackVideo.name}: ${trackCameraId}`,
+              )
+            } else {
+              // Если разрешение не определено, используем уникальный идентификатор
+              trackCameraId = `camera-${nanoid(6)}`
+              console.log(
+                `Using generated camera ID for track with video ${trackVideo.name}: ${trackCameraId}`,
               )
             }
           }
@@ -624,19 +642,14 @@ export const createTracksFromFiles = (
           }
         }
 
-        // Создаем имя дорожки с учетом ID камеры
-        let trackName = `Видео ${maxVideoIndex + 1}`
-        let trackCameraName = null
+        // Всегда используем формат "Камера X" для видео треков
+        const nextCameraNumber = maxCameraNumber + 1
+        const trackName = `Камера ${nextCameraNumber}`
+        // Всегда устанавливаем cameraName в формате "Камера X"
+        const trackCameraName = `Камера ${nextCameraNumber}`
 
-        if (cameraId) {
-          // Используем простую нумерацию камер
-          trackName = `Камера ${maxCameraNumber + 1}`
-
-          // Если есть название камеры из метаданных, сохраняем его
-          if (cameraName) {
-            trackCameraName = cameraName
-          }
-        }
+        console.log(`Creating new track with name: ${trackName} for camera ID: ${cameraId}`)
+        console.log(`Using camera name: ${trackCameraName}`)
 
         // Создаем новую дорожку
         sector.tracks.push({
@@ -664,6 +677,19 @@ export const createTracksFromFiles = (
 
     // Обновляем timeRanges сектора
     sector.timeRanges = calculateTimeRanges(dayFiles)
+
+    // Обновляем время начала и конца секции
+    if (sector.tracks.length > 0) {
+      const allVideos = sector.tracks.flatMap((track) => track.videos || [])
+      if (allVideos.length > 0) {
+        const minStartTime = Math.min(...allVideos.map((video) => video.startTime || 0))
+        const maxEndTime = Math.max(
+          ...allVideos.map((video) => (video.startTime || 0) + (video.duration || 0)),
+        )
+        sector.startTime = minStartTime
+        sector.endTime = maxEndTime
+      }
+    }
 
     // Добавляем сектор в список, если он новый
     if (!existingSector) {
@@ -702,6 +728,10 @@ export const createTracksFromFiles = (
       name: `Сектор ${date}`,
       tracks: [],
       timeRanges: [],
+      startTime: 0,
+      endTime: 0,
+      zoomLevel: 1,
+      scrollPosition: 0,
     }
 
     // Обрабатываем каждый файл и добавляем его на подходящую дорожку
@@ -783,9 +813,12 @@ export const createTracksFromFiles = (
         )
 
         // Создаем новую дорожку
+        const nextAudioNumber = maxAudioIndex + 1
+        const audioTrackName = `Аудио ${nextAudioNumber}`
+
         sector.tracks.push({
           id: nanoid(),
-          name: `Аудио ${maxAudioIndex + 1}`,
+          name: audioTrackName,
           type: "audio",
           isActive: false,
           videos: [file],
@@ -793,17 +826,31 @@ export const createTracksFromFiles = (
           endTime: fileEndTime,
           combinedDuration: fileDuration,
           timeRanges: calculateTimeRanges([file]),
-          index: maxAudioIndex + 1,
+          index: nextAudioNumber,
           volume: 1,
           isMuted: false,
           isLocked: false,
           isVisible: true,
+          cameraName: audioTrackName, // Устанавливаем cameraName для совместимости
         })
       }
     }
 
     // Обновляем timeRanges сектора
     sector.timeRanges = calculateTimeRanges(dayFiles)
+
+    // Обновляем время начала и конца секции
+    if (sector.tracks.length > 0) {
+      const allVideos = sector.tracks.flatMap((track) => track.videos || [])
+      if (allVideos.length > 0) {
+        const minStartTime = Math.min(...allVideos.map((video) => video.startTime || 0))
+        const maxEndTime = Math.max(
+          ...allVideos.map((video) => (video.startTime || 0) + (video.duration || 0)),
+        )
+        sector.startTime = minStartTime
+        sector.endTime = maxEndTime
+      }
+    }
 
     // Добавляем сектор в список, если он новый
     if (!existingSector) {

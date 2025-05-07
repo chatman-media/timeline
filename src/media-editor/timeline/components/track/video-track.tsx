@@ -21,19 +21,31 @@ interface TimelineTrackProps {
       }
     >
   }
+  sectorZoomLevel?: number
 }
 
 const TimelineTrack = memo(function TimelineTrack({
   track,
   coordinates,
   sectionStartTime,
+  sectorZoomLevel,
 }: TimelineTrackProps) {
-  const { zoomLevel } = useTimeline()
+  const { zoomLevel: globalZoomLevel } = useTimeline()
+  // Используем масштаб сектора, если он задан, иначе используем общий масштаб
+  const zoomLevel = sectorZoomLevel || globalZoomLevel
   const containerRef = useRef<HTMLDivElement>(null)
 
   if (!track.videos || track.videos.length === 0) {
     return null
   }
+
+  // Находим минимальное время начала видео в треке
+  const trackMinStartTime = Math.min(...track.videos.map((v) => v.startTime || 0))
+
+  // Находим максимальное время окончания видео в треке
+  const trackMaxEndTime = Math.max(
+    ...track.videos.map((v) => (v.startTime || 0) + (v.duration || 0)),
+  )
 
   return (
     <div className="flex" ref={containerRef}>
@@ -65,6 +77,8 @@ const TimelineTrack = memo(function TimelineTrack({
                         track={track}
                         sectionStart={sectionStartTime}
                         zoomLevel={zoomLevel}
+                        trackStartTime={trackMinStartTime}
+                        trackEndTime={trackMaxEndTime}
                       />
                     ))}
                   </div>

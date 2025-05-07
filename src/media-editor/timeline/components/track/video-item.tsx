@@ -5,33 +5,14 @@ import { usePlayerContext } from "@/media-editor/media-player"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile, Track, VideoSegment } from "@/types/media"
 
-/**
- * Получает название камеры для отображения
- * @param track - Трек, к которому принадлежит видео
- * @returns Строка с названием камеры
- */
-function getCameraDisplayName(track: Track): string {
-  // Если у трека есть пользовательское название камеры, используем его
-  if (track.cameraName) {
-    return track.cameraName
-  }
-
-  // Извлекаем номер из имени трека (например, "Камера 1" -> "1")
-  const match = track.name?.match(/Камера\s+(\d+)/i)
-  if (match && match[1]) {
-    return `Камера ${match[1]}`
-  }
-
-  // Если не удалось извлечь номер, используем имя трека или "Камера"
-  return track.name || "Камера"
-}
-
 interface VideoItemProps {
   video: MediaFile
   segment?: VideoSegment
   track: Track
   sectionStart: number
   zoomLevel: number
+  trackStartTime?: number
+  trackEndTime?: number
 }
 
 export const VideoItem = memo(function VideoItem({
@@ -39,6 +20,8 @@ export const VideoItem = memo(function VideoItem({
   track,
   sectionStart,
   zoomLevel,
+  trackStartTime,
+  // trackEndTime не используется, но оставляем в интерфейсе для совместимости
 }: VideoItemProps) {
   const { activeTrackId, setActiveTrack, setVideoRef, seek } = useTimeline()
   const {
@@ -144,8 +127,15 @@ export const VideoItem = memo(function VideoItem({
   // Рассчитываем позицию и ширину видео
   const videoStart = video.startTime || 0
   const videoDuration = video.duration || 0
-  const left = (videoStart - sectionStart) * 2 * zoomLevel
-  const width = videoDuration * 2 * zoomLevel
+
+  // Если указаны границы трека, используем их для расчета позиции
+  const referenceStart = trackStartTime !== undefined ? trackStartTime : sectionStart
+
+  // Рассчитываем позицию и ширину в пикселях
+  // Для параллельных видео используем позицию относительно начала трека
+  const left = (videoStart - referenceStart) * 2 * zoomLevel
+  // Вычитаем 1px из ширины, чтобы компенсировать возможные погрешности округления
+  const width = Math.max(0, videoDuration * 2 * zoomLevel - 1)
 
   // Отключаем эффект для логирования активного состояния для повышения производительности
   // useEffect(() => {
@@ -170,7 +160,7 @@ export const VideoItem = memo(function VideoItem({
       }}
       onClick={handleClick}
     >
-      <div className="relative h-full w-full border-r border-gray-600 last:border-r-0">
+      <div className="relative h-full w-full">
         <div
           className="video-metadata m-0 flex h-full w-full flex-row items-start justify-between truncate rounded border border-gray-800 p-1 py-[3px] text-xs text-white shadow-md hover:border-gray-100 dark:border-gray-800 dark:hover:border-gray-100"
           style={{
@@ -183,9 +173,6 @@ export const VideoItem = memo(function VideoItem({
         >
           <span className="mr-1 rounded px-1 text-xs whitespace-nowrap dark:bg-[#033032]">
             {video.probeData?.streams[0]?.codec_type === "audio" ? "Аудио" : "Видео"} {track.index}
-          </span>
-          <span className="mr-1 max-w-[120px] truncate rounded bg-[#033032] px-1 whitespace-nowrap">
-            {getCameraDisplayName(track)}
           </span>
           <div className="m-0 flex w-full justify-end space-x-2 overflow-hidden p-0 text-xs text-white">
             {video.probeData?.streams?.[0]?.codec_type === "video" ? (

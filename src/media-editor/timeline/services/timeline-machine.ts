@@ -286,6 +286,7 @@ export const timelineMachine = createMachine({
 
                 if (existingTrackIndex >= 0) {
                   // Обновляем существующий трек
+                  const trackIndex = updatedTracks[existingTrackIndex].index
                   updatedTracks[existingTrackIndex] = {
                     ...updatedTracks[existingTrackIndex],
                     videos: [
@@ -303,9 +304,24 @@ export const timelineMachine = createMachine({
                     combinedDuration:
                       (updatedTracks[existingTrackIndex].combinedDuration || 0) +
                       (newTrack.combinedDuration || 0),
+                    // Всегда устанавливаем имя в формате "Камера X" для видео треков
+                    name:
+                      updatedTracks[existingTrackIndex].type === "video"
+                        ? `Камера ${trackIndex}`
+                        : updatedTracks[existingTrackIndex].name,
+                    // Всегда устанавливаем cameraName в формате "Камера X" для видео треков
+                    cameraName:
+                      updatedTracks[existingTrackIndex].type === "video"
+                        ? `Камера ${trackIndex}`
+                        : updatedTracks[existingTrackIndex].cameraName,
                   }
                 } else {
                   // Добавляем новый трек
+                  // Всегда устанавливаем имя в формате "Камера X" для видео треков
+                  if (newTrack.type === "video") {
+                    newTrack.name = `Камера ${newTrack.index}`
+                    newTrack.cameraName = `Камера ${newTrack.index}`
+                  }
                   updatedTracks.push(newTrack)
                 }
               })
