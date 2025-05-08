@@ -1,6 +1,7 @@
 import { memo, useCallback, useState } from "react"
 
 import { cn } from "@/lib/utils"
+
 import { useEnhancedPreviewSize, UseEnhancedPreviewSizeOptions } from "./use-enhanced-preview-size"
 
 /**
@@ -126,7 +127,7 @@ export const BrowserTabTemplate = memo(function BrowserTabTemplate<T extends Bro
         onSettingsChange(updatedSettings)
       }
     },
-    [settings, onSettingsChange]
+    [settings, onSettingsChange],
   )
 
   // Фильтрация элементов
@@ -170,7 +171,7 @@ export const BrowserTabTemplate = memo(function BrowserTabTemplate<T extends Bro
     (mode: string) => {
       handleSettingsChange({ viewMode: mode })
     },
-    [handleSettingsChange]
+    [handleSettingsChange],
   )
 
   // Рендеринг содержимого
@@ -196,10 +197,7 @@ export const BrowserTabTemplate = memo(function BrowserTabTemplate<T extends Bro
           <div key={group} className="mb-4">
             {group && <h3 className="mb-3 text-sm font-medium text-gray-400">{group}</h3>}
             <div
-              className={cn(
-                "flex flex-wrap gap-4",
-                viewMode === "list" && "flex-col gap-1"
-              )}
+              className={cn("flex flex-wrap gap-4", viewMode === "list" && "flex-col gap-1")}
               style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
             >
               {groupItems.map((item, index) => renderItem(item, index))}

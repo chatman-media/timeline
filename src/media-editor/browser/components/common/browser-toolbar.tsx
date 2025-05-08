@@ -99,7 +99,7 @@ export function BrowserToolbar<T extends BrowserItem>({
                       size="icon"
                       className={cn(
                         "mr-0 ml-3 h-6 w-6 cursor-pointer",
-                        viewMode === "grid" ? "bg-[#dddbdd] dark:bg-[#45444b]" : ""
+                        viewMode === "grid" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                       )}
                       onClick={() => onViewModeChange("grid")}
                     >
@@ -118,7 +118,7 @@ export function BrowserToolbar<T extends BrowserItem>({
                       size="icon"
                       className={cn(
                         "mr-0 h-6 w-6 cursor-pointer",
-                        viewMode === "thumbnails" ? "bg-[#dddbdd] dark:bg-[#45444b]" : ""
+                        viewMode === "thumbnails" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                       )}
                       onClick={() => onViewModeChange("thumbnails")}
                     >
@@ -137,7 +137,7 @@ export function BrowserToolbar<T extends BrowserItem>({
                       size="icon"
                       className={cn(
                         "mr-1 h-6 w-6 cursor-pointer",
-                        viewMode === "list" ? "bg-[#dddbdd] dark:bg-[#45444b]" : ""
+                        viewMode === "list" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                       )}
                       onClick={() => onViewModeChange("list")}
                     >
@@ -161,7 +161,7 @@ export function BrowserToolbar<T extends BrowserItem>({
                   size="icon"
                   className={cn(
                     "mr-1 h-6 w-6 cursor-pointer",
-                    !canDecreaseSize && "cursor-not-allowed opacity-50"
+                    !canDecreaseSize && "cursor-not-allowed opacity-50",
                   )}
                   onClick={handleDecreaseSize}
                   disabled={!canDecreaseSize}
@@ -178,7 +178,7 @@ export function BrowserToolbar<T extends BrowserItem>({
                   size="icon"
                   className={cn(
                     "mr-1 h-6 w-6 cursor-pointer",
-                    !canIncreaseSize && "cursor-not-allowed opacity-50"
+                    !canIncreaseSize && "cursor-not-allowed opacity-50",
                   )}
                   onClick={handleIncreaseSize}
                   disabled={!canIncreaseSize}

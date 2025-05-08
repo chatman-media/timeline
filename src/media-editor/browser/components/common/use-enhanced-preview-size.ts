@@ -48,7 +48,7 @@ export interface UseEnhancedPreviewSizeOptions {
  */
 export const useEnhancedPreviewSize = (
   key: string,
-  options: UseEnhancedPreviewSizeOptions = {}
+  options: UseEnhancedPreviewSizeOptions = {},
 ) => {
   const {
     minSize = MIN_SIZE,
@@ -99,7 +99,7 @@ export const useEnhancedPreviewSize = (
         })
       }
     },
-    [key, minSize, maxSize, syncWithOtherTabs, syncTabs]
+    [key, minSize, maxSize, syncWithOtherTabs, syncTabs],
   )
 
   // Загружаем размер после монтирования компонента
@@ -116,7 +116,7 @@ export const useEnhancedPreviewSize = (
       setPreviewSize(validSize)
       saveSize(validSize)
     },
-    [minSize, maxSize, saveSize]
+    [minSize, maxSize, saveSize],
   )
 
   // Обработчики для изменения размера превью
@@ -136,12 +136,15 @@ export const useEnhancedPreviewSize = (
 
   // Проверка возможности увеличения/уменьшения размера
   const canIncreaseSize =
-    PREVIEW_SIZES.indexOf(previewSize as (typeof PREVIEW_SIZES)[number]) < PREVIEW_SIZES.length - 1 &&
-    PREVIEW_SIZES[PREVIEW_SIZES.indexOf(previewSize as (typeof PREVIEW_SIZES)[number]) + 1] <= maxSize
+    PREVIEW_SIZES.indexOf(previewSize as (typeof PREVIEW_SIZES)[number]) <
+      PREVIEW_SIZES.length - 1 &&
+    PREVIEW_SIZES[PREVIEW_SIZES.indexOf(previewSize as (typeof PREVIEW_SIZES)[number]) + 1] <=
+      maxSize
 
   const canDecreaseSize =
     PREVIEW_SIZES.indexOf(previewSize as (typeof PREVIEW_SIZES)[number]) > 0 &&
-    PREVIEW_SIZES[PREVIEW_SIZES.indexOf(previewSize as (typeof PREVIEW_SIZES)[number]) - 1] >= minSize
+    PREVIEW_SIZES[PREVIEW_SIZES.indexOf(previewSize as (typeof PREVIEW_SIZES)[number]) - 1] >=
+      minSize
 
   return {
     previewSize,

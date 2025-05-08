@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import { ImperativePanelHandle,Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
 import { MediaFile } from "@/types/media"

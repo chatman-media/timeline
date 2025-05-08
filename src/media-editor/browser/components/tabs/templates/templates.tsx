@@ -1,4 +1,5 @@
 import { JSX } from "react"
+
 import { landscapeTemplates } from "./landscape-templates"
 import { portraitTemplates } from "./portrait-templates"
 import { squareTemplates } from "./square-templates"
@@ -19,6 +20,6 @@ export interface MediaTemplate {
 
 export const TEMPLATE_MAP: Record<"landscape" | "portrait" | "square", MediaTemplate[]> = {
   landscape: landscapeTemplates,
-  portrait:  portraitTemplates,
+  portrait: portraitTemplates,
   square: squareTemplates,
 }

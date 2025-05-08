@@ -50,70 +50,70 @@ export function BrowserItemView<T extends BrowserItem>({
   const displayName = item.name || (item.labels && item.labels.ru) || item.id
 
   switch (viewMode) {
-    case "list":
-      return (
-        <div
-          className={cn(
-            "group flex h-full items-center border border-transparent p-0",
-            "bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
-            isSelected && "pointer-events-none",
-            className
-          )}
-          onClick={handleClick}
-        >
-          <div className="relative mr-3 flex h-full flex-shrink-0 gap-1">
-            {renderPreview(item, previewSize)}
-          </div>
-          {renderMetadata && renderMetadata(item, previewSize)}
+  case "list":
+    return (
+      <div
+        className={cn(
+          "group flex h-full items-center border border-transparent p-0",
+          "bg-white hover:border-[#38daca71] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
+          isSelected && "pointer-events-none",
+          className,
+        )}
+        onClick={handleClick}
+      >
+        <div className="relative mr-3 flex h-full flex-shrink-0 gap-1">
+          {renderPreview(item, previewSize)}
         </div>
-      )
+        {renderMetadata && renderMetadata(item, previewSize)}
+      </div>
+    )
 
-    case "grid":
-      return (
+  case "grid":
+    return (
+      <div
+        className={cn(
+          "flex h-full w-full flex-col overflow-hidden rounded-xs",
+          "border border-transparent bg-white hover:border-[#38dacac3] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
+          isSelected && "pointer-events-none",
+          className,
+        )}
+        style={{
+          width: `${((previewSize * 16) / 9).toFixed(0)}px`,
+        }}
+        onClick={handleClick}
+      >
+        <div className="group relative w-full flex-1 flex-grow flex-row">
+          {renderPreview(item, previewSize)}
+        </div>
         <div
-          className={cn(
-            "flex h-full w-full flex-col overflow-hidden rounded-xs",
-            "border border-transparent bg-white hover:border-[#38dacac3] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
-            isSelected && "pointer-events-none",
-            className
-          )}
+          className="truncate p-1 text-xs"
           style={{
-            width: `${((previewSize * 16) / 9).toFixed(0)}px`,
+            fontSize: previewSize > 100 ? "13px" : "12px",
           }}
-          onClick={handleClick}
         >
-          <div className="group relative w-full flex-1 flex-grow flex-row">
-            {renderPreview(item, previewSize)}
-          </div>
-          <div
-            className="truncate p-1 text-xs"
-            style={{
-              fontSize: previewSize > 100 ? "13px" : "12px",
-            }}
-          >
-            {displayName}
-          </div>
+          {displayName}
         </div>
-      )
+      </div>
+    )
 
-    case "thumbnails":
-      return (
-        <div
-          className={cn(
-            "flex h-full items-center p-0",
-            "border border-transparent bg-white hover:border-[#38dacac3] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
-            isSelected && "pointer-events-none",
-            className
-          )}
-          onClick={handleClick}
-        >
-          <div className="group relative w-full flex-1 flex-grow flex-row">
-            {renderPreview(item, previewSize)}
-          </div>
+  case "thumbnails":
+    return (
+      <div
+        className={cn(
+          "flex h-full items-center p-0",
+          "border border-transparent bg-white hover:border-[#38dacac3] hover:bg-gray-100 dark:bg-[#25242b] dark:hover:border-[#35d1c1] dark:hover:bg-[#2f2d38]",
+          isSelected && "pointer-events-none",
+          className,
+        )}
+        onClick={handleClick}
+      >
+        <div className="group relative w-full flex-1 flex-grow flex-row">
+          {renderPreview(item, previewSize)}
         </div>
-      )
+      </div>
+    )
 
-    default:
-      return null
+  default:
+    return null
   }
 }

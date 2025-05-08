@@ -1,4 +1,4 @@
-import { createContext, ReactNode,useContext, useState } from "react"
+import { createContext, ReactNode, useContext, useState } from "react"
 
 interface DisplayTimeContextType {
   displayTime: number
