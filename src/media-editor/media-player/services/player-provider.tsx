@@ -1,10 +1,12 @@
 import { useMachine } from "@xstate/react"
 import { createContext, useContext } from "react"
 
+import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
 import { MediaFile } from "@/types/media"
 import { TimelineVideo } from "@/types/timeline"
 
 import { playerMachine } from "."
+import { AppliedTemplate } from "./template-service"
 
 // Ключ для хранения состояния плеера в IndexedDB
 const PLAYER_STORAGE_KEY = "player-state"
@@ -25,9 +27,12 @@ interface PlayerContextType {
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
 
-  // Новые поля для поддержки параллельных видео
+  // Поля для поддержки параллельных видео
   parallelVideos: MediaFile[] // Список всех параллельных видео, которые должны воспроизводиться одновременно
   activeVideoId: string | null // ID активного видео, которое отображается
+
+  // Поля для поддержки шаблонов
+  appliedTemplate: AppliedTemplate | null // Примененный шаблон
 
   setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) => void
   setVideo: (video: MediaFile) => void
@@ -42,9 +47,12 @@ interface PlayerContextType {
   setVideoLoading: (isLoading: boolean) => void
   setVideoReady: (isReady: boolean) => void
 
-  // Новые методы для управления параллельными видео
+  // Методы для управления параллельными видео
   setParallelVideos: (videos: MediaFile[]) => void
   setActiveVideoId: (videoId: string | null) => void
+
+  // Методы для управления шаблонами
+  setAppliedTemplate: (template: AppliedTemplate | null) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined)
@@ -114,6 +122,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           send({ type: "setParallelVideos", parallelVideos }),
         setActiveVideoId: (activeVideoId: string | null) =>
           send({ type: "setActiveVideoId", activeVideoId }),
+        setAppliedTemplate: (appliedTemplate: AppliedTemplate | null) =>
+          send({ type: "setAppliedTemplate", appliedTemplate }),
       }}
     >
       {children}

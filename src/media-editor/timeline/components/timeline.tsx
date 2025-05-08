@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react"
+import { MoveHorizontal, Trash2 } from "lucide-react"
 import React, { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile, Track } from "@/types/media"
 
 import { TimelineBar } from "./layout/timeline-bar"
+import { TimelineControls } from "./layout/timeline-controls"
 import { TimelineScale } from "./timeline-scale/timeline-scale"
 import { VideoTrack } from "./track"
 
@@ -64,9 +65,6 @@ export function Timeline() {
 
   const {
     tracks,
-    // sectors используется только для отладки
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    sectors,
     activeTrackId,
     seek,
     setActiveTrack,
@@ -84,7 +82,7 @@ export function Timeline() {
   // Состояние для хранения масштаба каждой секции
   const [sectionZoomLevels, setSectionZoomLevels] = useState<Record<string, number>>({})
 
-  // Отображаем треки и секторы на таймлайне
+  // Отображаем треки и видео на таймлайне
   const { isRecording, setIsRecording, setVideo, video, currentTime, isPlaying } =
     usePlayerContext()
   const activeVideo = video
@@ -92,8 +90,8 @@ export function Timeline() {
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const [deletingSectionDate, setDeletingSectionDate] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [containerWidth, setContainerWidth] = useState(3500)
+  // Используем ширину контейнера для расчетов
+  const [containerWidth, setContainerWidth] = useState(1000) // Начальное значение по умолчанию
 
   // Реф для контейнера таймлайна
   const timelineContainerRef = React.useRef<HTMLDivElement>(null)
@@ -260,7 +258,7 @@ export function Timeline() {
     // Принудительно обновляем компонент для пересчета ширины контейнера
     setTimeout(() => {
       // Обновляем ширину контейнера, чтобы вызвать перерисовку
-      setContainerWidth((prev) => prev + 0.001)
+      setContainerWidth(window.innerWidth)
 
       // Прокручиваем к началу секции
       if (scrollContainerRef.current) {
@@ -288,7 +286,7 @@ export function Timeline() {
     // Принудительно обновляем компонент для пересчета ширины контейнера
     setTimeout(() => {
       // Обновляем ширину контейнера, чтобы вызвать перерисовку
-      setContainerWidth((prev) => prev + 0.001)
+      setContainerWidth(window.innerWidth)
 
       // После изменения масштаба прокручиваем к видимой области
       scrollToVisibleVideos()
@@ -372,7 +370,7 @@ export function Timeline() {
     // Принудительно обновляем компонент для пересчета ширины контейнера
     setTimeout(() => {
       // Обновляем ширину контейнера, чтобы вызвать перерисовку
-      setContainerWidth((prev) => prev + 0.001)
+      setContainerWidth(window.innerWidth)
 
       // После изменения масштаба прокручиваем к видимой области
       scrollToVisibleVideos()
@@ -388,7 +386,7 @@ export function Timeline() {
     // Принудительно обновляем компонент для пересчета ширины контейнера
     setTimeout(() => {
       // Обновляем ширину контейнера, чтобы вызвать перерисовку
-      setContainerWidth((prev) => prev + 0.001)
+      setContainerWidth(window.innerWidth)
 
       // После изменения масштаба прокручиваем к видимой области
       scrollToVisibleVideos()
@@ -520,22 +518,11 @@ export function Timeline() {
   // Эффект для обновления ширины контейнера
   React.useEffect(() => {
     const updateContainerWidth = () => {
-      if (timelineContainerRef.current) {
-        const width = timelineContainerRef.current.clientWidth
-        setContainerWidth(width)
-
-        // Принудительно обновляем компонент при изменении размера окна
-        // для пересчета ширины контейнера с содержимым таймлайна
-        forceUpdate()
+      // Проверяем, что мы на клиенте (а не на сервере)
+      if (typeof window !== "undefined") {
+        // Используем ширину окна для расчетов
+        setContainerWidth(window.innerWidth)
       }
-    }
-
-    // Функция для принудительного обновления компонента
-    const forceUpdate = () => {
-      // Используем небольшую задержку, чтобы DOM успел обновиться
-      setTimeout(() => {
-        setContainerWidth((prev) => prev + 0.001)
-      }, 10)
     }
 
     // Обновляем ширину при монтировании
@@ -561,7 +548,9 @@ export function Timeline() {
         // Принудительно обновляем компонент для пересчета ширины контейнера
         setTimeout(() => {
           // Обновляем ширину контейнера, чтобы вызвать перерисовку
-          setContainerWidth((prev) => prev + 0.001)
+          if (typeof window !== "undefined") {
+            setContainerWidth(window.innerWidth)
+          }
 
           // Прокручиваем к видимой области с видео
           scrollToVisibleVideos()
@@ -581,12 +570,12 @@ export function Timeline() {
   // Эффект для обновления ширины контейнера при изменении масштаба
   React.useEffect(() => {
     // Обновляем ширину контейнера при изменении масштаба
-    if (timelineContainerRef.current) {
-      // Используем небольшую задержку, чтобы DOM успел обновиться
-      setTimeout(() => {
-        setContainerWidth((prev) => prev + 0.001)
-      }, 10)
-    }
+    // Используем небольшую задержку, чтобы DOM успел обновиться
+    setTimeout(() => {
+      if (typeof window !== "undefined") {
+        setContainerWidth(window.innerWidth)
+      }
+    }, 10)
   }, [zoomLevel])
 
   // Эффект для обработки события sector-fit-to-screen и sector-zoom-change
@@ -611,7 +600,9 @@ export function Timeline() {
 
         // Принудительно обновляем компонент для пересчета ширины контейнера
         setTimeout(() => {
-          setContainerWidth((prev) => prev + 0.001)
+          if (typeof window !== "undefined") {
+            setContainerWidth(window.innerWidth)
+          }
         }, 100)
       }
     }
@@ -655,13 +646,13 @@ export function Timeline() {
 
       {/* Скроллируемый контент с разделением на левую и правую части */}
       <div className="timeline-container flex-1 overflow-y-auto" ref={timelineContainerRef}>
-        <div className="flex h-full w-[calc(100%-200px)]">
+        <div className="flex h-full w-full overflow-x-hidden">
           {/* Левая панель фиксированной ширины */}
           <div
             className="sticky left-0 z-200 h-full min-h-full w-[200px] flex-shrink-0 border-r border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-900"
             style={{
               height: `${sections?.reduce(
-                (acc, sector) => acc + 61 + sector.tracks.length * 72,
+                (acc, sector) => acc + 31 + 30 + sector.tracks.length * 72, // PADDING + SCALE_HEIGHT + tracks
                 0,
               )}px`,
             }}
@@ -712,10 +703,10 @@ export function Timeline() {
 
           {/* Правая часть - каждый сектор имеет свой собственный скролл */}
           <div
-            className="flex h-full w-full flex-col"
+            className="flex h-full w-[calc(100%-200px)] flex-col"
             style={{
               height: `${sections?.reduce(
-                (acc, sector) => acc + 61 + sector.tracks.length * 72,
+                (acc, sector) => acc + 31 + 30 + sector.tracks.length * 72, // PADDING + SCALE_HEIGHT + tracks
                 0,
               )}px`,
             }}
@@ -740,26 +731,58 @@ export function Timeline() {
                   sector.endTime, // Используем endTime сектора как запасной вариант
                 )
 
-                // Общая ширина секции в пикселях
-                // Ограничиваем максимальную ширину секции, чтобы она всегда вмещалась на экран
-                // Используем ширину контейнера или 1000px по умолчанию
-                const containerWidth = scrollContainerRef.current?.clientWidth || 1000
-                // Рассчитываем ширину секции на основе длительности и масштаба
-                const calculatedWidth =
-                  (maxEndTime - minStartTime) * 2 * (sectionZoomLevels[sector.date] || zoomLevel)
-                // Используем максимум из рассчитанной ширины и ширины контейнера
-                // Добавляем 2px к ширине секции, чтобы компенсировать добавление 1px к ширине трека
-                const sectionWidthPx = Math.max(containerWidth, calculatedWidth) + 2
+                // Общая длительность секции
+                const sectionTotalDuration = maxEndTime - minStartTime
+
+                // Константы для расчета высоты
+                const TRACK_HEIGHT = 72 // высота одной дорожки в пикселях
+                const SCALE_HEIGHT = 30 // высота шкалы времени
+                const PADDING = 31 // дополнительная высота (отступы и т.д.)
+
+                // Расчет общей высоты сектора
+                const sectorHeight = PADDING + SCALE_HEIGHT + sector.tracks.length * TRACK_HEIGHT
 
                 return (
                   <div
                     key={index}
-                    className="mb-4 flex-shrink-0"
+                    className="relative mb-4 flex-shrink-0"
                     style={{
-                      height: `${61 + sector.tracks.length * 72}px`,
+                      width: `${Math.max(1000, (maxEndTime - minStartTime) * 2 * (sectionZoomLevels[sector.date] || zoomLevel))}px`,
+                      height: `${sectorHeight}px`,
                     }}
                   >
-                    {/* Контейнер со скроллом для каждого сектора */}
+                    {/* Шкала времени - фиксированная, не скроллится */}
+                    <div className="sticky top-0 right-0 left-0 z-10 h-[30px] w-full flex-shrink-0 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                      <div className="flex items-center justify-between">
+                        <TimelineScale
+                          startTime={sector.startTime}
+                          endTime={sector.endTime}
+                          duration={sector.endTime - sector.startTime}
+                          sectorDate={sector.date}
+                          sectorZoomLevel={sectionZoomLevels[sector.date]}
+                        />
+
+                        {/* Элементы управления масштабом для сектора */}
+                        <div className="z-10 mr-2 ml-2 flex items-center gap-2">
+                          {/* Двунаправленная стрелка */}
+                          <button
+                            onClick={() => fitSectionToScreen(sector.date)}
+                            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm hover:bg-[#dddbdd] dark:hover:bg-[#45444b]"
+                            title="Масштабировать под ширину экрана"
+                          >
+                            <MoveHorizontal size={14} />
+                          </button>
+
+                          <TimelineControls
+                            minScale={0.005}
+                            maxScale={200}
+                            sectorDate={sector.date}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Контейнер со скроллом только для треков */}
                     <div
                       className="overflow-x-auto"
                       ref={(el) => {
@@ -767,30 +790,26 @@ export function Timeline() {
                         if (index === 0) scrollContainerRef.current = el
                       }}
                     >
-                      <div style={{ width: `${sectionWidthPx}px` }}>
-                        {/* Шкала времени */}
-                        <div className="relative z-10 h-[30px] w-full flex-shrink-0 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
-                          <TimelineScale
-                            startTime={sector.startTime}
-                            endTime={sector.endTime}
-                            duration={sector.endTime - sector.startTime}
-                            sectorDate={sector.date}
-                            sectorZoomLevel={sectionZoomLevels[sector.date]}
-                          />
+                      <div
+                        className="relative"
+                        style={{
+                          width: `${Math.max(1000, (maxEndTime - minStartTime) * 2 * (sectionZoomLevels[sector.date] || zoomLevel))}px`,
+                          height: "100%",
+                        }}
+                      >
+                        {/* TimelineBar поверх всех дорожек */}
+                        <div className="pointer-events-none absolute top-0 right-0 bottom-0 left-0 z-20">
                           <TimelineBar
                             startTime={sector.startTime}
                             endTime={sector.endTime}
-                            height={30}
+                            height={sectorHeight - SCALE_HEIGHT - PADDING}
                           />
                         </div>
-
                         {/* Дорожки */}
                         <div className="flex w-full flex-col gap-1 p-2">
                           {sector.tracks.map((track: Track, trackIndex: number) => {
                             // Рассчитываем координаты для VideoTrack
                             const trackStartTime = track.startTime || 0
-                            const trackEndTime = track.endTime || 0
-                            const trackDuration = trackEndTime - trackStartTime
 
                             // Рассчитываем координаты для каждого видео
                             const videoCoordinates: Record<
@@ -814,19 +833,7 @@ export function Timeline() {
                               sector.endTime, // Используем endTime сектора как запасной вариант
                             )
 
-                            // Общая ширина секции в пикселях
-                            // Ограничиваем максимальную ширину секции, чтобы она всегда вмещалась на экран
-                            // Используем ширину контейнера или 1000px по умолчанию
-                            const containerWidth = scrollContainerRef.current?.clientWidth || 1000
-                            // Рассчитываем ширину секции на основе длительности и масштаба
-                            // Используем масштаб сектора, если он задан, иначе используем общий масштаб
-                            const calculatedWidth =
-                              (maxEndTime - minStartTime) *
-                              2 *
-                              (sectionZoomLevels[sector.date] || zoomLevel)
-                            // Используем максимум из рассчитанной ширины и ширины контейнера
-                            // Добавляем 2px к ширине секции, чтобы компенсировать добавление 1px к ширине трека
-                            const sectionWidthPx = Math.max(containerWidth, calculatedWidth) + 2
+                            // Общая длительность секции уже рассчитана выше
 
                             // Для каждого трека находим минимальное время начала видео
                             const trackMinStartTime =
@@ -835,27 +842,31 @@ export function Timeline() {
                                 : trackStartTime
 
                             // Для каждого трека находим максимальное время окончания видео
-                            const trackMaxEndTime =
+                            const trackMaxEndTime: number =
                               track.videos && track.videos.length > 0
                                 ? Math.max(
                                   ...track.videos.map(
                                     (v) => (v.startTime || 0) + (v.duration || 0),
                                   ),
                                 )
-                                : trackStartTime + trackDuration
+                                : trackStartTime
 
                             // Рассчитываем координаты трека
                             // Используем масштаб сектора, если он задан, иначе используем общий масштаб
                             const sectorZoomLevel = sectionZoomLevels[sector.date] || zoomLevel
-                            const trackPixelLeft =
-                              (trackMinStartTime - minStartTime) * 2 * sectorZoomLevel
-                            // Добавляем 1px к ширине трека, чтобы компенсировать вычитание 1px из ширины видео
-                            const trackPixelWidth =
-                              (trackMaxEndTime - trackMinStartTime) * 2 * sectorZoomLevel + 1
 
+                            // Рассчитываем относительные координаты в процентах
+                            // Позиция трека относительно начала секции
+                            const trackRelativeStart = trackMinStartTime - minStartTime
+                            // Длительность трека
+                            const trackDuration = trackMaxEndTime - trackMinStartTime
+                            // Общая длительность секции
+                            const sectionTotalDuration = maxEndTime - minStartTime
+
+                            // Координаты в процентах от общей ширины
                             const coordinates = {
-                              left: (trackPixelLeft / sectionWidthPx) * 100,
-                              width: (trackPixelWidth / sectionWidthPx) * 100,
+                              left: (trackRelativeStart / sectionTotalDuration) * 100,
+                              width: (trackDuration / sectionTotalDuration) * 100,
                               videos: videoCoordinates,
                             }
 

@@ -39,7 +39,7 @@ export function TimelineLayout() {
             className="sticky left-0 h-full min-h-full w-[200px] flex-shrink-0 border-r border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-900"
             style={{
               height: `${sectors?.reduce(
-                (acc, sector) => acc + 57 + sector.tracks.length * 54,
+                (acc, sector) => acc + 61 + sector.tracks.length * 72,
                 0,
               )}px`,
             }}
@@ -56,8 +56,8 @@ export function TimelineLayout() {
                     return (
                       <div
                         key={i}
-                        className="min-h-[50px] w-full flex-1 bg-[#033032] p-2 text-sm"
-                        style={{ height: `50px` }}
+                        className="min-h-[70px] w-full flex-1 bg-[#033032] p-2 text-sm"
+                        style={{ height: `70px` }}
                       >
                         <div className="flex flex-row justify-between">
                           <div>{track.name}</div>
@@ -80,7 +80,7 @@ export function TimelineLayout() {
             className="flex h-full w-full flex-col overflow-x-auto overflow-y-hidden"
             style={{
               height: `${sectors?.reduce(
-                (acc, sector) => acc + 57 + sector.tracks.length * 54,
+                (acc, sector) => acc + 61 + sector.tracks.length * 72,
                 0,
               )}px`,
             }}
@@ -90,7 +90,7 @@ export function TimelineLayout() {
                 key={index}
                 className="flex-shrink-0 overflow-x-auto overflow-y-hidden"
                 style={{
-                  height: `${57 + sector.tracks.length * 54}px`,
+                  height: `${61 + sector.tracks.length * 72}px`,
                 }}
               >
                 <div
@@ -113,7 +113,7 @@ export function TimelineLayout() {
                     <div
                       key={index}
                       // ширина должна быть равна самому длинному треку в секторе
-                      className={cn("h-[50px] w-[220px] flex-shrink-0 rounded-lg bg-[#033032]")}
+                      className={cn("h-[70px] w-[220px] flex-shrink-0 rounded-lg bg-[#033032]")}
                       style={{ width: `${(track.combinedDuration ?? 0) * 5}px` }}
                     >
                       <div className="h-full flex-1 justify-between overflow-x-auto text-sm whitespace-nowrap">

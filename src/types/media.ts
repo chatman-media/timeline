@@ -86,6 +86,7 @@ export interface Track {
   index: string | number
   cameraId?: string
   cameraName?: string // Пользовательское название камеры (например, "Sony Alpha")
+  sectionDuration?: number // Длительность секции для расчета позиции видео
 
   volume?: number
   isMuted?: boolean

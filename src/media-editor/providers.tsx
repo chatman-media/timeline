@@ -7,6 +7,7 @@ import { MediaProvider } from "@/media-editor/browser/providers/media-provider"
 import { UserSettingsProvider } from "@/media-editor/browser/providers/user-settings-provider"
 import { ModalProvider } from "@/media-editor/dialogs"
 import { PlayerProvider } from "@/media-editor/media-player"
+import { DisplayTimeProvider } from "@/media-editor/media-player/contexts"
 import { ProjectProvider } from "@/media-editor/project-settings/project-provider"
 import { TimelineProvider } from "@/media-editor/timeline/services"
 
@@ -30,6 +31,7 @@ const AppProvider = composeProviders(
   MediaProvider,
   ProjectProvider,
   UserSettingsProvider,
+  DisplayTimeProvider,
   PlayerProvider,
   ModalProvider,
   TimelineProvider,

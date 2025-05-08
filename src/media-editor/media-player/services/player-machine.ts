@@ -1,7 +1,10 @@
 import { assign, createMachine } from "xstate"
 
+import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
 import { MediaFile } from "@/types/media"
 import { TimelineVideo } from "@/types/timeline"
+
+import { AppliedTemplate } from "./template-service"
 
 export interface PlayerContextType {
   video: MediaFile | null
@@ -19,9 +22,12 @@ export interface PlayerContextType {
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
 
-  // Новые поля для поддержки параллельных видео
+  // Поля для поддержки параллельных видео
   parallelVideos: MediaFile[] // Список всех параллельных видео, которые должны воспроизводиться одновременно
   activeVideoId: string | null // ID активного видео, которое отображается
+
+  // Поля для поддержки шаблонов
+  appliedTemplate: AppliedTemplate | null // Примененный шаблон
 }
 
 const initialContext: PlayerContextType = {
@@ -39,6 +45,7 @@ const initialContext: PlayerContextType = {
   volume: 1,
   parallelVideos: [],
   activeVideoId: null,
+  appliedTemplate: null,
 }
 
 type SetCurrentTimeEvent = {
@@ -111,6 +118,11 @@ type SetActiveVideoIdEvent = {
   activeVideoId: string | null
 }
 
+type SetAppliedTemplateEvent = {
+  type: "setAppliedTemplate"
+  appliedTemplate: AppliedTemplate | null
+}
+
 export type PlayerEvent =
   | SetCurrentTimeEvent
   | SetIsPlayingEvent
@@ -126,6 +138,7 @@ export type PlayerEvent =
   | SetVideoReadyEvent
   | SetParallelVideosEvent
   | SetActiveVideoIdEvent
+  | SetAppliedTemplateEvent
 
 // Функция для сохранения состояния плеера в IndexedDB - временно отключена
 const persistPlayerState = async (_: { context: PlayerContextType }): Promise<void> => {
@@ -207,6 +220,9 @@ export const playerMachine = createMachine({
         setActiveVideoId: {
           actions: assign({ activeVideoId: ({ event }) => event.activeVideoId }),
         },
+        setAppliedTemplate: {
+          actions: assign({ appliedTemplate: ({ event }) => event.appliedTemplate }),
+        },
       },
     },
     loading: {
@@ -259,6 +275,9 @@ export const playerMachine = createMachine({
         setActiveVideoId: {
           actions: assign({ activeVideoId: ({ event }) => event.activeVideoId }),
         },
+        setAppliedTemplate: {
+          actions: assign({ appliedTemplate: ({ event }) => event.appliedTemplate }),
+        },
       },
     },
     ready: {
@@ -308,6 +327,9 @@ export const playerMachine = createMachine({
         },
         setActiveVideoId: {
           actions: assign({ activeVideoId: ({ event }) => event.activeVideoId }),
+        },
+        setAppliedTemplate: {
+          actions: assign({ appliedTemplate: ({ event }) => event.appliedTemplate }),
         },
       },
     },

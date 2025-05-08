@@ -7,6 +7,7 @@ import {
   MonitorCog,
   Pause,
   Play,
+  ScreenShare,
   StepBack,
   StepForward,
   Volume2,
@@ -19,6 +20,7 @@ import { ExitPointIcon } from "@/components/icons/exit-point"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
+import { useDisplayTime } from "@/media-editor/media-player/contexts"
 import { useTimeline } from "@/media-editor/timeline/services"
 
 import { usePlayerContext } from ".."
@@ -44,6 +46,9 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setIsChangingCamera,
     parallelVideos,
     videoRefs,
+    appliedTemplate,
+    setAppliedTemplate,
+    setActiveVideoId,
   } = usePlayerContext()
 
   // Используем состояние для хранения текущего времени воспроизведения
@@ -63,17 +68,6 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
     return () => clearInterval(interval)
   }, [video])
-
-  // Улучшаем handlePlayPause: НЕ устанавливаем флаг isChangingCamera при переключении
-  const handlePlayPause = useCallback(() => {
-    if (!video) return
-
-    // Не устанавливаем флаг isChangingCamera при переключении между паузой и воспроизведением,
-    // так как это приводит к сбросу времени
-    console.log("[handlePlayPause] Переключение воспроизведения")
-
-    setIsPlaying(!isPlaying)
-  }, [isPlaying, setIsPlaying, video])
 
   // Переписываем handleSkipBackward: используем currentTime, вызываем setCurrentTime
   const handleSkipBackward = useCallback(() => {
@@ -142,6 +136,14 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setIsFullscreen(!isFullscreen)
   }, [isFullscreen])
 
+  // Функция для сброса шаблона
+  const handleResetTemplate = useCallback(() => {
+    if (appliedTemplate) {
+      console.log("[handleResetTemplate] Сбрасываем шаблон:", appliedTemplate.template?.id)
+      setAppliedTemplate(null)
+    }
+  }, [appliedTemplate, setAppliedTemplate])
+
   // Улучшенная функция для переключения между камерами
   const handleSwitchCamera = useCallback(() => {
     // Если нет параллельных видео или их меньше 2, ничего не делаем
@@ -154,6 +156,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     const currentIndex = parallelVideos.findIndex((v) => v.id === video?.id)
     if (currentIndex === -1) {
       console.log("[handleSwitchCamera] Текущая камера не найдена в списке параллельных видео")
+      // Если текущая камера не найдена, используем первую камеру из списка
+      const nextVideo = parallelVideos[0]
+      console.log(`[handleSwitchCamera] Используем первую камеру из списка: ${nextVideo.id}`)
+      setVideo(nextVideo)
+      setActiveVideoId(nextVideo.id)
       return
     }
 
@@ -192,8 +199,10 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     // Устанавливаем флаг переключения камеры
     setIsChangingCamera(true)
 
-    // Устанавливаем новое активное видео
+    // Устанавливаем новое активное видео и ID
+    console.log(`[handleSwitchCamera] Устанавливаем новое активное видео: ${nextVideo.id}`)
     setVideo(nextVideo)
+    setActiveVideoId(nextVideo.id)
 
     // Сбрасываем флаг переключения камеры через небольшую задержку
     setTimeout(() => {
@@ -265,6 +274,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setIsRecording,
     isPlaying,
     setIsPlaying,
+    setActiveVideoId,
   ])
 
   // Улучшенный handleRecordToggle для корректной работы с параллельными видео
@@ -547,6 +557,9 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     }
   }, [video?.id, videoRefs, isPlaying])
 
+  // Импортируем контекст для обмена данными с TimelineBar
+  const { setDisplayTime } = useDisplayTime()
+
   // Нормализуем currentTime для отображения, если это Unix timestamp
   const displayTime = useMemo(() => {
     if (currentTime > 365 * 24 * 60 * 60) {
@@ -557,6 +570,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     return currentTime
   }, [currentTime, localDisplayTime])
 
+  // Обновляем контекст при изменении displayTime
+  useEffect(() => {
+    setDisplayTime(displayTime)
+  }, [displayTime, setDisplayTime])
+
   // Ограничиваем логирование, чтобы не перегружать консоль
   useEffect(() => {
     console.log(
@@ -566,6 +584,37 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       displayTime,
     )
   }, [currentTime, displayTime])
+
+  // Улучшаем handlePlayPause: НЕ устанавливаем флаг isChangingCamera при переключении
+  const handlePlayPause = useCallback(() => {
+    if (!video) return
+
+    // Не устанавливаем флаг isChangingCamera при переключении между паузой и воспроизведением,
+    // так как это приводит к сбросу времени
+    console.log("[handlePlayPause] Переключение воспроизведения")
+
+    // Если начинаем воспроизведение, устанавливаем текущее время видео в displayTime
+    if (!isPlaying && video.id && videoRefs[video.id]) {
+      const videoElement = videoRefs[video.id]
+
+      // Если currentTime - это Unix timestamp, используем displayTime
+      if (currentTime > 365 * 24 * 60 * 60) {
+        console.log(
+          `[handlePlayPause] Установка времени видео в displayTime: ${displayTime.toFixed(3)}`,
+        )
+        videoElement.currentTime = displayTime
+
+        // Сохраняем это время для текущего видео
+        if (video.id) {
+          console.log(
+            `[handlePlayPause] Сохраняем displayTime ${displayTime.toFixed(3)} для видео ${video.id}`,
+          )
+        }
+      }
+    }
+
+    setIsPlaying(!isPlaying)
+  }, [isPlaying, setIsPlaying, video, videoRefs, currentTime, displayTime])
 
   return (
     <div className="flex w-full flex-col">
@@ -757,6 +806,19 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                   <path d="M10 8V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" />
                   <path d="M12 17v-9" />
                 </svg>
+              </Button>
+            )}
+
+            {/* Кнопка сброса шаблона - показываем только если применен шаблон */}
+            {appliedTemplate && (
+              <Button
+                className="h-6 w-6 cursor-pointer"
+                variant="ghost"
+                size="icon"
+                title="Сбросить шаблон"
+                onClick={handleResetTemplate}
+              >
+                <ScreenShare className="h-4 w-4" />
               </Button>
             )}
 

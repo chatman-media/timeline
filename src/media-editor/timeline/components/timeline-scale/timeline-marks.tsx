@@ -1,4 +1,4 @@
-import { TimelineMark } from "."
+import { TimelineMark } from "./timeline-mark"
 
 interface TimelineMarksProps {
   startTime: number
@@ -8,111 +8,67 @@ interface TimelineMarksProps {
   subStep: number
   isActive: boolean
   zoomLevel?: number
+  timeToPosition?: (time: number) => number
 }
 
 export function TimelineMarks({
   startTime,
   endTime,
-  // duration больше не используется, так как мы используем пиксели вместо процентов
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   duration,
   timeStep,
   subStep,
   isActive,
-  zoomLevel = 1,
+  timeToPosition,
 }: TimelineMarksProps) {
-  // Параметры для отображения временных меток
+  // Если функция timeToPosition не передана, создаем ее локально
+  const calculatePosition =
+    timeToPosition ||
+    ((time: number) => {
+      return ((time - startTime) / duration) * 100
+    })
   const marks = []
 
   // Определяем шаги для разных уровней меток
-  const level1Step = timeStep // Основной шаг (крупные метки с подписями)
-  const level2Step = subStep // Средний шаг (средние метки)
-  const level3Step = subStep / 5 // Малый шаг (мелкие метки)
+  const level1Step = timeStep // Основные метки с подписями
+  const level2Step = subStep // Средние метки
+  const level3Step = subStep / 2 // Малые метки
+  const level4Step = subStep / 4 // Наименьшие метки
 
-  // Вычисляем видимую длительность в пикселях
-  const visibleWidthPx = (endTime - startTime) * 2 * zoomLevel
+  // Определяем, нужно ли показывать метки определенного уровня в зависимости от шага
+  const showLevel3 = level1Step >= 5 // Показываем малые метки только при достаточном масштабе
+  const showLevel4 = level1Step >= 10 // Показываем наименьшие метки только при большом масштабе
 
-  // Вычисляем первую метку, которая попадает в видимую область
-  // Округляем до ближайшего меньшего значения, кратного самому маленькому шагу
-  // Для абсолютного времени нам нужно учитывать, что время может быть очень большим числом
-  const firstMark = Math.floor(startTime / level3Step) * level3Step
+  // Определяем шаг для цикла в зависимости от масштаба
+  const iterationStep = showLevel4 ? level4Step : showLevel3 ? level3Step : level2Step
 
-  // Вспомогательная функция для проверки, является ли число кратным заданному шагу
-  function isMultipleOf(value: number, step: number): boolean {
-    // Учитываем погрешность округления для дробных чисел
-    const epsilon = 0.0001
-    const remainder = value % step
-    return remainder < epsilon || Math.abs(remainder - step) < epsilon
-  }
+  // Находим первую метку, которая попадает в видимую область
+  const firstMark = Math.floor(startTime / iterationStep) * iterationStep
 
-  // Рассчитываем, сколько пикселей приходится на одну секунду
-  const pixelsPerSecond = 2 * zoomLevel
+  console.log(
+    `[TimelineMarks] Шаги: L1=${level1Step}с, L2=${level2Step}с, L3=${level3Step}с, L4=${level4Step}с, Итерация=${iterationStep}с`,
+  )
 
-  // Определяем, какие метки нужно показывать в зависимости от плотности
-  // Если метки слишком плотные, показываем только каждую N-ую
-  const level1PixelDistance = level1Step * pixelsPerSecond
-  const level2PixelDistance = level2Step * pixelsPerSecond
-  const level3PixelDistance = level3Step * pixelsPerSecond
-
-  // Минимальное расстояние между метками в пикселях для хорошей читаемости
-  const minLevel1Distance = 80 // Для основных меток с подписями
-  const minLevel2Distance = 20 // Для средних меток
-  const minLevel3Distance = 5 // Для малых меток
-
-  // Определяем, нужно ли прореживать метки
-  const skipLevel1 =
-    level1PixelDistance < minLevel1Distance ? Math.ceil(minLevel1Distance / level1PixelDistance) : 1
-  const skipLevel2 =
-    level2PixelDistance < minLevel2Distance ? Math.ceil(minLevel2Distance / level2PixelDistance) : 1
-  const skipLevel3 =
-    level3PixelDistance < minLevel3Distance ? Math.ceil(minLevel3Distance / level3PixelDistance) : 1
-
-  // Счетчики для прореживания меток
-  let level1Counter = 0
-  let level2Counter = 0
-  let level3Counter = 0
-
-  // Создаем метки с шагом level3Step (самый маленький шаг)
-  for (
-    let timestamp = firstMark;
-    timestamp <= endTime + 0.0001;
-    timestamp = parseFloat((timestamp + level3Step).toFixed(10))
-  ) {
-    // Рассчитываем позицию метки в пикселях
-    const position = (timestamp - startTime) * pixelsPerSecond
+  for (let timestamp = firstMark; timestamp <= endTime; timestamp += iterationStep) {
+    const position = calculatePosition(timestamp)
 
     // Пропускаем метки, которые находятся за пределами видимой области
-    if (position < 0 || position > visibleWidthPx) continue
+    if (position < 0 || position > 100) continue
 
-    let markType: "large" | "medium" | "small" | "smallest" = "smallest"
+    let markType: "large" | "medium" | "small" | "smallest"
     let showValue = false
 
-    // Определяем тип метки в зависимости от её кратности разным шагам
-    const isLevel1 = isMultipleOf(timestamp, level1Step)
-    const isLevel2 = !isLevel1 && isMultipleOf(timestamp, level2Step)
-    const isLevel3 = !isLevel1 && !isLevel2 && isMultipleOf(timestamp, level3Step)
-
-    // Применяем прореживание меток
-    if (isLevel1) {
-      level1Counter = (level1Counter + 1) % skipLevel1
-      if (level1Counter !== 0) continue
-
+    // Определяем тип метки и нужно ли показывать значение
+    if (timestamp % level1Step === 0) {
       markType = "large"
       showValue = true
-    } else if (isLevel2) {
-      level2Counter = (level2Counter + 1) % skipLevel2
-      if (level2Counter !== 0) continue
-
+    } else if (timestamp % level2Step === 0) {
       markType = "medium"
-      // Показываем значения для средних меток только при небольшом шаге
-      showValue = timeStep <= 10
-    } else if (isLevel3) {
-      level3Counter = (level3Counter + 1) % skipLevel3
-      if (level3Counter !== 0) continue
-
+    } else if (showLevel3 && timestamp % level3Step === 0) {
       markType = "small"
+    } else if (showLevel4) {
+      markType = "smallest"
     } else {
-      // Пропускаем самые маленькие метки, они не нужны
+      // Пропускаем метки, которые не нужно показывать при текущем масштабе
       continue
     }
 
@@ -123,22 +79,17 @@ export function TimelineMarks({
         position={position}
         markType={markType}
         showValue={showValue}
+        isFirstMark={timestamp === Math.ceil(startTime / level1Step) * level1Step}
       />,
     )
   }
 
-  // Ограничиваем количество меток для производительности
-  const maxMarks = 200 // Увеличиваем максимальное количество меток, так как наш алгоритм уже прореживает их
-
-  // Более эффективный способ фильтрации меток, если их все еще слишком много
-  let finalMarks = marks
-  if (marks.length > maxMarks) {
-    const step = Math.ceil(marks.length / maxMarks)
-    finalMarks = []
-    for (let i = 0; i < marks.length; i += step) {
-      finalMarks.push(marks[i])
-    }
-  }
-
-  return <div className={`relative h-8 w-full ${isActive ? "" : "bg-muted/50"}`}>{finalMarks}</div>
+  return (
+    <div className="flex">
+      <div className="sticky left-0 z-10 flex h-8 min-w-[120px] items-center justify-center bg-[#014a4f] text-white">
+        <span>Время</span>
+      </div>
+      <div className={`relative h-8 w-full ${isActive ? "" : "bg-muted/50"}`}>{marks}</div>
+    </div>
+  )
 }

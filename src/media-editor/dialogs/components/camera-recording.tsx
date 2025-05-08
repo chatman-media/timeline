@@ -1,7 +1,7 @@
-import { useCallback, useContext,useRef, useState } from "react"
+import { useCallback, useContext, useRef, useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription,DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { MediaContext } from "@/media-editor/browser/providers/media-provider"
 import { CameraCaptureDialog } from "@/media-editor/dialogs"
 import { useModalContext } from "@/media-editor/dialogs/services/modal-provider"

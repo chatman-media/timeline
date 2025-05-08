@@ -1,82 +1,203 @@
-import React, { useMemo } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { usePlayerContext } from "@/media-editor/media-player"
+import { useDisplayTime } from "@/media-editor/media-player/contexts"
 
 interface TimelineBarProps {
   startTime: number
   endTime: number
-  height?: number
+  sectionStartTime: number
+  sectionDuration: number
+  height: number
 }
 
-export function TimelineBar({ startTime, endTime, height }: TimelineBarProps) {
-  const { currentTime, setCurrentTime: setTime } = usePlayerContext()
+// Функция для расчета позиции и обработки перемещения курсора времени
+function useSectionTime({ startTime, endTime }: { startTime: number; endTime: number }) {
+  const { currentTime, setCurrentTime } = usePlayerContext()
+  const { displayTime } = useDisplayTime()
+  const [position, setPosition] = useState<number>(0)
+  const isDraggingRef = useRef(false)
+  const lastTimeRef = useRef<number>(currentTime)
+  const positionRef = useRef<number>(0)
 
-  const position = useMemo(() => {
-    if (currentTime < startTime) return "-5px"
-    if (currentTime > endTime) return "100%"
-    const percent = ((currentTime - startTime) / (endTime - startTime)) * 100
-    return `${percent}%`
-  }, [currentTime, startTime, endTime])
+  // Функция для расчета позиции
+  const calculatePosition = useCallback(() => {
+    if (startTime === undefined || endTime === undefined) return
 
-  // Убираем эффект для анимации бара во время воспроизведения
-  // Теперь бар будет двигаться только за счет обновления currentTime из плеера
-  // Это предотвратит конфликты между разными источниками обновления времени
+    const duration = endTime - startTime
+    if (duration <= 0) return
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>): void => {
-    e.stopPropagation()
-    const onMouseMove = (e: MouseEvent): void => {
-      const rect = document.getElementById("timeline-bar-container")?.getBoundingClientRect()
-      if (!rect) return
-      const mouseX = e.clientX - rect.left
-      const percent = Math.max(0, Math.min(1, mouseX / rect.width))
-      const time = startTime + percent * (endTime - startTime)
-      setTime(time)
+    // Обрабатываем Unix timestamp
+    let effectiveCurrentTime = currentTime
+
+    // Если currentTime - это Unix timestamp (больше года в секундах)
+    if (currentTime > 365 * 24 * 60 * 60) {
+      // Используем displayTime из контекста, который содержит относительное время
+      effectiveCurrentTime = displayTime
+
+      console.log(
+        `TimelineBar: Обнаружен Unix timestamp (${currentTime}), используем относительное время из контекста: ${effectiveCurrentTime}`,
+      )
     }
 
-    const onMouseUp = (): void => {
-      document.removeEventListener("mousemove", onMouseMove)
-      document.removeEventListener("mouseup", onMouseUp)
+    // Проверяем, находится ли effectiveCurrentTime в пределах секции
+    if (effectiveCurrentTime < startTime) {
+      // Если время меньше начала секции, устанавливаем позицию в 0%
+      if (positionRef.current !== 0) {
+        console.log(
+          `TimelineBar: effectiveCurrentTime=${effectiveCurrentTime.toFixed(2)} меньше startTime=${startTime.toFixed(2)}, устанавливаем позицию в 0%`,
+        )
+        positionRef.current = 0
+        setPosition(0)
+      }
+      return
     }
 
-    document.addEventListener("mousemove", onMouseMove)
-    document.addEventListener("mouseup", onMouseUp)
+    if (effectiveCurrentTime > endTime) {
+      // Если время больше конца секции, устанавливаем позицию в 100%
+      if (positionRef.current !== 100) {
+        console.log(
+          `TimelineBar: effectiveCurrentTime=${effectiveCurrentTime.toFixed(2)} больше endTime=${endTime.toFixed(2)}, устанавливаем позицию в 100%`,
+        )
+        positionRef.current = 100
+        setPosition(100)
+      }
+      return
+    }
+
+    // Рассчитываем позицию в процентах
+    const relativeTime = effectiveCurrentTime - startTime
+    const positionPercent = (relativeTime / duration) * 100
+
+    // Ограничиваем позицию в пределах 0-100%
+    const clampedPosition = Math.max(0, Math.min(100, positionPercent))
+
+    // Проверяем, изменилась ли позиция существенно
+    if (Math.abs(clampedPosition - positionRef.current) < 0.1) return
+
+    // Логируем для отладки
+    console.log(
+      `TimelineBar: effectiveCurrentTime=${effectiveCurrentTime.toFixed(2)}, position=${clampedPosition.toFixed(2)}%`,
+    )
+
+    // Сохраняем позицию в ref для сравнения
+    positionRef.current = clampedPosition
+
+    // Обновляем состояние
+    setPosition(clampedPosition)
+  }, [currentTime, displayTime, startTime, endTime])
+
+  // Обновляем позицию при изменении currentTime
+  useEffect(() => {
+    // Сохраняем текущее время для следующего сравнения
+    lastTimeRef.current = currentTime
+
+    // Вызываем функцию расчета позиции
+    calculatePosition()
+
+    // Используем requestAnimationFrame для более плавного обновления
+    let animationFrameId: number
+
+    const updatePosition = () => {
+      calculatePosition()
+      animationFrameId = requestAnimationFrame(updatePosition)
+    }
+
+    // Запускаем анимацию
+    animationFrameId = requestAnimationFrame(updatePosition)
+
+    return () => {
+      // Останавливаем анимацию при размонтировании
+      cancelAnimationFrame(animationFrameId)
+    }
+  }, [currentTime, calculatePosition])
+
+  // Обработчик начала перетаскивания
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    isDraggingRef.current = true
+
+    // Обработчик перемещения мыши
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!isDraggingRef.current) return
+
+      const container = (e.target as HTMLElement).closest(".relative")
+      if (!container) return
+
+      const rect = container.getBoundingClientRect()
+      // Учитываем смещение в 120 пикселей при расчете позиции
+      const x = moveEvent.clientX - rect.left - 120
+      const width = rect.width - 120
+
+      // Проверяем, что x находится в допустимом диапазоне
+      if (x < 0) {
+        console.log(`[TimelineBar] Перетаскивание за левую границу: x=${x}`)
+        return
+      }
+
+      // Рассчитываем новое время (с учетом смещения)
+      const percent = Math.max(0, Math.min(1, x / width))
+      const duration = endTime - startTime
+      const newTime = startTime + percent * duration
+
+      // Логируем для отладки
+      console.log(
+        `[TimelineBar] Перетаскивание: x=${x}, width=${width}, percent=${percent.toFixed(2)}, newTime=${newTime.toFixed(2)}`,
+      )
+
+      // Устанавливаем новое время
+      setCurrentTime(newTime)
+    }
+
+    // Обработчик отпускания кнопки мыши
+    const handleMouseUp = () => {
+      isDraggingRef.current = false
+      document.removeEventListener("mousemove", handleMouseMove)
+      document.removeEventListener("mouseup", handleMouseUp)
+    }
+
+    document.addEventListener("mousemove", handleMouseMove)
+    document.addEventListener("mouseup", handleMouseUp)
   }
 
+  return { position, handleMouseDown }
+}
+
+export function TimelineBar({ sectionStartTime, sectionDuration, height }: TimelineBarProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { currentTime } = usePlayerContext()
+  const { displayTime } = useDisplayTime()
+  const { position, handleMouseDown } = useSectionTime({
+    startTime: sectionStartTime,
+    endTime: sectionStartTime + sectionDuration,
+  })
+
+  // Добавляем логирование для отладки
+  useEffect(() => {
+    console.log(
+      `TimelineBar: sectionStartTime=${sectionStartTime}, sectionDuration=${sectionDuration}, currentTime=${currentTime}, displayTime=${displayTime}`,
+    )
+  }, [sectionStartTime, sectionDuration, currentTime, displayTime])
+
+  if (position < 0) return null
+
   return (
-    <div
-      id="timeline-bar-container"
-      className="absolute top-0 right-0 left-0 h-full"
-      style={{ height: height || "100%" }}
-    >
+    <div ref={containerRef} className="pointer-events-none absolute inset-0">
       <div
-        className="group absolute top-0 bottom-0 z-[100] flex w-[3px] cursor-col-resize flex-col items-center"
+        className="pointer-events-auto absolute z-50 flex cursor-ew-resize flex-col items-center hover:opacity-90"
         style={{
-          left: position,
+          left: `calc(120px + ${position}%)`,
+          top: "0",
           transform: "translateX(-50%)",
-          height: "100%",
+          height: `${height + 70}px`,
         }}
         onMouseDown={handleMouseDown}
       >
-        <div className="bg-primary group-hover:bg-primary group-active:bg-primary/90 h-full w-[1px] transition-colors">
-          <div className="absolute top-0 h-5 w-3 -translate-x-[5px] overflow-visible">
-            <svg
-              viewBox="0 0 24 24"
-              className="fill-primary h-full w-full drop-shadow-lg"
-              style={{ filter: "drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))" }}
-            >
-              <path d="M12 4L4 15h16L12 4z" />
-            </svg>
-          </div>
-          <div className="absolute bottom-0 h-5 w-3 -translate-x-[5px] rotate-180 overflow-visible">
-            <svg
-              viewBox="0 0 24 24"
-              className="fill-primary h-full w-full drop-shadow-lg"
-              style={{ filter: "drop-shadow(0 2px 3px rgba(0, 0, 0, 0.5))" }}
-            >
-              <path d="M12 4L4 15h16L12 4z" />
-            </svg>
-          </div>
+        <div className="flex flex-col items-center">
+          <div className="h-[6px] w-[10px] bg-red-600" />
+          <div className="h-0 w-0 border-t-[5px] border-r-[5px] border-l-[5px] border-t-red-600 border-r-transparent border-l-transparent" />
         </div>
+        <div className="mt-[-2px] w-[2px] flex-1 bg-red-600" />
       </div>
     </div>
   )

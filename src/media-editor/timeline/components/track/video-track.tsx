@@ -26,8 +26,8 @@ interface TimelineTrackProps {
 
 const TimelineTrack = memo(function TimelineTrack({
   track,
-  coordinates,
   sectionStartTime,
+  sectionDuration,
   sectorZoomLevel,
 }: TimelineTrackProps) {
   const { zoomLevel: globalZoomLevel } = useTimeline()
@@ -49,14 +49,12 @@ const TimelineTrack = memo(function TimelineTrack({
 
   return (
     <div className="flex" ref={containerRef}>
+      {/* Название трека с фиксированной позицией */}
+      <div className="sticky left-0 z-10 flex h-full min-w-[120px] items-center bg-[#014a4f] px-2 text-white">
+        <span className="truncate">{track.name || track.id}</span>
+      </div>
       <div className="h-full w-full">
-        <div
-          className="relative h-full"
-          style={{
-            left: `${coordinates.left}%`,
-            width: `${coordinates.width}%`,
-          }}
-        >
+        <div className="relative h-full w-full">
           <div
             className="drag--parent flex-1"
             style={{
@@ -74,7 +72,10 @@ const TimelineTrack = memo(function TimelineTrack({
                       <VideoItem
                         key={video.id}
                         video={video}
-                        track={track}
+                        track={{
+                          ...track,
+                          sectionDuration: sectionDuration, // Добавляем длительность секции для расчета позиции
+                        }}
                         sectionStart={sectionStartTime}
                         zoomLevel={zoomLevel}
                         trackStartTime={trackMinStartTime}

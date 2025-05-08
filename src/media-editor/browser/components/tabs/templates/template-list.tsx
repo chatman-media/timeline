@@ -2,6 +2,8 @@ import { useEffect, useState } from "react"
 
 import { usePreviewSize } from "@/media-editor/browser"
 import { TemplateListToolbar } from "@/media-editor/browser/components/tabs/templates"
+import { usePlayerContext } from "@/media-editor/media-player"
+import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
 import { useProject } from "@/media-editor/project-settings/project-provider"
 
 import { MediaTemplate, TEMPLATE_MAP } from "./templates"
@@ -67,6 +69,9 @@ export function TemplateList() {
   const [templates, setTemplates] = useState<MediaTemplate[]>([])
   const { settings } = useProject()
 
+  // Получаем доступ к контексту плеера для работы с параллельными видео и шаблонами
+  const { parallelVideos, setAppliedTemplate } = usePlayerContext()
+
   const {
     previewSize,
     isSizeLoaded,
@@ -124,6 +129,30 @@ export function TemplateList() {
   const handleTemplateClick = (template: MediaTemplate) => {
     setActiveTemplate(template)
     console.log("Applying template:", template.id)
+
+    // Проверяем, есть ли параллельные видео для применения шаблона
+    if (parallelVideos.length > 0) {
+      console.log(`Применяем шаблон ${template.id} к ${parallelVideos.length} параллельным видео`)
+
+      // Проверяем, сколько экранов в шаблоне и сколько у нас видео
+      const screensCount = template.screens || 1
+      const availableVideos = parallelVideos.slice(0, screensCount)
+
+      console.log(
+        `Шаблон содержит ${screensCount} экранов, доступно ${availableVideos.length} видео`,
+      )
+
+      // Создаем объект AppliedTemplate
+      const appliedTemplate: AppliedTemplate = {
+        template,
+        videos: availableVideos,
+      }
+
+      // Применяем шаблон через контекст плеера
+      setAppliedTemplate(appliedTemplate)
+    } else {
+      console.log("Нет параллельных видео для применения шаблона")
+    }
   }
 
   return (

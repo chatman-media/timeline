@@ -21,7 +21,7 @@ export const VideoItem = memo(function VideoItem({
   sectionStart,
   zoomLevel,
   trackStartTime,
-  // trackEndTime не используется, но оставляем в интерфейсе для совместимости
+  trackEndTime,
 }: VideoItemProps) {
   const { activeTrackId, setActiveTrack, setVideoRef, seek, tracks } = useTimeline()
   const {
@@ -211,11 +211,20 @@ export const VideoItem = memo(function VideoItem({
   // Если указаны границы трека, используем их для расчета позиции
   const referenceStart = trackStartTime !== undefined ? trackStartTime : sectionStart
 
-  // Рассчитываем позицию и ширину в пикселях
-  // Для параллельных видео используем позицию относительно начала трека
-  const left = (videoStart - referenceStart) * 2 * zoomLevel
-  // Вычитаем 1px из ширины, чтобы компенсировать возможные погрешности округления
-  const width = Math.max(0, videoDuration * 2 * zoomLevel - 1)
+  // Рассчитываем позицию в процентах относительно видимого диапазона
+  // Используем длительность секции для расчета, чтобы видео соответствовало шкале времени
+  const trackEndTimeValue = trackEndTime || 0
+  const sectionDuration =
+    trackEndTimeValue && trackStartTime ? trackEndTimeValue - trackStartTime : videoDuration
+
+  // Рассчитываем позицию в процентах от ширины секции
+  const leftPercent = ((videoStart - referenceStart) / sectionDuration) * 100
+
+  // Рассчитываем ширину в процентах от ширины секции
+  const widthPercent = (videoDuration / sectionDuration) * 100
+
+  // Логируем расчеты для отладки
+  // console.log(`[VideoItem] ${video.name}: start=${videoStart}, duration=${videoDuration}, left=${leftPercent}%, width=${widthPercent}%`)
 
   // Отключаем эффект для логирования активного состояния для повышения производительности
   // useEffect(() => {
@@ -229,8 +238,8 @@ export const VideoItem = memo(function VideoItem({
       key={video.id}
       className={`absolute ${isActive ? "border-2 border-white shadow-lg" : ""}`}
       style={{
-        left: `${left}px`,
-        width: `${width}px`,
+        left: `${leftPercent}%`,
+        width: `${widthPercent}%`,
         height: "70px",
         top: "0px",
         overflow: "hidden",
@@ -400,7 +409,7 @@ export const VideoItem = memo(function VideoItem({
         <div
           className="absolute bottom-0 left-0 mb-[2px] ml-1 bg-[#033032] px-[3px] text-xs text-[11px] text-gray-100"
           style={{
-            display: width < 16 ? "none" : "block",
+            display: widthPercent < 5 ? "none" : "block",
           }}
         >
           {formatTimeWithMilliseconds(video.startTime || 0, false, true, true)}
@@ -408,7 +417,7 @@ export const VideoItem = memo(function VideoItem({
         <div
           className="absolute right-0 bottom-0 mr-1 mb-[2px] bg-[#033032] px-[3px] text-xs text-[11px] text-gray-100"
           style={{
-            display: width < 16 ? "none" : "block",
+            display: widthPercent < 5 ? "none" : "block",
           }}
         >
           {formatTimeWithMilliseconds(
