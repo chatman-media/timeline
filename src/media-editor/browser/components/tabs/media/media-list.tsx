@@ -605,7 +605,7 @@ export const MediaFileList = memo(function MediaFileList({
           return b.localeCompare(a)
         })
         .map(([type, files]) => ({
-          title: type === "video" ? "Видео" : type === "audio" ? "Аудио" : "Изображения",
+          title: t(`browser.media.${type}`),
           files,
         }))
     }
@@ -715,20 +715,7 @@ export const MediaFileList = memo(function MediaFileList({
           return sortOrder === "asc" ? indexA - indexB : indexB - indexA
         })
         .map(([type, files]) => ({
-          title:
-            type === "noDuration"
-              ? "Файлы без длительности"
-              : type === "veryShort"
-                ? "Очень короткие (до 1 минуты)"
-                : type === "short"
-                  ? "Короткие (1-5 минут)"
-                  : type === "medium"
-                    ? "Средние (5-30 минут)"
-                    : type === "long"
-                      ? "Длинные (30-60 минут)"
-                      : type === "veryLong"
-                        ? "Очень длинные (1-3 часа)"
-                        : "Сверхдлинные (более 3 часов)",
+          title: t(`browser.toolbar.duration.${type}`),
           files,
         }))
     }
@@ -985,7 +972,7 @@ export const MediaFileList = memo(function MediaFileList({
   const renderContent = useCallback(() => {
     if (filteredAndSortedMedia.length === 0) {
       return (
-        <div className="p-4 text-center text-gray-400 dark:text-gray-500">Нет медиа-файлов</div>
+        <div className="p-4 text-center text-gray-400 dark:text-gray-500">{t("browser.media.noMedia")}</div>
       )
     }
 

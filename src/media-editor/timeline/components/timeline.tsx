@@ -70,7 +70,7 @@ function formatSectionDate(dateString: string): string {
 }
 
 export function Timeline() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const context = useTimeline()
   if (!context) {
     throw new Error("Timeline must be used within a TimelineProvider")

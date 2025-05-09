@@ -272,6 +272,15 @@
         "artist": "By artist",
         "genre": "By genre",
         "album": "By album"
+      },
+      "duration": {
+        "noDuration": "Files without duration",
+        "veryShort": "Very short (under 1 minute)",
+        "short": "Short (1-5 minutes)",
+        "medium": "Medium (5-30 minutes)",
+        "long": "Long (30-60 minutes)",
+        "veryLong": "Very long (1-3 hours)",
+        "extraLong": "Extra long (over 3 hours)"
       }
     }
   },
