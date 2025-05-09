@@ -21,37 +21,48 @@ import { TimelineControls } from "./layout/timeline-controls"
 import { TimelineScale } from "./timeline-scale/timeline-scale"
 import { VideoTrack } from "./track"
 
-// Добавляю функцию для форматирования даты секции
+// Функция для форматирования даты секции с учетом локализации
 function formatSectionDate(dateString: string): string {
   try {
     // Если дата в формате ISO (YYYY-MM-DD), добавляем время
     const date = new Date(dateString + "T00:00:00")
-    if (isNaN(date.getTime())) return "Неверный формат даты"
+    if (isNaN(date.getTime())) {
+      return "Неверный формат даты"
+    }
 
-    // Форматируем дату как "31 марта 25 г." (как на скриншоте)
-    const day = date.getDate()
+    // Получаем текущий язык из i18next
+    let currentLanguage = "ru"
+    try {
+      // Проверяем, что мы на клиенте
+      if (typeof window !== "undefined") {
+        const i18next = require("i18next").default;
+        currentLanguage = i18next.language || "ru";
+      }
+    } catch (error) {
+      console.error("Error getting current language:", error);
+    }
 
-    // Месяцы на русском
-    const months = [
-      "января",
-      "февраля",
-      "марта",
-      "апреля",
-      "мая",
-      "июня",
-      "июля",
-      "августа",
-      "сентября",
-      "октября",
-      "ноября",
-      "декабря",
-    ]
-    const month = months[date.getMonth()]
+    const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
 
-    // Год (последние 2 цифры)
-    const year = date.getFullYear().toString().slice(-2)
+    if (currentLanguage === "en") {
+      // Для английского используем формат "March 31, '25"
+      return date.toLocaleDateString(locale, {
+        day: "numeric",
+        month: "long",
+        year: "2-digit"
+      })
+    } else {
+      // Для русского используем формат "31 марта 25 г."
+      // Используем toLocaleDateString для правильного склонения месяцев
+      const formattedDate = date.toLocaleDateString(locale, {
+        day: "numeric",
+        month: "long",
+        year: "2-digit"
+      })
 
-    return `${day} ${month} ${year} г.`
+      // Добавляем "г." в конце для русской локали
+      return formattedDate + " г."
+    }
   } catch (e) {
     console.error("Error formatting section date:", e)
     return "Ошибка форматирования даты"
@@ -900,10 +911,10 @@ export function Timeline() {
           <DialogHeader>
             <DialogTitle>{t('timeline.section.delete')}</DialogTitle>
             <DialogDescription>
-              {i18n.language === 'en'
-                ? `Are you sure you want to delete the section ${deletingSectionDate ? formatSectionDate(deletingSectionDate) : ""}? This action cannot be undone.`
-                : `Вы уверены, что хотите удалить секцию ${deletingSectionDate ? formatSectionDate(deletingSectionDate) : ""}? Это действие нельзя отменить.`
-              }
+              {t('timeline.section.deleteConfirmation', {
+                section: deletingSectionDate ? formatSectionDate(deletingSectionDate) : "",
+                defaultValue: `Вы уверены, что хотите удалить секцию {{section}}? Это действие нельзя отменить.`
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -302,7 +302,8 @@
     "section": {
       "delete": "Delete section",
       "editTrackName": "Click to edit",
-      "sectorName": "Sector {{date}}"
+      "sectorName": "Sector {{date}}",
+      "deleteConfirmation": "Are you sure you want to delete the section {{section}}? This action cannot be undone."
     },
     "controls": {
       "firstFrame": "First frame",

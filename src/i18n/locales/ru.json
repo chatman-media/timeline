@@ -302,7 +302,8 @@
     "section": {
       "delete": "Удалить секцию",
       "editTrackName": "Нажмите для редактирования",
-      "sectorName": "Сектор {{date}}"
+      "sectorName": "Сектор {{date}}",
+      "deleteConfirmation": "Вы уверены, что хотите удалить секцию {{section}}? Это действие нельзя отменить."
     },
     "controls": {
       "firstFrame": "Первый кадр",

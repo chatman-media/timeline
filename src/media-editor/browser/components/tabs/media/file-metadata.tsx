@@ -1,4 +1,5 @@
 import { memo } from "react"
+import { useTranslation } from "react-i18next"
 
 import {
   formatBitrate,
@@ -21,6 +22,7 @@ interface FileMetadataProps {
  * @param size - Размер контейнера в пикселях
  */
 export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: FileMetadataProps) {
+  const { i18n } = useTranslation()
   const videoStream = file.probeData?.streams?.find((s) => s.codec_type === "video")
   console.log(file)
 
@@ -39,11 +41,14 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
 
         {file.isImage && file.createdAt && (
           <span className="flex-shrink-0 text-sm font-medium whitespace-nowrap text-gray-700 dark:text-gray-200">
-            {new Date(file.createdAt).toLocaleDateString("ru-RU", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            {new Date(file.createdAt).toLocaleDateString(
+              i18n.language === "en" ? "en-US" : "ru-RU",
+              {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              }
+            )}
           </span>
         )}
       </div>
