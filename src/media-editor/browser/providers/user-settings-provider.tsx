@@ -5,6 +5,7 @@ import {
   BrowserTab,
   Language,
   LayoutMode,
+  STORAGE_KEYS,
   userSettingsMachine,
 } from "@/media-editor/browser/machines/user-settings-machine"
 import { browserInspector } from "@/media-editor/providers"
@@ -48,6 +49,41 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
     }
   }, [state.context.language, send])
 
+  // Проверяем соответствие layout в localStorage и в state machine
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Используем константу STORAGE_KEYS.LAYOUT из user-settings-machine.ts
+      const storedLayout = localStorage.getItem(STORAGE_KEYS.LAYOUT)
+      console.log("UserSettingsProvider: localStorage layout:", storedLayout)
+      console.log("UserSettingsProvider: state machine layout:", state.context.layoutMode)
+      console.log("UserSettingsProvider: STORAGE_KEYS.LAYOUT:", STORAGE_KEYS.LAYOUT)
+
+      // Проверяем все ключи в localStorage
+      console.log("UserSettingsProvider: All localStorage keys:")
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key) {
+          console.log(`${key}: ${localStorage.getItem(key)}`)
+        }
+      }
+
+      // Если layout в localStorage отличается от текущего layout в state machine, обновляем его
+      if (
+        storedLayout &&
+        ["default", "options", "vertical", "dual"].includes(storedLayout) &&
+        storedLayout !== state.context.layoutMode
+      ) {
+        console.log("UserSettingsProvider: Updating layout to match localStorage:", storedLayout)
+        send({ type: "UPDATE_LAYOUT", layoutMode: storedLayout as LayoutMode })
+      }
+    }
+  }, [send, state.context.layoutMode])
+
+  // Логируем каждое изменение состояния
+  useEffect(() => {
+    console.log("UserSettingsProvider: state updated", state.context)
+  }, [state])
+
   const value = {
     activeTab: state.context.activeTab,
     language: state.context.language,
@@ -67,7 +103,16 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
     },
     handleLayoutChange: (value: LayoutMode) => {
       console.log("Layout change requested:", value)
-      send({ type: "UPDATE_LAYOUT", layoutMode: value })
+      console.log("Current layoutMode before update:", state.context.layoutMode)
+
+      // Проверяем, что значение является допустимым LayoutMode
+      if (["default", "options", "vertical", "dual"].includes(value)) {
+        // Отправляем событие в машину состояний
+        send({ type: "UPDATE_LAYOUT", layoutMode: value })
+        console.log("UPDATE_LAYOUT event sent with layoutMode:", value)
+      } else {
+        console.error("Invalid layout value:", value)
+      }
     },
   }
 

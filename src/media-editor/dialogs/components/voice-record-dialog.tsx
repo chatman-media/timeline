@@ -433,15 +433,6 @@ export function VoiceRecordDialog({
                   className="w-20 border-[#444] bg-[#222] text-white focus:border-[#666]"
                   disabled={isRecording}
                 />
-
-                <div className="text-sm text-gray-300">
-                  {t("dialogs.voiceRecord.muted", { defaultValue: "Безгласный" })}:
-                </div>
-                <Checkbox
-                  checked={isMuted}
-                  onCheckedChange={(checked) => setIsMuted(checked as boolean)}
-                  disabled={isRecording}
-                />
               </div>
 
               {/* Запись */}

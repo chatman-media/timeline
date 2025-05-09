@@ -256,6 +256,17 @@ export const userSettingsMachine = createMachine(
         // Загружаем сохраненный макет
         let layoutMode = DEFAULT_LAYOUT
         try {
+          console.log("STORAGE_KEYS.LAYOUT:", STORAGE_KEYS.LAYOUT)
+
+          // Проверяем все ключи в localStorage
+          console.log("All localStorage keys in loadSettings:")
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)
+            if (key) {
+              console.log(`${key}: ${localStorage.getItem(key)}`)
+            }
+          }
+
           const savedLayout = localStorage.getItem(STORAGE_KEYS.LAYOUT)
           console.log("Loaded layout from localStorage:", savedLayout)
 
@@ -288,10 +299,22 @@ export const userSettingsMachine = createMachine(
         }
       },
       updateSettings: assign({
-        previewSizes: (_, event) => (event as UserSettingsLoadedEvent).previewSizes,
-        activeTab: (_, event) => (event as UserSettingsLoadedEvent).activeTab,
-        language: (_, event) => (event as UserSettingsLoadedEvent).language,
-        layoutMode: (_, event) => (event as UserSettingsLoadedEvent).layoutMode || DEFAULT_LAYOUT,
+        previewSizes: (_, event) => {
+          const typedEvent = event as UserSettingsLoadedEvent
+          return typedEvent.previewSizes
+        },
+        activeTab: (_, event) => {
+          const typedEvent = event as UserSettingsLoadedEvent
+          return typedEvent.activeTab
+        },
+        language: (_, event) => {
+          const typedEvent = event as UserSettingsLoadedEvent
+          return typedEvent.language
+        },
+        layoutMode: (_, event) => {
+          const typedEvent = event as UserSettingsLoadedEvent
+          return typedEvent.layoutMode || DEFAULT_LAYOUT
+        },
         isLoaded: (_) => true,
       }),
       updatePreviewSize: assign((context, event: any) => {
@@ -306,24 +329,21 @@ export const userSettingsMachine = createMachine(
         }
         return context
       }),
-      updateActiveTab: assign((context, event: any) => {
-        if (event.type === "UPDATE_ACTIVE_TAB") {
-          console.log("Updating active tab in machine:", event.tab)
-          console.log("Current context:", context)
-          console.log("Event:", event)
+      updateActiveTab: assign({
+        activeTab: (_, event: any) => {
+          if (event.type === "UPDATE_ACTIVE_TAB") {
+            console.log("Updating active tab in machine:", event.tab)
 
-          // Проверяем, что значение таба является допустимым
-          if (!BROWSER_TABS.includes(event.tab)) {
-            console.error("Invalid tab value in machine:", event.tab)
-            return context
-          }
+            // Проверяем, что значение таба является допустимым
+            if (!BROWSER_TABS.includes(event.tab)) {
+              console.error("Invalid tab value in machine:", event.tab)
+              return DEFAULT_TAB
+            }
 
-          return {
-            ...context,
-            activeTab: event.tab,
+            return event.tab
           }
+          return DEFAULT_TAB
         }
-        return context
       }),
       savePreviewSizeToStorage: (_, event: any) => {
         if (event.type === "UPDATE_PREVIEW_SIZE") {
@@ -363,38 +383,37 @@ export const userSettingsMachine = createMachine(
           }
         }
       },
-      updateLanguage: assign((context, event: any) => {
-        if (event.type === "UPDATE_LANGUAGE") {
-          console.log("Updating language in machine:", event.language)
+      updateLanguage: assign({
+        language: (_, event: any) => {
+          if (event.type === "UPDATE_LANGUAGE") {
+            console.log("Updating language in machine:", event.language)
 
-          // Проверяем, что значение языка является допустимым
-          if (!LANGUAGES.includes(event.language)) {
-            console.error("Invalid language value in machine:", event.language)
-            return context
+            // Проверяем, что значение языка является допустимым
+            if (!LANGUAGES.includes(event.language)) {
+              console.error("Invalid language value in machine:", event.language)
+              return DEFAULT_LANGUAGE
+            }
+
+            // Обновляем язык в i18next
+            try {
+              import("i18next").then((i18n) => {
+                i18n.default.changeLanguage(event.language)
+                console.log("Language changed in i18next:", event.language)
+
+                // Дополнительно сохраняем язык напрямую в localStorage
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("app-language", event.language)
+                  console.log("Directly saved language to localStorage from machine:", event.language)
+                }
+              })
+            } catch (error) {
+              console.error("Error changing language in i18next:", error)
+            }
+
+            return event.language
           }
-
-          // Обновляем язык в i18next
-          try {
-            import("i18next").then((i18n) => {
-              i18n.default.changeLanguage(event.language)
-              console.log("Language changed in i18next:", event.language)
-
-              // Дополнительно сохраняем язык напрямую в localStorage
-              if (typeof window !== "undefined") {
-                localStorage.setItem("app-language", event.language)
-                console.log("Directly saved language to localStorage from machine:", event.language)
-              }
-            })
-          } catch (error) {
-            console.error("Error changing language in i18next:", error)
-          }
-
-          return {
-            ...context,
-            language: event.language,
-          }
+          return DEFAULT_LANGUAGE
         }
-        return context
       }),
       saveLanguageToStorage: (_, event: any) => {
         if (event.type === "UPDATE_LANGUAGE") {
@@ -433,22 +452,21 @@ export const userSettingsMachine = createMachine(
           }
         }
       },
-      updateLayout: assign((context, event: any) => {
-        if (event.type === "UPDATE_LAYOUT") {
-          console.log("Updating layout in machine:", event.layoutMode)
+      updateLayout: assign({
+        layoutMode: (_, event: any) => {
+          if (event.type === "UPDATE_LAYOUT") {
+            console.log("Updating layout in machine:", event.layoutMode)
 
-          // Проверяем, что значение макета является допустимым
-          if (!LAYOUTS.includes(event.layoutMode)) {
-            console.error("Invalid layout value in machine:", event.layoutMode)
-            return context
-          }
+            // Проверяем, что значение макета является допустимым
+            if (!LAYOUTS.includes(event.layoutMode)) {
+              console.error("Invalid layout value in machine:", event.layoutMode)
+              return DEFAULT_LAYOUT
+            }
 
-          return {
-            ...context,
-            layoutMode: event.layoutMode,
+            return event.layoutMode
           }
+          return DEFAULT_LAYOUT
         }
-        return context
       }),
       saveLayoutToStorage: (_, event: any) => {
         if (event.type === "UPDATE_LAYOUT") {

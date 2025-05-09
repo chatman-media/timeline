@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import { STORAGE_KEYS } from "@/media-editor/browser/machines/user-settings-machine"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
 import { CameraRecording } from "@/media-editor/dialogs/components/camera-recording"
 import { TopNavBar } from "@/media-editor/project-settings/components"
@@ -13,8 +14,26 @@ import {
 } from "./layouts"
 
 export function MediaEditor() {
-  const { layoutMode, handleLayoutChange } = useUserSettings()
+  const { layoutMode: contextLayoutMode, handleLayoutChange } = useUserSettings()
   const [hasExternalDisplay, setHasExternalDisplay] = useState(false)
+  const [layoutMode, setLayoutMode] = useState(contextLayoutMode)
+
+  // Логируем значение layoutMode при каждом рендере
+  console.log("MediaEditor rendering with layoutMode:", layoutMode)
+  console.log("MediaEditor rendering with contextLayoutMode:", contextLayoutMode)
+
+  // Синхронизируем layoutMode с localStorage при монтировании компонента
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const storedLayout = localStorage.getItem(STORAGE_KEYS.LAYOUT)
+      console.log("MediaEditor: localStorage layout on mount:", storedLayout)
+
+      if (storedLayout && ["default", "options", "vertical", "dual"].includes(storedLayout)) {
+        console.log("MediaEditor: Using layout from localStorage:", storedLayout)
+        setLayoutMode(storedLayout as LayoutMode)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     const checkExternalDisplay = (): void => {
@@ -36,6 +55,18 @@ export function MediaEditor() {
     }
   }, [])
 
+  useEffect(() => {
+    console.log("MediaEditor: layoutMode changed to", layoutMode)
+
+    if (typeof window !== "undefined") {
+      const storedLayout = localStorage.getItem(STORAGE_KEYS.LAYOUT)
+      if (storedLayout !== layoutMode) {
+        localStorage.setItem(STORAGE_KEYS.LAYOUT, layoutMode)
+        console.log("MediaEditor: Updated localStorage with new layout:", layoutMode)
+      }
+    }
+  }, [layoutMode])
+
   const changeLayout = (mode: LayoutMode): void => {
     // Разрешаем переключение на любой макет, кроме dual, если нет внешнего дисплея
     if (mode === "dual" && !hasExternalDisplay) {
@@ -43,15 +74,19 @@ export function MediaEditor() {
       return
     }
 
-    console.log("Changing layout to:", mode)
-    handleLayoutChange(mode)
+    console.log("MediaEditor.changeLayout called with mode:", mode)
 
-    // Принудительно обновляем компоненты
-    setTimeout(() => {
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("resize"))
-      }
-    }, 50)
+    // Сохраняем напрямую в localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem(STORAGE_KEYS.LAYOUT, mode)
+      console.log("Layout saved directly to localStorage:", mode)
+    }
+
+    // Обновляем локальное состояние
+    setLayoutMode(mode)
+
+    // Вызываем handleLayoutChange для обновления состояния в машине
+    handleLayoutChange(mode)
   }
 
   return (

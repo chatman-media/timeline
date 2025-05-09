@@ -234,22 +234,37 @@ export function LayoutPreviews({
       <div className="flex justify-around gap-2">
         <DefaultLayout
           isActive={layoutMode === "default"}
-          onClick={() => onLayoutChange("default")}
+          onClick={() => {
+            console.log("DefaultLayout clicked, calling onLayoutChange with 'default'")
+            onLayoutChange("default")
+          }}
         />
         <OptionsLayout
           isActive={layoutMode === "options"}
-          onClick={() => onLayoutChange("options")}
+          onClick={() => {
+            console.log("OptionsLayout clicked, calling onLayoutChange with 'options'")
+            onLayoutChange("options")
+          }}
         />
       </div>
       <div className="flex justify-around gap-2">
         <VerticalLayout
           isActive={layoutMode === "vertical"}
-          onClick={() => onLayoutChange("vertical")}
+          onClick={() => {
+            console.log("VerticalLayout clicked, calling onLayoutChange with 'vertical'")
+            onLayoutChange("vertical")
+          }}
         />
         <DualLayout
           isActive={layoutMode === "dual"}
           hasExternalDisplay={hasExternalDisplay}
-          onClick={() => hasExternalDisplay && onLayoutChange("dual")}
+          onClick={() => {
+            console.log("DualLayout clicked, hasExternalDisplay:", hasExternalDisplay)
+            if (hasExternalDisplay) {
+              console.log("Calling onLayoutChange with 'dual'")
+              onLayoutChange("dual")
+            }
+          }}
         />
       </div>
     </div>
