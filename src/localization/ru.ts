@@ -14,9 +14,9 @@ const ruTranslations: Translations = {
       editingTasks: "Задачи монтажа",
       projectTasks: "Задачи Проекта",
       userSettings: "Настройки пользователя",
-      export: "Экспорт"
+      export: "Экспорт",
     },
-    
+
     // Диалоги
     dialogs: {
       // Настройки проекта
@@ -27,27 +27,27 @@ const ruTranslations: Translations = {
         frameRate: "Частота кадров:",
         colorSpace: "Цветовое пространство:",
         cancel: "Отменить",
-        save: "OK"
+        save: "OK",
       },
-      
+
       // Настройки пользователя
       userSettings: {
         title: "Настройки пользователя",
         interfaceLanguage: "Язык интерфейса:",
         cancel: "Отменить",
-        save: "Сохранить"
+        save: "Сохранить",
       },
-      
+
       // Экспорт
       export: {
         title: "Экспорт",
         local: "Местный",
         device: "Устройство",
         socialNetworks: "Социальные сети",
-        dvd: "DVD"
-      }
+        dvd: "DVD",
+      },
     },
-    
+
     // Шаблоны
     templates: {
       // Общие названия шаблонов
@@ -56,9 +56,9 @@ const ruTranslations: Translations = {
       diagonalSplit: "Диагональное разделение",
       grid2x2: "Сетка 2×2",
       grid3x3: "Сетка 3×3",
-      grid4x4: "Сетка 4×4"
-    }
-  }
+      grid4x4: "Сетка 4×4",
+    },
+  },
 }
 
 export default ruTranslations

@@ -1,6 +1,7 @@
 import { assign, createMachine } from "xstate"
 
 import { StorageService } from "@/media-editor/browser/services/storage-service"
+
 import { Language } from "./types"
 
 // Допустимые значения для языка
@@ -64,7 +65,7 @@ export const languageMachine = createMachine(
           const storageService = StorageService.getInstance()
           const savedLanguage = storageService.get(LANGUAGE_STORAGE_KEY, DEFAULT_LANGUAGE)
           console.log("Loaded language from localStorage:", savedLanguage)
-          
+
           // Проверяем, что значение языка является допустимым
           if (savedLanguage && LANGUAGES.includes(savedLanguage as Language)) {
             language = savedLanguage as Language

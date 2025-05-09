@@ -140,7 +140,7 @@ const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
         />
       </div>
       <div className="mt-1 text-xs text-gray-300">
-        {effects.find((e) => e.type === effectType)?.labels[i18n.language === 'en' ? 'en' : 'ru']}
+        {effects.find((e) => e.type === effectType)?.labels[i18n.language === "en" ? "en" : "ru"]}
       </div>
     </div>
   )
@@ -177,7 +177,7 @@ export function EffectList() {
       <div className="flex items-center justify-between p-1">
         <Input
           type="search"
-          placeholder={t('common.search')}
+          placeholder={t("common.search")}
           className="mr-5 h-7 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500"
           style={{
             backgroundColor: "transparent",
@@ -204,7 +204,7 @@ export function EffectList() {
                     <ZoomOut size={16} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('browser.toolbar.zoomOut')}</TooltipContent>
+                <TooltipContent>{t("browser.toolbar.zoomOut")}</TooltipContent>
               </Tooltip>
 
               <Tooltip>
@@ -222,7 +222,7 @@ export function EffectList() {
                     <ZoomIn size={16} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('browser.toolbar.zoomIn')}</TooltipContent>
+                <TooltipContent>{t("browser.toolbar.zoomIn")}</TooltipContent>
               </Tooltip>
             </div>
           </TooltipProvider>
@@ -234,7 +234,7 @@ export function EffectList() {
           <div className="flex h-full items-center justify-center text-gray-500" />
         ) : filteredEffects.length === 0 ? (
           <div className="flex h-full items-center justify-center text-gray-500">
-            {t('browser.tabs.effects')} {t('common.notFound')}
+            {t("browser.tabs.effects")} {t("common.notFound")}
           </div>
         ) : (
           <div

@@ -845,17 +845,17 @@ export const templateLabels: TemplateDescription[] = [
       ru: "Шестнадцать экранов в сетке 4×4",
       en: "Sixteen screens in a 4×4 grid",
     },
-  }
+  },
 ]
 
 // Функция для получения локализованных названий шаблонов по id
 export function getTemplateLabels(id: string): TemplateLabels | undefined {
-  const template = templateLabels.find(template => template.id === id)
+  const template = templateLabels.find((template) => template.id === id)
   return template?.labels
 }
 
 // Функция для получения локализованного описания шаблона по id
 export function getTemplateDescription(id: string): TemplateLabels | undefined {
-  const template = templateLabels.find(template => template.id === id)
+  const template = templateLabels.find((template) => template.id === id)
   return template?.description
 }

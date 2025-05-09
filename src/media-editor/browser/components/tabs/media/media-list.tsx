@@ -1,10 +1,10 @@
 import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
-import i18n from "@/i18n"
 
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+import i18n from "@/i18n"
 import { cn } from "@/lib/utils"
 import {
   FileMetadata,
@@ -600,7 +600,7 @@ export const MediaFileList = memo(function MediaFileList({
       // Получаем текущий язык из i18n
       const currentLanguage = i18n.language || "ru"
       const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
-      const noDateText = i18n.t('dates.noDate', { defaultValue: "Без даты" })
+      const noDateText = i18n.t("dates.noDate", { defaultValue: "Без даты" })
 
       filteredAndSortedMedia.forEach((file) => {
         // Для изображений используем дату создания файла, если она доступна
@@ -946,7 +946,9 @@ export const MediaFileList = memo(function MediaFileList({
               }}
               disabled={allFilesAdded}
             >
-              <span className="px-1 text-xs">{allFilesAdded ? t('browser.media.added') : t('browser.media.add')}</span>
+              <span className="px-1 text-xs">
+                {allFilesAdded ? t("browser.media.added") : t("browser.media.add")}
+              </span>
               <CopyPlus className="mr-1 h-3 w-3" />
             </Button>
           </div>

@@ -94,7 +94,10 @@ export class StorageService {
         // Для ключа app-language выводим дополнительную информацию
         if (key === "app-language") {
           console.log(`[StorageService] Language saved to localStorage: ${value}`)
-          console.log(`[StorageService] Verified language in localStorage:`, localStorage.getItem(key))
+          console.log(
+            `[StorageService] Verified language in localStorage:`,
+            localStorage.getItem(key),
+          )
         }
       } else {
         localStorage.setItem(key, JSON.stringify(value))

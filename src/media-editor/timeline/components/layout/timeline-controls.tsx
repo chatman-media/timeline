@@ -69,7 +69,7 @@ export function TimelineControls({
       <button
         onClick={handleScaleDecrease}
         className="flex h-4 w-4 items-center justify-center rounded-full border-1 border-white bg-gray-800 text-gray-200 hover:bg-gray-700"
-        title={t('timeline.zoom.zoomOut')}
+        title={t("timeline.zoom.zoomOut")}
       >
         <Minus size={12} />
       </button>
@@ -86,14 +86,14 @@ export function TimelineControls({
           value={String(sliderValue)}
           onChange={handleSliderChange}
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-          aria-label={t('timeline.zoom.fitToScreen')}
+          aria-label={t("timeline.zoom.fitToScreen")}
         />
       </div>
 
       <button
         onClick={handleScaleIncrease}
         className="flex h-4 w-4 items-center justify-center rounded-full border-1 border-white bg-gray-800 text-gray-200 hover:bg-gray-700"
-        title={t('timeline.zoom.zoomIn')}
+        title={t("timeline.zoom.zoomIn")}
       >
         <Plus size={12} />
       </button>

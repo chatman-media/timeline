@@ -188,7 +188,7 @@ export const BrowserTabTemplate = memo(function BrowserTabTemplate<T extends Bro
     if (Object.values(grouped).flat().length === 0) {
       return (
         <div className="flex h-full items-center justify-center text-gray-500">
-          {t('common.noResults')}
+          {t("common.noResults")}
         </div>
       )
     }

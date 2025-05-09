@@ -55,10 +55,10 @@ export function StatusBar({
               variant="ghost"
               size="sm"
               className="bg-secondary flex h-6 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1] dark:hover:text-black"
-              title={t('browser.media.addAllVideo')}
+              title={t("browser.media.addAllVideo")}
               onClick={onAddAllVideoFiles}
             >
-              {remainingVideoCount} {t('browser.media.video')}
+              {remainingVideoCount} {t("browser.media.video")}
               <CopyPlus size={10} className="" />
             </Button>
           )}
@@ -67,10 +67,10 @@ export function StatusBar({
               variant="ghost"
               size="sm"
               className="bg-secondary flex h-6 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1] dark:hover:text-black"
-              title={t('browser.media.addAllAudio')}
+              title={t("browser.media.addAllAudio")}
               onClick={onAddAllAudioFiles}
             >
-              {remainingAudioCount} {t('browser.media.audio')}
+              {remainingAudioCount} {t("browser.media.audio")}
               <CopyPlus size={10} className="" />
             </Button>
           )}
@@ -91,12 +91,12 @@ export function StatusBar({
             variant="ghost"
             size="sm"
             className="bg-secondary flex h-6 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1] dark:hover:text-black"
-            title={t('browser.media.addDate') + `: ${topDateWithRemainingFiles.date}`}
+            title={t("browser.media.addDate") + `: ${topDateWithRemainingFiles.date}`}
             onClick={() => {
               onAddDateFiles(topDateWithRemainingFiles.files)
             }}
           >
-            {`${topDateWithRemainingFiles.remainingFiles.length} ${t('browser.media.video')} ${topDateWithRemainingFiles.date}`}
+            {`${topDateWithRemainingFiles.remainingFiles.length} ${t("browser.media.video")} ${topDateWithRemainingFiles.date}`}
             <CopyPlus size={10} className="" />
           </Button>
         </div>
@@ -104,17 +104,17 @@ export function StatusBar({
       <div className="flex flex-col items-end justify-center gap-0 text-xs">
         {allFilesAdded ? (
           <div className="flex items-center gap-1 px-2 font-medium text-[#49a293]">
-            <span>{t('common.allFilesAdded')}</span>
+            <span>{t("common.allFilesAdded")}</span>
           </div>
         ) : (
           <Button
             variant="ghost"
             size="sm"
             className="bg-secondary flex h-6 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1] dark:hover:text-black"
-            title={t('browser.media.addAll')}
+            title={t("browser.media.addAll")}
             onClick={onAddAllFiles}
           >
-            <span className="px-1 text-xs">{t('browser.media.addAll')}</span>
+            <span className="px-1 text-xs">{t("browser.media.addAll")}</span>
             <CopyPlus size={10} className="" />
           </Button>
         )}

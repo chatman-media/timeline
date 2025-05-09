@@ -16,9 +16,9 @@ import {
   ZoomIn,
   ZoomOut,
 } from "lucide-react"
+import dynamic from "next/dynamic"
 import React, { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import dynamic from "next/dynamic"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -142,7 +142,7 @@ function MediaToolbarClient({
           className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#d1d1d1] dark:bg-[#45444b] dark:hover:bg-[#dddbdd]/25"
           onClick={onImport}
         >
-          <span className="px-2 text-xs">{t('common.import')}</span>
+          <span className="px-2 text-xs">{t("common.import")}</span>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -156,7 +156,7 @@ function MediaToolbarClient({
                   <File size={12} />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.media.uploadMedia')}</TooltipContent>
+              <TooltipContent>{t("browser.media.uploadMedia")}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -170,7 +170,7 @@ function MediaToolbarClient({
                   <Folder size={12} />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.media.addFolder')}</TooltipContent>
+              <TooltipContent>{t("browser.media.addFolder")}</TooltipContent>
             </Tooltip>
           </div>
         </Button>
@@ -181,7 +181,7 @@ function MediaToolbarClient({
           className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#d1d1d1] dark:bg-[#45444b] dark:hover:bg-[#dddbdd]/25"
           onClick={onRecord}
         >
-          <span className="px-2 text-xs">{t('common.record')}</span>
+          <span className="px-2 text-xs">{t("common.record")}</span>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -195,7 +195,7 @@ function MediaToolbarClient({
                   <Webcam size={12} />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.media.recordVideo')}</TooltipContent>
+              <TooltipContent>{t("browser.media.recordVideo")}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -209,7 +209,7 @@ function MediaToolbarClient({
                   <Monitor size={12} />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.media.recordScreen')}</TooltipContent>
+              <TooltipContent>{t("browser.media.recordScreen")}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -223,7 +223,7 @@ function MediaToolbarClient({
                   <Mic size={12} className="" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.media.recordVoice')}</TooltipContent>
+              <TooltipContent>{t("browser.media.recordVoice")}</TooltipContent>
             </Tooltip>
           </div>
         </Button>
@@ -247,7 +247,7 @@ function MediaToolbarClient({
                   <Grid size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.toolbar.grid')}</TooltipContent>
+              <TooltipContent>{t("browser.toolbar.grid")}</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -264,7 +264,7 @@ function MediaToolbarClient({
                   <LayoutDashboard size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.toolbar.thumbnails')}</TooltipContent>
+              <TooltipContent>{t("browser.toolbar.thumbnails")}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -280,7 +280,7 @@ function MediaToolbarClient({
                   <LayoutList size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.toolbar.list')}</TooltipContent>
+              <TooltipContent>{t("browser.toolbar.list")}</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
@@ -305,7 +305,7 @@ function MediaToolbarClient({
                   <ZoomOut size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.toolbar.zoomOut')}</TooltipContent>
+              <TooltipContent>{t("browser.toolbar.zoomOut")}</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -323,7 +323,7 @@ function MediaToolbarClient({
                   <ZoomIn size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.toolbar.zoomIn')}</TooltipContent>
+              <TooltipContent>{t("browser.toolbar.zoomIn")}</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
@@ -346,24 +346,24 @@ function MediaToolbarClient({
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.toolbar.sort')}</TooltipContent>
+              <TooltipContent>{t("browser.toolbar.sort")}</TooltipContent>
               <DropdownMenuContent className="space-y-1" align="end">
                 <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("name")}>
                   <div className="flex items-center gap-2">
                     {internalSortBy === "name" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.sortBy.name')}</span>
+                    <span>{t("browser.toolbar.sortBy.name")}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("date")}>
                   <div className="flex items-center gap-2">
                     {internalSortBy === "date" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.sortBy.date')}</span>
+                    <span>{t("browser.toolbar.sortBy.date")}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("size")}>
                   <div className="flex items-center gap-2">
                     {internalSortBy === "size" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.sortBy.size')}</span>
+                    <span>{t("browser.toolbar.sortBy.size")}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -372,7 +372,7 @@ function MediaToolbarClient({
                 >
                   <div className="flex items-center gap-2">
                     {internalSortBy === "duration" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.sortBy.duration')}</span>
+                    <span>{t("browser.toolbar.sortBy.duration")}</span>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -398,31 +398,31 @@ function MediaToolbarClient({
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.toolbar.filter')}</TooltipContent>
+              <TooltipContent>{t("browser.toolbar.filter")}</TooltipContent>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleFilter("all")}>
                   <div className="flex items-center gap-2">
                     {internalFilterType === "all" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.filterBy.all')}</span>
+                    <span>{t("browser.toolbar.filterBy.all")}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleFilter("video")}>
                   <div className="flex items-center gap-2">
                     {internalFilterType === "video" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.filterBy.video')}</span>
+                    <span>{t("browser.toolbar.filterBy.video")}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleFilter("audio")}>
                   <div className="flex items-center gap-2">
                     {internalFilterType === "audio" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.filterBy.audio')}</span>
+                    <span>{t("browser.toolbar.filterBy.audio")}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleFilter("image")}>
                   <div className="flex items-center gap-2">
                     {internalFilterType === "image" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.filterBy.image')}</span>
+                    <span>{t("browser.toolbar.filterBy.image")}</span>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -448,31 +448,31 @@ function MediaToolbarClient({
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>{t('browser.toolbar.group')}</TooltipContent>
+              <TooltipContent>{t("browser.toolbar.group")}</TooltipContent>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleGroupBy("none")}>
                   <div className="flex items-center gap-2">
                     {internalGroupBy === "none" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.groupBy.none')}</span>
+                    <span>{t("browser.toolbar.groupBy.none")}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleGroupBy("type")}>
                   <div className="flex items-center gap-2">
                     {internalGroupBy === "type" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.groupBy.type')}</span>
+                    <span>{t("browser.toolbar.groupBy.type")}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleGroupBy("date")}>
                   <div className="flex items-center gap-2">
                     {internalGroupBy === "date" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.groupBy.date')}</span>
+                    <span>{t("browser.toolbar.groupBy.date")}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleGroupBy("duration")}>
                   <div className="flex items-center gap-2">
                     {internalGroupBy === "duration" && <Check className="h-4 w-4" />}
-                    <span>{t('browser.toolbar.groupBy.duration')}</span>
+                    <span>{t("browser.toolbar.groupBy.duration")}</span>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -494,7 +494,9 @@ function MediaToolbarClient({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {sortOrder === "asc" ? t('browser.toolbar.sortOrder.desc') : t('browser.toolbar.sortOrder.asc')}
+              {sortOrder === "asc"
+                ? t("browser.toolbar.sortOrder.desc")
+                : t("browser.toolbar.sortOrder.asc")}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

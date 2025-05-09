@@ -45,7 +45,7 @@ export const AddMediaButton = memo(function AddMediaButton({
         e.stopPropagation()
         if (!isAdded) onAddMedia(e, file)
       }}
-      title={isAdded ? t('browser.media.added') : t('browser.media.add')}
+      title={isAdded ? t("browser.media.added") : t("browser.media.add")}
     >
       {isAdded ? (
         <Check className={iconSize} strokeWidth={3} />

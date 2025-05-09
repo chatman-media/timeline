@@ -1,5 +1,5 @@
-import { assign, createMachine } from "xstate"
 import i18next from "i18next"
+import { assign, createMachine } from "xstate"
 
 import { DEFAULT_PROJECT_SETTINGS, type ProjectSettings } from "@/types/project"
 
@@ -50,14 +50,14 @@ export type ProjectContextEvents = {
 const getDefaultProjectName = (): string => {
   // Проверяем, доступен ли i18next
   if (typeof i18next !== "undefined" && i18next.isInitialized) {
-    return i18next.t("project.untitledProject", { number: 1 });
+    return i18next.t("project.untitledProject", { number: 1 })
   }
 
   // Если i18next недоступен, используем значение по умолчанию
-  const language = typeof window !== "undefined" ?
-    localStorage.getItem("app-language") || "ru" : "ru";
+  const language =
+    typeof window !== "undefined" ? localStorage.getItem("app-language") || "ru" : "ru"
 
-  return language === "en" ? "Untitled #1" : "Без названия #1";
+  return language === "en" ? "Untitled #1" : "Без названия #1"
 }
 
 // Initialize with saved settings or defaults

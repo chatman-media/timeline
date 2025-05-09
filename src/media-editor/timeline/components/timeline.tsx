@@ -35,11 +35,11 @@ function formatSectionDate(dateString: string): string {
     try {
       // Проверяем, что мы на клиенте
       if (typeof window !== "undefined") {
-        const i18next = require("i18next").default;
-        currentLanguage = i18next.language || "ru";
+        const i18next = require("i18next").default
+        currentLanguage = i18next.language || "ru"
       }
     } catch (error) {
-      console.error("Error getting current language:", error);
+      console.error("Error getting current language:", error)
     }
 
     const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
@@ -49,7 +49,7 @@ function formatSectionDate(dateString: string): string {
       return date.toLocaleDateString(locale, {
         day: "numeric",
         month: "long",
-        year: "2-digit"
+        year: "2-digit",
       })
     } else {
       // Для русского используем формат "31 марта 25 г."
@@ -57,7 +57,7 @@ function formatSectionDate(dateString: string): string {
       const formattedDate = date.toLocaleDateString(locale, {
         day: "numeric",
         month: "long",
-        year: "2-digit"
+        year: "2-digit",
       })
 
       // Добавляем "г." в конце для русской локали
@@ -677,7 +677,7 @@ export function Timeline() {
                   <button
                     onClick={() => handleDeleteSection(sector.date)}
                     className="flex h-6 w-6 items-center justify-center rounded-sm hover:bg-red-500/20"
-                    title={t('timeline.section.delete')}
+                    title={t("timeline.section.delete")}
                   >
                     <Trash2 size={14} className="text-red-500" />
                   </button>
@@ -702,7 +702,7 @@ export function Timeline() {
                       <div
                         className="block cursor-pointer truncate pl-[1px] hover:border hover:border-[#35d1c1] hover:pl-[0px]"
                         onClick={() => handleEditTrackName(track)}
-                        title={t('timeline.section.editTrackName')}
+                        title={t("timeline.section.editTrackName")}
                       >
                         {track.cameraName ? track.cameraName : track.name}
                       </div>
@@ -781,7 +781,7 @@ export function Timeline() {
                           <button
                             onClick={() => fitSectionToScreen(sector.date)}
                             className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm hover:bg-[#dddbdd] dark:hover:bg-[#45444b]"
-                            title={t('timeline.toolbar.fitToScreen')}
+                            title={t("timeline.toolbar.fitToScreen")}
                           >
                             <MoveHorizontal size={14} />
                           </button>
@@ -909,20 +909,20 @@ export function Timeline() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>{t('timeline.section.delete')}</DialogTitle>
+            <DialogTitle>{t("timeline.section.delete")}</DialogTitle>
             <DialogDescription>
-              {t('timeline.section.deleteConfirmation', {
+              {t("timeline.section.deleteConfirmation", {
                 section: deletingSectionDate ? formatSectionDate(deletingSectionDate) : "",
-                defaultValue: `Вы уверены, что хотите удалить секцию {{section}}? Это действие нельзя отменить.`
+                defaultValue: `Вы уверены, что хотите удалить секцию {{section}}? Это действие нельзя отменить.`,
               })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              {t('common.cancel')}
+              {t("common.cancel")}
             </Button>
             <Button variant="destructive" onClick={confirmDeleteSection}>
-              {t('common.delete')}
+              {t("common.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

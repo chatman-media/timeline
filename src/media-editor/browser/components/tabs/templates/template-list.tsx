@@ -117,8 +117,10 @@ export function TemplateList() {
     // Поиск по локализованным названиям
     const labels = getTemplateLabels(template.id)
     if (labels) {
-      if (labels.ru.toLowerCase().includes(searchLower) ||
-          labels.en.toLowerCase().includes(searchLower)) {
+      if (
+        labels.ru.toLowerCase().includes(searchLower) ||
+        labels.en.toLowerCase().includes(searchLower)
+      ) {
         return true
       }
     }
@@ -149,13 +151,15 @@ export function TemplateList() {
 
     // Получаем локализованное название шаблона
     const labels = getTemplateLabels(template.id)
-    const templateName = labels ? labels[i18n.language === 'en' ? 'en' : 'ru'] : template.id
+    const templateName = labels ? labels[i18n.language === "en" ? "en" : "ru"] : template.id
 
     console.log("Applying template:", template.id, templateName)
 
     // Проверяем, есть ли параллельные видео для применения шаблона
     if (parallelVideos.length > 0) {
-      console.log(`Применяем шаблон "${templateName}" (${template.id}) к ${parallelVideos.length} параллельным видео`)
+      console.log(
+        `Применяем шаблон "${templateName}" (${template.id}) к ${parallelVideos.length} параллельным видео`,
+      )
 
       // Проверяем, сколько экранов в шаблоне и сколько у нас видео
       const screensCount = template.screens || 1
@@ -194,7 +198,7 @@ export function TemplateList() {
           <div className="flex h-full items-center justify-center text-gray-500" />
         ) : filteredTemplates.length === 0 ? (
           <div className="flex h-full items-center justify-center text-gray-500">
-            {t('browser.tabs.templates')} {t('common.notFound')}
+            {t("browser.tabs.templates")} {t("common.notFound")}
           </div>
         ) : (
           <div className="space-y-6">
@@ -203,9 +207,15 @@ export function TemplateList() {
               <div key={screenCount} className="mb-4">
                 <h3 className="mb-3 text-sm font-medium text-gray-400">
                   {screenCount}{" "}
-                  {i18n.language === 'en'
-                    ? (screenCount === 1 ? "screen" : "screens")
-                    : (screenCount === 1 ? "экран" : screenCount < 5 ? "экрана" : "экранов")}
+                  {i18n.language === "en"
+                    ? screenCount === 1
+                      ? "screen"
+                      : "screens"
+                    : screenCount === 1
+                      ? "экран"
+                      : screenCount < 5
+                        ? "экрана"
+                        : "экранов"}
                 </h3>
                 <div
                   className="flex flex-wrap gap-4"
@@ -221,10 +231,14 @@ export function TemplateList() {
                       />
                       <div
                         className="mt-1 truncate text-center text-xs text-gray-400"
-                        title={getTemplateLabels(template.id)?.[i18n.language === 'en' ? 'en' : 'ru'] || template.id}
+                        title={
+                          getTemplateLabels(template.id)?.[i18n.language === "en" ? "en" : "ru"] ||
+                          template.id
+                        }
                         style={{ width: `${previewSize}px` }}
                       >
-                        {getTemplateLabels(template.id)?.[i18n.language === 'en' ? 'en' : 'ru'] || template.id}
+                        {getTemplateLabels(template.id)?.[i18n.language === "en" ? "en" : "ru"] ||
+                          template.id}
                       </div>
                     </div>
                   ))}

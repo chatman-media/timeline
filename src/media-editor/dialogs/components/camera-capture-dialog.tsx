@@ -30,10 +30,9 @@ interface CameraCaptureDialogProps {
 }
 
 const COMMON_RESOLUTIONS: Resolution[] = [
-  { width: 1920, height: 1080, label: "1920x1080" },
-  { width: 1280, height: 720, label: "1280x720" },
-  { width: 640, height: 480, label: "640x480" },
-  { width: 320, height: 240, label: "320x240" },
+  { width: 1920, height: 1080, label: "1920x1080" }, // Full HD
+  { width: 1280, height: 720, label: "1280x720" }, // HD
+  { width: 640, height: 480, label: "640x480" }, // VGA
 ]
 
 const COMMON_FRAMERATES = [30, 60, 24, 25]
@@ -50,7 +49,8 @@ export function CameraCaptureDialog({
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("")
   const [availableResolutions, setAvailableResolutions] = useState<Resolution[]>([])
   const [supportedResolutions, setSupportedResolutions] = useState<Resolution[]>([])
-  const [selectedResolution, setSelectedResolution] = useState<string>("1920x1080")
+  // Начальное значение будет переопределено при получении возможностей устройства
+  const [selectedResolution, setSelectedResolution] = useState<string>("")
   const [frameRate, setFrameRate] = useState<number>(30)
   const [supportedFrameRates, setSupportedFrameRates] = useState<number[]>([])
   const [countdown, setCountdown] = useState<number>(0)
@@ -63,8 +63,6 @@ export function CameraCaptureDialog({
   >("pending")
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [isLoadingCapabilities, setIsLoadingCapabilities] = useState<boolean>(false)
-  const [actualVideoWidth, setActualVideoWidth] = useState<number>(0)
-  const [actualVideoHeight, setActualVideoHeight] = useState<number>(0)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -148,70 +146,52 @@ export function CameraCaptureDialog({
           // Не используем step, вместо этого создаем массив стандартных разрешений
           // и проверяем, какие из них поддерживаются камерой
 
-          // Создаем пары разрешений в стандартных соотношениях сторон
-          // Обычно камеры поддерживают 16:9, 4:3, 1:1
-          const standardResolutions = [
-            { width: 320, height: 240 }, // 4:3
-            { width: 640, height: 480 }, // 4:3
-            { width: 640, height: 360 }, // 16:9
-            { width: 1280, height: 720 }, // 16:9
-            { width: 1920, height: 1080 }, // 16:9
-            { width: 3840, height: 2160 }, // 16:9 (4K)
-          ]
+          // Получаем максимальное разрешение устройства
+          const deviceWidthMax = capabilities.width?.max || 1920
+          const deviceHeightMax = capabilities.height?.max || 1080
 
-          // Проверяем, какие из стандартных разрешений поддерживаются
-          standardResolutions.forEach((res) => {
-            // Проверяем наличие свойств max и min перед использованием
-            const widthMax = capabilities.width?.max
-            const widthMin = capabilities.width?.min
-            const heightMax = capabilities.height?.max
-            const heightMin = capabilities.height?.min
+          console.log(`Максимальное разрешение устройства: ${deviceWidthMax}x${deviceHeightMax}`)
 
-            if (
-              (widthMax === undefined || res.width <= widthMax) &&
-              (widthMin === undefined || res.width >= widthMin) &&
-              (heightMax === undefined || res.height <= heightMax) &&
-              (heightMin === undefined || res.height >= heightMin)
-            ) {
-              resolutions.push({
-                width: res.width,
-                height: res.height,
-                label: `${res.width}x${res.height}`,
-              })
-            }
+          // Проверяем соотношение сторон максимального разрешения
+          // Добавляем только если оно близко к стандартному (16:9, 4:3)
+          const aspectRatio = deviceWidthMax / deviceHeightMax
+
+          // Проверяем, близко ли соотношение к 16:9 (1.77) или 4:3 (1.33)
+          const isStandardRatio =
+            Math.abs(aspectRatio - 16 / 9) < 0.1 || // Близко к 16:9
+            Math.abs(aspectRatio - 4 / 3) < 0.1 // Близко к 4:3
+
+          if (isStandardRatio) {
+            // Добавляем только если соотношение сторон стандартное
+            resolutions.push({
+              width: deviceWidthMax,
+              height: deviceHeightMax,
+              label: `${deviceWidthMax}x${deviceHeightMax}`,
+            })
+          } else {
+            console.log(`Пропускаем нестандартное соотношение сторон: ${aspectRatio.toFixed(2)}`)
+          }
+
+          // Добавляем стандартные разрешения
+          resolutions.push({
+            width: 1920,
+            height: 1080,
+            label: "1920x1080", // Full HD
           })
 
-          // Если есть высокие разрешения, добавляем их
-          const widthMax = capabilities.width?.max
-          const heightMax = capabilities.height?.max
+          resolutions.push({
+            width: 1280,
+            height: 720,
+            label: "1280x720", // HD
+          })
 
-          if (widthMax && heightMax && (widthMax > 1920 || heightMax > 1080)) {
-            // Проверяем поддержку 4K
-            if (widthMax >= 3840 && heightMax >= 2160) {
-              const found = resolutions.find((r) => r.width === 3840 && r.height === 2160)
-              if (!found) {
-                resolutions.push({
-                  width: 3840,
-                  height: 2160,
-                  label: "3840x2160 (4K UHD)",
-                })
-              }
-            }
+          resolutions.push({
+            width: 640,
+            height: 480,
+            label: "640x480", // VGA
+          })
 
-            // Добавляем максимальное разрешение устройства
-            // Проверяем, чтобы не дублировать уже добавленные разрешения
-            const maxResExists = resolutions.some(
-              (r) => r.width === widthMax && r.height === heightMax,
-            )
-
-            if (!maxResExists) {
-              resolutions.push({
-                width: widthMax,
-                height: heightMax,
-                label: `${widthMax}x${heightMax} (Макс.)`,
-              })
-            }
-          }
+          // Максимальное разрешение уже добавлено выше
 
           // Сортируем разрешения от большего к меньшему
           resolutions.sort((a, b) => b.width * b.height - a.width * a.height)
@@ -237,39 +217,33 @@ export function CameraCaptureDialog({
             }
           }
 
-          if (resolutions.length > 0) {
-            setSupportedResolutions(resolutions)
-            setAvailableResolutions(resolutions)
+          // Сортируем разрешения от большего к меньшему
+          const sortedResolutions = [...resolutions].sort((a, b) => {
+            // Сравниваем по общему количеству пикселей
+            const pixelsA = a.width * a.height
+            const pixelsB = b.width * b.height
+            return pixelsB - pixelsA
+          })
 
-            // Сортируем разрешения по убыванию (сначала самые высокие)
-            const sortedResolutions = [...resolutions].sort((a, b) => {
-              // Сначала сравниваем по общему количеству пикселей
-              const pixelsA = a.width * a.height;
-              const pixelsB = b.width * b.height;
-              return pixelsB - pixelsA;
-            });
+          console.log(
+            "Доступные разрешения:",
+            sortedResolutions.map((r) => r.label),
+          )
 
-            console.log("Доступные разрешения (отсортированные):", sortedResolutions.map(r => r.label));
+          // Устанавливаем отсортированные разрешения
+          setSupportedResolutions(sortedResolutions)
+          setAvailableResolutions(sortedResolutions)
 
-            // Устанавливаем максимальное доступное разрешение по умолчанию
-            if (sortedResolutions.length > 0) {
-              const maxResolution = sortedResolutions[0];
-              console.log("Выбрано максимальное разрешение:", maxResolution.label);
-              setSelectedResolution(maxResolution.label);
-            }
+          // Всегда выбираем максимальное разрешение по умолчанию
+          if (sortedResolutions.length > 0) {
+            const maxResolution = sortedResolutions[0]
+            console.log("Выбрано максимальное разрешение:", maxResolution.label)
+            setSelectedResolution(maxResolution.label)
           } else {
+            // Если по какой-то причине нет разрешений, используем стандартные
             setAvailableResolutions(COMMON_RESOLUTIONS)
-
-            // Если нет доступных разрешений, выбираем максимальное из стандартных
-            const sortedCommonResolutions = [...COMMON_RESOLUTIONS].sort((a, b) => {
-              const pixelsA = a.width * a.height;
-              const pixelsB = b.width * b.height;
-              return pixelsB - pixelsA;
-            });
-
-            if (sortedCommonResolutions.length > 0) {
-              setSelectedResolution(sortedCommonResolutions[0].label);
-            }
+            setSupportedResolutions(COMMON_RESOLUTIONS)
+            setSelectedResolution(COMMON_RESOLUTIONS[0].label)
           }
 
           if (frameRates.length > 0) {
@@ -309,7 +283,12 @@ export function CameraCaptureDialog({
         .filter((device) => device.kind === "videoinput")
         .map((device) => {
           // Очищаем названия устройств от текста в скобках
-          let label = device.label || t('timeline.tracks.cameraWithNumber', { number: devices.indexOf(device) + 1, defaultValue: `Камера ${devices.indexOf(device) + 1}` })
+          let label =
+            device.label ||
+            t("timeline.tracks.cameraWithNumber", {
+              number: devices.indexOf(device) + 1,
+              defaultValue: `Камера ${devices.indexOf(device) + 1}`,
+            })
           // Удаляем текст в скобках, если он присутствует
           label = label.replace(/\s*\([^)]*\)\s*$/, "")
 
@@ -323,7 +302,12 @@ export function CameraCaptureDialog({
         .filter((device) => device.kind === "audioinput")
         .map((device) => {
           // Очищаем названия устройств от текста в скобках
-          let label = device.label || t('timeline.tracks.audioWithNumber', { number: devices.indexOf(device) + 1, defaultValue: `Микрофон ${devices.indexOf(device) + 1}` })
+          let label =
+            device.label ||
+            t("timeline.tracks.audioWithNumber", {
+              number: devices.indexOf(device) + 1,
+              defaultValue: `Микрофон ${devices.indexOf(device) + 1}`,
+            })
           // Удаляем текст в скобках, если он присутствует
           label = label.replace(/\s*\([^)]*\)\s*$/, "")
 
@@ -384,10 +368,72 @@ export function CameraCaptureDialog({
       }
 
       // Извлекаем выбранное разрешение
-      const [width, height] = selectedResolution.split("x").map(Number)
+      let width = 1920
+      let height = 1080
+
+      if (selectedResolution) {
+        // Извлекаем числа из строки разрешения (например, "1920x1080")
+        console.log("Выбранное разрешение для обработки:", selectedResolution)
+
+        const resolutionMatch = selectedResolution.match(/(\d+)x(\d+)/)
+        if (resolutionMatch && resolutionMatch.length >= 3) {
+          width = parseInt(resolutionMatch[1], 10)
+          height = parseInt(resolutionMatch[2], 10)
+
+          // Проверяем соотношение сторон
+          const aspectRatio = width / height
+          const isStandardRatio =
+            Math.abs(aspectRatio - 16 / 9) < 0.1 || // Близко к 16:9
+            Math.abs(aspectRatio - 4 / 3) < 0.1 // Близко к 4:3
+
+          if (!isStandardRatio) {
+            console.warn(
+              `Нестандартное соотношение сторон: ${aspectRatio.toFixed(2)}, используем 16:9`,
+            )
+            // Используем стандартное разрешение 16:9
+            width = 1920
+            height = 1080
+          } else {
+            console.log(`Извлечено разрешение: ${width}x${height}`)
+          }
+        } else {
+          console.warn("Не удалось извлечь разрешение из строки:", selectedResolution)
+        }
+      } else {
+        // Если разрешение не выбрано, используем максимальное из доступных
+        if (availableResolutions.length > 0) {
+          // Сортируем по убыванию (сначала самые высокие разрешения)
+          const sortedResolutions = [...availableResolutions].sort((a, b) => {
+            const pixelsA = a.width * a.height
+            const pixelsB = b.width * b.height
+            return pixelsB - pixelsA
+          })
+
+          // Берем максимальное разрешение
+          const maxResolution = sortedResolutions[0]
+          width = maxResolution.width
+          height = maxResolution.height
+
+          console.log("Разрешение не выбрано, используем максимальное:", width, "x", height)
+
+          // Обновляем выбранное разрешение
+          setSelectedResolution(maxResolution.label)
+        }
+      }
+
       console.log(`Запрашиваем разрешение: ${width}x${height}, частота кадров: ${frameRate}`)
 
+      // Проверяем, что разрешение имеет разумные значения
+      if (width < 640 || height < 480) {
+        console.warn(
+          `Обнаружено слишком низкое разрешение ${width}x${height}, устанавливаем минимальное 640x480`,
+        )
+        width = 640
+        height = 480
+      }
+
       // Настраиваем ограничения для видео потока
+      // Используем exact для устройства и ideal для разрешения
       const constraints: MediaStreamConstraints = {
         video: {
           deviceId: { exact: selectedDevice },
@@ -398,25 +444,54 @@ export function CameraCaptureDialog({
         audio: selectedAudioDevice ? { deviceId: { exact: selectedAudioDevice } } : false,
       }
 
-      console.log("Запрашиваем медиа-поток с ограничениями:", constraints)
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      console.log("Поток получен:", stream)
-      streamRef.current = stream
+      console.log("Запрашиваем максимальное разрешение:", width, "x", height)
 
-      if (videoRef.current) {
+      console.log("Запрашиваем медиа-поток с ограничениями:", constraints)
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        console.log("Поток получен:", stream)
+        streamRef.current = stream
+
+        // Получаем информацию о фактическом разрешении из трека
+        const videoTrack = stream.getVideoTracks()[0]
+        if (videoTrack) {
+          const settings = videoTrack.getSettings()
+          console.log("Фактические настройки трека:", settings)
+          if (settings.width && settings.height) {
+            console.log(`Фактическое разрешение трека: ${settings.width}x${settings.height}`)
+          }
+        }
+      } catch (error) {
+        console.error("Ошибка при получении потока с запрошенным разрешением:", error)
+
+        // Пробуем получить поток без указания разрешения
+        console.log("Пробуем получить поток без указания разрешения")
+        const fallbackConstraints: MediaStreamConstraints = {
+          video: {
+            deviceId: { exact: selectedDevice },
+          },
+          audio: selectedAudioDevice ? { deviceId: { exact: selectedAudioDevice } } : false,
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia(fallbackConstraints)
+        console.log("Поток получен с резервными настройками:", stream)
+        streamRef.current = stream
+      }
+
+      if (videoRef.current && streamRef.current) {
         console.log("Устанавливаем srcObject для видео элемента")
-        videoRef.current.srcObject = stream
+        videoRef.current.srcObject = streamRef.current
 
         // Добавляем обработчик события loadedmetadata
         videoRef.current.onloadedmetadata = () => {
           console.log("Видео метаданные загружены, начинаем воспроизведение")
           videoRef.current?.play().catch((e) => console.error("Ошибка воспроизведения:", e))
 
-          // Получаем фактическое разрешение видео
+          // Получаем фактическое разрешение видео для логирования
           if (videoRef.current) {
-            setActualVideoWidth(videoRef.current.videoWidth)
-            setActualVideoHeight(videoRef.current.videoHeight)
-            console.log(`Фактическое разрешение видео: ${videoRef.current.videoWidth}x${videoRef.current.videoHeight}`)
+            const actualWidth = videoRef.current.videoWidth
+            const actualHeight = videoRef.current.videoHeight
+            console.log(`Фактическое разрешение видео: ${actualWidth}x${actualHeight}`)
           }
 
           setIsDeviceReady(true)
@@ -626,18 +701,18 @@ export function CameraCaptureDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
-        className="overflow-hidden border-[#333] bg-[#18181B] p-0 text-white sm:max-w-[500px]"
+        className="w-full max-w-[1000px] overflow-hidden border-[#333] bg-[#18181B] p-0 text-white"
         aria-describedby="camera-capture-description"
       >
         <DialogTitle className="border-b border-[#333] p-4 text-lg font-semibold">
-          {t('dialogs.cameraCapture.title')}
+          {t("dialogs.cameraCapture.title")}
         </DialogTitle>
 
-        <div className="p-4">
+        <div className="p-6">
           {/* Отображаем ошибки и статус разрешений */}
           {permissionStatus === "pending" && (
             <div className="mb-4 text-center text-sm">
-              {t('dialogs.cameraCapture.permissionDenied')}
+              {t("dialogs.cameraCapture.permissionDenied")}
             </div>
           )}
 
@@ -646,7 +721,7 @@ export function CameraCaptureDialog({
               {errorMessage}
               <div className="mt-2">
                 <Button className="w-full bg-red-600 hover:bg-red-700" onClick={requestPermissions}>
-                  {t('dialogs.cameraCapture.retryRequest')}
+                  {t("dialogs.cameraCapture.retryRequest")}
                 </Button>
               </div>
             </div>
@@ -657,7 +732,7 @@ export function CameraCaptureDialog({
               {errorMessage}
               <div className="mt-2">
                 <Button className="w-full bg-red-600 hover:bg-red-700" onClick={requestPermissions}>
-                  {t('dialogs.cameraCapture.retry')}
+                  {t("dialogs.cameraCapture.retry")}
                 </Button>
               </div>
             </div>
@@ -669,207 +744,235 @@ export function CameraCaptureDialog({
                 id="camera-capture-description"
                 className="mb-4 text-sm text-white"
               >
-                {t('dialogs.cameraCapture.title')}
+                {t("dialogs.cameraCapture.description", {
+                  defaultValue:
+                    "Record video from your camera with selected resolution and frame rate.",
+                })}
               </DialogDescription>
 
-              {/* Предпросмотр видео */}
-              <div className="relative mx-auto mb-6 flex h-[320px] w-full max-w-[400px] items-center justify-center rounded-md border border-gray-800 bg-black">
-                {!isDeviceReady && (
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                    {t('dialogs.cameraCapture.initializingCamera')}
-                  </div>
-                )}
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  muted
-                  style={{
-                    display: "block",
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                  }}
-                  className={`${!isDeviceReady ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
-                />
-                {showCountdown && countdown > 0 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-6xl font-bold text-white">
-                    {countdown}
-                  </div>
-                )}
-                {isDeviceReady && actualVideoWidth > 0 && actualVideoHeight > 0 && (
-                  <div className="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-1 text-xs text-white">
-                    {t('dialogs.cameraCapture.currentResolution', { width: actualVideoWidth, height: actualVideoHeight })}
-                  </div>
-                )}
-              </div>
-
-              {/* Настройки устройств */}
-              <div className="mb-6 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-4">
-                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.device')}:</div>
-                <Select
-                  value={selectedDevice}
-                  onValueChange={setSelectedDevice}
-                  disabled={isRecording || isLoadingCapabilities}
-                >
-                  <SelectTrigger className="border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="border-[#444] bg-[#222]">
-                    {devices.map(
-                      (device) =>
-                        device.deviceId && (
-                          <SelectItem
-                            key={device.deviceId}
-                            value={device.deviceId}
-                            className="text-white hover:bg-[#333] focus:bg-[#333]"
-                          >
-                            {device.label}
-                          </SelectItem>
-                        ),
+              {/* Двухколоночная разметка: видео слева, настройки справа */}
+              <div className="flex flex-col gap-8 md:flex-row">
+                {/* Левая колонка - превью видео */}
+                <div className="md:w-3/5">
+                  {/* Предпросмотр видео */}
+                  <div className="relative flex h-[450px] w-full items-center justify-center rounded-md border border-gray-800 bg-black shadow-lg">
+                    {!isDeviceReady && (
+                      <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+                        {t("dialogs.cameraCapture.initializingCamera")}
+                      </div>
                     )}
-                  </SelectContent>
-                </Select>
-
-                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.audioDevice')}:</div>
-                <Select
-                  value={selectedAudioDevice}
-                  onValueChange={setSelectedAudioDevice}
-                  disabled={isRecording || isLoadingCapabilities}
-                >
-                  <SelectTrigger className="border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="border-[#444] bg-[#222]">
-                    {audioDevices.map(
-                      (device) =>
-                        device.deviceId && (
-                          <SelectItem
-                            key={device.deviceId}
-                            value={device.deviceId}
-                            className="text-white hover:bg-[#333] focus:bg-[#333]"
-                          >
-                            {device.label}
-                          </SelectItem>
-                        ),
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{
+                        display: "block",
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "contain",
+                      }}
+                      className={`${!isDeviceReady ? "opacity-0" : "opacity-100"} transition-opacity duration-300`}
+                    />
+                    {showCountdown && countdown > 0 && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 text-6xl font-bold text-white">
+                        {countdown}
+                      </div>
                     )}
-                  </SelectContent>
-                </Select>
+                  </div>
+                </div>
 
-                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.resolution')}:</div>
-                <div>
-                  {isLoadingCapabilities ? (
-                    <div className="flex items-center text-xs text-gray-400">
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[#0CC] border-t-transparent"></div>
-                      {t('dialogs.cameraCapture.determiningCapabilities')}
+                {/* Правая колонка - настройки и кнопки */}
+                <div className="flex flex-col md:w-2/5">
+                  {/* Настройки устройств */}
+                  <div className="mb-8 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-5">
+                    <div className="text-sm text-gray-300">
+                      {t("dialogs.cameraCapture.device")}:
                     </div>
-                  ) : (
                     <Select
-                      value={selectedResolution}
-                      onValueChange={setSelectedResolution}
-                      disabled={isRecording}
+                      value={selectedDevice}
+                      onValueChange={setSelectedDevice}
+                      disabled={isRecording || isLoadingCapabilities}
                     >
-                      <SelectTrigger className="border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
+                      <SelectTrigger className="w-full border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="max-h-56 overflow-y-auto border-[#444] bg-[#222]">
-                        {availableResolutions.map(
-                          (res) =>
-                            res.label && (
+                      <SelectContent className="w-full border-[#444] bg-[#222]">
+                        {devices.map(
+                          (device) =>
+                            device.deviceId && (
                               <SelectItem
-                                key={res.label}
-                                value={res.label}
+                                key={device.deviceId}
+                                value={device.deviceId}
                                 className="text-white hover:bg-[#333] focus:bg-[#333]"
                               >
-                                {res.label}
+                                {device.label}
                               </SelectItem>
                             ),
                         )}
                       </SelectContent>
                     </Select>
-                  )}
 
-                  {supportedResolutions.length > 0 && (
-                    <div className="mt-1 text-xs text-gray-400">
-                      {t('dialogs.cameraCapture.supportedResolutions', { count: supportedResolutions.length })}
+                    <div className="text-sm text-gray-300">
+                      {t("dialogs.cameraCapture.audioDevice")}:
                     </div>
-                  )}
-                </div>
-
-                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.frameRate')}:</div>
-                <div>
-                  {isLoadingCapabilities ? (
-                    <div className="flex items-center text-xs text-gray-400">
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[#0CC] border-t-transparent"></div>
-                      {t('dialogs.cameraCapture.determiningCapabilities')}
-                    </div>
-                  ) : (
                     <Select
-                      value={frameRate.toString()}
-                      onValueChange={(value) => setFrameRate(parseInt(value))}
-                      disabled={isRecording}
+                      value={selectedAudioDevice}
+                      onValueChange={setSelectedAudioDevice}
+                      disabled={isRecording || isLoadingCapabilities}
                     >
-                      <SelectTrigger className="border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
+                      <SelectTrigger className="w-full border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent className="border-[#444] bg-[#222]">
-                        {supportedFrameRates.map((fps) => (
-                          <SelectItem
-                            key={fps.toString()}
-                            value={fps.toString()}
-                            className="text-white hover:bg-[#333] focus:bg-[#333]"
-                          >
-                            {fps} fps
-                          </SelectItem>
-                        ))}
+                      <SelectContent className="w-full border-[#444] bg-[#222]">
+                        {audioDevices.map(
+                          (device) =>
+                            device.deviceId && (
+                              <SelectItem
+                                key={device.deviceId}
+                                value={device.deviceId}
+                                className="text-white hover:bg-[#333] focus:bg-[#333]"
+                              >
+                                {device.label}
+                              </SelectItem>
+                            ),
+                        )}
                       </SelectContent>
                     </Select>
-                  )}
 
-                  {supportedFrameRates.length > 0 && supportedFrameRates.length < 10 && (
-                    <div className="mt-1 text-xs text-gray-400">
-                      {t('dialogs.cameraCapture.supportedFrameRates', { frameRates: supportedFrameRates.join(", ") })}
+                    <div className="text-sm text-gray-300">
+                      {t("dialogs.cameraCapture.resolution")}:
                     </div>
-                  )}
-                </div>
+                    <div>
+                      {isLoadingCapabilities ? (
+                        <div className="flex items-center text-xs text-gray-400">
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[#0CC] border-t-transparent"></div>
+                          {t("dialogs.cameraCapture.determiningCapabilities")}
+                        </div>
+                      ) : (
+                        <Select
+                          value={selectedResolution}
+                          onValueChange={setSelectedResolution}
+                          disabled={isRecording}
+                        >
+                          <SelectTrigger className="w-full border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-56 w-full overflow-y-auto border-[#444] bg-[#222]">
+                            {availableResolutions.map(
+                              (res) =>
+                                res.label && (
+                                  <SelectItem
+                                    key={res.label}
+                                    value={res.label}
+                                    className="text-white hover:bg-[#333] focus:bg-[#333]"
+                                  >
+                                    {res.label}
+                                  </SelectItem>
+                                ),
+                            )}
+                          </SelectContent>
+                        </Select>
+                      )}
 
-                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.countdown')}:</div>
-                <div className="flex items-center">
-                  <Input
-                    type="number"
-                    value={countdown}
-                    onChange={(e) => setCountdown(parseInt(e.target.value) || 3)}
-                    min={1}
-                    max={10}
-                    className="mr-2 w-16 border-[#444] bg-[#222] text-center"
-                    disabled={isRecording}
-                  />
-                  <span className="text-sm text-gray-300">{t('dialogs.cameraCapture.seconds')}</span>
-                </div>
-              </div>
+                      {supportedResolutions.length > 0 && (
+                        <div className="mt-1 text-xs text-gray-400">
+                          {t("dialogs.cameraCapture.supportedResolutions", {
+                            count: supportedResolutions.length,
+                          })}
+                        </div>
+                      )}
+                    </div>
 
-              {/* Запись */}
-              <div className="flex flex-col items-center">
-                <div className="mb-4 flex items-center justify-center gap-6">
-                  {!isRecording ? (
-                    <Button
-                      className="mb-0 flex h-14 w-14 items-center justify-center rounded-full border border-white bg-red-500 hover:bg-red-600"
-                      onClick={startCountdown}
-                      disabled={!isDeviceReady}
-                    >
-                      <div className="h-4 w-4 animate-pulse rounded-full bg-white" />
-                    </Button>
-                  ) : (
-                    <Button
-                      className="mb-0 flex h-14 w-14 items-center justify-center rounded-full border border-white bg-red-500 hover:bg-red-600"
-                      onClick={stopRecording}
-                    >
-                      <div className="h-4 w-4 rounded bg-white" />
-                    </Button>
-                  )}
-                </div>
-                <div className="font-mono text-lg">
-                  {t('dialogs.cameraCapture.recordingTime')} {formatRecordingTime(recordingTime)}
+                    <div className="text-sm text-gray-300">
+                      {t("dialogs.cameraCapture.frameRate")}:
+                    </div>
+                    <div>
+                      {isLoadingCapabilities ? (
+                        <div className="flex items-center text-xs text-gray-400">
+                          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[#0CC] border-t-transparent"></div>
+                          {t("dialogs.cameraCapture.determiningCapabilities")}
+                        </div>
+                      ) : (
+                        <Select
+                          value={frameRate.toString()}
+                          onValueChange={(value) => setFrameRate(parseInt(value))}
+                          disabled={isRecording}
+                        >
+                          <SelectTrigger className="w-full border-[#444] bg-[#222] focus:ring-0 focus:ring-offset-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="w-full border-[#444] bg-[#222]">
+                            {supportedFrameRates.map((fps) => (
+                              <SelectItem
+                                key={fps.toString()}
+                                value={fps.toString()}
+                                className="text-white hover:bg-[#333] focus:bg-[#333]"
+                              >
+                                {fps} fps
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
+
+                      {supportedFrameRates.length > 0 && supportedFrameRates.length < 10 && (
+                        <div className="mt-1 text-xs text-gray-400">
+                          {t("dialogs.cameraCapture.supportedFrameRates", {
+                            frameRates: supportedFrameRates.join(", "),
+                          })}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="text-sm text-gray-300">
+                      {t("dialogs.cameraCapture.countdown")}:
+                    </div>
+                    <div className="flex items-center">
+                      <Input
+                        type="number"
+                        value={countdown}
+                        onChange={(e) => setCountdown(parseInt(e.target.value) || 3)}
+                        min={1}
+                        max={10}
+                        className="mr-2 w-20 border-[#444] bg-[#222] text-center"
+                        disabled={isRecording}
+                      />
+                      <span className="text-sm text-gray-300">
+                        {t("dialogs.cameraCapture.seconds")}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Запись */}
+                  <div className="mt-auto flex flex-col items-center pt-4">
+                    <div className="mb-4 flex items-center justify-center gap-6">
+                      {!isRecording ? (
+                        <Button
+                          className="mb-0 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-red-600 shadow-lg hover:bg-red-700"
+                          onClick={startCountdown}
+                          disabled={!isDeviceReady}
+                          title={t("dialogs.cameraCapture.startRecording")}
+                          aria-label={t("dialogs.cameraCapture.startRecording")}
+                        >
+                          <div className="h-5 w-5 animate-pulse rounded-full bg-white" />
+                        </Button>
+                      ) : (
+                        <Button
+                          className="mb-0 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-red-600 shadow-lg hover:bg-red-700"
+                          onClick={stopRecording}
+                          title={t("dialogs.cameraCapture.stopRecording")}
+                          aria-label={t("dialogs.cameraCapture.stopRecording")}
+                        >
+                          <div className="h-5 w-5 rounded bg-white" />
+                        </Button>
+                      )}
+                    </div>
+                    <div className="font-mono text-lg font-semibold">
+                      {t("dialogs.cameraCapture.recordingTime")}{" "}
+                      {formatRecordingTime(recordingTime)}
+                    </div>
+                  </div>
                 </div>
               </div>
             </>
@@ -877,8 +980,11 @@ export function CameraCaptureDialog({
         </div>
 
         <div className="flex justify-end border-t border-[#333] p-4">
-          <Button className="bg-[#0CC] text-black hover:bg-[#0AA]" onClick={handleClose}>
-            {t('common.ok')}
+          <Button
+            className="bg-[#0CC] px-6 font-medium text-black hover:bg-[#0AA]"
+            onClick={handleClose}
+          >
+            {t("common.ok")}
           </Button>
         </div>
       </DialogContent>

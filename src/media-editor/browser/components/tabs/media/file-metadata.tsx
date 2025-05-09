@@ -47,7 +47,7 @@ export const FileMetadata = memo(function FileMetadata({ file, size = 100 }: Fil
                 year: "numeric",
                 month: "long",
                 day: "numeric",
-              }
+              },
             )}
           </span>
         )}

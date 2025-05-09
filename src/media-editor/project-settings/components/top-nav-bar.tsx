@@ -1,8 +1,7 @@
 import { Keyboard, Layout, ListTodo, Save, Send, Settings, Upload, UserCog } from "lucide-react"
+import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-
-import dynamic from "next/dynamic"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -59,7 +58,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
               className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
               variant="ghost"
               size="icon"
-              title={t('topNavBar.layout')}
+              title={t("topNavBar.layout")}
             >
               <Layout className="h-5 w-5" />
             </Button>
@@ -76,7 +75,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
           variant="ghost"
           size="icon"
-          title={t('topNavBar.keyboardShortcuts')}
+          title={t("topNavBar.keyboardShortcuts")}
         >
           <Keyboard className="h-5 w-5" />
         </Button>
@@ -86,7 +85,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
           variant="ghost"
           size="icon"
-          title={t('topNavBar.projectSettings')}
+          title={t("topNavBar.projectSettings")}
           onClick={() => setIsSettingsOpen(true)}
         >
           <Settings className="h-5 w-5" />
@@ -98,9 +97,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           )}
           variant="ghost"
           size="icon"
-          title={isDirty
-            ? t('topNavBar.allChangesSaved')
-            : t('topNavBar.saveChanges')}
+          title={isDirty ? t("topNavBar.allChangesSaved") : t("topNavBar.saveChanges")}
           onClick={handleSave}
           disabled={isDirty}
         >
@@ -141,16 +138,14 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
               className="h-7 w-7 cursor-pointer p-0"
               variant="ghost"
               size="icon"
-              title={t('topNavBar.publish')}
+              title={t("topNavBar.publish")}
             >
               <Send className="h-5 w-5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64" sideOffset={0}>
             <div className="">
-              <h4 className="text-sm font-semibold">
-                {t('topNavBar.publicationTasks')}
-              </h4>
+              <h4 className="text-sm font-semibold">{t("topNavBar.publicationTasks")}</h4>
               <div className="h-10"></div>
             </div>
           </PopoverContent>
@@ -162,16 +157,14 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
               className="h-7 w-7 cursor-pointer p-0"
               variant="ghost"
               size="icon"
-              title={t('topNavBar.editingTasks')}
+              title={t("topNavBar.editingTasks")}
             >
               <ListTodo className="h-5 w-5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64" sideOffset={0}>
             <div className="">
-              <h4 className="text-sm font-semibold">
-                {t('topNavBar.projectTasks')}
-              </h4>
+              <h4 className="text-sm font-semibold">{t("topNavBar.projectTasks")}</h4>
               <div className="h-10"></div>
             </div>
           </PopoverContent>
@@ -189,7 +182,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           variant="ghost"
           size="icon"
           className="mr-1 h-7 w-7 cursor-pointer p-0"
-          title={t('topNavBar.userSettings')}
+          title={t("topNavBar.userSettings")}
           onClick={() => setIsUserSettingsOpen(true)}
         >
           <UserCog className="h-5 w-5" />
@@ -200,7 +193,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           className="h-6 w-24 cursor-pointer items-center gap-1 border-none bg-[#38dacac3] px-1 text-sm text-black hover:bg-[#35d1c1] hover:text-black dark:bg-[#35d1c1] dark:hover:bg-[#35d1c1]"
           onClick={handleExport}
         >
-          <span className="px-2 text-xs">{t('topNavBar.export')}</span>
+          <span className="px-2 text-xs">{t("topNavBar.export")}</span>
           <Upload className="h-5 w-5" />
         </Button>
       </div>

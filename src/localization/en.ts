@@ -14,9 +14,9 @@ const enTranslations: Translations = {
       editingTasks: "Editing Tasks",
       projectTasks: "Project Tasks",
       userSettings: "User Settings",
-      export: "Export"
+      export: "Export",
     },
-    
+
     // Dialogs
     dialogs: {
       // Project settings
@@ -27,27 +27,27 @@ const enTranslations: Translations = {
         frameRate: "Frame Rate:",
         colorSpace: "Color Space:",
         cancel: "Cancel",
-        save: "OK"
+        save: "OK",
       },
-      
+
       // User settings
       userSettings: {
         title: "User Settings",
         interfaceLanguage: "Interface Language:",
         cancel: "Cancel",
-        save: "Save"
+        save: "Save",
       },
-      
+
       // Export
       export: {
         title: "Export",
         local: "Local",
         device: "Device",
         socialNetworks: "Social Networks",
-        dvd: "DVD"
-      }
+        dvd: "DVD",
+      },
     },
-    
+
     // Templates
     templates: {
       // Common template names
@@ -56,9 +56,9 @@ const enTranslations: Translations = {
       diagonalSplit: "Diagonal Split",
       grid2x2: "Grid 2×2",
       grid3x3: "Grid 3×3",
-      grid4x4: "Grid 4×4"
-    }
-  }
+      grid4x4: "Grid 4×4",
+    },
+  },
 }
 
 export default enTranslations

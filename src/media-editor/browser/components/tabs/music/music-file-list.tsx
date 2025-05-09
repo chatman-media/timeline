@@ -82,7 +82,7 @@ export function MusicFileList() {
       return { "": filteredFiles }
     }
 
-    const unknownLabel = t('browser.common.unknown')
+    const unknownLabel = t("browser.common.unknown")
     const groups = filteredFiles.reduce(
       (acc, file) => {
         const key = file.probeData?.format.tags?.[groupBy] || unknownLabel

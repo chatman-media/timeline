@@ -38,14 +38,17 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
   // Проверяем соответствие языка в i18n и localStorage при открытии диалога
   useEffect(() => {
     if (open) {
-      const storedLang = localStorage.getItem('app-language')
-      console.log('UserSettingsDialog: Current i18n language:', i18n.language)
-      console.log('UserSettingsDialog: Current context language:', language)
-      console.log('UserSettingsDialog: localStorage language:', storedLang)
+      const storedLang = localStorage.getItem("app-language")
+      console.log("UserSettingsDialog: Current i18n language:", i18n.language)
+      console.log("UserSettingsDialog: Current context language:", language)
+      console.log("UserSettingsDialog: localStorage language:", storedLang)
 
       // Если язык в localStorage отличается от текущего языка в контексте, обновляем его
-      if (storedLang && (storedLang === 'ru' || storedLang === 'en') && storedLang !== language) {
-        console.log('UserSettingsDialog: Updating selected language to match localStorage:', storedLang)
+      if (storedLang && (storedLang === "ru" || storedLang === "en") && storedLang !== language) {
+        console.log(
+          "UserSettingsDialog: Updating selected language to match localStorage:",
+          storedLang,
+        )
         setSelectedLanguage(storedLang as Language)
       }
     }
@@ -86,24 +89,19 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
       <DialogContent className="rounded-sm dark:bg-[#1b1a1f] [&>button]:hidden">
         <DialogHeader>
           <DialogTitle className="text-md text-center">
-            {t('dialogs.userSettings.title')}
+            {t("dialogs.userSettings.title")}
           </DialogTitle>
         </DialogHeader>
         <div className="flex flex-col space-y-6 py-1">
           <div className="flex items-center justify-end">
-            <Label className="mr-2 text-xs">
-              {t('dialogs.userSettings.interfaceLanguage')}
-            </Label>
-            <Select
-              value={selectedLanguage}
-              onValueChange={handleLanguageSelect}
-            >
+            <Label className="mr-2 text-xs">{t("dialogs.userSettings.interfaceLanguage")}</Label>
+            <Select value={selectedLanguage} onValueChange={handleLanguageSelect}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder={t('dialogs.userSettings.interfaceLanguage')} />
+                <SelectValue placeholder={t("dialogs.userSettings.interfaceLanguage")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ru">{t('language.ru')}</SelectItem>
-                <SelectItem value="en">{t('language.en')}</SelectItem>
+                <SelectItem value="ru">{t("language.ru")}</SelectItem>
+                <SelectItem value="en">{t("language.en")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -114,14 +112,14 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
             className="flex-1 cursor-pointer"
             onClick={() => onOpenChange(false)}
           >
-            {t('dialogs.userSettings.cancel')}
+            {t("dialogs.userSettings.cancel")}
           </Button>
           <Button
             variant="default"
             className="flex-1 cursor-pointer bg-[#00CCC0] text-black hover:bg-[#00AAA0]"
             onClick={handleSave}
           >
-            {t('dialogs.userSettings.save')}
+            {t("dialogs.userSettings.save")}
           </Button>
         </DialogFooter>
       </DialogContent>

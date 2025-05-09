@@ -264,9 +264,14 @@ export const VideoItem = memo(function VideoItem({
         >
           <span className="mr-1 rounded px-1 text-xs whitespace-nowrap dark:bg-[#033032]">
             {video.probeData?.streams[0]?.codec_type === "audio"
-              ? t('timeline.tracks.audioWithNumber', { number: track.index, defaultValue: `Аудио ${track.index}` })
-              : t('timeline.tracks.videoWithNumber', { number: track.index, defaultValue: `Видео ${track.index}` })
-            }
+              ? t("timeline.tracks.audioWithNumber", {
+                number: track.index,
+                defaultValue: `Аудио ${track.index}`,
+              })
+              : t("timeline.tracks.videoWithNumber", {
+                number: track.index,
+                defaultValue: `Видео ${track.index}`,
+              })}
           </span>
           <div className="m-0 flex w-full justify-end space-x-2 overflow-hidden p-0 text-xs text-white">
             {video.probeData?.streams?.[0]?.codec_type === "video" ? (

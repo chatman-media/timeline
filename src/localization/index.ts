@@ -1,4 +1,5 @@
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
+
 import enTranslations from "./en"
 import ruTranslations from "./ru"
 import { Language, Translations } from "./types"
@@ -6,7 +7,7 @@ import { Language, Translations } from "./types"
 // Словарь переводов
 const translations: Record<Language, Translations> = {
   ru: ruTranslations,
-  en: enTranslations
+  en: enTranslations,
 }
 
 // Хук для получения переводов

@@ -113,6 +113,7 @@
     },
     "cameraCapture": {
       "title": "Camera Recording",
+      "description": "Record video from your camera with selected resolution and frame rate.",
       "selectCamera": "Select camera:",
       "selectMicrophone": "Select microphone:",
       "selectResolution": "Select resolution:",
@@ -138,7 +139,8 @@
       "supportedFrameRates": "Supported: {{frameRates}} fps",
       "retryRequest": "Retry request",
       "retry": "Retry",
-      "currentResolution": "Current resolution: {{width}}x{{height}}"
+      "currentResolution": "Current resolution: {{width}}x{{height}}",
+      "requestedResolution": "Requested: {{resolution}}"
     },
     "cameraPreview": {
       "title": "Recording Preview",

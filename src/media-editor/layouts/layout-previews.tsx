@@ -58,7 +58,7 @@ function DefaultLayout({ isActive, onClick }: LayoutProps) {
           </div>
         </div>
       </div>
-      <span className="text-[10px] font-medium">{t('topNavBar.layouts.default')}</span>
+      <span className="text-[10px] font-medium">{t("topNavBar.layouts.default")}</span>
     </div>
   )
 }
@@ -113,7 +113,7 @@ function OptionsLayout({ isActive, onClick }: LayoutProps) {
           <div className="bg-primary/70 h-1 w-full rounded-sm"></div>
         </div>
       </div>
-      <span className="text-[10px] font-medium">{t('topNavBar.layouts.options')}</span>
+      <span className="text-[10px] font-medium">{t("topNavBar.layouts.options")}</span>
     </div>
   )
 }
@@ -167,7 +167,7 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
           </div>
         </div>
       </div>
-      <span className="text-[10px] font-medium">{t('topNavBar.layouts.vertical')}</span>
+      <span className="text-[10px] font-medium">{t("topNavBar.layouts.vertical")}</span>
     </div>
   )
 }
@@ -184,7 +184,11 @@ function DualLayout({ isActive, onClick, hasExternalDisplay }: DualLayoutProps) 
         hasExternalDisplay ? "cursor-pointer" : "cursor-not-allowed opacity-50"
       } ${isActive ? "bg-muted" : hasExternalDisplay ? "hover:bg-muted" : ""} p-2 pb-1`}
       onClick={onClick}
-      title={hasExternalDisplay ? t('topNavBar.layouts.dual') : t('topNavBar.layouts.externalDisplayRequired')}
+      title={
+        hasExternalDisplay
+          ? t("topNavBar.layouts.dual")
+          : t("topNavBar.layouts.externalDisplayRequired")
+      }
     >
       <div className="bg-background relative mb-1 flex h-24 w-40 items-center justify-center">
         <div className="bg-muted absolute right-4 h-14 w-24 translate-y-2 border-2 border-gray-700">
@@ -209,9 +213,11 @@ function DualLayout({ isActive, onClick, hasExternalDisplay }: DualLayoutProps) 
           </div>
         </div>
       </div>
-      <span className="text-[10px] font-medium">{t('topNavBar.layouts.dual')}</span>
+      <span className="text-[10px] font-medium">{t("topNavBar.layouts.dual")}</span>
       {!hasExternalDisplay && (
-        <span className="text-muted-foreground text-[9px]">{t('topNavBar.layouts.externalDisplayRequired')}</span>
+        <span className="text-muted-foreground text-[9px]">
+          {t("topNavBar.layouts.externalDisplayRequired")}
+        </span>
       )}
     </div>
   )

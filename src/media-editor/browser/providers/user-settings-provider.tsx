@@ -37,7 +37,11 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
       console.log("UserSettingsProvider: state machine language:", state.context.language)
 
       // Если язык в localStorage отличается от текущего языка в state machine, обновляем его
-      if (storedLang && (storedLang === "ru" || storedLang === "en") && storedLang !== state.context.language) {
+      if (
+        storedLang &&
+        (storedLang === "ru" || storedLang === "en") &&
+        storedLang !== state.context.language
+      ) {
         console.log("UserSettingsProvider: Updating language to match localStorage:", storedLang)
         send({ type: "UPDATE_LANGUAGE", language: storedLang as Language })
       }

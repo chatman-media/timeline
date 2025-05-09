@@ -22,13 +22,13 @@ interface ExportDialogProps {
 }
 
 export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-background flex h-[600px] flex-col sm:max-w-[800px]">
         <DialogHeader className="bg-background">
-          <DialogTitle>{t('dialogs.export.title')}</DialogTitle>
+          <DialogTitle>{t("dialogs.export.title")}</DialogTitle>
         </DialogHeader>
         <Tabs defaultValue="local" className="flex w-full flex-1 flex-col">
           <TabsList className="bg-muted h-10 w-full justify-start p-0">
@@ -62,7 +62,10 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                   <div className="space-y-2">
                     <Label>Настройки вывода</Label>
                     <div className="grid grid-cols-[1fr,auto] items-center gap-2">
-                      <Input placeholder="Имя" defaultValue={t('project.untitledExport', { number: 1 })} />
+                      <Input
+                        placeholder="Имя"
+                        defaultValue={t("project.untitledExport", { number: 1 })}
+                      />
                       <Button variant="ghost" size="icon">
                         <Info className="h-4 w-4" />
                       </Button>

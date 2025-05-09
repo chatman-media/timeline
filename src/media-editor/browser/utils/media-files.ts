@@ -1,11 +1,11 @@
 import { nanoid } from "nanoid"
-import i18n from "@/i18n"
 
+import i18n from "@/i18n"
+import i18next from "@/i18n"
 import { getCameraModel } from "@/lib/utils"
 import { calculateTimeRanges } from "@/lib/video-utils"
 import type { MediaFile, Track } from "@/types/media"
 import type { TimeRange } from "@/types/time-range"
-import i18next from "@/i18n"
 
 // Типы для улучшения типизации
 interface VideoStream {
@@ -119,7 +119,7 @@ export function getTopDateWithRemainingFiles(
 export const groupFilesByDate = (media: MediaFile[]): DateGroup[] => {
   // Получаем текущий язык из i18next
   const currentLanguage = i18next.language || "ru"
-  const noDateText = i18next.t('dates.noDate', { defaultValue: "Без даты" })
+  const noDateText = i18next.t("dates.noDate", { defaultValue: "Без даты" })
 
   // Определяем локаль для форматирования даты
   const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
@@ -360,7 +360,10 @@ export const createTracksFromFiles = (
     // Создаем или используем существующий сектор для всех файлов дня
     const sector: Sector = existingSector || {
       id: nanoid(),
-      name: i18n.t('timeline.section.sectorName', { date: formattedDate, defaultValue: `Сектор ${formattedDate}` }),
+      name: i18n.t("timeline.section.sectorName", {
+        date: formattedDate,
+        defaultValue: `Сектор ${formattedDate}`,
+      }),
       tracks: [],
       timeRanges: [],
       startTime: 0,
@@ -665,7 +668,10 @@ export const createTracksFromFiles = (
 
         // Всегда используем формат "Камера X" для видео треков
         const nextCameraNumber = maxCameraNumber + 1
-        const trackName = i18n.t('timeline.tracks.cameraWithNumber', { number: nextCameraNumber, defaultValue: `Камера ${nextCameraNumber}` })
+        const trackName = i18n.t("timeline.tracks.cameraWithNumber", {
+          number: nextCameraNumber,
+          defaultValue: `Камера ${nextCameraNumber}`,
+        })
         // Всегда устанавливаем cameraName в формате "Камера X"
         const trackCameraName = trackName
 
@@ -755,7 +761,10 @@ export const createTracksFromFiles = (
     // Создаем или используем существующий сектор для всех файлов дня
     const sector: Sector = existingSector || {
       id: nanoid(),
-      name: i18n.t('timeline.section.sectorName', { date: formattedDate, defaultValue: `Сектор ${formattedDate}` }),
+      name: i18n.t("timeline.section.sectorName", {
+        date: formattedDate,
+        defaultValue: `Сектор ${formattedDate}`,
+      }),
       tracks: [],
       timeRanges: [],
       startTime: 0,
@@ -844,7 +853,10 @@ export const createTracksFromFiles = (
 
         // Создаем новую дорожку
         const nextAudioNumber = maxAudioIndex + 1
-        const audioTrackName = i18n.t('timeline.tracks.audioWithNumber', { number: nextAudioNumber, defaultValue: `Аудио ${nextAudioNumber}` })
+        const audioTrackName = i18n.t("timeline.tracks.audioWithNumber", {
+          number: nextAudioNumber,
+          defaultValue: `Аудио ${nextAudioNumber}`,
+        })
 
         sector.tracks.push({
           id: nanoid(),

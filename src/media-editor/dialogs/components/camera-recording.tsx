@@ -221,19 +221,19 @@ export function CameraRecording() {
           aria-describedby="camera-preview-description"
         >
           <DialogTitle className="border-b border-[#333] p-4 text-lg font-semibold">
-            {t('dialogs.cameraPreview.title')}
+            {t("dialogs.cameraPreview.title")}
           </DialogTitle>
 
           <div className="p-4">
             <DialogDescription id="camera-preview-description" className="mb-4 text-sm text-white">
-              {t('dialogs.cameraPreview.description')}
+              {t("dialogs.cameraPreview.description")}
             </DialogDescription>
 
             {/* Предпросмотр видео */}
             <div className="relative mx-auto mb-6 flex h-[320px] w-full max-w-[400px] items-center justify-center rounded-md border border-gray-800 bg-black">
               {!videoRef.current?.src && (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                  {t('dialogs.cameraPreview.loadingVideo')}
+                  {t("dialogs.cameraPreview.loadingVideo")}
                 </div>
               )}
               <video
@@ -255,18 +255,20 @@ export function CameraRecording() {
 
             {/* Информация о видео */}
             <div className="mb-6 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2">
-              <div className="text-sm text-gray-300">{t('dialogs.cameraPreview.fileName')}:</div>
+              <div className="text-sm text-gray-300">{t("dialogs.cameraPreview.fileName")}:</div>
               <div className="text-sm">{recordedFileName}</div>
 
-              <div className="text-sm text-gray-300">{t('dialogs.cameraPreview.duration')}:</div>
-              <div className="text-sm">{videoDuration.toFixed(2)} {t('dialogs.cameraPreview.seconds')}</div>
+              <div className="text-sm text-gray-300">{t("dialogs.cameraPreview.duration")}:</div>
+              <div className="text-sm">
+                {videoDuration.toFixed(2)} {t("dialogs.cameraPreview.seconds")}
+              </div>
 
-              <div className="text-sm text-gray-300">{t('dialogs.cameraPreview.resolution')}:</div>
+              <div className="text-sm text-gray-300">{t("dialogs.cameraPreview.resolution")}:</div>
               <div className="text-sm">
                 {videoWidth}x{videoHeight}
               </div>
 
-              <div className="text-sm text-gray-300">{t('dialogs.cameraPreview.fileSize')}:</div>
+              <div className="text-sm text-gray-300">{t("dialogs.cameraPreview.fileSize")}:</div>
               <div className="text-sm">
                 {(recordedBlob?.size || 0) / 1024 / 1024 < 1
                   ? `${((recordedBlob?.size || 0) / 1024).toFixed(2)} КБ`
@@ -281,14 +283,16 @@ export function CameraRecording() {
                 className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
                 onClick={handleClosePreview}
               >
-                {t('dialogs.cameraPreview.cancel')}
+                {t("dialogs.cameraPreview.cancel")}
               </Button>
               <Button
                 className="bg-green-600 hover:bg-green-700"
                 onClick={handleSaveVideo}
                 disabled={isSaving}
               >
-                {isSaving ? t('dialogs.cameraPreview.saving') : t('dialogs.cameraPreview.saveVideo')}
+                {isSaving
+                  ? t("dialogs.cameraPreview.saving")
+                  : t("dialogs.cameraPreview.saveVideo")}
               </Button>
             </div>
           </div>

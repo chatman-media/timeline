@@ -113,6 +113,7 @@
     },
     "cameraCapture": {
       "title": "Запись с камеры",
+      "description": "Запись видео с камеры с выбранным разрешением и частотой кадров.",
       "selectCamera": "Выберите камеру:",
       "selectMicrophone": "Выберите микрофон:",
       "selectResolution": "Выберите разрешение:",
@@ -138,7 +139,8 @@
       "supportedFrameRates": "Поддерживается: {{frameRates}} fps",
       "retryRequest": "Повторить запрос",
       "retry": "Повторить",
-      "currentResolution": "Текущее разрешение: {{width}}x{{height}}"
+      "currentResolution": "Текущее разрешение: {{width}}x{{height}}",
+      "requestedResolution": "Запрошено: {{resolution}}"
     },
     "cameraPreview": {
       "title": "Предпросмотр записи",

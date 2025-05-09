@@ -199,7 +199,7 @@ export const userSettingsMachine = createMachine(
 
             // Обновляем язык в i18next
             try {
-              import('i18next').then(i18n => {
+              import("i18next").then((i18n) => {
                 i18n.default.changeLanguage(language)
                 console.log("Language initialized in i18next:", language)
 
@@ -375,7 +375,7 @@ export const userSettingsMachine = createMachine(
 
           // Обновляем язык в i18next
           try {
-            import('i18next').then(i18n => {
+            import("i18next").then((i18n) => {
               i18n.default.changeLanguage(event.language)
               console.log("Language changed in i18next:", event.language)
 
@@ -423,7 +423,10 @@ export const userSettingsMachine = createMachine(
             console.log("Verified saved language value in StorageService:", savedValue)
 
             if (typeof window !== "undefined") {
-              console.log("Verified saved language value in localStorage:", localStorage.getItem("app-language"))
+              console.log(
+                "Verified saved language value in localStorage:",
+                localStorage.getItem("app-language"),
+              )
             }
           } catch (error) {
             console.error(`Error saving language:`, error)

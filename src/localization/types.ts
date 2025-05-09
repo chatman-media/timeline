@@ -17,7 +17,7 @@ export interface UITranslations {
     userSettings: string
     export: string
   }
-  
+
   // Диалоги
   dialogs: {
     // Настройки проекта
@@ -30,7 +30,7 @@ export interface UITranslations {
       cancel: string
       save: string
     }
-    
+
     // Настройки пользователя
     userSettings: {
       title: string
@@ -38,7 +38,7 @@ export interface UITranslations {
       cancel: string
       save: string
     }
-    
+
     // Экспорт
     export: {
       title: string
@@ -48,7 +48,7 @@ export interface UITranslations {
       dvd: string
     }
   }
-  
+
   // Шаблоны
   templates: {
     // Общие названия шаблонов

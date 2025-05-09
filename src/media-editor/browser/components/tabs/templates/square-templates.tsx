@@ -1278,7 +1278,7 @@ export const squareTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         {/* Большой экран (левый нижний) */}
         <div
-          className="absolute left-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#23262b",
             width: "50%",
@@ -1334,7 +1334,7 @@ export const squareTemplates: MediaTemplate[] = [
 
         {/* Нижний правый нижний экран */}
         <div
-          className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#2a2e36",
             width: "25%",
@@ -1431,7 +1431,7 @@ export const squareTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         {/* Большой экран (левый верхний) */}
         <div
-          className="absolute left-0 top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#23262b",
             width: "50%",
@@ -1459,7 +1459,7 @@ export const squareTemplates: MediaTemplate[] = [
 
         {/* Нижний правый экран */}
         <div
-          className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#23262b",
             width: "50%",
@@ -1585,7 +1585,7 @@ export const squareTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         {/* Большой экран (правый верхний) */}
         <div
-          className="absolute right-0 top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#23262b",
             width: "50%",
@@ -1613,7 +1613,7 @@ export const squareTemplates: MediaTemplate[] = [
 
         {/* Нижний правый экран */}
         <div
-          className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#23262b",
             width: "50%",
