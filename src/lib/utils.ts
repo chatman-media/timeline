@@ -106,13 +106,14 @@ export function formatTimeWithMilliseconds(
 }
 
 export function formatDate(timestamp: number): string {
-  // Получаем текущий язык из i18next
+  // Получаем текущий язык из localStorage или используем значение по умолчанию
   let locale = "ru-RU"
   try {
     // Проверяем, что мы на клиенте
     if (typeof window !== "undefined") {
-      const i18next = require("i18next").default
-      const currentLanguage = i18next.language || "ru"
+      // Сначала пробуем получить язык из localStorage
+      const storedLanguage = localStorage.getItem("app-language")
+      const currentLanguage = storedLanguage || "ru"
       locale = currentLanguage === "en" ? "en-US" : "ru-RU"
     }
   } catch (error) {

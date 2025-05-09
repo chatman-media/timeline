@@ -37,10 +37,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Парсим форму
     const { fields, files } = await parseForm(req)
-    const videoFile = files.file as formidable.File
+    const audioFile = files.file as formidable.File
     const fileName = fields.fileName as string
 
-    if (!videoFile || !fileName) { 
+    if (!audioFile || !fileName) {
       return res.status(400).json({ error: "Missing required fields" })
     }
 
@@ -57,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await fs.mkdir(mediaDir, { recursive: true })
 
     // Получаем временный путь к загруженному файлу
-    const tempFilePath = (videoFile as any).filepath
+    const tempFilePath = (audioFile as any).filepath
 
     // Копируем файл из временной директории в целевую
     await fs.copyFile(tempFilePath, filePath)
@@ -75,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       createdAt: new Date().toISOString(),
     })
   } catch (error) {
-    console.error("Error saving recording:", error)
-    return res.status(500).json({ error: "Failed to save recording" })
+    console.error("Error saving audio recording:", error)
+    return res.status(500).json({ error: "Failed to save audio recording" })
   }
 }

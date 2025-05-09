@@ -99,6 +99,13 @@
       "resolution": "Resolution:",
       "frameRate": "Frame Rate:",
       "colorSpace": "Color Space:",
+      "customSize": "Custom Size:",
+      "lockAspectRatio": "Lock aspect ratio",
+      "unlockAspectRatio": "Unlock aspect ratio",
+      "aspectRatioLocked": "Aspect ratio {{ratio}} locked",
+      "aspectRatioUnlocked": "Aspect ratio {{ratio}} unlocked",
+      "customResolution": "Current resolution: {{width}}x{{height}}",
+      "aspectRatioValue": "Aspect ratio: {{ratio}}",
       "cancel": "Cancel",
       "save": "OK",
       "aspectRatioLabels": {

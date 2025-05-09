@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -701,7 +701,7 @@ export function CameraCaptureDialog({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent
-        className="w-full max-w-[1000px] overflow-hidden border-[#333] bg-[#18181B] p-0 text-white"
+        className="w-full max-w-[70%] overflow-hidden border-[#333] bg-[#18181B] p-0 text-white"
         aria-describedby="camera-capture-description"
       >
         <DialogTitle className="border-b border-[#333] p-4 text-lg font-semibold">
@@ -740,15 +740,7 @@ export function CameraCaptureDialog({
 
           {permissionStatus === "granted" && (
             <>
-              <DialogDescription
-                id="camera-capture-description"
-                className="mb-4 text-sm text-white"
-              >
-                {t("dialogs.cameraCapture.description", {
-                  defaultValue:
-                    "Record video from your camera with selected resolution and frame rate.",
-                })}
-              </DialogDescription>
+
 
               {/* Двухколоночная разметка: видео слева, настройки справа */}
               <div className="flex flex-col gap-8 md:flex-row">

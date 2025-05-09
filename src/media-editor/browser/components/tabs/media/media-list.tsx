@@ -16,7 +16,7 @@ import {
   StatusBar,
   useMedia,
 } from "@/media-editor/browser"
-import { CameraCaptureDialog } from "@/media-editor/dialogs"
+import { CameraCaptureDialog, VoiceRecordDialog } from "@/media-editor/dialogs"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
@@ -149,6 +149,7 @@ export const MediaFileList = memo(function MediaFileList({
   const { addMediaFiles: timelineAddMediaFiles } = useTimeline()
 
   const [isRecordingModalOpen, setIsRecordingModalOpen] = useState(false)
+  const [isVoiceRecordModalOpen, setIsVoiceRecordModalOpen] = useState(false)
 
   // Загружаем сохраненные настройки
   const savedSettings = loadSavedSettings()
@@ -163,6 +164,7 @@ export const MediaFileList = memo(function MediaFileList({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">(
     (savedSettings?.sortOrder as "asc" | "desc") || "desc",
   )
+  const [searchQuery, setSearchQuery] = useState<string>("")
 
   // Сохраняем настройки при их изменении
   useEffect(() => {
@@ -401,14 +403,9 @@ export const MediaFileList = memo(function MediaFileList({
     setIsRecordingModalOpen(true)
   }
 
-  const handleRecordScreen = () => {
-    console.log("Запись экрана")
-    // В будущем здесь будет логика для записи экрана
-  }
-
   const handleRecordVoice = () => {
-    console.log("Запись голоса")
-    // В будущем здесь будет логика для записи голоса
+    console.log("Открытие модального окна записи голоса")
+    setIsVoiceRecordModalOpen(true)
   }
 
   const handleRecordedVideo = useCallback((blob: Blob, fileName: string) => {
@@ -465,8 +462,8 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Фильтрация и сортировка
   const filteredAndSortedMedia = useMemo(() => {
-    // Сначала фильтрация
-    const filtered =
+    // Сначала фильтрация по типу
+    let filtered =
       filterType === "all"
         ? media
         : media.filter((file: MediaFile) => {
@@ -478,6 +475,24 @@ export const MediaFileList = memo(function MediaFileList({
             return true
           return false
         })
+
+    // Затем фильтрация по поисковому запросу
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter(
+        (file) =>
+          file.name.toLowerCase().includes(query) ||
+          String(file.probeData?.format.tags?.title || "")
+            .toLowerCase()
+            .includes(query) ||
+          String(file.probeData?.format.tags?.artist || "")
+            .toLowerCase()
+            .includes(query) ||
+          String(file.probeData?.format.tags?.album || "")
+            .toLowerCase()
+            .includes(query)
+      )
+    }
 
     // Затем сортировка
     return [...filtered].sort((a: MediaFile, b: MediaFile) => {
@@ -554,7 +569,7 @@ export const MediaFileList = memo(function MediaFileList({
       const timeB = b.startTime || 0
       return orderMultiplier * (timeB - timeA)
     })
-  }, [media, filterType, sortBy, sortOrder])
+  }, [media, filterType, sortBy, sortOrder, searchQuery])
 
   // Группируем файлы
   const groupedFiles = useMemo<GroupedMediaFiles[]>(() => {
@@ -937,7 +952,6 @@ export const MediaFileList = memo(function MediaFileList({
               onClick={() => {
                 // Фильтруем файлы - изображения не добавляем на таймлайн
                 const nonImageFiles = group.files.filter((file) => !file.isImage)
-                const imageFiles = group.files.filter((file) => file.isImage)
 
                 // Добавляем видео и аудио файлы на таймлайн
                 if (nonImageFiles.length > 0) {
@@ -1010,6 +1024,8 @@ export const MediaFileList = memo(function MediaFileList({
       <MediaToolbar
         viewMode={viewMode as ViewMode}
         onViewModeChange={handleViewModeChange}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
         onImport={handleImport}
         onImportFile={handleImportFile}
         onImportFolder={handleImportFolder}
@@ -1023,7 +1039,6 @@ export const MediaFileList = memo(function MediaFileList({
         currentGroupBy={groupBy}
         onRecord={handleRecord}
         onRecordCamera={handleRecordCamera}
-        onRecordScreen={handleRecordScreen}
         onRecordVoice={handleRecordVoice}
         onIncreaseSize={handleIncreaseSize}
         onDecreaseSize={handleDecreaseSize}
@@ -1049,6 +1064,12 @@ export const MediaFileList = memo(function MediaFileList({
           isOpen={isRecordingModalOpen}
           onClose={() => setIsRecordingModalOpen(false)}
           onVideoRecorded={handleRecordedVideo}
+        />
+      )}
+      {isVoiceRecordModalOpen && (
+        <VoiceRecordDialog
+          isOpen={isVoiceRecordModalOpen}
+          onClose={() => setIsVoiceRecordModalOpen(false)}
         />
       )}
     </div>

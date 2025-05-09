@@ -10,7 +10,6 @@ import {
   LayoutList,
   ListFilterPlus,
   Mic,
-  Monitor,
   SortDesc,
   Webcam,
   ZoomIn,
@@ -28,12 +27,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 interface MediaToolbarProps {
   viewMode: "list" | "grid" | "thumbnails"
   onViewModeChange: (mode: "list" | "grid" | "thumbnails") => void
+  searchQuery?: string
+  setSearchQuery?: (query: string) => void
   onImport: () => void
   onImportFile: () => void
   onImportFolder: () => void
@@ -47,7 +49,6 @@ interface MediaToolbarProps {
   currentGroupBy?: string
   onRecord?: () => void
   onRecordCamera?: () => void
-  onRecordScreen?: () => void
   onRecordVoice?: () => void
   onIncreaseSize?: () => void
   onDecreaseSize?: () => void
@@ -60,6 +61,8 @@ interface MediaToolbarProps {
  *
  * @param viewMode - Режим просмотра (список, сетка, миниатюры)
  * @param onViewModeChange - Callback для изменения режима просмотра
+ * @param searchQuery - Текущий запрос поиска
+ * @param setSearchQuery - Callback для установки запроса поиска
  * @param onImport - Callback для импорта файлов
  * @param onImportFile - Callback для импорта файлов
  * @param onImportFolder - Callback для импорта папок
@@ -73,7 +76,6 @@ interface MediaToolbarProps {
  * @param currentGroupBy - Текущий параметр группировки
  * @param onRecord - Callback для записи
  * @param onRecordCamera - Callback для записи с веб-камеры
- * @param onRecordScreen - Callback для записи экрана
  * @param onRecordVoice - Callback для записи голоса
  * @param onIncreaseSize - Callback для увеличения размера превью
  * @param onDecreaseSize - Callback для уменьшения размера превью
@@ -83,6 +85,8 @@ interface MediaToolbarProps {
 function MediaToolbarClient({
   viewMode = "thumbnails",
   onViewModeChange,
+  searchQuery = "",
+  setSearchQuery = () => {},
   onImport,
   onImportFile,
   onImportFolder,
@@ -96,7 +100,6 @@ function MediaToolbarClient({
   currentGroupBy = "none",
   onRecord = () => {},
   onRecordCamera = () => {},
-  onRecordScreen = () => {},
   onRecordVoice = () => {},
   onIncreaseSize = () => {},
   onDecreaseSize = () => {},
@@ -135,7 +138,7 @@ function MediaToolbarClient({
 
   return (
     <div className="flex items-center justify-between p-1">
-      <div className="flex items-center gap-2">
+      <div className="flex w-[calc(100%-100px)] items-center gap-2">
         <Button
           variant="outline"
           size="sm"
@@ -203,20 +206,6 @@ function MediaToolbarClient({
                   className="cursor-pointer rounded-sm p-1 hover:bg-[#efefef] dark:hover:bg-[#dddbdd]/25"
                   onClick={(e) => {
                     e.stopPropagation()
-                    onRecordScreen()
-                  }}
-                >
-                  <Monitor size={12} />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>{t("browser.media.recordScreen")}</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div
-                  className="cursor-pointer rounded-sm p-1 hover:bg-[#efefef] dark:hover:bg-[#dddbdd]/25"
-                  onClick={(e) => {
-                    e.stopPropagation()
                     onRecordVoice()
                   }}
                 >
@@ -227,6 +216,17 @@ function MediaToolbarClient({
             </Tooltip>
           </div>
         </Button>
+
+        <Input
+          type="search"
+          placeholder={t("common.search")}
+          className="mr-5 h-7 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500"
+          style={{
+            backgroundColor: "transparent",
+          }}
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <div className="flex items-center space-x-2">
