@@ -1100,7 +1100,7 @@ export const squareTemplates: MediaTemplate[] = [
         <div
           className="absolute inset-0 z-10 bg-gray-400"
           style={{
-            clipPath: "polygon(0 0, 1% 0, 100% 99%, 100% 100%, 99% 100%, 0 1%)",
+            clipPath: "polygon(0 0, 0.5% 0, 100% 99.5%, 100% 100%, 99.5% 100%, 0 0.5%)",
             opacity: 0.3,
           }}
         />
@@ -1109,7 +1109,7 @@ export const squareTemplates: MediaTemplate[] = [
         <div
           className="absolute inset-0 z-10 bg-gray-400"
           style={{
-            clipPath: "polygon(99% 0, 100% 0, 100% 1%, 1% 100%, 0 100%, 0 99%)",
+            clipPath: "polygon(99.5% 0, 100% 0, 100% 0.5%, 0.5% 100%, 0 100%, 0 99.5%)",
             opacity: 0.3,
           }}
         />

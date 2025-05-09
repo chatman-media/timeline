@@ -1,4 +1,4 @@
-import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles } from "lucide-react"
+import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles, Type } from "lucide-react"
 import { memo, useEffect, useState } from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -8,6 +8,7 @@ import {
   FilterList,
   MediaFileList,
   MusicFileList,
+  SubtitlesList,
   TemplateList,
   TransitionsList,
 } from "."
@@ -84,10 +85,10 @@ export const Browser = memo(function Browser() {
           <Blend className="h-4 w-4" />
           <span>Фильтры</span>
         </TabsTrigger>
-        {/* <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
+        <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
           <Type className="h-4 w-4" />
           <span>Титры</span>
-        </TabsTrigger> */}
+        </TabsTrigger>
         <TabsTrigger value="templates" className={TAB_TRIGGER_STYLES}>
           <Layout className="h-4 w-4" />
           <span>Шаблоны</span>
@@ -105,9 +106,9 @@ export const Browser = memo(function Browser() {
       <TabsContent value="effects" className="bg-secondary m-0 flex-1 overflow-hidden">
         <EffectList />
       </TabsContent>
-      {/* <TabsContent value="subtitles" className="bg-secondary m-0 flex-1 overflow-hidden">
+      <TabsContent value="subtitles" className="bg-secondary m-0 flex-1 overflow-hidden">
         <SubtitlesList />
-      </TabsContent> */}
+      </TabsContent>
       <TabsContent value="filters" className="bg-secondary m-0 flex-1 overflow-hidden">
         <FilterList />
       </TabsContent>

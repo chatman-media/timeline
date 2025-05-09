@@ -6,6 +6,7 @@ import { usePlayerContext } from "@/media-editor/media-player"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
 import { useProject } from "@/media-editor/project-settings/project-provider"
 
+import { getTemplateLabels } from "./template-labels"
 import { MediaTemplate, TEMPLATE_MAP } from "./templates"
 
 function mapAspectLabelToGroup(label: string): "landscape" | "square" | "portrait" {
@@ -105,7 +106,22 @@ export function TemplateList() {
 
   const filteredTemplates = templates.filter((template) => {
     const searchLower = searchQuery.toLowerCase()
-    return template.id.toLowerCase().includes(searchLower)
+
+    // Поиск по ID
+    if (template.id.toLowerCase().includes(searchLower)) {
+      return true
+    }
+
+    // Поиск по локализованным названиям
+    const labels = getTemplateLabels(template.id)
+    if (labels) {
+      if (labels.ru.toLowerCase().includes(searchLower) ||
+          labels.en.toLowerCase().includes(searchLower)) {
+        return true
+      }
+    }
+
+    return false
   })
 
   // Группируем шаблоны по количеству экранов
@@ -128,11 +144,16 @@ export function TemplateList() {
 
   const handleTemplateClick = (template: MediaTemplate) => {
     setActiveTemplate(template)
-    console.log("Applying template:", template.id)
+
+    // Получаем локализованное название шаблона
+    const labels = getTemplateLabels(template.id)
+    const templateName = labels ? labels.ru : template.id
+
+    console.log("Applying template:", template.id, templateName)
 
     // Проверяем, есть ли параллельные видео для применения шаблона
     if (parallelVideos.length > 0) {
-      console.log(`Применяем шаблон ${template.id} к ${parallelVideos.length} параллельным видео`)
+      console.log(`Применяем шаблон "${templateName}" (${template.id}) к ${parallelVideos.length} параллельным видео`)
 
       // Проверяем, сколько экранов в шаблоне и сколько у нас видео
       const screensCount = template.screens || 1
@@ -187,13 +208,21 @@ export function TemplateList() {
                   style={{ "--preview-size": `${previewSize}px` } as React.CSSProperties}
                 >
                   {groupedTemplates[screenCount].map((template) => (
-                    <TemplatePreview
-                      key={template.id}
-                      template={template}
-                      onClick={() => handleTemplateClick(template)}
-                      size={previewSize}
-                      dimensions={currentDimensions}
-                    />
+                    <div key={template.id} className="flex flex-col items-center">
+                      <TemplatePreview
+                        template={template}
+                        onClick={() => handleTemplateClick(template)}
+                        size={previewSize}
+                        dimensions={currentDimensions}
+                      />
+                      <div
+                        className="mt-1 truncate text-center text-xs text-gray-400"
+                        title={getTemplateLabels(template.id)?.ru || template.id}
+                        style={{ width: `${previewSize}px` }}
+                      >
+                        {getTemplateLabels(template.id)?.ru || template.id}
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
