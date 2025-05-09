@@ -87,7 +87,7 @@ export function TimelineMarks({
   return (
     <div className="flex">
       <div className="sticky left-0 z-10 flex h-8 min-w-[120px] items-center justify-center bg-[#014a4f] text-white">
-        <span>Время</span>
+        {/* <span>Время</span> */}
       </div>
       <div className={`relative h-8 w-full ${isActive ? "" : "bg-muted/50"}`}>{marks}</div>
     </div>

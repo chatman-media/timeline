@@ -1,5 +1,6 @@
 import { ZoomIn, ZoomOut } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,6 +17,7 @@ interface FilterPreviewProps {
 }
 
 const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
+  const { i18n } = useTranslation()
   const [isHovering, setIsHovering] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>(null)
@@ -83,13 +85,14 @@ const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
         />
       </div>
       <div className="mt-1 text-xs text-gray-300">
-        {filters.find((f) => f.id === filter.id)?.labels.ru}
+        {filters.find((f) => f.id === filter.id)?.labels[i18n.language === 'en' ? 'en' : 'ru']}
       </div>
     </div>
   )
 }
 
 export function FilterList() {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
   const [, setActiveFilter] = useState<VideoFilter | null>(null)
 
@@ -121,7 +124,7 @@ export function FilterList() {
       <div className="flex items-center justify-between p-1">
         <Input
           type="search"
-          placeholder="Поиск"
+          placeholder={t('common.search')}
           className="mr-5 h-7 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500"
           style={{
             backgroundColor: "transparent",
@@ -148,7 +151,7 @@ export function FilterList() {
                     <ZoomOut size={16} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Уменьшить превью</TooltipContent>
+                <TooltipContent>{t('browser.toolbar.zoomOut')}</TooltipContent>
               </Tooltip>
 
               <Tooltip>
@@ -166,7 +169,7 @@ export function FilterList() {
                     <ZoomIn size={16} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Увеличить превью</TooltipContent>
+                <TooltipContent>{t('browser.toolbar.zoomIn')}</TooltipContent>
               </Tooltip>
             </div>
           </TooltipProvider>
@@ -178,7 +181,7 @@ export function FilterList() {
           <div className="flex h-full items-center justify-center text-gray-500" />
         ) : filteredFilters.length === 0 ? (
           <div className="flex h-full items-center justify-center text-gray-500">
-            Фильтры не найдены
+            {t('browser.tabs.filters')} {t('common.notFound')}
           </div>
         ) : (
           <div

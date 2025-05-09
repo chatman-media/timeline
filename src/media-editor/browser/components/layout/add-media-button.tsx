@@ -1,5 +1,6 @@
 import { Check, Plus } from "lucide-react"
 import { memo } from "react"
+import { useTranslation } from "react-i18next"
 
 import { MediaFile } from "@/types/media"
 
@@ -29,6 +30,7 @@ export const AddMediaButton = memo(function AddMediaButton({
   size = 60,
   onAddMedia,
 }: AddMediaButtonProps) {
+  const { t } = useTranslation()
   if (!onAddMedia) return null
 
   const iconSize = size > 100 ? "h-4 w-4" : "h-3 w-3"
@@ -43,7 +45,7 @@ export const AddMediaButton = memo(function AddMediaButton({
         e.stopPropagation()
         if (!isAdded) onAddMedia(e, file)
       }}
-      title={isAdded ? "Добавлено" : "Добавить"}
+      title={isAdded ? t('browser.media.added') : t('browser.media.add')}
     >
       {isAdded ? (
         <Check className={iconSize} strokeWidth={3} />

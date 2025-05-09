@@ -14,6 +14,7 @@ import {
   VolumeX,
 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { EntryPointIcon } from "@/components/icons/entry-point"
 import { ExitPointIcon } from "@/components/icons/exit-point"
@@ -30,6 +31,7 @@ interface PlayerControlsProps {
 }
 
 export function PlayerControls({ currentTime }: PlayerControlsProps) {
+  const { t } = useTranslation()
   const { tracks, activeTrackId } = useTimeline()
   const {
     isPlaying,
@@ -670,7 +672,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title="Первый кадр"
+              title={t('timeline.controls.firstFrame')}
               onClick={handleChevronFirst}
               disabled={isFirstFrame || isPlaying || isChangingCamera}
             >
@@ -681,7 +683,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title="Предыдущий кадр"
+              title={t('timeline.controls.previousFrame')}
               onClick={handleSkipBackward}
               disabled={isFirstFrame || isPlaying || isChangingCamera}
             >
@@ -692,7 +694,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title={isPlaying ? "Пауза" : "Воспроизвести"}
+              title={isPlaying ? t('timeline.controls.pause') : t('timeline.controls.play')}
               onClick={handlePlayPause}
               disabled={isChangingCamera}
             >
@@ -703,7 +705,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title="Следующий кадр"
+              title={t('timeline.controls.nextFrame')}
               onClick={handleSkipForward}
               disabled={isLastFrame || isPlaying || isChangingCamera}
             >
@@ -714,7 +716,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title="Последний кадр"
+              title={t('timeline.controls.lastFrame')}
               onClick={handleChevronLast}
               disabled={isLastFrame || isPlaying || isChangingCamera}
             >
@@ -725,7 +727,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className={"h-8 w-8 cursor-pointer"}
               variant="ghost"
               size="icon"
-              title={isRecording ? "Остановить запись" : "Начать запись"}
+              title={isRecording ? t('timeline.controls.stopRecord') : t('timeline.controls.record')}
               onClick={handleRecordToggle}
               disabled={isChangingCamera} // Отключаем кнопку во время переключения камеры
             >
@@ -745,7 +747,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
-              title="Точка входа"
+              title={t('timeline.controls.entryPoint')}
               onClick={() => {}}
             >
               <EntryPointIcon className="h-4 w-4" />
@@ -754,7 +756,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
-              title="Точка выхода"
+              title={t('timeline.controls.exitPoint')}
               onClick={() => {}}
             >
               <ExitPointIcon className="h-4 w-4" />
@@ -763,7 +765,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
-              title="Настройки"
+              title={t('timeline.controls.settings')}
               onClick={() => {}}
             >
               <MonitorCog className="h-4 w-4" />
@@ -773,7 +775,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
-              title="Сделать снимок"
+              title={t('timeline.controls.takeSnapshot')}
               onClick={() => {}}
             >
               <Camera className="h-4 w-4" />
@@ -785,7 +787,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 className={`h-6 w-6 cursor-pointer ${isChangingCamera ? "animate-pulse" : ""}`}
                 variant="ghost"
                 size="icon"
-                title={`Переключить камеру (${parallelVideos.findIndex((v) => v.id === video?.id) + 1}/${parallelVideos.length})`}
+                title={`${t('timeline.controls.switchCamera')} (${parallelVideos.findIndex((v) => v.id === video?.id) + 1}/${parallelVideos.length})`}
                 onClick={handleSwitchCamera}
                 disabled={isChangingCamera}
               >
@@ -815,7 +817,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 className="h-6 w-6 cursor-pointer"
                 variant="ghost"
                 size="icon"
-                title="Сбросить шаблон"
+                title={t('timeline.controls.resetTemplate')}
                 onClick={handleResetTemplate}
               >
                 <ScreenShare className="h-4 w-4" />
@@ -827,7 +829,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 className="h-6 w-6 cursor-pointer"
                 variant="ghost"
                 size="icon"
-                title={volume === 0 ? "Включить звук" : "Выключить звук"}
+                title={volume === 0 ? t('timeline.controls.unmuteAudio') : t('timeline.controls.muteAudio')}
                 onClick={handleToggleMute}
               >
                 {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
@@ -858,7 +860,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-6 w-6 cursor-pointer"
               variant="ghost"
               size="icon"
-              title={isFullscreen ? "Выйти из полноэкранного режима" : "Полноэкранный режим"}
+              title={isFullscreen ? t('timeline.controls.exitFullscreen') : t('timeline.controls.fullscreen')}
               onClick={handleFullscreen}
             >
               <Maximize2 className="h-4 w-4" />

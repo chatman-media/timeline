@@ -1,4 +1,5 @@
 import { memo, useCallback, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 
@@ -176,6 +177,7 @@ export const BrowserTabTemplate = memo(function BrowserTabTemplate<T extends Bro
 
   // Рендеринг содержимого
   const renderContent = useCallback(() => {
+    const { t } = useTranslation()
     const grouped = groupedItems()
     const viewMode = settings.viewMode || "grid"
 
@@ -186,7 +188,7 @@ export const BrowserTabTemplate = memo(function BrowserTabTemplate<T extends Bro
     if (Object.values(grouped).flat().length === 0) {
       return (
         <div className="flex h-full items-center justify-center text-gray-500">
-          Элементы не найдены
+          {t('common.noResults')}
         </div>
       )
     }

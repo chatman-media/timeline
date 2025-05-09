@@ -1,4 +1,5 @@
 import { CopyPlus } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -37,6 +38,7 @@ export function StatusBar({
   sortedDates,
   addedFiles,
 }: StatusBarProps) {
+  const { t } = useTranslation()
   const addedFilesSet = new Set(addedFiles.map((file) => file.path))
   const { remainingVideoCount, remainingAudioCount, allFilesAdded } = getRemainingMediaCounts(
     media,
@@ -53,10 +55,10 @@ export function StatusBar({
               variant="ghost"
               size="sm"
               className="bg-secondary flex h-6 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1] dark:hover:text-black"
-              title="Добавить все видео"
+              title={t('browser.media.addAllVideo')}
               onClick={onAddAllVideoFiles}
             >
-              {remainingVideoCount} видео
+              {remainingVideoCount} {t('browser.media.video')}
               <CopyPlus size={10} className="" />
             </Button>
           )}
@@ -65,10 +67,10 @@ export function StatusBar({
               variant="ghost"
               size="sm"
               className="bg-secondary flex h-6 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1] dark:hover:text-black"
-              title="Добавить все аудио"
+              title={t('browser.media.addAllAudio')}
               onClick={onAddAllAudioFiles}
             >
-              {remainingAudioCount} аудио
+              {remainingAudioCount} {t('browser.media.audio')}
               <CopyPlus size={10} className="" />
             </Button>
           )}
@@ -89,12 +91,12 @@ export function StatusBar({
             variant="ghost"
             size="sm"
             className="bg-secondary flex h-6 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1] dark:hover:text-black"
-            title={`Добавить видео за ${topDateWithRemainingFiles.date}`}
+            title={t('browser.media.addDate') + `: ${topDateWithRemainingFiles.date}`}
             onClick={() => {
               onAddDateFiles(topDateWithRemainingFiles.files)
             }}
           >
-            {`${topDateWithRemainingFiles.remainingFiles.length} видео ${topDateWithRemainingFiles.date}`}
+            {`${topDateWithRemainingFiles.remainingFiles.length} ${t('browser.media.video')} ${topDateWithRemainingFiles.date}`}
             <CopyPlus size={10} className="" />
           </Button>
         </div>
@@ -102,17 +104,17 @@ export function StatusBar({
       <div className="flex flex-col items-end justify-center gap-0 text-xs">
         {allFilesAdded ? (
           <div className="flex items-center gap-1 px-2 font-medium text-[#49a293]">
-            <span>Все файлы добавлены</span>
+            <span>{t('common.allFilesAdded')}</span>
           </div>
         ) : (
           <Button
             variant="ghost"
             size="sm"
             className="bg-secondary flex h-6 cursor-pointer items-center gap-1 rounded-sm px-2 text-xs hover:bg-[#38dacac3] dark:hover:bg-[#35d1c1] dark:hover:text-black"
-            title="Добавить все файлы"
+            title={t('browser.media.addAll')}
             onClick={onAddAllFiles}
           >
-            <span className="px-1 text-xs">Добавить все</span>
+            <span className="px-1 text-xs">{t('browser.media.addAll')}</span>
             <CopyPlus size={10} className="" />
           </Button>
         )}

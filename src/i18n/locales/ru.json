@@ -1,0 +1,439 @@
+{
+  "common": {
+    "add": "Добавить",
+    "remove": "Удалить",
+    "edit": "Редактировать",
+    "save": "Сохранить",
+    "cancel": "Отменить",
+    "apply": "Применить",
+    "ok": "OK",
+    "yes": "Да",
+    "no": "Нет",
+    "close": "Закрыть",
+    "back": "Назад",
+    "next": "Далее",
+    "search": "Поиск",
+    "filter": "Фильтр",
+    "sort": "Сортировка",
+    "settings": "Настройки",
+    "preview": "Предпросмотр",
+    "loading": "Загрузка...",
+    "noResults": "Нет результатов",
+    "notFound": "не найдены",
+    "error": "Ошибка",
+    "success": "Успешно",
+    "warning": "Предупреждение",
+    "info": "Информация",
+    "import": "Импорт",
+    "record": "Запись",
+    "upload": "Загрузить",
+    "download": "Скачать",
+    "delete": "Удалить",
+    "create": "Создать",
+    "update": "Обновить",
+    "allFilesAdded": "Все файлы добавлены"
+  },
+  "dates": {
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "thisWeek": "На этой неделе",
+    "lastWeek": "На прошлой неделе",
+    "thisMonth": "В этом месяце",
+    "lastMonth": "В прошлом месяце",
+    "older": "Ранее",
+    "noDate": "Без даты",
+    "format": {
+      "short": "DD.MM.YYYY",
+      "long": "D MMMM YYYY",
+      "time": "HH:mm",
+      "dateTime": "DD.MM.YYYY HH:mm"
+    },
+    "months": {
+      "january": "Январь",
+      "february": "Февраль",
+      "march": "Март",
+      "april": "Апрель",
+      "may": "Май",
+      "june": "Июнь",
+      "july": "Июль",
+      "august": "Август",
+      "september": "Сентябрь",
+      "october": "Октябрь",
+      "november": "Ноябрь",
+      "december": "Декабрь"
+    },
+    "weekdays": {
+      "monday": "Понедельник",
+      "tuesday": "Вторник",
+      "wednesday": "Среда",
+      "thursday": "Четверг",
+      "friday": "Пятница",
+      "saturday": "Суббота",
+      "sunday": "Воскресенье"
+    }
+  },
+  "topNavBar": {
+    "layout": "Макет",
+    "keyboardShortcuts": "Быстрые клавиши",
+    "projectSettings": "Настройки проекта",
+    "saveChanges": "Сохранить изменения",
+    "allChangesSaved": "Все изменения сохранены",
+    "publish": "Опубликовать",
+    "publicationTasks": "Задачи Публикации",
+    "editingTasks": "Задачи монтажа",
+    "projectTasks": "Задачи Проекта",
+    "userSettings": "Настройки пользователя",
+    "export": "Экспорт",
+    "layouts": {
+      "default": "По умолчанию",
+      "options": "Опции",
+      "vertical": "Вертикальное видео",
+      "dual": "Два окна",
+      "externalDisplayRequired": "Требуется внешний монитор"
+    }
+  },
+  "dialogs": {
+    "projectSettings": {
+      "title": "Настройки проекта",
+      "aspectRatio": "Соотношение сторон:",
+      "resolution": "Разрешение:",
+      "frameRate": "Частота кадров:",
+      "colorSpace": "Цветовое пространство:",
+      "cancel": "Отменить",
+      "save": "OK",
+      "aspectRatioLabels": {
+        "widescreen": "Широкоэкранный",
+        "portrait": "Портрет",
+        "social": "Социальные сети",
+        "standard": "Стандарт",
+        "vertical": "Вертикальный",
+        "cinema": "Кинотеатр",
+        "custom": "Пользовательское"
+      }
+    },
+    "cameraCapture": {
+      "title": "Запись с камеры",
+      "selectCamera": "Выберите камеру:",
+      "selectMicrophone": "Выберите микрофон:",
+      "selectResolution": "Выберите разрешение:",
+      "selectFrameRate": "Выберите частоту кадров:",
+      "startRecording": "Начать запись",
+      "stopRecording": "Остановить запись",
+      "countdown": "Обратный отсчет:",
+      "seconds": "секунд",
+      "recordingTime": "Время записи:",
+      "noDevices": "Устройства не найдены",
+      "permissionDenied": "Доступ к камере и микрофону запрещен. Пожалуйста, разрешите доступ в настройках браузера.",
+      "deviceNotFound": "Камера или микрофон не найдены. Пожалуйста, подключите устройства и попробуйте снова.",
+      "errorAccess": "Ошибка доступа к устройствам:",
+      "unknownError": "Неизвестная ошибка при запросе доступа к устройствам",
+      "loadingCapabilities": "Загрузка возможностей устройства...",
+      "initializingCamera": "Инициализация камеры...",
+      "device": "Устройство",
+      "audioDevice": "Аудио устройство",
+      "resolution": "Разрешение",
+      "frameRate": "Частота кадров",
+      "determiningCapabilities": "Определяем возможности...",
+      "supportedResolutions": "Поддерживается: {{count}} разрешений",
+      "supportedFrameRates": "Поддерживается: {{frameRates}} fps",
+      "retryRequest": "Повторить запрос",
+      "retry": "Повторить",
+      "currentResolution": "Текущее разрешение: {{width}}x{{height}}"
+    },
+    "cameraPreview": {
+      "title": "Предпросмотр записи",
+      "description": "Просмотрите записанное видео перед сохранением. После нажатия на кнопку \"Сохранить видео\" файл будет скачан. Переместите его в папку public/media проекта для добавления на таймлайн.",
+      "loadingVideo": "Загрузка видео...",
+      "fileName": "Имя файла",
+      "duration": "Длительность",
+      "resolution": "Разрешение",
+      "fileSize": "Размер файла",
+      "cancel": "Отмена",
+      "saving": "Сохранение...",
+      "saveVideo": "Сохранить видео",
+      "seconds": "сек."
+    },
+    "userSettings": {
+      "title": "Настройки пользователя",
+      "interfaceLanguage": "Язык интерфейса:",
+      "cancel": "Отменить",
+      "save": "Сохранить"
+    },
+    "export": {
+      "title": "Экспорт",
+      "local": "Местный",
+      "device": "Устройство",
+      "socialNetworks": "Социальные сети",
+      "dvd": "DVD"
+    }
+  },
+  "templates": {
+    "verticalSplit": "Вертикальное разделение",
+    "horizontalSplit": "Горизонтальное разделение",
+    "diagonalSplit": "Диагональное разделение",
+    "grid2x2": "Сетка 2×2",
+    "grid3x3": "Сетка 3×3",
+    "grid4x4": "Сетка 4×4"
+  },
+  "language": {
+    "ru": "Русский",
+    "en": "English"
+  },
+  "browser": {
+    "tabs": {
+      "media": "Медиа",
+      "music": "Музыка",
+      "transitions": "Переходы",
+      "effects": "Эффекты",
+      "filters": "Фильтры",
+      "templates": "Шаблоны"
+    },
+    "common": {
+      "unknown": "Неизвестно"
+    },
+    "media": {
+      "noMedia": "Нет медиафайлов",
+      "addMedia": "Файлы",
+      "uploadMedia": "Добавить файлы",
+      "recordVideo": "Записать видео",
+      "recordScreen": "Запись экрана",
+      "recordVoice": "Запись голоса",
+      "addFolder": "Папку",
+      "takePhoto": "Сделать фото",
+      "duration": "Длительность",
+      "resolution": "Разрешение",
+      "size": "Размер",
+      "created": "Создано",
+      "import": "Импортировать медиа",
+      "record": "Записать",
+      "addAll": "Добавить все",
+      "addSelected": "Добавить выбранные",
+      "addDate": "Добавить по дате",
+      "addAllVideo": "Добавить все видео",
+      "addAllAudio": "Добавить всю аудио",
+      "added": "Добавлено",
+      "add": "Добавить",
+      "sortBy": "Сортировать по",
+      "groupBy": "Группировать по",
+      "filterBy": "Фильтровать по",
+      "date": "Дате",
+      "name": "Имени",
+      "type": "Типу",
+      "fileType": "Типу файла",
+      "all": "Все",
+      "video": "Видео",
+      "audio": "Аудио",
+      "image": "Изображения"
+    },
+    "toolbar": {
+      "search": "Поиск медиафайлов",
+      "searchByName": "Поиск по названию",
+      "viewMode": "Режим просмотра",
+      "grid": "Сетка",
+      "list": "Список",
+      "thumbnails": "Миниатюры",
+      "zoomIn": "Увеличить превью",
+      "zoomOut": "Уменьшить превью",
+      "sort": "Сортировка",
+      "filter": "Фильтры",
+      "group": "Группировка",
+      "sortOrder": {
+        "asc": "По возрастанию",
+        "desc": "По убыванию"
+      },
+      "sortBy": {
+        "name": "По имени",
+        "title": "По заголовку",
+        "artist": "По артисту",
+        "date": "По дате",
+        "size": "По размеру",
+        "duration": "По длительности"
+      },
+      "filterBy": {
+        "all": "Все файлы",
+        "video": "Видео",
+        "audio": "Аудио",
+        "image": "Изображения"
+      },
+      "groupBy": {
+        "none": "Не группировать",
+        "type": "Тип",
+        "date": "По дате создания",
+        "duration": "По длительности",
+        "artist": "По артисту",
+        "genre": "По жанру",
+        "album": "По альбому"
+      }
+    }
+  },
+  "timeline": {
+    "tracks": {
+      "camera": "Камера",
+      "audio": "Аудио",
+      "title": "Титры",
+      "effects": "Эффекты",
+      "cameraWithNumber": "Камера {{number}}",
+      "videoWithNumber": "Видео {{number}}",
+      "audioWithNumber": "Аудио {{number}}"
+    },
+    "zoom": {
+      "zoomIn": "Увеличить",
+      "zoomOut": "Уменьшить",
+      "fitToScreen": "По ширине экрана"
+    },
+    "playback": {
+      "play": "Воспроизвести",
+      "pause": "Пауза",
+      "stop": "Стоп",
+      "previous": "Предыдущий",
+      "next": "Следующий"
+    },
+    "toolbar": {
+      "layout": "Макет",
+      "pointer": "Указатель",
+      "undo": "Отменить",
+      "redo": "Повторить",
+      "delete": "Удалить",
+      "cut": "Разрезать",
+      "fitToScreen": "Масштабировать под ширину экрана",
+      "zoomIn": "Увеличить",
+      "zoomOut": "Уменьшить"
+    },
+    "section": {
+      "delete": "Удалить секцию",
+      "editTrackName": "Нажмите для редактирования",
+      "sectorName": "Сектор {{date}}"
+    },
+    "controls": {
+      "firstFrame": "Первый кадр",
+      "previousFrame": "Предыдущий кадр",
+      "play": "Воспроизвести",
+      "pause": "Пауза",
+      "nextFrame": "Следующий кадр",
+      "lastFrame": "Последний кадр",
+      "record": "Начать запись",
+      "stopRecord": "Остановить запись",
+      "entryPoint": "Точка входа",
+      "exitPoint": "Точка выхода",
+      "settings": "Настройки",
+      "takeSnapshot": "Сделать снимок",
+      "switchCamera": "Переключить камеру",
+      "resetTemplate": "Сбросить шаблон",
+      "muteAudio": "Выключить звук",
+      "unmuteAudio": "Включить звук",
+      "fullscreen": "Полноэкранный режим",
+      "exitFullscreen": "Выйти из полноэкранного режима"
+    }
+  },
+  "titles": {
+    "add": "Добавить титры",
+    "edit": "Редактировать титры",
+    "remove": "Удалить титры",
+    "font": "Шрифт",
+    "size": "Размер",
+    "color": "Цвет",
+    "alignment": "Выравнивание",
+    "position": "Позиция",
+    "duration": "Длительность",
+    "animation": "Анимация",
+    "styles": {
+      "bold": "Жирный",
+      "italic": "Курсив",
+      "underline": "Подчеркнутый",
+      "strikethrough": "Зачеркнутый"
+    },
+    "templates": {
+      "title": "Заголовок",
+      "subtitle": "Подзаголовок",
+      "credits": "Титры",
+      "lowerThird": "Нижняя треть",
+      "custom": "Пользовательский"
+    }
+  },
+  "filters": {
+    "add": "Добавить фильтр",
+    "edit": "Редактировать фильтр",
+    "remove": "Удалить фильтр",
+    "intensity": "Интенсивность",
+    "categories": {
+      "color": "Цвет",
+      "blur": "Размытие",
+      "sharpen": "Резкость",
+      "artistic": "Художественные",
+      "distortion": "Искажение",
+      "noise": "Шум",
+      "vintage": "Винтаж",
+      "other": "Другие"
+    },
+    "names": {
+      "grayscale": "Оттенки серого",
+      "sepia": "Сепия",
+      "invert": "Инвертировать",
+      "brightness": "Яркость",
+      "contrast": "Контрастность",
+      "saturation": "Насыщенность",
+      "hue": "Оттенок",
+      "blur": "Размытие",
+      "gaussianBlur": "Размытие по Гауссу",
+      "sharpen": "Резкость",
+      "emboss": "Рельеф",
+      "vintage": "Винтаж",
+      "vignette": "Виньетка",
+      "noise": "Шум",
+      "pixelate": "Пикселизация",
+      "filmGrain": "Зернистость пленки",
+      "blackAndWhite": "Черно-белый",
+      "negative": "Негатив",
+      "polaroid": "Полароид",
+      "fadeColor": "Выцветание"
+    }
+  },
+  "effects": {
+    "add": "Добавить эффект",
+    "edit": "Редактировать эффект",
+    "remove": "Удалить эффект",
+    "duration": "Длительность",
+    "intensity": "Интенсивность",
+    "categories": {
+      "transition": "Переходы",
+      "motion": "Движение",
+      "light": "Свет",
+      "particle": "Частицы",
+      "text": "Текст",
+      "3d": "3D",
+      "other": "Другие"
+    },
+    "names": {
+      "fade": "Затухание",
+      "dissolve": "Растворение",
+      "wipe": "Вытеснение",
+      "slide": "Скольжение",
+      "zoom": "Масштабирование",
+      "rotate": "Вращение",
+      "flash": "Вспышка",
+      "glitch": "Глитч",
+      "blur": "Размытие",
+      "particles": "Частицы",
+      "confetti": "Конфетти",
+      "snow": "Снег",
+      "rain": "Дождь",
+      "fire": "Огонь",
+      "smoke": "Дым",
+      "bokeh": "Боке",
+      "lens": "Линза",
+      "mirror": "Зеркало",
+      "split": "Разделение",
+      "picture": "Картинка в картинке"
+    }
+  },
+  "project": {
+    "untitledProject": "Без названия #{{number}}",
+    "untitledExport": "Без названия {{number}}",
+    "newProject": "Новый проект",
+    "saveProject": "Сохранить проект",
+    "openProject": "Открыть проект",
+    "deleteProject": "Удалить проект",
+    "exportProject": "Экспортировать проект",
+    "importProject": "Импортировать проект"
+  }
+}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -32,8 +33,23 @@ interface ProjectSettingsDialogProps {
 }
 
 export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDialogProps) {
+  const { t } = useTranslation()
   const { settings, updateSettings } = useProject()
   const [availableResolutions, setAvailableResolutions] = useState<ResolutionOption[]>([])
+
+  // Функция для получения локализованного названия соотношения сторон
+  const getAspectRatioLabel = (textLabel: string): string => {
+    const labelMap: Record<string, string> = {
+      "Широкоэкнранный": t('dialogs.projectSettings.aspectRatioLabels.widescreen'),
+      "Портрет": t('dialogs.projectSettings.aspectRatioLabels.portrait'),
+      "Социальные сети": t('dialogs.projectSettings.aspectRatioLabels.social'),
+      "Стандарт": t('dialogs.projectSettings.aspectRatioLabels.standard'),
+      "Вертикальный": t('dialogs.projectSettings.aspectRatioLabels.vertical'),
+      "Кинотеатр": t('dialogs.projectSettings.aspectRatioLabels.cinema')
+    }
+
+    return labelMap[textLabel] || textLabel
+  }
 
   // Обновляем доступные разрешения при изменении соотношения сторон
   useEffect(() => {
@@ -93,11 +109,11 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="rounded-sm dark:bg-[#1b1a1f] [&>button]:hidden">
         <DialogHeader>
-          <DialogTitle className="text-md text-center">Настройки проекта</DialogTitle>
+          <DialogTitle className="text-md text-center">{t('dialogs.projectSettings.title')}</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col space-y-6 py-1">
           <div className="flex items-center justify-end">
-            <Label className="mr-2 text-xs">Соотношение сторон:</Label>
+            <Label className="mr-2 text-xs">{t('dialogs.projectSettings.aspectRatio')}</Label>
             <Select value={settings.aspectRatio.label} onValueChange={handleAspectRatioChange}>
               <SelectTrigger className="w-[300px]">
                 <SelectValue />
@@ -105,7 +121,9 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
               <SelectContent className="">
                 {ASPECT_RATIOS.map((item) => (
                   <SelectItem key={item.label} value={item.label} className="">
-                    {item.label} {item.textLabel ? `(${item.textLabel})` : ""}
+                    {item.label === "custom"
+                      ? `${item.label} (${t('dialogs.projectSettings.aspectRatioLabels.custom')})`
+                      : `${item.label} ${item.textLabel ? `(${getAspectRatioLabel(item.textLabel)})` : ""}`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -113,7 +131,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
           </div>
 
           <div className="flex items-center justify-end">
-            <Label className="mr-2 text-xs">Разрешение:</Label>
+            <Label className="mr-2 text-xs">{t('dialogs.projectSettings.resolution')}</Label>
             <Select
               value={settings.resolution}
               onValueChange={(value: string) => {
@@ -160,7 +178,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
           </div>
 
           <div className="flex items-center justify-end">
-            <Label className="mr-2 text-xs">Частота кадров:</Label>
+            <Label className="mr-2 text-xs">{t('dialogs.projectSettings.frameRate')}</Label>
             <Select
               value={settings.frameRate}
               onValueChange={(value: FrameRate) =>
@@ -203,7 +221,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
           </div>
 
           <div className="flex items-center justify-end">
-            <Label className="mr-2 text-xs">Цветовое пространство:</Label>
+            <Label className="mr-2 text-xs">{t('dialogs.projectSettings.colorSpace')}</Label>
             <Select
               value={settings.colorSpace}
               onValueChange={(value: ColorSpace) =>
@@ -242,7 +260,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
             className="flex-1 cursor-pointer"
             onClick={() => onOpenChange(false)}
           >
-            Отменить
+            {t('dialogs.projectSettings.cancel')}
           </Button>
           <Button
             variant="default"
@@ -292,7 +310,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
               }, 100)
             }}
           >
-            OK
+            {t('dialogs.projectSettings.save')}
           </Button>
         </DialogFooter>
       </DialogContent>

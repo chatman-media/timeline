@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { usePreviewSize } from "@/media-editor/browser"
 import { TemplateListToolbar } from "@/media-editor/browser/components/tabs/templates"
@@ -63,6 +64,7 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
 }
 
 export function TemplateList() {
+  const { t, i18n } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
   const [, setActiveTemplate] = useState<MediaTemplate | null>(null)
   const [, setCurrentGroup] = useState<"landscape" | "portrait" | "square">("landscape")
@@ -147,7 +149,7 @@ export function TemplateList() {
 
     // Получаем локализованное название шаблона
     const labels = getTemplateLabels(template.id)
-    const templateName = labels ? labels.ru : template.id
+    const templateName = labels ? labels[i18n.language === 'en' ? 'en' : 'ru'] : template.id
 
     console.log("Applying template:", template.id, templateName)
 
@@ -192,7 +194,7 @@ export function TemplateList() {
           <div className="flex h-full items-center justify-center text-gray-500" />
         ) : filteredTemplates.length === 0 ? (
           <div className="flex h-full items-center justify-center text-gray-500">
-            Шаблоны не найдены
+            {t('browser.tabs.templates')} {t('common.notFound')}
           </div>
         ) : (
           <div className="space-y-6">
@@ -201,7 +203,9 @@ export function TemplateList() {
               <div key={screenCount} className="mb-4">
                 <h3 className="mb-3 text-sm font-medium text-gray-400">
                   {screenCount}{" "}
-                  {screenCount === 1 ? "экран" : screenCount < 5 ? "экрана" : "экранов"}
+                  {i18n.language === 'en'
+                    ? (screenCount === 1 ? "screen" : "screens")
+                    : (screenCount === 1 ? "экран" : screenCount < 5 ? "экрана" : "экранов")}
                 </h3>
                 <div
                   className="flex flex-wrap gap-4"
@@ -217,10 +221,10 @@ export function TemplateList() {
                       />
                       <div
                         className="mt-1 truncate text-center text-xs text-gray-400"
-                        title={getTemplateLabels(template.id)?.ru || template.id}
+                        title={getTemplateLabels(template.id)?.[i18n.language === 'en' ? 'en' : 'ru'] || template.id}
                         style={{ width: `${previewSize}px` }}
                       >
-                        {getTemplateLabels(template.id)?.ru || template.id}
+                        {getTemplateLabels(template.id)?.[i18n.language === 'en' ? 'en' : 'ru'] || template.id}
                       </div>
                     </div>
                   ))}

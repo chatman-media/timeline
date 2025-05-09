@@ -1,10 +1,13 @@
 import { Keyboard, Layout, ListTodo, Save, Send, Settings, Upload, UserCog } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+
+import dynamic from "next/dynamic"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { ExportDialog, ProjectSettingsDialog } from "@/media-editor/dialogs"
+import { ExportDialog, ProjectSettingsDialog, UserSettingsDialog } from "@/media-editor/dialogs"
 import { type LayoutMode, LayoutPreviews } from "@/media-editor/layouts"
 import { useProject } from "@/media-editor/project-settings/project-provider"
 
@@ -16,8 +19,9 @@ interface TopNavBarProps {
   hasExternalDisplay: boolean
 }
 
-export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: TopNavBarProps) {
+function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: TopNavBarProps) {
   const { name, isDirty, setName, setDirty } = useProject()
+  const { t } = useTranslation()
   const [isEditing, setIsEditing] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
@@ -55,7 +59,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
               className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
               variant="ghost"
               size="icon"
-              title="Макет"
+              title={t('topNavBar.layout')}
             >
               <Layout className="h-5 w-5" />
             </Button>
@@ -72,7 +76,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
           variant="ghost"
           size="icon"
-          title="Быстрые клавиши"
+          title={t('topNavBar.keyboardShortcuts')}
         >
           <Keyboard className="h-5 w-5" />
         </Button>
@@ -82,7 +86,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
           variant="ghost"
           size="icon"
-          title="Настройки"
+          title={t('topNavBar.projectSettings')}
           onClick={() => setIsSettingsOpen(true)}
         >
           <Settings className="h-5 w-5" />
@@ -94,7 +98,9 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           )}
           variant="ghost"
           size="icon"
-          title={isDirty ? "Все изменения сохранены" : "Сохранить изменения"}
+          title={isDirty
+            ? t('topNavBar.allChangesSaved')
+            : t('topNavBar.saveChanges')}
           onClick={handleSave}
           disabled={isDirty}
         >
@@ -135,14 +141,16 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
               className="h-7 w-7 cursor-pointer p-0"
               variant="ghost"
               size="icon"
-              title="Опубликовать"
+              title={t('topNavBar.publish')}
             >
               <Send className="h-5 w-5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64" sideOffset={0}>
             <div className="">
-              <h4 className="text-sm font-semibold">Задачи Публикации</h4>
+              <h4 className="text-sm font-semibold">
+                {t('topNavBar.publicationTasks')}
+              </h4>
               <div className="h-10"></div>
             </div>
           </PopoverContent>
@@ -154,14 +162,16 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
               className="h-7 w-7 cursor-pointer p-0"
               variant="ghost"
               size="icon"
-              title="Задачи монтажа"
+              title={t('topNavBar.editingTasks')}
             >
               <ListTodo className="h-5 w-5" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-64" sideOffset={0}>
             <div className="">
-              <h4 className="text-sm font-semibold">Задачи Проекта</h4>
+              <h4 className="text-sm font-semibold">
+                {t('topNavBar.projectTasks')}
+              </h4>
               <div className="h-10"></div>
             </div>
           </PopoverContent>
@@ -179,7 +189,7 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           variant="ghost"
           size="icon"
           className="mr-1 h-7 w-7 cursor-pointer p-0"
-          title="Настройки"
+          title={t('topNavBar.userSettings')}
           onClick={() => setIsUserSettingsOpen(true)}
         >
           <UserCog className="h-5 w-5" />
@@ -190,12 +200,18 @@ export function TopNavBar({ onLayoutChange, layoutMode, hasExternalDisplay }: To
           className="h-6 w-24 cursor-pointer items-center gap-1 border-none bg-[#38dacac3] px-1 text-sm text-black hover:bg-[#35d1c1] hover:text-black dark:bg-[#35d1c1] dark:hover:bg-[#35d1c1]"
           onClick={handleExport}
         >
-          <span className="px-2 text-xs">Экспорт</span>
+          <span className="px-2 text-xs">{t('topNavBar.export')}</span>
           <Upload className="h-5 w-5" />
         </Button>
       </div>
       <ExportDialog open={isExportOpen} onOpenChange={setIsExportOpen} />
       <ProjectSettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
+      <UserSettingsDialog open={isUserSettingsOpen} onOpenChange={setIsUserSettingsOpen} />
     </div>
   )
 }
+
+// Экспортируем компонент с использованием dynamic для предотвращения ошибок гидратации
+export const TopNavBar = dynamic(() => Promise.resolve(TopNavBarClient), {
+  ssr: false,
+})

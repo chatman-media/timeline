@@ -1,6 +1,7 @@
 import { CirclePause, CirclePlay, Pause, Play } from "lucide-react"
 import type { MouseEvent } from "react"
 import { useMemo, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { cn, formatFileSize, formatTime } from "@/lib/utils"
 import { AddMediaButton, MusicToolbar } from "@/media-editor/browser"
@@ -9,6 +10,7 @@ import { MediaFile } from "@/types/media"
 import { useMusicMachine } from "./use-music-machine"
 
 export function MusicFileList() {
+  const { t } = useTranslation()
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -80,9 +82,10 @@ export function MusicFileList() {
       return { "": filteredFiles }
     }
 
+    const unknownLabel = t('browser.common.unknown')
     const groups = filteredFiles.reduce(
       (acc, file) => {
-        const key = file.probeData?.format.tags?.[groupBy] || "Неизвестно"
+        const key = file.probeData?.format.tags?.[groupBy] || unknownLabel
         if (!acc[key]) {
           acc[key] = []
         }
@@ -94,6 +97,11 @@ export function MusicFileList() {
 
     // Сортируем группы
     const sortedGroups = Object.entries(groups).sort(([a], [b]) => {
+      // Перемещаем "Неизвестно" в конец списка
+      if (a === unknownLabel) return 1
+      if (b === unknownLabel) return -1
+
+      // Обычная сортировка для остальных элементов
       if (sortOrder === "asc") {
         return a.localeCompare(b)
       }

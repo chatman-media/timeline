@@ -1,5 +1,6 @@
 import { ZoomIn, ZoomOut } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -39,6 +40,7 @@ const TransitionPreview = ({
   onClick,
   size,
 }: TransitionPreviewProps) => {
+  const { i18n } = useTranslation()
   const [isHovering, setIsHovering] = useState(false)
   const [isError, setIsError] = useState(false)
   const sourceVideoRef = useRef<HTMLVideoElement>(null)
@@ -221,7 +223,7 @@ const TransitionPreview = ({
       >
         {isError ? (
           <div className="flex h-full items-center justify-center text-white">
-            Ошибка загрузки видео
+            {i18n.language === 'en' ? 'Video loading error' : 'Ошибка загрузки видео'}
           </div>
         ) : (
           <div className="relative flex h-full w-full cursor-pointer items-center justify-center rounded-md">
@@ -247,7 +249,7 @@ const TransitionPreview = ({
         )}
       </div>
       <div className="mt-1 text-xs text-gray-300">
-        {transitions.find((t) => t.type === transitionType)?.labels.ru}
+        {transitions.find((t) => t.type === transitionType)?.labels[i18n.language === 'en' ? 'en' : 'ru']}
       </div>
     </div>
   )
@@ -385,6 +387,7 @@ const transitions = [
 ]
 
 export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void }) {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
 
   const {
@@ -415,7 +418,7 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
       <div className="flex items-center justify-between p-1">
         <Input
           type="search"
-          placeholder="Поиск"
+          placeholder={t('common.search')}
           className="mr-5 h-7 w-full max-w-[400px] rounded-sm border border-gray-300 text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500"
           style={{
             backgroundColor: "transparent",
@@ -442,7 +445,7 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
                     <ZoomOut size={16} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Уменьшить превью</TooltipContent>
+                <TooltipContent>{t('browser.toolbar.zoomOut')}</TooltipContent>
               </Tooltip>
 
               <Tooltip>
@@ -460,7 +463,7 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
                     <ZoomIn size={16} />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Увеличить превью</TooltipContent>
+                <TooltipContent>{t('browser.toolbar.zoomIn')}</TooltipContent>
               </Tooltip>
             </div>
           </TooltipProvider>
@@ -472,7 +475,7 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
           <div className="flex h-full items-center justify-center text-gray-500"></div>
         ) : filteredTransitions.length === 0 ? (
           <div className="flex h-full items-center justify-center text-gray-500">
-            Переходы не найдены
+            {t('browser.tabs.transitions')} {t('common.notFound')}
           </div>
         ) : (
           <div

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
@@ -42,6 +43,7 @@ export function CameraCaptureDialog({
   onClose,
   onVideoRecorded,
 }: CameraCaptureDialogProps) {
+  const { t } = useTranslation()
   const [devices, setDevices] = useState<CaptureDevice[]>([])
   const [selectedDevice, setSelectedDevice] = useState<string>("")
   const [audioDevices, setAudioDevices] = useState<CaptureDevice[]>([])
@@ -61,6 +63,8 @@ export function CameraCaptureDialog({
   >("pending")
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [isLoadingCapabilities, setIsLoadingCapabilities] = useState<boolean>(false)
+  const [actualVideoWidth, setActualVideoWidth] = useState<number>(0)
+  const [actualVideoHeight, setActualVideoHeight] = useState<number>(0)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -237,19 +241,35 @@ export function CameraCaptureDialog({
             setSupportedResolutions(resolutions)
             setAvailableResolutions(resolutions)
 
-            // Устанавливаем разрешение по умолчанию (HD или лучшее доступное)
-            const hdResolution = resolutions.find((r) => r.width === 1280 && r.height === 720)
-            const fullHdResolution = resolutions.find((r) => r.width === 1920 && r.height === 1080)
+            // Сортируем разрешения по убыванию (сначала самые высокие)
+            const sortedResolutions = [...resolutions].sort((a, b) => {
+              // Сначала сравниваем по общему количеству пикселей
+              const pixelsA = a.width * a.height;
+              const pixelsB = b.width * b.height;
+              return pixelsB - pixelsA;
+            });
 
-            if (fullHdResolution) {
-              setSelectedResolution(fullHdResolution.label)
-            } else if (hdResolution) {
-              setSelectedResolution(hdResolution.label)
-            } else if (resolutions.length > 0) {
-              setSelectedResolution(resolutions[0].label)
+            console.log("Доступные разрешения (отсортированные):", sortedResolutions.map(r => r.label));
+
+            // Устанавливаем максимальное доступное разрешение по умолчанию
+            if (sortedResolutions.length > 0) {
+              const maxResolution = sortedResolutions[0];
+              console.log("Выбрано максимальное разрешение:", maxResolution.label);
+              setSelectedResolution(maxResolution.label);
             }
           } else {
             setAvailableResolutions(COMMON_RESOLUTIONS)
+
+            // Если нет доступных разрешений, выбираем максимальное из стандартных
+            const sortedCommonResolutions = [...COMMON_RESOLUTIONS].sort((a, b) => {
+              const pixelsA = a.width * a.height;
+              const pixelsB = b.width * b.height;
+              return pixelsB - pixelsA;
+            });
+
+            if (sortedCommonResolutions.length > 0) {
+              setSelectedResolution(sortedCommonResolutions[0].label);
+            }
           }
 
           if (frameRates.length > 0) {
@@ -289,7 +309,7 @@ export function CameraCaptureDialog({
         .filter((device) => device.kind === "videoinput")
         .map((device) => {
           // Очищаем названия устройств от текста в скобках
-          let label = device.label || `Камера ${devices.indexOf(device) + 1}`
+          let label = device.label || t('timeline.tracks.cameraWithNumber', { number: devices.indexOf(device) + 1, defaultValue: `Камера ${devices.indexOf(device) + 1}` })
           // Удаляем текст в скобках, если он присутствует
           label = label.replace(/\s*\([^)]*\)\s*$/, "")
 
@@ -303,7 +323,7 @@ export function CameraCaptureDialog({
         .filter((device) => device.kind === "audioinput")
         .map((device) => {
           // Очищаем названия устройств от текста в скобках
-          let label = device.label || `Микрофон ${devices.indexOf(device) + 1}`
+          let label = device.label || t('timeline.tracks.audioWithNumber', { number: devices.indexOf(device) + 1, defaultValue: `Микрофон ${devices.indexOf(device) + 1}` })
           // Удаляем текст в скобках, если он присутствует
           label = label.replace(/\s*\([^)]*\)\s*$/, "")
 
@@ -391,6 +411,14 @@ export function CameraCaptureDialog({
         videoRef.current.onloadedmetadata = () => {
           console.log("Видео метаданные загружены, начинаем воспроизведение")
           videoRef.current?.play().catch((e) => console.error("Ошибка воспроизведения:", e))
+
+          // Получаем фактическое разрешение видео
+          if (videoRef.current) {
+            setActualVideoWidth(videoRef.current.videoWidth)
+            setActualVideoHeight(videoRef.current.videoHeight)
+            console.log(`Фактическое разрешение видео: ${videoRef.current.videoWidth}x${videoRef.current.videoHeight}`)
+          }
+
           setIsDeviceReady(true)
         }
 
@@ -602,14 +630,14 @@ export function CameraCaptureDialog({
         aria-describedby="camera-capture-description"
       >
         <DialogTitle className="border-b border-[#333] p-4 text-lg font-semibold">
-          Захват видео
+          {t('dialogs.cameraCapture.title')}
         </DialogTitle>
 
         <div className="p-4">
           {/* Отображаем ошибки и статус разрешений */}
           {permissionStatus === "pending" && (
             <div className="mb-4 text-center text-sm">
-              Запрашиваем доступ к камере и микрофону...
+              {t('dialogs.cameraCapture.permissionDenied')}
             </div>
           )}
 
@@ -618,7 +646,7 @@ export function CameraCaptureDialog({
               {errorMessage}
               <div className="mt-2">
                 <Button className="w-full bg-red-600 hover:bg-red-700" onClick={requestPermissions}>
-                  Повторить запрос
+                  {t('dialogs.cameraCapture.retryRequest')}
                 </Button>
               </div>
             </div>
@@ -629,7 +657,7 @@ export function CameraCaptureDialog({
               {errorMessage}
               <div className="mt-2">
                 <Button className="w-full bg-red-600 hover:bg-red-700" onClick={requestPermissions}>
-                  Повторить
+                  {t('dialogs.cameraCapture.retry')}
                 </Button>
               </div>
             </div>
@@ -641,14 +669,14 @@ export function CameraCaptureDialog({
                 id="camera-capture-description"
                 className="mb-4 text-sm text-white"
               >
-                Запись с веб-камеры
+                {t('dialogs.cameraCapture.title')}
               </DialogDescription>
 
               {/* Предпросмотр видео */}
               <div className="relative mx-auto mb-6 flex h-[320px] w-full max-w-[400px] items-center justify-center rounded-md border border-gray-800 bg-black">
                 {!isDeviceReady && (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                    Инициализация камеры...
+                    {t('dialogs.cameraCapture.initializingCamera')}
                   </div>
                 )}
                 <video
@@ -669,11 +697,16 @@ export function CameraCaptureDialog({
                     {countdown}
                   </div>
                 )}
+                {isDeviceReady && actualVideoWidth > 0 && actualVideoHeight > 0 && (
+                  <div className="absolute bottom-2 right-2 rounded bg-black/70 px-2 py-1 text-xs text-white">
+                    {t('dialogs.cameraCapture.currentResolution', { width: actualVideoWidth, height: actualVideoHeight })}
+                  </div>
+                )}
               </div>
 
               {/* Настройки устройств */}
               <div className="mb-6 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-4">
-                <div className="text-sm text-gray-300">Устройство:</div>
+                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.device')}:</div>
                 <Select
                   value={selectedDevice}
                   onValueChange={setSelectedDevice}
@@ -698,7 +731,7 @@ export function CameraCaptureDialog({
                   </SelectContent>
                 </Select>
 
-                <div className="text-sm text-gray-300">Аудио:</div>
+                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.audioDevice')}:</div>
                 <Select
                   value={selectedAudioDevice}
                   onValueChange={setSelectedAudioDevice}
@@ -723,12 +756,12 @@ export function CameraCaptureDialog({
                   </SelectContent>
                 </Select>
 
-                <div className="text-sm text-gray-300">Разрешение:</div>
+                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.resolution')}:</div>
                 <div>
                   {isLoadingCapabilities ? (
                     <div className="flex items-center text-xs text-gray-400">
                       <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[#0CC] border-t-transparent"></div>
-                      Определяем возможности...
+                      {t('dialogs.cameraCapture.determiningCapabilities')}
                     </div>
                   ) : (
                     <Select
@@ -758,17 +791,17 @@ export function CameraCaptureDialog({
 
                   {supportedResolutions.length > 0 && (
                     <div className="mt-1 text-xs text-gray-400">
-                      Поддерживается: {supportedResolutions.length} разрешений
+                      {t('dialogs.cameraCapture.supportedResolutions', { count: supportedResolutions.length })}
                     </div>
                   )}
                 </div>
 
-                <div className="text-sm text-gray-300">Частота кадров:</div>
+                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.frameRate')}:</div>
                 <div>
                   {isLoadingCapabilities ? (
                     <div className="flex items-center text-xs text-gray-400">
                       <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-[#0CC] border-t-transparent"></div>
-                      Определяем возможности...
+                      {t('dialogs.cameraCapture.determiningCapabilities')}
                     </div>
                   ) : (
                     <Select
@@ -795,12 +828,12 @@ export function CameraCaptureDialog({
 
                   {supportedFrameRates.length > 0 && supportedFrameRates.length < 10 && (
                     <div className="mt-1 text-xs text-gray-400">
-                      Поддерживается: {supportedFrameRates.join(", ")} fps
+                      {t('dialogs.cameraCapture.supportedFrameRates', { frameRates: supportedFrameRates.join(", ") })}
                     </div>
                   )}
                 </div>
 
-                <div className="text-sm text-gray-300">Обратный отсчет:</div>
+                <div className="text-sm text-gray-300">{t('dialogs.cameraCapture.countdown')}:</div>
                 <div className="flex items-center">
                   <Input
                     type="number"
@@ -811,7 +844,7 @@ export function CameraCaptureDialog({
                     className="mr-2 w-16 border-[#444] bg-[#222] text-center"
                     disabled={isRecording}
                   />
-                  <span className="text-sm text-gray-300">сек</span>
+                  <span className="text-sm text-gray-300">{t('dialogs.cameraCapture.seconds')}</span>
                 </div>
               </div>
 
@@ -836,7 +869,7 @@ export function CameraCaptureDialog({
                   )}
                 </div>
                 <div className="font-mono text-lg">
-                  Время записи: {formatRecordingTime(recordingTime)}
+                  {t('dialogs.cameraCapture.recordingTime')} {formatRecordingTime(recordingTime)}
                 </div>
               </div>
             </>
@@ -845,7 +878,7 @@ export function CameraCaptureDialog({
 
         <div className="flex justify-end border-t border-[#333] p-4">
           <Button className="bg-[#0CC] text-black hover:bg-[#0AA]" onClick={handleClose}>
-            OK
+            {t('common.ok')}
           </Button>
         </div>
       </DialogContent>

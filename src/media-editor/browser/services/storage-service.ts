@@ -23,14 +23,31 @@ export class StorageService {
    * @returns Значение из localStorage или значение по умолчанию
    */
   public get<T>(key: string, defaultValue: T): T {
-    // Если значение есть в кэше, возвращаем его
-    if (this.cache[key] !== undefined) {
-      return this.cache[key]
-    }
-
     // Если localStorage недоступен (SSR), возвращаем значение по умолчанию
     if (typeof window === "undefined") {
       return defaultValue
+    }
+
+    // Для ключа app-language всегда читаем напрямую из localStorage
+    if (key === "app-language") {
+      try {
+        const value = localStorage.getItem(key)
+        if (value === null) {
+          return defaultValue
+        }
+
+        // Обновляем кэш
+        this.cache[key] = value
+        return value as unknown as T
+      } catch (error) {
+        console.error(`[StorageService] Error reading language from localStorage:`, error)
+        return defaultValue
+      }
+    }
+
+    // Для остальных ключей используем кэш
+    if (this.cache[key] !== undefined) {
+      return this.cache[key]
     }
 
     try {
@@ -73,6 +90,12 @@ export class StorageService {
       // Сохраняем значение в localStorage
       if (typeof value === "string") {
         localStorage.setItem(key, value)
+
+        // Для ключа app-language выводим дополнительную информацию
+        if (key === "app-language") {
+          console.log(`[StorageService] Language saved to localStorage: ${value}`)
+          console.log(`[StorageService] Verified language in localStorage:`, localStorage.getItem(key))
+        }
       } else {
         localStorage.setItem(key, JSON.stringify(value))
       }

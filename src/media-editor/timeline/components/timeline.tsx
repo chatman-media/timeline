@@ -1,5 +1,6 @@
 import { MoveHorizontal, Trash2 } from "lucide-react"
 import React, { useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -58,6 +59,7 @@ function formatSectionDate(dateString: string): string {
 }
 
 export function Timeline() {
+  const { t, i18n } = useTranslation()
   const context = useTimeline()
   if (!context) {
     throw new Error("Timeline must be used within a TimelineProvider")
@@ -664,7 +666,7 @@ export function Timeline() {
                   <button
                     onClick={() => handleDeleteSection(sector.date)}
                     className="flex h-6 w-6 items-center justify-center rounded-sm hover:bg-red-500/20"
-                    title="Удалить секцию"
+                    title={t('timeline.section.delete')}
                   >
                     <Trash2 size={14} className="text-red-500" />
                   </button>
@@ -689,7 +691,7 @@ export function Timeline() {
                       <div
                         className="block cursor-pointer truncate pl-[1px] hover:border hover:border-[#35d1c1] hover:pl-[0px]"
                         onClick={() => handleEditTrackName(track)}
-                        title="Нажмите для редактирования"
+                        title={t('timeline.section.editTrackName')}
                       >
                         {track.cameraName ? track.cameraName : track.name}
                       </div>
@@ -768,7 +770,7 @@ export function Timeline() {
                           <button
                             onClick={() => fitSectionToScreen(sector.date)}
                             className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm hover:bg-[#dddbdd] dark:hover:bg-[#45444b]"
-                            title="Масштабировать под ширину экрана"
+                            title={t('timeline.toolbar.fitToScreen')}
                           >
                             <MoveHorizontal size={14} />
                           </button>
@@ -896,19 +898,20 @@ export function Timeline() {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>Удаление секции</DialogTitle>
+            <DialogTitle>{t('timeline.section.delete')}</DialogTitle>
             <DialogDescription>
-              Вы уверены, что хотите удалить секцию{" "}
-              {deletingSectionDate ? formatSectionDate(deletingSectionDate) : ""}? Это действие
-              нельзя отменить.
+              {i18n.language === 'en'
+                ? `Are you sure you want to delete the section ${deletingSectionDate ? formatSectionDate(deletingSectionDate) : ""}? This action cannot be undone.`
+                : `Вы уверены, что хотите удалить секцию ${deletingSectionDate ? formatSectionDate(deletingSectionDate) : ""}? Это действие нельзя отменить.`
+              }
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Отмена
+              {t('common.cancel')}
             </Button>
             <Button variant="destructive" onClick={confirmDeleteSection}>
-              Удалить
+              {t('common.delete')}
             </Button>
           </DialogFooter>
         </DialogContent>

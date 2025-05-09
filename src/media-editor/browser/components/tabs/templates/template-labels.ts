@@ -17,23 +17,23 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-vertical-landscape",
     labels: {
-      ru: "2 экрана по вертикали (50/50)",
-      en: "2 screens vertical (50/50)",
+      ru: "2 экрана по вертикали",
+      en: "2 screens vertical",
     },
     description: {
-      ru: "Два экрана, разделенные вертикальной линией (50/50)",
-      en: "Two screens divided by a vertical line (50/50)",
+      ru: "Два экрана, разделенные вертикальной линией",
+      en: "Two screens divided by a vertical line",
     },
   },
   {
     id: "split-horizontal-landscape",
     labels: {
-      ru: "2 экрана по горизонтали (50/50)",
-      en: "2 screens horizontal (50/50)",
+      ru: "2 экрана по горизонтали",
+      en: "2 screens horizontal",
     },
     description: {
-      ru: "Два экрана, разделенные горизонтальной линией (50/50)",
-      en: "Two screens divided by a horizontal line (50/50)",
+      ru: "Два экрана, разделенные горизонтальной линией",
+      en: "Two screens divided by a horizontal line",
     },
   },
   {
@@ -266,8 +266,8 @@ export const templateLabels: TemplateDescription[] = [
       en: "Vertical Split",
     },
     description: {
-      ru: "Два экрана, разделенные вертикальной линией (50/50)",
-      en: "Two screens divided by a vertical line (50/50)",
+      ru: "Два экрана, разделенные вертикальной линией",
+      en: "Two screens divided by a vertical line",
     },
   },
   {
@@ -277,8 +277,8 @@ export const templateLabels: TemplateDescription[] = [
       en: "Horizontal Split",
     },
     description: {
-      ru: "Два экрана, разделенные горизонтальной линией (50/50)",
-      en: "Two screens divided by a horizontal line (50/50)",
+      ru: "Два экрана, разделенные горизонтальной линией",
+      en: "Two screens divided by a horizontal line",
     },
   },
   {
@@ -535,8 +535,8 @@ export const templateLabels: TemplateDescription[] = [
       en: "Vertical Split",
     },
     description: {
-      ru: "Два экрана, разделенные вертикальной линией (50/50)",
-      en: "Two screens divided by a vertical line (50/50)",
+      ru: "Два экрана, разделенные вертикальной линией",
+      en: "Two screens divided by a vertical line",
     },
   },
   {
@@ -546,8 +546,8 @@ export const templateLabels: TemplateDescription[] = [
       en: "Horizontal Split",
     },
     description: {
-      ru: "Два экрана, разделенные горизонтальной линией (50/50)",
-      en: "Two screens divided by a horizontal line (50/50)",
+      ru: "Два экрана, разделенные горизонтальной линией",
+      en: "Two screens divided by a horizontal line",
     },
   },
   {
@@ -599,12 +599,12 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-mixed-2-square",
     labels: {
-      ru: "2 сверху + 1 снизу",
-      en: "2 top + 1 bottom",
+      ru: "1 слева + 2 справа",
+      en: "1 left + 2 right",
     },
     description: {
-      ru: "Два экрана сверху, один экран снизу",
-      en: "Two screens on top, one screen below",
+      ru: "Один экран слева, два экрана справа",
+      en: "One screen on the left, two screens on the right",
     },
   },
 
@@ -759,8 +759,41 @@ export const templateLabels: TemplateDescription[] = [
       en: "7 screens (variant 1)",
     },
     description: {
-      ru: "Семь экранов в специальном расположении",
-      en: "Seven screens in a special arrangement",
+      ru: "Большой экран справа внизу, 6 маленьких экранов слева и сверху",
+      en: "Large screen in bottom right, 6 small screens on left and top",
+    },
+  },
+  {
+    id: "split-custom-7-2-square",
+    labels: {
+      ru: "7 экранов (вариант 2)",
+      en: "7 screens (variant 2)",
+    },
+    description: {
+      ru: "Большой экран слева внизу, 6 маленьких экранов справа и сверху",
+      en: "Large screen in bottom left, 6 small screens on right and top",
+    },
+  },
+  {
+    id: "split-custom-7-3-square",
+    labels: {
+      ru: "7 экранов (вариант 3)",
+      en: "7 screens (variant 3)",
+    },
+    description: {
+      ru: "Большой экран слева вверху, 6 маленьких экранов справа и снизу",
+      en: "Large screen in top left, 6 small screens on right and bottom",
+    },
+  },
+  {
+    id: "split-custom-7-4-square",
+    labels: {
+      ru: "7 экранов (вариант 4)",
+      en: "7 screens (variant 4)",
+    },
+    description: {
+      ru: "Большой экран справа вверху, 6 маленьких экранов слева и снизу",
+      en: "Large screen in top right, 6 small screens on left and bottom",
     },
   },
   {

@@ -1,4 +1,5 @@
 import { Play } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 // Создаем тип для макетов
 export type LayoutMode = "default" | "options" | "vertical" | "dual"
@@ -15,6 +16,7 @@ interface LayoutProps {
 }
 
 function DefaultLayout({ isActive, onClick }: LayoutProps) {
+  const { t } = useTranslation()
   return (
     <div
       className={`flex cursor-pointer flex-col items-center ${
@@ -56,12 +58,13 @@ function DefaultLayout({ isActive, onClick }: LayoutProps) {
           </div>
         </div>
       </div>
-      <span className="text-[10px] font-medium">По умолчанию</span>
+      <span className="text-[10px] font-medium">{t('topNavBar.layouts.default')}</span>
     </div>
   )
 }
 
 function OptionsLayout({ isActive, onClick }: LayoutProps) {
+  const { t } = useTranslation()
   return (
     <div
       className={`flex cursor-pointer flex-col items-center ${
@@ -110,12 +113,13 @@ function OptionsLayout({ isActive, onClick }: LayoutProps) {
           <div className="bg-primary/70 h-1 w-full rounded-sm"></div>
         </div>
       </div>
-      <span className="text-[10px] font-medium">Опции</span>
+      <span className="text-[10px] font-medium">{t('topNavBar.layouts.options')}</span>
     </div>
   )
 }
 
 function VerticalLayout({ isActive, onClick }: LayoutProps) {
+  const { t } = useTranslation()
   return (
     <div
       className={`flex cursor-pointer flex-col items-center ${
@@ -163,7 +167,7 @@ function VerticalLayout({ isActive, onClick }: LayoutProps) {
           </div>
         </div>
       </div>
-      <span className="text-[10px] font-medium">Вертикальное видео</span>
+      <span className="text-[10px] font-medium">{t('topNavBar.layouts.vertical')}</span>
     </div>
   )
 }
@@ -173,13 +177,14 @@ interface DualLayoutProps extends LayoutProps {
 }
 
 function DualLayout({ isActive, onClick, hasExternalDisplay }: DualLayoutProps) {
+  const { t } = useTranslation()
   return (
     <div
       className={`flex flex-col items-center ${
         hasExternalDisplay ? "cursor-pointer" : "cursor-not-allowed opacity-50"
       } ${isActive ? "bg-muted" : hasExternalDisplay ? "hover:bg-muted" : ""} p-2 pb-1`}
       onClick={onClick}
-      title={hasExternalDisplay ? "Двойной вид" : "Требуется внешний монитор"}
+      title={hasExternalDisplay ? t('topNavBar.layouts.dual') : t('topNavBar.layouts.externalDisplayRequired')}
     >
       <div className="bg-background relative mb-1 flex h-24 w-40 items-center justify-center">
         <div className="bg-muted absolute right-4 h-14 w-24 translate-y-2 border-2 border-gray-700">
@@ -204,9 +209,9 @@ function DualLayout({ isActive, onClick, hasExternalDisplay }: DualLayoutProps) 
           </div>
         </div>
       </div>
-      <span className="text-[10px] font-medium">Два окна</span>
+      <span className="text-[10px] font-medium">{t('topNavBar.layouts.dual')}</span>
       {!hasExternalDisplay && (
-        <span className="text-muted-foreground text-[9px]">Нужен внешний монитор</span>
+        <span className="text-muted-foreground text-[9px]">{t('topNavBar.layouts.externalDisplayRequired')}</span>
       )}
     </div>
   )
@@ -217,6 +222,7 @@ export function LayoutPreviews({
   layoutMode,
   hasExternalDisplay,
 }: LayoutPreviewsProps) {
+  const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-2">
       <div className="flex justify-around gap-2">

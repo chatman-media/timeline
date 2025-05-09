@@ -71,7 +71,7 @@ export const ASPECT_RATIOS: AspectRatio[] = [
     },
   },
   {
-    label: "Пользовательское",
+    label: "custom", // Это будет переведено через i18n
     textLabel: "",
     description: "User",
     value: {

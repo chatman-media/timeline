@@ -1,5 +1,6 @@
 import { ZoomIn, ZoomOut } from "lucide-react"
 import type { ChangeEvent } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -23,6 +24,8 @@ export function TemplateListToolbar({
   handleDecreaseSize,
   handleIncreaseSize,
 }: TemplateListToolbarProps) {
+  const { t } = useTranslation()
+
   function onSearchChange(e: ChangeEvent<HTMLInputElement>) {
     setSearchQuery(e.target.value)
   }
@@ -31,7 +34,7 @@ export function TemplateListToolbar({
     <div className="flex items-center justify-between p-1">
       <Input
         type="search"
-        placeholder="Поиск по названию"
+        placeholder={t('browser.toolbar.searchByName')}
         className="mr-5 h-7 w-full max-w-[400px] rounded-sm border border-gray-300 bg-transparent text-xs outline-none focus:border-gray-400 focus:ring-0 focus-visible:ring-0 dark:border-gray-600 dark:focus:border-gray-500"
         value={searchQuery}
         onChange={onSearchChange}
@@ -54,7 +57,7 @@ export function TemplateListToolbar({
                   <ZoomOut size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Уменьшить превью</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.zoomOut')}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -71,7 +74,7 @@ export function TemplateListToolbar({
                   <ZoomIn size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Увеличить превью</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.zoomIn')}</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>

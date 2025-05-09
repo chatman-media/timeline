@@ -9,6 +9,7 @@ import {
   Trash2,
   Undo2,
 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
 import { Track } from "@/types/media"
@@ -49,6 +50,7 @@ export function TimelineTopPanel({
   sliderValue,
   maxScale = 2000,
 }: TimelineTopPanelProps) {
+  const { t } = useTranslation();
   return (
     <div className="flex-shrink-0">
       <div className="border-border flex items-center justify-between border-b px-2 py-1">
@@ -77,6 +79,7 @@ export function TimelineTopPanel({
           <button
             onClick={() => {}}
             className="flex h-8 w-8 items-center justify-center rounded-sm opacity-50"
+            title={t('timeline.toolbar.layout')}
           >
             <LayoutTemplate size={16} />
           </button>
@@ -85,6 +88,7 @@ export function TimelineTopPanel({
           <button
             onClick={() => {}}
             className="flex h-8 w-8 items-center justify-center rounded-sm opacity-50"
+            title={t('timeline.toolbar.pointer')}
           >
             <SquareMousePointer size={16} />
           </button>
@@ -93,6 +97,7 @@ export function TimelineTopPanel({
           <button
             onClick={() => {}}
             className="flex h-8 w-8 items-center justify-center rounded-sm opacity-50"
+            title={t('timeline.toolbar.undo')}
           >
             <Undo2 size={16} />
           </button>
@@ -101,6 +106,7 @@ export function TimelineTopPanel({
           <button
             onClick={() => {}}
             className="flex h-8 w-8 items-center justify-center rounded-sm opacity-50"
+            title={t('timeline.toolbar.redo')}
           >
             <Redo2 size={16} />
           </button>
@@ -112,6 +118,7 @@ export function TimelineTopPanel({
               deleteTrack()
             }}
             className={cn(ICON_STYLE, !isTrashActive && "pointer-events-none opacity-50")}
+            title={t('timeline.toolbar.delete')}
           >
             <Trash2 size={16} />
           </button>
@@ -122,6 +129,7 @@ export function TimelineTopPanel({
               cutTrack()
             }}
             className={cn(ICON_STYLE, !isCutActive && "pointer-events-none opacity-50")}
+            title={t('timeline.toolbar.cut')}
           >
             <Scissors size={16} className="rotate-270" />
           </button>
@@ -153,7 +161,7 @@ export function TimelineTopPanel({
               "relative flex items-center justify-center",
               !isAbleToFitToTracks && "pointer-events-none opacity-50",
             )}
-            title="Масштабировать под ширину экрана"
+            title={t('timeline.toolbar.fitToScreen')}
           >
             <MoveHorizontal size={16} />
           </button>
@@ -163,6 +171,7 @@ export function TimelineTopPanel({
               "flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border-1 border-white bg-gray-800 text-gray-200 hover:bg-[#45444b]",
               !isAbleToScaleDown && "pointer-events-none opacity-50",
             )}
+            title={t('timeline.toolbar.zoomOut')}
           >
             <Minus size={12} />
           </button>
@@ -185,6 +194,7 @@ export function TimelineTopPanel({
               value={String(sliderValue)}
               onChange={handleSliderChange}
               className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+              aria-label={t('timeline.zoom.fitToScreen')}
             />
           </div>
 
@@ -194,6 +204,7 @@ export function TimelineTopPanel({
               "flex h-4 w-4 cursor-pointer items-center justify-center rounded-full border-1 border-white bg-gray-800 text-gray-200 hover:bg-[#45444b]",
               !isAbleToScaleUp && "pointer-events-none opacity-50",
             )}
+            title={t('timeline.toolbar.zoomIn')}
           >
             <Plus size={12} />
           </button>

@@ -17,6 +17,8 @@ import {
   ZoomOut,
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import dynamic from "next/dynamic"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -78,7 +80,7 @@ interface MediaToolbarProps {
  * @param canIncreaseSize - Флаг, указывающий на возможность увеличения размера превью
  * @param canDecreaseSize - Флаг, указывающий на возможность уменьшения размера превью
  */
-export function MediaToolbar({
+function MediaToolbarClient({
   viewMode = "thumbnails",
   onViewModeChange,
   onImport,
@@ -101,6 +103,7 @@ export function MediaToolbar({
   canIncreaseSize = true,
   canDecreaseSize = true,
 }: MediaToolbarProps) {
+  const { t } = useTranslation()
   // Внутренний стейт для управления текущим выбором
   const [internalSortBy, setInternalSortBy] = useState(currentSortBy)
   const [internalFilterType, setInternalFilterType] = useState(currentFilterType)
@@ -139,7 +142,7 @@ export function MediaToolbar({
           className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#d1d1d1] dark:bg-[#45444b] dark:hover:bg-[#dddbdd]/25"
           onClick={onImport}
         >
-          <span className="px-2 text-xs">Импорт</span>
+          <span className="px-2 text-xs">{t('common.import')}</span>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -153,7 +156,7 @@ export function MediaToolbar({
                   <File size={12} />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>Добавить файлы</TooltipContent>
+              <TooltipContent>{t('browser.media.uploadMedia')}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -167,7 +170,7 @@ export function MediaToolbar({
                   <Folder size={12} />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>Добавить папку</TooltipContent>
+              <TooltipContent>{t('browser.media.addFolder')}</TooltipContent>
             </Tooltip>
           </div>
         </Button>
@@ -178,7 +181,7 @@ export function MediaToolbar({
           className="flex cursor-pointer items-center gap-1 bg-[#dddbdd] px-1 text-xs hover:bg-[#d1d1d1] dark:bg-[#45444b] dark:hover:bg-[#dddbdd]/25"
           onClick={onRecord}
         >
-          <span className="px-2 text-xs">Запись</span>
+          <span className="px-2 text-xs">{t('common.record')}</span>
           <div className="flex items-center gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
@@ -192,7 +195,7 @@ export function MediaToolbar({
                   <Webcam size={12} />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>Запись с веб-камеры</TooltipContent>
+              <TooltipContent>{t('browser.media.recordVideo')}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -206,7 +209,7 @@ export function MediaToolbar({
                   <Monitor size={12} />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>Запись экрана</TooltipContent>
+              <TooltipContent>{t('browser.media.recordScreen')}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -220,7 +223,7 @@ export function MediaToolbar({
                   <Mic size={12} className="" />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>Запись голоса</TooltipContent>
+              <TooltipContent>{t('browser.media.recordVoice')}</TooltipContent>
             </Tooltip>
           </div>
         </Button>
@@ -244,7 +247,7 @@ export function MediaToolbar({
                   <Grid size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Сетка</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.grid')}</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -261,7 +264,7 @@ export function MediaToolbar({
                   <LayoutDashboard size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Миниатюры</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.thumbnails')}</TooltipContent>
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
@@ -277,12 +280,12 @@ export function MediaToolbar({
                   <LayoutList size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Список</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.list')}</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
 
-        {/* Кнопки изменения размера 
+        {/* Кнопки изменения размера
         TODO: Добавить анимацию при наведении
         */}
         <TooltipProvider>
@@ -302,7 +305,7 @@ export function MediaToolbar({
                   <ZoomOut size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Уменьшить превью</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.zoomOut')}</TooltipContent>
             </Tooltip>
 
             <Tooltip>
@@ -320,7 +323,7 @@ export function MediaToolbar({
                   <ZoomIn size={16} />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Увеличить превью</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.zoomIn')}</TooltipContent>
             </Tooltip>
           </div>
         </TooltipProvider>
@@ -343,24 +346,24 @@ export function MediaToolbar({
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>Сортировка</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.sort')}</TooltipContent>
               <DropdownMenuContent className="space-y-1" align="end">
                 <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("name")}>
                   <div className="flex items-center gap-2">
                     {internalSortBy === "name" && <Check className="h-4 w-4" />}
-                    <span>По имени</span>
+                    <span>{t('browser.toolbar.sortBy.name')}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("date")}>
                   <div className="flex items-center gap-2">
                     {internalSortBy === "date" && <Check className="h-4 w-4" />}
-                    <span>По дате</span>
+                    <span>{t('browser.toolbar.sortBy.date')}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem className="h-6 cursor-pointer" onClick={() => handleSort("size")}>
                   <div className="flex items-center gap-2">
                     {internalSortBy === "size" && <Check className="h-4 w-4" />}
-                    <span>По размеру</span>
+                    <span>{t('browser.toolbar.sortBy.size')}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem
@@ -369,7 +372,7 @@ export function MediaToolbar({
                 >
                   <div className="flex items-center gap-2">
                     {internalSortBy === "duration" && <Check className="h-4 w-4" />}
-                    <span>По длительности</span>
+                    <span>{t('browser.toolbar.sortBy.duration')}</span>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -395,31 +398,31 @@ export function MediaToolbar({
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>Фильтры</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.filter')}</TooltipContent>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleFilter("all")}>
                   <div className="flex items-center gap-2">
                     {internalFilterType === "all" && <Check className="h-4 w-4" />}
-                    <span>Все файлы</span>
+                    <span>{t('browser.toolbar.filterBy.all')}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleFilter("video")}>
                   <div className="flex items-center gap-2">
                     {internalFilterType === "video" && <Check className="h-4 w-4" />}
-                    <span>Видео</span>
+                    <span>{t('browser.toolbar.filterBy.video')}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleFilter("audio")}>
                   <div className="flex items-center gap-2">
                     {internalFilterType === "audio" && <Check className="h-4 w-4" />}
-                    <span>Аудио</span>
+                    <span>{t('browser.toolbar.filterBy.audio')}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleFilter("image")}>
                   <div className="flex items-center gap-2">
                     {internalFilterType === "image" && <Check className="h-4 w-4" />}
-                    <span>Изображения</span>
+                    <span>{t('browser.toolbar.filterBy.image')}</span>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -445,31 +448,31 @@ export function MediaToolbar({
                   </Button>
                 </DropdownMenuTrigger>
               </TooltipTrigger>
-              <TooltipContent>Группировка</TooltipContent>
+              <TooltipContent>{t('browser.toolbar.group')}</TooltipContent>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleGroupBy("none")}>
                   <div className="flex items-center gap-2">
                     {internalGroupBy === "none" && <Check className="h-4 w-4" />}
-                    <span>Не группировать</span>
+                    <span>{t('browser.toolbar.groupBy.none')}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleGroupBy("type")}>
                   <div className="flex items-center gap-2">
                     {internalGroupBy === "type" && <Check className="h-4 w-4" />}
-                    <span>Тип</span>
+                    <span>{t('browser.toolbar.groupBy.type')}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleGroupBy("date")}>
                   <div className="flex items-center gap-2">
                     {internalGroupBy === "date" && <Check className="h-4 w-4" />}
-                    <span>По дате создания</span>
+                    <span>{t('browser.toolbar.groupBy.date')}</span>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleGroupBy("duration")}>
                   <div className="flex items-center gap-2">
                     {internalGroupBy === "duration" && <Check className="h-4 w-4" />}
-                    <span>По длительности</span>
+                    <span>{t('browser.toolbar.groupBy.duration')}</span>
                   </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -491,7 +494,7 @@ export function MediaToolbar({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              {sortOrder === "asc" ? "По убыванию" : "По возрастанию"}
+              {sortOrder === "asc" ? t('browser.toolbar.sortOrder.desc') : t('browser.toolbar.sortOrder.asc')}
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>
@@ -499,3 +502,8 @@ export function MediaToolbar({
     </div>
   )
 }
+
+// Экспортируем компонент с использованием dynamic для предотвращения ошибок гидратации
+export const MediaToolbar = dynamic(() => Promise.resolve(MediaToolbarClient), {
+  ssr: false,
+})

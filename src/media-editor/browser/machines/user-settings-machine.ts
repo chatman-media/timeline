@@ -1,5 +1,7 @@
 import { assign, createMachine } from "xstate"
 
+import { StorageService } from "../services/storage-service"
+
 export const PREVIEW_SIZES = [60, 80, 100, 125, 150, 200, 250, 300, 400] as const
 export const DEFAULT_SIZE = 100
 export const MIN_SIZE = 60
@@ -9,6 +11,8 @@ export const STORAGE_KEYS = {
   TRANSITIONS: "timeline-transitions-preview-size",
   TEMPLATES: "timeline-templates-preview-size",
   ACTIVE_TAB: "browser-active-tab",
+  LANGUAGE: "app-language",
+  LAYOUT: "app-layout-mode",
 } as const
 
 // Допустимые значения для активного таба
@@ -22,13 +26,25 @@ export const BROWSER_TABS = [
 ] as const
 export const DEFAULT_TAB = "media"
 
+// Допустимые значения для языка
+export const LANGUAGES = ["ru", "en"] as const
+export const DEFAULT_LANGUAGE = "ru"
+
+// Допустимые значения для макета
+export const LAYOUTS = ["default", "options", "vertical", "dual"] as const
+export const DEFAULT_LAYOUT = "default"
+
 export type PreviewSize = (typeof PREVIEW_SIZES)[number]
 export type BrowserTab = (typeof BROWSER_TABS)[number]
+export type Language = (typeof LANGUAGES)[number]
+export type LayoutMode = (typeof LAYOUTS)[number]
 export type StorageKey = keyof typeof STORAGE_KEYS
 
 export interface UserSettingsContext {
   previewSizes: Record<"MEDIA" | "TRANSITIONS" | "TEMPLATES", PreviewSize>
   activeTab: BrowserTab
+  language: Language
+  layoutMode: LayoutMode
   isLoaded: boolean
 }
 
@@ -39,6 +55,8 @@ const initialContext: UserSettingsContext = {
     TEMPLATES: DEFAULT_SIZE,
   },
   activeTab: DEFAULT_TAB,
+  language: DEFAULT_LANGUAGE,
+  layoutMode: DEFAULT_LAYOUT,
   isLoaded: false,
 }
 
@@ -47,6 +65,8 @@ type UserSettingsLoadedEvent = {
   type: "SETTINGS_LOADED"
   previewSizes: Record<"MEDIA" | "TRANSITIONS" | "TEMPLATES", PreviewSize>
   activeTab: BrowserTab
+  language: Language
+  layoutMode: LayoutMode
 }
 type UpdatePreviewSizeEvent = {
   type: "UPDATE_PREVIEW_SIZE"
@@ -54,12 +74,16 @@ type UpdatePreviewSizeEvent = {
   size: PreviewSize
 }
 type UpdateActiveTabEvent = { type: "UPDATE_ACTIVE_TAB"; tab: BrowserTab }
+type UpdateLanguageEvent = { type: "UPDATE_LANGUAGE"; language: Language }
+type UpdateLayoutEvent = { type: "UPDATE_LAYOUT"; layoutMode: LayoutMode }
 
 export type UserSettingsEvent =
   | LoadUserSettingsEvent
   | UserSettingsLoadedEvent
   | UpdatePreviewSizeEvent
   | UpdateActiveTabEvent
+  | UpdateLanguageEvent
+  | UpdateLayoutEvent
 
 export const userSettingsMachine = createMachine(
   {
@@ -86,6 +110,12 @@ export const userSettingsMachine = createMachine(
           },
           UPDATE_ACTIVE_TAB: {
             actions: ["updateActiveTab", "saveActiveTabToStorage"],
+          },
+          UPDATE_LANGUAGE: {
+            actions: ["updateLanguage", "saveLanguageToStorage"],
+          },
+          UPDATE_LAYOUT: {
+            actions: ["updateLayout", "saveLayoutToStorage"],
           },
         },
       },
@@ -154,6 +184,41 @@ export const userSettingsMachine = createMachine(
           console.error("Error loading active tab:", error)
         }
 
+        // Загружаем сохраненный язык
+        let language = DEFAULT_LANGUAGE
+        try {
+          // Используем StorageService для загрузки настроек
+          const storageService = StorageService.getInstance()
+          const savedLanguage = storageService.get(STORAGE_KEYS.LANGUAGE, DEFAULT_LANGUAGE)
+          console.log("Loaded language from localStorage:", savedLanguage)
+
+          // Проверяем, что значение языка является допустимым
+          if (savedLanguage && LANGUAGES.includes(savedLanguage as Language)) {
+            language = savedLanguage as Language
+            console.log("Using saved language:", language)
+
+            // Обновляем язык в i18next
+            try {
+              import('i18next').then(i18n => {
+                i18n.default.changeLanguage(language)
+                console.log("Language initialized in i18next:", language)
+
+                // Синхронизируем значение в localStorage напрямую
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("app-language", language)
+                  console.log("Synchronized language in localStorage:", language)
+                }
+              })
+            } catch (error) {
+              console.error("Error initializing language in i18next:", error)
+            }
+          } else {
+            console.log("No valid saved language found, using default:", DEFAULT_LANGUAGE)
+          }
+        } catch (error) {
+          console.error("Error loading language:", error)
+        }
+
         // Сохраняем значения по умолчанию в localStorage, если их там нет
         Object.entries({
           MEDIA: STORAGE_KEYS.MEDIA,
@@ -178,15 +243,55 @@ export const userSettingsMachine = createMachine(
           }
         }
 
+        // Сохраняем значение по умолчанию для языка, если его нет
+        try {
+          const storageService = StorageService.getInstance()
+          if (storageService.get(STORAGE_KEYS.LANGUAGE, null) === null) {
+            storageService.set(STORAGE_KEYS.LANGUAGE, DEFAULT_LANGUAGE)
+          }
+        } catch (error) {
+          console.error("Error saving default language:", error)
+        }
+
+        // Загружаем сохраненный макет
+        let layoutMode = DEFAULT_LAYOUT
+        try {
+          const savedLayout = localStorage.getItem(STORAGE_KEYS.LAYOUT)
+          console.log("Loaded layout from localStorage:", savedLayout)
+
+          // Проверяем, что значение макета является допустимым
+          if (savedLayout && LAYOUTS.includes(savedLayout as LayoutMode)) {
+            layoutMode = savedLayout as LayoutMode
+            console.log("Using saved layout:", layoutMode)
+          } else {
+            console.log("No valid saved layout found, using default:", DEFAULT_LAYOUT)
+          }
+        } catch (error) {
+          console.error("Error loading layout:", error)
+        }
+
+        // Сохраняем значение по умолчанию для макета, если его нет
+        if (localStorage.getItem(STORAGE_KEYS.LAYOUT) === null) {
+          try {
+            localStorage.setItem(STORAGE_KEYS.LAYOUT, DEFAULT_LAYOUT)
+          } catch (error) {
+            console.error("Error saving default layout:", error)
+          }
+        }
+
         return {
           type: "SETTINGS_LOADED",
           previewSizes,
           activeTab,
+          language,
+          layoutMode,
         }
       },
       updateSettings: assign({
         previewSizes: (_, event) => (event as UserSettingsLoadedEvent).previewSizes,
         activeTab: (_, event) => (event as UserSettingsLoadedEvent).activeTab,
+        language: (_, event) => (event as UserSettingsLoadedEvent).language,
+        layoutMode: (_, event) => (event as UserSettingsLoadedEvent).layoutMode || DEFAULT_LAYOUT,
         isLoaded: (_) => true,
       }),
       updatePreviewSize: assign((context, event: any) => {
@@ -255,6 +360,112 @@ export const userSettingsMachine = createMachine(
             console.log("Verified saved value:", savedValue)
           } catch (error) {
             console.error(`Error saving active tab:`, error)
+          }
+        }
+      },
+      updateLanguage: assign((context, event: any) => {
+        if (event.type === "UPDATE_LANGUAGE") {
+          console.log("Updating language in machine:", event.language)
+
+          // Проверяем, что значение языка является допустимым
+          if (!LANGUAGES.includes(event.language)) {
+            console.error("Invalid language value in machine:", event.language)
+            return context
+          }
+
+          // Обновляем язык в i18next
+          try {
+            import('i18next').then(i18n => {
+              i18n.default.changeLanguage(event.language)
+              console.log("Language changed in i18next:", event.language)
+
+              // Дополнительно сохраняем язык напрямую в localStorage
+              if (typeof window !== "undefined") {
+                localStorage.setItem("app-language", event.language)
+                console.log("Directly saved language to localStorage from machine:", event.language)
+              }
+            })
+          } catch (error) {
+            console.error("Error changing language in i18next:", error)
+          }
+
+          return {
+            ...context,
+            language: event.language,
+          }
+        }
+        return context
+      }),
+      saveLanguageToStorage: (_, event: any) => {
+        if (event.type === "UPDATE_LANGUAGE") {
+          try {
+            console.log("Saving language to localStorage:", event.language)
+
+            // Проверяем, что значение языка является допустимым
+            if (!LANGUAGES.includes(event.language)) {
+              console.error("Invalid language value when saving to localStorage:", event.language)
+              return
+            }
+
+            // Используем StorageService для сохранения настроек
+            const storageService = StorageService.getInstance()
+            storageService.set(STORAGE_KEYS.LANGUAGE, event.language)
+            console.log("Language saved to localStorage successfully")
+
+            // Дополнительно сохраняем язык напрямую в localStorage
+            if (typeof window !== "undefined") {
+              localStorage.setItem("app-language", event.language)
+              console.log("Directly saved language to localStorage from machine:", event.language)
+            }
+
+            // Проверяем, что значение было сохранено правильно
+            const savedValue = storageService.get(STORAGE_KEYS.LANGUAGE, DEFAULT_LANGUAGE)
+            console.log("Verified saved language value in StorageService:", savedValue)
+
+            if (typeof window !== "undefined") {
+              console.log("Verified saved language value in localStorage:", localStorage.getItem("app-language"))
+            }
+          } catch (error) {
+            console.error(`Error saving language:`, error)
+          }
+        }
+      },
+      updateLayout: assign((context, event: any) => {
+        if (event.type === "UPDATE_LAYOUT") {
+          console.log("Updating layout in machine:", event.layoutMode)
+
+          // Проверяем, что значение макета является допустимым
+          if (!LAYOUTS.includes(event.layoutMode)) {
+            console.error("Invalid layout value in machine:", event.layoutMode)
+            return context
+          }
+
+          return {
+            ...context,
+            layoutMode: event.layoutMode,
+          }
+        }
+        return context
+      }),
+      saveLayoutToStorage: (_, event: any) => {
+        if (event.type === "UPDATE_LAYOUT") {
+          try {
+            console.log("Saving layout to localStorage:", event.layoutMode)
+
+            // Проверяем, что значение макета является допустимым
+            if (!LAYOUTS.includes(event.layoutMode)) {
+              console.error("Invalid layout value when saving to localStorage:", event.layoutMode)
+              return
+            }
+
+            localStorage.setItem(STORAGE_KEYS.LAYOUT, event.layoutMode)
+            console.log("Layout saved to localStorage successfully")
+
+            // Проверяем, что значение было сохранено правильно
+            const savedValue = localStorage.getItem(STORAGE_KEYS.LAYOUT)
+            console.log("Verified saved layout value:", savedValue)
+          } catch (error) {
+            console.error(`Error saving layout:`, error)
           }
         }
       },

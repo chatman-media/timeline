@@ -1,5 +1,7 @@
 import { CopyPlus } from "lucide-react"
 import { memo, useCallback, useEffect, useMemo, useState } from "react"
+import { useTranslation } from "react-i18next"
+import i18n from "@/i18n"
 
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -134,6 +136,7 @@ export const MediaFileList = memo(function MediaFileList({
 }: {
   viewMode?: ViewMode
 }) {
+  const { t } = useTranslation()
   const {
     isLoading,
     allMediaFiles: media,
@@ -594,6 +597,10 @@ export const MediaFileList = memo(function MediaFileList({
 
     if (groupBy === "date") {
       const groups: Record<string, MediaFile[]> = {}
+      // Получаем текущий язык из i18n
+      const currentLanguage = i18n.language || "ru"
+      const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
+      const noDateText = i18n.t('dates.noDate', { defaultValue: "Без даты" })
 
       filteredAndSortedMedia.forEach((file) => {
         // Для изображений используем дату создания файла, если она доступна
@@ -606,12 +613,12 @@ export const MediaFileList = memo(function MediaFileList({
         }
 
         const date = timestamp
-          ? new Date(timestamp * 1000).toLocaleDateString("ru-RU", {
+          ? new Date(timestamp * 1000).toLocaleDateString(locale, {
             day: "2-digit",
             month: "long",
             year: "numeric",
           })
-          : "Без даты"
+          : noDateText
 
         if (!groups[date]) {
           groups[date] = []
@@ -621,8 +628,8 @@ export const MediaFileList = memo(function MediaFileList({
 
       return Object.entries(groups)
         .sort(([a], [b]) => {
-          if (a === "Без даты") return 1
-          if (b === "Без даты") return -1
+          if (a === noDateText) return 1
+          if (b === noDateText) return -1
           const dateA = new Date(a)
           const dateB = new Date(b)
           return sortOrder === "asc"
@@ -939,7 +946,7 @@ export const MediaFileList = memo(function MediaFileList({
               }}
               disabled={allFilesAdded}
             >
-              <span className="px-1 text-xs">{allFilesAdded ? "Добавлено" : "Добавить"}</span>
+              <span className="px-1 text-xs">{allFilesAdded ? t('browser.media.added') : t('browser.media.add')}</span>
               <CopyPlus className="mr-1 h-3 w-3" />
             </Button>
           </div>

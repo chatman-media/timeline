@@ -1,5 +1,7 @@
 import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles, Type } from "lucide-react"
 import { memo, useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+import dynamic from "next/dynamic"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -24,10 +26,11 @@ export const TAB_TRIGGER_STYLES =
   "border-1 border-transparent flex flex-col items-center justify-center gap-1 py-2 " +
   "[&>svg]:data-[state=active]:text-[#38dacac3] cursor-pointer data-[state=active]:cursor-default rounded-none"
 
-// Используем memo для предотвращения ненужных рендеров
-export const Browser = memo(function Browser() {
+// Клиентский компонент Browser
+const BrowserClient = memo(function BrowserClient() {
   // Используем useState с отложенной инициализацией для предотвращения ошибок гидратации
   const [activeTab, setActiveTab] = useState("media")
+  const { t } = useTranslation()
 
   // Загружаем сохраненный таб из localStorage только на клиенте
   useEffect(() => {
@@ -67,31 +70,31 @@ export const Browser = memo(function Browser() {
       <TabsList className="h-[50px] flex-shrink-0 justify-start border-none bg-transparent p-0">
         <TabsTrigger value="media" className={TAB_TRIGGER_STYLES}>
           <Image className="h-4 w-4" />
-          <span>Медиатека</span>
+          <span>{t('browser.tabs.media')}</span>
         </TabsTrigger>
         <TabsTrigger value="music" className={TAB_TRIGGER_STYLES}>
           <Music className="h-4 w-4" />
-          <span>Музыка</span>
+          <span>{t('browser.tabs.music')}</span>
         </TabsTrigger>
         <TabsTrigger value="transitions" className={TAB_TRIGGER_STYLES}>
           <FlipHorizontal2 className="h-4 w-4" />
-          <span>Переходы</span>
+          <span>{t('browser.tabs.transitions')}</span>
         </TabsTrigger>
         <TabsTrigger value="effects" className={TAB_TRIGGER_STYLES}>
           <Sparkles className="h-4 w-4" />
-          <span>Эффекты</span>
+          <span>{t('browser.tabs.effects')}</span>
         </TabsTrigger>
         <TabsTrigger value="filters" className={TAB_TRIGGER_STYLES}>
           <Blend className="h-4 w-4" />
-          <span>Фильтры</span>
+          <span>{t('browser.tabs.filters')}</span>
         </TabsTrigger>
         <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
           <Type className="h-4 w-4" />
-          <span>Титры</span>
+          <span>{t('titles.add')}</span>
         </TabsTrigger>
         <TabsTrigger value="templates" className={TAB_TRIGGER_STYLES}>
           <Layout className="h-4 w-4" />
-          <span>Шаблоны</span>
+          <span>{t('browser.tabs.templates')}</span>
         </TabsTrigger>
       </TabsList>
       <TabsContent value="media" className="bg-secondary m-0 flex-1 overflow-hidden">
@@ -117,4 +120,9 @@ export const Browser = memo(function Browser() {
       </TabsContent>
     </Tabs>
   )
+})
+
+// Экспортируем компонент с использованием dynamic для предотвращения ошибок гидратации
+export const Browser = dynamic(() => Promise.resolve(BrowserClient), {
+  ssr: false,
 })

@@ -1,0 +1,439 @@
+{
+  "common": {
+    "add": "Add",
+    "remove": "Remove",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "ok": "OK",
+    "yes": "Yes",
+    "no": "No",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "settings": "Settings",
+    "preview": "Preview",
+    "loading": "Loading...",
+    "noResults": "No results",
+    "notFound": "not found",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Information",
+    "import": "Import",
+    "record": "Record",
+    "upload": "Upload",
+    "download": "Download",
+    "delete": "Delete",
+    "create": "Create",
+    "update": "Update",
+    "allFilesAdded": "All files added"
+  },
+  "dates": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "lastWeek": "Last week",
+    "thisMonth": "This month",
+    "lastMonth": "Last month",
+    "older": "Older",
+    "noDate": "No date",
+    "format": {
+      "short": "MM/DD/YYYY",
+      "long": "MMMM D, YYYY",
+      "time": "h:mm A",
+      "dateTime": "MM/DD/YYYY h:mm A"
+    },
+    "months": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "weekdays": {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday",
+      "saturday": "Saturday",
+      "sunday": "Sunday"
+    }
+  },
+  "topNavBar": {
+    "layout": "Layout",
+    "keyboardShortcuts": "Keyboard Shortcuts",
+    "projectSettings": "Project Settings",
+    "saveChanges": "Save changes",
+    "allChangesSaved": "All changes saved",
+    "publish": "Publish",
+    "publicationTasks": "Publication Tasks",
+    "editingTasks": "Editing Tasks",
+    "projectTasks": "Project Tasks",
+    "userSettings": "User Settings",
+    "export": "Export",
+    "layouts": {
+      "default": "Default",
+      "options": "Options",
+      "vertical": "Vertical Video",
+      "dual": "Dual View",
+      "externalDisplayRequired": "External display required"
+    }
+  },
+  "dialogs": {
+    "projectSettings": {
+      "title": "Project Settings",
+      "aspectRatio": "Aspect Ratio:",
+      "resolution": "Resolution:",
+      "frameRate": "Frame Rate:",
+      "colorSpace": "Color Space:",
+      "cancel": "Cancel",
+      "save": "OK",
+      "aspectRatioLabels": {
+        "widescreen": "Widescreen",
+        "portrait": "Portrait",
+        "social": "Social Media",
+        "standard": "Standard",
+        "vertical": "Vertical",
+        "cinema": "Cinema",
+        "custom": "Custom"
+      }
+    },
+    "cameraCapture": {
+      "title": "Camera Recording",
+      "selectCamera": "Select camera:",
+      "selectMicrophone": "Select microphone:",
+      "selectResolution": "Select resolution:",
+      "selectFrameRate": "Select frame rate:",
+      "startRecording": "Start Recording",
+      "stopRecording": "Stop Recording",
+      "countdown": "Countdown:",
+      "seconds": "seconds",
+      "recordingTime": "Recording time:",
+      "noDevices": "No devices found",
+      "permissionDenied": "Camera and microphone access denied. Please allow access in browser settings.",
+      "deviceNotFound": "Camera or microphone not found. Please connect devices and try again.",
+      "errorAccess": "Error accessing devices:",
+      "unknownError": "Unknown error requesting device access",
+      "loadingCapabilities": "Loading device capabilities...",
+      "initializingCamera": "Initializing camera...",
+      "device": "Device",
+      "audioDevice": "Audio device",
+      "resolution": "Resolution",
+      "frameRate": "Frame rate",
+      "determiningCapabilities": "Determining capabilities...",
+      "supportedResolutions": "Supported: {{count}} resolutions",
+      "supportedFrameRates": "Supported: {{frameRates}} fps",
+      "retryRequest": "Retry request",
+      "retry": "Retry",
+      "currentResolution": "Current resolution: {{width}}x{{height}}"
+    },
+    "cameraPreview": {
+      "title": "Recording Preview",
+      "description": "Review your recorded video before saving. After clicking the \"Save Video\" button, the file will be downloaded. Move it to the public/media folder of the project to add it to the timeline.",
+      "loadingVideo": "Loading video...",
+      "fileName": "File name",
+      "duration": "Duration",
+      "resolution": "Resolution",
+      "fileSize": "File size",
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "saveVideo": "Save Video",
+      "seconds": "sec."
+    },
+    "userSettings": {
+      "title": "User Settings",
+      "interfaceLanguage": "Interface Language:",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "export": {
+      "title": "Export",
+      "local": "Local",
+      "device": "Device",
+      "socialNetworks": "Social Networks",
+      "dvd": "DVD"
+    }
+  },
+  "templates": {
+    "verticalSplit": "Vertical Split",
+    "horizontalSplit": "Horizontal Split",
+    "diagonalSplit": "Diagonal Split",
+    "grid2x2": "Grid 2×2",
+    "grid3x3": "Grid 3×3",
+    "grid4x4": "Grid 4×4"
+  },
+  "language": {
+    "ru": "Russian",
+    "en": "English"
+  },
+  "browser": {
+    "tabs": {
+      "media": "Media",
+      "music": "Music",
+      "transitions": "Transitions",
+      "effects": "Effects",
+      "filters": "Filters",
+      "templates": "Templates"
+    },
+    "common": {
+      "unknown": "Unknown"
+    },
+    "media": {
+      "noMedia": "No media files",
+      "addMedia": "File",
+      "uploadMedia": "File",
+      "recordVideo": "Record video",
+      "recordScreen": "Record screen",
+      "recordVoice": "Record voice",
+      "addFolder": "Folder",
+      "takePhoto": "Take photo",
+      "duration": "Duration",
+      "resolution": "Resolution",
+      "size": "Size",
+      "created": "Created",
+      "import": "Import media",
+      "record": "Record",
+      "addAll": "Add all",
+      "addSelected": "Add selected",
+      "addDate": "Add by date",
+      "addAllVideo": "Add all video",
+      "addAllAudio": "Add all audio",
+      "added": "Added",
+      "add": "Add",
+      "sortBy": "Sort by",
+      "groupBy": "Group by",
+      "filterBy": "Filter by",
+      "date": "Date",
+      "name": "Name",
+      "type": "Type",
+      "fileType": "File type",
+      "all": "All",
+      "video": "Video",
+      "audio": "Audio",
+      "image": "Images"
+    },
+    "toolbar": {
+      "search": "Search media files",
+      "searchByName": "Search by name",
+      "viewMode": "View mode",
+      "grid": "Grid",
+      "list": "List",
+      "thumbnails": "Thumbnails",
+      "zoomIn": "Zoom in preview",
+      "zoomOut": "Zoom out preview",
+      "sort": "Sort",
+      "filter": "Filters",
+      "group": "Group",
+      "sortOrder": {
+        "asc": "Ascending",
+        "desc": "Descending"
+      },
+      "sortBy": {
+        "name": "By name",
+        "title": "By title",
+        "artist": "By artist",
+        "date": "By date",
+        "size": "By size",
+        "duration": "By duration"
+      },
+      "filterBy": {
+        "all": "All files",
+        "video": "Video",
+        "audio": "Audio",
+        "image": "Images"
+      },
+      "groupBy": {
+        "none": "No grouping",
+        "type": "Type",
+        "date": "By creation date",
+        "duration": "By duration",
+        "artist": "By artist",
+        "genre": "By genre",
+        "album": "By album"
+      }
+    }
+  },
+  "timeline": {
+    "tracks": {
+      "camera": "Camera",
+      "audio": "Audio",
+      "title": "Titles",
+      "effects": "Effects",
+      "cameraWithNumber": "Camera {{number}}",
+      "videoWithNumber": "Video {{number}}",
+      "audioWithNumber": "Audio {{number}}"
+    },
+    "zoom": {
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out",
+      "fitToScreen": "Fit to screen"
+    },
+    "playback": {
+      "play": "Play",
+      "pause": "Pause",
+      "stop": "Stop",
+      "previous": "Previous",
+      "next": "Next"
+    },
+    "toolbar": {
+      "layout": "Layout",
+      "pointer": "Pointer",
+      "undo": "Undo",
+      "redo": "Redo",
+      "delete": "Delete",
+      "cut": "Cut",
+      "fitToScreen": "Fit to screen width",
+      "zoomIn": "Zoom in",
+      "zoomOut": "Zoom out"
+    },
+    "section": {
+      "delete": "Delete section",
+      "editTrackName": "Click to edit",
+      "sectorName": "Sector {{date}}"
+    },
+    "controls": {
+      "firstFrame": "First frame",
+      "previousFrame": "Previous frame",
+      "play": "Play",
+      "pause": "Pause",
+      "nextFrame": "Next frame",
+      "lastFrame": "Last frame",
+      "record": "Start recording",
+      "stopRecord": "Stop recording",
+      "entryPoint": "Entry point",
+      "exitPoint": "Exit point",
+      "settings": "Settings",
+      "takeSnapshot": "Take snapshot",
+      "switchCamera": "Switch camera",
+      "resetTemplate": "Reset template",
+      "muteAudio": "Mute audio",
+      "unmuteAudio": "Unmute audio",
+      "fullscreen": "Fullscreen mode",
+      "exitFullscreen": "Exit fullscreen mode"
+    }
+  },
+  "titles": {
+    "add": "Titles",
+    "edit": "Edit title",
+    "remove": "Remove title",
+    "font": "Font",
+    "size": "Size",
+    "color": "Color",
+    "alignment": "Alignment",
+    "position": "Position",
+    "duration": "Duration",
+    "animation": "Animation",
+    "styles": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strikethrough": "Strikethrough"
+    },
+    "templates": {
+      "title": "Title",
+      "subtitle": "Subtitle",
+      "credits": "Credits",
+      "lowerThird": "Lower Third",
+      "custom": "Custom"
+    }
+  },
+  "filters": {
+    "add": "Add filter",
+    "edit": "Edit filter",
+    "remove": "Remove filter",
+    "intensity": "Intensity",
+    "categories": {
+      "color": "Color",
+      "blur": "Blur",
+      "sharpen": "Sharpen",
+      "artistic": "Artistic",
+      "distortion": "Distortion",
+      "noise": "Noise",
+      "vintage": "Vintage",
+      "other": "Other"
+    },
+    "names": {
+      "grayscale": "Grayscale",
+      "sepia": "Sepia",
+      "invert": "Invert",
+      "brightness": "Brightness",
+      "contrast": "Contrast",
+      "saturation": "Saturation",
+      "hue": "Hue",
+      "blur": "Blur",
+      "gaussianBlur": "Gaussian Blur",
+      "sharpen": "Sharpen",
+      "emboss": "Emboss",
+      "vintage": "Vintage",
+      "vignette": "Vignette",
+      "noise": "Noise",
+      "pixelate": "Pixelate",
+      "filmGrain": "Film Grain",
+      "blackAndWhite": "Black & White",
+      "negative": "Negative",
+      "polaroid": "Polaroid",
+      "fadeColor": "Fade Color"
+    }
+  },
+  "effects": {
+    "add": "Add effect",
+    "edit": "Edit effect",
+    "remove": "Remove effect",
+    "duration": "Duration",
+    "intensity": "Intensity",
+    "categories": {
+      "transition": "Transitions",
+      "motion": "Motion",
+      "light": "Light",
+      "particle": "Particles",
+      "text": "Text",
+      "3d": "3D",
+      "other": "Other"
+    },
+    "names": {
+      "fade": "Fade",
+      "dissolve": "Dissolve",
+      "wipe": "Wipe",
+      "slide": "Slide",
+      "zoom": "Zoom",
+      "rotate": "Rotate",
+      "flash": "Flash",
+      "glitch": "Glitch",
+      "blur": "Blur",
+      "particles": "Particles",
+      "confetti": "Confetti",
+      "snow": "Snow",
+      "rain": "Rain",
+      "fire": "Fire",
+      "smoke": "Smoke",
+      "bokeh": "Bokeh",
+      "lens": "Lens",
+      "mirror": "Mirror",
+      "split": "Split",
+      "picture": "Picture in Picture"
+    }
+  },
+  "project": {
+    "untitledProject": "Untitled #{{number}}",
+    "untitledExport": "Untitled {{number}}",
+    "newProject": "New Project",
+    "saveProject": "Save Project",
+    "openProject": "Open Project",
+    "deleteProject": "Delete Project",
+    "exportProject": "Export Project",
+    "importProject": "Import Project"
+  }
+}

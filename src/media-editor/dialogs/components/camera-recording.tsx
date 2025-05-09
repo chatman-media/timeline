@@ -1,4 +1,5 @@
 import { useCallback, useContext, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
@@ -9,6 +10,7 @@ import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 import { MediaFile } from "@/types/media"
 
 export function CameraRecording() {
+  const { t } = useTranslation()
   const { isRecordModalOpen, handleCloseModal } = useModalContext()
   const mediaContext = useContext(MediaContext)
   const { addMediaFiles } = useTimeline()
@@ -219,21 +221,19 @@ export function CameraRecording() {
           aria-describedby="camera-preview-description"
         >
           <DialogTitle className="border-b border-[#333] p-4 text-lg font-semibold">
-            Предпросмотр записи
+            {t('dialogs.cameraPreview.title')}
           </DialogTitle>
 
           <div className="p-4">
             <DialogDescription id="camera-preview-description" className="mb-4 text-sm text-white">
-              Просмотрите записанное видео перед сохранением. После нажатия на кнопку "Сохранить
-              видео" файл будет скачан. Переместите его в папку public/media проекта для добавления
-              на таймлайн.
+              {t('dialogs.cameraPreview.description')}
             </DialogDescription>
 
             {/* Предпросмотр видео */}
             <div className="relative mx-auto mb-6 flex h-[320px] w-full max-w-[400px] items-center justify-center rounded-md border border-gray-800 bg-black">
               {!videoRef.current?.src && (
                 <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-                  Загрузка видео...
+                  {t('dialogs.cameraPreview.loadingVideo')}
                 </div>
               )}
               <video
@@ -255,18 +255,18 @@ export function CameraRecording() {
 
             {/* Информация о видео */}
             <div className="mb-6 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2">
-              <div className="text-sm text-gray-300">Имя файла:</div>
+              <div className="text-sm text-gray-300">{t('dialogs.cameraPreview.fileName')}:</div>
               <div className="text-sm">{recordedFileName}</div>
 
-              <div className="text-sm text-gray-300">Длительность:</div>
-              <div className="text-sm">{videoDuration.toFixed(2)} сек.</div>
+              <div className="text-sm text-gray-300">{t('dialogs.cameraPreview.duration')}:</div>
+              <div className="text-sm">{videoDuration.toFixed(2)} {t('dialogs.cameraPreview.seconds')}</div>
 
-              <div className="text-sm text-gray-300">Разрешение:</div>
+              <div className="text-sm text-gray-300">{t('dialogs.cameraPreview.resolution')}:</div>
               <div className="text-sm">
                 {videoWidth}x{videoHeight}
               </div>
 
-              <div className="text-sm text-gray-300">Размер файла:</div>
+              <div className="text-sm text-gray-300">{t('dialogs.cameraPreview.fileSize')}:</div>
               <div className="text-sm">
                 {(recordedBlob?.size || 0) / 1024 / 1024 < 1
                   ? `${((recordedBlob?.size || 0) / 1024).toFixed(2)} КБ`
@@ -281,14 +281,14 @@ export function CameraRecording() {
                 className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
                 onClick={handleClosePreview}
               >
-                Отмена
+                {t('dialogs.cameraPreview.cancel')}
               </Button>
               <Button
                 className="bg-green-600 hover:bg-green-700"
                 onClick={handleSaveVideo}
                 disabled={isSaving}
               >
-                {isSaving ? "Сохранение..." : "Сохранить видео"}
+                {isSaving ? t('dialogs.cameraPreview.saving') : t('dialogs.cameraPreview.saveVideo')}
               </Button>
             </div>
           </div>
