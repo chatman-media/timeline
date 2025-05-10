@@ -1177,6 +1177,478 @@ export function ResizableTemplate({
       )
     }
 
+    // Специальная обработка для шаблона "5 screens: 1 left + 4 right"
+    if (template.screens === 5 && template.id && template.id.includes("split-custom-5-1-landscape")) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем вертикальную разделительную линию между левой и правой частями */}
+          <div
+            className="absolute inset-y-0 left-1/2 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+
+          {/* Добавляем горизонтальную разделительную линию в правой части */}
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "50%",
+              left: "50%",
+            }}
+          />
+
+          {/* Добавляем вертикальную разделительную линию в верхней части нижней правой половины */}
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "25%",
+              top: "50%",
+              left: "75%",
+            }}
+          />
+
+          {/* Добавляем горизонтальную разделительную линию в нижней правой части */}
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "75%",
+              left: "50%",
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "5 screens: 1 right + 4 left"
+    if (template.screens === 5 && template.id && template.id.includes("split-custom-5-2-landscape")) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем вертикальную разделительную линию между левой и правой частями */}
+          <div
+            className="absolute inset-y-0 left-1/2 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+
+          {/* Добавляем горизонтальную разделительную линию в левой части */}
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "50%",
+              left: "0",
+            }}
+          />
+
+          {/* Добавляем вертикальную разделительную линию в верхней части нижней левой половины */}
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "25%",
+              top: "50%",
+              left: "25%",
+            }}
+          />
+
+          {/* Добавляем горизонтальную разделительную линию в нижней левой части */}
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "75%",
+              left: "0",
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "5 screens: 1 top + 4 bottom" (2 сверху, 1 посередине, 2 снизу)
+    if (template.screens === 5 && template.id && template.id.includes("split-custom-5-3-landscape")) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем горизонтальные разделительные линии */}
+          <div
+            className="absolute inset-x-0 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              top: "33.33%",
+            }}
+          />
+          <div
+            className="absolute inset-x-0 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              top: "66.66%",
+            }}
+          />
+
+          {/* Добавляем вертикальную разделительную линию в верхней части */}
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "33.33%",
+              top: "0",
+              left: "50%",
+            }}
+          />
+
+          {/* Добавляем вертикальную разделительную линию в нижней части */}
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "33.33%",
+              top: "66.66%",
+              left: "50%",
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "3 top + 1 bottom"
+    if (template.screens === 4 && template.id && template.id.includes("split-3-1-landscape") && !template.id.includes("right")) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем горизонтальную разделительную линию */}
+          <div
+            className="absolute inset-x-0 top-1/2 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+
+          {/* Добавляем вертикальные разделительные линии в верхней части */}
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "50%",
+              top: "0",
+              left: "33.33%",
+            }}
+          />
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "50%",
+              top: "0",
+              left: "66.66%",
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "Diagonal Split"
+    if (template.screens === 2 && template.id && template.id.includes("split-diagonal") && !template.id.includes("cross") && !template.id.includes("vertical")) {
+      // Получаем точки разделения из шаблона
+      const templateSplitPoints = template.splitPoints || [
+        { x: 66.67, y: 0 }, // Начальная точка (2/3 от левого края, верх)
+        { x: 33.33, y: 100 }, // Конечная точка (1/3 от левого края, низ)
+      ];
+
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Создаем clipPath для видео на основе положения линии
+            const clipPaths = [
+              `polygon(0 0, ${templateSplitPoints[0].x}% 0, ${templateSplitPoints[1].x}% 100%, 0 100%)`,
+              `polygon(${templateSplitPoints[0].x}% 0, 100% 0, 100% 100%, ${templateSplitPoints[1].x}% 100%)`
+            ];
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: '0',
+                  left: '0',
+                  width: '100%',
+                  height: '100%',
+                  clipPath: clipPaths[index],
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                  hideLabel={false}
+                  labelPosition={index % 2 === 0 ? "left" : "right"}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительную линию с учетом угла наклона */}
+          {(() => {
+            // Рассчитываем угол наклона линии
+            const dx = templateSplitPoints[1].x - templateSplitPoints[0].x;
+            const dy = templateSplitPoints[1].y - templateSplitPoints[0].y;
+            const angle = Math.atan2(dy, dx);
+
+            // Рассчитываем ширину линии в зависимости от угла
+            // Чем ближе угол к 90 градусам (вертикальная линия), тем меньше ширина
+            // Чем ближе угол к 0 градусам (горизонтальная линия), тем больше ширина
+            const baseWidth = 0.1; // Базовая ширина линии
+            const widthFactor = Math.abs(Math.cos(angle)); // Фактор изменения ширины
+            const lineWidth = baseWidth + baseWidth * widthFactor;
+
+            return (
+              <div
+                className="absolute inset-0 z-20"
+                style={{
+                  clipPath: `polygon(
+                    ${templateSplitPoints[0].x - lineWidth}% 0,
+                    ${templateSplitPoints[0].x + lineWidth}% 0,
+                    ${templateSplitPoints[1].x + lineWidth}% 100%,
+                    ${templateSplitPoints[1].x - lineWidth}% 100%
+                  )`,
+                  backgroundColor: "#35d1c1",
+                  pointerEvents: "none" // Отключаем события мыши для линии
+                }}
+              />
+            );
+          })()}
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "Diagonal Split Vertical"
+    if (template.screens === 2 && template.id && template.id.includes("split-diagonal-vertical")) {
+      // Получаем точки разделения из шаблона
+      const templateSplitPoints = template.splitPoints || [
+        { x: 65, y: 0 }, // Начальная точка (65% от левого края, верх)
+        { x: 35, y: 100 }, // Конечная точка (35% от левого края, низ)
+      ];
+
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Создаем clipPath для видео на основе положения линии
+            const clipPaths = [
+              `polygon(0 0, ${templateSplitPoints[0].x}% 0, ${templateSplitPoints[1].x}% 100%, 0 100%)`,
+              `polygon(${templateSplitPoints[0].x}% 0, 100% 0, 100% 100%, ${templateSplitPoints[1].x}% 100%)`
+            ];
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: '0',
+                  left: '0',
+                  width: '100%',
+                  height: '100%',
+                  clipPath: clipPaths[index],
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                  hideLabel={false}
+                  labelPosition={index % 2 === 0 ? "left" : "right"}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительную линию с учетом угла наклона */}
+          {(() => {
+            // Рассчитываем угол наклона линии
+            const dx = templateSplitPoints[1].x - templateSplitPoints[0].x;
+            const dy = templateSplitPoints[1].y - templateSplitPoints[0].y;
+            const angle = Math.atan2(dy, dx);
+
+            // Рассчитываем ширину линии в зависимости от угла
+            // Чем ближе угол к 90 градусам (вертикальная линия), тем меньше ширина
+            // Чем ближе угол к 0 градусам (горизонтальная линия), тем больше ширина
+            const baseWidth = 0.1; // Базовая ширина линии
+            const widthFactor = Math.abs(Math.cos(angle)); // Фактор изменения ширины
+            const lineWidth = baseWidth + baseWidth * widthFactor;
+
+            return (
+              <div
+                className="absolute inset-0 z-20"
+                style={{
+                  clipPath: `polygon(
+                    ${templateSplitPoints[0].x - lineWidth}% 0,
+                    ${templateSplitPoints[0].x + lineWidth}% 0,
+                    ${templateSplitPoints[1].x + lineWidth}% 100%,
+                    ${templateSplitPoints[1].x - lineWidth}% 100%
+                  )`,
+                  backgroundColor: "#35d1c1",
+                  pointerEvents: "none" // Отключаем события мыши для линии
+                }}
+              />
+            );
+          })()}
+        </div>
+      )
+    }
+
     // Специальная обработка для сетки 2x2 (4 экрана)
     if (template.screens === 4 && template.id && (template.id.includes("split-grid-2x2-landscape") || template.id.includes("split-grid-2x2-portrait") || template.id.includes("split-grid-2x2-square"))) {
       return (
