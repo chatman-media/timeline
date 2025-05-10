@@ -318,7 +318,7 @@
     },
     "player": {
       "camera": "Camera",
-      "videoUnavailable": "Video unavailable"
+      "videoUnavailable": "Unavailable"
     },
     "zoom": {
       "zoomIn": "Zoom in",

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { usePlayerContext } from "@/media-editor/media-player"
 import { PlayerControls } from "@/media-editor/media-player/components/player-controls"
@@ -13,6 +14,9 @@ import { useProject } from "@/media-editor/project-settings/project-provider"
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 
 export function MediaPlayer() {
+  // Для локализации
+  const { t } = useTranslation()
+
   // Массив для хранения refs контейнеров видео
   const videoContainerRefs = useRef<Record<string, React.RefObject<HTMLDivElement | null>>>({})
   const {
@@ -1796,7 +1800,7 @@ export function MediaPlayer() {
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center bg-black">
-                            <span className="text-white">Видео недоступно</span>
+                            <span className="text-white">{t('timeline.player.videoUnavailable', 'Видео недоступно')}</span>
                           </div>
                         )}
                       </div>

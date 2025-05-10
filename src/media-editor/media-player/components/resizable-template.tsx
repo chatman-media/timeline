@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { useTranslation } from "react-i18next"
 
 import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { ResizableVideo } from "@/media-editor/media-player/components/resizable-video"
@@ -37,6 +38,104 @@ export function ResizableTemplate({
 
   // Состояние для хранения размеров панелей
   const [panelSizes, setPanelSizes] = useState<number[]>([])
+
+  // Состояние для хранения текущего положения диагональной линии для диагонального шаблона
+  const [splitPoints, setSplitPoints] = useState<{x: number, y: number}[]>(
+    template?.splitPoints ? [...template.splitPoints] : [
+      { x: 66.67, y: 0 }, // Начальная точка (2/3 от левого края, верх)
+      { x: 33.33, y: 100 } // Конечная точка (1/3 от левого края, низ)
+    ]
+  );
+
+  // Состояние для отслеживания перетаскивания
+  const [isDragging, setIsDragging] = useState(false);
+
+  // Смещение курсора относительно линии при начале перетаскивания
+  const [dragOffset, setDragOffset] = useState<number>(0);
+
+  // Ссылка на контейнер для диагонального шаблона
+  const diagonalContainerRef = useRef<HTMLDivElement>(null);
+
+  // Обработчик начала перетаскивания
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+
+    // Вычисляем смещение курсора относительно линии
+    if (diagonalContainerRef.current) {
+      const rect = diagonalContainerRef.current.getBoundingClientRect();
+      const cursorX = ((e.clientX - rect.left) / rect.width) * 100;
+      // Вычисляем смещение от верхней точки линии
+      setDragOffset(cursorX - splitPoints[0].x);
+    }
+
+    setIsDragging(true);
+  }, [splitPoints]);
+
+  // Обработчик перетаскивания
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging || !diagonalContainerRef.current) return;
+
+    // Получаем размеры и позицию контейнера из ref
+    const rect = diagonalContainerRef.current.getBoundingClientRect();
+
+    // Вычисляем относительную позицию курсора в процентах
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+
+    // Вычисляем разницу между верхней и нижней точками линии
+    const diffX = splitPoints[1].x - splitPoints[0].x;
+
+    // Устанавливаем верхнюю точку с учетом смещения
+    let newX1 = x - dragOffset;
+    // Нижняя точка смещается на то же расстояние, сохраняя наклон линии
+    let newX2 = newX1 + diffX;
+
+    // Проверяем, не выходит ли линия за границы
+    // Верхняя точка должна быть в пределах от 0% до 100%
+    if (newX1 < 0) {
+      const adjustment = -newX1;
+      newX1 += adjustment;
+      newX2 += adjustment;
+    } else if (newX1 > 100) {
+      const adjustment = newX1 - 100;
+      newX1 -= adjustment;
+      newX2 -= adjustment;
+    }
+
+    // Нижняя точка должна быть в пределах от 0% до 100%
+    if (newX2 < 0) {
+      const adjustment = -newX2;
+      newX1 += adjustment;
+      newX2 += adjustment;
+    } else if (newX2 > 100) {
+      const adjustment = newX2 - 100;
+      newX1 -= adjustment;
+      newX2 -= adjustment;
+    }
+
+    // Обновляем положение линии
+    setSplitPoints([
+      { x: newX1, y: 0 },
+      { x: newX2, y: 100 }
+    ]);
+  }, [isDragging, splitPoints, dragOffset]);
+
+  // Обработчик окончания перетаскивания
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Добавляем и удаляем обработчики событий для перетаскивания
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
   // Эффект для инициализации размеров панелей
   useEffect(() => {
@@ -2842,7 +2941,7 @@ export function ResizableTemplate({
     // Для сетки 2x2 (4 экрана)
     else if (template.screens === 4) {
       return (
-        <div className="h-full w-full">
+        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {/* Верхний ряд */}
             <Panel>
@@ -3639,23 +3738,30 @@ export function ResizableTemplate({
   if (template.split === "diagonal") {
     // Для диагональных шаблонов с 2 экранами
     if (template.screens === 2) {
+      // Создаем clipPath для видео на основе текущего положения линии
+      const clipPaths = [
+        `polygon(0 0, ${splitPoints[0].x}% 0, ${splitPoints[1].x}% 100%, 0 100%)`,
+        `polygon(${splitPoints[0].x}% 0, 100% 0, 100% 100%, ${splitPoints[1].x}% 100%)`
+      ];
+
       return (
-        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+        <div
+          ref={diagonalContainerRef}
+          className="relative h-full w-full"
+          style={{ border: "1px solid #35d1c1" }}
+        >
           {/* Рендерим видео */}
           {validVideos.slice(0, videoCount).map((video, index) => {
-            // Получаем стили для видео в зависимости от шаблона
-            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
-
             return (
               <div
                 key={`fixed-video-${video.id}-${index}`}
                 className="absolute"
                 style={{
-                  top: videoStyle.top || '0',
-                  left: videoStyle.left || '0',
-                  width: videoStyle.width || '100%',
-                  height: videoStyle.height || '100%',
-                  clipPath: videoStyle.clipPath,
+                  top: '0',
+                  left: '0',
+                  width: '100%',
+                  height: '100%',
+                  clipPath: clipPaths[index],
                   zIndex: 10, // Поверх шаблона
                 }}
               >
@@ -3670,22 +3776,21 @@ export function ResizableTemplate({
             )
           })}
 
-          {/* Добавляем разделительную линию */}
-          {template.splitPoints && (
-            <div
-              className="absolute inset-0 z-20"
-              style={{
-                clipPath: `polygon(
-                  ${template.splitPoints[0].x - 0.2}% 0,
-                  ${template.splitPoints[0].x + 0.2}% 0,
-                  ${template.splitPoints[1].x + 0.2}% 100%,
-                  ${template.splitPoints[1].x - 0.2}% 100%
-                )`,
-                backgroundColor: "#35d1c1",
-                opacity: 0.8,
-              }}
-            />
-          )}
+          {/* Добавляем разделительную линию с возможностью перетаскивания */}
+          <div
+            className="absolute inset-0 z-20"
+            style={{
+              clipPath: `polygon(
+                ${splitPoints[0].x - 0.5}% 0,
+                ${splitPoints[0].x + 0.5}% 0,
+                ${splitPoints[1].x + 0.5}% 100%,
+                ${splitPoints[1].x - 0.5}% 100%
+              )`,
+              backgroundColor: "#35d1c1",
+              cursor: "ew-resize"
+            }}
+            onMouseDown={handleMouseDown}
+          />
 
           {/* Добавляем надписи с названиями камер */}
           {validVideos.slice(0, videoCount).map((_, index) => {
@@ -3834,13 +3939,14 @@ interface VideoPanelProps {
  */
 function VideoPanel({ video, isActive, videoRefs, index = 0, hideLabel = false }: VideoPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null)
+  const { t } = useTranslation()
 
   // Проверяем, что видео существует и имеет путь
   if (!video || !video.path) {
     console.error(`[VideoPanel] Ошибка: видео не определено или не имеет пути`, video)
     return (
       <div className="relative flex h-full w-full items-center justify-center bg-black">
-        <span className="text-white">Видео недоступно</span>
+        <span className="text-white">{t('timeline.player.videoUnavailable', 'Видео недоступно')}</span>
       </div>
     )
   }
