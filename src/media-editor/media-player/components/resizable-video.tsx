@@ -11,12 +11,13 @@ interface ResizableVideoProps {
   videoRefs?: Record<string, HTMLVideoElement>
   index?: number // Индекс видео в шаблоне
   hideLabel?: boolean // Флаг для скрытия надписи с названием камеры
+  labelPosition?: 'left' | 'right' | 'center' // Позиция надписи с названием камеры
 }
 
 /**
  * Компонент для отображения видео с возможностью масштабирования
  */
-export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabel = false }: ResizableVideoProps) {
+export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabel = false, labelPosition = 'center' }: ResizableVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isReady, setIsReady] = useState(false)
 
@@ -300,7 +301,13 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
       {/* Подпись с названием камеры (поверх видео) - не отображаем если hideLabel=true */}
       {!hideLabel && (
         <div
-          className="absolute bottom-1 left-1/2 transform -translate-x-1/2 text-center px-1.5 py-0.5 rounded-sm bg-black bg-opacity-30 text-white text-xs font-medium"
+          className={`absolute px-1.5 py-0.5 rounded-sm bg-black bg-opacity-50 text-white text-xs font-medium ${
+            labelPosition === 'center'
+              ? 'bottom-1 left-1/2 transform -translate-x-1/2 text-center'
+              : labelPosition === 'left'
+                ? 'top-1/2 left-[2%] transform -translate-y-1/2'
+                : 'top-1/2 right-[2%] transform -translate-y-1/2'
+          }`}
           style={{ zIndex: 10 }}
         >
           {t('timeline.player.camera', 'Камера')} {index + 1}

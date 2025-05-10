@@ -53,19 +53,32 @@ export function ResizableTemplate({
   // Смещение курсора относительно линии при начале перетаскивания
   const [dragOffset, setDragOffset] = useState<number>(0);
 
+  // Состояние для отслеживания, какую точку перетаскиваем (0 - верхнюю, 1 - нижнюю)
+  const [dragPoint, setDragPoint] = useState<number | null>(null);
+
   // Ссылка на контейнер для диагонального шаблона
   const diagonalContainerRef = useRef<HTMLDivElement>(null);
 
   // Обработчик начала перетаскивания
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+  const handleMouseDown = useCallback((e: React.MouseEvent, pointIndex: number = 0) => {
     e.preventDefault();
 
-    // Вычисляем смещение курсора относительно линии
+    // Запоминаем, какую точку перетаскиваем
+    setDragPoint(pointIndex);
+
+    // Вычисляем смещение курсора относительно выбранной точки или центра линии
     if (diagonalContainerRef.current) {
       const rect = diagonalContainerRef.current.getBoundingClientRect();
       const cursorX = ((e.clientX - rect.left) / rect.width) * 100;
-      // Вычисляем смещение от верхней точки линии
-      setDragOffset(cursorX - splitPoints[0].x);
+
+      // Если перетаскиваем всю линию (pointIndex === 2), используем центр линии
+      if (pointIndex === 2) {
+        const centerX = (splitPoints[0].x + splitPoints[1].x) / 2;
+        setDragOffset(cursorX - centerX);
+      } else {
+        // Иначе используем выбранную точку
+        setDragOffset(cursorX - splitPoints[pointIndex].x);
+      }
     }
 
     setIsDragging(true);
@@ -73,7 +86,7 @@ export function ResizableTemplate({
 
   // Обработчик перетаскивания
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!isDragging || !diagonalContainerRef.current) return;
+    if (!isDragging || !diagonalContainerRef.current || dragPoint === null) return;
 
     // Получаем размеры и позицию контейнера из ref
     const rect = diagonalContainerRef.current.getBoundingClientRect();
@@ -81,35 +94,56 @@ export function ResizableTemplate({
     // Вычисляем относительную позицию курсора в процентах
     const x = ((e.clientX - rect.left) / rect.width) * 100;
 
-    // Вычисляем разницу между верхней и нижней точками линии
-    const diffX = splitPoints[1].x - splitPoints[0].x;
+    // Создаем копию текущих точек
+    const newPoints = [...splitPoints];
 
-    // Устанавливаем верхнюю точку с учетом смещения
-    let newX1 = x - dragOffset;
-    // Нижняя точка смещается на то же расстояние, сохраняя наклон линии
-    let newX2 = newX1 + diffX;
+    // Вычисляем новую позицию с учетом смещения
+    const newX = x - dragOffset;
 
-    // Проверяем, не выходит ли линия за границы
-    // Верхняя точка должна быть в пределах от 0% до 100%
-    if (newX1 < 0) {
-      const adjustment = -newX1;
-      newX1 += adjustment;
-      newX2 += adjustment;
-    } else if (newX1 > 100) {
-      const adjustment = newX1 - 100;
-      newX1 -= adjustment;
-      newX2 -= adjustment;
+    if (dragPoint === 2) {
+      // Если перетаскиваем всю линию, смещаем обе точки
+      const diffX = newX - ((splitPoints[0].x + splitPoints[1].x) / 2);
+      newPoints[0].x = splitPoints[0].x + diffX;
+      newPoints[1].x = splitPoints[1].x + diffX;
+    } else {
+      // Иначе обновляем только выбранную точку
+      newPoints[dragPoint].x = newX;
     }
 
-    // Нижняя точка должна быть в пределах от 0% до 100%
-    if (newX2 < 0) {
-      const adjustment = -newX2;
-      newX1 += adjustment;
-      newX2 += adjustment;
-    } else if (newX2 > 100) {
-      const adjustment = newX2 - 100;
-      newX1 -= adjustment;
-      newX2 -= adjustment;
+    // Для совместимости с остальным кодом
+    let newX1 = newPoints[0].x;
+    let newX2 = newPoints[1].x;
+
+    // Проверяем, не выходит ли линия за границы
+    if (dragPoint === 2) {
+      // Если перетаскиваем всю линию, проверяем обе точки
+      // Верхняя точка должна быть в пределах от 0% до 100%
+      if (newX1 < 0) {
+        const adjustment = -newX1;
+        newX1 += adjustment;
+        newX2 += adjustment;
+      } else if (newX1 > 100) {
+        const adjustment = newX1 - 100;
+        newX1 -= adjustment;
+        newX2 -= adjustment;
+      }
+
+      // Нижняя точка должна быть в пределах от 0% до 100%
+      if (newX2 < 0) {
+        const adjustment = -newX2;
+        newX1 += adjustment;
+        newX2 += adjustment;
+      } else if (newX2 > 100) {
+        const adjustment = newX2 - 100;
+        newX1 -= adjustment;
+        newX2 -= adjustment;
+      }
+    } else if (dragPoint === 0) {
+      // Если перетаскиваем верхнюю точку, ограничиваем только её
+      newX1 = Math.max(0, Math.min(100, newX1));
+    } else if (dragPoint === 1) {
+      // Если перетаскиваем нижнюю точку, ограничиваем только её
+      newX2 = Math.max(0, Math.min(100, newX2));
     }
 
     // Обновляем положение линии
@@ -117,11 +151,12 @@ export function ResizableTemplate({
       { x: newX1, y: 0 },
       { x: newX2, y: 100 }
     ]);
-  }, [isDragging, splitPoints, dragOffset]);
+  }, [isDragging, splitPoints, dragOffset, dragPoint]);
 
   // Обработчик окончания перетаскивания
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    setDragPoint(null);
   }, []);
 
   // Добавляем и удаляем обработчики событий для перетаскивания
@@ -3770,13 +3805,14 @@ export function ResizableTemplate({
                   isActive={video.id === activeVideoId}
                   videoRefs={videoRefs}
                   index={index}
-                  hideLabel={template.split === "diagonal"}
+                  hideLabel={false}
+                  labelPosition={index % 2 === 0 ? "left" : "right"}
                 />
               </div>
             )
           })}
 
-          {/* Добавляем разделительную линию с возможностью перетаскивания */}
+          {/* Добавляем разделительную линию */}
           <div
             className="absolute inset-0 z-20"
             style={{
@@ -3787,38 +3823,53 @@ export function ResizableTemplate({
                 ${splitPoints[1].x - 0.5}% 100%
               )`,
               backgroundColor: "#35d1c1",
-              cursor: "ew-resize"
+              pointerEvents: "none" // Отключаем события мыши для линии
             }}
-            onMouseDown={handleMouseDown}
           />
 
-          {/* Добавляем надписи с названиями камер */}
-          {validVideos.slice(0, videoCount).map((_, index) => {
-            // Определяем позицию для каждой камеры
-            const style: React.CSSProperties = {
-              backgroundColor: "rgba(0,0,0,0.5)",
-              padding: "2px 8px",
-              borderRadius: "4px"
-            };
+          {/* Центральная область для перетаскивания всей линии */}
+          <div
+            className="absolute z-30"
+            style={{
+              top: "20%",
+              bottom: "20%",
+              left: `${(splitPoints[0].x + splitPoints[1].x) / 2 - 5}%`,
+              width: "10%",
+              cursor: "ew-resize",
+              backgroundColor: "transparent"
+            }}
+            onMouseDown={(e) => handleMouseDown(e, 2)}
+          />
 
-            if (index === 0) {
-              style.bottom = "10%";
-              style.left = "10%";
-            } else if (index === 1) {
-              style.bottom = "10%";
-              style.right = "10%";
-            }
+          {/* Верхняя область для перетаскивания */}
+          <div
+            className="absolute z-30"
+            style={{
+              top: 0,
+              left: `${splitPoints[0].x - 5}%`,
+              width: "10%",
+              height: "20%",
+              cursor: "ew-resize",
+              backgroundColor: "transparent"
+            }}
+            onMouseDown={(e) => handleMouseDown(e, 0)}
+          />
 
-            return (
-              <div
-                key={`camera-label-${index}`}
-                className="absolute z-30 text-white text-sm"
-                style={style}
-              >
-                Camera {index + 1}
-              </div>
-            );
-          })}
+          {/* Нижняя область для перетаскивания */}
+          <div
+            className="absolute z-30"
+            style={{
+              bottom: 0,
+              left: `${splitPoints[1].x - 5}%`,
+              width: "10%",
+              height: "20%",
+              cursor: "ew-resize",
+              backgroundColor: "transparent"
+            }}
+            onMouseDown={(e) => handleMouseDown(e, 1)}
+          />
+
+          {/* Надписи с названиями камер добавляются в компоненте VideoPanel */}
         </div>
       )
     }
@@ -3932,12 +3983,13 @@ interface VideoPanelProps {
   videoRefs?: Record<string, HTMLVideoElement>
   index?: number // Индекс видео в шаблоне
   hideLabel?: boolean // Флаг для скрытия надписи с названием камеры
+  labelPosition?: 'left' | 'right' | 'center' // Позиция надписи с названием камеры
 }
 
 /**
  * Компонент для отображения видео в панели
  */
-function VideoPanel({ video, isActive, videoRefs, index = 0, hideLabel = false }: VideoPanelProps) {
+function VideoPanel({ video, isActive, videoRefs, index = 0, hideLabel = false, labelPosition = 'center' }: VideoPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
 
@@ -3965,6 +4017,7 @@ function VideoPanel({ video, isActive, videoRefs, index = 0, hideLabel = false }
         videoRefs={videoRefs}
         index={index}
         hideLabel={hideLabel}
+        labelPosition={labelPosition}
       />
     </div>
   )
