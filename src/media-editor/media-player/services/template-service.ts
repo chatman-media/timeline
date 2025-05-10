@@ -179,53 +179,7 @@ export function getVideoStyleForTemplate(
           zIndex: 3,
         }
       }
-    } else if (template.screens === 4 && template.id && template.id.includes("split-diagonal-cross")) {
-      // Для 4 экранов (диагональный крест)
-      if (videoIndex === 0) {
-        // Первое видео (верхняя часть)
-        return {
-          ...baseStyle,
-          top: "0",
-          left: "0",
-          width: "100%",
-          height: "100%",
-          clipPath: "polygon(0 0, 100% 0, 50% 50%)",
-          zIndex: 1,
-        }
-      } else if (videoIndex === 1) {
-        // Второе видео (правая часть)
-        return {
-          ...baseStyle,
-          top: "0",
-          left: "0",
-          width: "100%",
-          height: "100%",
-          clipPath: "polygon(100% 0, 100% 100%, 50% 50%)",
-          zIndex: 2,
-        }
-      } else if (videoIndex === 2) {
-        // Третье видео (нижняя часть)
-        return {
-          ...baseStyle,
-          top: "0",
-          left: "0",
-          width: "100%",
-          height: "100%",
-          clipPath: "polygon(0 100%, 100% 100%, 50% 50%)",
-          zIndex: 3,
-        }
-      } else {
-        // Четвертое видео (левая часть)
-        return {
-          ...baseStyle,
-          top: "0",
-          left: "0",
-          width: "100%",
-          height: "100%",
-          clipPath: "polygon(0 0, 0 100%, 50% 50%)",
-          zIndex: 4,
-        }
-      }
+
     }
   } else if (template.split === "custom") {
     // Для шаблона "1 left + 3 right" (1 большое слева, 3 маленьких справа)
