@@ -1,4 +1,4 @@
-import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
+import { CellConfig, MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
 import { MediaFile } from "@/types/media"
 
 // Интерфейс для хранения информации о применяемом шаблоне
@@ -20,6 +20,7 @@ export interface VideoTemplateStyle {
   zIndex?: number
   transform?: string
   display?: "block" | "none"
+  cellConfig?: CellConfig // Настройки ячейки для видео
 }
 
 /**
@@ -32,7 +33,7 @@ export interface VideoTemplateStyle {
 export function getVideoStyleForTemplate(
   template: MediaTemplate,
   videoIndex: number,
-  totalVideos: number,
+  _totalVideos: number, // Параметр не используется, но оставлен для совместимости
 ): VideoTemplateStyle {
   // Базовый стиль для всех видео
   const baseStyle: VideoTemplateStyle = {
@@ -63,107 +64,52 @@ export function getVideoStyleForTemplate(
     }
   }
 
-  // Если количество видео меньше, чем количество экранов в шаблоне,
-  // адаптируем шаблон к доступным видео
-  if (totalVideos < template.screens) {
-    // Для шаблонов с сеткой, адаптируем размеры ячеек
-    if (
-      template.split === "custom" &&
-      (template.screens === 4 || template.screens === 9 || template.screens === 16)
-    ) {
-      // Для сетки 2x2 (4 экрана) с 2 видео - размещаем их сверху
-      if (template.screens === 4 && totalVideos === 2) {
-        const col = videoIndex % 2
-        return {
-          ...baseStyle,
-          top: "0",
-          left: `${col * 50}%`,
-          width: "50%",
-          height: "100%",
-        }
-      }
+  // Получаем настройки ячейки из шаблона
+  let cellConfig: CellConfig | undefined
 
-      // Для сетки 3x3 (9 экранов) с 2-3 видео - размещаем их сверху
-      if (template.screens === 9 && (totalVideos === 2 || totalVideos === 3)) {
-        const col = videoIndex % 3
-        return {
-          ...baseStyle,
-          top: "0",
-          left: `${col * 33.33}%`,
-          width: "33.33%",
-          height: "100%",
-        }
-      }
+  if (template.cellConfig) {
+    if (Array.isArray(template.cellConfig)) {
+      // Если настройки заданы для каждой ячейки отдельно
+      cellConfig = template.cellConfig[videoIndex]
+    } else {
+      // Если настройки общие для всех ячеек
+      cellConfig = template.cellConfig
     }
   }
-
-  // Проверяем наличие настраиваемых пропорций
-  const hasProportions =
-    template.proportions &&
-    Array.isArray(template.proportions) &&
-    template.proportions.length >= Math.min(template.screens, totalVideos)
 
   // В зависимости от типа разделения шаблона, возвращаем соответствующие стили
   if (template.split === "vertical") {
     // Вертикальное разделение (колонки)
-    if (hasProportions && !Array.isArray(template.proportions![0])) {
-      // Используем настраиваемые пропорции
-      const proportions = template.proportions as number[]
-
-      // Вычисляем позицию на основе пропорций
-      let leftPosition = 0
-      for (let i = 0; i < videoIndex; i++) {
-        leftPosition += proportions[i]
-      }
-
-      return {
-        ...baseStyle,
-        top: "0",
-        left: `${leftPosition}%`,
-        width: `${proportions[videoIndex]}%`,
-        height: "100%",
-      }
-    } else {
-      // Используем равномерное разделение
-      const widthPercent = 100 / Math.min(template.screens, totalVideos)
-      return {
-        ...baseStyle,
-        top: "0",
-        left: `${videoIndex * widthPercent}%`,
-        width: `${widthPercent}%`,
-        height: "100%",
-      }
+    const widthPercent = 100 / template.screens
+    const result = {
+      ...baseStyle,
+      top: "0",
+      left: `${videoIndex * widthPercent}%`,
+      width: `${widthPercent}%`,
+      height: "100%",
+      cellConfig, // Добавляем настройки ячейки
     }
+
+    // Логируем стили для отладки
+    console.log(`[TemplateService] Стили для вертикального разделения (индекс ${videoIndex}):`, result)
+
+    return result
   } else if (template.split === "horizontal") {
     // Горизонтальное разделение (строки)
-    if (hasProportions && !Array.isArray(template.proportions![0])) {
-      // Используем настраиваемые пропорции
-      const proportions = template.proportions as number[]
-
-      // Вычисляем позицию на основе пропорций
-      let topPosition = 0
-      for (let i = 0; i < videoIndex; i++) {
-        topPosition += proportions[i]
-      }
-
-      return {
-        ...baseStyle,
-        top: `${topPosition}%`,
-        left: "0",
-        width: "100%",
-        height: `${proportions[videoIndex]}%`,
-      }
-    } else {
-      // Используем равномерное разделение
-      const heightPercent = 100 / Math.min(template.screens, totalVideos)
-      return {
-        ...baseStyle,
-        top: `${videoIndex * heightPercent}%`,
-        left: "0",
-        width: "100%",
-        height: `${heightPercent}%`,
-      }
+    const heightPercent = 100 / template.screens
+    const result = {
+      ...baseStyle,
+      top: `${videoIndex * heightPercent}%`,
+      left: "0",
+      width: "100%",
+      height: `${heightPercent}%`,
+      cellConfig, // Добавляем настройки ячейки
     }
+
+    // Логируем стили для отладки
+    console.log(`[TemplateService] Стили для горизонтального разделения (индекс ${videoIndex}):`, result)
+
+    return result
   } else if (template.split === "diagonal") {
     // Диагональное разделение
     if (template.screens === 2) {
@@ -179,6 +125,7 @@ export function getVideoStyleForTemplate(
           height: "100%",
           clipPath: `polygon(0 0, ${splitPosition}% 0, ${splitPosition - 10}% 100%, 0 100%)`,
           zIndex: 1,
+          cellConfig, // Добавляем настройки ячейки
         }
       } else {
         // Второе видео (правая или нижняя часть)
@@ -190,6 +137,7 @@ export function getVideoStyleForTemplate(
           height: "100%",
           clipPath: `polygon(${splitPosition}% 0, 100% 0, 100% 100%, ${splitPosition - 10}% 100%)`,
           zIndex: 2,
+          cellConfig, // Добавляем настройки ячейки
         }
       }
     } else if (template.screens === 3) {
@@ -228,49 +176,544 @@ export function getVideoStyleForTemplate(
           zIndex: 3,
         }
       }
-    }
-  } else if (template.split === "custom") {
-    // Для сетки 2x2 (4 экрана)
-    if (template.screens === 4) {
-      // Проверяем наличие настраиваемых пропорций для сетки
-      if (hasProportions && Array.isArray(template.proportions![0])) {
-        // Используем настраиваемые пропорции для сетки
-        const rowProportions = template.proportions![0] as number[]
-        const colProportions = template.proportions![1] as number[]
-
-        const row = Math.floor(videoIndex / 2)
-        const col = videoIndex % 2
-
-        // Вычисляем позиции на основе пропорций
-        let topPosition = 0
-        for (let i = 0; i < row; i++) {
-          topPosition += rowProportions[i]
-        }
-
-        let leftPosition = 0
-        for (let i = 0; i < col; i++) {
-          leftPosition += colProportions[i]
-        }
-
+    } else if (template.screens === 4 && template.id && template.id.includes("split-diagonal-cross")) {
+      // Для 4 экранов (диагональный крест)
+      if (videoIndex === 0) {
+        // Первое видео (верхняя часть)
         return {
           ...baseStyle,
-          top: `${topPosition}%`,
-          left: `${leftPosition}%`,
-          width: `${colProportions[col]}%`,
-          height: `${rowProportions[row]}%`,
+          top: "0",
+          left: "0",
+          width: "100%",
+          height: "100%",
+          clipPath: "polygon(0 0, 100% 0, 50% 50%)",
+          zIndex: 1,
+        }
+      } else if (videoIndex === 1) {
+        // Второе видео (правая часть)
+        return {
+          ...baseStyle,
+          top: "0",
+          left: "0",
+          width: "100%",
+          height: "100%",
+          clipPath: "polygon(100% 0, 100% 100%, 50% 50%)",
+          zIndex: 2,
+        }
+      } else if (videoIndex === 2) {
+        // Третье видео (нижняя часть)
+        return {
+          ...baseStyle,
+          top: "0",
+          left: "0",
+          width: "100%",
+          height: "100%",
+          clipPath: "polygon(0 100%, 100% 100%, 50% 50%)",
+          zIndex: 3,
         }
       } else {
-        // Используем равномерное разделение
-        const row = Math.floor(videoIndex / 2)
-        const col = videoIndex % 2
+        // Четвертое видео (левая часть)
         return {
           ...baseStyle,
-          top: `${row * 50}%`,
+          top: "0",
+          left: "0",
+          width: "100%",
+          height: "100%",
+          clipPath: "polygon(0 0, 0 100%, 50% 50%)",
+          zIndex: 4,
+        }
+      }
+    }
+  } else if (template.split === "custom") {
+    // Для шаблона "1 left + 3 right" (1 большое слева, 3 маленьких справа)
+    if (template.screens === 4 && template.id && template.id.includes("split-1-3-landscape") && !template.id.includes("bottom")) {
+      if (videoIndex === 0) {
+        // Большое видео слева
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: "0",
+          width: "50%",
+          height: "100%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "1 left + 3 right" (большое видео слева, индекс ${videoIndex}):`, result)
+
+        return result
+      } else {
+        // Маленькие видео справа (3 видео в столбец)
+        const adjustedIndex = videoIndex - 1 // Смещаем индекс, так как первое видео занимает всю левую часть
+        const row = Math.floor(adjustedIndex / 1) // Каждое видео в своей строке
+
+        const result = {
+          ...baseStyle,
+          top: `${row * 33.33}%`,
+          left: "50%",
+          width: "50%",
+          height: "33.33%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "1 left + 3 right" (маленькое видео справа, индекс ${videoIndex}):`, result)
+
+        return result
+      }
+    }
+    // Для шаблона "3 left + 1 right" (3 маленьких слева, 1 большое справа)
+    else if (template.screens === 4 && template.id && template.id.includes("split-3-1-right-landscape")) {
+      if (videoIndex === 3) {
+        // Большое видео справа
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: "50%",
+          width: "50%",
+          height: "100%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "3 left + 1 right" (большое видео справа, индекс ${videoIndex}):`, result)
+
+        return result
+      } else {
+        // Маленькие видео слева (3 видео в столбец)
+        const row = Math.floor(videoIndex / 1) // Каждое видео в своей строке
+
+        const result = {
+          ...baseStyle,
+          top: `${row * 33.33}%`,
+          left: "0",
+          width: "50%",
+          height: "33.33%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "3 left + 1 right" (маленькое видео слева, индекс ${videoIndex}):`, result)
+
+        return result
+      }
+    }
+    // Для шаблона "Mixed Split (2+1)" (1 сверху, 2 снизу)
+    else if (template.screens === 3 && template.id && template.id.includes("split-mixed-1-landscape")) {
+      if (videoIndex === 0) {
+        // Верхнее видео (на всю ширину)
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: "0",
+          width: "100%",
+          height: "50%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "Mixed Split (2+1)" (верхнее видео, индекс ${videoIndex}):`, result)
+
+        return result
+      } else {
+        // Нижние видео (2 видео в ряд)
+        const adjustedIndex = videoIndex - 1 // Смещаем индекс, так как первое видео занимает всю верхнюю часть
+        const col = adjustedIndex % 2 // Каждое видео в своем столбце
+
+        const result = {
+          ...baseStyle,
+          top: "50%",
           left: `${col * 50}%`,
           width: "50%",
           height: "50%",
+          cellConfig, // Добавляем настройки ячейки
         }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "Mixed Split (2+1)" (нижнее видео, индекс ${videoIndex}):`, result)
+
+        return result
       }
+    }
+    // Для шаблона "Mixed Split (1+2)" (1 слева, 2 справа)
+    else if (template.screens === 3 && template.id && template.id.includes("split-mixed-2-landscape")) {
+      if (videoIndex === 0) {
+        // Левое видео (на всю высоту)
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: "0",
+          width: "50%",
+          height: "100%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "Mixed Split (1+2)" (левое видео, индекс ${videoIndex}):`, result)
+
+        return result
+      } else {
+        // Правые видео (2 видео в столбец)
+        const adjustedIndex = videoIndex - 1 // Смещаем индекс, так как первое видео занимает всю левую часть
+        const row = adjustedIndex % 2 // Каждое видео в своей строке
+
+        const result = {
+          ...baseStyle,
+          top: `${row * 50}%`,
+          left: "50%",
+          width: "50%",
+          height: "50%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "Mixed Split (1+2)" (правое видео, индекс ${videoIndex}):`, result)
+
+        return result
+      }
+    }
+    // Для шаблона "5 screens: 1 left + 4 right" (сложное разделение справа, 1 большое слева)
+    else if (template.screens === 5 && template.id && template.id.includes("split-custom-5-1-landscape")) {
+      if (videoIndex === 0) {
+        // Большое видео слева
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: "0",
+          width: "50%",
+          height: "100%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (большое видео слева, индекс ${videoIndex}):`, result)
+
+        return result
+      } else if (videoIndex === 1) {
+        // Большое видео в верхней правой части
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: "50%",
+          width: "50%",
+          height: "50%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (большое видео в верхней правой части, индекс ${videoIndex}):`, result)
+
+        return result
+      } else if (videoIndex === 2 || videoIndex === 3) {
+        // Маленькие видео в верхней части нижней правой половины
+        const col = (videoIndex - 2) % 2
+
+        const result = {
+          ...baseStyle,
+          top: "50%",
+          left: `${50 + col * 25}%`,
+          width: "25%",
+          height: "25%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (маленькое видео в верхней части нижней правой половины, индекс ${videoIndex}):`, result)
+
+        return result
+      } else if (videoIndex === 4) {
+        // Видео в нижней части нижней правой половины
+        const result = {
+          ...baseStyle,
+          top: "75%",
+          left: "50%",
+          width: "50%",
+          height: "25%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (видео в нижней части нижней правой половины, индекс ${videoIndex}):`, result)
+
+        return result
+      }
+    }
+    // Для шаблона "5 screens: 1 right + 4 left" (сложное разделение слева, 1 большое справа)
+    else if (template.screens === 5 && template.id && template.id.includes("split-custom-5-2-landscape")) {
+      if (videoIndex === 4) {
+        // Большое видео справа
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: "50%",
+          width: "50%",
+          height: "100%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (большое видео справа, индекс ${videoIndex}):`, result)
+
+        return result
+      } else if (videoIndex === 0) {
+        // Большое видео в верхней левой части
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: "0",
+          width: "50%",
+          height: "50%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (большое видео в верхней левой части, индекс ${videoIndex}):`, result)
+
+        return result
+      } else if (videoIndex === 1 || videoIndex === 2) {
+        // Маленькие видео в верхней части нижней левой половины
+        const col = (videoIndex - 1) % 2
+
+        const result = {
+          ...baseStyle,
+          top: "50%",
+          left: `${col * 25}%`,
+          width: "25%",
+          height: "25%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (маленькое видео в верхней части нижней левой половины, индекс ${videoIndex}):`, result)
+
+        return result
+      } else if (videoIndex === 3) {
+        // Видео в нижней части нижней левой половины
+        const result = {
+          ...baseStyle,
+          top: "75%",
+          left: "0",
+          width: "50%",
+          height: "25%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (видео в нижней части нижней левой половины, индекс ${videoIndex}):`, result)
+
+        return result
+      }
+    }
+    // Для шаблона "5 screens: 1 top + 4 bottom" (2 сверху, 1 посередине, 2 снизу)
+    else if (template.screens === 5 && template.id && template.id.includes("split-custom-5-3-landscape")) {
+      if (videoIndex === 0 || videoIndex === 1) {
+        // Верхние видео (2 в ряд)
+        const col = videoIndex % 2
+
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: `${col * 50}%`,
+          width: "50%",
+          height: "33.33%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 top + 4 bottom" (верхнее видео, индекс ${videoIndex}):`, result)
+
+        return result
+      } else if (videoIndex === 2) {
+        // Среднее видео на всю ширину
+        const result = {
+          ...baseStyle,
+          top: "33.33%",
+          left: "0",
+          width: "100%",
+          height: "33.33%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 top + 4 bottom" (среднее видео, индекс ${videoIndex}):`, result)
+
+        return result
+      } else {
+        // Нижние видео (2 в ряд)
+        const col = (videoIndex - 3) % 2
+
+        const result = {
+          ...baseStyle,
+          top: "66.66%",
+          left: `${col * 50}%`,
+          width: "50%",
+          height: "33.33%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 top + 4 bottom" (нижнее видео, индекс ${videoIndex}):`, result)
+
+        return result
+      }
+    }
+    // Для шаблона "3 top + 1 bottom" (3 маленьких сверху, 1 большое снизу)
+    else if (template.screens === 4 && template.id && template.id.includes("split-3-1-landscape") && !template.id.includes("right")) {
+      if (videoIndex === 3) {
+        // Большое видео снизу
+        const result = {
+          ...baseStyle,
+          top: "50%",
+          left: "0",
+          width: "100%",
+          height: "50%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "3 top + 1 bottom" (большое видео снизу, индекс ${videoIndex}):`, result)
+
+        return result
+      } else {
+        // Маленькие видео сверху (3 видео в ряд)
+        const col = videoIndex % 3 // Каждое видео в своем столбце
+
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: `${col * 33.33}%`,
+          width: "33.33%",
+          height: "50%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "3 top + 1 bottom" (маленькое видео сверху, индекс ${videoIndex}):`, result)
+
+        return result
+      }
+    }
+    // Для шаблона "1 top + 3 bottom" (1 большое сверху, 3 маленьких снизу)
+    else if (template.screens === 4 && template.id && template.id.includes("split-1-3-bottom-landscape")) {
+      if (videoIndex === 0) {
+        // Большое видео сверху
+        const result = {
+          ...baseStyle,
+          top: "0",
+          left: "0",
+          width: "100%",
+          height: "50%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "1 top + 3 bottom" (большое видео сверху, индекс ${videoIndex}):`, result)
+
+        return result
+      } else {
+        // Маленькие видео снизу (3 видео в ряд)
+        const adjustedIndex = videoIndex - 1 // Смещаем индекс, так как первое видео занимает всю верхнюю часть
+        const col = adjustedIndex % 3 // Каждое видео в своем столбце
+
+        const result = {
+          ...baseStyle,
+          top: "50%",
+          left: `${col * 33.33}%`,
+          width: "33.33%",
+          height: "50%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+
+        // Логируем стили для отладки
+        console.log(`[TemplateService] Стили для шаблона "1 top + 3 bottom" (маленькое видео снизу, индекс ${videoIndex}):`, result)
+
+        return result
+      }
+    }
+    // Для сетки 2x2 (4 экрана)
+    else if (template.screens === 4) {
+      const row = Math.floor(videoIndex / 2)
+      const col = videoIndex % 2
+      return {
+        ...baseStyle,
+        top: `${row * 50}%`,
+        left: `${col * 50}%`,
+        width: "50%",
+        height: "50%",
+        cellConfig, // Добавляем настройки ячейки
+      }
+    }
+    // Для сетки с 8 экранами (общий случай)
+    else if (template.screens === 8 && (!template.id || (!template.id.includes("4x2") && !template.id.includes("2x4")))) {
+      const row = Math.floor(videoIndex / 4)
+      const col = videoIndex % 4
+      const result = {
+        ...baseStyle,
+        top: `${row * 50}%`,
+        left: `${col * 25}%`,
+        width: "25%",
+        height: "50%",
+        cellConfig, // Добавляем настройки ячейки
+      }
+
+      // Логируем стили для отладки
+      console.log(`[TemplateService] Стили для сетки с 8 экранами (общий случай, индекс ${videoIndex}):`, result)
+
+      return result
+    }
+    // Для сетки 4x2 (8 экранов)
+    else if (template.screens === 8 && template.id && template.id.includes("4x2")) {
+      const row = Math.floor(videoIndex / 4)
+      const col = videoIndex % 4
+      const result = {
+        ...baseStyle,
+        top: `${row * 50}%`,
+        left: `${col * 25}%`,
+        width: "25%",
+        height: "50%",
+        cellConfig, // Добавляем настройки ячейки
+      }
+
+      // Логируем стили для отладки
+      console.log(`[TemplateService] Стили для сетки 4x2 (индекс ${videoIndex}):`, result)
+
+      return result
+    }
+    // Для сетки 2x4 (8 экранов)
+    else if (template.screens === 8 && template.id && template.id.includes("2x4")) {
+      const row = Math.floor(videoIndex / 2)
+      const col = videoIndex % 2
+      const result = {
+        ...baseStyle,
+        top: `${row * 25}%`,
+        left: `${col * 50}%`,
+        width: "50%",
+        height: "25%",
+        cellConfig, // Добавляем настройки ячейки
+      }
+
+      // Логируем стили для отладки
+      console.log(`[TemplateService] Стили для сетки 2x4 (индекс ${videoIndex}):`, result)
+
+      return result
+    }
+    // Для сетки 3x2 (6 экранов)
+    else if (template.screens === 6 && template.id && template.id.includes("3x2")) {
+      const row = Math.floor(videoIndex / 3)
+      const col = videoIndex % 3
+      const result = {
+        ...baseStyle,
+        top: `${row * 50}%`,
+        left: `${col * 33.33}%`,
+        width: "33.33%",
+        height: "50%",
+        cellConfig, // Добавляем настройки ячейки
+      }
+
+      // Логируем стили для отладки
+      console.log(`[TemplateService] Стили для сетки 3x2 (индекс ${videoIndex}):`, result)
+
+      return result
     }
     // Для сетки 3x3 (9 экранов)
     else if (template.screens === 9) {
@@ -282,6 +725,103 @@ export function getVideoStyleForTemplate(
         left: `${col * 33.33}%`,
         width: "33.33%",
         height: "33.33%",
+        cellConfig, // Добавляем настройки ячейки
+      }
+    }
+    // Для сетки 5x2 (10 экранов, ландшафтный формат)
+    else if (template.screens === 10 && template.id && template.id.includes("landscape")) {
+      const row = Math.floor(videoIndex / 5)
+      const col = videoIndex % 5
+      return {
+        ...baseStyle,
+        top: `${row * 50}%`,
+        left: `${col * 20}%`,
+        width: "20%",
+        height: "50%",
+      }
+    }
+    // Для сетки 4x3 (12 экранов, ландшафтный формат)
+    else if (template.screens === 12 && template.id && template.id.includes("landscape")) {
+      const row = Math.floor(videoIndex / 4)
+      const col = videoIndex % 4
+      return {
+        ...baseStyle,
+        top: `${row * 33.33}%`,
+        left: `${col * 25}%`,
+        width: "25%",
+        height: "33.33%",
+      }
+    }
+    // Для сетки 2x5 (10 экранов, вертикальный формат)
+    else if (template.screens === 10 && template.id && template.id.includes("portrait")) {
+      const row = Math.floor(videoIndex / 2)
+      const col = videoIndex % 2
+      return {
+        ...baseStyle,
+        top: `${row * 20}%`,
+        left: `${col * 50}%`,
+        width: "50%",
+        height: "20%",
+      }
+    }
+    // Для сетки 3x4 (12 экранов, вертикальный формат)
+    else if (template.screens === 12 && template.id && template.id.includes("portrait")) {
+      const row = Math.floor(videoIndex / 3)
+      const col = videoIndex % 3
+      return {
+        ...baseStyle,
+        top: `${row * 25}%`,
+        left: `${col * 33.33}%`,
+        width: "33.33%",
+        height: "25%",
+      }
+    }
+    // Для сетки 5x2 (10 экранов, квадратный формат)
+    else if (template.screens === 10 && template.id && template.id.includes("5x2-square")) {
+      const row = Math.floor(videoIndex / 5)
+      const col = videoIndex % 5
+      return {
+        ...baseStyle,
+        top: `${row * 50}%`,
+        left: `${col * 20}%`,
+        width: "20%",
+        height: "50%",
+      }
+    }
+    // Для сетки 2x5 (10 экранов, квадратный формат)
+    else if (template.screens === 10 && template.id && template.id.includes("2x5-square")) {
+      const row = Math.floor(videoIndex / 2)
+      const col = videoIndex % 2
+      return {
+        ...baseStyle,
+        top: `${row * 20}%`,
+        left: `${col * 50}%`,
+        width: "50%",
+        height: "20%",
+      }
+    }
+    // Для сетки 4x3 (12 экранов, квадратный формат)
+    else if (template.screens === 12 && template.id && template.id.includes("4x3-square")) {
+      const row = Math.floor(videoIndex / 4)
+      const col = videoIndex % 4
+      return {
+        ...baseStyle,
+        top: `${row * 33.33}%`,
+        left: `${col * 25}%`,
+        width: "25%",
+        height: "33.33%",
+      }
+    }
+    // Для сетки 3x4 (12 экранов, квадратный формат)
+    else if (template.screens === 12 && template.id && template.id.includes("3x4-square")) {
+      const row = Math.floor(videoIndex / 3)
+      const col = videoIndex % 3
+      return {
+        ...baseStyle,
+        top: `${row * 25}%`,
+        left: `${col * 33.33}%`,
+        width: "33.33%",
+        height: "25%",
       }
     }
     // Для сетки 4x4 (16 экранов)
@@ -304,6 +844,7 @@ export function getVideoStyleForTemplate(
       position: "relative", // Для ResizableTemplate используем relative
       width: "100%",
       height: "100%",
+      cellConfig, // Добавляем настройки ячейки
     }
   }
 
@@ -314,5 +855,6 @@ export function getVideoStyleForTemplate(
     left: "0",
     width: "100%",
     height: "100%",
+    cellConfig, // Добавляем настройки ячейки
   }
 }

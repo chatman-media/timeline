@@ -23,6 +23,7 @@ interface PlayerContextType {
   isRecording: boolean
   isVideoLoading: boolean
   isVideoReady: boolean
+  isResizableMode: boolean // Флаг, указывающий, что шаблоны должны быть resizable
 
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
@@ -53,6 +54,7 @@ interface PlayerContextType {
 
   // Методы для управления шаблонами
   setAppliedTemplate: (template: AppliedTemplate | null) => void
+  setIsResizableMode: (isResizableMode: boolean) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined)
@@ -124,6 +126,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
           send({ type: "setActiveVideoId", activeVideoId }),
         setAppliedTemplate: (appliedTemplate: AppliedTemplate | null) =>
           send({ type: "setAppliedTemplate", appliedTemplate }),
+        setIsResizableMode: (isResizableMode: boolean) =>
+          send({ type: "setIsResizableMode", isResizableMode }),
       }}
     >
       {children}

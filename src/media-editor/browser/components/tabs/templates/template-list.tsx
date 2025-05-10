@@ -6,6 +6,8 @@ import { TemplateListToolbar } from "@/media-editor/browser/components/tabs/temp
 import { usePlayerContext } from "@/media-editor/media-player"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
 import { useProject } from "@/media-editor/project-settings/project-provider"
+import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
+import { MediaFile, Track } from "@/types/media"
 
 import { getTemplateLabels } from "./template-labels"
 import { MediaTemplate, TEMPLATE_MAP } from "./templates"
@@ -107,9 +109,29 @@ export function TemplateList() {
   }, [settings.aspectRatio, settings.resolution])
 
   const filteredTemplates = templates.filter((template) => {
-    const searchLower = searchQuery.toLowerCase()
+    const searchLower = searchQuery.toLowerCase().trim()
 
-    // Поиск по ID
+    // Если поисковый запрос пустой, возвращаем все шаблоны
+    if (!searchLower) {
+      return true
+    }
+
+    // Проверяем, является ли запрос одной цифрой (количество экранов)
+    if (/^\d+$/.test(searchLower)) {
+      const screenCount = parseInt(searchLower, 10)
+      return template.screens === screenCount
+    }
+
+    // Проверяем, является ли запрос двумя цифрами, разделенными пробелом или x/х (например, "5 2" или "5x2")
+    const twoDigitsMatch = searchLower.match(/^(\d+)[\s×x](\d+)$/)
+    if (twoDigitsMatch) {
+      const [, firstDigit, secondDigit] = twoDigitsMatch
+      // Проверяем, содержит ли ID шаблона эти две цифры в правильном порядке
+      const digitPattern = new RegExp(`${firstDigit}[^\\d]*${secondDigit}`)
+      return digitPattern.test(template.id)
+    }
+
+    // Стандартный поиск по ID
     if (template.id.toLowerCase().includes(searchLower)) {
       return true
     }
@@ -146,6 +168,9 @@ export function TemplateList() {
     .map(Number)
     .sort((a, b) => a - b)
 
+  // Получаем доступ к контексту таймлайна для получения всех видео с таймлайна
+  const { tracks } = useTimeline()
+
   const handleTemplateClick = (template: MediaTemplate) => {
     setActiveTemplate(template)
 
@@ -155,19 +180,44 @@ export function TemplateList() {
 
     console.log("Applying template:", template.id, templateName)
 
-    // Проверяем, есть ли параллельные видео для применения шаблона
-    if (parallelVideos.length > 0) {
+    // Собираем все видео со всех треков таймлайна
+    const allTimelineVideos: MediaFile[] = []
+    tracks.forEach((track: Track) => {
+      if (track.videos && track.videos.length > 0) {
+        allTimelineVideos.push(...track.videos)
+      }
+    })
+
+    // Проверяем, что у всех видео есть путь
+    const validVideos = allTimelineVideos.filter(video => {
+      if (!video.path) {
+        console.error(`Видео ${video.id} не имеет пути:`, video)
+        return false
+      }
+      return true
+    })
+
+    // Сортируем видео по времени начала (startTime)
+    const sortedVideos = [...validVideos].sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
+
+    if (sortedVideos.length > 0) {
       console.log(
-        `Применяем шаблон "${templateName}" (${template.id}) к ${parallelVideos.length} параллельным видео`,
+        `Применяем шаблон "${templateName}" (${template.id}) к ${sortedVideos.length} видео с таймлайна`,
       )
 
       // Проверяем, сколько экранов в шаблоне и сколько у нас видео
       const screensCount = template.screens || 1
-      const availableVideos = parallelVideos.slice(0, screensCount)
+      const availableVideos = sortedVideos.slice(0, screensCount)
 
       console.log(
         `Шаблон содержит ${screensCount} экранов, доступно ${availableVideos.length} видео`,
       )
+
+      // Подробное логирование видео для отладки
+      console.log("Детали видео для шаблона:")
+      availableVideos.forEach((v, i) => {
+        console.log(`Видео ${i+1}/${availableVideos.length}: id=${v.id}, path=${v.path}, name=${v.name}`)
+      })
 
       // Создаем объект AppliedTemplate
       const appliedTemplate: AppliedTemplate = {
@@ -177,8 +227,23 @@ export function TemplateList() {
 
       // Применяем шаблон через контекст плеера
       setAppliedTemplate(appliedTemplate)
+    } else if (parallelVideos.length > 0) {
+      // Если на таймлайне нет видео, но есть параллельные видео, используем их (для обратной совместимости)
+      console.log(
+        `На таймлайне нет видео, используем ${parallelVideos.length} параллельных видео`,
+      )
+
+      const screensCount = template.screens || 1
+      const availableVideos = parallelVideos.slice(0, screensCount)
+
+      const appliedTemplate: AppliedTemplate = {
+        template,
+        videos: availableVideos,
+      }
+
+      setAppliedTemplate(appliedTemplate)
     } else {
-      console.log("Нет параллельных видео для применения шаблона")
+      console.log("Нет видео на таймлайне и нет параллельных видео для применения шаблона")
     }
   }
 

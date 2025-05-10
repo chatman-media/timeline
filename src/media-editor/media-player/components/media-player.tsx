@@ -1,12 +1,16 @@
-import { useEffect, useRef } from "react"
+import React, { useEffect, useRef, useState } from "react"
 
 import { usePlayerContext } from "@/media-editor/media-player"
 import { PlayerControls } from "@/media-editor/media-player/components/player-controls"
 import { ResizableTemplate } from "@/media-editor/media-player/components/resizable-template"
+import { ResizableVideo } from "@/media-editor/media-player/components/resizable-video"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
-import { getVideoStyleForTemplate } from "@/media-editor/media-player/services/template-service"
+import { getVideoStyleForTemplate, VideoTemplateStyle } from "@/media-editor/media-player/services/template-service"
+import { useProject } from "@/media-editor/project-settings/project-provider"
 
 export function MediaPlayer() {
+  // Массив для хранения refs контейнеров видео
+  const videoContainerRefs = useRef<Record<string, React.RefObject<HTMLDivElement | null>>>({});
   const {
     video,
     isPlaying,
@@ -23,10 +27,72 @@ export function MediaPlayer() {
     videoRefs,
     parallelVideos,
     appliedTemplate,
+    volume, // Добавляем volume из контекста плеера
   } = usePlayerContext()
 
   // Получаем displayTime из контекста
   const { displayTime } = useDisplayTime()
+
+  // Получаем настройки проекта
+  const { settings } = useProject()
+
+  // Вычисляем соотношение сторон из настроек проекта
+  const [aspectRatio, setAspectRatio] = useState({
+    width: settings.aspectRatio.value.width,
+    height: settings.aspectRatio.value.height,
+  })
+
+  // Обновляем соотношение сторон при изменении настроек проекта
+  useEffect(() => {
+    setAspectRatio({
+      width: settings.aspectRatio.value.width,
+      height: settings.aspectRatio.value.height,
+    })
+  }, [settings.aspectRatio])
+
+  // Эффект для обработки изменения громкости
+  useEffect(() => {
+    // Если нет видео или рефов, выходим
+    if (!videoRefs) return;
+
+    // Определяем активное видео ID
+    const currentActiveId = video?.id || null;
+
+    // Если используется шаблон с несколькими видео, применяем громкость ко всем видео
+    if (appliedTemplate?.template && parallelVideos.length > 0) {
+      parallelVideos.forEach(parallelVideo => {
+        if (parallelVideo.id && videoRefs[parallelVideo.id]) {
+          const videoElement = videoRefs[parallelVideo.id]
+
+          // Устанавливаем громкость только для активного видео, остальные заглушены
+          if (parallelVideo.id === currentActiveId) {
+            videoElement.volume = volume
+            videoElement.muted = false
+            console.log(`[Volume] Установлена громкость ${volume} для активного видео ${parallelVideo.id} в шаблоне`)
+          } else {
+            videoElement.muted = true
+            console.log(`[Volume] Заглушено неактивное видео ${parallelVideo.id} в шаблоне`)
+          }
+        }
+      })
+    }
+    // Если нет шаблона, применяем громкость только к активному видео
+    else if (video?.id && videoRefs[video.id]) {
+      // Получаем элемент видео
+      const videoElement = videoRefs[video.id]
+
+      // Устанавливаем громкость
+      videoElement.volume = volume
+
+      // Логируем изменение громкости
+      console.log(`[Volume] Установлена громкость ${volume} для видео ${video.id}`)
+    }
+
+    // Сохраняем уровень звука в localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("player-volume", volume.toString())
+    }
+  }, [video, videoRefs, volume, appliedTemplate, parallelVideos])
 
   // Используем ref для хранения последнего времени обновления, чтобы избежать слишком частых обновлений
   const lastUpdateTimeRef = useRef(0)
@@ -46,17 +112,51 @@ export function MediaPlayer() {
   // Используем ref для отслеживания изменения видео, чтобы избежать бесконечного цикла
   const isVideoChangedRef = useRef(false)
 
+  // Используем ref для предотвращения множественных вызовов
+  const isHandlingPlayPauseRef = useRef(false)
+  const lastPlayPauseTimeRef = useRef(0)
+
+  // Рефы для эффекта обработки изменения состояния воспроизведения
+  const isHandlingPlayPauseEffectRef = useRef(false)
+  const lastPlayPauseEffectTimeRef = useRef(0)
+
   const handlePlayPause = (e: React.MouseEvent) => {
     e.stopPropagation()
+
+    // Предотвращаем множественные вызовы в течение короткого промежутка времени
+    const now = Date.now()
+    if (isHandlingPlayPauseRef.current || now - lastPlayPauseTimeRef.current < 300) {
+      console.log("[MediaPlayer] Игнорируем повторный вызов handlePlayPause")
+      return
+    }
+
+    // Устанавливаем флаг, что обрабатываем событие
+    isHandlingPlayPauseRef.current = true
+    lastPlayPauseTimeRef.current = now
 
     // Если идет процесс переключения камеры, игнорируем нажатие
     if (isChangingCamera) {
       console.log("[MediaPlayer] Игнорируем переключение воспроизведения во время смены камеры")
+      isHandlingPlayPauseRef.current = false
       return
     }
 
-    // Сохраняем текущее время перед паузой
-    if (isPlaying && video?.id && videoRefs[video.id]) {
+    // Если используется шаблон с несколькими видео, сохраняем время для всех видео
+    if (appliedTemplate?.template && parallelVideos.length > 0) {
+      if (isPlaying) {
+        // Сохраняем текущее время для всех видео перед паузой
+        parallelVideos.forEach(parallelVideo => {
+          if (parallelVideo.id && videoRefs[parallelVideo.id]) {
+            const videoElement = videoRefs[parallelVideo.id]
+            const currentVideoTime = videoElement.currentTime
+            videoTimesRef.current[parallelVideo.id] = currentVideoTime
+            console.log(`[MediaPlayer] Сохраняем время для видео ${parallelVideo.id} перед паузой: ${currentVideoTime.toFixed(3)}`)
+          }
+        })
+      }
+    }
+    // Если нет шаблона, сохраняем время только для активного видео
+    else if (isPlaying && video?.id && videoRefs[video.id]) {
       const videoElement = videoRefs[video.id]
       // Сохраняем текущее время в lastSentTimeRef и videoTimesRef
       const currentVideoTime = videoElement.currentTime
@@ -65,8 +165,13 @@ export function MediaPlayer() {
       console.log(`[MediaPlayer] Сохраняем время перед паузой: ${currentVideoTime.toFixed(3)}`)
     }
 
-    // Переключаем состояние воспроизведения
+    // Переключаем состояние воспроизведения для всех видео
     setIsPlaying(!isPlaying)
+
+    // Сбрасываем флаг обработки через небольшую задержку
+    setTimeout(() => {
+      isHandlingPlayPauseRef.current = false
+    }, 300)
   }
 
   // Используем ref для отслеживания последнего обработанного видео и его пути
@@ -1366,6 +1471,17 @@ export function MediaPlayer() {
     const videoElement = videoRefs[video.id]
     if (!videoElement) return
 
+    // Предотвращаем множественные вызовы в течение короткого промежутка времени
+    const now = Date.now()
+    if (isHandlingPlayPauseEffectRef.current || now - lastPlayPauseEffectTimeRef.current < 300) {
+      console.log("[PlayPauseEffect] Игнорируем повторный вызов эффекта")
+      return
+    }
+
+    // Устанавливаем флаг, что обрабатываем событие
+    isHandlingPlayPauseEffectRef.current = true
+    lastPlayPauseEffectTimeRef.current = now
+
     // Сохраняем текущее время видео перед изменением состояния воспроизведения
     const currentVideoTime = videoElement.currentTime
     if (currentVideoTime > 0) {
@@ -1388,8 +1504,47 @@ export function MediaPlayer() {
     // Обрабатываем изменение состояния воспроизведения без установки флага isChangingCamera
     // Проверяем, не находимся ли мы в процессе переключения камеры или блокировки
     if (!isChangingCamera && !isCameraChangeLockRef.current) {
-      // Проверяем, что видео элемент существует и доступен
-      if (videoElement && document.body.contains(videoElement)) {
+      // Если используется шаблон с несколькими видео, управляем всеми видео
+      if (appliedTemplate?.template && parallelVideos.length > 0) {
+        // Обрабатываем все видео в шаблоне
+        parallelVideos.forEach(parallelVideo => {
+          if (parallelVideo.id && videoRefs[parallelVideo.id]) {
+            const parallelVideoElement = videoRefs[parallelVideo.id]
+
+            if (isPlaying) {
+              // Если видео на паузе, запускаем воспроизведение
+              if (parallelVideoElement.paused) {
+                // Используем setTimeout для предотвращения конфликта с другими операциями
+                setTimeout(() => {
+                  // Проверяем, что видео элемент все еще существует и доступен
+                  if (
+                    parallelVideoElement &&
+                    document.body.contains(parallelVideoElement) &&
+                    isPlaying &&
+                    !isChangingCamera &&
+                    !isCameraChangeLockRef.current
+                  ) {
+                    console.log(`[PlayPause] Запускаем воспроизведение для видео ${parallelVideo.id} в шаблоне`)
+                    parallelVideoElement.play().catch((err: Error) => {
+                      if (err.name !== "AbortError") {
+                        console.error(`[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`, err)
+                      }
+                    })
+                  }
+                }, 100) // Увеличиваем задержку для большей надежности
+              }
+            } else {
+              // Если видео воспроизводится, ставим на паузу
+              if (!parallelVideoElement.paused) {
+                console.log(`[PlayPause] Ставим на паузу видео ${parallelVideo.id} в шаблоне`)
+                parallelVideoElement.pause()
+              }
+            }
+          }
+        })
+      }
+      // Если нет шаблона, управляем только активным видео
+      else if (videoElement && document.body.contains(videoElement)) {
         if (isPlaying) {
           // Если видео на паузе, запускаем воспроизведение
           if (videoElement.paused) {
@@ -1429,7 +1584,14 @@ export function MediaPlayer() {
         `[PlayPause] Пропускаем изменение состояния воспроизведения во время переключения камеры или блокировки`,
       )
     }
+
+    // Сбрасываем флаг обработки через небольшую задержку
+    setTimeout(() => {
+      isHandlingPlayPauseEffectRef.current = false
+    }, 300)
   }, [isPlaying, video?.id, videoRefs, isChangingCamera, setIsPlaying])
+
+
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent): void => {
@@ -1496,29 +1658,78 @@ export function MediaPlayer() {
     `[MediaPlayer] Видео для отображения: ${videosToDisplay.length}, шаблон: ${appliedTemplate?.template?.id || "нет"}`,
   )
 
+  // Подробное логирование видео для отладки
+  if (videosToDisplay.length > 0) {
+    console.log("[MediaPlayer] Детали видео для отображения:")
+    videosToDisplay.forEach((v, i) => {
+      console.log(`[MediaPlayer] Видео ${i+1}/${videosToDisplay.length}: id=${v.id}, path=${v.path}, name=${v.name}`)
+    })
+  }
+
   // Логируем информацию о параллельных видео и активном видео
   console.log(
     `[MediaPlayer] Параллельные видео: ${parallelVideos.map((v) => v.id).join(", ")}, активное видео: ${activeId}`,
   )
 
+  // Вычисляем стили для контейнера видео с учетом соотношения сторон
+  const containerStyle = {
+    position: "relative" as const,
+    width: "100%",
+    height: "100%",
+    maxWidth: "100%",
+    maxHeight: "100%",
+    overflow: "hidden",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  }
+
+  // Вычисляем стили для обертки с фиксированным соотношением сторон
+  const wrapperStyle = {
+    position: "relative" as const,
+    width: "100%",
+    height: "0",
+    paddingTop: `${(aspectRatio.height / aspectRatio.width) * 100}%`,
+    maxWidth: `calc(100vh * ${aspectRatio.width / aspectRatio.height})`,
+    maxHeight: `calc(100vw * ${aspectRatio.height / aspectRatio.width})`,
+  }
+
+  // Вычисляем стили для внутреннего контейнера
+  const innerContainerStyle = {
+    position: "absolute" as const,
+    top: "0",
+    left: "0",
+    width: "100%",
+    height: "100%",
+  }
+
+  // Логируем информацию о шаблоне и видео для отладки
+  console.log("[MediaPlayer] Применяем шаблон:", appliedTemplate?.template)
+  console.log("[MediaPlayer] Видео для отображения:", videosToDisplay)
+  console.log("[MediaPlayer] Активное видео ID:", activeId)
+  console.log("[MediaPlayer] Соотношение сторон:", aspectRatio)
+
   return (
     <div className="relative flex h-full flex-col">
-      <div className="relative flex-1 bg-black">
+      <div className="relative flex-1 bg-black" style={containerStyle}>
         {isTimeInRange ? (
-          <>
+          <div style={wrapperStyle}>
+            <div style={innerContainerStyle}>
+            {/* Логируем информацию о шаблоне для отладки */}
+
             {/* Если есть примененный шаблон и он настраиваемый, используем ResizableTemplate */}
-            {appliedTemplate?.template && appliedTemplate.template.split === "resizable" ? (
+            {appliedTemplate?.template && (appliedTemplate.template.split === "resizable" || appliedTemplate.template.resizable) ? (
               <ResizableTemplate
                 appliedTemplate={appliedTemplate}
                 videos={videosToDisplay}
                 activeVideoId={activeId}
-                onVideoClick={handlePlayPause}
+                videoRefs={videoRefs}
               />
             ) : (
               // Иначе используем стандартный подход с абсолютным позиционированием
               videosToDisplay.map((videoItem, index) => {
                 // Получаем стили для видео в зависимости от шаблона
-                const videoStyle = appliedTemplate?.template
+                const videoStyle: VideoTemplateStyle = appliedTemplate?.template
                   ? getVideoStyleForTemplate(
                     appliedTemplate.template,
                     index,
@@ -1533,6 +1744,54 @@ export function MediaPlayer() {
                     display: videoItem.id === activeId ? "block" : "none",
                   }
 
+                // Логируем стили для отладки
+                console.log(`[MediaPlayer] Стили для видео ${videoItem.id} (индекс ${index}):`, videoStyle)
+
+                // Если используется шаблон, применяем ResizableVideo
+                if (appliedTemplate?.template) {
+                  // Создаем компонент-обертку для ResizableVideo
+                  const ResizableVideoWrapper = () => {
+                    // Создаем ref для контейнера, если его еще нет
+                    if (!videoContainerRefs.current[`${videoItem.id}-${index}`]) {
+                      videoContainerRefs.current[`${videoItem.id}-${index}`] = React.createRef<HTMLDivElement>()
+                    }
+
+                    // Получаем ref для контейнера
+                    const containerRef = videoContainerRefs.current[`${videoItem.id}-${index}`]
+
+                    return (
+                      <div
+                        className="absolute"
+                        style={{
+                          ...videoStyle,
+                          display: videoItem.path ? "block" : "none", // Показываем только видео с путем
+                          border: "1px solid #38dacac3", // Добавляем рамку для отладки
+                          overflow: "visible" // Убираем overflow: hidden
+                        }}
+                        data-video-id={videoItem.id} // Добавляем атрибут для отладки
+                        ref={containerRef}
+                      >
+                        {videoItem && videoItem.path ? (
+                          <ResizableVideo
+                            video={videoItem}
+                            isActive={videoItem.id === activeId}
+                            containerRef={containerRef}
+                            videoRefs={videoRefs}
+                            index={index}
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-black">
+                            <span className="text-white">Видео недоступно</span>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  }
+
+                  return <ResizableVideoWrapper key={`wrapper-${videoItem.id}-${index}`} />
+                }
+
+                // Если шаблон не используется, используем стандартный подход
                 return (
                   <video
                     key={`${videoItem.id}-${index}`} // Добавляем индекс к ключу, чтобы сделать его уникальным
@@ -1541,6 +1800,25 @@ export function MediaPlayer() {
                         console.log(`[MediaPlayer] Монтирование видео элемента ${videoItem.id}`)
 
                         videoRefs[videoItem.id] = el
+
+                        // Проверяем, что путь к видео существует
+                        if (videoItem.path) {
+                          console.log(`[MediaPlayer] Устанавливаем src для видео ${videoItem.id}: ${videoItem.path}`)
+                          el.src = videoItem.path
+                          el.load()
+                        } else {
+                          console.error(`[MediaPlayer] Ошибка: путь к видео ${videoItem.id} не определен`)
+                        }
+
+                        // Устанавливаем обработчик загрузки метаданных
+                        el.onloadedmetadata = () => {
+                          console.log(`[MediaPlayer] Метаданные загружены для видео ${videoItem.id}`)
+                        }
+
+                        // Устанавливаем обработчик загрузки данных
+                        el.onloadeddata = () => {
+                          console.log(`[MediaPlayer] Данные загружены для видео ${videoItem.id}`)
+                        }
 
                         // Устанавливаем обработчик ошибок напрямую
                         el.onerror = (e) => {
@@ -1572,16 +1850,12 @@ export function MediaPlayer() {
                         }
                       }
                     }}
-                    src={videoItem.path}
+                    src={videoItem.path || ''}
                     className="object-contain"
                     style={{
                       ...videoStyle,
                       // Если нет шаблона, показываем только активное видео
-                      display: appliedTemplate?.template
-                        ? "block" // Если есть шаблон, показываем все видео
-                        : videoItem.id === activeId
-                          ? "block"
-                          : "none",
+                      display: videoItem.id === activeId && videoItem.path ? "block" : "none",
                     }}
                     data-video-id={videoItem.id} // Добавляем атрибут для отладки
                     onClick={handlePlayPause}
@@ -1601,7 +1875,8 @@ export function MediaPlayer() {
                 )
               })
             )}
-          </>
+            </div>
+          </div>
         ) : (
           <div className="absolute inset-0 h-full w-full bg-black" />
         )}

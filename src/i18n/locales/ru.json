@@ -294,6 +294,32 @@
       "videoWithNumber": "Видео {{number}}",
       "audioWithNumber": "Аудио {{number}}"
     },
+    "controls": {
+      "resizableMode": "Режим изменения размеров",
+      "fixedSizeMode": "Режим фиксированных размеров",
+      "resetTemplate": "Сбросить шаблон",
+      "switchCamera": "Переключить камеру",
+      "takeSnapshot": "Сделать снимок",
+      "settings": "Настройки",
+      "entryPoint": "Точка входа",
+      "exitPoint": "Точка выхода",
+      "muteAudio": "Выключить звук",
+      "unmuteAudio": "Включить звук",
+      "fullscreen": "Полноэкранный режим",
+      "exitFullscreen": "Выйти из полноэкранного режима",
+      "record": "Запись",
+      "stopRecord": "Остановить запись",
+      "play": "Воспроизвести",
+      "pause": "Пауза",
+      "previousFrame": "Предыдущий кадр",
+      "nextFrame": "Следующий кадр",
+      "firstFrame": "Первый кадр",
+      "lastFrame": "Последний кадр"
+    },
+    "player": {
+      "camera": "Камера",
+      "videoUnavailable": "Видео недоступно"
+    },
     "zoom": {
       "zoomIn": "Увеличить",
       "zoomOut": "Уменьшить",

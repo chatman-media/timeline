@@ -13,6 +13,7 @@ export const STORAGE_KEYS = {
   ACTIVE_TAB: "browser-active-tab",
   LANGUAGE: "app-language",
   LAYOUT: "app-layout-mode",
+  VOLUME: "player-volume",
 } as const
 
 // Допустимые значения для активного таба

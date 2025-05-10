@@ -11,10 +11,25 @@ interface TimelineBarProps {
   height: number
 }
 
+// Интерфейс для параметров useSectionTime
+interface SectionTimeProps {
+  startTime: number;
+  endTime: number;
+  currentTime?: number;
+  displayTime?: number;
+}
+
 // Функция для расчета позиции и обработки перемещения курсора времени
-function useSectionTime({ startTime, endTime }: { startTime: number; endTime: number }) {
-  const { currentTime, setCurrentTime } = usePlayerContext()
-  const { displayTime } = useDisplayTime()
+function useSectionTime({ startTime, endTime, currentTime: propCurrentTime, displayTime: propDisplayTime }: SectionTimeProps) {
+  // Получаем значения из контекста
+  const playerContext = usePlayerContext()
+  const displayTimeContext = useDisplayTime()
+
+  // Используем значения из пропсов, если они переданы, иначе из контекста
+  const currentTime = propCurrentTime !== undefined ? propCurrentTime : playerContext.currentTime
+  const displayTime = propDisplayTime !== undefined ? propDisplayTime : displayTimeContext.displayTime
+  const setCurrentTime = playerContext.setCurrentTime
+
   const [position, setPosition] = useState<number>(0)
   const isDraggingRef = useRef(false)
   const lastTimeRef = useRef<number>(currentTime)
@@ -35,9 +50,12 @@ function useSectionTime({ startTime, endTime }: { startTime: number; endTime: nu
       // Используем displayTime из контекста, который содержит относительное время
       effectiveCurrentTime = displayTime
 
-      console.log(
-        `TimelineBar: Обнаружен Unix timestamp (${currentTime}), используем относительное время из контекста: ${effectiveCurrentTime}`,
-      )
+      // Логируем только при изменении времени, чтобы избежать спама в консоли
+      if (Math.abs(lastTimeRef.current - currentTime) > 0.01) {
+        console.log(
+          `TimelineBar: Обнаружен Unix timestamp (${currentTime}), используем относительное время из контекста: ${effectiveCurrentTime}`,
+        )
+      }
     }
 
     // Проверяем, находится ли effectiveCurrentTime в пределах секции
@@ -95,12 +113,19 @@ function useSectionTime({ startTime, endTime }: { startTime: number; endTime: nu
     // Вызываем функцию расчета позиции
     calculatePosition()
 
-    // Используем requestAnimationFrame для более плавного обновления
+    // Используем requestAnimationFrame для более плавного обновления, но с ограничением частоты
     let animationFrameId: number
+    let lastUpdateTime = 0
+    const updateInterval = 100; // Обновляем не чаще чем раз в 100 мс
 
-    const updatePosition = () => {
-      calculatePosition()
-      animationFrameId = requestAnimationFrame(updatePosition)
+    const updatePosition = (timestamp: number) => {
+      // Ограничиваем частоту обновлений
+      if (timestamp - lastUpdateTime >= updateInterval) {
+        lastUpdateTime = timestamp;
+        calculatePosition();
+      }
+
+      animationFrameId = requestAnimationFrame(updatePosition);
     }
 
     // Запускаем анимацию
@@ -165,19 +190,19 @@ function useSectionTime({ startTime, endTime }: { startTime: number; endTime: nu
 
 export function TimelineBar({ sectionStartTime, sectionDuration, height }: TimelineBarProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { currentTime } = usePlayerContext()
-  const { displayTime } = useDisplayTime()
+
+  // Используем useSectionTime напрямую, без передачи контекстов
   const { position, handleMouseDown } = useSectionTime({
     startTime: sectionStartTime,
-    endTime: sectionStartTime + sectionDuration,
+    endTime: sectionStartTime + sectionDuration
   })
 
-  // Добавляем логирование для отладки
+  // Добавляем логирование для отладки только при изменении параметров секции
   useEffect(() => {
     console.log(
-      `TimelineBar: sectionStartTime=${sectionStartTime}, sectionDuration=${sectionDuration}, currentTime=${currentTime}, displayTime=${displayTime}`,
+      `TimelineBar: sectionStartTime=${sectionStartTime}, sectionDuration=${sectionDuration}`,
     )
-  }, [sectionStartTime, sectionDuration, currentTime, displayTime])
+  }, [sectionStartTime, sectionDuration])
 
   if (position < 0) return null
 

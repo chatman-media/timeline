@@ -294,6 +294,32 @@
       "videoWithNumber": "Video {{number}}",
       "audioWithNumber": "Audio {{number}}"
     },
+    "controls": {
+      "resizableMode": "Resizable Mode",
+      "fixedSizeMode": "Fixed Size Mode",
+      "resetTemplate": "Reset Template",
+      "switchCamera": "Switch Camera",
+      "takeSnapshot": "Take Snapshot",
+      "settings": "Settings",
+      "entryPoint": "Entry Point",
+      "exitPoint": "Exit Point",
+      "muteAudio": "Mute Audio",
+      "unmuteAudio": "Unmute Audio",
+      "fullscreen": "Fullscreen",
+      "exitFullscreen": "Exit Fullscreen",
+      "record": "Record",
+      "stopRecord": "Stop Recording",
+      "play": "Play",
+      "pause": "Pause",
+      "previousFrame": "Previous Frame",
+      "nextFrame": "Next Frame",
+      "firstFrame": "First Frame",
+      "lastFrame": "Last Frame"
+    },
+    "player": {
+      "camera": "Camera",
+      "videoUnavailable": "Video unavailable"
+    },
     "zoom": {
       "zoomIn": "Zoom in",
       "zoomOut": "Zoom out",

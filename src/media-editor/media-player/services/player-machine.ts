@@ -18,6 +18,7 @@ export interface PlayerContextType {
   isRecording: boolean
   isVideoLoading: boolean
   isVideoReady: boolean
+  isResizableMode: boolean // Флаг, указывающий, что шаблоны должны быть resizable
 
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
@@ -30,6 +31,21 @@ export interface PlayerContextType {
   appliedTemplate: AppliedTemplate | null // Примененный шаблон
 }
 
+// Загружаем сохраненный уровень звука из localStorage
+const getSavedVolume = (): number => {
+  if (typeof window !== "undefined") {
+    const savedVolume = localStorage.getItem("player-volume")
+    if (savedVolume !== null) {
+      const volume = parseFloat(savedVolume)
+      if (!isNaN(volume) && volume >= 0 && volume <= 1) {
+        console.log(`[PlayerMachine] Загружен сохраненный уровень звука: ${volume}`)
+        return volume
+      }
+    }
+  }
+  return 1 // Значение по умолчанию
+}
+
 const initialContext: PlayerContextType = {
   video: null,
   currentTime: 0,
@@ -39,10 +55,11 @@ const initialContext: PlayerContextType = {
   isRecording: false,
   isVideoLoading: false,
   isVideoReady: false,
+  isResizableMode: true, // По умолчанию включен режим resizable
   videoRefs: {},
   videos: {},
   duration: 0,
-  volume: 1,
+  volume: getSavedVolume(),
   parallelVideos: [],
   activeVideoId: null,
   appliedTemplate: null,
@@ -123,6 +140,11 @@ type SetAppliedTemplateEvent = {
   appliedTemplate: AppliedTemplate | null
 }
 
+type SetIsResizableModeEvent = {
+  type: "setIsResizableMode"
+  isResizableMode: boolean
+}
+
 export type PlayerEvent =
   | SetCurrentTimeEvent
   | SetIsPlayingEvent
@@ -139,6 +161,7 @@ export type PlayerEvent =
   | SetParallelVideosEvent
   | SetActiveVideoIdEvent
   | SetAppliedTemplateEvent
+  | SetIsResizableModeEvent
 
 // Функция для сохранения состояния плеера в IndexedDB - временно отключена
 const persistPlayerState = async (_: { context: PlayerContextType }): Promise<void> => {
@@ -223,6 +246,9 @@ export const playerMachine = createMachine({
         setAppliedTemplate: {
           actions: assign({ appliedTemplate: ({ event }) => event.appliedTemplate }),
         },
+        setIsResizableMode: {
+          actions: assign({ isResizableMode: ({ event }) => event.isResizableMode }),
+        },
       },
     },
     loading: {
@@ -278,6 +304,9 @@ export const playerMachine = createMachine({
         setAppliedTemplate: {
           actions: assign({ appliedTemplate: ({ event }) => event.appliedTemplate }),
         },
+        setIsResizableMode: {
+          actions: assign({ isResizableMode: ({ event }) => event.isResizableMode }),
+        },
       },
     },
     ready: {
@@ -330,6 +359,9 @@ export const playerMachine = createMachine({
         },
         setAppliedTemplate: {
           actions: assign({ appliedTemplate: ({ event }) => event.appliedTemplate }),
+        },
+        setIsResizableMode: {
+          actions: assign({ isResizableMode: ({ event }) => event.isResizableMode }),
         },
       },
     },

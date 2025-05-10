@@ -245,6 +245,32 @@ export const templateLabels: TemplateDescription[] = [
     },
   },
 
+  // Шаблоны с 10 экранами - Ландшафтный формат
+  {
+    id: "split-grid-5x2-landscape",
+    labels: {
+      ru: "Сетка 5×2",
+      en: "Grid 5×2",
+    },
+    description: {
+      ru: "Десять экранов в сетке 5×2",
+      en: "Ten screens in a 5×2 grid",
+    },
+  },
+
+  // Шаблоны с 12 экранами - Ландшафтный формат
+  {
+    id: "split-grid-4x3-landscape",
+    labels: {
+      ru: "Сетка 4×3",
+      en: "Grid 4×3",
+    },
+    description: {
+      ru: "Двенадцать экранов в сетке 4×3",
+      en: "Twelve screens in a 4×3 grid",
+    },
+  },
+
   // Шаблоны с 16 экранами - Ландшафтный формат
   {
     id: "split-grid-4x4-landscape",
@@ -498,6 +524,32 @@ export const templateLabels: TemplateDescription[] = [
     description: {
       ru: "Восемь экранов в сетке 2×4",
       en: "Eight screens in a 2×4 grid",
+    },
+  },
+
+  // Шаблоны с 10 экранами - Портретный формат
+  {
+    id: "split-grid-2x5-portrait",
+    labels: {
+      ru: "Сетка 2×5",
+      en: "Grid 2×5",
+    },
+    description: {
+      ru: "Десять экранов в сетке 2×5",
+      en: "Ten screens in a 2×5 grid",
+    },
+  },
+
+  // Шаблоны с 12 экранами - Портретный формат
+  {
+    id: "split-grid-3x4-portrait",
+    labels: {
+      ru: "Сетка 3×4",
+      en: "Grid 3×4",
+    },
+    description: {
+      ru: "Двенадцать экранов в сетке 3×4",
+      en: "Twelve screens in a 3×4 grid",
     },
   },
 
@@ -831,6 +883,54 @@ export const templateLabels: TemplateDescription[] = [
     description: {
       ru: "Девять экранов в сетке 3×3",
       en: "Nine screens in a 3×3 grid",
+    },
+  },
+
+  // Шаблоны с 10 экранами - Квадратный формат
+  {
+    id: "split-grid-5x2-square",
+    labels: {
+      ru: "Сетка 5×2",
+      en: "Grid 5×2",
+    },
+    description: {
+      ru: "Десять экранов в сетке 5×2",
+      en: "Ten screens in a 5×2 grid",
+    },
+  },
+  {
+    id: "split-grid-2x5-square",
+    labels: {
+      ru: "Сетка 2×5",
+      en: "Grid 2×5",
+    },
+    description: {
+      ru: "Десять экранов в сетке 2×5",
+      en: "Ten screens in a 2×5 grid",
+    },
+  },
+
+  // Шаблоны с 12 экранами - Квадратный формат
+  {
+    id: "split-grid-4x3-square",
+    labels: {
+      ru: "Сетка 4×3",
+      en: "Grid 4×3",
+    },
+    description: {
+      ru: "Двенадцать экранов в сетке 4×3",
+      en: "Twelve screens in a 4×3 grid",
+    },
+  },
+  {
+    id: "split-grid-3x4-square",
+    labels: {
+      ru: "Сетка 3×4",
+      en: "Grid 3×4",
+    },
+    description: {
+      ru: "Двенадцать экранов в сетке 3×4",
+      en: "Twelve screens in a 3×4 grid",
     },
   },
 

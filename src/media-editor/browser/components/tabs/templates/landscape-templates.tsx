@@ -1,12 +1,13 @@
 import { MediaTemplate } from "./templates"
 
 export const landscapeTemplates: MediaTemplate[] = [
-  // Шаблоны с 2 экранами
+  // Шаблоны с 2 экранами (с возможностью изменения размеров)
   {
     id: "split-vertical-landscape",
     split: "vertical",
+    resizable: true,
     screens: 2,
-    splitPosition: 50, // Позиция разделения в процентах (50% - посередине)
+    splitPosition: 50, // Позиция разделения в процентах (50% - посередине),
     render: () => (
       <div className="flex h-full w-full">
         <div
@@ -38,6 +39,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-horizontal-landscape",
     split: "horizontal",
+    resizable: true,
     screens: 2,
     splitPosition: 50, // Позиция разделения в процентах (50% - посередине)
     render: () => (
@@ -74,6 +76,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-diagonal-landscape",
     split: "diagonal",
+    resizable: true,
     screens: 2,
     splitPoints: [
       { x: 60, y: 0 }, // Начальная точка (60% от левого края, верх)
@@ -126,6 +129,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-mixed-1-landscape",
     split: "custom",
+    resizable: true,
     screens: 3,
     render: () => (
       <div className="relative h-full w-full">
@@ -202,6 +206,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-mixed-2-landscape",
     split: "custom",
+    resizable: true,
     screens: 3,
     render: () => (
       <div className="relative h-full w-full">
@@ -278,6 +283,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-vertical-3-landscape",
     split: "vertical",
+    resizable: true,
     screens: 3,
     render: () => (
       <div className="flex h-full w-full">
@@ -321,6 +327,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-horizontal-3-landscape",
     split: "horizontal",
+    resizable: true,
     screens: 3,
     render: () => (
       <div className="flex h-full w-full flex-col">
@@ -370,6 +377,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-grid-2x2-landscape",
     split: "custom",
+    resizable: true,
     screens: 4,
     render: () => (
       <div className="relative h-full w-full">
@@ -458,6 +466,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-vertical-4-landscape",
     split: "vertical",
+    resizable: true,
     screens: 4,
     render: () => (
       <div className="flex h-full w-full">
@@ -514,6 +523,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-custom-5-1-landscape",
     split: "custom",
+    resizable: true,
     screens: 5,
     render: () => (
       <div className="relative h-full w-full">
@@ -644,6 +654,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-custom-5-2-landscape",
     split: "custom",
+    resizable: true,
     screens: 5,
     render: () => (
       <div className="relative h-full w-full">
@@ -773,6 +784,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-custom-5-3-landscape",
     split: "custom",
+    resizable: true,
     screens: 5,
     render: () => (
       <div className="relative h-full w-full">
@@ -895,6 +907,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-1-3-landscape",
     split: "custom",
+    resizable: true,
     screens: 4,
     render: () => (
       <div className="relative h-full w-full">
@@ -995,6 +1008,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-3-1-right-landscape",
     split: "custom",
+    resizable: true,
     screens: 4,
     render: () => (
       <div className="relative h-full w-full">
@@ -1095,6 +1109,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-1-3-bottom-landscape",
     split: "custom",
+    resizable: true,
     screens: 4,
     render: () => (
       <div className="relative h-full w-full">
@@ -1285,6 +1300,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-3-1-landscape",
     split: "custom",
+    resizable: true,
     screens: 4,
     render: () => (
       <div className="relative h-full w-full">
@@ -1387,6 +1403,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-grid-3x2-landscape",
     split: "custom",
+    resizable: true,
     screens: 6,
     render: () => (
       <div className="relative h-full w-full">
@@ -1517,6 +1534,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-grid-3x3-landscape",
     split: "custom",
+    resizable: true,
     screens: 9,
     render: () => (
       <div className="relative h-full w-full">
@@ -1696,10 +1714,454 @@ export const landscapeTemplates: MediaTemplate[] = [
     ),
   },
 
+  // Шаблон с 10 экранами (5x2) для широкоэкранного формата
+  {
+    id: "split-grid-5x2-landscape",
+    split: "custom",
+    resizable: true,
+    screens: 10,
+    render: () => (
+      <div className="relative h-full w-full">
+        {/* Верхний ряд */}
+        {/* Верхний первый экран */}
+        <div
+          className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "20%",
+            height: "50%",
+            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          1
+        </div>
+
+        {/* Верхний второй экран */}
+        <div
+          className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "20%",
+            height: "50%",
+            left: "20%",
+            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          2
+        </div>
+
+        {/* Верхний третий экран */}
+        <div
+          className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "20%",
+            height: "50%",
+            left: "40%",
+            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          3
+        </div>
+
+        {/* Верхний четвертый экран */}
+        <div
+          className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "20%",
+            height: "50%",
+            left: "60%",
+            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          4
+        </div>
+
+        {/* Верхний пятый экран */}
+        <div
+          className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "20%",
+            height: "50%",
+            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          5
+        </div>
+
+        {/* Нижний ряд */}
+        {/* Нижний первый экран */}
+        <div
+          className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "20%",
+            height: "50%",
+            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          6
+        </div>
+
+        {/* Нижний второй экран */}
+        <div
+          className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "20%",
+            height: "50%",
+            left: "20%",
+            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          7
+        </div>
+
+        {/* Нижний третий экран */}
+        <div
+          className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "20%",
+            height: "50%",
+            left: "40%",
+            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          8
+        </div>
+
+        {/* Нижний четвертый экран */}
+        <div
+          className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "20%",
+            height: "50%",
+            left: "60%",
+            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          9
+        </div>
+
+        {/* Нижний пятый экран */}
+        <div
+          className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "20%",
+            height: "50%",
+            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          10
+        </div>
+
+        {/* Горизонтальная линия разделения */}
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "100%",
+            height: "1px",
+            top: "50%",
+            left: "0",
+            opacity: 0.3,
+          }}
+        />
+
+        {/* Вертикальные линии разделения */}
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "1px",
+            height: "100%",
+            top: "0",
+            left: "20%",
+            opacity: 0.3,
+          }}
+        />
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "1px",
+            height: "100%",
+            top: "0",
+            left: "40%",
+            opacity: 0.3,
+          }}
+        />
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "1px",
+            height: "100%",
+            top: "0",
+            left: "60%",
+            opacity: 0.3,
+          }}
+        />
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "1px",
+            height: "100%",
+            top: "0",
+            left: "80%",
+            opacity: 0.3,
+          }}
+        />
+      </div>
+    ),
+  },
+
+  // Шаблон с 12 экранами (4x3) для широкоэкранного формата
+  {
+    id: "split-grid-4x3-landscape",
+    split: "custom",
+    resizable: true,
+    screens: 12,
+    render: () => (
+      <div className="relative h-full w-full">
+        {/* Верхний ряд */}
+        {/* Верхний первый экран */}
+        <div
+          className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "25%",
+            height: "33.33%",
+            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          1
+        </div>
+
+        {/* Верхний второй экран */}
+        <div
+          className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "25%",
+            height: "33.33%",
+            left: "25%",
+            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          2
+        </div>
+
+        {/* Верхний третий экран */}
+        <div
+          className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "25%",
+            height: "33.33%",
+            left: "50%",
+            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          3
+        </div>
+
+        {/* Верхний четвертый экран */}
+        <div
+          className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "25%",
+            height: "33.33%",
+            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
+            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          4
+        </div>
+
+        {/* Средний ряд */}
+        {/* Средний первый экран */}
+        <div
+          className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "25%",
+            height: "33.33%",
+            top: "33.33%",
+            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          5
+        </div>
+
+        {/* Средний второй экран */}
+        <div
+          className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "25%",
+            height: "33.33%",
+            top: "33.33%",
+            left: "25%",
+          }}
+        >
+          6
+        </div>
+
+        {/* Средний третий экран */}
+        <div
+          className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "25%",
+            height: "33.33%",
+            top: "33.33%",
+            left: "50%",
+          }}
+        >
+          7
+        </div>
+
+        {/* Средний четвертый экран */}
+        <div
+          className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "25%",
+            height: "33.33%",
+            top: "33.33%",
+            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          8
+        </div>
+
+        {/* Нижний ряд */}
+        {/* Нижний первый экран */}
+        <div
+          className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "25%",
+            height: "33.33%",
+            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          9
+        </div>
+
+        {/* Нижний второй экран */}
+        <div
+          className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "25%",
+            height: "33.33%",
+            left: "25%",
+            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          10
+        </div>
+
+        {/* Нижний третий экран */}
+        <div
+          className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#23262b",
+            width: "25%",
+            height: "33.33%",
+            left: "50%",
+            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          11
+        </div>
+
+        {/* Нижний четвертый экран */}
+        <div
+          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          style={{
+            background: "#2a2e36",
+            width: "25%",
+            height: "33.33%",
+            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
+            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
+          }}
+        >
+          12
+        </div>
+
+        {/* Горизонтальные линии разделения */}
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "100%",
+            height: "1px",
+            top: "33.33%",
+            left: "0",
+            opacity: 0.3,
+          }}
+        />
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "100%",
+            height: "1px",
+            top: "66.66%",
+            left: "0",
+            opacity: 0.3,
+          }}
+        />
+
+        {/* Вертикальные линии разделения */}
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "1px",
+            height: "100%",
+            top: "0",
+            left: "25%",
+            opacity: 0.3,
+          }}
+        />
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "1px",
+            height: "100%",
+            top: "0",
+            left: "50%",
+            opacity: 0.3,
+          }}
+        />
+        <div
+          className="absolute z-10 bg-gray-400"
+          style={{
+            width: "1px",
+            height: "100%",
+            top: "0",
+            left: "75%",
+            opacity: 0.3,
+          }}
+        />
+      </div>
+    ),
+  },
+
   // Шаблон с 16 экранами (4x4) для широкоэкранного формата
   {
     id: "split-grid-4x4-landscape",
     split: "custom",
+    resizable: true,
     screens: 16,
     render: () => (
       <div className="relative h-full w-full">
@@ -2012,6 +2474,7 @@ export const landscapeTemplates: MediaTemplate[] = [
   {
     id: "split-grid-4x2-landscape",
     split: "custom",
+    resizable: true,
     screens: 8,
     render: () => (
       <div className="relative h-full w-full">

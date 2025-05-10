@@ -51,6 +51,8 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     appliedTemplate,
     setAppliedTemplate,
     setActiveVideoId,
+    isResizableMode,
+    setIsResizableMode,
   } = usePlayerContext()
 
   // Используем состояние для хранения текущего времени воспроизведения
@@ -125,13 +127,27 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
   const handleVolumeChange = useCallback(
     (value: number[]) => {
-      setVolume(value[0])
+      const newVolume = value[0]
+      setVolume(newVolume)
+
+      // Сохраняем уровень звука в localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("player-volume", newVolume.toString())
+        console.log(`[PlayerControls] Сохранен уровень звука: ${newVolume}`)
+      }
     },
     [setVolume],
   )
 
   const handleToggleMute = useCallback(() => {
-    setVolume(volume === 0 ? 1 : 0)
+    const newVolume = volume === 0 ? 1 : 0
+    setVolume(newVolume)
+
+    // Сохраняем уровень звука в localStorage
+    if (typeof window !== "undefined") {
+      localStorage.setItem("player-volume", newVolume.toString())
+      console.log(`[PlayerControls] Сохранен уровень звука при переключении: ${newVolume}`)
+    }
   }, [volume, setVolume])
 
   const handleFullscreen = useCallback(() => {
@@ -823,6 +839,33 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 onClick={handleResetTemplate}
               >
                 <ScreenShare className="h-4 w-4" />
+              </Button>
+            )}
+
+            {/* Кнопка переключения режима resizable - показываем только если применен шаблон */}
+            {appliedTemplate && (
+              <Button
+                className={`h-6 w-6 cursor-pointer ${isResizableMode ? "bg-gray-700" : ""}`}
+                variant="ghost"
+                size="icon"
+                title={isResizableMode ? t("timeline.controls.fixedSizeMode") : t("timeline.controls.resizableMode")}
+                onClick={() => setIsResizableMode(!isResizableMode)}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="4" y="4" width="16" height="16" rx="2" />
+                  <path d="M4 12h16" />
+                  <path d="M12 4v16" />
+                </svg>
               </Button>
             )}
 
