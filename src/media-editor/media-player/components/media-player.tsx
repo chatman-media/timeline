@@ -5,12 +5,16 @@ import { PlayerControls } from "@/media-editor/media-player/components/player-co
 import { ResizableTemplate } from "@/media-editor/media-player/components/resizable-template"
 import { ResizableVideo } from "@/media-editor/media-player/components/resizable-video"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
-import { getVideoStyleForTemplate, VideoTemplateStyle } from "@/media-editor/media-player/services/template-service"
+import {
+  getVideoStyleForTemplate,
+  VideoTemplateStyle,
+} from "@/media-editor/media-player/services/template-service"
 import { useProject } from "@/media-editor/project-settings/project-provider"
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 
 export function MediaPlayer() {
   // Массив для хранения refs контейнеров видео
-  const videoContainerRefs = useRef<Record<string, React.RefObject<HTMLDivElement | null>>>({});
+  const videoContainerRefs = useRef<Record<string, React.RefObject<HTMLDivElement | null>>>({})
   const {
     video,
     isPlaying,
@@ -53,14 +57,14 @@ export function MediaPlayer() {
   // Эффект для обработки изменения громкости
   useEffect(() => {
     // Если нет видео или рефов, выходим
-    if (!videoRefs) return;
+    if (!videoRefs) return
 
     // Определяем активное видео ID
-    const currentActiveId = video?.id || null;
+    const currentActiveId = video?.id || null
 
     // Если используется шаблон с несколькими видео, применяем громкость ко всем видео
     if (appliedTemplate?.template && parallelVideos.length > 0) {
-      parallelVideos.forEach(parallelVideo => {
+      parallelVideos.forEach((parallelVideo) => {
         if (parallelVideo.id && videoRefs[parallelVideo.id]) {
           const videoElement = videoRefs[parallelVideo.id]
 
@@ -68,7 +72,9 @@ export function MediaPlayer() {
           if (parallelVideo.id === currentActiveId) {
             videoElement.volume = volume
             videoElement.muted = false
-            console.log(`[Volume] Установлена громкость ${volume} для активного видео ${parallelVideo.id} в шаблоне`)
+            console.log(
+              `[Volume] Установлена громкость ${volume} для активного видео ${parallelVideo.id} в шаблоне`,
+            )
           } else {
             videoElement.muted = true
             console.log(`[Volume] Заглушено неактивное видео ${parallelVideo.id} в шаблоне`)
@@ -145,12 +151,14 @@ export function MediaPlayer() {
     if (appliedTemplate?.template && parallelVideos.length > 0) {
       if (isPlaying) {
         // Сохраняем текущее время для всех видео перед паузой
-        parallelVideos.forEach(parallelVideo => {
+        parallelVideos.forEach((parallelVideo) => {
           if (parallelVideo.id && videoRefs[parallelVideo.id]) {
             const videoElement = videoRefs[parallelVideo.id]
             const currentVideoTime = videoElement.currentTime
             videoTimesRef.current[parallelVideo.id] = currentVideoTime
-            console.log(`[MediaPlayer] Сохраняем время для видео ${parallelVideo.id} перед паузой: ${currentVideoTime.toFixed(3)}`)
+            console.log(
+              `[MediaPlayer] Сохраняем время для видео ${parallelVideo.id} перед паузой: ${currentVideoTime.toFixed(3)}`,
+            )
           }
         })
       }
@@ -1507,7 +1515,7 @@ export function MediaPlayer() {
       // Если используется шаблон с несколькими видео, управляем всеми видео
       if (appliedTemplate?.template && parallelVideos.length > 0) {
         // Обрабатываем все видео в шаблоне
-        parallelVideos.forEach(parallelVideo => {
+        parallelVideos.forEach((parallelVideo) => {
           if (parallelVideo.id && videoRefs[parallelVideo.id]) {
             const parallelVideoElement = videoRefs[parallelVideo.id]
 
@@ -1524,10 +1532,15 @@ export function MediaPlayer() {
                     !isChangingCamera &&
                     !isCameraChangeLockRef.current
                   ) {
-                    console.log(`[PlayPause] Запускаем воспроизведение для видео ${parallelVideo.id} в шаблоне`)
+                    console.log(
+                      `[PlayPause] Запускаем воспроизведение для видео ${parallelVideo.id} в шаблоне`,
+                    )
                     parallelVideoElement.play().catch((err: Error) => {
                       if (err.name !== "AbortError") {
-                        console.error(`[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`, err)
+                        console.error(
+                          `[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`,
+                          err,
+                        )
                       }
                     })
                   }
@@ -1591,8 +1604,6 @@ export function MediaPlayer() {
     }, 300)
   }, [isPlaying, video?.id, videoRefs, isChangingCamera, setIsPlaying])
 
-
-
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent): void => {
       if (e.key.toLowerCase() === "p" && video?.id) {
@@ -1645,13 +1656,13 @@ export function MediaPlayer() {
   // Определяем, какие видео нужно отображать в зависимости от шаблона
   const videosToDisplay = appliedTemplate?.template
     ? // Если есть примененный шаблон, используем видео из него
-    appliedTemplate.videos.length > 0
+      appliedTemplate.videos.length > 0
       ? appliedTemplate.videos
       : parallelVideos.length > 0
         ? parallelVideos.slice(0, appliedTemplate.template.screens || 1) // Ограничиваем количество видео количеством экранов в шаблоне
         : videosToRender
     : // Если нет примененного шаблона, используем стандартный подход
-    videosToRender
+      videosToRender
 
   // Логируем информацию о видео для отладки
   console.log(
@@ -1662,7 +1673,9 @@ export function MediaPlayer() {
   if (videosToDisplay.length > 0) {
     console.log("[MediaPlayer] Детали видео для отображения:")
     videosToDisplay.forEach((v, i) => {
-      console.log(`[MediaPlayer] Видео ${i+1}/${videosToDisplay.length}: id=${v.id}, path=${v.path}, name=${v.name}`)
+      console.log(
+        `[MediaPlayer] Видео ${i + 1}/${videosToDisplay.length}: id=${v.id}, path=${v.path}, name=${v.name}`,
+      )
     })
   }
 
@@ -1708,6 +1721,9 @@ export function MediaPlayer() {
   console.log("[MediaPlayer] Видео для отображения:", videosToDisplay)
   console.log("[MediaPlayer] Активное видео ID:", activeId)
   console.log("[MediaPlayer] Соотношение сторон:", aspectRatio)
+
+  // Вычисляем соотношение сторон для AspectRatio
+  const aspectRatioValue = aspectRatio.width / aspectRatio.height
 
   return (
     <div className="relative flex h-full flex-col">
@@ -1775,7 +1791,6 @@ export function MediaPlayer() {
                           <ResizableVideo
                             video={videoItem}
                             isActive={videoItem.id === activeId}
-                            containerRef={containerRef}
                             videoRefs={videoRefs}
                             index={index}
                           />

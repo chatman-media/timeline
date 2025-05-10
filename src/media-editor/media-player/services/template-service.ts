@@ -114,28 +114,31 @@ export function getVideoStyleForTemplate(
     // Диагональное разделение
     if (template.screens === 2) {
       // Для 2 экранов
-      const splitPosition = template.splitPosition || 50
       if (videoIndex === 0) {
-        // Первое видео (левая или верхняя часть)
+        // Первое видео (левая часть)
         return {
           ...baseStyle,
           top: "0",
           left: "0",
           width: "100%",
           height: "100%",
-          clipPath: `polygon(0 0, ${splitPosition}% 0, ${splitPosition - 10}% 100%, 0 100%)`,
+          clipPath: template.splitPoints
+            ? `polygon(0 0, ${template.splitPoints[0].x}% 0, ${template.splitPoints[1].x}% 100%, 0 100%)`
+            : `polygon(0 0, 66.67% 0, 33.33% 100%, 0 100%)`,
           zIndex: 1,
           cellConfig, // Добавляем настройки ячейки
         }
       } else {
-        // Второе видео (правая или нижняя часть)
+        // Второе видео (правая часть)
         return {
           ...baseStyle,
           top: "0",
           left: "0",
           width: "100%",
           height: "100%",
-          clipPath: `polygon(${splitPosition}% 0, 100% 0, 100% 100%, ${splitPosition - 10}% 100%)`,
+          clipPath: template.splitPoints
+            ? `polygon(${template.splitPoints[0].x}% 0, 100% 0, 100% 100%, ${template.splitPoints[1].x}% 100%)`
+            : `polygon(66.67% 0, 100% 0, 100% 100%, 33.33% 100%)`,
           zIndex: 2,
           cellConfig, // Добавляем настройки ячейки
         }
@@ -697,8 +700,8 @@ export function getVideoStyleForTemplate(
 
       return result
     }
-    // Для сетки 3x2 (6 экранов)
-    else if (template.screens === 6 && template.id && template.id.includes("3x2")) {
+    // Для сетки 3x2 (6 экранов) - ландшафтный формат
+    else if (template.screens === 6 && template.id && template.id.includes("3x2") && template.id.includes("landscape")) {
       const row = Math.floor(videoIndex / 3)
       const col = videoIndex % 3
       const result = {
@@ -715,17 +718,51 @@ export function getVideoStyleForTemplate(
 
       return result
     }
-    // Для сетки 3x3 (9 экранов)
-    else if (template.screens === 9) {
-      const row = Math.floor(videoIndex / 3)
-      const col = videoIndex % 3
-      return {
+    // Для сетки 2x3 (6 экранов) - портретный формат
+    else if (template.screens === 6 && template.id && template.id.includes("2x3") && template.id.includes("portrait")) {
+      const row = Math.floor(videoIndex / 2)
+      const col = videoIndex % 2
+      const result = {
         ...baseStyle,
         top: `${row * 33.33}%`,
-        left: `${col * 33.33}%`,
-        width: "33.33%",
+        left: `${col * 50}%`,
+        width: "50%",
         height: "33.33%",
         cellConfig, // Добавляем настройки ячейки
+      }
+
+      // Логируем стили для отладки
+      console.log(`[TemplateService] Стили для сетки 2x3 (индекс ${videoIndex}):`, result)
+
+      return result
+    }
+    // Для сетки 3x3 (9 экранов)
+    else if (template.screens === 9) {
+      // Для портретного режима
+      if (template.id && template.id.includes("portrait")) {
+        const row = Math.floor(videoIndex / 3)
+        const col = videoIndex % 3
+        return {
+          ...baseStyle,
+          top: `${row * 33.33}%`,
+          left: `${col * 33.33}%`,
+          width: "33.33%",
+          height: "33.33%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+      }
+      // Для ландшафтного режима
+      else {
+        const row = Math.floor(videoIndex / 3)
+        const col = videoIndex % 3
+        return {
+          ...baseStyle,
+          top: `${row * 33.33}%`,
+          left: `${col * 33.33}%`,
+          width: "33.33%",
+          height: "33.33%",
+          cellConfig, // Добавляем настройки ячейки
+        }
       }
     }
     // Для сетки 5x2 (10 экранов, ландшафтный формат)
@@ -826,14 +863,60 @@ export function getVideoStyleForTemplate(
     }
     // Для сетки 4x4 (16 экранов)
     else if (template.screens === 16) {
-      const row = Math.floor(videoIndex / 4)
-      const col = videoIndex % 4
-      return {
-        ...baseStyle,
-        top: `${row * 25}%`,
-        left: `${col * 25}%`,
-        width: "25%",
-        height: "25%",
+      // Для портретного режима
+      if (template.id && template.id.includes("portrait")) {
+        const row = Math.floor(videoIndex / 4)
+        const col = videoIndex % 4
+        return {
+          ...baseStyle,
+          top: `${row * 25}%`,
+          left: `${col * 25}%`,
+          width: "25%",
+          height: "25%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+      }
+      // Для ландшафтного режима
+      else {
+        const row = Math.floor(videoIndex / 4)
+        const col = videoIndex % 4
+        return {
+          ...baseStyle,
+          top: `${row * 25}%`,
+          left: `${col * 25}%`,
+          width: "25%",
+          height: "25%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+      }
+    }
+    // Для сетки 5x5 (25 экранов)
+    else if (template.screens === 25) {
+      // Для портретного режима
+      if (template.id && template.id.includes("portrait")) {
+        const row = Math.floor(videoIndex / 5)
+        const col = videoIndex % 5
+        return {
+          ...baseStyle,
+          top: `${row * 20}%`,
+          left: `${col * 20}%`,
+          width: "20%",
+          height: "20%",
+          cellConfig, // Добавляем настройки ячейки
+        }
+      }
+      // Для ландшафтного режима
+      else {
+        const row = Math.floor(videoIndex / 5)
+        const col = videoIndex % 5
+        return {
+          ...baseStyle,
+          top: `${row * 20}%`,
+          left: `${col * 20}%`,
+          width: "20%",
+          height: "20%",
+          cellConfig, // Добавляем настройки ячейки
+        }
       }
     }
   } else if (template.split === "resizable") {

@@ -79,8 +79,8 @@ export const landscapeTemplates: MediaTemplate[] = [
     resizable: true,
     screens: 2,
     splitPoints: [
-      { x: 60, y: 0 }, // Начальная точка (60% от левого края, верх)
-      { x: 40, y: 100 }, // Конечная точка (40% от левого края, низ)
+      { x: 66.67, y: 0 }, // Начальная точка (2/3 от левого края, верх)
+      { x: 33.33, y: 100 }, // Конечная точка (1/3 от левого края, низ)
     ],
     render: () => (
       <div className="relative h-full w-full">
@@ -89,21 +89,21 @@ export const landscapeTemplates: MediaTemplate[] = [
           className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#23262b",
-            clipPath: "polygon(0 0, 60% 0, 40% 100%, 0 100%)",
+            clipPath: "polygon(0 0, 66.67% 0, 33.33% 100%, 0 100%)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             border: "1px solid rgba(156, 163, 175, 0.3)",
           }}
         >
-          <div style={{ position: "relative", left: "-25%" }}>1</div>
+          <div style={{ position: "relative", left: "-15%" }}>1</div>
         </div>
 
         {/* Линия разделения */}
         <div
           className="absolute inset-0 z-10 bg-gray-400"
           style={{
-            clipPath: "polygon(59.8% 0, 60.2% 0, 40.2% 100%, 39.8% 100%)",
+            clipPath: "polygon(66.47% 0, 66.87% 0, 33.53% 100%, 33.13% 100%)",
             opacity: 0.3,
           }}
         />
@@ -113,14 +113,14 @@ export const landscapeTemplates: MediaTemplate[] = [
           className="absolute inset-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#2a2e36",
-            clipPath: "polygon(60% 0, 100% 0, 100% 100%, 40% 100%)",
+            clipPath: "polygon(66.67% 0, 100% 0, 100% 100%, 33.33% 100%)",
             border: "1px solid rgba(156, 163, 175, 0.3)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <div style={{ position: "relative", left: "25%" }}>2</div>
+          <div style={{ position: "relative", left: "30%" }}>2</div>
         </div>
       </div>
     ),
@@ -2153,6 +2153,76 @@ export const landscapeTemplates: MediaTemplate[] = [
             opacity: 0.3,
           }}
         />
+      </div>
+    ),
+  },
+
+  // Шаблон с 25 экранами (5x5) для широкоэкранного формата
+  {
+    id: "split-grid-5x5-landscape",
+    split: "custom",
+    resizable: true,
+    screens: 25,
+    render: () => (
+      <div className="relative h-full w-full">
+        {/* Создаем сетку 5x5 */}
+        {Array.from({ length: 5 }).map((_, rowIndex) => (
+          <>
+            {Array.from({ length: 5 }).map((_, colIndex) => {
+              const cellIndex = rowIndex * 5 + colIndex + 1;
+              const isEvenCell = (rowIndex + colIndex) % 2 === 0;
+              return (
+                <div
+                  key={`cell-${rowIndex}-${colIndex}`}
+                  className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+                  style={{
+                    background: isEvenCell ? "#23262b" : "#2a2e36",
+                    width: "20%",
+                    height: "20%",
+                    top: `${rowIndex * 20}%`,
+                    left: `${colIndex * 20}%`,
+                    borderTop: rowIndex === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                    borderBottom: rowIndex === 4 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                    borderLeft: colIndex === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                    borderRight: colIndex === 4 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  }}
+                >
+                  {cellIndex}
+                </div>
+              );
+            })}
+          </>
+        ))}
+
+        {/* Горизонтальные линии разделения */}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={`h-line-${i}`}
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: `${(i + 1) * 20}%`,
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+        ))}
+
+        {/* Вертикальные линии разделения */}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={`v-line-${i}`}
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: `${(i + 1) * 20}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
       </div>
     ),
   },

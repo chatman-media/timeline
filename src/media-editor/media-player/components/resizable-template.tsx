@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
-import { ImperativePanelHandle, Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
+import { AspectRatio } from "@/components/ui/aspect-ratio"
 import { ResizableVideo } from "@/media-editor/media-player/components/resizable-video"
 import { AppliedTemplate, getVideoStyleForTemplate } from "@/media-editor/media-player/services/template-service"
 import { MediaFile } from "@/types/media"
@@ -63,14 +64,19 @@ export function ResizableTemplate({
   // Определяем направление разделения в зависимости от типа шаблона
   // Если тип "resizable", то обрабатываем его как "horizontal"
   const effectiveSplit = template.split === "resizable" ? "horizontal" : template.split
-  const direction = effectiveSplit === "horizontal" ? "vertical" : "horizontal"
+
+  // Для вертикального разделения (split=vertical) используем horizontal direction в PanelGroup
+  // Для горизонтального разделения (split=horizontal) используем vertical direction в PanelGroup
+  const direction = effectiveSplit === "vertical" ? "horizontal" : "vertical"
 
   // Функция для рендеринга шаблона в фиксированном режиме
   const renderFixedTemplate = () => {
-    // Специальная обработка для шаблона "Diagonal Cross"
-    if (template.id && template.id.includes("split-diagonal-cross")) {
+
+
+    // Специальная обработка для сетки 5x5 (25 экранов)
+    if (template.screens === 25 && template.id && (template.id.includes("split-grid-5x5-landscape") || template.id.includes("split-grid-5x5-portrait"))) {
       return (
-        <div className="relative h-full w-full">
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           {/* Рендерим видео */}
           {validVideos.slice(0, videoCount).map((video, index) => {
             // Получаем стили для видео в зависимости от шаблона
@@ -99,77 +105,1295 @@ export function ResizableTemplate({
             )
           })}
 
-          {/* Добавляем диагональные линии разделения цвета #35d1c1 */}
+          {/* Добавляем разделительные линии */}
+          {/* Вертикальные линии */}
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={`v-line-${i}`}
+              className="absolute inset-y-0 z-20"
+              style={{
+                left: `${i * 20}%`,
+                width: "1px",
+                backgroundColor: "#35d1c1",
+                opacity: 0.8,
+              }}
+            />
+          ))}
+
+          {/* Горизонтальные линии */}
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={`h-line-${i}`}
+              className="absolute inset-x-0 z-20"
+              style={{
+                top: `${i * 20}%`,
+                height: "1px",
+                backgroundColor: "#35d1c1",
+                opacity: 0.8,
+              }}
+            />
+          ))}
+        </div>
+      )
+    }
+
+    // Специальная обработка для сетки 3x2 (6 экранов)
+    if (template.screens === 6 && template.id && (template.id.includes("split-grid-3x2-landscape") || template.id.includes("split-grid-2x3-portrait"))) {
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
+
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительные линии */}
+          {isPortrait ? (
+            // Для портретного режима (2x3)
+            <>
+              {/* Вертикальная линия */}
+              <div
+                className="absolute inset-y-0 left-1/2 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              {/* Горизонтальные линии */}
+              <div
+                className="absolute inset-x-0 top-1/3 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                className="absolute inset-x-0 top-2/3 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+            </>
+          ) : (
+            // Для ландшафтного режима (3x2)
+            <>
+              {/* Вертикальные линии */}
+              <div
+                className="absolute inset-y-0 left-1/3 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                className="absolute inset-y-0 left-2/3 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              {/* Горизонтальная линия */}
+              <div
+                className="absolute inset-x-0 top-1/2 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+            </>
+          )}
+        </div>
+      )
+    }
+
+    // Специальная обработка для сетки 4x2 (8 экранов) или 2x4 (портретный режим)
+    if (template.screens === 8 && template.id && (template.id.includes("split-grid-4x2-landscape") || template.id.includes("split-grid-2x4-portrait") || template.id.includes("split-grid-2x4-square"))) {
+      // Определяем, является ли шаблон портретным или квадратным
+      const isPortrait = template.id && template.id.includes("portrait");
+      const isSquare = template.id && template.id.includes("square");
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительные линии */}
+          {/* Вертикальные линии */}
           <div
-            className="absolute inset-0 z-20"
+            className="absolute inset-y-0 left-1/4 z-20"
             style={{
-              clipPath: "polygon(0 0, 1.5% 0, 100% 98.5%, 100% 100%, 98.5% 100%, 0 1.5%)",
+              width: "1px",
               backgroundColor: "#35d1c1",
               opacity: 0.8,
             }}
           />
           <div
-            className="absolute inset-0 z-20"
+            className="absolute inset-y-0 left-2/4 z-20"
             style={{
-              clipPath: "polygon(100% 0, 100% 1.5%, 1.5% 100%, 0 100%, 0 98.5%, 98.5% 0)",
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-y-0 left-3/4 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          {/* Горизонтальная линия */}
+          <div
+            className="absolute inset-x-0 top-1/2 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для сетки 4x3 (12 экранов) или 3x4 (портретный режим)
+    if (template.screens === 12 && template.id && (template.id.includes("split-grid-4x3-landscape") || template.id.includes("split-grid-3x4-portrait") || template.id.includes("split-grid-4x3-square"))) {
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
+
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительные линии */}
+          {isPortrait ? (
+            // Для портретного режима (3x4)
+            <>
+              {/* Вертикальные линии */}
+              <div
+                className="absolute inset-y-0 left-1/3 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                className="absolute inset-y-0 left-2/3 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              {/* Горизонтальные линии */}
+              <div
+                className="absolute inset-x-0 top-1/4 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                className="absolute inset-x-0 top-2/4 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                className="absolute inset-x-0 top-3/4 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+            </>
+          ) : (
+            // Для ландшафтного режима (4x3)
+            <>
+              {/* Вертикальные линии */}
+              <div
+                className="absolute inset-y-0 left-1/4 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                className="absolute inset-y-0 left-2/4 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                className="absolute inset-y-0 left-3/4 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              {/* Горизонтальные линии */}
+              <div
+                className="absolute inset-x-0 top-1/3 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              <div
+                className="absolute inset-x-0 top-2/3 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+            </>
+          )}
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "1 left + 3 right"
+    if (template.screens === 4 && template.id && (template.id.includes("split-1-3-landscape") || template.id.includes("split-1-3-portrait") || template.id.includes("split-1-3-square")) && !template.id.includes("bottom")) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Добавляем вертикальную разделительную линию */}
+          <div
+            className="absolute inset-y-0 left-1/2 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          {/* Добавляем горизонтальные разделительные линии в правой части */}
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "33.33%",
+              left: "50%",
+            }}
+          />
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "66.66%",
+              left: "50%",
+            }}
+          />
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем вертикальную разделительную линию */}
+          <div
+            className="absolute inset-y-0 left-1/2 z-20"
+            style={{
+              width: "1px",
               backgroundColor: "#35d1c1",
               opacity: 0.8,
             }}
           />
 
-          {/* Добавляем надписи с названиями камер */}
+          {/* Добавляем горизонтальные разделительные линии в правой части */}
           <div
-            className="absolute z-30 text-white text-sm"
+            className="absolute z-20"
             style={{
-              top: "15%",
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "33.33%",
               left: "50%",
-              transform: "translateX(-50%)",
-              backgroundColor: "rgba(0,0,0,0.5)",
-              padding: "2px 8px",
-              borderRadius: "4px"
             }}
-          >
-            Камера 1
-          </div>
+          />
           <div
-            className="absolute z-30 text-white text-sm"
+            className="absolute z-20"
             style={{
-              bottom: "15%",
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "66.66%",
               left: "50%",
-              transform: "translateX(-50%)",
-              backgroundColor: "rgba(0,0,0,0.5)",
-              padding: "2px 8px",
-              borderRadius: "4px"
             }}
-          >
-            Камера 2
-          </div>
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "1 top + 3 bottom"
+    if (template.screens === 4 && template.id && (template.id.includes("split-1-3-bottom-landscape") || template.id.includes("split-1-3-bottom-portrait") || template.id.includes("split-1-3-bottom-square"))) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Добавляем горизонтальную разделительную линию */}
           <div
-            className="absolute z-30 text-white text-sm"
+            className="absolute inset-x-0 top-1/2 z-20"
             style={{
-              top: "50%",
-              left: "15%",
-              transform: "translateY(-50%)",
-              backgroundColor: "rgba(0,0,0,0.5)",
-              padding: "2px 8px",
-              borderRadius: "4px"
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
             }}
-          >
-            Камера 3
-          </div>
+          />
+          {/* Добавляем вертикальные разделительные линии в нижней части */}
           <div
-            className="absolute z-30 text-white text-sm"
+            className="absolute z-20"
             style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "50%",
               top: "50%",
-              right: "15%",
-              transform: "translateY(-50%)",
-              backgroundColor: "rgba(0,0,0,0.5)",
-              padding: "2px 8px",
-              borderRadius: "4px"
+              left: "33.33%",
             }}
-          >
-            Камера 4
-          </div>
+          />
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "50%",
+              top: "50%",
+              left: "66.66%",
+            }}
+          />
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем горизонтальную разделительную линию */}
+          <div
+            className="absolute inset-x-0 top-1/2 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+
+          {/* Добавляем вертикальные разделительные линии в нижней части */}
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "50%",
+              top: "50%",
+              left: "33.33%",
+            }}
+          />
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "50%",
+              top: "50%",
+              left: "66.66%",
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "3 left + 1 right"
+    if (template.screens === 4 && template.id && (template.id.includes("split-3-1-right-landscape") || template.id.includes("split-3-1-right-portrait") || template.id.includes("split-3-1-right-square"))) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Добавляем вертикальную разделительную линию */}
+          <div
+            className="absolute inset-y-0 left-1/2 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          {/* Добавляем горизонтальные разделительные линии в левой части */}
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "33.33%",
+              left: "0",
+            }}
+          />
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "66.66%",
+              left: "0",
+            }}
+          />
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем вертикальную разделительную линию */}
+          <div
+            className="absolute inset-y-0 left-1/2 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+
+          {/* Добавляем горизонтальные разделительные линии в левой части */}
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "33.33%",
+              left: "0",
+            }}
+          />
+          <div
+            className="absolute z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              width: "50%",
+              top: "66.66%",
+              left: "0",
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "3 screens horizontal"
+    if (template.screens === 3 && template.id && (template.id.includes("split-horizontal-3-landscape") || template.id.includes("split-horizontal-3-portrait") || template.id.includes("split-horizontal-3-square"))) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем горизонтальные разделительные линии */}
+          <div
+            className="absolute inset-x-0 top-1/3 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-x-0 top-2/3 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "4 screens vertical"
+    if (template.screens === 4 && template.id && (template.id.includes("split-vertical-4-landscape") || template.id.includes("split-vertical-4-portrait") || template.id.includes("split-vertical-4-square"))) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительные линии справа */}
+          <div
+            className="absolute inset-y-0 right-1/4 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-y-0 right-2/4 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-y-0 right-3/4 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "2 screens vertical"
+    if (template.screens === 2 && template.id && (template.id.includes("split-vertical-landscape") || template.id.includes("split-vertical-portrait") || template.id.includes("split-vertical-square"))) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем вертикальную разделительную линию */}
+          <div
+            className="absolute inset-y-0 left-1/2 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "2 screens horizontal"
+    if (template.screens === 2 && template.id && (template.id.includes("split-horizontal-landscape") || template.id.includes("split-horizontal-portrait") || template.id.includes("split-horizontal-square"))) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем горизонтальную разделительную линию */}
+          <div
+            className="absolute inset-x-0 top-1/2 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для шаблона "5 screens: 1 top + 4 bottom"
+    if (template.screens === 5 && template.id && template.id.includes("split-custom-5-1-portrait")) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем горизонтальную разделительную линию */}
+          <div
+            className="absolute inset-x-0 top-1/2 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+
+          {/* Добавляем вертикальные разделительные линии в нижней части */}
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "50%",
+              top: "50%",
+              left: "25%",
+            }}
+          />
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "50%",
+              top: "50%",
+              left: "50%",
+            }}
+          />
+          <div
+            className="absolute z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              height: "50%",
+              top: "50%",
+              left: "75%",
+            }}
+          />
+
+          {/* Добавляем горизонтальную разделительную линию в нижней части */}
+          <div
+            className="absolute inset-x-0 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+              top: "75%",
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для сетки 2x2 (4 экрана)
+    if (template.screens === 4 && template.id && (template.id.includes("split-grid-2x2-landscape") || template.id.includes("split-grid-2x2-portrait") || template.id.includes("split-grid-2x2-square"))) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительные линии */}
+          {/* Вертикальная линия */}
+          <div
+            className="absolute inset-y-0 left-1/2 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          {/* Горизонтальная линия */}
+          <div
+            className="absolute inset-x-0 top-1/2 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для сетки 3x3 (9 экранов)
+    if (template.screens === 9 && template.id && (template.id.includes("split-grid-3x3-landscape") || template.id.includes("split-grid-3x3-portrait") || template.id.includes("split-grid-3x3-square"))) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительные линии */}
+          {/* Вертикальные линии */}
+          <div
+            className="absolute inset-y-0 left-1/3 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-y-0 left-2/3 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          {/* Горизонтальные линии */}
+          <div
+            className="absolute inset-x-0 top-1/3 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-x-0 top-2/3 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для сетки 4x4 (16 экранов)
+    if (template.screens === 16 && template.id && (template.id.includes("split-grid-4x4-landscape") || template.id.includes("split-grid-4x4-portrait") || template.id.includes("split-grid-4x4-square"))) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительные линии */}
+          {/* Вертикальные линии */}
+          <div
+            className="absolute inset-y-0 left-1/4 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-y-0 left-2/4 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-y-0 left-3/4 z-20"
+            style={{
+              width: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          {/* Горизонтальные линии */}
+          <div
+            className="absolute inset-x-0 top-1/4 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-x-0 top-2/4 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+          <div
+            className="absolute inset-x-0 top-3/4 z-20"
+            style={{
+              height: "1px",
+              backgroundColor: "#35d1c1",
+              opacity: 0.8,
+            }}
+          />
+        </div>
+      )
+    }
+
+    // Специальная обработка для сетки 2x5 (10 экранов) или 5x2 (10 экранов)
+    if (template.screens === 10 && template.id && (template.id.includes("split-grid-5x2-landscape") || template.id.includes("split-grid-2x5-portrait") || template.id.includes("split-grid-2x5-square"))) {
+      // Определяем, является ли шаблон портретным или квадратным
+      const isPortrait = template.id && template.id.includes("portrait");
+      const isSquare = template.id && template.id.includes("square");
+
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительные линии */}
+          {isPortrait || isSquare ? (
+            // Для портретного режима (2x5) или квадратного (2x5)
+            <>
+              {/* Вертикальная линия */}
+              <div
+                className="absolute inset-y-0 left-1/2 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+              {/* Горизонтальные линии */}
+              <div
+                className="absolute inset-x-0 top-1/5 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                  top: "20%"
+                }}
+              />
+              <div
+                className="absolute inset-x-0 top-2/5 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                  top: "40%"
+                }}
+              />
+              <div
+                className="absolute inset-x-0 top-3/5 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                  top: "60%"
+                }}
+              />
+              <div
+                className="absolute inset-x-0 top-4/5 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                  top: "80%"
+                }}
+              />
+            </>
+          ) : (
+            // Для ландшафтного режима (5x2)
+            <>
+              {/* Вертикальные линии */}
+              <div
+                className="absolute inset-y-0 left-1/5 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                  left: "20%"
+                }}
+              />
+              <div
+                className="absolute inset-y-0 left-2/5 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                  left: "40%"
+                }}
+              />
+              <div
+                className="absolute inset-y-0 left-3/5 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                  left: "60%"
+                }}
+              />
+              <div
+                className="absolute inset-y-0 left-4/5 z-20"
+                style={{
+                  width: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                  left: "80%"
+                }}
+              />
+              {/* Горизонтальная линия */}
+              <div
+                className="absolute inset-x-0 top-1/2 z-20"
+                style={{
+                  height: "1px",
+                  backgroundColor: "#35d1c1",
+                  opacity: 0.8,
+                }}
+              />
+            </>
+          )}
         </div>
       )
     }
@@ -179,7 +1403,7 @@ export function ResizableTemplate({
 
     // Стандартный рендеринг для остальных шаблонов
     return (
-      <div className="relative h-full w-full">
+      <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
         {/* Рендерим модифицированный шаблон как фон */}
         {modifiedTemplate}
 
@@ -243,8 +1467,8 @@ export function ResizableTemplate({
     )
   }
 
-  // Для шаблона "Diagonal Cross" всегда используем стандартный рендеринг
-  if (template.id && template.id.includes("split-diagonal-cross")) {
+  // Для шаблона "Diagonal Cross" обработка перенесена в блок для диагональных шаблонов
+  if (template.id && template.id.includes("split-diagonal-cross") && template.split !== "diagonal") {
     console.log("[ResizableTemplate] Рендеринг шаблона Diagonal Cross:", template.id)
     return renderFixedTemplate()
   }
@@ -265,10 +1489,53 @@ export function ResizableTemplate({
     // Для шаблона с 2 экранами
     if (template.screens === 2) {
       // Определяем направление разделения по типу split
-      const panelDirection = effectiveSplit === "horizontal" ? "vertical" : "horizontal"
+      // Для вертикального разделения (split=vertical) используем horizontal direction в PanelGroup
+      // Для горизонтального разделения (split=horizontal) используем vertical direction в PanelGroup
+      const panelDirection = effectiveSplit === "vertical" ? "horizontal" : "vertical"
 
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
+
+      // Для портретных шаблонов добавляем ограничение по соотношению сторон
+      if (isPortrait) {
+        return (
+          <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+            <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+              <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+                <PanelGroup direction={panelDirection} onLayout={(sizes) => setPanelSizes(sizes)}>
+                  <Panel minSize={10}>
+                    <VideoPanel
+                      video={validVideos[0]}
+                      isActive={validVideos[0]?.id === activeVideoId}
+                      videoRefs={videoRefs}
+                      index={0}
+                    />
+                  </Panel>
+                  <PanelResizeHandle
+                    className={
+                      panelDirection === "horizontal"
+                        ? "w-1 bg-gray-700 hover:bg-gray-500"
+                        : "h-1 bg-gray-700 hover:bg-gray-500"
+                    }
+                  />
+                  <Panel minSize={10}>
+                    <VideoPanel
+                      video={validVideos[1]}
+                      isActive={validVideos[1]?.id === activeVideoId}
+                      videoRefs={videoRefs}
+                      index={1}
+                    />
+                  </Panel>
+                </PanelGroup>
+              </AspectRatio>
+            </div>
+          </div>
+        )
+      }
+
+      // Для ландшафтных шаблонов используем стандартный рендеринг
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction={panelDirection} onLayout={(sizes) => setPanelSizes(sizes)}>
             <Panel minSize={10}>
               <VideoPanel
@@ -300,43 +1567,262 @@ export function ResizableTemplate({
 
     // Для шаблона с 3 экранами
     if (template.screens === 3) {
-      // Определяем направление разделения по типу split
-      const panelDirection = template.split === "horizontal" ? "vertical" : "horizontal"
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
 
-      return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
-          <PanelGroup direction={panelDirection} onLayout={(sizes) => setPanelSizes(sizes)}>
-            {validVideos.slice(0, videoCount).map((video, index) => (
-              <React.Fragment key={`fragment-${video.id}-${index}`}>
-                <Panel key={`panel-${video.id}`} minSize={10}>
+      // Для шаблона "1 top + 2 bottom" (1 сверху + 2 снизу)
+      if (template.id && (template.id.includes("split-mixed-1") || template.id.includes("split-1-3-bottom"))) {
+        if (isPortrait) {
+          return (
+            <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+              <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+                <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+                  <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
+                    {/* Верхняя секция с 1 видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[0]}
+                        isActive={validVideos[0]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={0}
+                      />
+                    </Panel>
+                    <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                    {/* Нижняя секция с 2 видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <PanelGroup direction="horizontal">
+                        <Panel defaultSize={50} minSize={20}>
+                          <VideoPanel
+                            video={validVideos[1]}
+                            isActive={validVideos[1]?.id === activeVideoId}
+                            videoRefs={videoRefs}
+                            index={1}
+                          />
+                        </Panel>
+                        <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                        <Panel defaultSize={50} minSize={20}>
+                          <VideoPanel
+                            video={validVideos[2]}
+                            isActive={validVideos[2]?.id === activeVideoId}
+                            videoRefs={videoRefs}
+                            index={2}
+                          />
+                        </Panel>
+                      </PanelGroup>
+                    </Panel>
+                  </PanelGroup>
+                </AspectRatio>
+              </div>
+            </div>
+          )
+        } else {
+          return (
+            <div className="h-full w-full" style={{ overflow: "visible" }}>
+              <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
+                {/* Верхняя секция с 1 видео */}
+                <Panel defaultSize={50} minSize={20}>
                   <VideoPanel
-                    video={video}
-                    isActive={video.id === activeVideoId}
+                    video={validVideos[0]}
+                    isActive={validVideos[0]?.id === activeVideoId}
                     videoRefs={videoRefs}
-                    index={index}
+                    index={0}
                   />
                 </Panel>
-                {index < videoCount - 1 && (
-                  <PanelResizeHandle
-                    key={`handle-${index}`}
-                    className={
-                      panelDirection === "horizontal"
-                        ? "w-1 bg-gray-700 hover:bg-gray-500"
-                        : "h-1 bg-gray-700 hover:bg-gray-500"
-                    }
+                <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                {/* Нижняя секция с 2 видео */}
+                <Panel defaultSize={50} minSize={20}>
+                  <PanelGroup direction="horizontal">
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[1]}
+                        isActive={validVideos[1]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={1}
+                      />
+                    </Panel>
+                    <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[2]}
+                        isActive={validVideos[2]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={2}
+                      />
+                    </Panel>
+                  </PanelGroup>
+                </Panel>
+              </PanelGroup>
+            </div>
+          )
+        }
+      }
+
+      // Для шаблона "1 left + 2 right" (1 слева + 2 справа)
+      else if (template.id && (template.id.includes("split-mixed-2") || template.id.includes("split-1-3-landscape"))) {
+        if (isPortrait) {
+          return (
+            <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+              <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+                <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+                  <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
+                    {/* Левая секция с 1 видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[0]}
+                        isActive={validVideos[0]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={0}
+                      />
+                    </Panel>
+                    <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                    {/* Правая секция с 2 видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <PanelGroup direction="vertical">
+                        <Panel defaultSize={50} minSize={20}>
+                          <VideoPanel
+                            video={validVideos[1]}
+                            isActive={validVideos[1]?.id === activeVideoId}
+                            videoRefs={videoRefs}
+                            index={1}
+                          />
+                        </Panel>
+                        <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                        <Panel defaultSize={50} minSize={20}>
+                          <VideoPanel
+                            video={validVideos[2]}
+                            isActive={validVideos[2]?.id === activeVideoId}
+                            videoRefs={videoRefs}
+                            index={2}
+                          />
+                        </Panel>
+                      </PanelGroup>
+                    </Panel>
+                  </PanelGroup>
+                </AspectRatio>
+              </div>
+            </div>
+          )
+        } else {
+          return (
+            <div className="h-full w-full" style={{ overflow: "visible" }}>
+              <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
+                {/* Левая секция с 1 видео */}
+                <Panel defaultSize={50} minSize={20}>
+                  <VideoPanel
+                    video={validVideos[0]}
+                    isActive={validVideos[0]?.id === activeVideoId}
+                    videoRefs={videoRefs}
+                    index={0}
                   />
-                )}
-              </React.Fragment>
-            ))}
-          </PanelGroup>
-        </div>
-      )
+                </Panel>
+                <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                {/* Правая секция с 2 видео */}
+                <Panel defaultSize={50} minSize={20}>
+                  <PanelGroup direction="vertical">
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[1]}
+                        isActive={validVideos[1]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={1}
+                      />
+                    </Panel>
+                    <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[2]}
+                        isActive={validVideos[2]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={2}
+                      />
+                    </Panel>
+                  </PanelGroup>
+                </Panel>
+              </PanelGroup>
+            </div>
+          )
+        }
+      }
+
+      // Для обычных шаблонов с 3 экранами
+      else {
+        // Определяем направление разделения по типу split
+        // Для вертикального разделения (split=vertical) используем horizontal direction в PanelGroup
+        // Для горизонтального разделения (split=horizontal) используем vertical direction в PanelGroup
+        const panelDirection = template.split === "vertical" ? "horizontal" : "vertical"
+
+        // Для портретных шаблонов добавляем ограничение по соотношению сторон
+        if (isPortrait) {
+          return (
+            <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+              <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+                <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+                  <PanelGroup direction={panelDirection} onLayout={(sizes) => setPanelSizes(sizes)}>
+                    {validVideos.slice(0, videoCount).map((video, index) => (
+                      <React.Fragment key={`fragment-${video.id}-${index}`}>
+                        <Panel key={`panel-${video.id}`} minSize={10}>
+                          <VideoPanel
+                            video={video}
+                            isActive={video.id === activeVideoId}
+                            videoRefs={videoRefs}
+                            index={index}
+                          />
+                        </Panel>
+                        {index < videoCount - 1 && (
+                          <PanelResizeHandle
+                            key={`handle-${index}`}
+                            className={
+                              panelDirection === "horizontal"
+                                ? "w-1 bg-gray-700 hover:bg-gray-500"
+                                : "h-1 bg-gray-700 hover:bg-gray-500"
+                            }
+                          />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </PanelGroup>
+                </AspectRatio>
+              </div>
+            </div>
+          )
+        }
+
+        // Для ландшафтных шаблонов используем стандартный рендеринг
+        return (
+          <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
+            <PanelGroup direction={panelDirection} onLayout={(sizes) => setPanelSizes(sizes)}>
+              {validVideos.slice(0, videoCount).map((video, index) => (
+                <React.Fragment key={`fragment-${video.id}-${index}`}>
+                  <Panel key={`panel-${video.id}`} minSize={10}>
+                    <VideoPanel
+                      video={video}
+                      isActive={video.id === activeVideoId}
+                      videoRefs={videoRefs}
+                      index={index}
+                    />
+                  </Panel>
+                  {index < videoCount - 1 && (
+                    <PanelResizeHandle
+                      key={`handle-${index}`}
+                      className={
+                        panelDirection === "horizontal"
+                          ? "w-1 bg-gray-700 hover:bg-gray-500"
+                          : "h-1 bg-gray-700 hover:bg-gray-500"
+                      }
+                    />
+                  )}
+                </React.Fragment>
+              ))}
+            </PanelGroup>
+          </div>
+        )
+      }
     }
 
-    // Для шаблона с 4 экранами вертикально (split-vertical-4-landscape)
-    if (template.screens === 4 && template.id && template.id.includes("split-vertical-4-landscape")) {
+    // Для шаблона с 3 экранами вертикально (split-vertical-3-landscape)
+    if (template.screens === 3 && template.id && template.id.includes("split-vertical-3-landscape")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
             {validVideos.slice(0, videoCount).map((video, index) => (
               <React.Fragment key={`fragment-${video.id}-${index}`}>
@@ -360,10 +1846,189 @@ export function ResizableTemplate({
         </div>
       )
     }
+
+    // Для шаблона с 3 экранами вертикально (split-vertical-3-portrait)
+    else if (template.screens === 3 && template.id && template.id.includes("split-vertical-3-portrait")) {
+      return (
+        <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+          <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+            <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+              <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
+                {validVideos.slice(0, videoCount).map((video, index) => (
+                  <React.Fragment key={`fragment-${video.id}-${index}`}>
+                    <Panel key={`panel-${video.id}`} minSize={10}>
+                      <VideoPanel
+                        video={video}
+                        isActive={video.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={index}
+                      />
+                    </Panel>
+                    {index < videoCount - 1 && (
+                      <PanelResizeHandle
+                        key={`handle-${index}`}
+                        className="w-1 bg-gray-700 hover:bg-gray-500"
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+              </PanelGroup>
+            </AspectRatio>
+          </div>
+        </div>
+      )
+    }
+    // Для шаблона с 3 экранами горизонтально (split-horizontal-3-portrait)
+    else if (template.screens === 3 && template.id && template.id.includes("split-horizontal-3-portrait")) {
+      return (
+        <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+          <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+            <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+              <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
+                {validVideos.slice(0, videoCount).map((video, index) => (
+                  <React.Fragment key={`fragment-${video.id}-${index}`}>
+                    <Panel key={`panel-${video.id}`} minSize={10}>
+                      <VideoPanel
+                        video={video}
+                        isActive={video.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={index}
+                      />
+                    </Panel>
+                    {index < videoCount - 1 && (
+                      <PanelResizeHandle
+                        key={`handle-${index}`}
+                        className="h-1 bg-gray-700 hover:bg-gray-500"
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+              </PanelGroup>
+            </AspectRatio>
+          </div>
+        </div>
+      )
+    }
+    // Для шаблона с 4 экранами вертикально (split-vertical-4-landscape)
+    else if (template.screens === 4 && template.id && template.id.includes("split-vertical-4-landscape")) {
+      return (
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
+          <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
+            {validVideos.slice(0, videoCount).map((video, index) => (
+              <React.Fragment key={`fragment-${video.id}-${index}`}>
+                <Panel key={`panel-${video.id}`} minSize={10}>
+                  <VideoPanel
+                    video={video}
+                    isActive={video.id === activeVideoId}
+                    videoRefs={videoRefs}
+                    index={index}
+                  />
+                </Panel>
+                {index < videoCount - 1 && (
+                  <PanelResizeHandle
+                    key={`handle-${index}`}
+                    className="w-1 bg-gray-700 hover:bg-gray-500"
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </PanelGroup>
+        </div>
+      )
+    }
+    // Для шаблона с 4 экранами вертикально (split-vertical-4-portrait)
+    else if (template.screens === 4 && template.id && template.id.includes("split-vertical-4-portrait")) {
+      return (
+        <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+          <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+            <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+              <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
+                {validVideos.slice(0, videoCount).map((video, index) => (
+                  <React.Fragment key={`fragment-${video.id}-${index}`}>
+                    <Panel key={`panel-${video.id}`} minSize={10}>
+                      <VideoPanel
+                        video={video}
+                        isActive={video.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={index}
+                      />
+                    </Panel>
+                    {index < videoCount - 1 && (
+                      <PanelResizeHandle
+                        key={`handle-${index}`}
+                        className="w-1 bg-gray-700 hover:bg-gray-500"
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+              </PanelGroup>
+            </AspectRatio>
+          </div>
+        </div>
+      )
+    }
+    // Для шаблона с 4 экранами горизонтально (split-horizontal-4-landscape)
+    else if (template.screens === 4 && template.id && template.id.includes("split-horizontal-4-landscape")) {
+      return (
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
+          <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
+            {validVideos.slice(0, videoCount).map((video, index) => (
+              <React.Fragment key={`fragment-${video.id}-${index}`}>
+                <Panel key={`panel-${video.id}`} minSize={10}>
+                  <VideoPanel
+                    video={video}
+                    isActive={video.id === activeVideoId}
+                    videoRefs={videoRefs}
+                    index={index}
+                  />
+                </Panel>
+                {index < videoCount - 1 && (
+                  <PanelResizeHandle
+                    key={`handle-${index}`}
+                    className="h-1 bg-gray-700 hover:bg-gray-500"
+                  />
+                )}
+              </React.Fragment>
+            ))}
+          </PanelGroup>
+        </div>
+      )
+    }
+    // Для шаблона с 4 экранами горизонтально (split-horizontal-4-portrait)
+    else if (template.screens === 4 && template.id && template.id.includes("split-horizontal-4-portrait")) {
+      return (
+        <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+          <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+            <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+              <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
+                {validVideos.slice(0, videoCount).map((video, index) => (
+                  <React.Fragment key={`fragment-${video.id}-${index}`}>
+                    <Panel key={`panel-${video.id}`} minSize={10}>
+                      <VideoPanel
+                        video={video}
+                        isActive={video.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={index}
+                      />
+                    </Panel>
+                    {index < videoCount - 1 && (
+                      <PanelResizeHandle
+                        key={`handle-${index}`}
+                        className="h-1 bg-gray-700 hover:bg-gray-500"
+                      />
+                    )}
+                  </React.Fragment>
+                ))}
+              </PanelGroup>
+            </AspectRatio>
+          </div>
+        </div>
+      )
+    }
     // Для шаблона с 4 экранами (сетка 2x2)
     else if (template.screens === 4) {
       return (
-        <div className="h-full w-full">
+        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {/* Верхний ряд */}
             <Panel>
@@ -422,7 +2087,7 @@ export function ResizableTemplate({
     // Для шаблона "5 screens: 1 left + 4 right" (5 экранов, вариант 1)
     if (template.screens === 5 && template.id && template.id.includes("split-custom-5-1-landscape")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
             {/* Левая большая секция */}
             <Panel defaultSize={50} minSize={20}>
@@ -493,7 +2158,7 @@ export function ResizableTemplate({
     // Для шаблона "5 screens: 1 right + 4 left" (5 экранов, вариант 2)
     else if (template.screens === 5 && template.id && template.id.includes("split-custom-5-2-landscape")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
             {/* Левая секция с 4 видео */}
             <Panel defaultSize={50} minSize={20}>
@@ -564,7 +2229,7 @@ export function ResizableTemplate({
     // Для шаблона "5 screens: 1 middle + 2 top + 2 bottom" (5 экранов, вариант 3)
     else if (template.screens === 5 && template.id && template.id.includes("split-custom-5-3-landscape")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
             {/* Верхний ряд с 2 видео */}
             <Panel defaultSize={33.33} minSize={20}>
@@ -625,10 +2290,10 @@ export function ResizableTemplate({
         </div>
       )
     }
-    // Для шаблона "1 left + 3 right" (4 экрана)
-    else if (template.screens === 4 && template.id && template.id.includes("split-1-3-landscape") && !template.id.includes("bottom")) {
+    // Для шаблона "1 left + 3 right" (4 экрана) - ландшафтный формат
+    else if (template.screens === 4 && template.id && template.id.includes("split-1-3-landscape") && !template.id.includes("bottom") && !template.id.includes("portrait")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="horizontal">
             {/* Левая большая секция */}
             <Panel>
@@ -681,7 +2346,7 @@ export function ResizableTemplate({
     // Для шаблона "3 left + 1 right" (4 экрана)
     else if (template.screens === 4 && template.id && template.id.includes("split-3-1-right-landscape")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="horizontal">
             {/* Левая секция с 3 видео */}
             <Panel>
@@ -731,10 +2396,10 @@ export function ResizableTemplate({
         </div>
       )
     }
-    // Для шаблона "1 top + 3 bottom" (4 экрана)
+    // Для шаблона "1 top + 3 bottom" (4 экрана) - ландшафтный формат
     else if (template.screens === 4 && template.id && template.id.includes("split-1-3-bottom-landscape")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {/* Верхняя большая секция */}
             <Panel>
@@ -784,10 +2449,165 @@ export function ResizableTemplate({
         </div>
       )
     }
+    // Для шаблона "1 bottom + 4 top" (5 экранов) - ландшафтный или портретный формат
+    else if (template.screens === 5 && template.id && (template.id.includes("split-4-1-bottom-landscape") || template.id.includes("split-4-1-bottom-portrait"))) {
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
+
+      // Для портретных шаблонов добавляем ограничение по соотношению сторон
+      if (isPortrait) {
+        return (
+          <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+            <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+              <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+                <PanelGroup direction="vertical">
+                  {/* Верхняя секция с 4 видео в квадрате */}
+                  <Panel defaultSize={70} minSize={30}>
+                    <PanelGroup direction="vertical">
+                      {/* Верхний ряд */}
+                      <Panel defaultSize={50} minSize={20}>
+                        <PanelGroup direction="horizontal">
+                          {/* Левое верхнее видео */}
+                          <Panel defaultSize={50} minSize={20}>
+                            <VideoPanel
+                              video={validVideos[0]}
+                              isActive={validVideos[0]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={0}
+                            />
+                          </Panel>
+                          <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                          {/* Правое верхнее видео */}
+                          <Panel defaultSize={50} minSize={20}>
+                            <VideoPanel
+                              video={validVideos[1]}
+                              isActive={validVideos[1]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={1}
+                            />
+                          </Panel>
+                        </PanelGroup>
+                      </Panel>
+                      <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                      {/* Нижний ряд */}
+                      <Panel defaultSize={50} minSize={20}>
+                        <PanelGroup direction="horizontal">
+                          {/* Левое нижнее видео */}
+                          <Panel defaultSize={50} minSize={20}>
+                            <VideoPanel
+                              video={validVideos[2]}
+                              isActive={validVideos[2]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={2}
+                            />
+                          </Panel>
+                          <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                          {/* Правое нижнее видео */}
+                          <Panel defaultSize={50} minSize={20}>
+                            <VideoPanel
+                              video={validVideos[3]}
+                              isActive={validVideos[3]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={3}
+                            />
+                          </Panel>
+                        </PanelGroup>
+                      </Panel>
+                    </PanelGroup>
+                  </Panel>
+                  <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                  {/* Нижняя большая секция */}
+                  <Panel defaultSize={30} minSize={20}>
+                    <VideoPanel
+                      video={validVideos[4]}
+                      isActive={validVideos[4]?.id === activeVideoId}
+                      videoRefs={videoRefs}
+                      index={4}
+                    />
+                  </Panel>
+                </PanelGroup>
+              </AspectRatio>
+            </div>
+          </div>
+        )
+      }
+
+      // Для ландшафтных шаблонов используем стандартный рендеринг
+      return (
+        <div className="h-full w-full" style={{ overflow: "visible" }}>
+          <PanelGroup direction="vertical">
+            {/* Верхняя секция с 4 видео в квадрате */}
+            <Panel defaultSize={70} minSize={30}>
+              <PanelGroup direction="vertical">
+                {/* Верхний ряд */}
+                <Panel defaultSize={50} minSize={20}>
+                  <PanelGroup direction="horizontal">
+                    {/* Левое верхнее видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[0]}
+                        isActive={validVideos[0]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={0}
+                      />
+                    </Panel>
+                    <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                    {/* Правое верхнее видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[1]}
+                        isActive={validVideos[1]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={1}
+                      />
+                    </Panel>
+                  </PanelGroup>
+                </Panel>
+                <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                {/* Нижний ряд */}
+                <Panel defaultSize={50} minSize={20}>
+                  <PanelGroup direction="horizontal">
+                    {/* Левое нижнее видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[2]}
+                        isActive={validVideos[2]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={2}
+                      />
+                    </Panel>
+                    <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                    {/* Правое нижнее видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[3]}
+                        isActive={validVideos[3]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={3}
+                      />
+                    </Panel>
+                  </PanelGroup>
+                </Panel>
+              </PanelGroup>
+            </Panel>
+            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+            {/* Нижняя большая секция */}
+            <Panel defaultSize={30} minSize={20}>
+              <VideoPanel
+                video={validVideos[4]}
+                isActive={validVideos[4]?.id === activeVideoId}
+                videoRefs={videoRefs}
+                index={4}
+              />
+            </Panel>
+          </PanelGroup>
+        </div>
+      )
+    }
     // Для шаблона "3 top + 1 bottom" (4 экрана)
     else if (template.screens === 4 && template.id && template.id.includes("split-3-1-landscape") && !template.id.includes("right")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {/* Верхняя секция с 3 видео */}
             <Panel>
@@ -837,10 +2657,10 @@ export function ResizableTemplate({
         </div>
       )
     }
-    // Для шаблона "Mixed Split (1+2)" (3 экрана)
+    // Для шаблона "Mixed Split (1+2)" (3 экрана) - ландшафтный формат
     else if (template.screens === 3 && template.id && template.id.includes("split-mixed-2-landscape")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
             {/* Левая большая секция */}
             <Panel defaultSize={50} minSize={20}>
@@ -880,10 +2700,10 @@ export function ResizableTemplate({
         </div>
       )
     }
-    // Для шаблона "Mixed Split (2+1)" (3 экрана)
-    else if (template.screens === 3 && template.id && template.id.includes("split-mixed-1-landscape")) {
+    // Для шаблона "Mixed Split (2+1)" (3 экрана) или "3 screens horizontal" - ландшафтный формат
+    else if (template.screens === 3 && template.id && (template.id.includes("split-mixed-1-landscape") || template.id === "split-horizontal-3-landscape")) {
       return (
-        <div className="h-full w-full" style={{ overflow: "visible" }}>
+        <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
             {/* Верхняя большая секция */}
             <Panel defaultSize={50} minSize={20}>
@@ -920,6 +2740,102 @@ export function ResizableTemplate({
               </PanelGroup>
             </Panel>
           </PanelGroup>
+        </div>
+      )
+    }
+
+    // Для шаблона "1 left + 2 right" (1 большое слева, 2 маленьких справа) - портретный формат
+    else if (template.screens === 3 && template.id && template.id.includes("split-mixed-2-portrait")) {
+      return (
+        <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+          <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+            <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+              <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
+                {/* Левая большая секция */}
+                <Panel defaultSize={50} minSize={20}>
+                  <VideoPanel
+                    video={validVideos[0]}
+                    isActive={validVideos[0]?.id === activeVideoId}
+                    videoRefs={videoRefs}
+                    index={0}
+                  />
+                </Panel>
+                <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                {/* Правая секция с 2 видео */}
+                <Panel defaultSize={50} minSize={20}>
+                  <PanelGroup direction="vertical">
+                    {/* Верхнее правое видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[1]}
+                        isActive={validVideos[1]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={1}
+                      />
+                    </Panel>
+                    <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                    {/* Нижнее правое видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[2]}
+                        isActive={validVideos[2]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={2}
+                      />
+                    </Panel>
+                  </PanelGroup>
+                </Panel>
+              </PanelGroup>
+            </AspectRatio>
+          </div>
+        </div>
+      )
+    }
+
+    // Для шаблона "1 top + 2 bottom" (1 большое сверху, 2 маленьких снизу) - портретный формат
+    else if (template.screens === 3 && template.id && template.id.includes("split-1-3-portrait")) {
+      return (
+        <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+          <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+            <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+              <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
+                {/* Верхняя большая секция */}
+                <Panel defaultSize={50} minSize={20}>
+                  <VideoPanel
+                    video={validVideos[0]}
+                    isActive={validVideos[0]?.id === activeVideoId}
+                    videoRefs={videoRefs}
+                    index={0}
+                  />
+                </Panel>
+                <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                {/* Нижняя секция с 2 видео */}
+                <Panel defaultSize={50} minSize={20}>
+                  <PanelGroup direction="horizontal">
+                    {/* Левое нижнее видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[1]}
+                        isActive={validVideos[1]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={1}
+                      />
+                    </Panel>
+                    <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                    {/* Правое нижнее видео */}
+                    <Panel defaultSize={50} minSize={20}>
+                      <VideoPanel
+                        video={validVideos[2]}
+                        isActive={validVideos[2]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={2}
+                      />
+                    </Panel>
+                  </PanelGroup>
+                </Panel>
+              </PanelGroup>
+            </AspectRatio>
+          </div>
         </div>
       )
     }
@@ -982,72 +2898,109 @@ export function ResizableTemplate({
       )
     }
 
-    // Для сетки 3x2 (6 экранов)
-    else if (template.screens === 6 && template.id && template.id.includes("split-grid-3x2-landscape")) {
+    // Для сетки 3x2 (6 экранов) - ландшафтный или портретный формат
+    else if (template.screens === 6 && template.id && (template.id.includes("split-grid-3x2-landscape") || template.id.includes("split-grid-2x3-portrait"))) {
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
+
+      // Для портретных шаблонов добавляем ограничение по соотношению сторон
+      if (isPortrait) {
+        return (
+          <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+            <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+              <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+                <PanelGroup direction="horizontal">
+                  {/* Левый столбец */}
+                  <Panel defaultSize={50} minSize={20}>
+                    <PanelGroup direction="vertical">
+                      {[0, 1, 2].map((index) => (
+                        <React.Fragment key={`fragment-left-${index}`}>
+                          <Panel defaultSize={33.33} minSize={10}>
+                            <VideoPanel
+                              video={validVideos[index]}
+                              isActive={validVideos[index]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={index}
+                            />
+                          </Panel>
+                          {index < 2 && (
+                            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </PanelGroup>
+                  </Panel>
+                  <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                  {/* Правый столбец */}
+                  <Panel defaultSize={50} minSize={20}>
+                    <PanelGroup direction="vertical">
+                      {[3, 4, 5].map((index) => (
+                        <React.Fragment key={`fragment-right-${index}`}>
+                          <Panel defaultSize={33.33} minSize={10}>
+                            <VideoPanel
+                              video={validVideos[index]}
+                              isActive={validVideos[index]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={index}
+                            />
+                          </Panel>
+                          {index < 5 && (
+                            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </PanelGroup>
+                  </Panel>
+                </PanelGroup>
+              </AspectRatio>
+            </div>
+          </div>
+        )
+      }
+
+      // Для ландшафтных шаблонов используем стандартный рендеринг
       return (
-        <div className="h-full w-full">
+        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {/* Верхний ряд */}
-            <Panel>
+            <Panel defaultSize={50} minSize={20}>
               <PanelGroup direction="horizontal">
-                <Panel>
-                  <VideoPanel
-                    video={validVideos[0]}
-                    isActive={validVideos[0]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={0}
-                  />
-                </Panel>
-                <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
-                <Panel>
-                  <VideoPanel
-                    video={validVideos[1]}
-                    isActive={validVideos[1]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={1}
-                  />
-                </Panel>
-                <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
-                <Panel>
-                  <VideoPanel
-                    video={validVideos[2]}
-                    isActive={validVideos[2]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={2}
-                  />
-                </Panel>
+                {[0, 1, 2].map((index) => (
+                  <React.Fragment key={`fragment-top-${index}`}>
+                    <Panel defaultSize={33.33} minSize={10}>
+                      <VideoPanel
+                        video={validVideos[index]}
+                        isActive={validVideos[index]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={index}
+                      />
+                    </Panel>
+                    {index < 2 && (
+                      <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                    )}
+                  </React.Fragment>
+                ))}
               </PanelGroup>
             </Panel>
             <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
             {/* Нижний ряд */}
-            <Panel>
+            <Panel defaultSize={50} minSize={20}>
               <PanelGroup direction="horizontal">
-                <Panel>
-                  <VideoPanel
-                    video={validVideos[3]}
-                    isActive={validVideos[3]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={3}
-                  />
-                </Panel>
-                <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
-                <Panel>
-                  <VideoPanel
-                    video={validVideos[4]}
-                    isActive={validVideos[4]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={4}
-                  />
-                </Panel>
-                <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
-                <Panel>
-                  <VideoPanel
-                    video={validVideos[5]}
-                    isActive={validVideos[5]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={5}
-                  />
-                </Panel>
+                {[3, 4, 5].map((index) => (
+                  <React.Fragment key={`fragment-bottom-${index}`}>
+                    <Panel defaultSize={33.33} minSize={10}>
+                      <VideoPanel
+                        video={validVideos[index]}
+                        isActive={validVideos[index]?.id === activeVideoId}
+                        videoRefs={videoRefs}
+                        index={index}
+                      />
+                    </Panel>
+                    {index < 5 && (
+                      <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                    )}
+                  </React.Fragment>
+                ))}
               </PanelGroup>
             </Panel>
           </PanelGroup>
@@ -1057,7 +3010,7 @@ export function ResizableTemplate({
     // Для сетки 3x3 (9 экранов)
     else if (template.screens === 9 && template.id && template.id.includes("split-grid-3x3-landscape")) {
       return (
-        <div className="h-full w-full">
+        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {/* Верхний ряд */}
             <Panel>
@@ -1161,7 +3114,7 @@ export function ResizableTemplate({
     // Для сетки 4x2 (8 экранов)
     else if (template.screens === 8 && template.id && template.id.includes("split-grid-4x2-landscape")) {
       return (
-        <div className="h-full w-full">
+        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {/* Верхний ряд */}
             <Panel>
@@ -1248,10 +3201,69 @@ export function ResizableTemplate({
         </div>
       )
     }
-    // Для сетки 5x2 (10 экранов)
-    else if (template.screens === 10 && template.id && template.id.includes("split-grid-5x2-landscape")) {
+    // Для сетки 5x2 (10 экранов) или 2x5 (портретный режим)
+    else if (template.screens === 10 && template.id && (template.id.includes("split-grid-5x2-landscape") || template.id.includes("split-grid-2x5-portrait"))) {
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
+
+      // Для портретных шаблонов добавляем ограничение по соотношению сторон
+      if (isPortrait) {
+        return (
+          <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+            <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+              <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+                <PanelGroup direction="horizontal">
+                  {/* Левый столбец */}
+                  <Panel defaultSize={50} minSize={20}>
+                    <PanelGroup direction="vertical">
+                      {[0, 1, 2, 3, 4].map((index) => (
+                        <React.Fragment key={`fragment-left-${index}`}>
+                          <Panel defaultSize={20} minSize={10}>
+                            <VideoPanel
+                              video={validVideos[index]}
+                              isActive={validVideos[index]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={index}
+                            />
+                          </Panel>
+                          {index < 4 && (
+                            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </PanelGroup>
+                  </Panel>
+                  <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                  {/* Правый столбец */}
+                  <Panel defaultSize={50} minSize={20}>
+                    <PanelGroup direction="vertical">
+                      {[5, 6, 7, 8, 9].map((index) => (
+                        <React.Fragment key={`fragment-right-${index}`}>
+                          <Panel defaultSize={20} minSize={10}>
+                            <VideoPanel
+                              video={validVideos[index]}
+                              isActive={validVideos[index]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={index}
+                            />
+                          </Panel>
+                          {index < 9 && (
+                            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </PanelGroup>
+                  </Panel>
+                </PanelGroup>
+              </AspectRatio>
+            </div>
+          </div>
+        )
+      }
+
+      // Для ландшафтных шаблонов используем стандартный рендеринг
       return (
-        <div className="h-full w-full">
+        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {/* Верхний ряд */}
             <Panel defaultSize={50} minSize={20}>
@@ -1298,10 +3310,90 @@ export function ResizableTemplate({
         </div>
       )
     }
-    // Для сетки 4x3 (12 экранов)
-    else if (template.screens === 12 && template.id && template.id.includes("split-grid-4x3-landscape")) {
+    // Для сетки 4x3 (12 экранов) или 3x4 (портретный режим)
+    else if (template.screens === 12 && template.id && (template.id.includes("split-grid-4x3-landscape") || template.id.includes("split-grid-3x4-portrait"))) {
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
+
+      // Для портретных шаблонов добавляем ограничение по соотношению сторон
+      if (isPortrait) {
+        return (
+          <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+            <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+              <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+                <PanelGroup direction="horizontal">
+                  {/* Левый столбец */}
+                  <Panel defaultSize={33.33} minSize={20}>
+                    <PanelGroup direction="vertical">
+                      {[0, 1, 2, 3].map((index) => (
+                        <React.Fragment key={`fragment-left-${index}`}>
+                          <Panel defaultSize={25} minSize={10}>
+                            <VideoPanel
+                              video={validVideos[index]}
+                              isActive={validVideos[index]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={index}
+                            />
+                          </Panel>
+                          {index < 3 && (
+                            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </PanelGroup>
+                  </Panel>
+                  <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                  {/* Средний столбец */}
+                  <Panel defaultSize={33.33} minSize={20}>
+                    <PanelGroup direction="vertical">
+                      {[4, 5, 6, 7].map((index) => (
+                        <React.Fragment key={`fragment-middle-${index}`}>
+                          <Panel defaultSize={25} minSize={10}>
+                            <VideoPanel
+                              video={validVideos[index]}
+                              isActive={validVideos[index]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={index}
+                            />
+                          </Panel>
+                          {index < 7 && (
+                            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </PanelGroup>
+                  </Panel>
+                  <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                  {/* Правый столбец */}
+                  <Panel defaultSize={33.33} minSize={20}>
+                    <PanelGroup direction="vertical">
+                      {[8, 9, 10, 11].map((index) => (
+                        <React.Fragment key={`fragment-right-${index}`}>
+                          <Panel defaultSize={25} minSize={10}>
+                            <VideoPanel
+                              video={validVideos[index]}
+                              isActive={validVideos[index]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={index}
+                            />
+                          </Panel>
+                          {index < 11 && (
+                            <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                          )}
+                        </React.Fragment>
+                      ))}
+                    </PanelGroup>
+                  </Panel>
+                </PanelGroup>
+              </AspectRatio>
+            </div>
+          </div>
+        )
+      }
+
+      // Для ландшафтных шаблонов используем стандартный рендеринг
       return (
-        <div className="h-full w-full">
+        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {/* Верхний ряд */}
             <Panel defaultSize={33.33} minSize={20}>
@@ -1369,10 +3461,57 @@ export function ResizableTemplate({
         </div>
       )
     }
-    // Для сетки 4x4 (16 экранов)
-    else if (template.screens === 16 && template.id && template.id.includes("split-grid-4x4-landscape")) {
+    // Для сетки 4x4 (16 экранов) или 4x4 (портретный режим)
+    else if (template.screens === 16 && template.id && (template.id.includes("split-grid-4x4-landscape") || template.id.includes("split-grid-4x4-portrait"))) {
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
+
+      // Для портретных шаблонов добавляем ограничение по соотношению сторон
+      if (isPortrait) {
+        return (
+          <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+            <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+              <AspectRatio ratio={9/16} className="h-auto max-h-full w-full">
+                <PanelGroup direction="vertical">
+                  {[0, 1, 2, 3].map((rowIndex) => (
+                    <React.Fragment key={`fragment-row-${rowIndex}`}>
+                      <Panel defaultSize={25} minSize={10}>
+                        <PanelGroup direction="horizontal">
+                          {[0, 1, 2, 3].map((colIndex) => {
+                            const index = rowIndex * 4 + colIndex;
+                            return (
+                              <React.Fragment key={`fragment-cell-${index}`}>
+                                <Panel defaultSize={25} minSize={10}>
+                                  <VideoPanel
+                                    video={validVideos[index]}
+                                    isActive={validVideos[index]?.id === activeVideoId}
+                                    videoRefs={videoRefs}
+                                    index={index}
+                                  />
+                                </Panel>
+                                {colIndex < 3 && (
+                                  <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </PanelGroup>
+                      </Panel>
+                      {rowIndex < 3 && (
+                        <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </PanelGroup>
+              </AspectRatio>
+            </div>
+          </div>
+        )
+      }
+
+      // Для ландшафтных шаблонов используем стандартный рендеринг
       return (
-        <div className="h-full w-full">
+        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           <PanelGroup direction="vertical">
             {[0, 1, 2, 3].map((rowIndex) => (
               <React.Fragment key={`fragment-row-${rowIndex}`}>
@@ -1407,16 +3546,248 @@ export function ResizableTemplate({
         </div>
       )
     }
+    // Для сетки 5x5 (25 экранов)
+    else if (template.screens === 25 && template.id && (template.id.includes("split-grid-5x5-landscape") || template.id.includes("split-grid-5x5-portrait"))) {
+      // Определяем, является ли шаблон портретным
+      const isPortrait = template.id && template.id.includes("portrait");
+
+      // Для портретных шаблонов добавляем ограничение по соотношению сторон
+      if (isPortrait) {
+        return (
+          <div className="h-full w-full flex items-center justify-center" style={{ overflow: "visible" }}>
+            <div className="h-full flex items-center" style={{ maxWidth: "56.25vh" }}>
+              <AspectRatio ratio={9/16} className="h-auto max-h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+                <PanelGroup direction="vertical">
+                  {[0, 1, 2, 3, 4].map((rowIndex) => (
+                    <React.Fragment key={`fragment-row-${rowIndex}`}>
+                      <Panel defaultSize={20} minSize={10}>
+                        <PanelGroup direction="horizontal">
+                          {[0, 1, 2, 3, 4].map((colIndex) => {
+                            const index = rowIndex * 5 + colIndex;
+                            return (
+                              <React.Fragment key={`fragment-cell-${index}`}>
+                                <Panel defaultSize={20} minSize={10}>
+                                  <VideoPanel
+                                    video={validVideos[index]}
+                                    isActive={validVideos[index]?.id === activeVideoId}
+                                    videoRefs={videoRefs}
+                                    index={index}
+                                  />
+                                </Panel>
+                                {colIndex < 4 && (
+                                  <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </PanelGroup>
+                      </Panel>
+                      {rowIndex < 4 && (
+                        <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                      )}
+                    </React.Fragment>
+                  ))}
+                </PanelGroup>
+              </AspectRatio>
+            </div>
+          </div>
+        )
+      }
+
+      // Для ландшафтных шаблонов используем стандартный рендеринг
+      return (
+        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          <PanelGroup direction="vertical">
+            {[0, 1, 2, 3, 4].map((rowIndex) => (
+              <React.Fragment key={`fragment-row-${rowIndex}`}>
+                <Panel defaultSize={20} minSize={10}>
+                  <PanelGroup direction="horizontal">
+                    {[0, 1, 2, 3, 4].map((colIndex) => {
+                      const index = rowIndex * 5 + colIndex;
+                      return (
+                        <React.Fragment key={`fragment-cell-${index}`}>
+                          <Panel defaultSize={20} minSize={10}>
+                            <VideoPanel
+                              video={validVideos[index]}
+                              isActive={validVideos[index]?.id === activeVideoId}
+                              videoRefs={videoRefs}
+                              index={index}
+                            />
+                          </Panel>
+                          {colIndex < 4 && (
+                            <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </PanelGroup>
+                </Panel>
+                {rowIndex < 4 && (
+                  <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
+                )}
+              </React.Fragment>
+            ))}
+          </PanelGroup>
+        </div>
+      )
+    }
     // Для других типов сеток можно добавить аналогичную логику
     // ...
   }
 
   // Для диагональных шаблонов
   if (template.split === "diagonal") {
-    // Для диагональных шаблонов используем специальную обработку
-    // Так как диагональное разделение сложно реализовать с помощью PanelGroup,
-    // мы используем стандартный рендеринг шаблона
-    return template.render()
+    // Для диагональных шаблонов с 2 экранами
+    if (template.screens === 2) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                  hideLabel={template.split === "diagonal"}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем разделительную линию */}
+          {template.splitPoints && (
+            <div
+              className="absolute inset-0 z-20"
+              style={{
+                clipPath: `polygon(
+                  ${template.splitPoints[0].x - 0.2}% 0,
+                  ${template.splitPoints[0].x + 0.2}% 0,
+                  ${template.splitPoints[1].x + 0.2}% 100%,
+                  ${template.splitPoints[1].x - 0.2}% 100%
+                )`,
+                backgroundColor: "#35d1c1",
+                opacity: 0.8,
+              }}
+            />
+          )}
+
+          {/* Добавляем надписи с названиями камер */}
+          {validVideos.slice(0, videoCount).map((_, index) => {
+            // Определяем позицию для каждой камеры
+            const style: React.CSSProperties = {
+              backgroundColor: "rgba(0,0,0,0.5)",
+              padding: "2px 8px",
+              borderRadius: "4px"
+            };
+
+            if (index === 0) {
+              style.bottom = "10%";
+              style.left = "10%";
+            } else if (index === 1) {
+              style.bottom = "10%";
+              style.right = "10%";
+            }
+
+            return (
+              <div
+                key={`camera-label-${index}`}
+                className="absolute z-30 text-white text-sm"
+                style={style}
+              >
+                Camera {index + 1}
+              </div>
+            );
+          })}
+        </div>
+      )
+    }
+    // Для диагональных шаблонов с 4 экранами (Diagonal Cross)
+    else if (template.id && template.id.includes("split-diagonal-cross")) {
+      return (
+        <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+          {/* Рендерим видео */}
+          {validVideos.slice(0, videoCount).map((video, index) => {
+            // Получаем стили для видео в зависимости от шаблона
+            const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+            return (
+              <div
+                key={`fixed-video-${video.id}-${index}`}
+                className="absolute"
+                style={{
+                  top: videoStyle.top || '0',
+                  left: videoStyle.left || '0',
+                  width: videoStyle.width || '100%',
+                  height: videoStyle.height || '100%',
+                  clipPath: videoStyle.clipPath,
+                  zIndex: 10, // Поверх шаблона
+                }}
+              >
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                />
+              </div>
+            )
+          })}
+
+          {/* Добавляем надписи с названиями камер */}
+          {validVideos.slice(0, videoCount).map((_, index) => {
+            // Определяем позицию для каждой камеры
+            const style: React.CSSProperties = {
+              backgroundColor: "rgba(0,0,0,0.5)",
+              padding: "2px 8px",
+              borderRadius: "4px"
+            };
+
+            if (index === 0) {
+              style.top = "10%";
+              style.left = "10%";
+            } else if (index === 1) {
+              style.top = "10%";
+              style.right = "10%";
+            } else if (index === 2) {
+              style.bottom = "10%";
+              style.right = "10%";
+            } else if (index === 3) {
+              style.bottom = "10%";
+              style.left = "10%";
+            }
+
+            return (
+              <div
+                key={`camera-label-${index}`}
+                className="absolute z-30 text-white text-sm"
+                style={style}
+              >
+                Camera {index + 1}
+              </div>
+            );
+          })}
+        </div>
+      )
+    }
+
+    // Для других диагональных шаблонов используем стандартный рендеринг
+    return renderFixedTemplate()
   }
 
   // Для всех остальных шаблонов используем PanelGroup
@@ -1455,12 +3826,13 @@ interface VideoPanelProps {
   isActive: boolean
   videoRefs?: Record<string, HTMLVideoElement>
   index?: number // Индекс видео в шаблоне
+  hideLabel?: boolean // Флаг для скрытия надписи с названием камеры
 }
 
 /**
  * Компонент для отображения видео в панели
  */
-function VideoPanel({ video, isActive, videoRefs, index = 0 }: VideoPanelProps) {
+function VideoPanel({ video, isActive, videoRefs, index = 0, hideLabel = false }: VideoPanelProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
   // Проверяем, что видео существует и имеет путь
@@ -1484,9 +3856,9 @@ function VideoPanel({ video, isActive, videoRefs, index = 0 }: VideoPanelProps) 
       <ResizableVideo
         video={video}
         isActive={isActive}
-        containerRef={containerRef}
         videoRefs={videoRefs}
         index={index}
+        hideLabel={hideLabel}
       />
     </div>
   )

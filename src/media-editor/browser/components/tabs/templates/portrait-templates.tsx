@@ -6,6 +6,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-vertical-portrait",
     split: "vertical",
     screens: 2,
+    resizable: true,
     splitPosition: 50, // Позиция разделения в процентах (50% - посередине)
     render: () => (
       <div className="flex h-full w-full">
@@ -39,6 +40,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-horizontal-portrait",
     split: "horizontal",
     screens: 2,
+    resizable: true,
     splitPosition: 50, // Позиция разделения в процентах (50% - посередине)
     render: () => (
       <div className="flex h-full w-full flex-col">
@@ -73,6 +75,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-diagonal-portrait",
     split: "diagonal",
     screens: 2,
+    resizable: false, // Диагональные шаблоны не могут быть resizable
     splitPoints: [
       { x: 0, y: 40 }, // Начальная точка (левый край, 40% от верха)
       { x: 100, y: 60 }, // Конечная точка (правый край, 60% от верха)
@@ -125,6 +128,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-mixed-1-portrait",
     split: "custom",
     screens: 3,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Верхняя секция */}
@@ -201,6 +205,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-mixed-2-portrait",
     split: "custom",
     screens: 3,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Левая секция */}
@@ -277,6 +282,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-vertical-3-portrait",
     split: "vertical",
     screens: 3,
+    resizable: true,
     render: () => (
       <div className="flex h-full w-full">
         <div
@@ -320,6 +326,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-horizontal-3-portrait",
     split: "horizontal",
     screens: 3,
+    resizable: true,
     render: () => (
       <div className="flex h-full w-full flex-col">
         <div
@@ -365,6 +372,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-grid-2x2-portrait",
     split: "custom",
     screens: 4,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Верхний левый экран */}
@@ -453,6 +461,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-horizontal-4-portrait",
     split: "horizontal",
     screens: 4,
+    resizable: true,
     render: () => (
       <div className="flex h-full w-full flex-col">
         <div
@@ -512,6 +521,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-grid-2x3-portrait",
     split: "custom",
     screens: 6,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Верхний левый экран */}
@@ -642,6 +652,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-custom-5-1-portrait",
     split: "custom",
     screens: 5,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Верхняя большая секция */}
@@ -770,6 +781,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-custom-5-2-portrait",
     split: "custom",
     screens: 5,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Нижняя большая секция */}
@@ -898,6 +910,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-custom-5-3-portrait",
     split: "custom",
     screens: 5,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Верхний левый экран */}
@@ -1022,6 +1035,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-grid-2x3-alt-portrait",
     split: "custom",
     screens: 6,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Верхний левый экран */}
@@ -1152,6 +1166,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-grid-2x5-portrait",
     split: "custom",
     screens: 10,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Левый столбец */}
@@ -1358,6 +1373,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-grid-3x4-portrait",
     split: "custom",
     screens: 12,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Первый ряд */}
@@ -1594,6 +1610,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-grid-2x4-portrait",
     split: "custom",
     screens: 8,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Первый ряд */}
@@ -1766,6 +1783,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-1-3-portrait",
     split: "custom",
     screens: 4,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Верхняя большая секция */}
@@ -1866,6 +1884,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-3-1-portrait",
     split: "custom",
     screens: 4,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Левая верхняя секция */}
@@ -1968,6 +1987,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-3-1-right-portrait",
     split: "custom",
     screens: 4,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Левая секция */}
@@ -2068,6 +2088,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-1-3-bottom-portrait",
     split: "custom",
     screens: 4,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Нижняя большая секция */}
@@ -2169,6 +2190,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-grid-3x3-portrait",
     split: "custom",
     screens: 9,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Верхний ряд */}
@@ -2352,6 +2374,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-grid-4x4-portrait",
     split: "custom",
     screens: 16,
+    resizable: true,
     render: () => (
       <div className="relative h-full w-full">
         {/* Первый ряд */}
@@ -2746,6 +2769,76 @@ export const portraitTemplates: MediaTemplate[] = [
             opacity: 0.3,
           }}
         />
+      </div>
+    ),
+  },
+
+  // Шаблон с 25 экранами (5x5) для портретного формата
+  {
+    id: "split-grid-5x5-portrait",
+    split: "custom",
+    screens: 25,
+    resizable: true,
+    render: () => (
+      <div className="relative h-full w-full">
+        {/* Создаем сетку 5x5 */}
+        {Array.from({ length: 5 }).map((_, rowIndex) => (
+          <>
+            {Array.from({ length: 5 }).map((_, colIndex) => {
+              const cellIndex = rowIndex * 5 + colIndex + 1;
+              const isEvenCell = (rowIndex + colIndex) % 2 === 0;
+              return (
+                <div
+                  key={`cell-${rowIndex}-${colIndex}`}
+                  className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+                  style={{
+                    background: isEvenCell ? "#23262b" : "#2a2e36",
+                    width: "20%",
+                    height: "20%",
+                    top: `${rowIndex * 20}%`,
+                    left: `${colIndex * 20}%`,
+                    borderTop: rowIndex === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                    borderBottom: rowIndex === 4 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                    borderLeft: colIndex === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                    borderRight: colIndex === 4 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  }}
+                >
+                  {cellIndex}
+                </div>
+              );
+            })}
+          </>
+        ))}
+
+        {/* Горизонтальные линии разделения */}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={`h-line-${i}`}
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "100%",
+              height: "1px",
+              top: `${(i + 1) * 20}%`,
+              left: "0",
+              opacity: 0.3,
+            }}
+          />
+        ))}
+
+        {/* Вертикальные линии разделения */}
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div
+            key={`v-line-${i}`}
+            className="absolute z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              height: "100%",
+              top: "0",
+              left: `${(i + 1) * 20}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
       </div>
     ),
   },

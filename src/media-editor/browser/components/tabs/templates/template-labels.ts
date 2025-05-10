@@ -284,6 +284,19 @@ export const templateLabels: TemplateDescription[] = [
     },
   },
 
+  // Шаблоны с 25 экранами - Ландшафтный формат
+  {
+    id: "split-grid-5x5-landscape",
+    labels: {
+      ru: "Сетка 5×5",
+      en: "Grid 5×5",
+    },
+    description: {
+      ru: "Двадцать пять экранов в сетке 5×5",
+      en: "Twenty-five screens in a 5×5 grid",
+    },
+  },
+
   // Шаблоны с 2 экранами - Портретный формат
   {
     id: "split-vertical-portrait",
@@ -576,6 +589,19 @@ export const templateLabels: TemplateDescription[] = [
     description: {
       ru: "Шестнадцать экранов в сетке 4×4",
       en: "Sixteen screens in a 4×4 grid",
+    },
+  },
+
+  // Шаблоны с 25 экранами - Портретный формат
+  {
+    id: "split-grid-5x5-portrait",
+    labels: {
+      ru: "Сетка 5×5",
+      en: "Grid 5×5",
+    },
+    description: {
+      ru: "Двадцать пять экранов в сетке 5×5",
+      en: "Twenty-five screens in a 5×5 grid",
     },
   },
 
@@ -944,6 +970,19 @@ export const templateLabels: TemplateDescription[] = [
     description: {
       ru: "Шестнадцать экранов в сетке 4×4",
       en: "Sixteen screens in a 4×4 grid",
+    },
+  },
+
+  // Шаблоны с 25 экранами - Квадратный формат
+  {
+    id: "split-grid-5x5-square",
+    labels: {
+      ru: "Сетка 5×5",
+      en: "Grid 5×5",
+    },
+    description: {
+      ru: "Двадцать пять экранов в сетке 5×5",
+      en: "Twenty-five screens in a 5×5 grid",
     },
   },
 ]

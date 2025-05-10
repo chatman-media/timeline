@@ -8,7 +8,6 @@ import { usePlayerContext } from "@/media-editor/media-player"
 interface ResizableVideoProps {
   video: MediaFile
   isActive: boolean
-  containerRef: React.RefObject<HTMLDivElement | null>
   videoRefs?: Record<string, HTMLVideoElement>
   index?: number // Индекс видео в шаблоне
 }
@@ -16,7 +15,7 @@ interface ResizableVideoProps {
 /**
  * Компонент для отображения видео с возможностью масштабирования
  */
-export function ResizableVideo({ video, isActive, containerRef, videoRefs, index = 0 }: ResizableVideoProps) {
+export function ResizableVideo({ video, isActive, videoRefs, index = 0 }: ResizableVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isReady, setIsReady] = useState(false)
 
@@ -38,6 +37,11 @@ export function ResizableVideo({ video, isActive, containerRef, videoRefs, index
         <span className="text-white">{t('timeline.player.videoUnavailable', 'Видео недоступно')}</span>
       </div>
     )
+  }
+
+  // Дополнительная проверка пути к видео
+  if (video.path && !video.path.startsWith('/')) {
+    console.error(`[ResizableVideo] Ошибка: некорректный путь к видео ${video.id}: ${video.path}`)
   }
 
   // Логируем информацию о видео для отладки только при первом рендере или изменении состояния
@@ -62,8 +66,31 @@ export function ResizableVideo({ video, isActive, containerRef, videoRefs, index
       // Проверяем, что src установлен правильно
       if (video.path && (!videoElement.src || !videoElement.src.includes(video.path))) {
         console.log(`[ResizableVideo] Устанавливаем src для видео ${video.id}: ${video.path}`)
-        videoElement.src = video.path
-        videoElement.load()
+
+        try {
+          // Проверяем, что путь к видео корректный
+          if (!video.path.startsWith('/')) {
+            console.error(`[ResizableVideo] Некорректный путь к видео ${video.id}: ${video.path}`)
+            // Пытаемся исправить путь
+            const correctedPath = `/${video.path.replace(/^\.\//, '')}`
+            console.log(`[ResizableVideo] Пытаемся исправить путь для ${video.id}: ${correctedPath}`)
+            videoElement.src = correctedPath
+          } else {
+            videoElement.src = video.path
+          }
+
+          // Загружаем видео
+          videoElement.load()
+
+          // Проверяем, что видео загружается
+          setTimeout(() => {
+            if (videoElement.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+              console.error(`[ResizableVideo] Не удалось загрузить видео ${video.id}: источник недоступен`)
+            }
+          }, 1000)
+        } catch (err) {
+          console.error(`[ResizableVideo] Ошибка при установке src для видео ${video.id}:`, err)
+        }
       }
     }
 
@@ -116,13 +143,14 @@ export function ResizableVideo({ video, isActive, containerRef, videoRefs, index
     // Получаем видео элемент
     const videoElement = videoRef.current
 
-    // Используем "cover" для заполнения всей ячейки с сохранением пропорций
-    videoElement.style.objectFit = "cover"
+    // Всегда используем "cover" для всех видео, включая портретные
+    const objectFit = "cover"
+    videoElement.style.objectFit = objectFit
 
     // Устанавливаем objectPosition по центру
     videoElement.style.objectPosition = "center"
 
-    console.log(`[ResizableVideo] Применяем настройки отображения для видео ${video.id}: cover`)
+    console.log(`[ResizableVideo] Применяем настройки отображения для видео ${video.id}: ${objectFit}`)
   }, [isReady, video.id])
 
   // Эффект для синхронизации воспроизведения с состоянием плеера
@@ -248,8 +276,23 @@ export function ResizableVideo({ video, isActive, containerRef, videoRefs, index
             }
           }}
           data-video-id={video.id}
-          onLoadedData={() => console.log(`[ResizableVideo] Видео ${video.id} загружено и готово к воспроизведению`)}
-          onError={(e) => console.error(`[ResizableVideo] Ошибка загрузки видео ${video.id}:`, e)}
+          onLoadedData={() => {
+            console.log(`[ResizableVideo] Видео ${video.id} загружено и готово к воспроизведению`);
+            // Проверяем, что видео действительно загружено
+            const target = videoRef.current;
+            if (target) {
+              if (target.videoWidth === 0 || target.videoHeight === 0) {
+                console.error(`[ResizableVideo] Видео ${video.id} загружено, но имеет нулевые размеры: ${target.videoWidth}x${target.videoHeight}`);
+              } else {
+                console.log(`[ResizableVideo] Видео ${video.id} имеет размеры: ${target.videoWidth}x${target.videoHeight}`);
+              }
+            }
+          }}
+          onError={(e) => {
+            const target = e.target as HTMLVideoElement;
+            console.error(`[ResizableVideo] Ошибка загрузки видео ${video.id}:`, e);
+            console.error(`[ResizableVideo] Детали ошибки для ${video.id}: networkState=${target.networkState}, readyState=${target.readyState}, error=${target.error?.code}`);
+          }}
         />
       </div>
 
