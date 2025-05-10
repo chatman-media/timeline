@@ -3812,20 +3812,36 @@ export function ResizableTemplate({
             )
           })}
 
-          {/* Добавляем разделительную линию */}
-          <div
-            className="absolute inset-0 z-20"
-            style={{
-              clipPath: `polygon(
-                ${splitPoints[0].x - 0.5}% 0,
-                ${splitPoints[0].x + 0.5}% 0,
-                ${splitPoints[1].x + 0.5}% 100%,
-                ${splitPoints[1].x - 0.5}% 100%
-              )`,
-              backgroundColor: "#35d1c1",
-              pointerEvents: "none" // Отключаем события мыши для линии
-            }}
-          />
+          {/* Добавляем разделительную линию с учетом угла наклона */}
+          {(() => {
+            // Рассчитываем угол наклона линии
+            const dx = splitPoints[1].x - splitPoints[0].x;
+            const dy = splitPoints[1].y - splitPoints[0].y;
+            const angle = Math.atan2(dy, dx);
+
+            // Рассчитываем ширину линии в зависимости от угла
+            // Чем ближе угол к 90 градусам (вертикальная линия), тем меньше ширина
+            // Чем ближе угол к 0 градусам (горизонтальная линия), тем больше ширина
+            const baseWidth = 0.1; // Базовая ширина линии
+            const widthFactor = Math.abs(Math.cos(angle)); // Фактор изменения ширины
+            const lineWidth = baseWidth + baseWidth * widthFactor;
+
+            return (
+              <div
+                className="absolute inset-0 z-20"
+                style={{
+                  clipPath: `polygon(
+                    ${splitPoints[0].x - lineWidth}% 0,
+                    ${splitPoints[0].x + lineWidth}% 0,
+                    ${splitPoints[1].x + lineWidth}% 100%,
+                    ${splitPoints[1].x - lineWidth}% 100%
+                  )`,
+                  backgroundColor: "#35d1c1",
+                  pointerEvents: "none" // Отключаем события мыши для линии
+                }}
+              />
+            );
+          })()}
 
           {/* Центральная область для перетаскивания всей линии */}
           <div
