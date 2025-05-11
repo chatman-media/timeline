@@ -24,13 +24,17 @@ export function SplitGrid5x5({
 
   // Если видео меньше 25, дублируем существующие для заполнения
   if (videoCount > 0 && videoCount < 25) {
-    console.log(`[SplitGrid5x5] Доступно только ${videoCount} видео, дублируем для заполнения 25 ячеек`)
+    console.log(
+      `[SplitGrid5x5] Доступно только ${videoCount} видео, дублируем для заполнения 25 ячеек`,
+    )
     for (let i = videoCount; i < 25; i++) {
       filledVideos[i] = validVideos[i % videoCount]
     }
   }
 
-  console.log(`[SplitGrid5x5] Рендеринг шаблона с ${videoCount} уникальными видео, всего ${filledVideos.length} видео`)
+  console.log(
+    `[SplitGrid5x5] Рендеринг шаблона с ${videoCount} уникальными видео, всего ${filledVideos.length} видео`,
+  )
 
   // Если нет видео вообще, возвращаем пустой div
   if (videoCount === 0) {

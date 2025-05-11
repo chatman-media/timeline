@@ -250,7 +250,9 @@ export function TemplateList() {
       setAppliedTemplate(appliedTemplate)
     } else if (allMediaFiles.length > 0) {
       // Если на таймлайне нет видео и нет параллельных видео, но есть медиафайлы, используем их
-      console.log(`На таймлайне нет видео, используем ${allMediaFiles.length} медиафайлов из библиотеки`)
+      console.log(
+        `На таймлайне нет видео, используем ${allMediaFiles.length} медиафайлов из библиотеки`,
+      )
 
       // Фильтруем только видеофайлы с путями
       const validMediaFiles = allMediaFiles.filter((file) => file.isVideo && file.path)
@@ -281,7 +283,9 @@ export function TemplateList() {
         console.log("В библиотеке нет подходящих видеофайлов для применения шаблона")
       }
     } else {
-      console.log("Нет видео на таймлайне, нет параллельных видео и нет медиафайлов в библиотеке для применения шаблона")
+      console.log(
+        "Нет видео на таймлайне, нет параллельных видео и нет медиафайлов в библиотеке для применения шаблона",
+      )
     }
   }
 
