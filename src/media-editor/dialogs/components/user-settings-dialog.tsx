@@ -54,34 +54,25 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
     }
   }, [open, language, i18n.language])
 
-  // Обработчик изменения языка
+  // Обработчик изменения языка - применяет изменения сразу
   const handleLanguageSelect = (value: string) => {
-    setSelectedLanguage(value as Language)
-  }
+    const newLanguage = value as Language
+    setSelectedLanguage(newLanguage)
 
-  // Обработчик сохранения настроек
-  const handleSave = () => {
-    console.log("Saving language settings:", selectedLanguage)
+    // Сразу применяем изменения языка
+    console.log("Applying language change immediately:", newLanguage)
 
-    // Сначала сохраняем язык напрямую в localStorage
+    // Сохраняем язык напрямую в localStorage
     if (typeof window !== "undefined") {
-      localStorage.setItem("app-language", selectedLanguage)
-      console.log("Directly saved language to localStorage:", selectedLanguage)
+      localStorage.setItem("app-language", newLanguage)
+      console.log("Directly saved language to localStorage:", newLanguage)
     }
 
-    // Затем обновляем язык в i18next
-    i18n.changeLanguage(selectedLanguage)
+    // Обновляем язык в i18next
+    i18n.changeLanguage(newLanguage)
 
-    // И наконец обновляем язык в state machine
-    handleLanguageChange(selectedLanguage)
-
-    // Проверяем, что язык был сохранен
-    if (typeof window !== "undefined") {
-      console.log("Verified localStorage language value:", localStorage.getItem("app-language"))
-      console.log("Current i18n language:", i18n.language)
-    }
-
-    onOpenChange(false)
+    // Обновляем язык в state machine
+    handleLanguageChange(newLanguage)
   }
 
   return (
@@ -117,7 +108,7 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
           <Button
             variant="default"
             className="flex-1 cursor-pointer bg-[#00CCC0] text-black hover:bg-[#00AAA0]"
-            onClick={handleSave}
+            onClick={() => onOpenChange(false)}
           >
             {t("dialogs.userSettings.save")}
           </Button>

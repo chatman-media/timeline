@@ -1738,7 +1738,10 @@ export function MediaPlayer() {
             {/* Логируем информацию о шаблоне для отладки */}
 
             {/* Если есть примененный шаблон и он настраиваемый, используем ResizableTemplate */}
-            {appliedTemplate?.template && (appliedTemplate.template.split === "resizable" || appliedTemplate.template.resizable) ? (
+            {appliedTemplate?.template && (
+              appliedTemplate.template.split === "resizable" ||
+              appliedTemplate.template.resizable
+            ) ? (
               <ResizableTemplate
                 appliedTemplate={appliedTemplate}
                 videos={videosToDisplay}
@@ -1769,6 +1772,8 @@ export function MediaPlayer() {
 
                 // Если используется шаблон, применяем ResizableVideo
                 if (appliedTemplate?.template) {
+                  // Добавляем отладочный вывод
+                  console.log(`[MediaPlayer] Применяем шаблон ${appliedTemplate.template.id}, resizable: ${appliedTemplate.template.resizable}, split: ${appliedTemplate.template.split}`)
                   // Создаем компонент-обертку для ResizableVideo
                   const ResizableVideoWrapper = () => {
                     // Создаем ref для контейнера, если его еще нет

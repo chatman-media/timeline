@@ -1376,231 +1376,116 @@ export const portraitTemplates: MediaTemplate[] = [
     resizable: true,
     render: () => (
       <div className="relative h-full w-full">
-        {/* Первый ряд */}
-        {/* Верхний левый экран */}
-        <div
-          className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "25%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          1
+        <div className="grid h-full w-full grid-cols-3 grid-rows-4">
+          {Array.from({ length: 12 }).map((_, index) => {
+            const row = Math.floor(index / 3);
+            const col = index % 3;
+            const isEven = (row + col) % 2 === 0;
+
+            return (
+              <div
+                key={`grid-cell-${index}`}
+                className="flex items-center justify-center text-sm font-normal text-gray-400"
+                style={{
+                  background: isEven ? "#23262b" : "#2a2e36",
+                  borderTop: row === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderBottom: row === 3 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderLeft: col === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderRight: col === 2 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                }}
+              >
+                {index + 1}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Верхний средний экран */}
-        <div
-          className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "25%",
-            left: "33.33%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          2
+        {/* Вертикальные линии */}
+        {[1, 2].map((i) => (
+          <div
+            key={`v-line-${i}`}
+            className="absolute inset-y-0 z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              left: `${i * 33.33}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
+
+        {/* Горизонтальные линии */}
+        {[1, 2, 3].map((i) => (
+          <div
+            key={`h-line-${i}`}
+            className="absolute inset-x-0 z-10 bg-gray-400"
+            style={{
+              height: "1px",
+              top: `${i * 25}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
+      </div>
+    ),
+  },
+
+  // Шаблон с 12 экранами (4x3)
+  {
+    id: "split-grid-4x3-portrait",
+    split: "custom",
+    screens: 12,
+    resizable: true,
+    render: () => (
+      <div className="relative h-full w-full">
+        <div className="grid h-full w-full grid-cols-4 grid-rows-3">
+          {Array.from({ length: 12 }).map((_, index) => {
+            const row = Math.floor(index / 4);
+            const col = index % 4;
+            const isEven = (row + col) % 2 === 0;
+
+            return (
+              <div
+                key={`grid-cell-${index}`}
+                className="flex items-center justify-center text-sm font-normal text-gray-400"
+                style={{
+                  background: isEven ? "#23262b" : "#2a2e36",
+                  borderTop: row === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderBottom: row === 2 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderLeft: col === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderRight: col === 3 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                }}
+              >
+                {index + 1}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Верхний правый экран */}
-        <div
-          className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "25%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          3
-        </div>
+        {/* Вертикальные линии */}
+        {[1, 2, 3].map((i) => (
+          <div
+            key={`v-line-${i}`}
+            className="absolute inset-y-0 z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              left: `${i * 25}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
 
-        {/* Второй ряд */}
-        {/* Второй левый экран */}
-        <div
-          className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "25%",
-            top: "25%",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          4
-        </div>
-
-        {/* Второй средний экран */}
-        <div
-          className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "25%",
-            top: "25%",
-            left: "33.33%",
-          }}
-        >
-          5
-        </div>
-
-        {/* Второй правый экран */}
-        <div
-          className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "25%",
-            top: "25%",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          6
-        </div>
-
-        {/* Третий ряд */}
-        {/* Третий левый экран */}
-        <div
-          className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "25%",
-            top: "50%",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          7
-        </div>
-
-        {/* Третий средний экран */}
-        <div
-          className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "25%",
-            top: "50%",
-            left: "33.33%",
-          }}
-        >
-          8
-        </div>
-
-        {/* Третий правый экран */}
-        <div
-          className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "25%",
-            top: "50%",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          9
-        </div>
-
-        {/* Четвертый ряд */}
-        {/* Нижний левый экран */}
-        <div
-          className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "25%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          10
-        </div>
-
-        {/* Нижний средний экран */}
-        <div
-          className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "25%",
-            left: "33.33%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          11
-        </div>
-
-        {/* Нижний правый экран */}
-        <div
-          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "25%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          12
-        </div>
-
-        {/* Горизонтальные линии разделения */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "25%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "50%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "75%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Вертикальные линии разделения */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "1px",
-            height: "100%",
-            top: "0",
-            left: "33.33%",
-            opacity: 0.3,
-          }}
-        />
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "1px",
-            height: "100%",
-            top: "0",
-            left: "66.66%",
-            opacity: 0.3,
-          }}
-        />
+        {/* Горизонтальные линии */}
+        {[1, 2].map((i) => (
+          <div
+            key={`h-line-${i}`}
+            className="absolute inset-x-0 z-10 bg-gray-400"
+            style={{
+              height: "1px",
+              top: `${i * 33.33}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
       </div>
     ),
   },
@@ -1613,169 +1498,52 @@ export const portraitTemplates: MediaTemplate[] = [
     resizable: true,
     render: () => (
       <div className="relative h-full w-full">
-        {/* Первый ряд */}
-        {/* Верхний левый экран */}
-        <div
-          className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "50%",
-            height: "25%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          1
+        <div className="grid h-full w-full grid-cols-2 grid-rows-4">
+          {Array.from({ length: 8 }).map((_, index) => {
+            const row = Math.floor(index / 2);
+            const col = index % 2;
+            const isEven = (row + col) % 2 === 0;
+
+            return (
+              <div
+                key={`grid-cell-${index}`}
+                className="flex items-center justify-center text-lg font-normal text-gray-400"
+                style={{
+                  background: isEven ? "#23262b" : "#2a2e36",
+                  borderTop: row === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderBottom: row === 3 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderLeft: col === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderRight: col === 1 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                }}
+              >
+                {index + 1}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Верхний правый экран */}
+        {/* Вертикальная линия */}
         <div
-          className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "50%",
-            height: "25%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          2
-        </div>
-
-        {/* Второй ряд */}
-        {/* Второй левый экран */}
-        <div
-          className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "50%",
-            height: "25%",
-            top: "25%",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          3
-        </div>
-
-        {/* Второй правый экран */}
-        <div
-          className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "50%",
-            height: "25%",
-            top: "25%",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          4
-        </div>
-
-        {/* Третий ряд */}
-        {/* Третий левый экран */}
-        <div
-          className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "50%",
-            height: "25%",
-            top: "50%",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          5
-        </div>
-
-        {/* Третий правый экран */}
-        <div
-          className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "50%",
-            height: "25%",
-            top: "50%",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          6
-        </div>
-
-        {/* Четвертый ряд */}
-        {/* Нижний левый экран */}
-        <div
-          className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "50%",
-            height: "25%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          7
-        </div>
-
-        {/* Нижний правый экран */}
-        <div
-          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "50%",
-            height: "25%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          8
-        </div>
-
-        {/* Горизонтальная линия разделения 1 */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "25%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Горизонтальная линия разделения 2 */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "50%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Горизонтальная линия разделения 3 */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "75%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Вертикальная линия разделения */}
-        <div
-          className="absolute z-10 bg-gray-400"
+          className="absolute inset-y-0 z-10 bg-gray-400"
           style={{
             width: "1px",
-            height: "100%",
-            top: "0",
             left: "50%",
             opacity: 0.3,
           }}
         />
+
+        {/* Горизонтальные линии */}
+        {[1, 2, 3].map((i) => (
+          <div
+            key={`h-line-${i}`}
+            className="absolute inset-x-0 z-10 bg-gray-400"
+            style={{
+              height: "1px",
+              top: `${i * 25}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
       </div>
     ),
   },
@@ -2193,178 +1961,55 @@ export const portraitTemplates: MediaTemplate[] = [
     resizable: true,
     render: () => (
       <div className="relative h-full w-full">
-        {/* Верхний ряд */}
-        {/* Верхний левый экран */}
-        <div
-          className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "33.33%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          1
+        <div className="grid h-full w-full grid-cols-3 grid-rows-3">
+          {Array.from({ length: 9 }).map((_, index) => {
+            const row = Math.floor(index / 3);
+            const col = index % 3;
+            const isEven = (row + col) % 2 === 0;
+
+            return (
+              <div
+                key={`grid-cell-${index}`}
+                className="flex items-center justify-center text-lg font-normal text-gray-400"
+                style={{
+                  background: isEven ? "#23262b" : "#2a2e36",
+                  borderTop: row === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderBottom: row === 2 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderLeft: col === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderRight: col === 2 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                }}
+              >
+                {index + 1}
+              </div>
+            );
+          })}
         </div>
 
-        {/* Верхний средний экран */}
-        <div
-          className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "33.33%",
-            left: "33.33%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          2
-        </div>
+        {/* Вертикальные линии */}
+        {[1, 2].map((i) => (
+          <div
+            key={`v-line-${i}`}
+            className="absolute inset-y-0 z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              left: `${i * 33.33}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
 
-        {/* Верхний правый экран */}
-        <div
-          className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "33.33%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          3
-        </div>
-
-        {/* Средний ряд */}
-        {/* Средний левый экран */}
-        <div
-          className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "33.33%",
-            top: "33.33%",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          4
-        </div>
-
-        {/* Средний средний экран */}
-        <div
-          className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "33.33%",
-            top: "33.33%",
-            left: "33.33%",
-          }}
-        >
-          5
-        </div>
-
-        {/* Средний правый экран */}
-        <div
-          className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "33.33%",
-            top: "33.33%",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          6
-        </div>
-
-        {/* Нижний ряд */}
-        {/* Нижний левый экран */}
-        <div
-          className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "33.33%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          7
-        </div>
-
-        {/* Нижний средний экран */}
-        <div
-          className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "33.33%",
-            height: "33.33%",
-            left: "33.33%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          8
-        </div>
-
-        {/* Нижний правый экран */}
-        <div
-          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "33.33%",
-            height: "33.33%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          9
-        </div>
-
-        {/* Горизонтальные линии разделения */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "33.33%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "66.66%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Вертикальные линии разделения */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "1px",
-            height: "100%",
-            top: "0",
-            left: "33.33%",
-            opacity: 0.3,
-          }}
-        />
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "1px",
-            height: "100%",
-            top: "0",
-            left: "66.66%",
-            opacity: 0.3,
-          }}
-        />
+        {/* Горизонтальные линии */}
+        {[1, 2].map((i) => (
+          <div
+            key={`h-line-${i}`}
+            className="absolute inset-x-0 z-10 bg-gray-400"
+            style={{
+              height: "1px",
+              top: `${i * 33.33}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
       </div>
     ),
   },
@@ -2377,307 +2022,55 @@ export const portraitTemplates: MediaTemplate[] = [
     resizable: true,
     render: () => (
       <div className="relative h-full w-full">
-        {/* Первый ряд */}
-        {/* 1-й экран (верхний левый) */}
-        <div
-          className="absolute top-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "25%",
-            height: "25%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          1
+        <div className="grid h-full w-full grid-cols-4 grid-rows-4">
+          {Array.from({ length: 16 }).map((_, index) => {
+            const row = Math.floor(index / 4);
+            const col = index % 4;
+            const isEven = (row + col) % 2 === 0;
+
+            return (
+              <div
+                key={`grid-cell-${index}`}
+                className="flex items-center justify-center text-sm font-normal text-gray-400"
+                style={{
+                  background: isEven ? "#23262b" : "#2a2e36",
+                  borderTop: row === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderBottom: row === 3 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderLeft: col === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                  borderRight: col === 3 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                }}
+              >
+                {index + 1}
+              </div>
+            );
+          })}
         </div>
 
-        {/* 2-й экран */}
-        <div
-          className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "25%",
-            height: "25%",
-            left: "25%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          2
-        </div>
+        {/* Вертикальные линии */}
+        {[1, 2, 3].map((i) => (
+          <div
+            key={`v-line-${i}`}
+            className="absolute inset-y-0 z-10 bg-gray-400"
+            style={{
+              width: "1px",
+              left: `${i * 25}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
 
-        {/* 3-й экран */}
-        <div
-          className="absolute top-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "25%",
-            height: "25%",
-            left: "50%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          3
-        </div>
-
-        {/* 4-й экран (верхний правый) */}
-        <div
-          className="absolute top-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "25%",
-            height: "25%",
-            borderTop: "1px solid rgba(156, 163, 175, 0.3)",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          4
-        </div>
-
-        {/* Второй ряд */}
-        {/* 5-й экран */}
-        <div
-          className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "25%",
-            height: "25%",
-            top: "25%",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          5
-        </div>
-
-        {/* 6-й экран */}
-        <div
-          className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "25%",
-            height: "25%",
-            top: "25%",
-            left: "25%",
-          }}
-        >
-          6
-        </div>
-
-        {/* 7-й экран */}
-        <div
-          className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "25%",
-            height: "25%",
-            top: "25%",
-            left: "50%",
-          }}
-        >
-          7
-        </div>
-
-        {/* 8-й экран */}
-        <div
-          className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "25%",
-            height: "25%",
-            top: "25%",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          8
-        </div>
-
-        {/* Третий ряд */}
-        {/* 9-й экран */}
-        <div
-          className="absolute left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "25%",
-            height: "25%",
-            top: "50%",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          9
-        </div>
-
-        {/* 10-й экран */}
-        <div
-          className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "25%",
-            height: "25%",
-            top: "50%",
-            left: "25%",
-          }}
-        >
-          10
-        </div>
-
-        {/* 11-й экран */}
-        <div
-          className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "25%",
-            height: "25%",
-            top: "50%",
-            left: "50%",
-          }}
-        >
-          11
-        </div>
-
-        {/* 12-й экран */}
-        <div
-          className="absolute right-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "25%",
-            height: "25%",
-            top: "50%",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          12
-        </div>
-
-        {/* Четвертый ряд */}
-        {/* 13-й экран (нижний левый) */}
-        <div
-          className="absolute bottom-0 left-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "25%",
-            height: "25%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-            borderLeft: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          13
-        </div>
-
-        {/* 14-й экран */}
-        <div
-          className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "25%",
-            height: "25%",
-            left: "25%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          14
-        </div>
-
-        {/* 15-й экран */}
-        <div
-          className="absolute bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#2a2e36",
-            width: "25%",
-            height: "25%",
-            left: "50%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          15
-        </div>
-
-        {/* 16-й экран (нижний правый) */}
-        <div
-          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
-          style={{
-            background: "#23262b",
-            width: "25%",
-            height: "25%",
-            borderBottom: "1px solid rgba(156, 163, 175, 0.3)",
-            borderRight: "1px solid rgba(156, 163, 175, 0.3)",
-          }}
-        >
-          16
-        </div>
-
-        {/* Горизонтальные линии разделения */}
-        {/* Горизонтальная линия 1 */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "25%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Горизонтальная линия 2 */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "50%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Горизонтальная линия 3 */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "100%",
-            height: "1px",
-            top: "75%",
-            left: "0",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Вертикальные линии разделения */}
-        {/* Вертикальная линия 1 */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "1px",
-            height: "100%",
-            top: "0",
-            left: "25%",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Вертикальная линия 2 */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "1px",
-            height: "100%",
-            top: "0",
-            left: "50%",
-            opacity: 0.3,
-          }}
-        />
-
-        {/* Вертикальная линия 3 */}
-        <div
-          className="absolute z-10 bg-gray-400"
-          style={{
-            width: "1px",
-            height: "100%",
-            top: "0",
-            left: "75%",
-            opacity: 0.3,
-          }}
-        />
+        {/* Горизонтальные линии */}
+        {[1, 2, 3].map((i) => (
+          <div
+            key={`h-line-${i}`}
+            className="absolute inset-x-0 z-10 bg-gray-400"
+            style={{
+              height: "1px",
+              top: `${i * 25}%`,
+              opacity: 0.3,
+            }}
+          />
+        ))}
       </div>
     ),
   },
@@ -2701,7 +2094,7 @@ export const portraitTemplates: MediaTemplate[] = [
               return (
                 <div
                   key={`cell-${rowIndex}-${colIndex}`}
-                  className="absolute flex items-center justify-center text-lg font-normal text-gray-400"
+                  className="absolute flex items-center justify-center text-xs font-normal text-gray-400"
                   style={{
                     background: isEvenCell ? "#23262b" : "#2a2e36",
                     width: "20%",

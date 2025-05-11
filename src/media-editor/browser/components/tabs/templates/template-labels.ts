@@ -74,8 +74,8 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-mixed-1-landscape",
     labels: {
-      ru: "Смешанное разделение (1+2)",
-      en: "Mixed Split (1+2)",
+      ru: "1 сверху + 2 снизу",
+      en: "1 top + 2 bottom",
     },
     description: {
       ru: "Один экран сверху, два экрана снизу",
@@ -85,12 +85,12 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-mixed-2-landscape",
     labels: {
-      ru: "Смешанное разделение (2+1)",
-      en: "Mixed Split (2+1)",
+      ru: "1 слева + 2 справа",
+      en: "1 left + 2 right",
     },
     description: {
-      ru: "Два экрана сверху, один экран снизу",
-      en: "Two screens on top, one screen below",
+      ru: "Один экран слева, два экрана справа",
+      en: "One screen on the left, two screens on the right",
     },
   },
 
@@ -268,6 +268,19 @@ export const templateLabels: TemplateDescription[] = [
     description: {
       ru: "Двенадцать экранов в сетке 4×3",
       en: "Twelve screens in a 4×3 grid",
+    },
+  },
+
+  // Шаблон с 12 экранами - Ландшафтный формат (3x4)
+  {
+    id: "split-grid-3x4-landscape",
+    labels: {
+      ru: "Сетка 3×4",
+      en: "Grid 3×4",
+    },
+    description: {
+      ru: "Двенадцать экранов в сетке 3×4",
+      en: "Twelve screens in a 3×4 grid",
     },
   },
 
@@ -566,6 +579,19 @@ export const templateLabels: TemplateDescription[] = [
     },
   },
 
+  // Шаблон с 12 экранами - Портретный формат (4x3)
+  {
+    id: "split-grid-4x3-portrait",
+    labels: {
+      ru: "Сетка 4×3",
+      en: "Grid 4×3",
+    },
+    description: {
+      ru: "Двенадцать экранов в сетке 4×3",
+      en: "Twelve screens in a 4×3 grid",
+    },
+  },
+
   // Шаблоны с 9 экранами - Портретный формат
   {
     id: "split-grid-3x3-portrait",
@@ -731,6 +757,30 @@ export const templateLabels: TemplateDescription[] = [
       en: "Four screens divided by horizontal lines",
     },
   },
+
+  // Шаблоны с 8 экранами - Квадратный формат
+  {
+    id: "split-grid-2x4-square",
+    labels: {
+      ru: "Сетка 2×4",
+      en: "Grid 2×4",
+    },
+    description: {
+      ru: "Восемь экранов в сетке 2×4",
+      en: "Eight screens in a 2×4 grid",
+    },
+  },
+  {
+    id: "split-grid-4x2-square",
+    labels: {
+      ru: "Сетка 4×2",
+      en: "Grid 4×2",
+    },
+    description: {
+      ru: "Восемь экранов в сетке 4×2",
+      en: "Eight screens in a 4×2 grid",
+    },
+  },
   {
     id: "split-diagonal-cross-square",
     labels: {
@@ -811,7 +861,7 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-custom-5-3-square",
     labels: {
-      ru: "1 посередине + 2×2 по краям",
+      ru: "1 посередине + по 2 сверху и снизу",
       en: "1 middle + 2×2 around",
     },
     description: {
@@ -822,8 +872,8 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-custom-5-4-square",
     labels: {
-      ru: "1 посередине + 2×2 по бокам",
-      en: "1 middle + 2×2 sides",
+      ru: "5 экранов: 2 + 1 + 2 (по бокам)",
+      en: "5 screens: 2 + 1 + 2 (sides)",
     },
     description: {
       ru: "Один экран посередине на всю высоту, по два экрана слева и справа",

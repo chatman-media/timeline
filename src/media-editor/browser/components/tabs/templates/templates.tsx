@@ -20,7 +20,7 @@ export interface CellConfig {
 
 export interface MediaTemplate {
   id: string
-  split: "vertical" | "horizontal" | "diagonal" | "custom" | "resizable"
+  split: "vertical" | "horizontal" | "diagonal" | "custom" | "grid"
   resizable?: boolean // Флаг, указывающий, что шаблон поддерживает изменение размеров
   screens: number // Количество экранов/секций в шаблоне
   splitPoints?: SplitPoint[] // Координаты точек разделения (для нестандартных разделений)

@@ -515,7 +515,7 @@ export function getVideoStyleForTemplate(
       }
     }
     // Для шаблона "3 top + 1 bottom" (3 маленьких сверху, 1 большое снизу)
-    else if (template.screens === 4 && template.id && template.id.includes("split-3-1-landscape") && !template.id.includes("right")) {
+    else if (template.screens === 4 && template.id && template.id.includes("split-3-1-bottom-landscape")) {
       if (videoIndex === 3) {
         // Большое видео снизу
         const result = {
