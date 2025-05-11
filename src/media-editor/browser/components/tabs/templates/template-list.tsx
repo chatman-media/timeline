@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { usePreviewSize } from "@/media-editor/browser"
+import { useMedia, usePreviewSize } from "@/media-editor/browser"
 import { TemplateListToolbar } from "@/media-editor/browser/components/tabs/templates"
 import { usePlayerContext } from "@/media-editor/media-player"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
@@ -50,6 +50,9 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
 
   const { height: previewHeight, width: previewWidth } = calculateDimensions()
 
+  // Создаем клон элемента с добавлением ключа для предотвращения предупреждения React
+  const renderedTemplate = template.render()
+
   return (
     <div
       className="group relative cursor-pointer"
@@ -60,7 +63,7 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
       }}
       onClick={onClick}
     >
-      {template.render()}
+      {React.cloneElement(renderedTemplate, { key: `template-preview-${template.id}` })}
     </div>
   )
 }
@@ -76,6 +79,9 @@ export function TemplateList() {
 
   // Получаем доступ к контексту плеера для работы с параллельными видео и шаблонами
   const { parallelVideos, setAppliedTemplate } = usePlayerContext()
+
+  // Получаем доступ к контексту медиа для работы с медиафайлами
+  const { allMediaFiles } = useMedia()
 
   const {
     previewSize,
@@ -242,8 +248,40 @@ export function TemplateList() {
       }
 
       setAppliedTemplate(appliedTemplate)
+    } else if (allMediaFiles.length > 0) {
+      // Если на таймлайне нет видео и нет параллельных видео, но есть медиафайлы, используем их
+      console.log(`На таймлайне нет видео, используем ${allMediaFiles.length} медиафайлов из библиотеки`)
+
+      // Фильтруем только видеофайлы с путями
+      const validMediaFiles = allMediaFiles.filter((file) => file.isVideo && file.path)
+
+      if (validMediaFiles.length > 0) {
+        const screensCount = template.screens || 1
+        const availableVideos = validMediaFiles.slice(0, screensCount)
+
+        console.log(
+          `Шаблон содержит ${screensCount} экранов, доступно ${availableVideos.length} видео из библиотеки`,
+        )
+
+        // Подробное логирование видео для отладки
+        console.log("Детали видео из библиотеки для шаблона:")
+        availableVideos.forEach((v, i) => {
+          console.log(
+            `Видео ${i + 1}/${availableVideos.length}: id=${v.id}, path=${v.path}, name=${v.name}`,
+          )
+        })
+
+        const appliedTemplate: AppliedTemplate = {
+          template,
+          videos: availableVideos,
+        }
+
+        setAppliedTemplate(appliedTemplate)
+      } else {
+        console.log("В библиотеке нет подходящих видеофайлов для применения шаблона")
+      }
     } else {
-      console.log("Нет видео на таймлайне и нет параллельных видео для применения шаблона")
+      console.log("Нет видео на таймлайне, нет параллельных видео и нет медиафайлов в библиотеке для применения шаблона")
     }
   }
 

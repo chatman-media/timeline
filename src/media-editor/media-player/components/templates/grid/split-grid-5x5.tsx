@@ -19,8 +19,21 @@ export function SplitGrid5x5({
   const validVideos = videos.filter((v) => v && v.path)
   const videoCount = Math.min(validVideos.length, 25)
 
-  // Если недостаточно видео, возвращаем пустой div
-  if (videoCount < 25) {
+  // Создаем массив с заполнителями для недостающих видео
+  const filledVideos = [...validVideos]
+
+  // Если видео меньше 25, дублируем существующие для заполнения
+  if (videoCount > 0 && videoCount < 25) {
+    console.log(`[SplitGrid5x5] Доступно только ${videoCount} видео, дублируем для заполнения 25 ячеек`)
+    for (let i = videoCount; i < 25; i++) {
+      filledVideos[i] = validVideos[i % videoCount]
+    }
+  }
+
+  console.log(`[SplitGrid5x5] Рендеринг шаблона с ${videoCount} уникальными видео, всего ${filledVideos.length} видео`)
+
+  // Если нет видео вообще, возвращаем пустой div
+  if (videoCount === 0) {
     return <div className="h-full w-full bg-black" />
   }
 
@@ -29,7 +42,7 @@ export function SplitGrid5x5({
     return (
       <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
         {/* Рендерим видео */}
-        {validVideos.slice(0, videoCount).map((video, index) => {
+        {filledVideos.slice(0, 25).map((video, index) => {
           const row = Math.floor(index / 5)
           const col = index % 5
 
@@ -101,8 +114,8 @@ export function SplitGrid5x5({
                     <React.Fragment key={`col-${colIndex}`}>
                       <Panel defaultSize={20} minSize={10}>
                         <VideoPanel
-                          video={validVideos[videoIndex]}
-                          isActive={validVideos[videoIndex]?.id === activeVideoId}
+                          video={filledVideos[videoIndex]}
+                          isActive={filledVideos[videoIndex]?.id === activeVideoId}
                           videoRefs={videoRefs}
                           index={videoIndex}
                         />

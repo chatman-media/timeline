@@ -6,10 +6,10 @@ import { VideoPanel } from "@/media-editor/media-player/components/templates/com
 import { TemplateProps } from "../types"
 
 /**
- * Шаблон "1 слева + 2 справа" - квадратный формат
- * ID: split-mixed-2-square
+ * Шаблон "4 экрана: 1 слева + 3 справа" - портретный формат
+ * ID: split-1-3-portrait
  */
-export function SplitMixed2Square({
+export function Split13Portrait({
   videos,
   activeVideoId,
   videoRefs,
@@ -17,10 +17,10 @@ export function SplitMixed2Square({
 }: TemplateProps) {
   // Проверяем, что у нас есть видео с путями
   const validVideos = videos.filter((v) => v && v.path)
-  const videoCount = Math.min(validVideos.length, 3)
+  const videoCount = Math.min(validVideos.length, 4)
 
   // Если недостаточно видео, возвращаем пустой div
-  if (videoCount < 3) {
+  if (videoCount < 4) {
     return <div className="h-full w-full bg-black" />
   }
 
@@ -28,7 +28,7 @@ export function SplitMixed2Square({
   if (!isResizable) {
     return (
       <div className="flex h-full w-full" style={{ border: "1px solid #35d1c1" }}>
-        {/* Левая большая секция */}
+        {/* Левая секция (1 большое видео) */}
         <div className="h-full w-1/2">
           <VideoPanel
             video={validVideos[0]}
@@ -38,13 +38,13 @@ export function SplitMixed2Square({
           />
         </div>
 
-        {/* Разделительная линия */}
-        <div className="h-full w-1 bg-[#35d1c1]" />
+        {/* Вертикальная разделительная линия */}
+        <div className="h-full w-[1px] bg-[#35d1c1]" />
 
-        {/* Правая секция с 2 видео */}
+        {/* Правая секция (3 маленьких видео) */}
         <div className="flex h-full w-1/2 flex-col">
-          {/* Верхнее правое видео */}
-          <div className="h-1/2 w-full">
+          {/* Верхнее видео правой секции */}
+          <div className="h-1/3 w-full">
             <VideoPanel
               video={validVideos[1]}
               isActive={validVideos[1]?.id === activeVideoId}
@@ -56,13 +56,26 @@ export function SplitMixed2Square({
           {/* Горизонтальная разделительная линия */}
           <div className="h-[1px] w-full bg-[#35d1c1]" />
 
-          {/* Нижнее правое видео */}
-          <div className="h-1/2 w-full">
+          {/* Среднее видео правой секции */}
+          <div className="h-1/3 w-full">
             <VideoPanel
               video={validVideos[2]}
               isActive={validVideos[2]?.id === activeVideoId}
               videoRefs={videoRefs}
               index={2}
+            />
+          </div>
+
+          {/* Горизонтальная разделительная линия */}
+          <div className="h-[1px] w-full bg-[#35d1c1]" />
+
+          {/* Нижнее видео правой секции */}
+          <div className="h-1/3 w-full">
+            <VideoPanel
+              video={validVideos[3]}
+              isActive={validVideos[3]?.id === activeVideoId}
+              videoRefs={videoRefs}
+              index={3}
             />
           </div>
         </div>
@@ -73,8 +86,8 @@ export function SplitMixed2Square({
   // Рендеринг в режиме с возможностью изменения размеров
   return (
     <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
-      <PanelGroup direction="horizontal" onLayout={(sizes) => console.log("Panel sizes:", sizes)}>
-        {/* Левая большая секция */}
+      <PanelGroup direction="horizontal">
+        {/* Левая секция (1 большое видео) */}
         <Panel defaultSize={50} minSize={20}>
           <VideoPanel
             video={validVideos[0]}
@@ -84,11 +97,11 @@ export function SplitMixed2Square({
           />
         </Panel>
         <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-        {/* Правая секция с 2 видео */}
+        {/* Правая секция (3 маленьких видео) */}
         <Panel defaultSize={50} minSize={20}>
           <PanelGroup direction="vertical">
-            {/* Верхнее правое видео */}
-            <Panel defaultSize={50} minSize={20}>
+            {/* Верхнее видео правой секции */}
+            <Panel defaultSize={33.33} minSize={10}>
               <VideoPanel
                 video={validVideos[1]}
                 isActive={validVideos[1]?.id === activeVideoId}
@@ -97,13 +110,23 @@ export function SplitMixed2Square({
               />
             </Panel>
             <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-            {/* Нижнее правое видео */}
-            <Panel defaultSize={50} minSize={20}>
+            {/* Среднее видео правой секции */}
+            <Panel defaultSize={33.33} minSize={10}>
               <VideoPanel
                 video={validVideos[2]}
                 isActive={validVideos[2]?.id === activeVideoId}
                 videoRefs={videoRefs}
                 index={2}
+              />
+            </Panel>
+            <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
+            {/* Нижнее видео правой секции */}
+            <Panel defaultSize={33.33} minSize={10}>
+              <VideoPanel
+                video={validVideos[3]}
+                isActive={validVideos[3]?.id === activeVideoId}
+                videoRefs={videoRefs}
+                index={3}
               />
             </Panel>
           </PanelGroup>
