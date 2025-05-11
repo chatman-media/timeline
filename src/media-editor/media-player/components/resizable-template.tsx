@@ -10,9 +10,20 @@ import { MediaFile } from "@/types/media"
 
 import { usePlayerContext } from "../services"
 import { VideoPanel } from "./templates/common"
-import { SplitCustom31, SplitHorizontal, SplitHorizontal4, SplitVertical } from "./templates/custom"
+import {
+  Split31Right,
+  SplitCustom31,
+  SplitCustom53Square,
+  SplitCustom54,
+  SplitHorizontal,
+  SplitHorizontal4,
+  SplitVertical,
+  SplitVertical3,
+  SplitVertical4,
+} from "./templates/custom"
 import {
   SplitGrid2x2,
+  SplitGrid2x3,
   SplitGrid3x2,
   SplitGrid3x3,
   SplitGrid3x4,
@@ -33,15 +44,11 @@ import {
   SplitCustom53Landscape,
   SplitDiagonalLandscape,
   SplitHorizontal3Landscape,
-  SplitHorizontal4Landscape,
   SplitMixed1Landscape,
   SplitMixed2Landscape,
-  SplitVertical3Landscape,
-  SplitVertical4Landscape,
 } from "./templates/landscape"
 import {
   Split13BottomPortrait,
-  Split13Portrait,
   SplitCustom51Portrait,
   SplitCustom52Portrait,
   SplitCustom53Portrait,
@@ -288,17 +295,26 @@ export function ResizableTemplate({
         />
       )
     }
-    if (template.id === "split-vertical-3-landscape") {
+    if (
+      template.id === "split-vertical-3-landscape" ||
+      template.id === "split-vertical-3-square" ||
+      template.id === "split-vertical-3-portrait"
+    ) {
       return (
-        <SplitVertical3Landscape
+        <SplitVertical3
           videos={validVideos}
           activeVideoId={activeVideoId}
           videoRefs={videoRefs}
           isResizable={isResizableMode}
+          templateId={template.id}
         />
       )
     }
-    if (template.id === "split-horizontal-3-landscape") {
+    if (
+      template.id === "split-horizontal-3-landscape" ||
+      template.id === "split-horizontal-3-square" ||
+      template.id === "split-horizontal-3-portrait"
+    ) {
       return (
         <SplitHorizontal3Landscape
           videos={validVideos}
@@ -308,27 +324,23 @@ export function ResizableTemplate({
         />
       )
     }
-    if (template.id === "split-vertical-4-landscape" || template.id === "split-vertical-4-square") {
+    if (
+      template.id === "split-vertical-4-landscape" ||
+      template.id === "split-vertical-4-square" ||
+      template.id === "split-vertical-4-portrait"
+    ) {
       return (
-        <SplitVertical4Landscape
+        <SplitVertical4
           videos={validVideos}
           activeVideoId={activeVideoId}
           videoRefs={videoRefs}
           isResizable={isResizableMode}
-        />
-      )
-    }
-    if (template.id === "split-horizontal-4-landscape") {
-      return (
-        <SplitHorizontal4Landscape
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
+          templateId={template.id}
         />
       )
     }
     if (
+      template.id === "split-horizontal-4-landscape" ||
       template.id === "split-horizontal-4-square" ||
       template.id === "split-horizontal-4-portrait"
     ) {
@@ -338,6 +350,7 @@ export function ResizableTemplate({
           activeVideoId={activeVideoId}
           videoRefs={videoRefs}
           isResizable={isResizableMode}
+          templateId={template.id}
         />
       )
     }
@@ -400,10 +413,21 @@ export function ResizableTemplate({
         />
       )
     }
+    if (template.id === "split-grid-2x3-portrait" || template.id === "split-grid-2x3-square") {
+      return (
+        <SplitGrid2x3
+          videos={validVideos}
+          activeVideoId={activeVideoId}
+          videoRefs={videoRefs}
+          isResizable={isResizableMode}
+          templateId={template.id}
+        />
+      )
+    }
     if (
       template.id === "split-grid-3x2-landscape" ||
       template.id === "split-grid-3x2-square" ||
-      template.id === "split-grid-2x3-portrait" ||
+      template.id === "split-grid-2x3-alt-portrait" ||
       template.id === "split-grid-3x2-portrait"
     ) {
       return (
@@ -518,7 +542,7 @@ export function ResizableTemplate({
     }
     if (template.id === "split-1-3-portrait") {
       return (
-        <Split13Portrait
+        <Split13Landscape
           videos={validVideos}
           activeVideoId={activeVideoId}
           videoRefs={videoRefs}
@@ -571,7 +595,11 @@ export function ResizableTemplate({
         />
       )
     }
-    if (template.id === "split-3-1-right-landscape") {
+    if (
+      template.id === "split-3-1-right-landscape" ||
+      template.id === "split-3-1-right-portrait" ||
+      template.id === "split-3-1-right-square"
+    ) {
       return (
         <Split31RightLandscape
           videos={validVideos}
@@ -662,27 +690,8 @@ export function ResizableTemplate({
 
   // Функция для рендеринга шаблона в фиксированном режиме
   const renderFixedTemplate = () => {
-    // Специальная обработка для шаблона "1 left + 3 right"
-    if (
-      template.screens === 4 &&
-      template.id &&
-      (template.id.includes("split-3-1-right-portrait") || template.id.includes("split-1-3-square"))
-    ) {
-      ;<Split13Portrait
-        videos={validVideos}
-        activeVideoId={activeVideoId}
-        videoRefs={videoRefs}
-        isResizable={isResizableMode}
-      />
-    }
-
     // Специальная обработка для шаблона "1 top + 3 bottom"
-    if (
-      template.screens === 4 &&
-      template.id &&
-      (template.id.includes("split-1-3-bottom-portrait") ||
-        template.id.includes("split-1-3-bottom-square"))
-    ) {
+    if (template.screens === 4 && template.id && template.id.includes("split-1-3-bottom-square")) {
       return (
         <SplitCustom31
           videos={validVideos}
@@ -690,23 +699,6 @@ export function ResizableTemplate({
           videoRefs={videoRefs}
           isResizable={isResizableMode}
           templateId={template.id}
-        />
-      )
-    }
-
-    // Специальная обработка для шаблона "2 screens vertical"
-    if (
-      template.screens === 2 &&
-      template.id &&
-      (template.id.includes("split-vertical-portrait") ||
-        template.id.includes("split-vertical-square"))
-    ) {
-      return (
-        <SplitVertical
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
         />
       )
     }
@@ -748,23 +740,6 @@ export function ResizableTemplate({
           activeVideoId={activeVideoId}
           videoRefs={videoRefs}
           isResizable={isResizableMode}
-        />
-      )
-    }
-
-    // Специальная обработка для сетки 2x5 (10 экранов) или 5x2 (10 экранов)
-    if (
-      template.id &&
-      (template.id.includes("split-grid-5x2") || template.id.includes("split-grid-2x5"))
-    ) {
-      console.log(`[ResizableTemplate] Рендеринг шаблона ${template.id} в режиме fixed`)
-      return (
-        <SplitGrid5x2
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
-          templateId={template.id}
         />
       )
     }
@@ -852,8 +827,6 @@ export function ResizableTemplate({
     return renderFixedTemplate()
   }
 
-  // Все шаблоны теперь resizable, независимо от наличия флага resizable
-  // Обрабатываем их в зависимости только от типа разделения
   // Для шаблонов с типом "horizontal", "vertical" или "resizable" используем PanelGroup с соответствующим направлением
   if (effectiveSplit === "horizontal" || effectiveSplit === "vertical") {
     // Для шаблона с 2 экранами
@@ -934,165 +907,6 @@ export function ResizableTemplate({
               />
             </Panel>
           </PanelGroup>
-        </div>
-      )
-    }
-
-    // Для шаблона с 3 экранами
-    if (template.screens === 3) {
-      // Определяем, является ли шаблон портретным
-      const isPortrait = template.id && template.id.includes("portrait")
-
-      // Для обычных шаблонов с 3 экранами
-      {
-        // Определяем направление разделения по типу split
-        // Для вертикального разделения (split=vertical) используем horizontal direction в PanelGroup
-        // Для горизонтального разделения (split=horizontal) используем vertical direction в PanelGroup
-        const panelDirection = template.split === "vertical" ? "horizontal" : "vertical"
-
-        // Для портретных шаблонов добавляем ограничение по соотношению сторон
-        if (isPortrait) {
-          return (
-            <div
-              className="flex h-full w-full items-center justify-center"
-              style={{ overflow: "visible" }}
-            >
-              <div className="flex h-full items-center" style={{ maxWidth: "56.25vh" }}>
-                <AspectRatio ratio={9 / 16} className="h-auto max-h-full w-full">
-                  <PanelGroup direction={panelDirection} onLayout={(sizes) => setPanelSizes(sizes)}>
-                    {validVideos.slice(0, videoCount).map((video, index) => (
-                      <React.Fragment key={`fragment-${video.id}-${index}`}>
-                        <Panel key={`panel-${video.id}`} minSize={10}>
-                          <VideoPanel
-                            video={video}
-                            isActive={video.id === activeVideoId}
-                            videoRefs={videoRefs}
-                            index={index}
-                          />
-                        </Panel>
-                        {index < videoCount - 1 && (
-                          <PanelResizeHandle
-                            key={`handle-${index}`}
-                            className={
-                              panelDirection === "horizontal"
-                                ? "w-1 bg-gray-700 hover:bg-gray-500"
-                                : "h-1 bg-gray-700 hover:bg-gray-500"
-                            }
-                          />
-                        )}
-                      </React.Fragment>
-                    ))}
-                  </PanelGroup>
-                </AspectRatio>
-              </div>
-            </div>
-          )
-        }
-
-        // Для ландшафтных шаблонов используем стандартный рендеринг
-        return (
-          <div
-            className="h-full w-full"
-            style={{ overflow: "visible", border: "1px solid #35d1c1" }}
-          >
-            <PanelGroup direction={panelDirection} onLayout={(sizes) => setPanelSizes(sizes)}>
-              {validVideos.slice(0, videoCount).map((video, index) => (
-                <React.Fragment key={`fragment-${video.id}-${index}`}>
-                  <Panel key={`panel-${video.id}`} minSize={10}>
-                    <VideoPanel
-                      video={video}
-                      isActive={video.id === activeVideoId}
-                      videoRefs={videoRefs}
-                      index={index}
-                    />
-                  </Panel>
-                  {index < videoCount - 1 && (
-                    <PanelResizeHandle
-                      key={`handle-${index}`}
-                      className={
-                        panelDirection === "horizontal"
-                          ? "w-1 bg-gray-700 hover:bg-gray-500"
-                          : "h-1 bg-gray-700 hover:bg-gray-500"
-                      }
-                    />
-                  )}
-                </React.Fragment>
-              ))}
-            </PanelGroup>
-          </div>
-        )
-      }
-    }
-
-    // Для шаблона с 3 экранами вертикально (split-vertical-3-portrait)
-    else if (template.screens === 3 && template.id && template.id === "split-vertical-3-portrait") {
-      return (
-        <div
-          className="flex h-full w-full items-center justify-center"
-          style={{ overflow: "visible" }}
-        >
-          <div className="flex h-full items-center" style={{ maxWidth: "56.25vh" }}>
-            <AspectRatio ratio={9 / 16} className="h-auto max-h-full w-full">
-              <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
-                {validVideos.slice(0, videoCount).map((video, index) => (
-                  <React.Fragment key={`fragment-${video.id}-${index}`}>
-                    <Panel key={`panel-${video.id}`} minSize={10}>
-                      <VideoPanel
-                        video={video}
-                        isActive={video.id === activeVideoId}
-                        videoRefs={videoRefs}
-                        index={index}
-                      />
-                    </Panel>
-                    {index < videoCount - 1 && (
-                      <PanelResizeHandle
-                        key={`handle-${index}`}
-                        className="w-1 bg-gray-700 hover:bg-gray-500"
-                      />
-                    )}
-                  </React.Fragment>
-                ))}
-              </PanelGroup>
-            </AspectRatio>
-          </div>
-        </div>
-      )
-    }
-    // Для шаблона с 3 экранами горизонтально (split-horizontal-3-portrait)
-    else if (
-      template.screens === 3 &&
-      template.id &&
-      template.id === "split-horizontal-3-portrait"
-    ) {
-      return (
-        <div
-          className="flex h-full w-full items-center justify-center"
-          style={{ overflow: "visible" }}
-        >
-          <div className="flex h-full items-center" style={{ maxWidth: "56.25vh" }}>
-            <AspectRatio ratio={9 / 16} className="h-auto max-h-full w-full">
-              <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
-                {validVideos.slice(0, videoCount).map((video, index) => (
-                  <React.Fragment key={`fragment-${video.id}-${index}`}>
-                    <Panel key={`panel-${video.id}`} minSize={10}>
-                      <VideoPanel
-                        video={video}
-                        isActive={video.id === activeVideoId}
-                        videoRefs={videoRefs}
-                        index={index}
-                      />
-                    </Panel>
-                    {index < videoCount - 1 && (
-                      <PanelResizeHandle
-                        key={`handle-${index}`}
-                        className="h-1 bg-gray-700 hover:bg-gray-500"
-                      />
-                    )}
-                  </React.Fragment>
-                ))}
-              </PanelGroup>
-            </AspectRatio>
-          </div>
         </div>
       )
     }
@@ -1179,109 +993,6 @@ export function ResizableTemplate({
         </div>
       )
     }
-
-    // Для сетки 2x3 (6 экранов) - квадратный формат
-    else if (template.screens === 6 && template.id && template.id === "split-grid-2x3-square") {
-      return (
-        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
-          <PanelGroup direction="vertical">
-            {/* Верхний ряд */}
-            <Panel defaultSize={33.33} minSize={10}>
-              <PanelGroup direction="horizontal">
-                {/* Левое верхнее видео */}
-                <Panel defaultSize={50} minSize={20}>
-                  <VideoPanel
-                    video={validVideos[0]}
-                    isActive={validVideos[0]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={0}
-                  />
-                </Panel>
-                <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-                {/* Правое верхнее видео */}
-                <Panel defaultSize={50} minSize={20}>
-                  <VideoPanel
-                    video={validVideos[1]}
-                    isActive={validVideos[1]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={1}
-                  />
-                </Panel>
-              </PanelGroup>
-            </Panel>
-            <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-            {/* Средний ряд */}
-            <Panel defaultSize={33.33} minSize={10}>
-              <PanelGroup direction="horizontal">
-                {/* Левое среднее видео */}
-                <Panel defaultSize={50} minSize={20}>
-                  <VideoPanel
-                    video={validVideos[2]}
-                    isActive={validVideos[2]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={2}
-                  />
-                </Panel>
-                <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-                {/* Правое среднее видео */}
-                <Panel defaultSize={50} minSize={20}>
-                  <VideoPanel
-                    video={validVideos[3]}
-                    isActive={validVideos[3]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={3}
-                  />
-                </Panel>
-              </PanelGroup>
-            </Panel>
-            <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-            {/* Нижний ряд */}
-            <Panel defaultSize={33.33} minSize={10}>
-              <PanelGroup direction="horizontal">
-                {/* Левое нижнее видео */}
-                <Panel defaultSize={50} minSize={20}>
-                  <VideoPanel
-                    video={validVideos[4]}
-                    isActive={validVideos[4]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={4}
-                  />
-                </Panel>
-                <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-                {/* Правое нижнее видео */}
-                <Panel defaultSize={50} minSize={20}>
-                  <VideoPanel
-                    video={validVideos[5]}
-                    isActive={validVideos[5]?.id === activeVideoId}
-                    videoRefs={videoRefs}
-                    index={5}
-                  />
-                </Panel>
-              </PanelGroup>
-            </Panel>
-          </PanelGroup>
-        </div>
-      )
-    }
-
-    // Для сетки 5x2 (10 экранов) или 2x5 (портретный или квадратный режим)
-    else if (
-      template.screens === 10 &&
-      template.id &&
-      (template.id.includes("split-grid-5x2-landscape") ||
-        template.id.includes("split-grid-2x5-portrait") ||
-        template.id.includes("split-grid-2x5-square"))
-    ) {
-      return (
-        <SplitGrid5x2
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
-          templateId={template.id}
-        />
-      )
-    }
     // Для сетки 4x3 (12 экранов) или 3x4 (портретный режим)
     else if (
       template.screens === 12 &&
@@ -1304,99 +1015,6 @@ export function ResizableTemplate({
           isResizable={isResizableMode}
           templateId={template.id}
         />
-      )
-    }
-    // Для сетки 4x4 (16 экранов) или 4x4 (портретный режим)
-    else if (
-      template.screens === 16 &&
-      template.id &&
-      (template.id.includes("split-grid-4x4-landscape") ||
-        template.id.includes("split-grid-4x4-portrait"))
-    ) {
-      // Определяем, является ли шаблон портретным
-      const isPortrait = template.id && template.id.includes("portrait")
-
-      // Для портретных шаблонов добавляем ограничение по соотношению сторон
-      if (isPortrait) {
-        return (
-          <div
-            className="flex h-full w-full items-center justify-center"
-            style={{ overflow: "visible" }}
-          >
-            <div className="flex h-full items-center" style={{ maxWidth: "56.25vh" }}>
-              <AspectRatio ratio={9 / 16} className="h-auto max-h-full w-full">
-                <PanelGroup direction="vertical">
-                  {[0, 1, 2, 3].map((rowIndex) => (
-                    <React.Fragment key={`fragment-row-${rowIndex}`}>
-                      <Panel defaultSize={25} minSize={10}>
-                        <PanelGroup direction="horizontal">
-                          {[0, 1, 2, 3].map((colIndex) => {
-                            const index = rowIndex * 4 + colIndex
-                            return (
-                              <React.Fragment key={`fragment-cell-${index}`}>
-                                <Panel defaultSize={25} minSize={10}>
-                                  <VideoPanel
-                                    video={validVideos[index]}
-                                    isActive={validVideos[index]?.id === activeVideoId}
-                                    videoRefs={videoRefs}
-                                    index={index}
-                                  />
-                                </Panel>
-                                {colIndex < 3 && (
-                                  <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
-                                )}
-                              </React.Fragment>
-                            )
-                          })}
-                        </PanelGroup>
-                      </Panel>
-                      {rowIndex < 3 && (
-                        <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
-                      )}
-                    </React.Fragment>
-                  ))}
-                </PanelGroup>
-              </AspectRatio>
-            </div>
-          </div>
-        )
-      }
-
-      // Для ландшафтных шаблонов используем стандартный рендеринг
-      return (
-        <div className="h-full w-full" style={{ border: "1px solid #35d1c1" }}>
-          <PanelGroup direction="vertical">
-            {[0, 1, 2, 3].map((rowIndex) => (
-              <React.Fragment key={`fragment-row-${rowIndex}`}>
-                <Panel defaultSize={25} minSize={10}>
-                  <PanelGroup direction="horizontal">
-                    {[0, 1, 2, 3].map((colIndex) => {
-                      const index = rowIndex * 4 + colIndex
-                      return (
-                        <React.Fragment key={`fragment-cell-${index}`}>
-                          <Panel defaultSize={25} minSize={10}>
-                            <VideoPanel
-                              video={validVideos[index]}
-                              isActive={validVideos[index]?.id === activeVideoId}
-                              videoRefs={videoRefs}
-                              index={index}
-                            />
-                          </Panel>
-                          {colIndex < 3 && (
-                            <PanelResizeHandle className="w-1 bg-gray-700 hover:bg-gray-500" />
-                          )}
-                        </React.Fragment>
-                      )
-                    })}
-                  </PanelGroup>
-                </Panel>
-                {rowIndex < 3 && (
-                  <PanelResizeHandle className="h-1 bg-gray-700 hover:bg-gray-500" />
-                )}
-              </React.Fragment>
-            ))}
-          </PanelGroup>
-        </div>
       )
     }
   }
@@ -1527,65 +1145,26 @@ export function ResizableTemplate({
   }
 
   // Для шаблона "1 слева + 3 справа" (4 экрана) - квадратный формат
-  if (template.id && template.id === "split-1-3-square") {
+  if (
+    (template.id && template.id.includes("split-1-3-right-portrait")) ||
+    template.id === "split-1-3-square"
+  ) {
     console.log(`[ResizableTemplate] Рендеринг шаблона split-1-3-square в режиме resizable`)
     return (
-      <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
-        <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
-          {/* Левая большая секция */}
-          <Panel defaultSize={50} minSize={20}>
-            <VideoPanel
-              video={validVideos[0]}
-              isActive={validVideos[0]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={0}
-            />
-          </Panel>
-          <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Правая секция с 3 видео */}
-          <Panel defaultSize={50} minSize={20}>
-            <PanelGroup direction="vertical">
-              {/* Верхнее правое видео */}
-              <Panel defaultSize={33.33} minSize={20}>
-                <VideoPanel
-                  video={validVideos[1]}
-                  isActive={validVideos[1]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={1}
-                />
-              </Panel>
-              <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-              {/* Среднее правое видео */}
-              <Panel defaultSize={33.33} minSize={20}>
-                <VideoPanel
-                  video={validVideos[2]}
-                  isActive={validVideos[2]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={2}
-                />
-              </Panel>
-              <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-              {/* Нижнее правое видео */}
-              <Panel defaultSize={33.33} minSize={20}>
-                <VideoPanel
-                  video={validVideos[3]}
-                  isActive={validVideos[3]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={3}
-                />
-              </Panel>
-            </PanelGroup>
-          </Panel>
-        </PanelGroup>
-      </div>
+      <Split13Landscape
+        videos={validVideos}
+        activeVideoId={activeVideoId}
+        videoRefs={videoRefs}
+        isResizable={isResizableMode}
+      />
     )
   }
 
   // Для шаблона "3 слева + 1 справа" (4 экрана) - квадратный формат
-  if (template.id && template.id === "split-3-1-square") {
+  if ((template.id && template.id === "split-3-1-square") || template.id === "split-3-1-portrait") {
     console.log(`[ResizableTemplate] Рендеринг шаблона split-3-1-square в режиме resizable`)
     return (
-      <SplitCustom31
+      <Split31Right
         videos={validVideos}
         activeVideoId={activeVideoId}
         videoRefs={videoRefs}
@@ -1596,7 +1175,10 @@ export function ResizableTemplate({
   }
 
   // Для шаблона "3 сверху + 1 снизу" (4 экрана) - квадратный формат
-  if (template.id && template.id === "split-3-1-right-square") {
+  if (
+    (template.id && template.id === "split-3-1-right-square") ||
+    template.id === "split-3-1-right-portrait"
+  ) {
     console.log(`[ResizableTemplate] Рендеринг шаблона split-3-1-right-square в режиме resizable`)
     return (
       <Split31RightLandscape
@@ -1608,128 +1190,17 @@ export function ResizableTemplate({
     )
   }
 
-  // Для шаблона "1 сверху + 3 снизу" (4 экрана) - квадратный формат
-  if (template.id && template.id === "split-1-3-bottom-square") {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-1-3-bottom-square в режиме resizable`)
-    return (
-      <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
-        <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
-          {/* Верхняя большая секция */}
-          <Panel defaultSize={50} minSize={20}>
-            <VideoPanel
-              video={validVideos[0]}
-              isActive={validVideos[0]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={0}
-            />
-          </Panel>
-          <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Нижняя секция с 3 видео */}
-          <Panel defaultSize={50} minSize={20}>
-            <PanelGroup direction="horizontal">
-              {/* Левое нижнее видео */}
-              <Panel defaultSize={33.33} minSize={20}>
-                <VideoPanel
-                  video={validVideos[1]}
-                  isActive={validVideos[1]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={1}
-                />
-              </Panel>
-              <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-              {/* Среднее нижнее видео */}
-              <Panel defaultSize={33.33} minSize={20}>
-                <VideoPanel
-                  video={validVideos[2]}
-                  isActive={validVideos[2]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={2}
-                />
-              </Panel>
-              <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-              {/* Правое нижнее видео */}
-              <Panel defaultSize={33.33} minSize={20}>
-                <VideoPanel
-                  video={validVideos[3]}
-                  isActive={validVideos[3]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={3}
-                />
-              </Panel>
-            </PanelGroup>
-          </Panel>
-        </PanelGroup>
-      </div>
-    )
-  }
-
   // Для шаблона "1 посередине + по 2 сверху и снизу" (5 экранов) - квадратный формат
   if (template.id && template.id === "split-custom-5-3-square") {
     console.log(`[ResizableTemplate] Рендеринг шаблона split-custom-5-3-square в режиме resizable`)
     return (
-      <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
-        <PanelGroup direction="vertical" onLayout={(sizes) => setPanelSizes(sizes)}>
-          {/* Верхняя секция с 2 видео */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <PanelGroup direction="horizontal">
-              {/* Левое верхнее видео */}
-              <Panel defaultSize={50} minSize={20}>
-                <VideoPanel
-                  video={validVideos[0]}
-                  isActive={validVideos[0]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={0}
-                />
-              </Panel>
-              <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-              {/* Правое верхнее видео */}
-              <Panel defaultSize={50} minSize={20}>
-                <VideoPanel
-                  video={validVideos[1]}
-                  isActive={validVideos[1]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={1}
-                />
-              </Panel>
-            </PanelGroup>
-          </Panel>
-          <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Средняя секция */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <VideoPanel
-              video={validVideos[2]}
-              isActive={validVideos[2]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={2}
-            />
-          </Panel>
-          <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Нижняя секция с 2 видео */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <PanelGroup direction="horizontal">
-              {/* Левое нижнее видео */}
-              <Panel defaultSize={50} minSize={20}>
-                <VideoPanel
-                  video={validVideos[3]}
-                  isActive={validVideos[3]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={3}
-                />
-              </Panel>
-              <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-              {/* Правое нижнее видео */}
-              <Panel defaultSize={50} minSize={20}>
-                <VideoPanel
-                  video={validVideos[4]}
-                  isActive={validVideos[4]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={4}
-                />
-              </Panel>
-            </PanelGroup>
-          </Panel>
-        </PanelGroup>
-      </div>
+      <SplitCustom53Square
+        videos={validVideos}
+        activeVideoId={activeVideoId}
+        videoRefs={videoRefs}
+        isResizable={isResizableMode}
+        templateId={template.id}
+      />
     )
   }
 
@@ -1737,177 +1208,13 @@ export function ResizableTemplate({
   if (template.id && template.id === "split-custom-5-4-square") {
     console.log(`[ResizableTemplate] Рендеринг шаблона split-custom-5-4-square в режиме resizable`)
     return (
-      <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
-        <PanelGroup direction="horizontal" onLayout={(sizes) => setPanelSizes(sizes)}>
-          {/* Левая секция с 2 видео */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <PanelGroup direction="vertical">
-              {/* Верхнее левое видео */}
-              <Panel defaultSize={50} minSize={20}>
-                <VideoPanel
-                  video={validVideos[0]}
-                  isActive={validVideos[0]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={0}
-                />
-              </Panel>
-              <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-              {/* Нижнее левое видео */}
-              <Panel defaultSize={50} minSize={20}>
-                <VideoPanel
-                  video={validVideos[1]}
-                  isActive={validVideos[1]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={1}
-                />
-              </Panel>
-            </PanelGroup>
-          </Panel>
-          <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Средняя секция */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <VideoPanel
-              video={validVideos[2]}
-              isActive={validVideos[2]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={2}
-            />
-          </Panel>
-          <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Правая секция с 2 видео */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <PanelGroup direction="vertical">
-              {/* Верхнее правое видео */}
-              <Panel defaultSize={50} minSize={20}>
-                <VideoPanel
-                  video={validVideos[3]}
-                  isActive={validVideos[3]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={3}
-                />
-              </Panel>
-              <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-              {/* Нижнее правое видео */}
-              <Panel defaultSize={50} minSize={20}>
-                <VideoPanel
-                  video={validVideos[4]}
-                  isActive={validVideos[4]?.id === activeVideoId}
-                  videoRefs={videoRefs}
-                  index={4}
-                />
-              </Panel>
-            </PanelGroup>
-          </Panel>
-        </PanelGroup>
-      </div>
-    )
-  }
-
-  // Для шаблона "2 экрана по вертикали" (split-vertical-square)
-  if (template.id && template.id === "split-vertical-square") {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-vertical-square в режиме resizable`)
-    return (
-      <SplitVertical
+      <SplitCustom54
         videos={validVideos}
         activeVideoId={activeVideoId}
         videoRefs={videoRefs}
         isResizable={isResizableMode}
+        templateId={template.id}
       />
-    )
-  }
-
-  // Для шаблона "2 экрана по горизонтали" (split-horizontal-square)
-  if (template.id && template.id === "split-horizontal-square") {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-horizontal-square в режиме resizable`)
-    return (
-      <SplitHorizontal
-        videos={validVideos}
-        activeVideoId={activeVideoId}
-        videoRefs={videoRefs}
-        isResizable={isResizableMode}
-      />
-    )
-  }
-
-  // Для шаблона "3 экрана по вертикали" (split-vertical-3-square)
-  if (template.id && template.id === "split-vertical-3-square") {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-vertical-3-square в режиме resizable`)
-    return (
-      <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
-        <PanelGroup direction="horizontal">
-          {/* Левая секция */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <VideoPanel
-              video={validVideos[0]}
-              isActive={validVideos[0]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={0}
-            />
-          </Panel>
-          <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Средняя секция */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <VideoPanel
-              video={validVideos[1]}
-              isActive={validVideos[1]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={1}
-            />
-          </Panel>
-          <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Правая секция */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <VideoPanel
-              video={validVideos[2]}
-              isActive={validVideos[2]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={2}
-            />
-          </Panel>
-        </PanelGroup>
-      </div>
-    )
-  }
-
-  // Для шаблона "3 экрана по горизонтали" (split-horizontal-3-square)
-  if (template.id && template.id === "split-horizontal-3-square") {
-    console.log(
-      `[ResizableTemplate] Рендеринг шаблона split-horizontal-3-square в режиме resizable`,
-    )
-    return (
-      <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
-        <PanelGroup direction="vertical">
-          {/* Верхняя секция */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <VideoPanel
-              video={validVideos[0]}
-              isActive={validVideos[0]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={0}
-            />
-          </Panel>
-          <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Средняя секция */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <VideoPanel
-              video={validVideos[1]}
-              isActive={validVideos[1]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={1}
-            />
-          </Panel>
-          <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-          {/* Нижняя секция */}
-          <Panel defaultSize={33.33} minSize={20}>
-            <VideoPanel
-              video={validVideos[2]}
-              isActive={validVideos[2]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={2}
-            />
-          </Panel>
-        </PanelGroup>
-      </div>
     )
   }
 

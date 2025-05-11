@@ -969,6 +969,7 @@ export const landscapeTemplates: MediaTemplate[] = [
       </div>
     ),
   },
+  // 3 слева + 1 справа
   {
     id: "split-3-1-right-landscape",
     split: "custom",

@@ -836,7 +836,7 @@ export const squareTemplates: MediaTemplate[] = [
     ),
   },
 
-  // Перевернутые шаблоны с 4 экранами
+  // 3 слева + 1 справа
   {
     id: "split-3-1-right-square",
     split: "custom",
