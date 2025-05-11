@@ -219,7 +219,7 @@ export function ResizableTemplate({
 
   // Определяем направление разделения в зависимости от типа шаблона
   // Если тип "resizable", то обрабатываем его как "horizontal"
-  const effectiveSplit = template.split === "resizable" ? "horizontal" : template.split
+  const effectiveSplit = template.resizable ? "horizontal" : (template.split === "grid" ? "horizontal" : template.split)
 
   // Для вертикального разделения (split=vertical) используем horizontal direction в PanelGroup
   // Для горизонтального разделения (split=horizontal) используем vertical direction в PanelGroup
@@ -246,8 +246,8 @@ export function ResizableTemplate({
     if (template.id === "split-horizontal-4-landscape") {
       return <SplitHorizontal4Landscape videos={validVideos} activeVideoId={activeVideoId} videoRefs={videoRefs} isResizable={isResizableMode} />;
     }
-    if (template.id === "split-diagonal-landscape") {
-      return <SplitDiagonalLandscape videos={validVideos} activeVideoId={activeVideoId} videoRefs={videoRefs} isResizable={isResizableMode} />;
+    if (template.id === "split-diagonal-landscape" || template.id === "split-diagonal-portrait" || template.id === "split-diagonal-square" || template.id === "split-diagonal-vertical-square") {
+      return <SplitDiagonalLandscape videos={validVideos} activeVideoId={activeVideoId} videoRefs={videoRefs} isResizable={isResizableMode} templateId={template.id} />;
     }
     if (template.id === "split-mixed-1-landscape") {
       return <SplitMixed1Landscape videos={validVideos} activeVideoId={activeVideoId} videoRefs={videoRefs} isResizable={isResizableMode} />;
@@ -2661,9 +2661,9 @@ export function ResizableTemplate({
     return renderFixedTemplate()
   }
 
-  // Для шаблона "Четыре равных сектора" (split-quad-square)
-  if (template.id && template.id === "split-quad-square") {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-quad-square в режиме resizable`)
+  // Для шаблона "Сетка 2x2" (split-grid-2x2-square)
+  if (template.id && template.id === "split-grid-2x2-square") {
+    console.log(`[ResizableTemplate] Рендеринг шаблона split-grid-2x2-square в режиме resizable`)
     return <SplitGrid2x2 videos={validVideos} activeVideoId={activeVideoId} videoRefs={videoRefs} isResizable={isResizableMode} templateId={template.id} />;
   }
 

@@ -176,10 +176,10 @@ export const squareTemplates: MediaTemplate[] = [
       </div>
     ),
   },
-  // Четвертное разделение (крестом)
+  // Сетка 2x2
   {
-    id: "split-quad-square",
-    split: "diagonal",
+    id: "split-grid-2x2-square",
+    split: "grid",
     screens: 4,
     resizable: true,
     splitPoints: [

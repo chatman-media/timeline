@@ -75,7 +75,7 @@ export const portraitTemplates: MediaTemplate[] = [
     id: "split-diagonal-portrait",
     split: "diagonal",
     screens: 2,
-    resizable: false, // Диагональные шаблоны не могут быть resizable
+    resizable: true, // Диагональные шаблоны не могут быть resizable
     splitPoints: [
       { x: 0, y: 40 }, // Начальная точка (левый край, 40% от верха)
       { x: 100, y: 60 }, // Конечная точка (правый край, 60% от верха)
