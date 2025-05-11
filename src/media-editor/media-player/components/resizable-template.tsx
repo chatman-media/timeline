@@ -528,17 +528,7 @@ export function ResizableTemplate({
         />
       )
     }
-    if (template.id === "split-1-3-landscape" || template.id === "split-3-1-right-portrait") {
-      return (
-        <Split13Landscape
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
-        />
-      )
-    }
-    if (template.id === "split-3-1-landscape" || template.id === "split-3-1-square") {
+    if (template.id === "split-3-1-landscape") {
       return (
         <Split31RightLandscape
           videos={validVideos}
@@ -550,7 +540,8 @@ export function ResizableTemplate({
     }
     if (
       template.id === "split-3-1-bottom-landscape" ||
-      template.id === "split-1-3-bottom-portrait"
+      template.id === "split-1-3-bottom-portrait" ||
+      template.id === "split-3-1-square"
     ) {
       return (
         <Split31BottomLandscape
@@ -571,7 +562,13 @@ export function ResizableTemplate({
         />
       )
     }
-    if (template.id === "split-3-1-right-landscape" || template.id === "split-3-1-right-square") {
+    if (
+      template.id === "split-3-1-right-landscape" ||
+      template.id === "split-1-3-landscape" ||
+      template.id === "split-3-1-right-portrait" ||
+      template.id === "split-3-1-right-square" ||
+      template.id === "split-1-3-square"
+    ) {
       return (
         <Split13Landscape
           videos={validVideos}
