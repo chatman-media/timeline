@@ -2,13 +2,18 @@ import { useActorRef, useSelector } from "@xstate/react"
 import React, { createContext, ReactNode, useContext } from "react"
 
 import { Sector } from "@/media-editor/browser"
+import { VideoEffect } from "@/media-editor/browser/components/tabs/effects/effects"
+import { VideoFilter } from "@/media-editor/browser/components/tabs/filters/filters"
+import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
 import {
   type TimelineContext,
   timelineMachine,
 } from "@/media-editor/timeline/services/timeline-machine"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
+import { TimelineResource } from "@/types/resources"
 import { TimeRange } from "@/types/time-range"
+import { TransitionEffect } from "@/types/transitions"
 
 interface TimelineContextType {
   isDirty: boolean
@@ -27,6 +32,13 @@ interface TimelineContextType {
   previousStates: TimelineContext[]
   currentStateIndex: number
 
+  // Ресурсы
+  resources: TimelineResource[] // Все добавленные ресурсы
+  effectResources: TimelineResource[] // Эффекты
+  filterResources: TimelineResource[] // Фильтры
+  transitionResources: TimelineResource[] // Переходы
+  templateResources: TimelineResource[] // Шаблоны
+
   zoom: (level: number) => void
   fitToScreen: (containerWidth: number) => void
   undo: () => void
@@ -44,6 +56,20 @@ interface TimelineContextType {
   setLoadedVideo: (fileId: string, loaded: boolean) => void
   preloadAllVideos: () => void
   setIsChangingCamera: (isChangingCamera: boolean) => void
+
+  // Методы для работы с ресурсами
+  addEffect: (effect: VideoEffect) => void
+  addFilter: (filter: VideoFilter) => void
+  addTransition: (transition: TransitionEffect) => void
+  addTemplate: (template: MediaTemplate) => void
+  removeResource: (resourceId: string) => void
+  updateResource: (resourceId: string, params: Record<string, any>) => void
+
+  // Методы для проверки наличия ресурса в хранилище
+  isEffectAdded: (effect: VideoEffect) => boolean
+  isFilterAdded: (filter: VideoFilter) => boolean
+  isTransitionAdded: (transition: TransitionEffect) => boolean
+  isTemplateAdded: (template: MediaTemplate) => boolean
 }
 
 interface TimelineProviderProps {
@@ -177,6 +203,93 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [send],
   )
 
+  // Методы для работы с ресурсами
+  const handleAddEffect = React.useCallback(
+    (effect: VideoEffect) => {
+      send({ type: "ADD_EFFECT", effect })
+    },
+    [send],
+  )
+
+  const handleAddFilter = React.useCallback(
+    (filter: VideoFilter) => {
+      send({ type: "ADD_FILTER", filter })
+    },
+    [send],
+  )
+
+  const handleAddTransition = React.useCallback(
+    (transition: TransitionEffect) => {
+      console.log("Adding transition:", transition)
+      send({ type: "ADD_TRANSITION", transition })
+    },
+    [send],
+  )
+
+  const handleAddTemplate = React.useCallback(
+    (template: MediaTemplate) => {
+      send({ type: "ADD_TEMPLATE", template })
+    },
+    [send],
+  )
+
+  const handleRemoveResource = React.useCallback(
+    (resourceId: string) => {
+      send({ type: "REMOVE_RESOURCE", resourceId })
+    },
+    [send],
+  )
+
+  const handleUpdateResource = React.useCallback(
+    (resourceId: string, params: Record<string, any>) => {
+      send({ type: "UPDATE_RESOURCE", resourceId, params })
+    },
+    [send],
+  )
+
+  // Методы для проверки наличия ресурса в хранилище
+  const isEffectAdded = React.useCallback(
+    (effect: VideoEffect) => {
+      return state.effectResources.some((resource) => resource.resourceId === effect.id)
+    },
+    [state.effectResources],
+  )
+
+  const isFilterAdded = React.useCallback(
+    (filter: VideoFilter) => {
+      return state.filterResources.some((resource) => resource.resourceId === filter.id)
+    },
+    [state.filterResources],
+  )
+
+  const isTransitionAdded = React.useCallback(
+    (transition: TransitionEffect) => {
+      console.log("Checking if transition is added:", transition)
+      console.log("Current transitionResources:", state.transitionResources)
+
+      const isAdded = state.transitionResources.some((resource) => {
+        const match =
+          resource.resourceId === transition.id || resource.resourceId === transition.type
+        console.log(
+          `Resource ${resource.id} (${resource.resourceId}) matches transition ${transition.id} (${transition.type}):`,
+          match,
+        )
+        return match
+      })
+
+      console.log("Transition isAdded result:", isAdded)
+      return isAdded
+    },
+    [state.transitionResources],
+  )
+
+  const isTemplateAdded = React.useCallback(
+    (template: MediaTemplate) => {
+      return state.templateResources.some((resource) => resource.resourceId === template.id)
+    },
+    [state.templateResources],
+  )
+
   const value: TimelineContextType = {
     ...state,
     zoom: handleZoom,
@@ -196,6 +309,20 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     setLoadedVideo: handleSetLoadedVideo,
     preloadAllVideos: handlePreloadAllVideos,
     setIsChangingCamera: handleSetIsChangingCamera,
+
+    // Методы для работы с ресурсами
+    addEffect: handleAddEffect,
+    addFilter: handleAddFilter,
+    addTransition: handleAddTransition,
+    addTemplate: handleAddTemplate,
+    removeResource: handleRemoveResource,
+    updateResource: handleUpdateResource,
+
+    // Методы для проверки наличия ресурса в хранилище
+    isEffectAdded,
+    isFilterAdded,
+    isTransitionAdded,
+    isTemplateAdded,
   }
 
   return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>

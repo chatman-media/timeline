@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { usePreviewSize } from "@/media-editor/browser"
+import { AddMediaButton } from "@/media-editor/browser/components/layout/add-media-button"
+import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 
 import { filters, VideoFilter } from "./filters"
 
@@ -18,9 +20,13 @@ interface FilterPreviewProps {
 
 const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
   const { i18n } = useTranslation()
+  const { addFilter, isFilterAdded } = useTimeline()
   const [isHovering, setIsHovering] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>(null)
+
+  // Проверяем, добавлен ли фильтр уже в хранилище
+  const isAdded = isFilterAdded(filter)
 
   const getFilterStyle = () => {
     const { brightness, contrast, saturation, gamma, temperature, tint } = filter.params
@@ -69,7 +75,7 @@ const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
   return (
     <div className="flex flex-col items-center">
       <div
-        className="relative cursor-pointer rounded-xs bg-black"
+        className="group relative cursor-pointer rounded-xs bg-black"
         style={{ width: `${size}px`, height: `${size}px` }}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
@@ -83,6 +89,18 @@ const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
           playsInline
           preload="auto"
         />
+        <div
+          className={`${isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-200`}
+        >
+          <AddMediaButton
+            file={{ id: filter.id, path: "", name: filter.name }}
+            onAddMedia={() => {
+              addFilter(filter)
+            }}
+            isAdded={isAdded}
+            size={size}
+          />
+        </div>
       </div>
       <div className="mt-1 text-xs text-gray-300">
         {filters.find((f) => f.id === filter.id)?.labels[i18n.language === "en" ? "en" : "ru"]}

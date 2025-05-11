@@ -43,7 +43,7 @@ export const AddMediaButton = memo(function AddMediaButton({
       }`}
       onClick={(e) => {
         e.stopPropagation()
-        if (!isAdded) onAddMedia(e, file)
+        onAddMedia(e, file)
       }}
       title={isAdded ? t("browser.media.added") : t("browser.media.add")}
     >

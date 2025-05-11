@@ -50,9 +50,17 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
   }
 
   const { height: previewHeight, width: previewWidth } = calculateDimensions()
+  const { addTemplate, isTemplateAdded } = useTimeline()
 
   // Создаем клон элемента с добавлением ключа для предотвращения предупреждения React
   const renderedTemplate = template.render()
+
+  // Проверяем, добавлен ли шаблон уже в хранилище
+  const isAdded = isTemplateAdded(template)
+
+  const handleAddTemplate = () => {
+    addTemplate(template)
+  }
 
   return (
     <div
@@ -65,11 +73,16 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
       onClick={onClick}
     >
       {React.cloneElement(renderedTemplate, { key: `template-preview-${template.id}` })}
-      <AddMediaButton
-        file={{ id: template.id, path: "", name: template.id }}
-        onAddMedia={() => {}}
-        size={previewWidth}
-      />
+      <div
+        className={`${isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-200`}
+      >
+        <AddMediaButton
+          file={{ id: template.id, path: "", name: template.id }}
+          onAddMedia={handleAddTemplate}
+          isAdded={isAdded}
+          size={previewWidth}
+        />
+      </div>
     </div>
   )
 }

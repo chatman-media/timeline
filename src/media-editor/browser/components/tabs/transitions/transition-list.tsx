@@ -7,7 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { usePreviewSize } from "@/media-editor/browser"
+import { AddMediaButton } from "@/media-editor/browser/components/layout/add-media-button"
+import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 import { MediaFile } from "@/types/media"
+import { transitions as transitionEffects } from "@/types/transitions"
 
 interface TransitionPreviewProps {
   sourceVideo: MediaFile
@@ -41,12 +44,37 @@ const TransitionPreview = ({
   size,
 }: TransitionPreviewProps) => {
   const { i18n } = useTranslation()
+  const { addTransition, isTransitionAdded } = useTimeline()
   const [isHovering, setIsHovering] = useState(false)
   const [isError, setIsError] = useState(false)
   const sourceVideoRef = useRef<HTMLVideoElement>(null)
   const targetVideoRef = useRef<HTMLVideoElement>(null)
   const transitionTimeoutRef = useRef<NodeJS.Timeout>(null)
   const loopTimeoutRef = useRef<NodeJS.Timeout>(null)
+
+  // Находим переход по типу
+  const transition = transitionEffects.find(
+    (t) => t.id === transitionType || t.type === transitionType,
+  )
+
+  // Создаем объект перехода с правильным id, если его нет в transitionEffects
+  const transitionObj = transition || {
+    id: transitionType,
+    type: transitionType as any,
+    name: transitions.find((t) => t.type === transitionType)?.labels?.ru || transitionType,
+    duration: 1.5,
+    ffmpegCommand: () => "",
+    params: {},
+    previewPath: "",
+  }
+
+  // Проверяем, добавлен ли переход уже в хранилище
+  const isAdded = isTransitionAdded(transitionObj)
+
+  // Отладочный вывод
+  useEffect(() => {
+    console.log(`Transition ${transitionObj.id} (${transitionType}) isAdded:`, isAdded)
+  }, [transitionObj, transitionType, isAdded])
 
   const resetVideos = useCallback(() => {
     if (!sourceVideoRef.current || !targetVideoRef.current) return
@@ -214,39 +242,53 @@ const TransitionPreview = ({
 
   return (
     <div className="flex flex-col items-center">
-      <div
-        className="flex cursor-pointer overflow-hidden rounded-xs bg-[#1a1a1a]"
-        style={{ width: `${size}px`, height: `${size}px` }}
-        onMouseEnter={() => setIsHovering(true)}
-        onMouseLeave={() => setIsHovering(false)}
-        onClick={onClick}
-      >
-        {isError ? (
-          <div className="flex h-full items-center justify-center text-white">
-            {i18n.language === "en" ? "Video loading error" : "Ошибка загрузки видео"}
-          </div>
-        ) : (
-          <div className="relative flex h-full w-full cursor-pointer items-center justify-center rounded-md">
-            <video
-              ref={sourceVideoRef}
-              src={sourceVideo.path}
-              className="h-full w-full origin-center object-cover transition-all duration-1000"
-              muted
-              playsInline
-              preload="auto"
-              onError={() => setIsError(true)}
-            />
-            <video
-              ref={targetVideoRef}
-              src={targetVideo.path}
-              className="absolute inset-0 h-full w-full origin-center object-cover opacity-0 transition-all duration-1000"
-              muted
-              playsInline
-              preload="auto"
-              onError={() => setIsError(true)}
-            />
-          </div>
-        )}
+      <div className="group relative">
+        <div
+          className="flex cursor-pointer overflow-hidden rounded-xs bg-[#1a1a1a]"
+          style={{ width: `${size}px`, height: `${size}px` }}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          onClick={onClick}
+        >
+          {isError ? (
+            <div className="flex h-full items-center justify-center text-white">
+              {i18n.language === "en" ? "Video loading error" : "Ошибка загрузки видео"}
+            </div>
+          ) : (
+            <div className="relative flex h-full w-full cursor-pointer items-center justify-center rounded-md">
+              <video
+                ref={sourceVideoRef}
+                src={sourceVideo.path}
+                className="h-full w-full origin-center object-cover transition-all duration-1000"
+                muted
+                playsInline
+                preload="auto"
+                onError={() => setIsError(true)}
+              />
+              <video
+                ref={targetVideoRef}
+                src={targetVideo.path}
+                className="absolute inset-0 h-full w-full origin-center object-cover opacity-0 transition-all duration-1000"
+                muted
+                playsInline
+                preload="auto"
+                onError={() => setIsError(true)}
+              />
+              <div
+                className={`${isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-200`}
+              >
+                <AddMediaButton
+                  file={{ id: transitionType, path: "", name: transitionType }}
+                  onAddMedia={() => {
+                    addTransition(transitionObj)
+                  }}
+                  isAdded={isAdded}
+                  size={size}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       <div className="mt-1 text-xs text-gray-300">
         {

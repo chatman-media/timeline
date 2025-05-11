@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { usePreviewSize } from "@/media-editor/browser"
+import { AddMediaButton } from "@/media-editor/browser/components/layout/add-media-button"
+import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 
 import { effects, type VideoEffect } from "."
 
@@ -18,9 +20,16 @@ interface EffectPreviewProps {
 
 const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
   const { i18n } = useTranslation()
+  const { addEffect, isEffectAdded } = useTimeline()
   const [isHovering, setIsHovering] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>(null)
+
+  // Находим эффект по типу
+  const effect = effects.find((e) => e.type === effectType)
+
+  // Проверяем, добавлен ли эффект уже в хранилище
+  const isAdded = effect ? isEffectAdded(effect) : false
 
   useEffect(() => {
     if (!videoRef.current) return
@@ -124,7 +133,7 @@ const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
   return (
     <div className="flex flex-col items-center">
       <div
-        className="relative cursor-pointer rounded-xs bg-black"
+        className="group relative cursor-pointer rounded-xs bg-black"
         style={{ width: `${size}px`, height: `${size}px` }}
         onMouseEnter={() => setIsHovering(true)}
         onMouseLeave={() => setIsHovering(false)}
@@ -138,6 +147,20 @@ const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
           playsInline
           preload="auto"
         />
+        <div
+          className={`${isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-200`}
+        >
+          <AddMediaButton
+            file={{ id: effectType, path: "", name: effectType }}
+            onAddMedia={() => {
+              if (effect) {
+                addEffect(effect)
+              }
+            }}
+            isAdded={isAdded}
+            size={size}
+          />
+        </div>
       </div>
       <div className="mt-1 text-xs text-gray-300">
         {effects.find((e) => e.type === effectType)?.labels[i18n.language === "en" ? "en" : "ru"]}

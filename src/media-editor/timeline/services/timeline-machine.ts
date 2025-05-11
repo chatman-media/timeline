@@ -1,9 +1,20 @@
 import { assign, createMachine } from "xstate"
 
+import { VideoEffect } from "@/media-editor/browser/components/tabs/effects/effects"
+import { VideoFilter } from "@/media-editor/browser/components/tabs/filters/filters"
+import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
 import { createTracksFromFiles, Sector } from "@/media-editor/browser/utils/media-files"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
+import {
+  createEffectResource,
+  createFilterResource,
+  createTemplateResource,
+  createTransitionResource,
+  TimelineResource,
+} from "@/types/resources"
 import { TimeRange } from "@/types/time-range"
+import { TransitionEffect } from "@/types/transitions"
 
 export interface TimelineContext {
   isDirty: boolean
@@ -21,6 +32,13 @@ export interface TimelineContext {
   loadedVideos: Record<string, boolean>
   previousStates: TimelineContext[]
   currentStateIndex: number
+
+  // Ресурсы
+  resources: TimelineResource[] // Все добавленные ресурсы
+  effectResources: TimelineResource[] // Эффекты
+  filterResources: TimelineResource[] // Фильтры
+  transitionResources: TimelineResource[] // Переходы
+  templateResources: TimelineResource[] // Шаблоны
 }
 
 export type TimelineEvent =
@@ -44,6 +62,13 @@ export type TimelineEvent =
   | { type: "REDO" }
   | { type: "PERSIST_STATE" }
   | { type: "RESTORE_STATE"; state: Partial<TimelineContext> }
+  // События для работы с ресурсами
+  | { type: "ADD_EFFECT"; effect: VideoEffect }
+  | { type: "ADD_FILTER"; filter: VideoFilter }
+  | { type: "ADD_TRANSITION"; transition: TransitionEffect }
+  | { type: "ADD_TEMPLATE"; template: MediaTemplate }
+  | { type: "REMOVE_RESOURCE"; resourceId: string }
+  | { type: "UPDATE_RESOURCE"; resourceId: string; params: Record<string, any> }
 
 const initialContext: TimelineContext = {
   isDirty: false,
@@ -61,6 +86,13 @@ const initialContext: TimelineContext = {
   loadedVideos: {},
   previousStates: [],
   currentStateIndex: -1,
+
+  // Ресурсы
+  resources: [],
+  effectResources: [],
+  filterResources: [],
+  transitionResources: [],
+  templateResources: [],
 }
 
 const addToHistory = ({
@@ -430,6 +462,158 @@ export const timelineMachine = createMachine({
             newState: { tracks: event.tracks },
           }),
         ),
+      ],
+    },
+    // Обработчики для ресурсов
+    ADD_EFFECT: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "ADD_EFFECT") return context
+
+          const newResource = createEffectResource(event.effect)
+          return {
+            ...context,
+            resources: [...context.resources, newResource],
+            effectResources: [...context.effectResources, newResource],
+            isDirty: true,
+          }
+        }),
+      ],
+    },
+    ADD_FILTER: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "ADD_FILTER") return context
+
+          const newResource = createFilterResource(event.filter)
+          return {
+            ...context,
+            resources: [...context.resources, newResource],
+            filterResources: [...context.filterResources, newResource],
+            isDirty: true,
+          }
+        }),
+      ],
+    },
+    ADD_TRANSITION: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "ADD_TRANSITION") return context
+
+          console.log("ADD_TRANSITION event received with transition:", event.transition)
+          const newResource = createTransitionResource(event.transition)
+          console.log("Created transition resource:", newResource)
+
+          return {
+            ...context,
+            resources: [...context.resources, newResource],
+            transitionResources: [...context.transitionResources, newResource],
+            isDirty: true,
+          }
+        }),
+      ],
+    },
+    ADD_TEMPLATE: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "ADD_TEMPLATE") return context
+
+          const newResource = createTemplateResource(event.template)
+          return {
+            ...context,
+            resources: [...context.resources, newResource],
+            templateResources: [...context.templateResources, newResource],
+            isDirty: true,
+          }
+        }),
+      ],
+    },
+    REMOVE_RESOURCE: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "REMOVE_RESOURCE") return context
+
+          const filteredResources = context.resources.filter(
+            (resource) => resource.id !== event.resourceId,
+          )
+
+          return {
+            ...context,
+            resources: filteredResources,
+            effectResources: context.effectResources.filter(
+              (resource) => resource.id !== event.resourceId,
+            ),
+            filterResources: context.filterResources.filter(
+              (resource) => resource.id !== event.resourceId,
+            ),
+            transitionResources: context.transitionResources.filter(
+              (resource) => resource.id !== event.resourceId,
+            ),
+            templateResources: context.templateResources.filter(
+              (resource) => resource.id !== event.resourceId,
+            ),
+            isDirty: true,
+          }
+        }),
+      ],
+    },
+    UPDATE_RESOURCE: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "UPDATE_RESOURCE") return context
+
+          const updatedResources = context.resources.map((resource) => {
+            if (resource.id === event.resourceId) {
+              return {
+                ...resource,
+                params: { ...resource.params, ...event.params },
+              }
+            }
+            return resource
+          })
+
+          return {
+            ...context,
+            resources: updatedResources,
+            effectResources: context.effectResources.map((resource) => {
+              if (resource.id === event.resourceId) {
+                return {
+                  ...resource,
+                  params: { ...resource.params, ...event.params },
+                }
+              }
+              return resource
+            }),
+            filterResources: context.filterResources.map((resource) => {
+              if (resource.id === event.resourceId) {
+                return {
+                  ...resource,
+                  params: { ...resource.params, ...event.params },
+                }
+              }
+              return resource
+            }),
+            transitionResources: context.transitionResources.map((resource) => {
+              if (resource.id === event.resourceId) {
+                return {
+                  ...resource,
+                  params: { ...resource.params, ...event.params },
+                }
+              }
+              return resource
+            }),
+            templateResources: context.templateResources.map((resource) => {
+              if (resource.id === event.resourceId) {
+                return {
+                  ...resource,
+                  params: { ...resource.params, ...event.params },
+                }
+              }
+              return resource
+            }),
+            isDirty: true,
+          }
+        }),
       ],
     },
     UNDO: {
