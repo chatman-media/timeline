@@ -13,21 +13,27 @@ interface TimelineBarProps {
 
 // Интерфейс для параметров useSectionTime
 interface SectionTimeProps {
-  startTime: number;
-  endTime: number;
-  currentTime?: number;
-  displayTime?: number;
+  startTime: number
+  endTime: number
+  currentTime?: number
+  displayTime?: number
 }
 
 // Функция для расчета позиции и обработки перемещения курсора времени
-function useSectionTime({ startTime, endTime, currentTime: propCurrentTime, displayTime: propDisplayTime }: SectionTimeProps) {
+function useSectionTime({
+  startTime,
+  endTime,
+  currentTime: propCurrentTime,
+  displayTime: propDisplayTime,
+}: SectionTimeProps) {
   // Получаем значения из контекста
   const playerContext = usePlayerContext()
   const displayTimeContext = useDisplayTime()
 
   // Используем значения из пропсов, если они переданы, иначе из контекста
   const currentTime = propCurrentTime !== undefined ? propCurrentTime : playerContext.currentTime
-  const displayTime = propDisplayTime !== undefined ? propDisplayTime : displayTimeContext.displayTime
+  const displayTime =
+    propDisplayTime !== undefined ? propDisplayTime : displayTimeContext.displayTime
   const setCurrentTime = playerContext.setCurrentTime
 
   const [position, setPosition] = useState<number>(0)
@@ -116,16 +122,16 @@ function useSectionTime({ startTime, endTime, currentTime: propCurrentTime, disp
     // Используем requestAnimationFrame для более плавного обновления, но с ограничением частоты
     let animationFrameId: number
     let lastUpdateTime = 0
-    const updateInterval = 100; // Обновляем не чаще чем раз в 100 мс
+    const updateInterval = 100 // Обновляем не чаще чем раз в 100 мс
 
     const updatePosition = (timestamp: number) => {
       // Ограничиваем частоту обновлений
       if (timestamp - lastUpdateTime >= updateInterval) {
-        lastUpdateTime = timestamp;
-        calculatePosition();
+        lastUpdateTime = timestamp
+        calculatePosition()
       }
 
-      animationFrameId = requestAnimationFrame(updatePosition);
+      animationFrameId = requestAnimationFrame(updatePosition)
     }
 
     // Запускаем анимацию
@@ -194,7 +200,7 @@ export function TimelineBar({ sectionStartTime, sectionDuration, height }: Timel
   // Используем useSectionTime напрямую, без передачи контекстов
   const { position, handleMouseDown } = useSectionTime({
     startTime: sectionStartTime,
-    endTime: sectionStartTime + sectionDuration
+    endTime: sectionStartTime + sectionDuration,
   })
 
   // Добавляем логирование для отладки только при изменении параметров секции

@@ -740,8 +740,6 @@ export function CameraCaptureDialog({
 
           {permissionStatus === "granted" && (
             <>
-
-
               {/* Двухколоночная разметка: видео слева, настройки справа */}
               <div className="flex flex-col gap-8 md:flex-row">
                 {/* Левая колонка - превью видео */}

@@ -40,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const videoFile = files.file as formidable.File
     const fileName = fields.fileName as string
 
-    if (!videoFile || !fileName) { 
+    if (!videoFile || !fileName) {
       return res.status(400).json({ error: "Missing required fields" })
     }
 

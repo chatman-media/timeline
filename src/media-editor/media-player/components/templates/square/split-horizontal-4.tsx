@@ -1,19 +1,26 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Шаблон "4 экрана по горизонтали" - квадратный формат
  */
-export function SplitHorizontal4({ videos, activeVideoId, videoRefs, isResizable = true }: TemplateProps) {
+export function SplitHorizontal4({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+}: TemplateProps) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 4);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 4)
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 4) {
-    return <div className="h-full w-full bg-black" />;
+    return <div className="h-full w-full bg-black" />
   }
 
   // Рендеринг в режиме без возможности изменения размеров
@@ -21,7 +28,7 @@ export function SplitHorizontal4({ videos, activeVideoId, videoRefs, isResizable
     return (
       <div className="flex h-full w-full" style={{ border: "1px solid #35d1c1" }}>
         {/* Первое видео */}
-        <div className="w-1/4 h-full">
+        <div className="h-full w-1/4">
           <VideoPanel
             video={validVideos[0]}
             isActive={validVideos[0]?.id === activeVideoId}
@@ -29,12 +36,12 @@ export function SplitHorizontal4({ videos, activeVideoId, videoRefs, isResizable
             index={0}
           />
         </div>
-        
+
         {/* Разделительная линия */}
-        <div className="w-1 h-full bg-[#35d1c1]" />
-        
+        <div className="h-full w-1 bg-[#35d1c1]" />
+
         {/* Второе видео */}
-        <div className="w-1/4 h-full">
+        <div className="h-full w-1/4">
           <VideoPanel
             video={validVideos[1]}
             isActive={validVideos[1]?.id === activeVideoId}
@@ -42,12 +49,12 @@ export function SplitHorizontal4({ videos, activeVideoId, videoRefs, isResizable
             index={1}
           />
         </div>
-        
+
         {/* Разделительная линия */}
-        <div className="w-1 h-full bg-[#35d1c1]" />
-        
+        <div className="h-full w-1 bg-[#35d1c1]" />
+
         {/* Третье видео */}
-        <div className="w-1/4 h-full">
+        <div className="h-full w-1/4">
           <VideoPanel
             video={validVideos[2]}
             isActive={validVideos[2]?.id === activeVideoId}
@@ -55,12 +62,12 @@ export function SplitHorizontal4({ videos, activeVideoId, videoRefs, isResizable
             index={2}
           />
         </div>
-        
+
         {/* Разделительная линия */}
-        <div className="w-1 h-full bg-[#35d1c1]" />
-        
+        <div className="h-full w-1 bg-[#35d1c1]" />
+
         {/* Четвертое видео */}
-        <div className="w-1/4 h-full">
+        <div className="h-full w-1/4">
           <VideoPanel
             video={validVideos[3]}
             isActive={validVideos[3]?.id === activeVideoId}
@@ -69,7 +76,7 @@ export function SplitHorizontal4({ videos, activeVideoId, videoRefs, isResizable
           />
         </div>
       </div>
-    );
+    )
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
@@ -117,5 +124,5 @@ export function SplitHorizontal4({ videos, activeVideoId, videoRefs, isResizable
         </Panel>
       </PanelGroup>
     </div>
-  );
+  )
 }

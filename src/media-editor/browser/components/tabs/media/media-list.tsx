@@ -490,7 +490,7 @@ export const MediaFileList = memo(function MediaFileList({
             .includes(query) ||
           String(file.probeData?.format.tags?.album || "")
             .toLowerCase()
-            .includes(query)
+            .includes(query),
       )
     }
 
@@ -972,7 +972,9 @@ export const MediaFileList = memo(function MediaFileList({
   const renderContent = useCallback(() => {
     if (filteredAndSortedMedia.length === 0) {
       return (
-        <div className="p-4 text-center text-gray-400 dark:text-gray-500">{t("browser.media.noMedia")}</div>
+        <div className="p-4 text-center text-gray-400 dark:text-gray-500">
+          {t("browser.media.noMedia")}
+        </div>
       )
     }
 

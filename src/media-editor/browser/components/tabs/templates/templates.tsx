@@ -15,7 +15,7 @@ export interface CellConfig {
   alignX?: "left" | "center" | "right" // Горизонтальное выравнивание
   alignY?: "top" | "center" | "bottom" // Вертикальное выравнивание
   initialScale?: number // Начальный масштаб (1.0 = 100%)
-  initialPosition?: { x: number, y: number } // Начальная позиция (в процентах от размера ячейки)
+  initialPosition?: { x: number; y: number } // Начальная позиция (в процентах от размера ячейки)
 }
 
 export interface MediaTemplate {

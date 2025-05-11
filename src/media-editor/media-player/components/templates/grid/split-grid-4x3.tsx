@@ -1,42 +1,52 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Шаблон "Сетка 4x3" (12 экранов)
  */
-export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = true, templateId }: TemplateProps & { templateId?: string }) {
+export function SplitGrid4x3({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+  templateId,
+}: TemplateProps & { templateId?: string }) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 12);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 12)
 
   // Определяем ориентацию и тип шаблона на основе ID шаблона
-  const isPortrait = templateId ? templateId.includes('portrait') : false;
-  const isSquare = templateId ? templateId.includes('square') : false;
-  const isLandscape = templateId ? templateId.includes('landscape') : false;
+  const isPortrait = templateId ? templateId.includes("portrait") : false
+  const isSquare = templateId ? templateId.includes("square") : false
+  const isLandscape = templateId ? templateId.includes("landscape") : false
 
   console.log(`[SplitGrid4x3] Рендеринг шаблона ${templateId} с параметрами:`, {
-    isPortrait, isSquare, isLandscape
-  });
+    isPortrait,
+    isSquare,
+    isLandscape,
+  })
 
   // Если видео меньше 12, заполняем оставшиеся ячейки пустыми видео
-  const filledVideos = [...validVideos];
+  const filledVideos = [...validVideos]
   while (filledVideos.length < 12) {
-    filledVideos.push({ id: `empty-${filledVideos.length}`, path: '' } as any);
+    filledVideos.push({ id: `empty-${filledVideos.length}`, path: "" } as any)
   }
 
   // Рендеринг в режиме без возможности изменения размеров
   if (!isResizable) {
     // Для портретного режима 4x3
     if (isPortrait) {
-      console.log(`[SplitGrid4x3] Рендеринг в режиме 4x3 (портретный)`);
+      console.log(`[SplitGrid4x3] Рендеринг в режиме 4x3 (портретный)`)
       return (
         <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           {/* Рендерим видео */}
           {filledVideos.slice(0, 12).map((video, index) => {
-            const row = Math.floor(index / 4);
-            const col = index % 4;
+            const row = Math.floor(index / 4)
+            const col = index % 4
 
             return (
               <div
@@ -57,7 +67,7 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
                   index={index}
                 />
               </div>
-            );
+            )
           })}
 
           {/* Добавляем разделительные линии */}
@@ -89,16 +99,16 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
             />
           ))}
         </div>
-      );
+      )
     } else {
       // Ландшафтный или квадратный режим
-      console.log(`[SplitGrid4x3] Рендеринг в режиме 4x3 (ландшафтный или квадратный)`);
+      console.log(`[SplitGrid4x3] Рендеринг в режиме 4x3 (ландшафтный или квадратный)`)
       return (
         <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           {/* Рендерим видео */}
           {filledVideos.slice(0, 12).map((video, index) => {
-            const row = Math.floor(index / 4);
-            const col = index % 4;
+            const row = Math.floor(index / 4)
+            const col = index % 4
 
             return (
               <div
@@ -119,7 +129,7 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
                   index={index}
                 />
               </div>
-            );
+            )
           })}
 
           {/* Добавляем разделительные линии */}
@@ -151,16 +161,16 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
             />
           ))}
         </div>
-      );
+      )
     }
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
-  console.log(`[SplitGrid4x3] Рендеринг в режиме resizable для шаблона ${templateId}`);
+  console.log(`[SplitGrid4x3] Рендеринг в режиме resizable для шаблона ${templateId}`)
 
   // Для портретного режима 4x3
   if (isPortrait) {
-    console.log(`[SplitGrid4x3] Рендеринг в режиме resizable 4x3 (портретный)`);
+    console.log(`[SplitGrid4x3] Рендеринг в режиме resizable 4x3 (портретный)`)
     return (
       <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
         <PanelGroup direction="vertical">
@@ -169,7 +179,7 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
               <Panel defaultSize={33.33} minSize={10}>
                 <PanelGroup direction="horizontal">
                   {[0, 1, 2, 3].map((colIndex) => {
-                    const videoIndex = rowIndex * 4 + colIndex;
+                    const videoIndex = rowIndex * 4 + colIndex
                     return (
                       <React.Fragment key={`col-${colIndex}`}>
                         <Panel defaultSize={25} minSize={10}>
@@ -184,7 +194,7 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
                           <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
                         )}
                       </React.Fragment>
-                    );
+                    )
                   })}
                 </PanelGroup>
               </Panel>
@@ -195,10 +205,10 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
           ))}
         </PanelGroup>
       </div>
-    );
+    )
   } else {
     // Ландшафтный или квадратный режим
-    console.log(`[SplitGrid4x3] Рендеринг в режиме resizable 4x3 (ландшафтный или квадратный)`);
+    console.log(`[SplitGrid4x3] Рендеринг в режиме resizable 4x3 (ландшафтный или квадратный)`)
     return (
       <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
         <PanelGroup direction="vertical">
@@ -207,7 +217,7 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
               <Panel defaultSize={33.33} minSize={10}>
                 <PanelGroup direction="horizontal">
                   {[0, 1, 2, 3].map((colIndex) => {
-                    const videoIndex = rowIndex * 4 + colIndex;
+                    const videoIndex = rowIndex * 4 + colIndex
                     return (
                       <React.Fragment key={`col-${colIndex}`}>
                         <Panel defaultSize={25} minSize={10}>
@@ -222,7 +232,7 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
                           <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
                         )}
                       </React.Fragment>
-                    );
+                    )
                   })}
                 </PanelGroup>
               </Panel>
@@ -233,6 +243,6 @@ export function SplitGrid4x3({ videos, activeVideoId, videoRefs, isResizable = t
           ))}
         </PanelGroup>
       </div>
-    );
+    )
   }
 }

@@ -1,20 +1,27 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Шаблон "5 экранов: вариант 2 (4 маленьких слева, 1 большой справа)" - ландшафтный формат
  * ID: split-custom-5-2-landscape
  */
-export function SplitCustom52Landscape({ videos, activeVideoId, videoRefs, isResizable = true }: TemplateProps) {
+export function SplitCustom52Landscape({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+}: TemplateProps) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 5);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 5)
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 5) {
-    return <div className="h-full w-full bg-black" />;
+    return <div className="h-full w-full bg-black" />
   }
 
   // Рендеринг в режиме без возможности изменения размеров
@@ -22,7 +29,7 @@ export function SplitCustom52Landscape({ videos, activeVideoId, videoRefs, isRes
     return (
       <div className="flex h-full w-full" style={{ border: "1px solid #35d1c1" }}>
         {/* Левая секция (4 маленьких видео) */}
-        <div className="w-1/2 h-full flex flex-col">
+        <div className="flex h-full w-1/2 flex-col">
           {/* Верхняя левая секция */}
           <div className="h-1/2 w-full">
             <VideoPanel
@@ -32,16 +39,16 @@ export function SplitCustom52Landscape({ videos, activeVideoId, videoRefs, isRes
               index={0}
             />
           </div>
-          
+
           {/* Горизонтальная разделительная линия */}
           <div className="h-[1px] w-full bg-[#35d1c1]" />
-          
+
           {/* Нижняя левая секция */}
-          <div className="h-1/2 w-full flex flex-col">
+          <div className="flex h-1/2 w-full flex-col">
             {/* Верхняя часть нижней левой секции */}
-            <div className="h-1/2 w-full flex">
+            <div className="flex h-1/2 w-full">
               {/* Левое видео */}
-              <div className="w-1/2 h-full">
+              <div className="h-full w-1/2">
                 <VideoPanel
                   video={validVideos[1]}
                   isActive={validVideos[1]?.id === activeVideoId}
@@ -49,12 +56,12 @@ export function SplitCustom52Landscape({ videos, activeVideoId, videoRefs, isRes
                   index={1}
                 />
               </div>
-              
+
               {/* Вертикальная разделительная линия */}
-              <div className="w-[1px] h-full bg-[#35d1c1]" />
-              
+              <div className="h-full w-[1px] bg-[#35d1c1]" />
+
               {/* Правое видео */}
-              <div className="w-1/2 h-full">
+              <div className="h-full w-1/2">
                 <VideoPanel
                   video={validVideos[2]}
                   isActive={validVideos[2]?.id === activeVideoId}
@@ -63,10 +70,10 @@ export function SplitCustom52Landscape({ videos, activeVideoId, videoRefs, isRes
                 />
               </div>
             </div>
-            
+
             {/* Горизонтальная разделительная линия */}
             <div className="h-[1px] w-full bg-[#35d1c1]" />
-            
+
             {/* Нижняя часть нижней левой секции */}
             <div className="h-1/2 w-full">
               <VideoPanel
@@ -78,12 +85,12 @@ export function SplitCustom52Landscape({ videos, activeVideoId, videoRefs, isRes
             </div>
           </div>
         </div>
-        
+
         {/* Разделительная линия */}
-        <div className="w-[1px] h-full bg-[#35d1c1]" />
-        
+        <div className="h-full w-[1px] bg-[#35d1c1]" />
+
         {/* Правая секция (большое видео) */}
-        <div className="w-1/2 h-full">
+        <div className="h-full w-1/2">
           <VideoPanel
             video={validVideos[4]}
             isActive={validVideos[4]?.id === activeVideoId}
@@ -92,7 +99,7 @@ export function SplitCustom52Landscape({ videos, activeVideoId, videoRefs, isRes
           />
         </div>
       </div>
-    );
+    )
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
@@ -165,5 +172,5 @@ export function SplitCustom52Landscape({ videos, activeVideoId, videoRefs, isRes
         </Panel>
       </PanelGroup>
     </div>
-  );
+  )
 }

@@ -1,19 +1,27 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Шаблон "Сетка 5x5" (25 экранов)
  */
-export function SplitGrid5x5({ videos, activeVideoId, videoRefs, isResizable = true, templateId }: TemplateProps & { templateId?: string }) {
+export function SplitGrid5x5({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+  templateId,
+}: TemplateProps & { templateId?: string }) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 25);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 25)
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 25) {
-    return <div className="h-full w-full bg-black" />;
+    return <div className="h-full w-full bg-black" />
   }
 
   // Рендеринг в режиме без возможности изменения размеров
@@ -22,8 +30,8 @@ export function SplitGrid5x5({ videos, activeVideoId, videoRefs, isResizable = t
       <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
         {/* Рендерим видео */}
         {validVideos.slice(0, videoCount).map((video, index) => {
-          const row = Math.floor(index / 5);
-          const col = index % 5;
+          const row = Math.floor(index / 5)
+          const col = index % 5
 
           return (
             <div
@@ -44,7 +52,7 @@ export function SplitGrid5x5({ videos, activeVideoId, videoRefs, isResizable = t
                 index={index}
               />
             </div>
-          );
+          )
         })}
 
         {/* Добавляем разделительные линии */}
@@ -76,7 +84,7 @@ export function SplitGrid5x5({ videos, activeVideoId, videoRefs, isResizable = t
           />
         ))}
       </div>
-    );
+    )
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
@@ -88,7 +96,7 @@ export function SplitGrid5x5({ videos, activeVideoId, videoRefs, isResizable = t
             <Panel defaultSize={20} minSize={10}>
               <PanelGroup direction="horizontal">
                 {[0, 1, 2, 3, 4].map((colIndex) => {
-                  const videoIndex = rowIndex * 5 + colIndex;
+                  const videoIndex = rowIndex * 5 + colIndex
                   return (
                     <React.Fragment key={`col-${colIndex}`}>
                       <Panel defaultSize={20} minSize={10}>
@@ -103,16 +111,14 @@ export function SplitGrid5x5({ videos, activeVideoId, videoRefs, isResizable = t
                         <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
                       )}
                     </React.Fragment>
-                  );
+                  )
                 })}
               </PanelGroup>
             </Panel>
-            {rowIndex < 4 && (
-              <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
-            )}
+            {rowIndex < 4 && <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />}
           </React.Fragment>
         ))}
       </PanelGroup>
     </div>
-  );
+  )
 }

@@ -1,9 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { MediaFile } from "@/types/media"
-
 import { usePlayerContext } from "@/media-editor/media-player"
+import { MediaFile } from "@/types/media"
 
 interface ResizableVideoProps {
   video: MediaFile
@@ -11,13 +10,20 @@ interface ResizableVideoProps {
   videoRefs?: Record<string, HTMLVideoElement>
   index?: number // Индекс видео в шаблоне
   hideLabel?: boolean // Флаг для скрытия надписи с названием камеры
-  labelPosition?: 'left' | 'right' | 'center' // Позиция надписи с названием камеры
+  labelPosition?: "left" | "right" | "center" // Позиция надписи с названием камеры
 }
 
 /**
  * Компонент для отображения видео с возможностью масштабирования
  */
-export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabel = false, labelPosition = 'center' }: ResizableVideoProps) {
+export function ResizableVideo({
+  video,
+  isActive,
+  videoRefs,
+  index = 0,
+  hideLabel = false,
+  labelPosition = "center",
+}: ResizableVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isReady, setIsReady] = useState(false)
 
@@ -36,24 +42,26 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
     console.error(`[ResizableVideo] Ошибка: видео не определено или не имеет пути`, video)
     return (
       <div className="relative flex h-full w-full items-center justify-center bg-black">
-        <span className="text-white">{t('timeline.player.videoUnavailable', 'Видео недоступно')}</span>
+        <span className="text-white">
+          {t("timeline.player.videoUnavailable", "Видео недоступно")}
+        </span>
       </div>
     )
   }
 
   // Дополнительная проверка пути к видео
-  if (video.path && !video.path.startsWith('/')) {
+  if (video.path && !video.path.startsWith("/")) {
     console.error(`[ResizableVideo] Ошибка: некорректный путь к видео ${video.id}: ${video.path}`)
   }
 
   // Логируем информацию о видео для отладки только при первом рендере или изменении состояния
   const isLoggedRef = useRef(false)
   if (!isLoggedRef.current) {
-    console.log(`[ResizableVideo] Рендеринг видео ${video.id}, isActive: ${isActive}, path: ${video.path}`)
+    console.log(
+      `[ResizableVideo] Рендеринг видео ${video.id}, isActive: ${isActive}, path: ${video.path}`,
+    )
     isLoggedRef.current = true
   }
-
-
 
   // Эффект для добавления видео элемента в videoRefs
   useEffect(() => {
@@ -71,11 +79,13 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
 
         try {
           // Проверяем, что путь к видео корректный
-          if (!video.path.startsWith('/')) {
+          if (!video.path.startsWith("/")) {
             console.error(`[ResizableVideo] Некорректный путь к видео ${video.id}: ${video.path}`)
             // Пытаемся исправить путь
-            const correctedPath = `/${video.path.replace(/^\.\//, '')}`
-            console.log(`[ResizableVideo] Пытаемся исправить путь для ${video.id}: ${correctedPath}`)
+            const correctedPath = `/${video.path.replace(/^\.\//, "")}`
+            console.log(
+              `[ResizableVideo] Пытаемся исправить путь для ${video.id}: ${correctedPath}`,
+            )
             videoElement.src = correctedPath
           } else {
             videoElement.src = video.path
@@ -87,7 +97,9 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
           // Проверяем, что видео загружается
           setTimeout(() => {
             if (videoElement.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
-              console.error(`[ResizableVideo] Не удалось загрузить видео ${video.id}: источник недоступен`)
+              console.error(
+                `[ResizableVideo] Не удалось загрузить видео ${video.id}: источник недоступен`,
+              )
             }
           }, 1000)
         } catch (err) {
@@ -152,7 +164,9 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
     // Устанавливаем objectPosition по центру
     videoElement.style.objectPosition = "center"
 
-    console.log(`[ResizableVideo] Применяем настройки отображения для видео ${video.id}: ${objectFit}`)
+    console.log(
+      `[ResizableVideo] Применяем настройки отображения для видео ${video.id}: ${objectFit}`,
+    )
   }, [isReady, video.id])
 
   // Эффект для синхронизации воспроизведения с состоянием плеера
@@ -174,9 +188,9 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
         console.log(`[ResizableVideo] Запускаем воспроизведение для видео ${video.id}`)
 
         // Используем Promise для синхронизации воспроизведения
-        videoElement.play().catch(err => {
+        videoElement.play().catch((err) => {
           // Игнорируем ошибки AbortError, которые возникают при удалении видео из DOM
-          if (err.name !== 'AbortError') {
+          if (err.name !== "AbortError") {
             console.error(`[ResizableVideo] Ошибка при воспроизведении видео ${video.id}:`, err)
           }
         })
@@ -188,7 +202,6 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
         videoElement.pause()
       }
     }
-
   }, [isReady, isPlaying, video.id, index])
 
   // Эффект для синхронизации текущего времени видео
@@ -214,12 +227,20 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
 
         // Синхронизируем время всех остальных видео
         Object.entries(videoRefs).forEach(([id, element]) => {
-          if (id !== video.id && element && !element.paused && Math.abs(element.currentTime - currentTime) > 0.1) {
+          if (
+            id !== video.id &&
+            element &&
+            !element.paused &&
+            Math.abs(element.currentTime - currentTime) > 0.1
+          ) {
             try {
               element.currentTime = currentTime
             } catch (err) {
               // Игнорируем ошибки при установке currentTime
-              console.warn(`[ResizableVideo] Не удалось синхронизировать время для видео ${id}:`, err)
+              console.warn(
+                `[ResizableVideo] Не удалось синхронизировать время для видео ${id}:`,
+                err,
+              )
             }
           }
         })
@@ -227,11 +248,11 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
     }
 
     // Добавляем обработчик события timeupdate
-    videoElement.addEventListener('timeupdate', handleTimeUpdate)
+    videoElement.addEventListener("timeupdate", handleTimeUpdate)
 
     return () => {
       // Удаляем обработчик при размонтировании
-      videoElement.removeEventListener('timeupdate', handleTimeUpdate)
+      videoElement.removeEventListener("timeupdate", handleTimeUpdate)
     }
   }, [isReady, video.id, videoRefs, index, lastUpdateTimeRef, updateIntervalMs])
 
@@ -242,7 +263,7 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
         style={{
           width: "100%",
           height: "100%",
-          overflow: "visible"
+          overflow: "visible",
         }}
       >
         <video
@@ -253,9 +274,8 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
             width: "100%",
             height: "100%",
             objectFit: "cover",
-            objectPosition: "center"
+            objectPosition: "center",
           }}
-
           playsInline
           preload="auto"
           controls={false}
@@ -267,33 +287,41 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
             // Если видео закончилось, но проигрывание продолжается,
             // устанавливаем currentTime на последний кадр
             if (isPlaying) {
-              const target = e.target as HTMLVideoElement;
+              const target = e.target as HTMLVideoElement
               if (target.duration > 0) {
-                console.log(`[ResizableVideo] Видео ${video.id} закончилось, показываем последний кадр`);
-                target.currentTime = Math.max(0, target.duration - 0.1);
+                console.log(
+                  `[ResizableVideo] Видео ${video.id} закончилось, показываем последний кадр`,
+                )
+                target.currentTime = Math.max(0, target.duration - 0.1)
 
                 // Останавливаем воспроизведение этого видео, но не останавливаем плеер
-                target.pause();
+                target.pause()
               }
             }
           }}
           data-video-id={video.id}
           onLoadedData={() => {
-            console.log(`[ResizableVideo] Видео ${video.id} загружено и готово к воспроизведению`);
+            console.log(`[ResizableVideo] Видео ${video.id} загружено и готово к воспроизведению`)
             // Проверяем, что видео действительно загружено
-            const target = videoRef.current;
+            const target = videoRef.current
             if (target) {
               if (target.videoWidth === 0 || target.videoHeight === 0) {
-                console.error(`[ResizableVideo] Видео ${video.id} загружено, но имеет нулевые размеры: ${target.videoWidth}x${target.videoHeight}`);
+                console.error(
+                  `[ResizableVideo] Видео ${video.id} загружено, но имеет нулевые размеры: ${target.videoWidth}x${target.videoHeight}`,
+                )
               } else {
-                console.log(`[ResizableVideo] Видео ${video.id} имеет размеры: ${target.videoWidth}x${target.videoHeight}`);
+                console.log(
+                  `[ResizableVideo] Видео ${video.id} имеет размеры: ${target.videoWidth}x${target.videoHeight}`,
+                )
               }
             }
           }}
           onError={(e) => {
-            const target = e.target as HTMLVideoElement;
-            console.error(`[ResizableVideo] Ошибка загрузки видео ${video.id}:`, e);
-            console.error(`[ResizableVideo] Детали ошибки для ${video.id}: networkState=${target.networkState}, readyState=${target.readyState}, error=${target.error?.code}`);
+            const target = e.target as HTMLVideoElement
+            console.error(`[ResizableVideo] Ошибка загрузки видео ${video.id}:`, e)
+            console.error(
+              `[ResizableVideo] Детали ошибки для ${video.id}: networkState=${target.networkState}, readyState=${target.readyState}, error=${target.error?.code}`,
+            )
           }}
         />
       </div>
@@ -301,16 +329,16 @@ export function ResizableVideo({ video, isActive, videoRefs, index = 0, hideLabe
       {/* Подпись с названием камеры (поверх видео) - не отображаем если hideLabel=true */}
       {!hideLabel && (
         <div
-          className={`absolute px-1.5 py-0.5 rounded-sm bg-black bg-opacity-50 text-white text-xs font-medium ${
-            labelPosition === 'center'
-              ? 'bottom-1 left-1/2 transform -translate-x-1/2 text-center'
-              : labelPosition === 'left'
-                ? 'top-1/2 left-[2%] transform -translate-y-1/2'
-                : 'top-1/2 right-[2%] transform -translate-y-1/2'
+          className={`bg-opacity-50 absolute rounded-sm bg-black px-1.5 py-0.5 text-xs font-medium text-white ${
+            labelPosition === "center"
+              ? "bottom-1 left-1/2 -translate-x-1/2 transform text-center"
+              : labelPosition === "left"
+                ? "top-1/2 left-[2%] -translate-y-1/2 transform"
+                : "top-1/2 right-[2%] -translate-y-1/2 transform"
           }`}
           style={{ zIndex: 10 }}
         >
-          {t('timeline.player.camera', 'Камера')} {index + 1}
+          {t("timeline.player.camera", "Камера")} {index + 1}
         </div>
       )}
     </div>

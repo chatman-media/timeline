@@ -189,7 +189,7 @@ export function TemplateList() {
     })
 
     // Проверяем, что у всех видео есть путь
-    const validVideos = allTimelineVideos.filter(video => {
+    const validVideos = allTimelineVideos.filter((video) => {
       if (!video.path) {
         console.error(`Видео ${video.id} не имеет пути:`, video)
         return false
@@ -216,7 +216,9 @@ export function TemplateList() {
       // Подробное логирование видео для отладки
       console.log("Детали видео для шаблона:")
       availableVideos.forEach((v, i) => {
-        console.log(`Видео ${i+1}/${availableVideos.length}: id=${v.id}, path=${v.path}, name=${v.name}`)
+        console.log(
+          `Видео ${i + 1}/${availableVideos.length}: id=${v.id}, path=${v.path}, name=${v.name}`,
+        )
       })
 
       // Создаем объект AppliedTemplate
@@ -229,9 +231,7 @@ export function TemplateList() {
       setAppliedTemplate(appliedTemplate)
     } else if (parallelVideos.length > 0) {
       // Если на таймлайне нет видео, но есть параллельные видео, используем их (для обратной совместимости)
-      console.log(
-        `На таймлайне нет видео, используем ${parallelVideos.length} параллельных видео`,
-      )
+      console.log(`На таймлайне нет видео, используем ${parallelVideos.length} параллельных видео`)
 
       const screensCount = template.screens || 1
       const availableVideos = parallelVideos.slice(0, screensCount)

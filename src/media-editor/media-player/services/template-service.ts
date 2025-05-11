@@ -1,4 +1,7 @@
-import { CellConfig, MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
+import {
+  CellConfig,
+  MediaTemplate,
+} from "@/media-editor/browser/components/tabs/templates/templates"
 import { MediaFile } from "@/types/media"
 
 // Интерфейс для хранения информации о применяемом шаблоне
@@ -91,7 +94,10 @@ export function getVideoStyleForTemplate(
     }
 
     // Логируем стили для отладки
-    console.log(`[TemplateService] Стили для вертикального разделения (индекс ${videoIndex}):`, result)
+    console.log(
+      `[TemplateService] Стили для вертикального разделения (индекс ${videoIndex}):`,
+      result,
+    )
 
     return result
   } else if (template.split === "horizontal") {
@@ -107,7 +113,10 @@ export function getVideoStyleForTemplate(
     }
 
     // Логируем стили для отладки
-    console.log(`[TemplateService] Стили для горизонтального разделения (индекс ${videoIndex}):`, result)
+    console.log(
+      `[TemplateService] Стили для горизонтального разделения (индекс ${videoIndex}):`,
+      result,
+    )
 
     return result
   } else if (template.split === "diagonal") {
@@ -179,11 +188,15 @@ export function getVideoStyleForTemplate(
           zIndex: 3,
         }
       }
-
     }
   } else if (template.split === "custom") {
     // Для шаблона "1 left + 3 right" (1 большое слева, 3 маленьких справа)
-    if (template.screens === 4 && template.id && template.id.includes("split-1-3-landscape") && !template.id.includes("bottom")) {
+    if (
+      template.screens === 4 &&
+      template.id &&
+      template.id.includes("split-1-3-landscape") &&
+      !template.id.includes("bottom")
+    ) {
       if (videoIndex === 0) {
         // Большое видео слева
         const result = {
@@ -196,7 +209,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "1 left + 3 right" (большое видео слева, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "1 left + 3 right" (большое видео слева, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else {
@@ -214,13 +230,20 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "1 left + 3 right" (маленькое видео справа, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "1 left + 3 right" (маленькое видео справа, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       }
     }
     // Для шаблона "3 left + 1 right" (3 маленьких слева, 1 большое справа)
-    else if (template.screens === 4 && template.id && template.id.includes("split-3-1-right-landscape")) {
+    else if (
+      template.screens === 4 &&
+      template.id &&
+      template.id.includes("split-3-1-right-landscape")
+    ) {
       if (videoIndex === 3) {
         // Большое видео справа
         const result = {
@@ -233,7 +256,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "3 left + 1 right" (большое видео справа, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "3 left + 1 right" (большое видео справа, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else {
@@ -250,13 +276,20 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "3 left + 1 right" (маленькое видео слева, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "3 left + 1 right" (маленькое видео слева, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       }
     }
     // Для шаблона "Mixed Split (2+1)" (1 сверху, 2 снизу)
-    else if (template.screens === 3 && template.id && template.id.includes("split-mixed-1-landscape")) {
+    else if (
+      template.screens === 3 &&
+      template.id &&
+      template.id.includes("split-mixed-1-landscape")
+    ) {
       if (videoIndex === 0) {
         // Верхнее видео (на всю ширину)
         const result = {
@@ -269,7 +302,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "Mixed Split (2+1)" (верхнее видео, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "Mixed Split (2+1)" (верхнее видео, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else {
@@ -287,13 +323,20 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "Mixed Split (2+1)" (нижнее видео, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "Mixed Split (2+1)" (нижнее видео, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       }
     }
     // Для шаблона "Mixed Split (1+2)" (1 слева, 2 справа)
-    else if (template.screens === 3 && template.id && template.id.includes("split-mixed-2-landscape")) {
+    else if (
+      template.screens === 3 &&
+      template.id &&
+      template.id.includes("split-mixed-2-landscape")
+    ) {
       if (videoIndex === 0) {
         // Левое видео (на всю высоту)
         const result = {
@@ -306,7 +349,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "Mixed Split (1+2)" (левое видео, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "Mixed Split (1+2)" (левое видео, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else {
@@ -324,13 +370,20 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "Mixed Split (1+2)" (правое видео, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "Mixed Split (1+2)" (правое видео, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       }
     }
     // Для шаблона "5 screens: 1 left + 4 right" (сложное разделение справа, 1 большое слева)
-    else if (template.screens === 5 && template.id && template.id.includes("split-custom-5-1-landscape")) {
+    else if (
+      template.screens === 5 &&
+      template.id &&
+      template.id.includes("split-custom-5-1-landscape")
+    ) {
       if (videoIndex === 0) {
         // Большое видео слева
         const result = {
@@ -343,7 +396,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (большое видео слева, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (большое видео слева, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else if (videoIndex === 1) {
@@ -358,7 +414,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (большое видео в верхней правой части, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (большое видео в верхней правой части, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else if (videoIndex === 2 || videoIndex === 3) {
@@ -375,7 +434,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (маленькое видео в верхней части нижней правой половины, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (маленькое видео в верхней части нижней правой половины, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else if (videoIndex === 4) {
@@ -390,13 +452,20 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (видео в нижней части нижней правой половины, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 left + 4 right" (видео в нижней части нижней правой половины, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       }
     }
     // Для шаблона "5 screens: 1 right + 4 left" (сложное разделение слева, 1 большое справа)
-    else if (template.screens === 5 && template.id && template.id.includes("split-custom-5-2-landscape")) {
+    else if (
+      template.screens === 5 &&
+      template.id &&
+      template.id.includes("split-custom-5-2-landscape")
+    ) {
       if (videoIndex === 4) {
         // Большое видео справа
         const result = {
@@ -409,7 +478,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (большое видео справа, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (большое видео справа, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else if (videoIndex === 0) {
@@ -424,7 +496,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (большое видео в верхней левой части, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (большое видео в верхней левой части, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else if (videoIndex === 1 || videoIndex === 2) {
@@ -441,7 +516,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (маленькое видео в верхней части нижней левой половины, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (маленькое видео в верхней части нижней левой половины, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else if (videoIndex === 3) {
@@ -456,13 +534,20 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (видео в нижней части нижней левой половины, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 right + 4 left" (видео в нижней части нижней левой половины, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       }
     }
     // Для шаблона "5 screens: 1 top + 4 bottom" (2 сверху, 1 посередине, 2 снизу)
-    else if (template.screens === 5 && template.id && template.id.includes("split-custom-5-3-landscape")) {
+    else if (
+      template.screens === 5 &&
+      template.id &&
+      template.id.includes("split-custom-5-3-landscape")
+    ) {
       if (videoIndex === 0 || videoIndex === 1) {
         // Верхние видео (2 в ряд)
         const col = videoIndex % 2
@@ -477,7 +562,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 top + 4 bottom" (верхнее видео, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 top + 4 bottom" (верхнее видео, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else if (videoIndex === 2) {
@@ -492,7 +580,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 top + 4 bottom" (среднее видео, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 top + 4 bottom" (среднее видео, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else {
@@ -509,13 +600,20 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "5 screens: 1 top + 4 bottom" (нижнее видео, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "5 screens: 1 top + 4 bottom" (нижнее видео, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       }
     }
     // Для шаблона "3 top + 1 bottom" (3 маленьких сверху, 1 большое снизу)
-    else if (template.screens === 4 && template.id && template.id.includes("split-3-1-bottom-landscape")) {
+    else if (
+      template.screens === 4 &&
+      template.id &&
+      template.id.includes("split-3-1-bottom-landscape")
+    ) {
       if (videoIndex === 3) {
         // Большое видео снизу
         const result = {
@@ -528,7 +626,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "3 top + 1 bottom" (большое видео снизу, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "3 top + 1 bottom" (большое видео снизу, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else {
@@ -545,13 +646,20 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "3 top + 1 bottom" (маленькое видео сверху, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "3 top + 1 bottom" (маленькое видео сверху, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       }
     }
     // Для шаблона "1 top + 3 bottom" (1 большое сверху, 3 маленьких снизу)
-    else if (template.screens === 4 && template.id && template.id.includes("split-1-3-bottom-landscape")) {
+    else if (
+      template.screens === 4 &&
+      template.id &&
+      template.id.includes("split-1-3-bottom-landscape")
+    ) {
       if (videoIndex === 0) {
         // Большое видео сверху
         const result = {
@@ -564,7 +672,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "1 top + 3 bottom" (большое видео сверху, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "1 top + 3 bottom" (большое видео сверху, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       } else {
@@ -582,7 +693,10 @@ export function getVideoStyleForTemplate(
         }
 
         // Логируем стили для отладки
-        console.log(`[TemplateService] Стили для шаблона "1 top + 3 bottom" (маленькое видео снизу, индекс ${videoIndex}):`, result)
+        console.log(
+          `[TemplateService] Стили для шаблона "1 top + 3 bottom" (маленькое видео снизу, индекс ${videoIndex}):`,
+          result,
+        )
 
         return result
       }
@@ -601,7 +715,10 @@ export function getVideoStyleForTemplate(
       }
     }
     // Для сетки с 8 экранами (общий случай)
-    else if (template.screens === 8 && (!template.id || (!template.id.includes("4x2") && !template.id.includes("2x4")))) {
+    else if (
+      template.screens === 8 &&
+      (!template.id || (!template.id.includes("4x2") && !template.id.includes("2x4")))
+    ) {
       const row = Math.floor(videoIndex / 4)
       const col = videoIndex % 4
       const result = {
@@ -614,7 +731,10 @@ export function getVideoStyleForTemplate(
       }
 
       // Логируем стили для отладки
-      console.log(`[TemplateService] Стили для сетки с 8 экранами (общий случай, индекс ${videoIndex}):`, result)
+      console.log(
+        `[TemplateService] Стили для сетки с 8 экранами (общий случай, индекс ${videoIndex}):`,
+        result,
+      )
 
       return result
     }
@@ -655,7 +775,12 @@ export function getVideoStyleForTemplate(
       return result
     }
     // Для сетки 3x2 (6 экранов) - ландшафтный формат
-    else if (template.screens === 6 && template.id && template.id.includes("3x2") && template.id.includes("landscape")) {
+    else if (
+      template.screens === 6 &&
+      template.id &&
+      template.id.includes("3x2") &&
+      template.id.includes("landscape")
+    ) {
       const row = Math.floor(videoIndex / 3)
       const col = videoIndex % 3
       const result = {
@@ -673,7 +798,12 @@ export function getVideoStyleForTemplate(
       return result
     }
     // Для сетки 2x3 (6 экранов) - портретный формат
-    else if (template.screens === 6 && template.id && template.id.includes("2x3") && template.id.includes("portrait")) {
+    else if (
+      template.screens === 6 &&
+      template.id &&
+      template.id.includes("2x3") &&
+      template.id.includes("portrait")
+    ) {
       const row = Math.floor(videoIndex / 2)
       const col = videoIndex % 2
       const result = {

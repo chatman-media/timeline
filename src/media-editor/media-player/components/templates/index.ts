@@ -1,17 +1,11 @@
 // Экспорт всех шаблонов
-import * as landscapeTemplates from './landscape'
-import * as portraitTemplates from './portrait'
+import * as customTemplates from "./custom"
+import * as gridTemplates from "./grid"
+import * as landscapeTemplates from "./landscape"
+import * as portraitTemplates from "./portrait"
 import * as squareTemplates from "./square"
-import * as gridTemplates from './grid'
-import * as customTemplates from './custom'
 
-export {
-  landscapeTemplates,
-  portraitTemplates,
-  squareTemplates,
-  gridTemplates,
-  customTemplates,
-};
+export { customTemplates,gridTemplates, landscapeTemplates, portraitTemplates, squareTemplates }
 
 // Экспорт типов
-export * from './types';
+export * from "./types"

@@ -24,10 +24,7 @@ interface VoiceRecordDialogProps {
   onClose: () => void
 }
 
-export function VoiceRecordDialog({
-  isOpen,
-  onClose,
-}: VoiceRecordDialogProps) {
+export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
   const { t } = useTranslation()
   const [audioDevices, setAudioDevices] = useState<CaptureDevice[]>([])
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("")
@@ -73,7 +70,8 @@ export function VoiceRecordDialog({
       setPermissionStatus("error")
       setErrorMessage(
         t("dialogs.voiceRecord.permissionError", {
-          defaultValue: "Не удалось получить доступ к микрофону. Пожалуйста, проверьте настройки разрешений в браузере.",
+          defaultValue:
+            "Не удалось получить доступ к микрофону. Пожалуйста, проверьте настройки разрешений в браузере.",
         }),
       )
     }
@@ -159,7 +157,8 @@ export function VoiceRecordDialog({
       console.error("Ошибка при инициализации микрофона:", error)
       setErrorMessage(
         t("dialogs.voiceRecord.initError", {
-          defaultValue: "Не удалось инициализировать микрофон. Пожалуйста, проверьте настройки и разрешения.",
+          defaultValue:
+            "Не удалось инициализировать микрофон. Пожалуйста, проверьте настройки и разрешения.",
         }),
       )
       setIsDeviceReady(false)
@@ -190,33 +189,36 @@ export function VoiceRecordDialog({
   }, [isDeviceReady, countdown])
 
   // Функция для отправки аудиозаписи на сервер
-  const saveAudioToServer = useCallback(async (blob: Blob, fileName: string) => {
-    try {
-      // Создаем объект FormData для отправки файла
-      const formData = new FormData()
-      formData.append("file", blob, fileName)
-      formData.append("fileName", fileName)
+  const saveAudioToServer = useCallback(
+    async (blob: Blob, fileName: string) => {
+      try {
+        // Создаем объект FormData для отправки файла
+        const formData = new FormData()
+        formData.append("file", blob, fileName)
+        formData.append("fileName", fileName)
 
-      // Отправляем запрос на сервер
-      const response = await fetch("/api/save-audio-recording", {
-        method: "POST",
-        body: formData,
-      })
+        // Отправляем запрос на сервер
+        const response = await fetch("/api/save-audio-recording", {
+          method: "POST",
+          body: formData,
+        })
 
-      if (!response.ok) {
-        throw new Error(`Server responded with ${response.status}: ${response.statusText}`)
+        if (!response.ok) {
+          throw new Error(`Server responded with ${response.status}: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        console.log("Аудиозапись успешно сохранена:", data)
+
+        // Закрываем диалог после успешного сохранения
+        onClose()
+      } catch (error) {
+        console.error("Ошибка при сохранении аудиозаписи:", error)
+        // Здесь можно добавить отображение ошибки пользователю
       }
-
-      const data = await response.json()
-      console.log("Аудиозапись успешно сохранена:", data)
-
-      // Закрываем диалог после успешного сохранения
-      onClose()
-    } catch (error) {
-      console.error("Ошибка при сохранении аудиозаписи:", error)
-      // Здесь можно добавить отображение ошибки пользователю
-    }
-  }, [onClose])
+    },
+    [onClose],
+  )
 
   // Запускаем запись
   const startRecording = useCallback(() => {
@@ -338,7 +340,9 @@ export function VoiceRecordDialog({
           {/* Отображаем ошибки и статус разрешений */}
           {permissionStatus === "pending" && (
             <div className="mb-4 text-center text-sm">
-              {t("dialogs.voiceRecord.requestingPermissions", { defaultValue: "Запрашиваем разрешения..." })}
+              {t("dialogs.voiceRecord.requestingPermissions", {
+                defaultValue: "Запрашиваем разрешения...",
+              })}
             </div>
           )}
 
@@ -404,7 +408,9 @@ export function VoiceRecordDialog({
                     size="icon"
                     className="h-10 w-10 border-[#444] bg-[#222] hover:bg-[#333]"
                     onClick={getDevices}
-                    title={t("dialogs.voiceRecord.refreshDevices", { defaultValue: "Обновить устройства" })}
+                    title={t("dialogs.voiceRecord.refreshDevices", {
+                      defaultValue: "Обновить устройства",
+                    })}
                   >
                     <RefreshCw size={16} />
                   </Button>
@@ -466,8 +472,12 @@ export function VoiceRecordDialog({
                       className="mb-0 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-red-600 shadow-lg hover:bg-red-700"
                       onClick={startCountdown}
                       disabled={!isDeviceReady}
-                      title={t("dialogs.voiceRecord.startRecording", { defaultValue: "Начать запись" })}
-                      aria-label={t("dialogs.voiceRecord.startRecording", { defaultValue: "Начать запись" })}
+                      title={t("dialogs.voiceRecord.startRecording", {
+                        defaultValue: "Начать запись",
+                      })}
+                      aria-label={t("dialogs.voiceRecord.startRecording", {
+                        defaultValue: "Начать запись",
+                      })}
                     >
                       <div className="h-5 w-5 animate-pulse rounded-full bg-white" />
                     </Button>
@@ -475,8 +485,12 @@ export function VoiceRecordDialog({
                     <Button
                       className="mb-0 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-red-600 shadow-lg hover:bg-red-700"
                       onClick={stopRecording}
-                      title={t("dialogs.voiceRecord.stopRecording", { defaultValue: "Остановить запись" })}
-                      aria-label={t("dialogs.voiceRecord.stopRecording", { defaultValue: "Остановить запись" })}
+                      title={t("dialogs.voiceRecord.stopRecording", {
+                        defaultValue: "Остановить запись",
+                      })}
+                      aria-label={t("dialogs.voiceRecord.stopRecording", {
+                        defaultValue: "Остановить запись",
+                      })}
                     >
                       <div className="h-5 w-5 rounded bg-white" />
                     </Button>

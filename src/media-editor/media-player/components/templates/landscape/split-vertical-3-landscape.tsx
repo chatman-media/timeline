@@ -1,20 +1,27 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Шаблон "3 экрана по вертикали" - ландшафтный формат
  * ID: split-vertical-3-landscape
  */
-export function SplitVertical3Landscape({ videos, activeVideoId, videoRefs, isResizable = true }: TemplateProps) {
+export function SplitVertical3Landscape({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+}: TemplateProps) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 3);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 3)
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 3) {
-    return <div className="h-full w-full bg-black" />;
+    return <div className="h-full w-full bg-black" />
   }
 
   // Рендеринг в режиме без возможности изменения размеров
@@ -22,7 +29,7 @@ export function SplitVertical3Landscape({ videos, activeVideoId, videoRefs, isRe
     return (
       <div className="flex h-full w-full" style={{ border: "1px solid #35d1c1" }}>
         {/* Первое видео */}
-        <div className="w-1/3 h-full">
+        <div className="h-full w-1/3">
           <VideoPanel
             video={validVideos[0]}
             isActive={validVideos[0]?.id === activeVideoId}
@@ -30,12 +37,12 @@ export function SplitVertical3Landscape({ videos, activeVideoId, videoRefs, isRe
             index={0}
           />
         </div>
-        
+
         {/* Разделительная линия */}
-        <div className="w-[1px] h-full bg-[#35d1c1]" />
-        
+        <div className="h-full w-[1px] bg-[#35d1c1]" />
+
         {/* Второе видео */}
-        <div className="w-1/3 h-full">
+        <div className="h-full w-1/3">
           <VideoPanel
             video={validVideos[1]}
             isActive={validVideos[1]?.id === activeVideoId}
@@ -43,12 +50,12 @@ export function SplitVertical3Landscape({ videos, activeVideoId, videoRefs, isRe
             index={1}
           />
         </div>
-        
+
         {/* Разделительная линия */}
-        <div className="w-[1px] h-full bg-[#35d1c1]" />
-        
+        <div className="h-full w-[1px] bg-[#35d1c1]" />
+
         {/* Третье видео */}
-        <div className="w-1/3 h-full">
+        <div className="h-full w-1/3">
           <VideoPanel
             video={validVideos[2]}
             isActive={validVideos[2]?.id === activeVideoId}
@@ -57,7 +64,7 @@ export function SplitVertical3Landscape({ videos, activeVideoId, videoRefs, isRe
           />
         </div>
       </div>
-    );
+    )
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
@@ -95,5 +102,5 @@ export function SplitVertical3Landscape({ videos, activeVideoId, videoRefs, isRe
         </Panel>
       </PanelGroup>
     </div>
-  );
+  )
 }

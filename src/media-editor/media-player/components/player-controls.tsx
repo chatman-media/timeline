@@ -848,7 +848,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 className={`h-6 w-6 cursor-pointer ${isResizableMode ? "bg-gray-700" : ""}`}
                 variant="ghost"
                 size="icon"
-                title={isResizableMode ? t("timeline.controls.fixedSizeMode") : t("timeline.controls.resizableMode")}
+                title={
+                  isResizableMode
+                    ? t("timeline.controls.fixedSizeMode")
+                    : t("timeline.controls.resizableMode")
+                }
                 onClick={() => setIsResizableMode(!isResizableMode)}
               >
                 <svg

@@ -1,29 +1,36 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Шаблон "Сетка 3x3" (9 экранов)
  */
-export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = true }: TemplateProps) {
+export function SplitGrid3x3({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+}: TemplateProps) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 9);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 9)
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 9) {
-    return <div className="h-full w-full bg-black" />;
+    return <div className="h-full w-full bg-black" />
   }
 
   // Рендеринг в режиме без возможности изменения размеров
   if (!isResizable) {
     return (
-      <div className="flex flex-col h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+      <div className="flex h-full w-full flex-col" style={{ border: "1px solid #35d1c1" }}>
         {/* Верхний ряд */}
-        <div className="h-1/3 w-full flex">
+        <div className="flex h-1/3 w-full">
           {/* Верхний левый экран */}
-          <div className="w-1/3 h-full">
+          <div className="h-full w-1/3">
             <VideoPanel
               video={validVideos[0]}
               isActive={validVideos[0]?.id === activeVideoId}
@@ -31,12 +38,12 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
               index={0}
             />
           </div>
-          
+
           {/* Вертикальная разделительная линия */}
-          <div className="w-[1px] h-full bg-[#35d1c1]" />
-          
+          <div className="h-full w-[1px] bg-[#35d1c1]" />
+
           {/* Верхний средний экран */}
-          <div className="w-1/3 h-full">
+          <div className="h-full w-1/3">
             <VideoPanel
               video={validVideos[1]}
               isActive={validVideos[1]?.id === activeVideoId}
@@ -44,12 +51,12 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
               index={1}
             />
           </div>
-          
+
           {/* Вертикальная разделительная линия */}
-          <div className="w-[1px] h-full bg-[#35d1c1]" />
-          
+          <div className="h-full w-[1px] bg-[#35d1c1]" />
+
           {/* Верхний правый экран */}
-          <div className="w-1/3 h-full">
+          <div className="h-full w-1/3">
             <VideoPanel
               video={validVideos[2]}
               isActive={validVideos[2]?.id === activeVideoId}
@@ -58,14 +65,14 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
             />
           </div>
         </div>
-        
+
         {/* Горизонтальная разделительная линия */}
         <div className="h-[1px] w-full bg-[#35d1c1]" />
-        
+
         {/* Средний ряд */}
-        <div className="h-1/3 w-full flex">
+        <div className="flex h-1/3 w-full">
           {/* Средний левый экран */}
-          <div className="w-1/3 h-full">
+          <div className="h-full w-1/3">
             <VideoPanel
               video={validVideos[3]}
               isActive={validVideos[3]?.id === activeVideoId}
@@ -73,12 +80,12 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
               index={3}
             />
           </div>
-          
+
           {/* Вертикальная разделительная линия */}
-          <div className="w-[1px] h-full bg-[#35d1c1]" />
-          
+          <div className="h-full w-[1px] bg-[#35d1c1]" />
+
           {/* Средний средний экран */}
-          <div className="w-1/3 h-full">
+          <div className="h-full w-1/3">
             <VideoPanel
               video={validVideos[4]}
               isActive={validVideos[4]?.id === activeVideoId}
@@ -86,12 +93,12 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
               index={4}
             />
           </div>
-          
+
           {/* Вертикальная разделительная линия */}
-          <div className="w-[1px] h-full bg-[#35d1c1]" />
-          
+          <div className="h-full w-[1px] bg-[#35d1c1]" />
+
           {/* Средний правый экран */}
-          <div className="w-1/3 h-full">
+          <div className="h-full w-1/3">
             <VideoPanel
               video={validVideos[5]}
               isActive={validVideos[5]?.id === activeVideoId}
@@ -100,14 +107,14 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
             />
           </div>
         </div>
-        
+
         {/* Горизонтальная разделительная линия */}
         <div className="h-[1px] w-full bg-[#35d1c1]" />
-        
+
         {/* Нижний ряд */}
-        <div className="h-1/3 w-full flex">
+        <div className="flex h-1/3 w-full">
           {/* Нижний левый экран */}
-          <div className="w-1/3 h-full">
+          <div className="h-full w-1/3">
             <VideoPanel
               video={validVideos[6]}
               isActive={validVideos[6]?.id === activeVideoId}
@@ -115,12 +122,12 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
               index={6}
             />
           </div>
-          
+
           {/* Вертикальная разделительная линия */}
-          <div className="w-[1px] h-full bg-[#35d1c1]" />
-          
+          <div className="h-full w-[1px] bg-[#35d1c1]" />
+
           {/* Нижний средний экран */}
-          <div className="w-1/3 h-full">
+          <div className="h-full w-1/3">
             <VideoPanel
               video={validVideos[7]}
               isActive={validVideos[7]?.id === activeVideoId}
@@ -128,12 +135,12 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
               index={7}
             />
           </div>
-          
+
           {/* Вертикальная разделительная линия */}
-          <div className="w-[1px] h-full bg-[#35d1c1]" />
-          
+          <div className="h-full w-[1px] bg-[#35d1c1]" />
+
           {/* Нижний правый экран */}
-          <div className="w-1/3 h-full">
+          <div className="h-full w-1/3">
             <VideoPanel
               video={validVideos[8]}
               isActive={validVideos[8]?.id === activeVideoId}
@@ -143,7 +150,7 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
@@ -256,5 +263,5 @@ export function SplitGrid3x3({ videos, activeVideoId, videoRefs, isResizable = t
         </Panel>
       </PanelGroup>
     </div>
-  );
+  )
 }

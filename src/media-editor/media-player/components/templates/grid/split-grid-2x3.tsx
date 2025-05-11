@@ -1,19 +1,26 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Шаблон "Сетка 2x3" (6 экранов)
  */
-export function SplitGrid2x3({ videos, activeVideoId, videoRefs, isResizable = true }: TemplateProps) {
+export function SplitGrid2x3({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+}: TemplateProps) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 6);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 6)
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 6) {
-    return <div className="h-full w-full bg-black" />;
+    return <div className="h-full w-full bg-black" />
   }
 
   // Рендеринг в режиме без возможности изменения размеров
@@ -23,15 +30,15 @@ export function SplitGrid2x3({ videos, activeVideoId, videoRefs, isResizable = t
         {/* Рендерим видео */}
         {validVideos.slice(0, videoCount).map((video, index) => {
           // Вычисляем позицию и размер для каждого видео
-          const row = Math.floor(index / 2);
-          const col = index % 2;
-          
+          const row = Math.floor(index / 2)
+          const col = index % 2
+
           const style = {
             top: `${row * 33.33}%`,
             left: `${col * 50}%`,
-            width: '50%',
-            height: '33.33%',
-          };
+            width: "50%",
+            height: "33.33%",
+          }
 
           return (
             <div
@@ -52,7 +59,7 @@ export function SplitGrid2x3({ videos, activeVideoId, videoRefs, isResizable = t
                 index={index}
               />
             </div>
-          );
+          )
         })}
 
         {/* Добавляем разделительные линии */}
@@ -83,7 +90,7 @@ export function SplitGrid2x3({ videos, activeVideoId, videoRefs, isResizable = t
           }}
         />
       </div>
-    );
+    )
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
@@ -166,5 +173,5 @@ export function SplitGrid2x3({ videos, activeVideoId, videoRefs, isResizable = t
         </Panel>
       </PanelGroup>
     </div>
-  );
+  )
 }

@@ -344,7 +344,7 @@ export const userSettingsMachine = createMachine(
             return event.tab
           }
           return DEFAULT_TAB
-        }
+        },
       }),
       savePreviewSizeToStorage: (_, event: any) => {
         if (event.type === "UPDATE_PREVIEW_SIZE") {
@@ -404,7 +404,10 @@ export const userSettingsMachine = createMachine(
                 // Дополнительно сохраняем язык напрямую в localStorage
                 if (typeof window !== "undefined") {
                   localStorage.setItem("app-language", event.language)
-                  console.log("Directly saved language to localStorage from machine:", event.language)
+                  console.log(
+                    "Directly saved language to localStorage from machine:",
+                    event.language,
+                  )
                 }
               })
             } catch (error) {
@@ -414,7 +417,7 @@ export const userSettingsMachine = createMachine(
             return event.language
           }
           return DEFAULT_LANGUAGE
-        }
+        },
       }),
       saveLanguageToStorage: (_, event: any) => {
         if (event.type === "UPDATE_LANGUAGE") {
@@ -467,7 +470,7 @@ export const userSettingsMachine = createMachine(
             return event.layoutMode
           }
           return DEFAULT_LAYOUT
-        }
+        },
       }),
       saveLayoutToStorage: (_, event: any) => {
         if (event.type === "UPDATE_LAYOUT") {

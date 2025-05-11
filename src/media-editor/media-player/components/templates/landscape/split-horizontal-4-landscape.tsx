@@ -1,26 +1,33 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Шаблон "4 экрана по горизонтали" - ландшафтный формат
  * ID: split-horizontal-4-landscape
  */
-export function SplitHorizontal4Landscape({ videos, activeVideoId, videoRefs, isResizable = true }: TemplateProps) {
+export function SplitHorizontal4Landscape({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+}: TemplateProps) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 4);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 4)
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 4) {
-    return <div className="h-full w-full bg-black" />;
+    return <div className="h-full w-full bg-black" />
   }
 
   // Рендеринг в режиме без возможности изменения размеров
   if (!isResizable) {
     return (
-      <div className="flex flex-col h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+      <div className="flex h-full w-full flex-col" style={{ border: "1px solid #35d1c1" }}>
         {/* Первое видео */}
         <div className="h-1/4 w-full">
           <VideoPanel
@@ -30,10 +37,10 @@ export function SplitHorizontal4Landscape({ videos, activeVideoId, videoRefs, is
             index={0}
           />
         </div>
-        
+
         {/* Разделительная линия */}
         <div className="h-[1px] w-full bg-[#35d1c1]" />
-        
+
         {/* Второе видео */}
         <div className="h-1/4 w-full">
           <VideoPanel
@@ -43,10 +50,10 @@ export function SplitHorizontal4Landscape({ videos, activeVideoId, videoRefs, is
             index={1}
           />
         </div>
-        
+
         {/* Разделительная линия */}
         <div className="h-[1px] w-full bg-[#35d1c1]" />
-        
+
         {/* Третье видео */}
         <div className="h-1/4 w-full">
           <VideoPanel
@@ -56,10 +63,10 @@ export function SplitHorizontal4Landscape({ videos, activeVideoId, videoRefs, is
             index={2}
           />
         </div>
-        
+
         {/* Разделительная линия */}
         <div className="h-[1px] w-full bg-[#35d1c1]" />
-        
+
         {/* Четвертое видео */}
         <div className="h-1/4 w-full">
           <VideoPanel
@@ -70,7 +77,7 @@ export function SplitHorizontal4Landscape({ videos, activeVideoId, videoRefs, is
           />
         </div>
       </div>
-    );
+    )
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
@@ -118,5 +125,5 @@ export function SplitHorizontal4Landscape({ videos, activeVideoId, videoRefs, is
         </Panel>
       </PanelGroup>
     </div>
-  );
+  )
 }

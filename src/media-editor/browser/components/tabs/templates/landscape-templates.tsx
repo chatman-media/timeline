@@ -383,9 +383,9 @@ export const landscapeTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-2 grid-rows-2">
           {Array.from({ length: 4 }).map((_, index) => {
-            const row = Math.floor(index / 2);
-            const col = index % 2;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 2)
+            const col = index % 2
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -401,7 +401,7 @@ export const landscapeTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -1284,9 +1284,9 @@ export const landscapeTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-3 grid-rows-2">
           {Array.from({ length: 6 }).map((_, index) => {
-            const row = Math.floor(index / 3);
-            const col = index % 3;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 3)
+            const col = index % 3
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -1302,7 +1302,7 @@ export const landscapeTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -1342,9 +1342,9 @@ export const landscapeTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-3 grid-rows-3">
           {Array.from({ length: 9 }).map((_, index) => {
-            const row = Math.floor(index / 3);
-            const col = index % 3;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 3)
+            const col = index % 3
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -1360,7 +1360,7 @@ export const landscapeTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -1531,7 +1531,7 @@ export const landscapeTemplates: MediaTemplate[] = [
 
         {/* Нижний пятый экран */}
         <div
-          className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#2a2e36",
             width: "20%",
@@ -1610,9 +1610,9 @@ export const landscapeTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-4 grid-rows-3">
           {Array.from({ length: 12 }).map((_, index) => {
-            const row = Math.floor(index / 4);
-            const col = index % 4;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 4)
+            const col = index % 4
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -1628,7 +1628,7 @@ export const landscapeTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -1671,9 +1671,9 @@ export const landscapeTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-3 grid-rows-4">
           {Array.from({ length: 12 }).map((_, index) => {
-            const row = Math.floor(index / 3);
-            const col = index % 3;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 3)
+            const col = index % 3
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -1689,7 +1689,7 @@ export const landscapeTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -1734,8 +1734,8 @@ export const landscapeTemplates: MediaTemplate[] = [
         {Array.from({ length: 5 }).map((_, rowIndex) => (
           <>
             {Array.from({ length: 5 }).map((_, colIndex) => {
-              const cellIndex = rowIndex * 5 + colIndex + 1;
-              const isEvenCell = (rowIndex + colIndex) % 2 === 0;
+              const cellIndex = rowIndex * 5 + colIndex + 1
+              const isEvenCell = (rowIndex + colIndex) % 2 === 0
               return (
                 <div
                   key={`cell-${rowIndex}-${colIndex}`}
@@ -1754,7 +1754,7 @@ export const landscapeTemplates: MediaTemplate[] = [
                 >
                   {cellIndex}
                 </div>
-              );
+              )
             })}
           </>
         ))}
@@ -1802,9 +1802,9 @@ export const landscapeTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-4 grid-rows-4">
           {Array.from({ length: 16 }).map((_, index) => {
-            const row = Math.floor(index / 4);
-            const col = index % 4;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 4)
+            const col = index % 4
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -1820,7 +1820,7 @@ export const landscapeTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 

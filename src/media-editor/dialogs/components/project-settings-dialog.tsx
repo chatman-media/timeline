@@ -1,6 +1,6 @@
+import { Lock, Unlock } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
-import { Lock, Unlock } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -79,7 +79,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
 
     // Если соотношение получается слишком сложным, возвращаем десятичную дробь с 2 знаками после запятой
     if (x > 30 || y > 30) {
-      return (width / height).toFixed(2).replace('.', ':')
+      return (width / height).toFixed(2).replace(".", ":")
     }
 
     return `${Math.round(x)}:${Math.round(y)}`
@@ -163,8 +163,6 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
       }, 50)
     }
   }
-
-
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -269,7 +267,8 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
 
                     // Если соотношение сторон заблокировано, обновляем высоту пропорционально
                     if (aspectRatioLocked && settings.aspectRatio.label !== "custom") {
-                      const aspectRatio = settings.aspectRatio.value.width / settings.aspectRatio.value.height
+                      const aspectRatio =
+                        settings.aspectRatio.value.width / settings.aspectRatio.value.height
                       const newHeight = Math.round(width / aspectRatio)
                       setCustomHeight(newHeight)
 
@@ -319,7 +318,8 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
 
                     // Если соотношение сторон заблокировано, обновляем ширину пропорционально
                     if (aspectRatioLocked && settings.aspectRatio.label !== "custom") {
-                      const aspectRatio = settings.aspectRatio.value.width / settings.aspectRatio.value.height
+                      const aspectRatio =
+                        settings.aspectRatio.value.width / settings.aspectRatio.value.height
                       const newWidth = Math.round(height * aspectRatio)
                       setCustomWidth(newWidth)
 
@@ -362,9 +362,13 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={`ml-2 h-7 w-7 cursor-pointer p-0 ${aspectRatioLocked ? 'text-[#00CCC0]' : 'text-gray-400 hover:text-gray-200'}`}
+                  className={`ml-2 h-7 w-7 cursor-pointer p-0 ${aspectRatioLocked ? "text-[#00CCC0]" : "text-gray-400 hover:text-gray-200"}`}
                   onClick={() => setAspectRatioLocked(!aspectRatioLocked)}
-                  title={aspectRatioLocked ? t("dialogs.projectSettings.unlockAspectRatio") : t("dialogs.projectSettings.lockAspectRatio")}
+                  title={
+                    aspectRatioLocked
+                      ? t("dialogs.projectSettings.unlockAspectRatio")
+                      : t("dialogs.projectSettings.lockAspectRatio")
+                  }
                 >
                   {aspectRatioLocked ? (
                     <Lock className="h-4 w-4" />
@@ -384,7 +388,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                     <Lock className="mr-1 h-3 w-3 text-[#00CCC0]" />
                     <span className="text-[#00CCC0]">
                       {t("dialogs.projectSettings.aspectRatioLocked", {
-                        ratio: settings.aspectRatio.label
+                        ratio: settings.aspectRatio.label,
                       })}
                     </span>
                   </>
@@ -392,14 +396,14 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                   <>
                     <Unlock className="mr-1 h-3 w-3" />
                     {t("dialogs.projectSettings.aspectRatioUnlocked", {
-                      ratio: settings.aspectRatio.label
+                      ratio: settings.aspectRatio.label,
                     })}
                   </>
                 )
               ) : (
                 <>
                   {t("dialogs.projectSettings.aspectRatioValue", {
-                    ratio: getAspectRatioString(customWidth, customHeight)
+                    ratio: getAspectRatioString(customWidth, customHeight),
                   })}
                 </>
               )}

@@ -1299,7 +1299,7 @@ export const portraitTemplates: MediaTemplate[] = [
 
         {/* Правый пятый экран */}
         <div
-          className="absolute bottom-0 right-0 flex items-center justify-center text-lg font-normal text-gray-400"
+          className="absolute right-0 bottom-0 flex items-center justify-center text-lg font-normal text-gray-400"
           style={{
             background: "#2a2e36",
             width: "50%",
@@ -1378,9 +1378,9 @@ export const portraitTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-3 grid-rows-4">
           {Array.from({ length: 12 }).map((_, index) => {
-            const row = Math.floor(index / 3);
-            const col = index % 3;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 3)
+            const col = index % 3
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -1396,7 +1396,7 @@ export const portraitTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -1439,9 +1439,9 @@ export const portraitTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-4 grid-rows-3">
           {Array.from({ length: 12 }).map((_, index) => {
-            const row = Math.floor(index / 4);
-            const col = index % 4;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 4)
+            const col = index % 4
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -1457,7 +1457,7 @@ export const portraitTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -1500,9 +1500,9 @@ export const portraitTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-2 grid-rows-4">
           {Array.from({ length: 8 }).map((_, index) => {
-            const row = Math.floor(index / 2);
-            const col = index % 2;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 2)
+            const col = index % 2
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -1518,7 +1518,7 @@ export const portraitTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -1963,9 +1963,9 @@ export const portraitTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-3 grid-rows-3">
           {Array.from({ length: 9 }).map((_, index) => {
-            const row = Math.floor(index / 3);
-            const col = index % 3;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 3)
+            const col = index % 3
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -1981,7 +1981,7 @@ export const portraitTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -2024,9 +2024,9 @@ export const portraitTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         <div className="grid h-full w-full grid-cols-4 grid-rows-4">
           {Array.from({ length: 16 }).map((_, index) => {
-            const row = Math.floor(index / 4);
-            const col = index % 4;
-            const isEven = (row + col) % 2 === 0;
+            const row = Math.floor(index / 4)
+            const col = index % 4
+            const isEven = (row + col) % 2 === 0
 
             return (
               <div
@@ -2042,7 +2042,7 @@ export const portraitTemplates: MediaTemplate[] = [
               >
                 {index + 1}
               </div>
-            );
+            )
           })}
         </div>
 
@@ -2075,8 +2075,6 @@ export const portraitTemplates: MediaTemplate[] = [
     ),
   },
 
-
-
   // Шаблон с 25 экранами (5x5) для портретного формата
   {
     id: "split-grid-5x5-portrait",
@@ -2089,8 +2087,8 @@ export const portraitTemplates: MediaTemplate[] = [
         {Array.from({ length: 5 }).map((_, rowIndex) => (
           <>
             {Array.from({ length: 5 }).map((_, colIndex) => {
-              const cellIndex = rowIndex * 5 + colIndex + 1;
-              const isEvenCell = (rowIndex + colIndex) % 2 === 0;
+              const cellIndex = rowIndex * 5 + colIndex + 1
+              const isEvenCell = (rowIndex + colIndex) % 2 === 0
               return (
                 <div
                   key={`cell-${rowIndex}-${colIndex}`}
@@ -2109,7 +2107,7 @@ export const portraitTemplates: MediaTemplate[] = [
                 >
                   {cellIndex}
                 </div>
-              );
+              )
             })}
           </>
         ))}

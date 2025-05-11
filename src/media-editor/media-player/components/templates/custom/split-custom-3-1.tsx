@@ -1,7 +1,9 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Универсальный шаблон "3+1" (4 экрана)
@@ -9,17 +11,23 @@ import { VideoPanel } from '@/media-editor/media-player/components/templates/com
  * - "3 сверху + 1 снизу" (split-3-1-landscape, split-3-1-square)
  * - "1 сверху + 3 снизу" (split-1-3-bottom-portrait, split-1-3-bottom-square)
  */
-export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = true, templateId }: TemplateProps & { templateId?: string }) {
+export function SplitCustom31({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+  templateId,
+}: TemplateProps & { templateId?: string }) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 4);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 4)
 
   // Определяем тип шаблона на основе ID
-  const isBottomLayout = templateId ? templateId.includes('1-3-bottom') : false;
+  const isBottomLayout = templateId ? templateId.includes("1-3-bottom") : false
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 4) {
-    return <div className="h-full w-full bg-black" />;
+    return <div className="h-full w-full bg-black" />
   }
 
   // Рендеринг в режиме без возможности изменения размеров
@@ -27,7 +35,7 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
     if (isBottomLayout) {
       // Шаблон "1 сверху + 3 снизу"
       return (
-        <div className="flex flex-col h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+        <div className="flex h-full w-full flex-col" style={{ border: "1px solid #35d1c1" }}>
           {/* Верхняя секция (большое видео) */}
           <div className="h-1/2 w-full">
             <VideoPanel
@@ -37,14 +45,14 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
               index={0}
             />
           </div>
-          
+
           {/* Горизонтальная разделительная линия */}
           <div className="h-[1px] w-full bg-[#35d1c1]" />
-          
+
           {/* Нижняя секция (3 маленьких видео) */}
-          <div className="h-1/2 w-full flex">
+          <div className="flex h-1/2 w-full">
             {/* Левое нижнее видео */}
-            <div className="w-1/3 h-full">
+            <div className="h-full w-1/3">
               <VideoPanel
                 video={validVideos[1]}
                 isActive={validVideos[1]?.id === activeVideoId}
@@ -52,12 +60,12 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
                 index={1}
               />
             </div>
-            
+
             {/* Вертикальная разделительная линия */}
-            <div className="w-[1px] h-full bg-[#35d1c1]" />
-            
+            <div className="h-full w-[1px] bg-[#35d1c1]" />
+
             {/* Среднее нижнее видео */}
-            <div className="w-1/3 h-full">
+            <div className="h-full w-1/3">
               <VideoPanel
                 video={validVideos[2]}
                 isActive={validVideos[2]?.id === activeVideoId}
@@ -65,12 +73,12 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
                 index={2}
               />
             </div>
-            
+
             {/* Вертикальная разделительная линия */}
-            <div className="w-[1px] h-full bg-[#35d1c1]" />
-            
+            <div className="h-full w-[1px] bg-[#35d1c1]" />
+
             {/* Правое нижнее видео */}
-            <div className="w-1/3 h-full">
+            <div className="h-full w-1/3">
               <VideoPanel
                 video={validVideos[3]}
                 isActive={validVideos[3]?.id === activeVideoId}
@@ -80,15 +88,15 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
             </div>
           </div>
         </div>
-      );
+      )
     } else {
       // Шаблон "3 сверху + 1 снизу"
       return (
-        <div className="flex flex-col h-full w-full" style={{ border: "1px solid #35d1c1" }}>
+        <div className="flex h-full w-full flex-col" style={{ border: "1px solid #35d1c1" }}>
           {/* Верхняя секция (3 маленьких видео) */}
-          <div className="h-1/2 w-full flex">
+          <div className="flex h-1/2 w-full">
             {/* Левое верхнее видео */}
-            <div className="w-1/3 h-full">
+            <div className="h-full w-1/3">
               <VideoPanel
                 video={validVideos[0]}
                 isActive={validVideos[0]?.id === activeVideoId}
@@ -96,12 +104,12 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
                 index={0}
               />
             </div>
-            
+
             {/* Вертикальная разделительная линия */}
-            <div className="w-[1px] h-full bg-[#35d1c1]" />
-            
+            <div className="h-full w-[1px] bg-[#35d1c1]" />
+
             {/* Среднее верхнее видео */}
-            <div className="w-1/3 h-full">
+            <div className="h-full w-1/3">
               <VideoPanel
                 video={validVideos[1]}
                 isActive={validVideos[1]?.id === activeVideoId}
@@ -109,12 +117,12 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
                 index={1}
               />
             </div>
-            
+
             {/* Вертикальная разделительная линия */}
-            <div className="w-[1px] h-full bg-[#35d1c1]" />
-            
+            <div className="h-full w-[1px] bg-[#35d1c1]" />
+
             {/* Правое верхнее видео */}
-            <div className="w-1/3 h-full">
+            <div className="h-full w-1/3">
               <VideoPanel
                 video={validVideos[2]}
                 isActive={validVideos[2]?.id === activeVideoId}
@@ -123,10 +131,10 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
               />
             </div>
           </div>
-          
+
           {/* Горизонтальная разделительная линия */}
           <div className="h-[1px] w-full bg-[#35d1c1]" />
-          
+
           {/* Нижняя секция (большое видео) */}
           <div className="h-1/2 w-full">
             <VideoPanel
@@ -137,7 +145,7 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
             />
           </div>
         </div>
-      );
+      )
     }
   }
 
@@ -193,7 +201,7 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
           </Panel>
         </PanelGroup>
       </div>
-    );
+    )
   } else {
     // Шаблон "3 сверху + 1 снизу"
     return (
@@ -245,6 +253,6 @@ export function SplitCustom31({ videos, activeVideoId, videoRefs, isResizable = 
           </Panel>
         </PanelGroup>
       </div>
-    );
+    )
   }
 }

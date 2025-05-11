@@ -1,20 +1,27 @@
-import React from 'react';
-import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
-import { TemplateProps } from '../types';
-import { VideoPanel } from '@/media-editor/media-player/components/templates/common';
+import React from "react"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+
+import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
+
+import { TemplateProps } from "../types"
 
 /**
  * Шаблон "Смешанное разделение (1 слева и 2 справа)" - ландшафтный формат
  * ID: split-mixed-2-landscape
  */
-export function SplitMixed2Landscape({ videos, activeVideoId, videoRefs, isResizable = true }: TemplateProps) {
+export function SplitMixed2Landscape({
+  videos,
+  activeVideoId,
+  videoRefs,
+  isResizable = true,
+}: TemplateProps) {
   // Проверяем, что у нас есть видео с путями
-  const validVideos = videos.filter(v => v && v.path);
-  const videoCount = Math.min(validVideos.length, 3);
+  const validVideos = videos.filter((v) => v && v.path)
+  const videoCount = Math.min(validVideos.length, 3)
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 3) {
-    return <div className="h-full w-full bg-black" />;
+    return <div className="h-full w-full bg-black" />
   }
 
   // Рендеринг в режиме без возможности изменения размеров
@@ -22,7 +29,7 @@ export function SplitMixed2Landscape({ videos, activeVideoId, videoRefs, isResiz
     return (
       <div className="flex h-full w-full" style={{ border: "1px solid #35d1c1" }}>
         {/* Левая секция */}
-        <div className="w-1/2 h-full">
+        <div className="h-full w-1/2">
           <VideoPanel
             video={validVideos[0]}
             isActive={validVideos[0]?.id === activeVideoId}
@@ -30,12 +37,12 @@ export function SplitMixed2Landscape({ videos, activeVideoId, videoRefs, isResiz
             index={0}
           />
         </div>
-        
+
         {/* Вертикальная разделительная линия */}
-        <div className="w-[1px] h-full bg-[#35d1c1]" />
-        
+        <div className="h-full w-[1px] bg-[#35d1c1]" />
+
         {/* Правая секция */}
-        <div className="w-1/2 h-full flex flex-col">
+        <div className="flex h-full w-1/2 flex-col">
           {/* Верхняя правая секция */}
           <div className="h-1/2 w-full">
             <VideoPanel
@@ -45,10 +52,10 @@ export function SplitMixed2Landscape({ videos, activeVideoId, videoRefs, isResiz
               index={1}
             />
           </div>
-          
+
           {/* Горизонтальная разделительная линия */}
           <div className="h-[1px] w-full bg-[#35d1c1]" />
-          
+
           {/* Нижняя правая секция */}
           <div className="h-1/2 w-full">
             <VideoPanel
@@ -60,7 +67,7 @@ export function SplitMixed2Landscape({ videos, activeVideoId, videoRefs, isResiz
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
@@ -103,5 +110,5 @@ export function SplitMixed2Landscape({ videos, activeVideoId, videoRefs, isResiz
         </Panel>
       </PanelGroup>
     </div>
-  );
+  )
 }
