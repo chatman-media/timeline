@@ -175,8 +175,8 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-custom-5-1-landscape",
     labels: {
-      ru: "5 экранов: 1 слева + 4 справа",
-      en: "5 screens: 1 left + 4 right",
+      ru: "1 слева + 4 справа",
+      en: "1 left + 4 right",
     },
     description: {
       ru: "Один большой экран слева, четыре экрана справа (2 сверху, 2 снизу)",
@@ -186,8 +186,8 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-custom-5-2-landscape",
     labels: {
-      ru: "5 экранов: 1 справа + 4 слева",
-      en: "5 screens: 1 right + 4 left",
+      ru: "4 слева + 1 справа",
+      en: "4 left + 1 right",
     },
     description: {
       ru: "Один большой экран справа, четыре экрана слева (2 сверху, 2 снизу)",
@@ -197,12 +197,12 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-custom-5-3-landscape",
     labels: {
-      ru: "5 экранов: 1 сверху + 4 снизу",
-      en: "5 screens: 1 top + 4 bottom",
+      ru: "2 + 1 широкий + 2",
+      en: "2 + 1 wide + 2",
     },
     description: {
-      ru: "Один большой экран сверху, четыре экрана снизу",
-      en: "One large screen on top, four screens below",
+      ru: "Два экрана сверху, один посередине, два экрана снизу",
+      en: "Two screens on top, one in the middle, two screens below",
     },
   },
 
