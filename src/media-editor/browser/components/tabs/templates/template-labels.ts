@@ -151,6 +151,17 @@ export const templateLabels: TemplateDescription[] = [
     },
   },
   {
+    id: "split-3-1-right-landscape",
+    labels: {
+      ru: "3 слева + 1 справа",
+      en: "3 left + 1 right",
+    },
+    description: {
+      ru: "Три экрана слева, один экран справа",
+      en: "Three screens on the left, one screen on the right",
+    },
+  },
+  {
     id: "split-1-3-bottom-landscape",
     labels: {
       ru: "1 сверху + 3 снизу",
@@ -1033,6 +1044,144 @@ export const templateLabels: TemplateDescription[] = [
     description: {
       ru: "Двадцать пять экранов в сетке 5×5",
       en: "Twenty-five screens in a 5×5 grid",
+    },
+  },
+
+  // Шаблоны с 7 экранами - Ландшафтный формат
+  {
+    id: "split-custom-7-1-landscape",
+    labels: {
+      ru: "7 экранов: большой справа внизу",
+      en: "7 screens: large bottom right",
+    },
+    description: {
+      ru: "Семь экранов: один большой справа внизу, шесть маленьких слева и сверху",
+      en: "Seven screens: one large at bottom right, six small on left and top",
+    },
+  },
+  {
+    id: "split-custom-7-2-landscape",
+    labels: {
+      ru: "7 экранов: большой слева внизу",
+      en: "7 screens: large bottom left",
+    },
+    description: {
+      ru: "Семь экранов: один большой слева внизу, шесть маленьких справа и сверху",
+      en: "Seven screens: one large at bottom left, six small on right and top",
+    },
+  },
+  {
+    id: "split-custom-7-3-landscape",
+    labels: {
+      ru: "7 экранов: большой слева вверху",
+      en: "7 screens: large top left",
+    },
+    description: {
+      ru: "Семь экранов: один большой слева вверху, шесть маленьких справа и снизу",
+      en: "Seven screens: one large at top left, six small on right and bottom",
+    },
+  },
+  {
+    id: "split-custom-7-4-landscape",
+    labels: {
+      ru: "7 экранов: большой справа вверху",
+      en: "7 screens: large top right",
+    },
+    description: {
+      ru: "Семь экранов: один большой справа вверху, шесть маленьких слева и снизу",
+      en: "Seven screens: one large at top right, six small on left and bottom",
+    },
+  },
+
+  // Шаблоны с 7 экранами - Портретный формат
+  {
+    id: "split-custom-7-1-portrait",
+    labels: {
+      ru: "7 экранов: большой справа внизу",
+      en: "7 screens: large bottom right",
+    },
+    description: {
+      ru: "Семь экранов: один большой справа внизу, шесть маленьких слева и сверху",
+      en: "Seven screens: one large at bottom right, six small on left and top",
+    },
+  },
+  {
+    id: "split-custom-7-2-portrait",
+    labels: {
+      ru: "7 экранов: большой слева внизу",
+      en: "7 screens: large bottom left",
+    },
+    description: {
+      ru: "Семь экранов: один большой слева внизу, шесть маленьких справа и сверху",
+      en: "Seven screens: one large at bottom left, six small on right and top",
+    },
+  },
+  {
+    id: "split-custom-7-3-portrait",
+    labels: {
+      ru: "7 экранов: большой слева вверху",
+      en: "7 screens: large top left",
+    },
+    description: {
+      ru: "Семь экранов: один большой слева вверху, шесть маленьких справа и снизу",
+      en: "Seven screens: one large at top left, six small on right and bottom",
+    },
+  },
+  {
+    id: "split-custom-7-4-portrait",
+    labels: {
+      ru: "7 экранов: большой справа вверху",
+      en: "7 screens: large top right",
+    },
+    description: {
+      ru: "Семь экранов: один большой справа вверху, шесть маленьких слева и снизу",
+      en: "Seven screens: one large at top right, six small on left and bottom",
+    },
+  },
+
+  // Шаблоны с 7 экранами - Квадратный формат
+  {
+    id: "split-custom-7-1-square",
+    labels: {
+      ru: "7 экранов: большой справа внизу",
+      en: "7 screens: large bottom right",
+    },
+    description: {
+      ru: "Семь экранов: один большой справа внизу, шесть маленьких слева и сверху",
+      en: "Seven screens: one large at bottom right, six small on left and top",
+    },
+  },
+  {
+    id: "split-custom-7-2-square",
+    labels: {
+      ru: "7 экранов: большой слева внизу",
+      en: "7 screens: large bottom left",
+    },
+    description: {
+      ru: "Семь экранов: один большой слева внизу, шесть маленьких справа и сверху",
+      en: "Seven screens: one large at bottom left, six small on right and top",
+    },
+  },
+  {
+    id: "split-custom-7-3-square",
+    labels: {
+      ru: "7 экранов: большой слева вверху",
+      en: "7 screens: large top left",
+    },
+    description: {
+      ru: "Семь экранов: один большой слева вверху, шесть маленьких справа и снизу",
+      en: "Seven screens: one large at top left, six small on right and bottom",
+    },
+  },
+  {
+    id: "split-custom-7-4-square",
+    labels: {
+      ru: "7 экранов: большой справа вверху",
+      en: "7 screens: large top right",
+    },
+    description: {
+      ru: "Семь экранов: один большой справа вверху, шесть маленьких слева и снизу",
+      en: "Seven screens: one large at top right, six small on left and bottom",
     },
   },
 ]

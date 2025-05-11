@@ -1,5 +1,6 @@
 import React from "react"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
+import { useTranslation } from "react-i18next"
 
 import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
 
@@ -15,9 +16,20 @@ export function Split31RightLandscape({
   videoRefs,
   isResizable = true,
 }: TemplateProps) {
+  // Используем хук для локализации
+  const { t, i18n } = useTranslation()
+
   // Проверяем, что у нас есть видео с путями
   const validVideos = videos.filter((v) => v && v.path)
   const videoCount = Math.min(validVideos.length, 4)
+
+  // Получаем локализованное название шаблона
+  const templateName = t("templates.split_3_1_right")
+
+  console.log(`[Split31RightLandscape] Рендеринг шаблона (${templateName}) с параметрами:`, {
+    isResizable,
+    language: i18n.language,
+  })
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 4) {

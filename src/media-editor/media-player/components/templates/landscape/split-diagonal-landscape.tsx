@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
 
@@ -15,6 +16,9 @@ export function SplitDiagonalLandscape({
   isResizable = true,
   templateId,
 }: TemplateProps & { templateId?: string }) {
+  // Используем хук для локализации
+  const { t } = useTranslation()
+
   // Проверяем, что у нас есть видео с путями
   const validVideos = videos.filter((v) => v && v.path)
   const videoCount = Math.min(validVideos.length, 2)
@@ -302,13 +306,18 @@ export function SplitDiagonalLandscape({
                 overflow: "hidden",
               }}
             >
-              <VideoPanel
-                video={validVideos[0]}
-                isActive={validVideos[0]?.id === activeVideoId}
-                videoRefs={videoRefs}
-                index={0}
-                labelPosition="center"
-              />
+              <div className="relative h-full w-full">
+                <VideoPanel
+                  video={validVideos[0]}
+                  isActive={validVideos[0]?.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={0}
+                  labelPosition="center"
+                />
+                <div className="absolute left-2 top-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
+                  {t("timeline.player.camera", "Камера")} 1
+                </div>
+              </div>
             </div>
 
             {/* Линия разделения */}
@@ -330,13 +339,18 @@ export function SplitDiagonalLandscape({
                 zIndex: 10,
               }}
             >
-              <VideoPanel
-                video={validVideos[1]}
-                isActive={validVideos[1]?.id === activeVideoId}
-                videoRefs={videoRefs}
-                index={1}
-                labelPosition="center"
-              />
+              <div className="relative h-full w-full">
+                <VideoPanel
+                  video={validVideos[1]}
+                  isActive={validVideos[1]?.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={1}
+                  labelPosition="center"
+                />
+                <div className="absolute left-2 bottom-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
+                  {t("timeline.player.camera", "Камера")} 2
+                </div>
+              </div>
             </div>
           </div>
         )
@@ -415,20 +429,25 @@ export function SplitDiagonalLandscape({
               overflow: "hidden",
             }}
           >
-            <VideoPanel
-              video={validVideos[0]}
-              isActive={validVideos[0]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={0}
-              labelPosition="center"
-            />
+            <div className="relative h-full w-full">
+              <VideoPanel
+                video={validVideos[0]}
+                isActive={validVideos[0]?.id === activeVideoId}
+                videoRefs={videoRefs}
+                index={0}
+                labelPosition="center"
+              />
+              <div className="absolute left-2 top-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
+                {t("timeline.player.camera", "Камера")} 1
+              </div>
+            </div>
           </div>
 
           {/* Линия разделения */}
           <div
             className="absolute inset-0 z-20"
             style={{
-              clipPath: "polygon(0 34.8%, 0 35.2%, 100% 65.2%, 100% 64.8%)",
+              clipPath: "polygon(0 34.9%, 0 35.1%, 100% 65.1%, 100% 64.9%)",
               backgroundColor: "#35d1c1",
               opacity: 0.8,
             }}
@@ -443,13 +462,18 @@ export function SplitDiagonalLandscape({
               zIndex: 10,
             }}
           >
-            <VideoPanel
-              video={validVideos[1]}
-              isActive={validVideos[1]?.id === activeVideoId}
-              videoRefs={videoRefs}
-              index={1}
-              labelPosition="center"
-            />
+            <div className="relative h-full w-full">
+              <VideoPanel
+                video={validVideos[1]}
+                isActive={validVideos[1]?.id === activeVideoId}
+                videoRefs={videoRefs}
+                index={1}
+                labelPosition="center"
+              />
+              <div className="absolute left-2 bottom-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
+                {t("timeline.player.camera", "Камера")} 2
+              </div>
+            </div>
           </div>
         </div>
       )
@@ -484,7 +508,7 @@ export function SplitDiagonalLandscape({
           <div
             className="absolute inset-0 z-20"
             style={{
-              clipPath: "polygon(64.8% 0, 65.2% 0, 35.2% 100%, 34.8% 100%)",
+              clipPath: "polygon(64.9% 0, 65.1% 0, 35.1% 100%, 34.9% 100%)",
               backgroundColor: "#35d1c1",
               opacity: 0.8,
             }}
@@ -599,14 +623,19 @@ export function SplitDiagonalLandscape({
                 zIndex: 10, // Поверх шаблона
               }}
             >
-              <VideoPanel
-                video={video}
-                isActive={video.id === activeVideoId}
-                videoRefs={videoRefs}
-                index={index}
-                hideLabel={false}
-                labelPosition="center"
-              />
+              <div className="relative h-full w-full">
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                  hideLabel={false}
+                  labelPosition="center"
+                />
+                <div className={`absolute ${index === 0 ? 'left-2 top-2' : 'left-2 bottom-2'} z-20 rounded bg-black/50 px-2 py-1 text-white`}>
+                  {t("timeline.player.camera", "Камера")} {index + 1}
+                </div>
+              </div>
             </div>
           )
         })}
@@ -759,14 +788,19 @@ export function SplitDiagonalLandscape({
                 zIndex: 10, // Поверх шаблона
               }}
             >
-              <VideoPanel
-                video={video}
-                isActive={video.id === activeVideoId}
-                videoRefs={videoRefs}
-                index={index}
-                hideLabel={false}
-                labelPosition={index % 2 === 0 ? "left" : "right"}
-              />
+              <div className="relative h-full w-full">
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+                  hideLabel={false}
+                  labelPosition={index % 2 === 0 ? "left" : "right"}
+                />
+                <div className={`absolute ${index === 0 ? 'left-2 top-2' : 'right-2 top-2'} z-20 rounded bg-black/50 px-2 py-1 text-white`}>
+                  {t("timeline.player.camera", "Камера")} {index + 1}
+                </div>
+              </div>
             </div>
           )
         })}

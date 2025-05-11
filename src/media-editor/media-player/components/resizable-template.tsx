@@ -12,6 +12,7 @@ import { usePlayerContext } from "../services"
 import { VideoPanel } from "./templates/common"
 import {
   Split31Right,
+  SplitCustom7,
   SplitCustom31,
   SplitCustom53Square,
   SplitCustom54,
@@ -38,7 +39,6 @@ import {
   Split13BottomLandscape,
   Split13Landscape,
   Split31BottomLandscape,
-  Split31RightLandscape,
   SplitCustom51Landscape,
   SplitCustom52Landscape,
   SplitCustom53Landscape,
@@ -48,7 +48,6 @@ import {
   SplitMixed2Landscape,
 } from "./templates/landscape"
 import {
-  Split13BottomPortrait,
   SplitCustom51Portrait,
   SplitCustom52Portrait,
   SplitCustom53Portrait,
@@ -540,20 +539,10 @@ export function ResizableTemplate({
         />
       )
     }
-    if (template.id === "split-1-3-portrait") {
-      return (
-        <Split13Landscape
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
-        />
-      )
-    }
     if (
       template.id === "split-3-1-landscape" ||
       template.id === "split-3-1-square" ||
-      template.id === "split-1-3-bottom-square"
+      template.id === "split-3-1-portrait"
     ) {
       return (
         <SplitCustom31
@@ -565,27 +554,7 @@ export function ResizableTemplate({
         />
       )
     }
-    if (template.id === "split-1-3-bottom-portrait") {
-      return (
-        <Split13BottomPortrait
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
-        />
-      )
-    }
-    if (template.id === "split-1-3-bottom-landscape") {
-      return (
-        <Split13BottomLandscape
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
-        />
-      )
-    }
-    if (template.id === "split-3-1-bottom-landscape") {
+    if (template.id === "split-3-1-bottom-landscape" || template.id === "split-1-3-bottom-portrait") {
       return (
         <Split31BottomLandscape
           videos={validVideos}
@@ -601,11 +570,12 @@ export function ResizableTemplate({
       template.id === "split-3-1-right-square"
     ) {
       return (
-        <Split31RightLandscape
+        <Split31Right
           videos={validVideos}
           activeVideoId={activeVideoId}
           videoRefs={videoRefs}
           isResizable={isResizableMode}
+          templateId={template.id}
         />
       )
     }
@@ -685,15 +655,28 @@ export function ResizableTemplate({
         />
       )
     }
-    // Шаблоны для 5 экранов будут добавлены позже
-  }
-
-  // Функция для рендеринга шаблона в фиксированном режиме
-  const renderFixedTemplate = () => {
-    // Специальная обработка для шаблона "1 top + 3 bottom"
-    if (template.screens === 4 && template.id && template.id.includes("split-1-3-bottom-square")) {
+    if (
+      template.id === "split-1-3-bottom-landscape" ||
+      template.id === "split-1-3-bottom-square" ||
+      template.id === "split-1-3-portrait"
+    ) {
       return (
-        <SplitCustom31
+        <Split13BottomLandscape
+          videos={validVideos}
+          activeVideoId={activeVideoId}
+          videoRefs={videoRefs}
+          isResizable={isResizableMode}
+        />
+      )
+    }
+
+    // Для шаблона "1 посередине + по 2 сверху и снизу" (5 экранов) - квадратный формат
+    if (template.id && template.id === "split-custom-5-3-square") {
+      console.log(
+        `[ResizableTemplate] Рендеринг шаблона split-custom-5-3-square в режиме resizable`,
+      )
+      return (
+        <SplitCustom53Square
           videos={validVideos}
           activeVideoId={activeVideoId}
           videoRefs={videoRefs}
@@ -703,35 +686,53 @@ export function ResizableTemplate({
       )
     }
 
-    // Специальная обработка для шаблона "2 screens horizontal"
+    // Для шаблона "5 экранов: 2 + 1 + 2 (по бокам)" (5 экранов) - квадратный формат
+    if (template.id && template.id === "split-custom-5-4-square") {
+      console.log(
+        `[ResizableTemplate] Рендеринг шаблона split-custom-5-4-square в режиме resizable`,
+      )
+      return (
+        <SplitCustom54
+          videos={validVideos}
+          activeVideoId={activeVideoId}
+          videoRefs={videoRefs}
+          isResizable={isResizableMode}
+          templateId={template.id}
+        />
+      )
+    }
+
+    // Для шаблонов с 7 экранами (варианты 1-4) - все форматы (квадратный, ландшафтный, портретный)
     if (
-      template.screens === 2 &&
       template.id &&
-      (template.id.includes("split-horizontal-portrait") ||
-        template.id.includes("split-horizontal-square"))
+      (template.id === "split-custom-7-1-square" ||
+        template.id === "split-custom-7-2-square" ||
+        template.id === "split-custom-7-3-square" ||
+        template.id === "split-custom-7-4-square" ||
+        template.id === "split-custom-7-1-landscape" ||
+        template.id === "split-custom-7-2-landscape" ||
+        template.id === "split-custom-7-3-landscape" ||
+        template.id === "split-custom-7-4-landscape" ||
+        template.id === "split-custom-7-1-portrait" ||
+        template.id === "split-custom-7-2-portrait" ||
+        template.id === "split-custom-7-3-portrait" ||
+        template.id === "split-custom-7-4-portrait")
     ) {
+      console.log(`[ResizableTemplate] Рендеринг шаблона ${template.id} в режиме resizable`)
       return (
-        <SplitHorizontal
+        <SplitCustom7
           videos={validVideos}
           activeVideoId={activeVideoId}
           videoRefs={videoRefs}
           isResizable={isResizableMode}
+          templateId={template.id}
         />
       )
     }
+  }
 
-    // Специальная обработка для шаблона "1 top + 3 bottom"
-    if (template.screens === 4 && template.id && template.id === "split-1-3-bottom-portrait") {
-      return (
-        <Split13BottomPortrait
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
-        />
-      )
-    }
-
+  // Функция для рендеринга шаблона в фиксированном режиме
+  const renderFixedTemplate = () => {
     // Специальная обработка для шаблона "5 screens: 1 top + 4 bottom"
     if (template.screens === 5 && template.id && template.id === "split-custom-5-1-portrait") {
       return (
@@ -810,6 +811,23 @@ export function ResizableTemplate({
 
         {/* Убираем разделительные линии для шаблонов с типом Grid */}
       </div>
+    )
+  }
+
+
+  // Для шаблона "1 слева + 3 справа" (4 экрана) - квадратный формат
+  if (
+    (template.id && template.id.includes("split-1-3-right-portrait")) ||
+    template.id === "split-1-3-square"
+  ) {
+    console.log(`[ResizableTemplate] Рендеринг шаблона split-1-3-square в режиме resizable`)
+    return (
+      <Split13Landscape
+        videos={validVideos}
+        activeVideoId={activeVideoId}
+        videoRefs={videoRefs}
+        isResizable={isResizableMode}
+      />
     )
   }
 
@@ -1142,80 +1160,6 @@ export function ResizableTemplate({
 
     // Для других диагональных шаблонов используем стандартный рендеринг
     return renderFixedTemplate()
-  }
-
-  // Для шаблона "1 слева + 3 справа" (4 экрана) - квадратный формат
-  if (
-    (template.id && template.id.includes("split-1-3-right-portrait")) ||
-    template.id === "split-1-3-square"
-  ) {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-1-3-square в режиме resizable`)
-    return (
-      <Split13Landscape
-        videos={validVideos}
-        activeVideoId={activeVideoId}
-        videoRefs={videoRefs}
-        isResizable={isResizableMode}
-      />
-    )
-  }
-
-  // Для шаблона "3 слева + 1 справа" (4 экрана) - квадратный формат
-  if ((template.id && template.id === "split-3-1-square") || template.id === "split-3-1-portrait") {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-3-1-square в режиме resizable`)
-    return (
-      <Split31Right
-        videos={validVideos}
-        activeVideoId={activeVideoId}
-        videoRefs={videoRefs}
-        isResizable={isResizableMode}
-        templateId={template.id}
-      />
-    )
-  }
-
-  // Для шаблона "3 сверху + 1 снизу" (4 экрана) - квадратный формат
-  if (
-    (template.id && template.id === "split-3-1-right-square") ||
-    template.id === "split-3-1-right-portrait"
-  ) {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-3-1-right-square в режиме resizable`)
-    return (
-      <Split31RightLandscape
-        videos={validVideos}
-        activeVideoId={activeVideoId}
-        videoRefs={videoRefs}
-        isResizable={isResizableMode}
-      />
-    )
-  }
-
-  // Для шаблона "1 посередине + по 2 сверху и снизу" (5 экранов) - квадратный формат
-  if (template.id && template.id === "split-custom-5-3-square") {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-custom-5-3-square в режиме resizable`)
-    return (
-      <SplitCustom53Square
-        videos={validVideos}
-        activeVideoId={activeVideoId}
-        videoRefs={videoRefs}
-        isResizable={isResizableMode}
-        templateId={template.id}
-      />
-    )
-  }
-
-  // Для шаблона "5 экранов: 2 + 1 + 2 (по бокам)" (5 экранов) - квадратный формат
-  if (template.id && template.id === "split-custom-5-4-square") {
-    console.log(`[ResizableTemplate] Рендеринг шаблона split-custom-5-4-square в режиме resizable`)
-    return (
-      <SplitCustom54
-        videos={validVideos}
-        activeVideoId={activeVideoId}
-        videoRefs={videoRefs}
-        isResizable={isResizableMode}
-        templateId={template.id}
-      />
-    )
   }
 
   // Для всех остальных шаблонов используем PanelGroup
