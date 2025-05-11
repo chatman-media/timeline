@@ -1,6 +1,6 @@
 import React from "react"
-import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 import { useTranslation } from "react-i18next"
+import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
 import { VideoPanel } from "@/media-editor/media-player/components/templates/common"
 

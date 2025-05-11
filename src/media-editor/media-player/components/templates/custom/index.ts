@@ -1,6 +1,4 @@
 // Экспорт компонентов пользовательских шаблонов
-export * from "./split-3-1-right"
-export * from "./split-custom-3-1"
 export * from "./split-custom-5-3-square"
 export * from "./split-custom-5-4"
 export * from "./split-custom-7"

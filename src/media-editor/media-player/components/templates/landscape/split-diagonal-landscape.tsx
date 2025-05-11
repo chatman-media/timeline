@@ -314,7 +314,7 @@ export function SplitDiagonalLandscape({
                   index={0}
                   labelPosition="center"
                 />
-                <div className="absolute left-2 top-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
+                <div className="absolute top-2 left-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
                   {t("timeline.player.camera", "Камера")} 1
                 </div>
               </div>
@@ -347,7 +347,7 @@ export function SplitDiagonalLandscape({
                   index={1}
                   labelPosition="center"
                 />
-                <div className="absolute left-2 bottom-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
+                <div className="absolute bottom-2 left-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
                   {t("timeline.player.camera", "Камера")} 2
                 </div>
               </div>
@@ -437,7 +437,7 @@ export function SplitDiagonalLandscape({
                 index={0}
                 labelPosition="center"
               />
-              <div className="absolute left-2 top-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
+              <div className="absolute top-2 left-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
                 {t("timeline.player.camera", "Камера")} 1
               </div>
             </div>
@@ -470,7 +470,7 @@ export function SplitDiagonalLandscape({
                 index={1}
                 labelPosition="center"
               />
-              <div className="absolute left-2 bottom-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
+              <div className="absolute bottom-2 left-2 z-20 rounded bg-black/50 px-2 py-1 text-white">
                 {t("timeline.player.camera", "Камера")} 2
               </div>
             </div>
@@ -632,7 +632,9 @@ export function SplitDiagonalLandscape({
                   hideLabel={false}
                   labelPosition="center"
                 />
-                <div className={`absolute ${index === 0 ? 'left-2 top-2' : 'left-2 bottom-2'} z-20 rounded bg-black/50 px-2 py-1 text-white`}>
+                <div
+                  className={`absolute ${index === 0 ? "top-2 left-2" : "bottom-2 left-2"} z-20 rounded bg-black/50 px-2 py-1 text-white`}
+                >
                   {t("timeline.player.camera", "Камера")} {index + 1}
                 </div>
               </div>
@@ -797,7 +799,9 @@ export function SplitDiagonalLandscape({
                   hideLabel={false}
                   labelPosition={index % 2 === 0 ? "left" : "right"}
                 />
-                <div className={`absolute ${index === 0 ? 'left-2 top-2' : 'right-2 top-2'} z-20 rounded bg-black/50 px-2 py-1 text-white`}>
+                <div
+                  className={`absolute ${index === 0 ? "top-2 left-2" : "top-2 right-2"} z-20 rounded bg-black/50 px-2 py-1 text-white`}
+                >
                   {t("timeline.player.camera", "Камера")} {index + 1}
                 </div>
               </div>

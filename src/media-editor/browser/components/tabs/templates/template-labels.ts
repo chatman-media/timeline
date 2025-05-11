@@ -140,17 +140,6 @@ export const templateLabels: TemplateDescription[] = [
     },
   },
   {
-    id: "split-1-3-right-landscape",
-    labels: {
-      ru: "1 слева + 3 справа",
-      en: "1 left + 3 right",
-    },
-    description: {
-      ru: "Один экран слева, три экрана справа",
-      en: "One screen on the left, three screens on the right",
-    },
-  },
-  {
     id: "split-3-1-right-landscape",
     labels: {
       ru: "3 слева + 1 справа",
@@ -417,12 +406,12 @@ export const templateLabels: TemplateDescription[] = [
   {
     id: "split-3-1-right-portrait",
     labels: {
-      ru: "3 слева + 1 справа",
-      en: "3 left + 1 right",
+      ru: "1 слева + 3 справа",
+      en: "1 left + 3 right",
     },
     description: {
-      ru: "Три экрана слева, один экран справа",
-      en: "Three screens on the left, one screen on the right",
+      ru: "Один экран слева, три экрана справа",
+      en: "One screen on the left, three screens on the right",
     },
   },
   {
