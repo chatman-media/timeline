@@ -707,15 +707,7 @@ export function ResizableTemplate({
       (template.id === "split-custom-7-1-square" ||
         template.id === "split-custom-7-2-square" ||
         template.id === "split-custom-7-3-square" ||
-        template.id === "split-custom-7-4-square" ||
-        template.id === "split-custom-7-1-landscape" ||
-        template.id === "split-custom-7-2-landscape" ||
-        template.id === "split-custom-7-3-landscape" ||
-        template.id === "split-custom-7-4-landscape" ||
-        template.id === "split-custom-7-1-portrait" ||
-        template.id === "split-custom-7-2-portrait" ||
-        template.id === "split-custom-7-3-portrait" ||
-        template.id === "split-custom-7-4-portrait")
+        template.id === "split-custom-7-4-square")
     ) {
       console.log(`[ResizableTemplate] Рендеринг шаблона ${template.id} в режиме resizable`)
       return (
