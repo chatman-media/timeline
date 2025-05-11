@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { useMedia, usePreviewSize } from "@/media-editor/browser"
+import { AddMediaButton } from "@/media-editor/browser/components/layout/add-media-button"
 import { TemplateListToolbar } from "@/media-editor/browser/components/tabs/templates"
 import { usePlayerContext } from "@/media-editor/media-player"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
@@ -64,6 +65,11 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
       onClick={onClick}
     >
       {React.cloneElement(renderedTemplate, { key: `template-preview-${template.id}` })}
+      <AddMediaButton
+        file={{ id: template.id, path: "", name: template.id }}
+        onAddMedia={() => {}}
+        size={previewWidth}
+      />
     </div>
   )
 }
