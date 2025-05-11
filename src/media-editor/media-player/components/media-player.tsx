@@ -1738,180 +1738,178 @@ export function MediaPlayer() {
               {/* Логируем информацию о шаблоне для отладки */}
 
               {/* Если есть примененный шаблон и он настраиваемый, используем ResizableTemplate */}
-              {appliedTemplate?.template &&
-              (appliedTemplate.template.split === "resizable" ||
-                appliedTemplate.template.resizable) ? (
-                  <ResizableTemplate
-                    appliedTemplate={appliedTemplate}
-                    videos={videosToDisplay}
-                    activeVideoId={activeId}
-                    videoRefs={videoRefs}
-                  />
-                ) : (
+              {appliedTemplate?.template && appliedTemplate.template.resizable ? (
+                <ResizableTemplate
+                  appliedTemplate={appliedTemplate}
+                  videos={videosToDisplay}
+                  activeVideoId={activeId}
+                  videoRefs={videoRefs}
+                />
+              ) : (
                 // Иначе используем стандартный подход с абсолютным позиционированием
-                  videosToDisplay.map((videoItem, index) => {
+                videosToDisplay.map((videoItem, index) => {
                   // Получаем стили для видео в зависимости от шаблона
-                    const videoStyle: VideoTemplateStyle = appliedTemplate?.template
-                      ? getVideoStyleForTemplate(
-                        appliedTemplate.template,
-                        index,
-                        videosToDisplay.length,
-                      )
-                      : {
-                        position: "absolute" as const,
-                        top: "0",
-                        left: "0",
-                        width: "100%",
-                        height: "100%",
-                        display: videoItem.id === activeId ? "block" : "none",
-                      }
-
-                    // Логируем стили для отладки
-                    console.log(
-                      `[MediaPlayer] Стили для видео ${videoItem.id} (индекс ${index}):`,
-                      videoStyle,
+                  const videoStyle: VideoTemplateStyle = appliedTemplate?.template
+                    ? getVideoStyleForTemplate(
+                      appliedTemplate.template,
+                      index,
+                      videosToDisplay.length,
                     )
-
-                    // Если используется шаблон, применяем ResizableVideo
-                    if (appliedTemplate?.template) {
-                    // Добавляем отладочный вывод
-                      console.log(
-                        `[MediaPlayer] Применяем шаблон ${appliedTemplate.template.id}, resizable: ${appliedTemplate.template.resizable}, split: ${appliedTemplate.template.split}`,
-                      )
-                      // Создаем компонент-обертку для ResizableVideo
-                      const ResizableVideoWrapper = () => {
-                      // Создаем ref для контейнера, если его еще нет
-                        if (!videoContainerRefs.current[`${videoItem.id}-${index}`]) {
-                          videoContainerRefs.current[`${videoItem.id}-${index}`] =
-                          React.createRef<HTMLDivElement>()
-                        }
-
-                        // Получаем ref для контейнера
-                        const containerRef = videoContainerRefs.current[`${videoItem.id}-${index}`]
-
-                        return (
-                          <div
-                            className="absolute"
-                            style={{
-                              ...videoStyle,
-                              display: videoItem.path ? "block" : "none", // Показываем только видео с путем
-                              border: "1px solid #38dacac3", // Добавляем рамку для отладки
-                              overflow: "visible", // Убираем overflow: hidden
-                            }}
-                            data-video-id={videoItem.id} // Добавляем атрибут для отладки
-                            ref={containerRef}
-                          >
-                            {videoItem && videoItem.path ? (
-                              <ResizableVideo
-                                video={videoItem}
-                                isActive={videoItem.id === activeId}
-                                videoRefs={videoRefs}
-                                index={index}
-                              />
-                            ) : (
-                              <div className="flex h-full w-full items-center justify-center bg-black">
-                                <span className="text-white">
-                                  {t("timeline.player.videoUnavailable", "Видео недоступно")}
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        )
-                      }
-
-                      return <ResizableVideoWrapper key={`wrapper-${videoItem.id}-${index}`} />
+                    : {
+                      position: "absolute" as const,
+                      top: "0",
+                      left: "0",
+                      width: "100%",
+                      height: "100%",
+                      display: videoItem.id === activeId ? "block" : "none",
                     }
 
-                    // Если шаблон не используется, используем стандартный подход
-                    return (
-                      <video
-                        key={`${videoItem.id}-${index}`} // Добавляем индекс к ключу, чтобы сделать его уникальным
-                        ref={(el) => {
-                          if (el && (!videoRefs[videoItem.id] || videoRefs[videoItem.id] !== el)) {
-                            console.log(`[MediaPlayer] Монтирование видео элемента ${videoItem.id}`)
+                  // Логируем стили для отладки
+                  console.log(
+                    `[MediaPlayer] Стили для видео ${videoItem.id} (индекс ${index}):`,
+                    videoStyle,
+                  )
 
-                            videoRefs[videoItem.id] = el
+                  // Если используется шаблон, применяем ResizableVideo
+                  if (appliedTemplate?.template) {
+                    // Добавляем отладочный вывод
+                    console.log(
+                      `[MediaPlayer] Применяем шаблон ${appliedTemplate.template.id}, resizable: ${appliedTemplate.template.resizable}, split: ${appliedTemplate.template.split}`,
+                    )
+                    // Создаем компонент-обертку для ResizableVideo
+                    const ResizableVideoWrapper = () => {
+                      // Создаем ref для контейнера, если его еще нет
+                      if (!videoContainerRefs.current[`${videoItem.id}-${index}`]) {
+                        videoContainerRefs.current[`${videoItem.id}-${index}`] =
+                          React.createRef<HTMLDivElement>()
+                      }
 
-                            // Проверяем, что путь к видео существует
-                            if (videoItem.path) {
-                              console.log(
-                                `[MediaPlayer] Устанавливаем src для видео ${videoItem.id}: ${videoItem.path}`,
-                              )
-                              el.src = videoItem.path
-                              el.load()
-                            } else {
+                      // Получаем ref для контейнера
+                      const containerRef = videoContainerRefs.current[`${videoItem.id}-${index}`]
+
+                      return (
+                        <div
+                          className="absolute"
+                          style={{
+                            ...videoStyle,
+                            display: videoItem.path ? "block" : "none", // Показываем только видео с путем
+                            border: "1px solid #38dacac3", // Добавляем рамку для отладки
+                            overflow: "visible", // Убираем overflow: hidden
+                          }}
+                          data-video-id={videoItem.id} // Добавляем атрибут для отладки
+                          ref={containerRef}
+                        >
+                          {videoItem && videoItem.path ? (
+                            <ResizableVideo
+                              video={videoItem}
+                              isActive={videoItem.id === activeId}
+                              videoRefs={videoRefs}
+                              index={index}
+                            />
+                          ) : (
+                            <div className="flex h-full w-full items-center justify-center bg-black">
+                              <span className="text-white">
+                                {t("timeline.player.videoUnavailable", "Видео недоступно")}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    }
+
+                    return <ResizableVideoWrapper key={`wrapper-${videoItem.id}-${index}`} />
+                  }
+
+                  // Если шаблон не используется, используем стандартный подход
+                  return (
+                    <video
+                      key={`${videoItem.id}-${index}`} // Добавляем индекс к ключу, чтобы сделать его уникальным
+                      ref={(el) => {
+                        if (el && (!videoRefs[videoItem.id] || videoRefs[videoItem.id] !== el)) {
+                          console.log(`[MediaPlayer] Монтирование видео элемента ${videoItem.id}`)
+
+                          videoRefs[videoItem.id] = el
+
+                          // Проверяем, что путь к видео существует
+                          if (videoItem.path) {
+                            console.log(
+                              `[MediaPlayer] Устанавливаем src для видео ${videoItem.id}: ${videoItem.path}`,
+                            )
+                            el.src = videoItem.path
+                            el.load()
+                          } else {
+                            console.error(
+                              `[MediaPlayer] Ошибка: путь к видео ${videoItem.id} не определен`,
+                            )
+                          }
+
+                          // Устанавливаем обработчик загрузки метаданных
+                          el.onloadedmetadata = () => {
+                            console.log(
+                              `[MediaPlayer] Метаданные загружены для видео ${videoItem.id}`,
+                            )
+                          }
+
+                          // Устанавливаем обработчик загрузки данных
+                          el.onloadeddata = () => {
+                            console.log(`[MediaPlayer] Данные загружены для видео ${videoItem.id}`)
+                          }
+
+                          // Устанавливаем обработчик ошибок напрямую
+                          el.onerror = (e) => {
+                            console.error(`[Video] Ошибка видео ${videoItem.id}:`, e)
+
+                            // Если это активное видео, сбрасываем флаг воспроизведения
+                            if (videoItem.id === activeId) {
+                              setIsPlaying(false)
+
+                              // Сбрасываем флаг isChangingCamera при ошибке
+                              if (isChangingCamera) {
+                                setIsChangingCamera(false)
+                              }
+                            }
+
+                            // Пробуем перезагрузить видео
+                            try {
+                              if (videoItem.path) {
+                                console.log(`[Video] Пробуем перезагрузить видео ${videoItem.id}`)
+                                el.src = videoItem.path
+                                el.load()
+                              }
+                            } catch (loadError) {
                               console.error(
-                                `[MediaPlayer] Ошибка: путь к видео ${videoItem.id} не определен`,
+                                `[Video] Ошибка при перезагрузке видео ${videoItem.id}:`,
+                                loadError,
                               )
-                            }
-
-                            // Устанавливаем обработчик загрузки метаданных
-                            el.onloadedmetadata = () => {
-                              console.log(
-                                `[MediaPlayer] Метаданные загружены для видео ${videoItem.id}`,
-                              )
-                            }
-
-                            // Устанавливаем обработчик загрузки данных
-                            el.onloadeddata = () => {
-                              console.log(`[MediaPlayer] Данные загружены для видео ${videoItem.id}`)
-                            }
-
-                            // Устанавливаем обработчик ошибок напрямую
-                            el.onerror = (e) => {
-                              console.error(`[Video] Ошибка видео ${videoItem.id}:`, e)
-
-                              // Если это активное видео, сбрасываем флаг воспроизведения
-                              if (videoItem.id === activeId) {
-                                setIsPlaying(false)
-
-                                // Сбрасываем флаг isChangingCamera при ошибке
-                                if (isChangingCamera) {
-                                  setIsChangingCamera(false)
-                                }
-                              }
-
-                              // Пробуем перезагрузить видео
-                              try {
-                                if (videoItem.path) {
-                                  console.log(`[Video] Пробуем перезагрузить видео ${videoItem.id}`)
-                                  el.src = videoItem.path
-                                  el.load()
-                                }
-                              } catch (loadError) {
-                                console.error(
-                                  `[Video] Ошибка при перезагрузке видео ${videoItem.id}:`,
-                                  loadError,
-                                )
-                              }
                             }
                           }
-                        }}
-                        src={videoItem.path || ""}
-                        className="object-contain"
-                        style={{
-                          ...videoStyle,
-                          // Если нет шаблона, показываем только активное видео
-                          display: videoItem.id === activeId && videoItem.path ? "block" : "none",
-                        }}
-                        data-video-id={videoItem.id} // Добавляем атрибут для отладки
-                        onClick={handlePlayPause}
-                        playsInline
-                        preload="auto"
-                        controls={false}
-                        autoPlay={false}
-                        loop={false}
-                        disablePictureInPicture
-                        muted={videoItem.id !== activeId} // Звук только у активного видео
-                        onLoadedData={() =>
-                          console.log(
-                            `[MediaPlayer] Видео ${videoItem.id} загружено и готово к воспроизведению`,
-                          )
                         }
-                      />
-                    )
-                  })
-                )}
+                      }}
+                      src={videoItem.path || ""}
+                      className="object-contain"
+                      style={{
+                        ...videoStyle,
+                        // Если нет шаблона, показываем только активное видео
+                        display: videoItem.id === activeId && videoItem.path ? "block" : "none",
+                      }}
+                      data-video-id={videoItem.id} // Добавляем атрибут для отладки
+                      onClick={handlePlayPause}
+                      playsInline
+                      preload="auto"
+                      controls={false}
+                      autoPlay={false}
+                      loop={false}
+                      disablePictureInPicture
+                      muted={videoItem.id !== activeId} // Звук только у активного видео
+                      onLoadedData={() =>
+                        console.log(
+                          `[MediaPlayer] Видео ${videoItem.id} загружено и готово к воспроизведению`,
+                        )
+                      }
+                    />
+                  )
+                })
+              )}
             </div>
           </div>
         ) : (

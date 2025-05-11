@@ -528,20 +528,11 @@ export function ResizableTemplate({
         />
       )
     }
-    if (template.id === "split-3-1-landscape") {
-      return (
-        <Split31RightLandscape
-          videos={validVideos}
-          activeVideoId={activeVideoId}
-          videoRefs={videoRefs}
-          isResizable={isResizableMode}
-        />
-      )
-    }
     if (
       template.id === "split-3-1-bottom-landscape" ||
       template.id === "split-1-3-bottom-portrait" ||
-      template.id === "split-3-1-square"
+      template.id === "split-3-1-square" ||
+      template.id === "split-3-1-landscape"
     ) {
       return (
         <Split31BottomLandscape
@@ -552,7 +543,7 @@ export function ResizableTemplate({
         />
       )
     }
-    if (template.id === "split-3-1-portrait") {
+    if (template.id === "split-3-1-right-landscape" || template.id === "split-3-1-portrait") {
       return (
         <Split31RightLandscape
           videos={validVideos}
@@ -563,7 +554,6 @@ export function ResizableTemplate({
       )
     }
     if (
-      template.id === "split-3-1-right-landscape" ||
       template.id === "split-1-3-landscape" ||
       template.id === "split-3-1-right-portrait" ||
       template.id === "split-3-1-right-square" ||
@@ -671,9 +661,7 @@ export function ResizableTemplate({
 
     // Для шаблона "1 посередине + по 2 сверху и снизу" (5 экранов) - квадратный формат
     if (template.id && template.id === "split-custom-5-3-square") {
-      console.log(
-        `[ResizableTemplate] Рендеринг шаблона split-custom-5-3-square`,
-      )
+      console.log(`[ResizableTemplate] Рендеринг шаблона split-custom-5-3-square`)
       return (
         <SplitCustom53Square
           videos={validVideos}
@@ -687,9 +675,7 @@ export function ResizableTemplate({
 
     // Для шаблона "5 экранов: 2 + 1 + 2 (по бокам)" (5 экранов) - квадратный формат
     if (template.id && template.id === "split-custom-5-4-square") {
-      console.log(
-        `[ResizableTemplate] Рендеринг шаблона split-custom-5-4-square`,
-      )
+      console.log(`[ResizableTemplate] Рендеринг шаблона split-custom-5-4-square`)
       return (
         <SplitCustom54
           videos={validVideos}

@@ -329,7 +329,7 @@ export function ResizableVideo({
       {/* Подпись с названием камеры (поверх видео) - не отображаем если hideLabel=true */}
       {!hideLabel && (
         <div
-          className={`bg-opacity-50 absolute rounded-sm bg-black px-1.5 py-0.5 text-xs font-medium text-white ${
+          className={`bg-opacity-50 absolute rounded-xs bg-black/68 px-1.5 py-0.5 text-xs font-medium text-white ${
             labelPosition === "center"
               ? "bottom-1 left-1/2 -translate-x-1/2 transform text-center"
               : labelPosition === "left"

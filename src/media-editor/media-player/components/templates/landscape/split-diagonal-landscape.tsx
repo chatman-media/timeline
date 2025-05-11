@@ -314,7 +314,7 @@ export function SplitDiagonalLandscape({
                   index={0}
                   labelPosition="center"
                 />
-              <div className="absolute top-1 left-[50%] z-20 bg-opacity-50 rounded-sm bg-black px-1.5 py-0.5 text-xs font-medium text-white -translate-x-1/2 transform text-center">
+                <div className="absolute top-1 left-[50%] z-20 -translate-x-1/2 transform rounded-xs bg-black/68 px-1.5 py-0.5 text-center text-xs font-medium text-white">
                   {t("timeline.player.camera", "Камера")} 1
                 </div>
               </div>
@@ -347,7 +347,7 @@ export function SplitDiagonalLandscape({
                   index={1}
                   labelPosition="center"
                 />
-              <div className="absolute bottom-1 left-[50%] z-20 bg-opacity-50 rounded-sm bg-black px-1.5 py-0.5 text-xs font-medium text-white -translate-x-1/2 transform text-center">
+                <div className="absolute bottom-1 left-[50%] z-20 -translate-x-1/2 transform rounded-xs bg-black/68 px-1.5 py-0.5 text-center text-xs font-medium text-white">
                   {t("timeline.player.camera", "Камера")} 2
                 </div>
               </div>
@@ -438,7 +438,7 @@ export function SplitDiagonalLandscape({
                 labelPosition="center"
               />
               {/* Для первой камеры в горизонтальном шаблоне добавляем метку сверху */}
-              <div className="absolute top-1 left-[50%] z-20 bg-opacity-50 rounded-sm bg-black px-1.5 py-0.5 text-xs font-medium text-white -translate-x-1/2 transform text-center">
+              <div className="absolute top-1 left-[50%] z-20 -translate-x-1/2 transform rounded-xs bg-black/68 px-1.5 py-0.5 text-center text-xs font-medium text-white">
                 {t("timeline.player.camera")} 1
               </div>
             </div>
@@ -633,7 +633,7 @@ export function SplitDiagonalLandscape({
                 />
                 {/* Для первой камеры в горизонтальном шаблоне добавляем метку сверху */}
                 {index === 0 && (
-                  <div className="absolute top-1 left-[50%] z-20 bg-opacity-50 rounded-sm bg-black px-1.5 py-0.5 text-xs font-medium text-white -translate-x-1/2 transform text-center">
+                  <div className="absolute top-1 left-[50%] z-20 -translate-x-1/2 transform rounded-xs bg-black/68 px-1.5 py-0.5 text-center text-xs font-medium text-white">
                     {t("timeline.player.camera")} {index + 1}
                   </div>
                 )}
