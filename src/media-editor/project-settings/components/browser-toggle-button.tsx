@@ -13,17 +13,19 @@ export function BrowserToggleButton() {
 
   return (
     <Button
-      className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
+      className="hover:bg-secondary h-7 w-7 cursor-pointer p-0 transition-all duration-300"
       variant="ghost"
       size="icon"
       onClick={toggleBrowserVisibility}
       title={t("topNavBar.toggleBrowser")}
     >
-      {isBrowserVisible ? (
-        <PanelLeftOpen className="h-5 w-5" />
-      ) : (
-        <PanelLeftClose className="h-5 w-5" />
-      )}
+      <div className="transition-transform duration-300">
+        {isBrowserVisible ? (
+          <PanelLeftOpen className="h-5 w-5" />
+        ) : (
+          <PanelLeftClose className="h-5 w-5" />
+        )}
+      </div>
     </Button>
   )
 }

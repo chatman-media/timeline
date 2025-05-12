@@ -16,7 +16,7 @@ export function BrowserToggle() {
     <Button
       variant="ghost"
       size="icon"
-      className={`absolute ${isBrowserVisible ? "-right-8" : "left-2"} top-2 z-50 h-8 w-8 rounded-full bg-gray-200 p-1 text-gray-700 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700`}
+      className={`absolute transition-all duration-300 ${isBrowserVisible ? "-right-8" : "left-2"} top-2 z-50 h-8 w-8 rounded-full bg-gray-200 p-1 text-gray-700 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 cursor-pointer`}
       onClick={toggleBrowserVisibility}
       title={isBrowserVisible ? t("browser.hide") : t("browser.show")}
     >
