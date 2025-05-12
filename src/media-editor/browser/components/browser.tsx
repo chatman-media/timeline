@@ -66,7 +66,7 @@ const BrowserClient = memo(function BrowserClient() {
   return (
     <div className={`relative h-full ${isBrowserVisible ? "w-full" : "w-0 overflow-hidden"}`}>
       <BrowserToggle />
-      <div className={isBrowserVisible ? "block" : "hidden"}>
+      <div className={isBrowserVisible ? "block h-full" : "hidden"}>
         <Tabs
           value={activeTab}
           onValueChange={handleTabChange}
@@ -90,10 +90,10 @@ const BrowserClient = memo(function BrowserClient() {
               <Blend className="h-4 w-4" />
               <span>{t("browser.tabs.filters")}</span>
             </TabsTrigger>
-            <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
+            {/* <TabsTrigger value="subtitles" className={TAB_TRIGGER_STYLES}>
               <Type className="h-4 w-4" />
               <span>{t("titles.add")}</span>
-            </TabsTrigger>
+            </TabsTrigger> */}
             <TabsTrigger value="transitions" className={TAB_TRIGGER_STYLES}>
               <FlipHorizontal2 className="h-4 w-4" />
               <span>{t("browser.tabs.transitions")}</span>
@@ -103,25 +103,25 @@ const BrowserClient = memo(function BrowserClient() {
               <span>{t("browser.tabs.templates")}</span>
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="media" className="bg-secondary m-0 flex-1 overflow-hidden">
+          <TabsContent value="media" className="bg-secondary m-0 flex-1 overflow-auto">
             <MediaFileList />
           </TabsContent>
-          <TabsContent value="music" className="bg-secondary m-0 flex-1 overflow-hidden">
+          <TabsContent value="music" className="bg-secondary m-0 flex-1 overflow-auto">
             <MusicFileList />
           </TabsContent>
-          <TabsContent value="transitions" className="bg-secondary m-0 flex-1 overflow-hidden">
+          <TabsContent value="transitions" className="bg-secondary m-0 flex-1 overflow-auto">
             <TransitionsList />
           </TabsContent>
-          <TabsContent value="effects" className="bg-secondary m-0 flex-1 overflow-hidden">
+          <TabsContent value="effects" className="bg-secondary m-0 flex-1 overflow-auto">
             <EffectList />
           </TabsContent>
-          <TabsContent value="subtitles" className="bg-secondary m-0 flex-1 overflow-hidden">
+          <TabsContent value="subtitles" className="bg-secondary m-0 flex-1 overflow-auto">
             <SubtitlesList />
           </TabsContent>
-          <TabsContent value="filters" className="bg-secondary m-0 flex-1 overflow-hidden">
+          <TabsContent value="filters" className="bg-secondary m-0 flex-1 overflow-auto">
             <FilterList />
           </TabsContent>
-          <TabsContent value="templates" className="bg-secondary m-0 flex-1 overflow-hidden">
+          <TabsContent value="templates" className="bg-secondary m-0 flex-1 overflow-auto">
             <TemplateList />
           </TabsContent>
         </Tabs>

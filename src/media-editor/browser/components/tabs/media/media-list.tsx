@@ -1009,7 +1009,7 @@ export const MediaFileList = memo(function MediaFileList({
   }
 
   return (
-    <div className="flex h-full flex-1 flex-col overflow-hidden">
+    <div className="flex h-full w-full flex-col overflow-hidden" style={{ height: '100%' }}>
       <MediaToolbar
         viewMode={viewMode as ViewMode}
         onViewModeChange={handleViewModeChange}

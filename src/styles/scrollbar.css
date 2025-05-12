@@ -1,0 +1,35 @@
+/* Стили для скрытия скроллбара */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE и Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari и Opera */
+  }
+  
+  .hover\:scrollbar-default:hover {
+    -ms-overflow-style: auto;  /* IE и Edge */
+    scrollbar-width: auto;  /* Firefox */
+  }
+  
+  .hover\:scrollbar-default:hover::-webkit-scrollbar {
+    display: block;  /* Chrome, Safari и Opera */
+    width: 8px;
+    height: 8px;
+  }
+  
+  .hover\:scrollbar-default:hover::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .hover\:scrollbar-default:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.5);
+    border-radius: 4px;
+  }
+  
+  .hover\:scrollbar-default:hover::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.7);
+  }
+}
