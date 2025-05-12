@@ -1732,33 +1732,31 @@ export const landscapeTemplates: MediaTemplate[] = [
     render: () => (
       <div className="relative h-full w-full">
         {/* Создаем сетку 5x5 */}
-        {Array.from({ length: 5 }).map((_, rowIndex) => (
-          <div key={`row-${rowIndex}`} className="h-full w-full">
-            {Array.from({ length: 5 }).map((_, colIndex) => {
-              const cellIndex = rowIndex * 5 + colIndex + 1
-              const isEvenCell = (rowIndex + colIndex) % 2 === 0
-              return (
-                <div
-                  key={`cell-${rowIndex}-${colIndex}`}
-                  className="absolute flex items-center justify-center text-sm font-normal text-gray-400"
-                  style={{
-                    background: isEvenCell ? "#23262b" : "#2a2e36",
-                    width: "20%",
-                    height: "20%",
-                    top: `${rowIndex * 20}%`,
-                    left: `${colIndex * 20}%`,
-                    borderTop: rowIndex === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
-                    borderBottom: rowIndex === 4 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
-                    borderLeft: colIndex === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
-                    borderRight: colIndex === 4 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
-                  }}
-                >
-                  {cellIndex}
-                </div>
-              )
-            })}
-          </div>
-        ))}
+        {Array.from({ length: 25 }).map((_, index) => {
+          const rowIndex = Math.floor(index / 5);
+          const colIndex = index % 5;
+          const cellIndex = index + 1;
+          const isEvenCell = (rowIndex + colIndex) % 2 === 0;
+          return (
+            <div
+              key={`cell-${rowIndex}-${colIndex}`}
+              className="absolute flex items-center justify-center text-sm font-normal text-gray-400"
+              style={{
+                background: isEvenCell ? "#23262b" : "#2a2e36",
+                width: "20%",
+                height: "20%",
+                top: `${rowIndex * 20}%`,
+                left: `${colIndex * 20}%`,
+                borderTop: rowIndex === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                borderBottom: rowIndex === 4 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                borderLeft: colIndex === 0 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+                borderRight: colIndex === 4 ? "1px solid rgba(156, 163, 175, 0.3)" : "none",
+              }}
+            >
+              {cellIndex}
+            </div>
+          );
+        })}
 
         {/* Горизонтальные линии разделения */}
         {Array.from({ length: 4 }).map((_, i) => (
