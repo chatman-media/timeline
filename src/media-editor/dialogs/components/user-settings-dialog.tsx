@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Language } from "@/media-editor/browser/machines/user-settings-machine"
+import { LANGUAGES, Language } from "@/media-editor/browser/machines/user-settings-machine"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
 
 interface UserSettingsDialogProps {
@@ -118,8 +118,11 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
                 <SelectValue placeholder={t("dialogs.userSettings.interfaceLanguage")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ru">{t("language.native.ru")}</SelectItem>
-                <SelectItem value="en">{t("language.native.en")}</SelectItem>
+                {LANGUAGES.map((lang) => (
+                  <SelectItem key={lang} value={lang}>
+                    {t(`language.native.${lang}`)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
