@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
   LANGUAGE: "app-language",
   LAYOUT: "app-layout-mode",
   VOLUME: "player-volume",
+  SCREENSHOTS_PATH: "screenshots-save-path",
 } as const
 
 // Допустимые значения для активного таба
@@ -46,6 +47,7 @@ export interface UserSettingsContext {
   activeTab: BrowserTab
   language: Language
   layoutMode: LayoutMode
+  screenshotsPath: string
   isLoaded: boolean
 }
 
@@ -58,6 +60,7 @@ const initialContext: UserSettingsContext = {
   activeTab: DEFAULT_TAB,
   language: DEFAULT_LANGUAGE,
   layoutMode: DEFAULT_LAYOUT,
+  screenshotsPath: "public/screenshots",
   isLoaded: false,
 }
 
@@ -68,6 +71,7 @@ type UserSettingsLoadedEvent = {
   activeTab: BrowserTab
   language: Language
   layoutMode: LayoutMode
+  screenshotsPath: string
 }
 type UpdatePreviewSizeEvent = {
   type: "UPDATE_PREVIEW_SIZE"
@@ -77,6 +81,7 @@ type UpdatePreviewSizeEvent = {
 type UpdateActiveTabEvent = { type: "UPDATE_ACTIVE_TAB"; tab: BrowserTab }
 type UpdateLanguageEvent = { type: "UPDATE_LANGUAGE"; language: Language }
 type UpdateLayoutEvent = { type: "UPDATE_LAYOUT"; layoutMode: LayoutMode }
+type UpdateScreenshotsPathEvent = { type: "UPDATE_SCREENSHOTS_PATH"; path: string }
 
 export type UserSettingsEvent =
   | LoadUserSettingsEvent
@@ -85,6 +90,7 @@ export type UserSettingsEvent =
   | UpdateActiveTabEvent
   | UpdateLanguageEvent
   | UpdateLayoutEvent
+  | UpdateScreenshotsPathEvent
 
 export const userSettingsMachine = createMachine(
   {
@@ -117,6 +123,9 @@ export const userSettingsMachine = createMachine(
           },
           UPDATE_LAYOUT: {
             actions: ["updateLayout", "saveLayoutToStorage"],
+          },
+          UPDATE_SCREENSHOTS_PATH: {
+            actions: ["updateScreenshotsPath", "saveScreenshotsPathToStorage"],
           },
         },
       },
@@ -291,12 +300,38 @@ export const userSettingsMachine = createMachine(
           }
         }
 
+        // Загружаем сохраненный путь для скриншотов
+        let screenshotsPath = "public/screenshots"
+        try {
+          const savedPath = localStorage.getItem(STORAGE_KEYS.SCREENSHOTS_PATH)
+          console.log("Loaded screenshots path from localStorage:", savedPath)
+
+          if (savedPath) {
+            screenshotsPath = savedPath
+            console.log("Using saved screenshots path:", screenshotsPath)
+          } else {
+            console.log("No saved screenshots path found, using default:", screenshotsPath)
+          }
+        } catch (error) {
+          console.error("Error loading screenshots path:", error)
+        }
+
+        // Сохраняем значение по умолчанию для пути скриншотов, если его нет
+        if (localStorage.getItem(STORAGE_KEYS.SCREENSHOTS_PATH) === null) {
+          try {
+            localStorage.setItem(STORAGE_KEYS.SCREENSHOTS_PATH, "public/screenshots")
+          } catch (error) {
+            console.error("Error saving default screenshots path:", error)
+          }
+        }
+
         return {
           type: "SETTINGS_LOADED",
           previewSizes,
           activeTab,
           language,
           layoutMode,
+          screenshotsPath,
         }
       },
       updateSettings: assign({
@@ -315,6 +350,10 @@ export const userSettingsMachine = createMachine(
         layoutMode: (_, event) => {
           const typedEvent = event as UserSettingsLoadedEvent
           return typedEvent.layoutMode || DEFAULT_LAYOUT
+        },
+        screenshotsPath: (_, event) => {
+          const typedEvent = event as UserSettingsLoadedEvent
+          return typedEvent.screenshotsPath || "public/screenshots"
         },
         isLoaded: (_) => true,
       }),
@@ -491,6 +530,30 @@ export const userSettingsMachine = createMachine(
             console.log("Verified saved layout value:", savedValue)
           } catch (error) {
             console.error(`Error saving layout:`, error)
+          }
+        }
+      },
+      updateScreenshotsPath: assign({
+        screenshotsPath: (_, event: any) => {
+          if (event.type === "UPDATE_SCREENSHOTS_PATH") {
+            console.log("Updating screenshots path in machine:", event.path)
+            return event.path
+          }
+          return "public/screenshots"
+        },
+      }),
+      saveScreenshotsPathToStorage: (_, event: any) => {
+        if (event.type === "UPDATE_SCREENSHOTS_PATH") {
+          try {
+            console.log("Saving screenshots path to localStorage:", event.path)
+            localStorage.setItem(STORAGE_KEYS.SCREENSHOTS_PATH, event.path)
+            console.log("Screenshots path saved to localStorage successfully")
+
+            // Проверяем, что значение было сохранено правильно
+            const savedValue = localStorage.getItem(STORAGE_KEYS.SCREENSHOTS_PATH)
+            console.log("Verified saved screenshots path value:", savedValue)
+          } catch (error) {
+            console.error(`Error saving screenshots path:`, error)
           }
         }
       },

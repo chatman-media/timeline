@@ -34,6 +34,12 @@ const enTranslations: Translations = {
       userSettings: {
         title: "User Settings",
         interfaceLanguage: "Interface Language:",
+        screenshotsPath: "Screenshots Save Path:",
+        selectFolder: "Select Folder",
+        selectFolderPrompt: "Choose a folder to save screenshots or enter your own path:",
+        clearPath: "Clear",
+        defaultPathHint: "Default path for saving screenshots",
+        customPathHint: "Screenshots will be saved to: {{path}}",
         cancel: "Cancel",
         save: "Save",
       },

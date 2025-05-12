@@ -3,25 +3,34 @@ import {
   ChevronFirst,
   ChevronLast,
   CircleDot,
+  LayoutPanelLeft,
+  LayoutPanelTop,
+  Maximize,
   Maximize2,
-  MonitorCog,
+  Minimize,
   Pause,
   Play,
-  ScreenShare,
+  Scaling,
+  SquareStack,
   StepBack,
   StepForward,
+  UnfoldHorizontal,
   Volume2,
   VolumeX,
 } from "lucide-react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { EntryPointIcon } from "@/components/icons/entry-point"
-import { ExitPointIcon } from "@/components/icons/exit-point"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
+import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
+import {
+  findTemplateContainer,
+  takeScreenshot,
+} from "@/media-editor/media-player/components/take-screenshot"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
+import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
 import { useTimeline } from "@/media-editor/timeline/services"
 
 import { usePlayerContext } from ".."
@@ -33,6 +42,7 @@ interface PlayerControlsProps {
 export function PlayerControls({ currentTime }: PlayerControlsProps) {
   const { t } = useTranslation()
   const { tracks, activeTrackId } = useTimeline()
+  const { screenshotsPath } = useUserSettings()
   const {
     isPlaying,
     setIsPlaying,
@@ -58,6 +68,8 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   // Используем состояние для хранения текущего времени воспроизведения
   const [localDisplayTime, setLocalDisplayTime] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  // Сохраняем последний примененный шаблон
+  const [lastAppliedTemplate, setLastAppliedTemplate] = useState<AppliedTemplate | null>(null)
   const lastSaveTime = useRef(0)
   const SAVE_INTERVAL = 3000 // Сохраняем каждые 3 секунды
 
@@ -154,13 +166,65 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setIsFullscreen(!isFullscreen)
   }, [isFullscreen])
 
+  // Функция для создания и сохранения скриншота
+  const handleTakeSnapshot = useCallback(async () => {
+    try {
+      console.log("[handleTakeSnapshot] Создаем скриншот")
+
+      // Проверяем, используется ли шаблон
+      if (appliedTemplate) {
+        console.log("[handleTakeSnapshot] Создаем скриншот для шаблона")
+
+        // Находим контейнер с шаблоном
+        const templateContainer = findTemplateContainer()
+        if (!templateContainer) return
+
+        // Создаем и сохраняем скриншот шаблона
+        await takeScreenshot({
+          isTemplate: true,
+          templateContainer,
+          screenshotsPath,
+        })
+      } else if (video && videoRefs[video.id]) {
+        console.log("[handleTakeSnapshot] Создаем скриншот для видео:", video.id)
+
+        // Получаем видеоэлемент
+        const videoElement = videoRefs[video.id]
+
+        // Создаем и сохраняем скриншот видео
+        await takeScreenshot({
+          isTemplate: false,
+          videoElement,
+          screenshotsPath,
+        })
+      } else {
+        console.log("[handleTakeSnapshot] Нет активного видео или шаблона для скриншота")
+      }
+    } catch (error) {
+      console.error("[handleTakeSnapshot] Ошибка при создании скриншота:", error)
+    }
+  }, [video, videoRefs, screenshotsPath, appliedTemplate])
+
   // Функция для сброса шаблона
   const handleResetTemplate = useCallback(() => {
+    console.log("[handleResetTemplate] Вызвана функция сброса шаблона")
+    console.log("[handleResetTemplate] Текущий шаблон:", appliedTemplate)
+
     if (appliedTemplate) {
       console.log("[handleResetTemplate] Сбрасываем шаблон:", appliedTemplate.template?.id)
+      // Сохраняем текущий шаблон перед сбросом
+      setLastAppliedTemplate(appliedTemplate)
+      // Принудительно устанавливаем null для сброса шаблона
       setAppliedTemplate(null)
+
+      // Добавляем проверку через setTimeout
+      setTimeout(() => {
+        console.log("[handleResetTemplate] Проверка после сброса:", appliedTemplate)
+      }, 100)
+    } else {
+      console.log("[handleResetTemplate] Нет активного шаблона для сброса")
     }
-  }, [appliedTemplate, setAppliedTemplate])
+  }, [appliedTemplate, setAppliedTemplate, setLastAppliedTemplate])
 
   // Улучшенная функция для переключения между камерами
   const handleSwitchCamera = useCallback(() => {
@@ -682,8 +746,110 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       </div>
 
       <div className="h-full w-full p-1">
-        <div className="flex items-center justify-between rounded-md border border-white">
-          <div className="flex items-center gap-2">
+        <div
+          className="flex items-center justify-between rounded-md border border-white px-2 py-0.5"
+          style={{ minWidth: "1000px" }}
+        >
+          {/* Левая часть: кнопки для камер и шаблонов */}
+          <div className="flex items-center gap-2" style={{ minWidth: "150px" }}>
+            {/* Кнопка переключения режима resizable - показываем только если применен шаблон */}
+            <Button
+              className={`h-6 w-6 cursor-pointer ${isResizableMode ? "bg-[#45444b] hover:bg-[#45444b]/80" : "hover:bg-[#45444b]/80"}`}
+              variant="ghost"
+              size="icon"
+              title={
+                isResizableMode
+                  ? t("timeline.controlsMain.fixedSizeMode")
+                  : t("timeline.controlsMain.resizableMode")
+              }
+              onClick={() => setIsResizableMode(!isResizableMode)}
+              disabled={!appliedTemplate}
+            >
+              {<UnfoldHorizontal size={14} />}
+            </Button>
+
+            {/* Кнопка шаблона - всегда активна, переключает режим шаблона */}
+            <Button
+              className="h-6 w-6 cursor-pointer"
+              variant="ghost"
+              size="icon"
+              title={
+                appliedTemplate
+                  ? t("timeline.controlsMain.resetTemplate")
+                  : t("timeline.controlsMain.applyTemplate") || "Применить шаблон"
+              }
+              onClick={
+                appliedTemplate
+                  ? handleResetTemplate
+                  : () => setAppliedTemplate(lastAppliedTemplate)
+              }
+            >
+              {appliedTemplate ? (
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="4" y="4" width="16" height="16" rx="2" />
+                  <line x1="4" y1="4" x2="20" y2="20" />
+                </svg>
+              ) : (
+                <LayoutPanelTop size={16} />
+              )}
+            </Button>
+
+            <Button
+              className="h-6 w-6 cursor-pointer"
+              variant="ghost"
+              size="icon"
+              title={t("timeline.controls.takeSnapshot")}
+              onClick={handleTakeSnapshot}
+            >
+              <Camera className="h-4 w-4" />
+            </Button>
+
+            {/* Кнопка переключения между камерами - показываем только если есть параллельные видео */}
+            {parallelVideos && parallelVideos.length > 1 && (
+              <Button
+                className={`h-6 w-6 cursor-pointer ${isChangingCamera ? "animate-pulse" : ""}`}
+                variant="ghost"
+                size="icon"
+                title={`${t("timeline.controlsMain.switchCamera")} (${parallelVideos.findIndex((v) => v.id === video?.id) + 1}/${parallelVideos.length})`}
+                onClick={handleSwitchCamera}
+                disabled={isChangingCamera}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M10 17a2 2 0 1 1 4 0 2 2 0 0 1-4 0Z" />
+                  <path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2" />
+                  <path d="M10 13H8a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2" />
+                  <path d="M10 8V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" />
+                  <path d="M12 17v-9" />
+                </svg>
+              </Button>
+            )}
+          </div>
+
+          {/* Центральная часть: кнопки управления воспроизведением */}
+          <div
+            className="flex items-center justify-center gap-2"
+            style={{ flex: "1", marginLeft: "auto", marginRight: "auto" }}
+          >
             <Button
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
@@ -760,119 +926,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
             </Button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              className="h-6 w-6 cursor-pointer"
-              variant="ghost"
-              size="icon"
-              title={t("timeline.controls.entryPoint")}
-              onClick={() => {}}
-            >
-              <EntryPointIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              className="h-6 w-6 cursor-pointer"
-              variant="ghost"
-              size="icon"
-              title={t("timeline.controls.exitPoint")}
-              onClick={() => {}}
-            >
-              <ExitPointIcon className="h-4 w-4" />
-            </Button>
-            <Button
-              className="h-6 w-6 cursor-pointer"
-              variant="ghost"
-              size="icon"
-              title={t("timeline.controls.settings")}
-              onClick={() => {}}
-            >
-              <MonitorCog className="h-4 w-4" />
-            </Button>
-
-            <Button
-              className="h-6 w-6 cursor-pointer"
-              variant="ghost"
-              size="icon"
-              title={t("timeline.controls.takeSnapshot")}
-              onClick={() => {}}
-            >
-              <Camera className="h-4 w-4" />
-            </Button>
-
-            {/* Кнопка переключения между камерами - показываем только если есть параллельные видео */}
-            {parallelVideos && parallelVideos.length > 1 && (
-              <Button
-                className={`h-6 w-6 cursor-pointer ${isChangingCamera ? "animate-pulse" : ""}`}
-                variant="ghost"
-                size="icon"
-                title={`${t("timeline.controls.switchCamera")} (${parallelVideos.findIndex((v) => v.id === video?.id) + 1}/${parallelVideos.length})`}
-                onClick={handleSwitchCamera}
-                disabled={isChangingCamera}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M10 17a2 2 0 1 1 4 0 2 2 0 0 1-4 0Z" />
-                  <path d="M14 13h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2" />
-                  <path d="M10 13H8a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2" />
-                  <path d="M10 8V7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1" />
-                  <path d="M12 17v-9" />
-                </svg>
-              </Button>
-            )}
-
-            {/* Кнопка сброса шаблона - показываем только если применен шаблон */}
-            {appliedTemplate && (
-              <Button
-                className="h-6 w-6 cursor-pointer"
-                variant="ghost"
-                size="icon"
-                title={t("timeline.controls.resetTemplate")}
-                onClick={handleResetTemplate}
-              >
-                <ScreenShare className="h-4 w-4" />
-              </Button>
-            )}
-
-            {/* Кнопка переключения режима resizable - показываем только если применен шаблон */}
-            {appliedTemplate && (
-              <Button
-                className={`h-6 w-6 cursor-pointer ${isResizableMode ? "bg-gray-700" : ""}`}
-                variant="ghost"
-                size="icon"
-                title={
-                  isResizableMode
-                    ? t("timeline.controls.fixedSizeMode")
-                    : t("timeline.controls.resizableMode")
-                }
-                onClick={() => setIsResizableMode(!isResizableMode)}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="4" y="4" width="16" height="16" rx="2" />
-                  <path d="M4 12h16" />
-                  <path d="M12 4v16" />
-                </svg>
-              </Button>
-            )}
-
+          {/* Правая часть: кнопки управления звуком и полноэкранным режимом */}
+          <div
+            className="flex items-center gap-2"
+            style={{ minWidth: "150px", justifyContent: "flex-end" }}
+          >
             <div className="flex items-center gap-2">
               <Button
                 className="h-6 w-6 cursor-pointer"

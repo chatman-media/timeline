@@ -35,6 +35,12 @@ export interface UITranslations {
     userSettings: {
       title: string
       interfaceLanguage: string
+      screenshotsPath: string
+      selectFolder: string
+      selectFolderPrompt: string
+      clearPath: string
+      defaultPathHint: string
+      customPathHint: string
       cancel: string
       save: string
     }

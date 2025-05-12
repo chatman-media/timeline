@@ -37,8 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Парсим форму
     const { fields, files } = await parseForm(req)
-    const videoFile = files.file as formidable.File
-    const fileName = fields.fileName as string
+    const videoFile = files.file as unknown as formidable.File
+    const fileName = fields.fileName as unknown as string
 
     if (!videoFile || !fileName) {
       return res.status(400).json({ error: "Missing required fields" })

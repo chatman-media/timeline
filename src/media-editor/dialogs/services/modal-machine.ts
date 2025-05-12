@@ -1,6 +1,12 @@
 import { assign, createMachine } from "xstate"
 
-export type ModalType = "record" | "settings" | "project-settings" | "user-settings" | "keyboard-shortcuts" | "none"
+export type ModalType =
+  | "record"
+  | "settings"
+  | "project-settings"
+  | "user-settings"
+  | "keyboard-shortcuts"
+  | "none"
 
 interface ModalContext {
   activeModal: ModalType

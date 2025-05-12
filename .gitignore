@@ -48,4 +48,5 @@ public/videos/*
 public/media/*
 public/thumbnails/*
 public/proxies/*
+public/screenshots/*
 *storybook.log

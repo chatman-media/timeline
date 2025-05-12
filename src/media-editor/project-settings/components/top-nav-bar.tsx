@@ -3,9 +3,6 @@ import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { useAppHotkeys } from "@/media-editor/keyboard-shortcuts/use-app-hotkeys"
-import { useModalContext } from "@/media-editor/dialogs/services/modal-provider"
-
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -15,6 +12,8 @@ import {
   ProjectSettingsDialog,
   UserSettingsDialog,
 } from "@/media-editor/dialogs"
+import { useModalContext } from "@/media-editor/dialogs/services/modal-provider"
+import { useAppHotkeys } from "@/media-editor/keyboard-shortcuts/use-app-hotkeys"
 import { type LayoutMode, LayoutPreviews } from "@/media-editor/layouts"
 import { useProject } from "@/media-editor/project-settings/project-provider"
 

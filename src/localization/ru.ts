@@ -34,6 +34,12 @@ const ruTranslations: Translations = {
       userSettings: {
         title: "Настройки пользователя",
         interfaceLanguage: "Язык интерфейса:",
+        screenshotsPath: "Путь для сохранения скриншотов:",
+        selectFolder: "Выбрать папку",
+        selectFolderPrompt: "Выберите папку для сохранения скриншотов или введите свой путь:",
+        clearPath: "Очистить",
+        defaultPathHint: "Стандартный путь для сохранения скриншотов",
+        customPathHint: "Скриншоты будут сохраняться в: {{path}}",
         cancel: "Отменить",
         save: "Сохранить",
       },

@@ -101,38 +101,34 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   //   }
   // }, [])
 
-  return (
-    <PlayerContext.Provider
-      value={{
-        ...state.context,
-        setCurrentTime: (currentTime: number) => send({ type: "setCurrentTime", currentTime }),
-        setIsPlaying: (isPlaying: boolean) => send({ type: "setIsPlaying", isPlaying }),
-        setIsSeeking: (isSeeking: boolean) => send({ type: "setIsSeeking", isSeeking }),
-        setIsChangingCamera: (isChangingCamera: boolean) =>
-          send({ type: "setIsChangingCamera", isChangingCamera }),
-        setIsRecording: (isRecording: boolean) => send({ type: "setIsRecording", isRecording }),
-        setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) =>
-          send({ type: "setVideoRefs", videoRefs }),
-        setVideo: (video: MediaFile) => send({ type: "setVideo", video }),
-        setVideos: (videos: Record<string, TimelineVideo>) => send({ type: "setVideos", videos }),
-        setDuration: (duration: number) => send({ type: "setDuration", duration }),
-        setVolume: (volume: number) => send({ type: "setVolume", volume }),
-        setVideoLoading: (isLoading: boolean) =>
-          send({ type: "setVideoLoading", isVideoLoading: isLoading }),
-        setVideoReady: (isReady: boolean) => send({ type: "setVideoReady", isVideoReady: isReady }),
-        setParallelVideos: (parallelVideos: MediaFile[]) =>
-          send({ type: "setParallelVideos", parallelVideos }),
-        setActiveVideoId: (activeVideoId: string | null) =>
-          send({ type: "setActiveVideoId", activeVideoId }),
-        setAppliedTemplate: (appliedTemplate: AppliedTemplate | null) =>
-          send({ type: "setAppliedTemplate", appliedTemplate }),
-        setIsResizableMode: (isResizableMode: boolean) =>
-          send({ type: "setIsResizableMode", isResizableMode }),
-      }}
-    >
-      {children}
-    </PlayerContext.Provider>
-  )
+  const contextValue = {
+    ...state.context,
+    setCurrentTime: (currentTime: number) => send({ type: "setCurrentTime", currentTime }),
+    setIsPlaying: (isPlaying: boolean) => send({ type: "setIsPlaying", isPlaying }),
+    setIsSeeking: (isSeeking: boolean) => send({ type: "setIsSeeking", isSeeking }),
+    setIsChangingCamera: (isChangingCamera: boolean) =>
+      send({ type: "setIsChangingCamera", isChangingCamera }),
+    setIsRecording: (isRecording: boolean) => send({ type: "setIsRecording", isRecording }),
+    setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) =>
+      send({ type: "setVideoRefs", videoRefs }),
+    setVideo: (video: MediaFile) => send({ type: "setVideo", video }),
+    setVideos: (videos: Record<string, TimelineVideo>) => send({ type: "setVideos", videos }),
+    setDuration: (duration: number) => send({ type: "setDuration", duration }),
+    setVolume: (volume: number) => send({ type: "setVolume", volume }),
+    setVideoLoading: (isLoading: boolean) =>
+      send({ type: "setVideoLoading", isVideoLoading: isLoading }),
+    setVideoReady: (isReady: boolean) => send({ type: "setVideoReady", isVideoReady: isReady }),
+    setParallelVideos: (parallelVideos: MediaFile[]) =>
+      send({ type: "setParallelVideos", parallelVideos }),
+    setActiveVideoId: (activeVideoId: string | null) =>
+      send({ type: "setActiveVideoId", activeVideoId }),
+    setAppliedTemplate: (appliedTemplate: AppliedTemplate | null) =>
+      send({ type: "setAppliedTemplate", appliedTemplate }),
+    setIsResizableMode: (isResizableMode: boolean) =>
+      send({ type: "setIsResizableMode", isResizableMode }),
+  }
+
+  return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>
 }
 
 export function usePlayerContext(): PlayerContextType {

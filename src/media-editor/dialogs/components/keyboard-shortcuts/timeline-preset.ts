@@ -117,18 +117,12 @@ export const createTimelinePreset: CreatePresetsFunction = (t: any): ShortcutCat
       },
       {
         id: "toggle-browser",
-        name: t(
-          "dialogs.keyboardShortcuts.shortcuts.toggle-browser",
-          "Показать/скрыть браузер",
-        ),
+        name: t("dialogs.keyboardShortcuts.shortcuts.toggle-browser", "Показать/скрыть браузер"),
         keys: "⌘B",
       },
       {
         id: "toggle-timeline",
-        name: t(
-          "dialogs.keyboardShortcuts.shortcuts.toggle-timeline",
-          "Показать/скрыть таймлайн",
-        ),
+        name: t("dialogs.keyboardShortcuts.shortcuts.toggle-timeline", "Показать/скрыть таймлайн"),
         keys: "⌘T",
       },
     ],
@@ -186,34 +180,22 @@ export const createTimelinePreset: CreatePresetsFunction = (t: any): ShortcutCat
     shortcuts: [
       {
         id: "switch-camera-1",
-        name: t(
-          "dialogs.keyboardShortcuts.shortcuts.switch-camera-1",
-          "Переключиться на камеру 1",
-        ),
+        name: t("dialogs.keyboardShortcuts.shortcuts.switch-camera-1", "Переключиться на камеру 1"),
         keys: "1",
       },
       {
         id: "switch-camera-2",
-        name: t(
-          "dialogs.keyboardShortcuts.shortcuts.switch-camera-2",
-          "Переключиться на камеру 2",
-        ),
+        name: t("dialogs.keyboardShortcuts.shortcuts.switch-camera-2", "Переключиться на камеру 2"),
         keys: "2",
       },
       {
         id: "switch-camera-3",
-        name: t(
-          "dialogs.keyboardShortcuts.shortcuts.switch-camera-3",
-          "Переключиться на камеру 3",
-        ),
+        name: t("dialogs.keyboardShortcuts.shortcuts.switch-camera-3", "Переключиться на камеру 3"),
         keys: "3",
       },
       {
         id: "switch-camera-4",
-        name: t(
-          "dialogs.keyboardShortcuts.shortcuts.switch-camera-4",
-          "Переключиться на камеру 4",
-        ),
+        name: t("dialogs.keyboardShortcuts.shortcuts.switch-camera-4", "Переключиться на камеру 4"),
         keys: "4",
       },
     ],

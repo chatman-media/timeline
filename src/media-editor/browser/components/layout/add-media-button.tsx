@@ -47,7 +47,7 @@ export const AddMediaButton = memo(function AddMediaButton({
   useEffect(() => {
     // Обновляем состояние немедленно при изменении isAdded
     if (isAdded !== prevIsAddedRef.current) {
-      console.log(`Файл ${file.name} ${isAdded ? 'добавлен' : 'удален'}, обновляем состояние`)
+      console.log(`Файл ${file.name} ${isAdded ? "добавлен" : "удален"}, обновляем состояние`)
 
       // Если файл добавлен, устанавливаем флаг isRecentlyAdded
       if (isAdded) {
@@ -122,8 +122,8 @@ export const AddMediaButton = memo(function AddMediaButton({
         size > 100 ? "right-[5px] bottom-1" : "right-1 bottom-0.5",
         isAdded
           ? isRecentlyAdded
-            ? "scale-110 bg-[#38dacac3] dark:bg-[#35d1c1] visible" // Яркий цвет и увеличенный размер для недавно добавленных
-            : "bg-[#38dacac3] dark:bg-[#35d1c1] visible" // Добавлен класс visible
+            ? "visible scale-110 bg-[#38dacac3] dark:bg-[#35d1c1]" // Яркий цвет и увеличенный размер для недавно добавленных
+            : "visible bg-[#38dacac3] dark:bg-[#35d1c1]" // Добавлен класс visible
           : "bg-[#2f2d38] group-hover:bg-[#35d1c1]/75 hover:bg-[#35d1c1] dark:group-hover:bg-[#35d1c1] dark:hover:bg-[#35d1c1]",
       )}
       onClick={(e) => {

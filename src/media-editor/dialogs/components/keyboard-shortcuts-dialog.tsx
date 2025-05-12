@@ -14,13 +14,12 @@ import {
 } from "@/components/ui/select"
 
 // Импортируем типы и функции из наших новых модулей
-import { createPresets, PresetType, ShortcutCategory, Shortcut } from "./keyboard-shortcuts"
+import { createPresets, PresetType, Shortcut,ShortcutCategory } from "./keyboard-shortcuts"
 
 interface KeyboardShortcutsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
 }
-
 
 export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcutsDialogProps) {
   const { t, i18n } = useTranslation()
@@ -389,7 +388,7 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
                         return (
                           <div
                             key={shortcut.id}
-                            className={`flex items-center justify-between rounded px-3 py-2.5 border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 ${isEditing ? "ring-2 ring-[#00CCC0]" : ""} cursor-pointer`}
+                            className={`flex items-center justify-between rounded border-b border-gray-100 px-3 py-2.5 hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800 ${isEditing ? "ring-2 ring-[#00CCC0]" : ""} cursor-pointer`}
                             onClick={(e) => {
                               e.stopPropagation()
                               startEditing(index, shortcutIndex)
@@ -400,7 +399,9 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
                             }}
                             tabIndex={0}
                           >
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{shortcut.name}</span>
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                              {shortcut.name}
+                            </span>
                             <div
                               className={`px-3 py-1.5 ${isEditing ? "bg-[#00CCC0] text-black" : "bg-gray-100 dark:bg-gray-700"} min-w-[100px] rounded text-center font-sans text-sm tracking-wide shadow-sm transition-all`}
                             >

@@ -14,9 +14,11 @@ interface UserSettingsContextValue {
   activeTab: BrowserTab
   language: Language
   layoutMode: LayoutMode
+  screenshotsPath: string
   handleTabChange: (value: string) => void
   handleLanguageChange: (value: Language) => void
   handleLayoutChange: (value: LayoutMode) => void
+  handleScreenshotsPathChange: (value: string) => void
 }
 
 export const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(undefined)
@@ -88,6 +90,7 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
     activeTab: state.context.activeTab,
     language: state.context.language,
     layoutMode: state.context.layoutMode,
+    screenshotsPath: state.context.screenshotsPath,
     handleTabChange: (value: string) => {
       console.log("Tab change requested:", value)
       // Проверяем, что значение является допустимым BrowserTab
@@ -113,6 +116,11 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
       } else {
         console.error("Invalid layout value:", value)
       }
+    },
+    handleScreenshotsPathChange: (value: string) => {
+      console.log("Screenshots path change requested:", value)
+      send({ type: "UPDATE_SCREENSHOTS_PATH", path: value })
+      console.log("UPDATE_SCREENSHOTS_PATH event sent with path:", value)
     },
   }
 

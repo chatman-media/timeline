@@ -1,4 +1,14 @@
-import { Blend, FlipHorizontal2, Image, Layout, Music, Sparkles, Type } from "lucide-react"
+import {
+  Blend,
+  BrickWall,
+  FlipHorizontal2,
+  Grid2X2,
+  Image,
+  Layout,
+  Music,
+  Sparkles,
+  Type,
+} from "lucide-react"
 import dynamic from "next/dynamic"
 import { memo, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -99,7 +109,7 @@ const BrowserClient = memo(function BrowserClient() {
               <span>{t("browser.tabs.transitions")}</span>
             </TabsTrigger>
             <TabsTrigger value="templates" className={TAB_TRIGGER_STYLES}>
-              <Layout className="h-4 w-4" />
+              <Grid2X2 className="h-4 w-4" />
               <span>{t("browser.tabs.templates")}</span>
             </TabsTrigger>
           </TabsList>

@@ -24,7 +24,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Альтернативный вариант для настроек пользователя
@@ -40,7 +40,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Еще один вариант для настроек пользователя
@@ -56,7 +56,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Еще один вариант для настроек пользователя с символами
@@ -72,7 +72,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Еще один вариант для настроек пользователя с другим синтаксисом
@@ -88,7 +88,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Настройки проекта (Option+Command+запятая)
@@ -104,7 +104,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Альтернативный вариант для настроек проекта
@@ -120,7 +120,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Еще один вариант для настроек проекта
@@ -136,7 +136,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Еще один вариант для настроек проекта с символами
@@ -152,7 +152,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Еще один вариант для настроек проекта с другим синтаксисом
@@ -168,7 +168,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Горячие клавиши (Option+Command+K)
@@ -184,7 +184,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Альтернативный вариант для быстрых клавиш
@@ -200,7 +200,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Еще один вариант для быстрых клавиш
@@ -216,7 +216,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Еще один вариант для быстрых клавиш с символами
@@ -232,7 +232,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Еще один вариант для быстрых клавиш с другим синтаксисом
@@ -248,7 +248,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [handleOpenModal, isEnabled]
+    [handleOpenModal, isEnabled],
   )
 
   // Тестовый обработчик для клавиши запятая
@@ -264,7 +264,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [isEnabled]
+    [isEnabled],
   )
 
   // Тестовый обработчик для клавиши k
@@ -280,7 +280,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [isEnabled]
+    [isEnabled],
   )
 
   // Тестовый обработчик для клавиши точка
@@ -296,7 +296,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [isEnabled]
+    [isEnabled],
   )
 
   // Тестовый обработчик для клавиши alt+k
@@ -312,7 +312,7 @@ export function useAppHotkeys() {
       preventDefault: true,
       enabled: isEnabled,
     },
-    [isEnabled]
+    [isEnabled],
   )
 
   // Отключаем горячие клавиши, когда открыто модальное окно редактирования горячих клавиш
