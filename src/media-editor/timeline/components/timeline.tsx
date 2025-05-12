@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { formatDateByLanguage } from "@/i18n/constants"
 import { TimelineTopPanel } from "@/media-editor"
 import { usePlayerContext } from "@/media-editor/media-player"
 import { useTimeline } from "@/media-editor/timeline/services"
@@ -42,27 +43,12 @@ function formatSectionDate(dateString: string): string {
       console.error("Error getting current language:", error)
     }
 
-    const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
-
-    if (currentLanguage === "en") {
-      // Для английского используем формат "March 31, '25"
-      return date.toLocaleDateString(locale, {
-        day: "numeric",
-        month: "long",
-        year: "2-digit",
-      })
-    } else {
-      // Для русского используем формат "31 марта 25 г."
-      // Используем toLocaleDateString для правильного склонения месяцев
-      const formattedDate = date.toLocaleDateString(locale, {
-        day: "numeric",
-        month: "long",
-        year: "2-digit",
-      })
-
-      // Добавляем "г." в конце для русской локали
-      return formattedDate + " г."
-    }
+    // Используем универсальный метод форматирования даты
+    return formatDateByLanguage(date, currentLanguage, {
+      includeYear: true,
+      longFormat: true,
+      addYearSuffix: currentLanguage === "ru",
+    })
   } catch (e) {
     console.error("Error formatting section date:", e)
     return "Ошибка форматирования даты"

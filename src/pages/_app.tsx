@@ -6,6 +6,7 @@ import type { AppProps } from "next/app"
 import { ThemeProvider } from "next-themes"
 import { useEffect } from "react"
 
+import { isSupportedLanguage } from "@/i18n/constants"
 import { Providers } from "@/media-editor/providers"
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -23,11 +24,7 @@ export default function App({ Component, pageProps }: AppProps) {
       console.log("App: Initial load - i18n language:", i18n.language)
 
       // Если язык в localStorage отличается от текущего языка i18next, применяем его
-      if (
-        storedLang &&
-        (storedLang === "ru" || storedLang === "en") &&
-        storedLang !== i18n.language
-      ) {
+      if (storedLang && isSupportedLanguage(storedLang) && storedLang !== i18n.language) {
         console.log("App: Initial load - changing language to match localStorage:", storedLang)
         i18n.changeLanguage(storedLang)
       }

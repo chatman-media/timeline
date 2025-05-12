@@ -2,6 +2,9 @@ import i18n from "i18next"
 import LanguageDetector from "i18next-browser-languagedetector"
 import { initReactI18next } from "react-i18next"
 
+// Импорт констант для языков
+import { DEFAULT_LANGUAGE, isSupportedLanguage,LanguageCode } from "./constants"
+
 // Проверка, что код выполняется в браузере
 const isBrowser = typeof window !== "undefined"
 
@@ -33,12 +36,12 @@ const initI18n = () => {
   }
 
   // Получаем сохраненный язык из localStorage
-  let savedLanguage = "ru"
+  let savedLanguage = DEFAULT_LANGUAGE
   if (isBrowser) {
     try {
       const storedLanguage = localStorage.getItem("app-language")
-      if (storedLanguage && (storedLanguage === "ru" || storedLanguage === "en")) {
-        savedLanguage = storedLanguage
+      if (storedLanguage && isSupportedLanguage(storedLanguage)) {
+        savedLanguage = storedLanguage as LanguageCode
         console.log("i18n: Using saved language from localStorage:", savedLanguage)
       }
     } catch (error) {
@@ -90,11 +93,7 @@ if (isBrowser) {
     console.log("i18n: Window load event - localStorage language:", storedLang)
 
     // Если язык в localStorage отличается от текущего языка i18next, применяем его
-    if (
-      storedLang &&
-      (storedLang === "ru" || storedLang === "en") &&
-      storedLang !== currentI18nLang
-    ) {
+    if (storedLang && isSupportedLanguage(storedLang) && storedLang !== currentI18nLang) {
       console.log("i18n: Window load event - changing language to match localStorage:", storedLang)
       i18n.changeLanguage(storedLang)
     }

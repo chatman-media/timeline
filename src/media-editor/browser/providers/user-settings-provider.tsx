@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect } from "react"
 import {
   BrowserTab,
   Language,
+  LANGUAGES,
   LayoutMode,
   STORAGE_KEYS,
   userSettingsMachine,
@@ -42,7 +43,7 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
       // Если язык в localStorage отличается от текущего языка в state machine, обновляем его
       if (
         storedLang &&
-        (storedLang === "ru" || storedLang === "en") &&
+        LANGUAGES.includes(storedLang as Language) &&
         storedLang !== state.context.language
       ) {
         console.log("UserSettingsProvider: Updating language to match localStorage:", storedLang)

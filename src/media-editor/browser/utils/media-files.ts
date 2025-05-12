@@ -2,6 +2,7 @@ import { nanoid } from "nanoid"
 
 import i18n from "@/i18n"
 import i18next from "@/i18n"
+import { formatDateByLanguage } from "@/i18n/constants"
 import { getCameraModel } from "@/lib/utils"
 import { calculateTimeRanges } from "@/lib/video-utils"
 import type { MediaFile, Track } from "@/types/media"
@@ -121,15 +122,12 @@ export const groupFilesByDate = (media: MediaFile[]): DateGroup[] => {
   const currentLanguage = i18next.language || "ru"
   const noDateText = i18next.t("dates.noDate", { defaultValue: "Без даты" })
 
-  // Определяем локаль для форматирования даты
-  const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
-
   const videoFilesByDate = media.reduce<Record<string, MediaFile[]>>((acc, file) => {
+    // Форматируем дату с помощью универсального метода
     const date = file.startTime
-      ? new Date(file.startTime * 1000).toLocaleDateString(locale, {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
+      ? formatDateByLanguage(new Date(file.startTime * 1000), currentLanguage, {
+        includeYear: true,
+        longFormat: true,
       })
       : noDateText
 
@@ -348,13 +346,11 @@ export const createTracksFromFiles = (
     console.log(`Existing sector for date ${date}: ${existingSector ? "yes" : "no"}`)
     console.log(`Existing tracks for date ${date}: ${existingDayTracks.length}`)
 
-    // Форматируем дату для отображения в соответствии с локалью
-    const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
+    // Форматируем дату для отображения с помощью универсального метода
     const dateObj = new Date(date)
-    const formattedDate = dateObj.toLocaleDateString(locale, {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+    const formattedDate = formatDateByLanguage(dateObj, currentLanguage, {
+      includeYear: true,
+      longFormat: true,
     })
 
     // Создаем или используем существующий сектор для всех файлов дня
@@ -749,13 +745,11 @@ export const createTracksFromFiles = (
     const existingSector = existingSectorsByDay[date]?.sector
     const existingDayTracks = existingSectorsByDay[date]?.tracks || []
 
-    // Форматируем дату для отображения в соответствии с локалью
-    const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
+    // Форматируем дату для отображения с помощью универсального метода
     const dateObj = new Date(date)
-    const formattedDate = dateObj.toLocaleDateString(locale, {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
+    const formattedDate = formatDateByLanguage(dateObj, currentLanguage, {
+      includeYear: true,
+      longFormat: true,
     })
 
     // Создаем или используем существующий сектор для всех файлов дня

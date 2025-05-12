@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Language,LANGUAGES } from "@/media-editor/browser/machines/user-settings-machine"
+import { Language, LANGUAGES } from "@/media-editor/browser/machines/user-settings-machine"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
 
 interface UserSettingsDialogProps {
@@ -53,7 +53,7 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
       console.log("UserSettingsDialog: localStorage language:", storedLang)
 
       // Если язык в localStorage отличается от текущего языка в контексте, обновляем его
-      if (storedLang && (storedLang === "ru" || storedLang === "en") && storedLang !== language) {
+      if (storedLang && LANGUAGES.includes(storedLang as Language) && storedLang !== language) {
         console.log(
           "UserSettingsDialog: Updating selected language to match localStorage:",
           storedLang,

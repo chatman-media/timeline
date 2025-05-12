@@ -105,25 +105,28 @@ export function formatTimeWithMilliseconds(
   return timeString
 }
 
+import { DEFAULT_LANGUAGE, formatDateByLanguage,LanguageCode } from "@/i18n/constants"
+
 export function formatDate(timestamp: number): string {
   // Получаем текущий язык из localStorage или используем значение по умолчанию
-  let locale = "ru-RU"
+  let currentLanguage = DEFAULT_LANGUAGE
   try {
     // Проверяем, что мы на клиенте
     if (typeof window !== "undefined") {
       // Сначала пробуем получить язык из localStorage
       const storedLanguage = localStorage.getItem("app-language")
-      const currentLanguage = storedLanguage || "ru"
-      locale = currentLanguage === "en" ? "en-US" : "ru-RU"
+      if (storedLanguage) {
+        currentLanguage = storedLanguage as LanguageCode
+      }
     }
   } catch (error) {
     console.error("Error getting current language:", error)
   }
 
-  return new Date(timestamp * 1000).toLocaleDateString(locale, {
-    day: "numeric",
-    month: "long",
-    year: "2-digit",
+  // Используем универсальный метод форматирования даты
+  return formatDateByLanguage(new Date(timestamp * 1000), currentLanguage, {
+    includeYear: true,
+    longFormat: true,
   })
 }
 

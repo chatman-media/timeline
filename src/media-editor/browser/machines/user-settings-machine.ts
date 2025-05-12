@@ -28,9 +28,11 @@ export const BROWSER_TABS = [
 ] as const
 export const DEFAULT_TAB = "media"
 
+// Импортируем константы для языков из централизованного места
+import { DEFAULT_LANGUAGE, SUPPORTED_LANGUAGES } from "@/i18n/constants"
+
 // Допустимые значения для языка
-export const LANGUAGES = ["ru", "en", "es"] as const
-export const DEFAULT_LANGUAGE = "ru"
+export const LANGUAGES = SUPPORTED_LANGUAGES
 
 // Допустимые значения для макета
 export const LAYOUTS = ["default", "options", "vertical", "dual"] as const
