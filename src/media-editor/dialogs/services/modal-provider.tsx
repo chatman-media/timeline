@@ -26,8 +26,14 @@ export function ModalProvider({ children }: ModalProviderProps) {
     () => ({
       activeModal: state.context.activeModal,
       isRecordModalOpen: state.context.activeModal === "record",
-      handleOpenModal: (modal: ModalType) => send({ type: "OPEN", modal }),
-      handleCloseModal: () => send({ type: "CLOSE" }),
+      handleOpenModal: (modal: ModalType) => {
+        console.log("Открываем модальное окно:", modal)
+        send({ type: "OPEN", modal })
+      },
+      handleCloseModal: () => {
+        console.log("Закрываем модальное окно")
+        send({ type: "CLOSE" })
+      },
     }),
     [state.context, send],
   )

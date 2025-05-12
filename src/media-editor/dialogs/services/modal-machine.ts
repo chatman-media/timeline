@@ -1,17 +1,23 @@
 import { assign, createMachine } from "xstate"
 
-export type ModalType = "record" | "settings" | "none"
+export type ModalType = "record" | "settings" | "project-settings" | "user-settings" | "keyboard-shortcuts" | "none"
 
 interface ModalContext {
   activeModal: ModalType
   isRecordModalOpen: boolean
   isSettingsModalOpen: boolean
+  isProjectSettingsModalOpen: boolean
+  isUserSettingsModalOpen: boolean
+  isKeyboardShortcutsModalOpen: boolean
 }
 
 const initialContext: ModalContext = {
   activeModal: "none",
   isRecordModalOpen: false,
   isSettingsModalOpen: false,
+  isProjectSettingsModalOpen: false,
+  isUserSettingsModalOpen: false,
+  isKeyboardShortcutsModalOpen: false,
 }
 
 type OpenModalEvent = { type: "OPEN"; modal: ModalType }

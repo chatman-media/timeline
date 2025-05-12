@@ -199,6 +199,7 @@
       },
       "shortcuts": {
         "preferences": "Настройки пользователя",
+        "project-settings": "Настройки проекта",
         "shortcuts": "Быстрые клавиши",
         "new-project": "Создать новый проект",
         "open-project": "Открыть Проект",
@@ -376,7 +377,7 @@
       "videoWithNumber": "Видео {{number}}",
       "audioWithNumber": "Аудио {{number}}"
     },
-    "controls": {
+    "controlsMain": {
       "resizableMode": "Режим изменения размеров",
       "fixedSizeMode": "Режим фиксированных размеров",
       "resetTemplate": "Сбросить шаблон",

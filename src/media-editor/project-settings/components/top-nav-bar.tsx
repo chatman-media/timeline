@@ -3,6 +3,9 @@ import dynamic from "next/dynamic"
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
+import { useAppHotkeys } from "@/media-editor/keyboard-shortcuts/use-app-hotkeys"
+import { useModalContext } from "@/media-editor/dialogs/services/modal-provider"
+
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
@@ -27,11 +30,14 @@ interface TopNavBarProps {
 function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: TopNavBarProps) {
   const { name, isDirty, setName, setDirty } = useProject()
   const { t } = useTranslation()
+  const { handleOpenModal, handleCloseModal, activeModal } = useModalContext()
   const [isEditing, setIsEditing] = useState(false)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
-  const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
-  const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState(false)
+
+  // Определяем состояния модальных окон на основе activeModal
+  const isSettingsOpen = activeModal === "project-settings"
+  const isUserSettingsOpen = activeModal === "user-settings"
+  const isKeyboardShortcutsOpen = activeModal === "keyboard-shortcuts"
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value)
@@ -54,6 +60,9 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
   const handleExport = () => {
     setIsExportOpen(true)
   }
+
+  // Используем хук для обработки горячих клавиш
+  useAppHotkeys()
 
   return (
     <div className="relative flex w-full items-center justify-between border border-b bg-gray-200 px-1 py-[2px] dark:bg-[#1b1a1f]">
@@ -84,7 +93,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           variant="ghost"
           size="icon"
           title={t("topNavBar.keyboardShortcuts")}
-          onClick={() => setIsKeyboardShortcutsOpen(true)}
+          onClick={() => handleOpenModal("keyboard-shortcuts")}
         >
           <Keyboard className="h-5 w-5" />
         </Button>
@@ -95,7 +104,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           variant="ghost"
           size="icon"
           title={t("topNavBar.projectSettings")}
-          onClick={() => setIsSettingsOpen(true)}
+          onClick={() => handleOpenModal("project-settings")}
         >
           <Settings className="h-5 w-5" />
         </Button>
@@ -192,7 +201,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           size="icon"
           className="mr-1 h-7 w-7 cursor-pointer p-0"
           title={t("topNavBar.userSettings")}
-          onClick={() => setIsUserSettingsOpen(true)}
+          onClick={() => handleOpenModal("user-settings")}
         >
           <UserCog className="h-5 w-5" />
         </Button>
@@ -207,11 +216,23 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
         </Button>
       </div>
       <ExportDialog open={isExportOpen} onOpenChange={setIsExportOpen} />
-      <ProjectSettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
-      <UserSettingsDialog open={isUserSettingsOpen} onOpenChange={setIsUserSettingsOpen} />
+      <ProjectSettingsDialog
+        open={isSettingsOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseModal()
+        }}
+      />
+      <UserSettingsDialog
+        open={isUserSettingsOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseModal()
+        }}
+      />
       <KeyboardShortcutsDialog
         open={isKeyboardShortcutsOpen}
-        onOpenChange={setIsKeyboardShortcutsOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseModal()
+        }}
       />
     </div>
   )
