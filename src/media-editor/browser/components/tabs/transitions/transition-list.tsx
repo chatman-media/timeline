@@ -44,7 +44,7 @@ const TransitionPreview = ({
   size,
 }: TransitionPreviewProps) => {
   const { i18n } = useTranslation()
-  const { addTransition, isTransitionAdded } = useTimeline()
+  const { addTransition, isTransitionAdded, removeResource, transitionResources } = useTimeline()
   const [isHovering, setIsHovering] = useState(false)
   const [isError, setIsError] = useState(false)
   const sourceVideoRef = useRef<HTMLVideoElement>(null)
@@ -279,8 +279,25 @@ const TransitionPreview = ({
               >
                 <AddMediaButton
                   file={{ id: transitionType, path: "", name: transitionType }}
-                  onAddMedia={() => {
+                  onAddMedia={(e) => {
+                    e.stopPropagation()
                     addTransition(transitionObj)
+                  }}
+                  onRemoveMedia={(e) => {
+                    e.stopPropagation()
+                    // Находим ресурс с этим переходом и удаляем его
+                    const resource = transitionResources.find(
+                      (res) =>
+                        res.resourceId === transitionObj.id ||
+                        res.resourceId === transitionObj.type,
+                    )
+                    if (resource) {
+                      removeResource(resource.id)
+                    } else {
+                      console.warn(
+                        `Не удалось найти ресурс перехода с ID ${transitionObj.id} для удаления`,
+                      )
+                    }
                   }}
                   isAdded={isAdded}
                   size={size}

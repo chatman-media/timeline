@@ -1,3 +1,5 @@
+import { useId } from "react"
+
 import { TimelineMark } from "./timeline-mark"
 
 interface TimelineMarksProps {
@@ -9,6 +11,7 @@ interface TimelineMarksProps {
   isActive: boolean
   zoomLevel?: number
   timeToPosition?: (time: number) => number
+  sectionId?: string // Опциональный ID секции для уникальности ключей
 }
 
 export function TimelineMarks({
@@ -19,7 +22,10 @@ export function TimelineMarks({
   subStep,
   isActive,
   timeToPosition,
+  sectionId,
 }: TimelineMarksProps) {
+  // Используем React useId для создания уникального идентификатора компонента
+  const componentId = useId()
   // Если функция timeToPosition не передана, создаем ее локально
   const calculatePosition =
     timeToPosition ||
@@ -72,9 +78,15 @@ export function TimelineMarks({
       continue
     }
 
+    // Генерируем уникальный ключ, добавляя префикс к timestamp, startTime и componentId
+    // Это предотвращает конфликты ключей между разными секциями таймлайна
+    // Используем sectionId (если передан) или componentId для обеспечения уникальности
+    const sectionPrefix = sectionId || componentId.replace(/:/g, "-")
+    const markKey = `mark-${sectionPrefix}-${startTime.toFixed(0)}-${timestamp.toFixed(0)}-${markType}`
+
     marks.push(
       <TimelineMark
-        key={timestamp}
+        key={markKey}
         timestamp={timestamp}
         position={position}
         markType={markType}

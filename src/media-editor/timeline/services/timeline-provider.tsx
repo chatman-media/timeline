@@ -38,6 +38,7 @@ interface TimelineContextType {
   filterResources: TimelineResource[] // Фильтры
   transitionResources: TimelineResource[] // Переходы
   templateResources: TimelineResource[] // Шаблоны
+  musicResources: TimelineResource[] // Музыкальные файлы
 
   zoom: (level: number) => void
   fitToScreen: (containerWidth: number) => void
@@ -62,6 +63,7 @@ interface TimelineContextType {
   addFilter: (filter: VideoFilter) => void
   addTransition: (transition: TransitionEffect) => void
   addTemplate: (template: MediaTemplate) => void
+  addMusic: (file: MediaFile) => void
   removeResource: (resourceId: string) => void
   updateResource: (resourceId: string, params: Record<string, any>) => void
 
@@ -70,6 +72,7 @@ interface TimelineContextType {
   isFilterAdded: (filter: VideoFilter) => boolean
   isTransitionAdded: (transition: TransitionEffect) => boolean
   isTemplateAdded: (template: MediaTemplate) => boolean
+  isMusicFileAdded: (file: MediaFile) => boolean
 }
 
 interface TimelineProviderProps {
@@ -233,6 +236,14 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [send],
   )
 
+  const handleAddMusic = React.useCallback(
+    (file: MediaFile) => {
+      console.log("Adding music file to resources:", file.name)
+      send({ type: "ADD_MUSIC", file })
+    },
+    [send],
+  )
+
   const handleRemoveResource = React.useCallback(
     (resourceId: string) => {
       send({ type: "REMOVE_RESOURCE", resourceId })
@@ -248,46 +259,151 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
   )
 
   // Методы для проверки наличия ресурса в хранилище
+  // Создаем кэш для результатов проверки эффектов
+  const effectAddedCache = React.useRef<Record<string, boolean>>({})
+
+  // Сбрасываем кэш при изменении effectResources
+  React.useEffect(() => {
+    effectAddedCache.current = {}
+  }, [state.effectResources])
+
   const isEffectAdded = React.useCallback(
     (effect: VideoEffect) => {
-      return state.effectResources.some((resource) => resource.resourceId === effect.id)
+      // Проверяем, есть ли результат в кэше
+      if (effectAddedCache.current[effect.id] !== undefined) {
+        return effectAddedCache.current[effect.id]
+      }
+
+      // Если результата нет в кэше, вычисляем его
+      const isAdded = state.effectResources.some((resource) => resource.resourceId === effect.id)
+
+      // Сохраняем результат в кэше
+      effectAddedCache.current[effect.id] = isAdded
+
+      return isAdded
     },
     [state.effectResources],
   )
 
+  // Создаем кэш для результатов проверки фильтров
+  const filterAddedCache = React.useRef<Record<string, boolean>>({})
+
+  // Сбрасываем кэш при изменении filterResources
+  React.useEffect(() => {
+    filterAddedCache.current = {}
+  }, [state.filterResources])
+
   const isFilterAdded = React.useCallback(
     (filter: VideoFilter) => {
-      return state.filterResources.some((resource) => resource.resourceId === filter.id)
+      // Проверяем, есть ли результат в кэше
+      if (filterAddedCache.current[filter.id] !== undefined) {
+        return filterAddedCache.current[filter.id]
+      }
+
+      // Если результата нет в кэше, вычисляем его
+      const isAdded = state.filterResources.some((resource) => resource.resourceId === filter.id)
+
+      // Сохраняем результат в кэше
+      filterAddedCache.current[filter.id] = isAdded
+
+      return isAdded
     },
     [state.filterResources],
   )
 
+  // Создаем кэш для результатов проверки переходов
+  const transitionAddedCache = React.useRef<Record<string, boolean>>({})
+
+  // Сбрасываем кэш при изменении transitionResources
+  React.useEffect(() => {
+    transitionAddedCache.current = {}
+  }, [state.transitionResources])
+
   const isTransitionAdded = React.useCallback(
     (transition: TransitionEffect) => {
-      console.log("Checking if transition is added:", transition)
-      console.log("Current transitionResources:", state.transitionResources)
+      // Проверяем, есть ли результат в кэше
+      const cacheKey = transition.id || transition.type
+      if (transitionAddedCache.current[cacheKey] !== undefined) {
+        return transitionAddedCache.current[cacheKey]
+      }
 
+      // Если результата нет в кэше, вычисляем его
       const isAdded = state.transitionResources.some((resource) => {
-        const match =
-          resource.resourceId === transition.id || resource.resourceId === transition.type
-        console.log(
-          `Resource ${resource.id} (${resource.resourceId}) matches transition ${transition.id} (${transition.type}):`,
-          match,
-        )
-        return match
+        return resource.resourceId === transition.id || resource.resourceId === transition.type
       })
 
-      console.log("Transition isAdded result:", isAdded)
+      // Сохраняем результат в кэше
+      transitionAddedCache.current[cacheKey] = isAdded
+
+      // Логируем только при первой проверке для каждого перехода
+      // console.log("Checking if transition is added:", transition)
+      // console.log("Current transitionResources:", state.transitionResources)
+      // console.log("Transition isAdded result:", isAdded)
+
       return isAdded
     },
     [state.transitionResources],
   )
 
+  // Создаем кэш для результатов проверки шаблонов
+  const templateAddedCache = React.useRef<Record<string, boolean>>({})
+
+  // Сбрасываем кэш при изменении templateResources
+  React.useEffect(() => {
+    templateAddedCache.current = {}
+  }, [state.templateResources])
+
   const isTemplateAdded = React.useCallback(
     (template: MediaTemplate) => {
-      return state.templateResources.some((resource) => resource.resourceId === template.id)
+      // Проверяем, есть ли результат в кэше
+      if (templateAddedCache.current[template.id] !== undefined) {
+        return templateAddedCache.current[template.id]
+      }
+
+      // Если результата нет в кэше, вычисляем его
+      const isAdded = state.templateResources.some(
+        (resource) => resource.resourceId === template.id,
+      )
+
+      // Сохраняем результат в кэше
+      templateAddedCache.current[template.id] = isAdded
+
+      return isAdded
     },
     [state.templateResources],
+  )
+
+  // Создаем кэш для результатов проверки музыкальных файлов
+  const musicFileAddedCache = React.useRef<Record<string, boolean>>({})
+
+  // Сбрасываем кэш при изменении musicResources
+  React.useEffect(() => {
+    musicFileAddedCache.current = {}
+  }, [state.musicResources])
+
+  const isMusicFileAdded = React.useCallback(
+    (file: MediaFile) => {
+      // Проверяем, есть ли результат в кэше
+      if (musicFileAddedCache.current[file.id] !== undefined) {
+        return musicFileAddedCache.current[file.id]
+      }
+
+      // Если результата нет в кэше, вычисляем его
+      const isAdded = state.musicResources.some(
+        (resource) => resource.type === "music" && resource.resourceId === file.id,
+      )
+
+      // Сохраняем результат в кэше
+      musicFileAddedCache.current[file.id] = isAdded
+
+      // Логируем только при первой проверке для каждого файла
+      // console.log("Checking if music file is added:", file.name, file.id)
+      // console.log("Current music resources:", state.musicResources)
+      // console.log("Music file isAdded result:", isAdded)
+
+      return isAdded
+    },
+    [state.musicResources],
   )
 
   const value: TimelineContextType = {
@@ -315,6 +431,7 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     addFilter: handleAddFilter,
     addTransition: handleAddTransition,
     addTemplate: handleAddTemplate,
+    addMusic: handleAddMusic,
     removeResource: handleRemoveResource,
     updateResource: handleUpdateResource,
 
@@ -323,6 +440,7 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     isFilterAdded,
     isTransitionAdded,
     isTemplateAdded,
+    isMusicFileAdded,
   }
 
   return <TimelineContext.Provider value={value}>{children}</TimelineContext.Provider>

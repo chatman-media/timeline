@@ -41,10 +41,12 @@ export default async function handler(
         metadataCache.set(filePath, probeData as FfprobeData)
 
         return {
+          id: `music-${file.replace(/[^a-zA-Z0-9]/g, "-")}`,
           name: file,
           path: `/${type}/${file}`,
           probeData,
           isVideo: false,
+          isAudio: true,
         }
       } catch (error) {
         console.error(`Error processing file ${file}:`, error)

@@ -50,7 +50,7 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
   }
 
   const { height: previewHeight, width: previewWidth } = calculateDimensions()
-  const { addTemplate, isTemplateAdded } = useTimeline()
+  const { addTemplate, isTemplateAdded, removeResource, templateResources } = useTimeline()
 
   // Создаем клон элемента с добавлением ключа для предотвращения предупреждения React
   const renderedTemplate = template.render()
@@ -58,8 +58,21 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
   // Проверяем, добавлен ли шаблон уже в хранилище
   const isAdded = isTemplateAdded(template)
 
-  const handleAddTemplate = () => {
+  const handleAddTemplate = (e: React.MouseEvent, _file: MediaFile) => {
+    e.stopPropagation()
     addTemplate(template)
+  }
+
+  const handleRemoveTemplate = (e: React.MouseEvent, _file: MediaFile) => {
+    e.stopPropagation()
+    // Находим ресурс с этим шаблоном и удаляем его
+    const resource = templateResources.find((res) => res.resourceId === template.id)
+
+    if (resource) {
+      removeResource(resource.id)
+    } else {
+      console.warn(`Не удалось найти ресурс шаблона с ID ${template.id} для удаления`)
+    }
   }
 
   return (
@@ -79,6 +92,7 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
         <AddMediaButton
           file={{ id: template.id, path: "", name: template.id }}
           onAddMedia={handleAddTemplate}
+          onRemoveMedia={handleRemoveTemplate}
           isAdded={isAdded}
           size={previewWidth}
         />

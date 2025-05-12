@@ -1639,18 +1639,21 @@ export function MediaPlayer() {
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [isPlaying, video?.id, setIsPlaying, videoRefs])
 
-  if (!video?.id) return null
+  // Удаляем проверку на наличие видео, чтобы плеер всегда отображался
+  // if (!video?.id) return null
 
   // Для видео всегда возвращаем true, чтобы оно отображалось
   // Это предотвращает проблемы с отображением при разных типах времени
   const isTimeInRange = true
 
-  // Определяем, какие видео нужно отображать
-  // Используем только активное видео для рендеринга, чтобы избежать проблем с дубликатами
-  const videosToRender = video ? [video] : []
-
   // Определяем, какое видео активно
-  const activeId = video ? video.id : null
+  // Если есть активное видео, используем его ID
+  // Если нет активного видео, но есть примененный шаблон с видео, используем ID первого видео из шаблона
+  const activeId = video
+    ? video.id
+    : appliedTemplate?.videos && appliedTemplate.videos.length > 0
+      ? appliedTemplate.videos[0].id
+      : null
 
   // Логируем информацию о параллельных видео для отладки
   console.log(
@@ -1664,9 +1667,13 @@ export function MediaPlayer() {
       ? appliedTemplate.videos
       : parallelVideos.length > 0
         ? parallelVideos.slice(0, appliedTemplate.template.screens || 1) // Ограничиваем количество видео количеством экранов в шаблоне
-        : videosToRender
+        : video
+          ? [video]
+          : []
     : // Если нет примененного шаблона, используем стандартный подход
-    videosToRender
+    video
+      ? [video]
+      : [] // Если нет активного видео, возвращаем пустой массив
 
   // Логируем информацию о видео для отладки
   console.log(
@@ -1688,36 +1695,18 @@ export function MediaPlayer() {
     `[MediaPlayer] Параллельные видео: ${parallelVideos.map((v) => v.id).join(", ")}, активное видео: ${activeId}`,
   )
 
-  // Вычисляем стили для контейнера видео с учетом соотношения сторон
+  // Вычисляем соотношение сторон для AspectRatio
+  const aspectRatioValue = aspectRatio.width / aspectRatio.height
+
+  // Вычисляем стили для контейнера видео
   const containerStyle = {
     position: "relative" as const,
     width: "100%",
     height: "100%",
-    maxWidth: "100%",
-    maxHeight: "100%",
-    overflow: "hidden",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-  }
-
-  // Вычисляем стили для обертки с фиксированным соотношением сторон
-  const wrapperStyle = {
-    position: "relative" as const,
-    width: "100%",
-    height: "0",
-    paddingTop: `${(aspectRatio.height / aspectRatio.width) * 100}%`,
-    maxWidth: `calc(100vh * ${aspectRatio.width / aspectRatio.height})`,
-    maxHeight: `calc(100vw * ${aspectRatio.height / aspectRatio.width})`,
-  }
-
-  // Вычисляем стили для внутреннего контейнера
-  const innerContainerStyle = {
-    position: "absolute" as const,
-    top: "0",
-    left: "0",
-    width: "100%",
-    height: "100%",
+    overflow: "hidden",
   }
 
   // Логируем информацию о шаблоне и видео для отладки
@@ -1726,195 +1715,213 @@ export function MediaPlayer() {
   console.log("[MediaPlayer] Активное видео ID:", activeId)
   console.log("[MediaPlayer] Соотношение сторон:", aspectRatio)
 
-  // Вычисляем соотношение сторон для AspectRatio
-  const aspectRatioValue = aspectRatio.width / aspectRatio.height
-
   return (
     <div className="relative flex h-full flex-col">
       <div className="relative flex-1 bg-black" style={containerStyle}>
-        {isTimeInRange ? (
-          <div style={wrapperStyle}>
-            <div style={innerContainerStyle}>
-              {/* Логируем информацию о шаблоне для отладки */}
-
-              {/* Если есть примененный шаблон и он настраиваемый, используем ResizableTemplate */}
-              {appliedTemplate?.template && appliedTemplate.template.resizable ? (
-                <ResizableTemplate
-                  appliedTemplate={appliedTemplate}
-                  videos={videosToDisplay}
-                  activeVideoId={activeId}
-                  videoRefs={videoRefs}
-                />
-              ) : (
-                // Иначе используем стандартный подход с абсолютным позиционированием
-                videosToDisplay.map((videoItem, index) => {
-                  // Получаем стили для видео в зависимости от шаблона
-                  const videoStyle: VideoTemplateStyle = appliedTemplate?.template
-                    ? getVideoStyleForTemplate(
-                      appliedTemplate.template,
-                      index,
-                      videosToDisplay.length,
-                    )
-                    : {
-                      position: "absolute" as const,
-                      top: "0",
-                      left: "0",
-                      width: "100%",
-                      height: "100%",
-                      display: videoItem.id === activeId ? "block" : "none",
-                    }
-
-                  // Логируем стили для отладки
-                  console.log(
-                    `[MediaPlayer] Стили для видео ${videoItem.id} (индекс ${index}):`,
-                    videoStyle,
-                  )
-
-                  // Если используется шаблон, применяем ResizableVideo
-                  if (appliedTemplate?.template) {
-                    // Добавляем отладочный вывод
-                    console.log(
-                      `[MediaPlayer] Применяем шаблон ${appliedTemplate.template.id}, resizable: ${appliedTemplate.template.resizable}, split: ${appliedTemplate.template.split}`,
-                    )
-                    // Создаем компонент-обертку для ResizableVideo
-                    const ResizableVideoWrapper = () => {
-                      // Создаем ref для контейнера, если его еще нет
-                      if (!videoContainerRefs.current[`${videoItem.id}-${index}`]) {
-                        videoContainerRefs.current[`${videoItem.id}-${index}`] =
-                          React.createRef<HTMLDivElement>()
-                      }
-
-                      // Получаем ref для контейнера
-                      const containerRef = videoContainerRefs.current[`${videoItem.id}-${index}`]
-
-                      return (
-                        <div
-                          className="absolute"
-                          style={{
-                            ...videoStyle,
-                            display: videoItem.path ? "block" : "none", // Показываем только видео с путем
-                            border: "1px solid #38dacac3", // Добавляем рамку для отладки
-                            overflow: "visible", // Убираем overflow: hidden
-                          }}
-                          data-video-id={videoItem.id} // Добавляем атрибут для отладки
-                          ref={containerRef}
-                        >
-                          {videoItem && videoItem.path ? (
-                            <ResizableVideo
-                              video={videoItem}
-                              isActive={videoItem.id === activeId}
-                              videoRefs={videoRefs}
-                              index={index}
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-black">
-                              <span className="text-white">
-                                {t("timeline.player.videoUnavailable", "Видео недоступно")}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      )
-                    }
-
-                    return <ResizableVideoWrapper key={`wrapper-${videoItem.id}-${index}`} />
-                  }
-
-                  // Если шаблон не используется, используем стандартный подход
-                  return (
-                    <video
-                      key={`${videoItem.id}-${index}`} // Добавляем индекс к ключу, чтобы сделать его уникальным
-                      ref={(el) => {
-                        if (el && (!videoRefs[videoItem.id] || videoRefs[videoItem.id] !== el)) {
-                          console.log(`[MediaPlayer] Монтирование видео элемента ${videoItem.id}`)
-
-                          videoRefs[videoItem.id] = el
-
-                          // Проверяем, что путь к видео существует
-                          if (videoItem.path) {
-                            console.log(
-                              `[MediaPlayer] Устанавливаем src для видео ${videoItem.id}: ${videoItem.path}`,
-                            )
-                            el.src = videoItem.path
-                            el.load()
-                          } else {
-                            console.error(
-                              `[MediaPlayer] Ошибка: путь к видео ${videoItem.id} не определен`,
-                            )
+        <div className="flex h-full w-full items-center justify-center">
+          <div className="max-h-[calc(100%-85px)] w-full max-w-[100%]">
+            <AspectRatio ratio={aspectRatioValue} className="bg-black">
+              <div className="relative h-full w-full">
+                {videosToDisplay && videosToDisplay.length > 0 ? (
+                  // Если есть видео для отображения
+                  <div className="h-full w-full">
+                    {/* Если есть примененный шаблон и он настраиваемый, используем ResizableTemplate */}
+                    {appliedTemplate?.template && appliedTemplate.template.resizable ? (
+                      <ResizableTemplate
+                        appliedTemplate={appliedTemplate}
+                        videos={videosToDisplay}
+                        activeVideoId={activeId}
+                        videoRefs={videoRefs}
+                      />
+                    ) : (
+                      // Иначе используем стандартный подход с абсолютным позиционированием
+                      videosToDisplay.map((videoItem, index) => {
+                        // Получаем стили для видео в зависимости от шаблона
+                        const videoStyle: VideoTemplateStyle = appliedTemplate?.template
+                          ? getVideoStyleForTemplate(
+                            appliedTemplate.template,
+                            index,
+                            videosToDisplay.length,
+                          )
+                          : {
+                            position: "absolute" as const,
+                            top: "0",
+                            left: "0",
+                            width: "100%",
+                            height: "100%",
+                            display: videoItem.id === activeId ? "block" : "none",
                           }
 
-                          // Устанавливаем обработчик загрузки метаданных
-                          el.onloadedmetadata = () => {
-                            console.log(
-                              `[MediaPlayer] Метаданные загружены для видео ${videoItem.id}`,
-                            )
-                          }
+                        // Логируем стили для отладки
+                        console.log(
+                          `[MediaPlayer] Стили для видео ${videoItem.id} (индекс ${index}):`,
+                          videoStyle,
+                        )
 
-                          // Устанавливаем обработчик загрузки данных
-                          el.onloadeddata = () => {
-                            console.log(`[MediaPlayer] Данные загружены для видео ${videoItem.id}`)
-                          }
-
-                          // Устанавливаем обработчик ошибок напрямую
-                          el.onerror = (e) => {
-                            console.error(`[Video] Ошибка видео ${videoItem.id}:`, e)
-
-                            // Если это активное видео, сбрасываем флаг воспроизведения
-                            if (videoItem.id === activeId) {
-                              setIsPlaying(false)
-
-                              // Сбрасываем флаг isChangingCamera при ошибке
-                              if (isChangingCamera) {
-                                setIsChangingCamera(false)
-                              }
+                        // Если используется шаблон, применяем ResizableVideo
+                        if (appliedTemplate?.template) {
+                          // Добавляем отладочный вывод
+                          console.log(
+                            `[MediaPlayer] Применяем шаблон ${appliedTemplate.template.id}, resizable: ${appliedTemplate.template.resizable}, split: ${appliedTemplate.template.split}`,
+                          )
+                          // Создаем компонент-обертку для ResizableVideo
+                          const ResizableVideoWrapper = () => {
+                            // Создаем ref для контейнера, если его еще нет
+                            if (!videoContainerRefs.current[`${videoItem.id}-${index}`]) {
+                              videoContainerRefs.current[`${videoItem.id}-${index}`] =
+                                React.createRef<HTMLDivElement>()
                             }
 
-                            // Пробуем перезагрузить видео
-                            try {
-                              if (videoItem.path) {
-                                console.log(`[Video] Пробуем перезагрузить видео ${videoItem.id}`)
-                                el.src = videoItem.path
-                                el.load()
+                            // Получаем ref для контейнера
+                            const containerRef =
+                              videoContainerRefs.current[`${videoItem.id}-${index}`]
+
+                            return (
+                              <div
+                                className="absolute"
+                                style={{
+                                  ...videoStyle,
+                                  display: videoItem.path ? "block" : "none", // Показываем только видео с путем
+                                  border: "1px solid #38dacac3", // Добавляем рамку для отладки
+                                  overflow: "visible", // Убираем overflow: hidden
+                                }}
+                                data-video-id={videoItem.id} // Добавляем атрибут для отладки
+                                ref={containerRef}
+                              >
+                                {videoItem && videoItem.path ? (
+                                  <ResizableVideo
+                                    video={videoItem}
+                                    isActive={videoItem.id === activeId}
+                                    videoRefs={videoRefs}
+                                    index={index}
+                                  />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center bg-black">
+                                    <span className="text-white">
+                                      {t("timeline.player.videoUnavailable", "Видео недоступно")}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            )
+                          }
+
+                          return <ResizableVideoWrapper key={`wrapper-${videoItem.id}-${index}`} />
+                        }
+
+                        // Если шаблон не используется, используем стандартный подход
+                        return (
+                          <video
+                            key={`${videoItem.id}-${index}`} // Добавляем индекс к ключу, чтобы сделать его уникальным
+                            ref={(el) => {
+                              if (
+                                el &&
+                                (!videoRefs[videoItem.id] || videoRefs[videoItem.id] !== el)
+                              ) {
+                                console.log(
+                                  `[MediaPlayer] Монтирование видео элемента ${videoItem.id}`,
+                                )
+
+                                videoRefs[videoItem.id] = el
+
+                                // Проверяем, что путь к видео существует
+                                if (videoItem.path) {
+                                  console.log(
+                                    `[MediaPlayer] Устанавливаем src для видео ${videoItem.id}: ${videoItem.path}`,
+                                  )
+                                  el.src = videoItem.path
+                                  el.load()
+                                } else {
+                                  console.error(
+                                    `[MediaPlayer] Ошибка: путь к видео ${videoItem.id} не определен`,
+                                  )
+                                }
+
+                                // Устанавливаем обработчик загрузки метаданных
+                                el.onloadedmetadata = () => {
+                                  console.log(
+                                    `[MediaPlayer] Метаданные загружены для видео ${videoItem.id}`,
+                                  )
+                                }
+
+                                // Устанавливаем обработчик загрузки данных
+                                el.onloadeddata = () => {
+                                  console.log(
+                                    `[MediaPlayer] Данные загружены для видео ${videoItem.id}`,
+                                  )
+                                }
+
+                                // Устанавливаем обработчик ошибок напрямую
+                                el.onerror = (e) => {
+                                  console.error(`[Video] Ошибка видео ${videoItem.id}:`, e)
+
+                                  // Если это активное видео, сбрасываем флаг воспроизведения
+                                  if (videoItem.id === activeId) {
+                                    setIsPlaying(false)
+
+                                    // Сбрасываем флаг isChangingCamera при ошибке
+                                    if (isChangingCamera) {
+                                      setIsChangingCamera(false)
+                                    }
+                                  }
+
+                                  // Пробуем перезагрузить видео
+                                  try {
+                                    if (videoItem.path) {
+                                      console.log(
+                                        `[Video] Пробуем перезагрузить видео ${videoItem.id}`,
+                                      )
+                                      el.src = videoItem.path
+                                      el.load()
+                                    }
+                                  } catch (loadError) {
+                                    console.error(
+                                      `[Video] Ошибка при перезагрузке видео ${videoItem.id}:`,
+                                      loadError,
+                                    )
+                                  }
+                                }
                               }
-                            } catch (loadError) {
-                              console.error(
-                                `[Video] Ошибка при перезагрузке видео ${videoItem.id}:`,
-                                loadError,
+                            }}
+                            src={videoItem.path || ""}
+                            className="object-contain"
+                            style={{
+                              ...videoStyle,
+                              // Если нет шаблона, показываем только активное видео
+                              display:
+                                videoItem.id === activeId && videoItem.path ? "block" : "none",
+                            }}
+                            data-video-id={videoItem.id} // Добавляем атрибут для отладки
+                            onClick={handlePlayPause}
+                            playsInline
+                            preload="auto"
+                            controls={false}
+                            autoPlay={false}
+                            loop={false}
+                            disablePictureInPicture
+                            muted={videoItem.id !== activeId} // Звук только у активного видео
+                            onLoadedData={() =>
+                              console.log(
+                                `[MediaPlayer] Видео ${videoItem.id} загружено и готово к воспроизведению`,
                               )
                             }
-                          }
-                        }
-                      }}
-                      src={videoItem.path || ""}
-                      className="object-contain"
-                      style={{
-                        ...videoStyle,
-                        // Если нет шаблона, показываем только активное видео
-                        display: videoItem.id === activeId && videoItem.path ? "block" : "none",
-                      }}
-                      data-video-id={videoItem.id} // Добавляем атрибут для отладки
-                      onClick={handlePlayPause}
-                      playsInline
-                      preload="auto"
-                      controls={false}
-                      autoPlay={false}
-                      loop={false}
-                      disablePictureInPicture
-                      muted={videoItem.id !== activeId} // Звук только у активного видео
-                      onLoadedData={() =>
-                        console.log(
-                          `[MediaPlayer] Видео ${videoItem.id} загружено и готово к воспроизведению`,
+                          />
                         )
-                      }
-                    />
-                  )
-                })
-              )}
-            </div>
+                      })
+                    )}
+                  </div>
+                ) : (
+                  // Если нет видео для отображения
+                  <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-black">
+                    <span className="text-lg text-white">
+                      {t("timeline.player.noVideoSelected", "Выберите видео для воспроизведения")}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </AspectRatio>
           </div>
-        ) : (
-          <div className="absolute inset-0 h-full w-full bg-black" />
-        )}
+        </div>
       </div>
       <PlayerControls currentTime={currentTime} />
     </div>

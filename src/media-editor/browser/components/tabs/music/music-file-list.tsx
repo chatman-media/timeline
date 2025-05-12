@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 
 import { cn, formatFileSize, formatTime } from "@/lib/utils"
 import { AddMediaButton, MusicToolbar } from "@/media-editor/browser"
+import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 import { MediaFile } from "@/types/media"
 
 import { useMusicMachine } from "./use-music-machine"
@@ -14,6 +15,7 @@ export function MusicFileList() {
   const [activeFile, setActiveFile] = useState<MediaFile | null>(null)
   const [isPlaying, setIsPlaying] = useState(false)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const { addMusic, removeResource, musicResources, isMusicFileAdded } = useTimeline()
   // const audioContextRef = useRef<AudioContext | null>(null)
   // const sourceRef = useRef<MediaElementAudioSourceNode | null>(null)
   // const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
@@ -189,7 +191,34 @@ export function MusicFileList() {
   }
 
   const handleAdd = (e: MouseEvent, file: MediaFile) => {
-    console.log(e, file)
+    e.stopPropagation()
+
+    // Проверяем, не добавлен ли файл уже
+    if (isMusicFileAdded(file)) {
+      console.log(`[handleAdd] Музыкальный файл ${file.name} уже добавлен`)
+      return
+    }
+
+    console.log("[handleAdd] Adding music file:", file.name)
+
+    // Добавляем музыкальный файл только в ресурсы
+    addMusic(file)
+  }
+
+  const handleRemove = (e: MouseEvent, file: MediaFile) => {
+    e.stopPropagation()
+    console.log("[handleRemove] Removing music file:", file.name)
+
+    // Находим ресурс с этим музыкальным файлом
+    const musicResource = musicResources.find(
+      (resource) => resource.type === "music" && resource.resourceId === file.id,
+    )
+
+    if (musicResource) {
+      removeResource(musicResource.id)
+    } else {
+      console.warn(`Не удалось найти ресурс музыкального файла с ID ${file.id} для удаления`)
+    }
   }
 
   return (
@@ -293,7 +322,12 @@ export function MusicFileList() {
                           </div>
                         </div>
                       </div>
-                      <AddMediaButton file={file} onAddMedia={handleAdd} />
+                      <AddMediaButton
+                        file={file}
+                        onAddMedia={handleAdd}
+                        onRemoveMedia={handleRemove}
+                        isAdded={isMusicFileAdded(file)}
+                      />
                     </div>
                   ))}
                 </div>
@@ -360,7 +394,13 @@ export function MusicFileList() {
                         </div>
                       </div>
 
-                      <AddMediaButton file={file} size={120} onAddMedia={handleAdd} />
+                      <AddMediaButton
+                        file={file}
+                        size={120}
+                        onAddMedia={handleAdd}
+                        onRemoveMedia={handleRemove}
+                        isAdded={isMusicFileAdded(file)}
+                      />
                     </div>
                   </div>
                 ))}

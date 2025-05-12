@@ -9,6 +9,7 @@ import { MediaFile } from "@/types/media"
 import {
   createEffectResource,
   createFilterResource,
+  createMusicResource,
   createTemplateResource,
   createTransitionResource,
   TimelineResource,
@@ -39,6 +40,7 @@ export interface TimelineContext {
   filterResources: TimelineResource[] // Фильтры
   transitionResources: TimelineResource[] // Переходы
   templateResources: TimelineResource[] // Шаблоны
+  musicResources: TimelineResource[] // Музыкальные файлы
 }
 
 export type TimelineEvent =
@@ -67,6 +69,7 @@ export type TimelineEvent =
   | { type: "ADD_FILTER"; filter: VideoFilter }
   | { type: "ADD_TRANSITION"; transition: TransitionEffect }
   | { type: "ADD_TEMPLATE"; template: MediaTemplate }
+  | { type: "ADD_MUSIC"; file: MediaFile }
   | { type: "REMOVE_RESOURCE"; resourceId: string }
   | { type: "UPDATE_RESOURCE"; resourceId: string; params: Record<string, any> }
 
@@ -93,6 +96,7 @@ const initialContext: TimelineContext = {
   filterResources: [],
   transitionResources: [],
   templateResources: [],
+  musicResources: [],
 }
 
 const addToHistory = ({
@@ -528,6 +532,24 @@ export const timelineMachine = createMachine({
         }),
       ],
     },
+    ADD_MUSIC: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "ADD_MUSIC") return context
+
+          console.log("ADD_MUSIC event received with file:", event.file.name)
+          const newResource = createMusicResource(event.file)
+          console.log("Created music resource:", newResource)
+
+          return {
+            ...context,
+            resources: [...context.resources, newResource],
+            musicResources: [...context.musicResources, newResource],
+            isDirty: true,
+          }
+        }),
+      ],
+    },
     REMOVE_RESOURCE: {
       actions: [
         assign(({ context, event }) => {
@@ -550,6 +572,9 @@ export const timelineMachine = createMachine({
               (resource) => resource.id !== event.resourceId,
             ),
             templateResources: context.templateResources.filter(
+              (resource) => resource.id !== event.resourceId,
+            ),
+            musicResources: context.musicResources.filter(
               (resource) => resource.id !== event.resourceId,
             ),
             isDirty: true,
@@ -603,6 +628,15 @@ export const timelineMachine = createMachine({
               return resource
             }),
             templateResources: context.templateResources.map((resource) => {
+              if (resource.id === event.resourceId) {
+                return {
+                  ...resource,
+                  params: { ...resource.params, ...event.params },
+                }
+              }
+              return resource
+            }),
+            musicResources: context.musicResources.map((resource) => {
               if (resource.id === event.resourceId) {
                 return {
                   ...resource,

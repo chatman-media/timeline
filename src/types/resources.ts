@@ -1,6 +1,7 @@
 import { VideoEffect } from "@/media-editor/browser/components/tabs/effects/effects"
 import { VideoFilter } from "@/media-editor/browser/components/tabs/filters/filters"
 import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
+import { MediaFile } from "@/types/media"
 import { TransitionEffect } from "@/types/transitions"
 
 // Общий интерфейс для всех ресурсов
@@ -13,7 +14,7 @@ export interface Resource {
 }
 
 // Типы ресурсов
-export type ResourceType = "effect" | "filter" | "transition" | "template"
+export type ResourceType = "effect" | "filter" | "transition" | "template" | "music"
 
 // Интерфейс для эффектов
 export interface EffectResource extends Resource {
@@ -43,12 +44,20 @@ export interface TemplateResource extends Resource {
   params?: Record<string, any> // Параметры шаблона
 }
 
+// Интерфейс для музыкальных файлов
+export interface MusicResource extends Resource {
+  type: "music"
+  file: MediaFile
+  params?: Record<string, any> // Параметры музыкального файла
+}
+
 // Тип для всех ресурсов
 export type TimelineResource =
   | EffectResource
   | FilterResource
   | TransitionResource
   | TemplateResource
+  | MusicResource
 
 // Функция для создания ресурса эффекта
 export function createEffectResource(effect: VideoEffect): EffectResource {
@@ -101,6 +110,19 @@ export function createTemplateResource(template: MediaTemplate): TemplateResourc
     resourceId: template.id,
     addedAt: Date.now(),
     template,
+    params: {},
+  }
+}
+
+// Функция для создания ресурса музыкального файла
+export function createMusicResource(file: MediaFile): MusicResource {
+  return {
+    id: `music-${file.id}-${Date.now()}`,
+    type: "music",
+    name: file.name,
+    resourceId: file.id,
+    addedAt: Date.now(),
+    file,
     params: {},
   }
 }

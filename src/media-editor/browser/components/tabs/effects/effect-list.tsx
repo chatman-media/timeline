@@ -20,7 +20,7 @@ interface EffectPreviewProps {
 
 const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
   const { i18n } = useTranslation()
-  const { addEffect, isEffectAdded } = useTimeline()
+  const { addEffect, isEffectAdded, removeResource, effectResources } = useTimeline()
   const [isHovering, setIsHovering] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>(null)
@@ -152,9 +152,22 @@ const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
         >
           <AddMediaButton
             file={{ id: effectType, path: "", name: effectType }}
-            onAddMedia={() => {
+            onAddMedia={(e) => {
+              e.stopPropagation()
               if (effect) {
                 addEffect(effect)
+              }
+            }}
+            onRemoveMedia={(e) => {
+              e.stopPropagation()
+              if (effect) {
+                // Находим ресурс с этим эффектом и удаляем его
+                const resource = effectResources.find((res) => res.resourceId === effect.id)
+                if (resource) {
+                  removeResource(resource.id)
+                } else {
+                  console.warn(`Не удалось найти ресурс эффекта с ID ${effect.id} для удаления`)
+                }
               }
             }}
             isAdded={isAdded}

@@ -1,12 +1,5 @@
+import { useTimelineScale } from "../use-timeline-scale"
 import { TimelineMarks } from "./timeline-marks"
-
-interface TimelineScaleProps {
-  timeStep: number
-  subStep: number
-  adjustedRange: TimeRange
-  isActive: boolean
-  timeToPosition?: (time: number) => number
-}
 
 interface TimeRange {
   startTime: number
@@ -14,19 +7,62 @@ interface TimeRange {
   duration: number
 }
 
+interface TimelineScaleProps {
+  // Старый интерфейс
+  timeStep?: number
+  subStep?: number
+  adjustedRange?: TimeRange
+  isActive?: boolean
+  timeToPosition?: (time: number) => number
+
+  // Новый интерфейс
+  startTime?: number
+  endTime?: number
+  duration?: number
+  sectorDate?: string
+  sectorZoomLevel?: number
+}
+
 export function TimelineScale({
-  timeStep,
-  subStep,
-  adjustedRange,
-  isActive,
+  // Поддержка старого интерфейса
+  timeStep: propTimeStep,
+  subStep: propSubStep,
+  adjustedRange: propAdjustedRange,
+  isActive = true,
   timeToPosition,
+
+  // Поддержка нового интерфейса
+  startTime,
+  endTime,
+  duration,
+  sectorZoomLevel = 1,
 }: TimelineScaleProps) {
+  // Создаем объект adjustedRange из новых параметров, если они переданы
+  const adjustedRange = propAdjustedRange || {
+    startTime: startTime || 0,
+    endTime: endTime || 0,
+    duration: duration || 0,
+  }
+
+  // Используем хук для расчета шагов шкалы времени
+  const { timeStep: calculatedTimeStep, subStep: calculatedSubStep } = useTimelineScale(
+    adjustedRange.duration,
+    adjustedRange.startTime,
+    adjustedRange.endTime,
+    sectorZoomLevel,
+  )
+
+  // Используем переданные значения или рассчитанные
+  const timeStep = propTimeStep || calculatedTimeStep
+  const subStep = propSubStep || calculatedSubStep
+
   // Если функция timeToPosition не передана, создаем ее локально
   const calculatePosition =
     timeToPosition ||
     ((time: number) => {
       return ((time - adjustedRange.startTime) / adjustedRange.duration) * 100
     })
+
   return (
     <div className={`relative mb-[13px] flex w-full flex-col`}>
       {/* Добавляем заголовок и линию времени */}
@@ -47,6 +83,7 @@ export function TimelineScale({
         subStep={subStep}
         isActive={isActive}
         timeToPosition={calculatePosition}
+        sectionId={`section-${startTime?.toFixed(0) || "0"}-${endTime?.toFixed(0) || "0"}`}
       />
     </div>
   )

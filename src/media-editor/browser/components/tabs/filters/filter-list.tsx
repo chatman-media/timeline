@@ -20,7 +20,7 @@ interface FilterPreviewProps {
 
 const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
   const { i18n } = useTranslation()
-  const { addFilter, isFilterAdded } = useTimeline()
+  const { addFilter, isFilterAdded, removeResource, filterResources } = useTimeline()
   const [isHovering, setIsHovering] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const timeoutRef = useRef<NodeJS.Timeout>(null)
@@ -94,8 +94,19 @@ const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
         >
           <AddMediaButton
             file={{ id: filter.id, path: "", name: filter.name }}
-            onAddMedia={() => {
+            onAddMedia={(e) => {
+              e.stopPropagation()
               addFilter(filter)
+            }}
+            onRemoveMedia={(e) => {
+              e.stopPropagation()
+              // Находим ресурс с этим фильтром и удаляем его
+              const resource = filterResources.find((res) => res.resourceId === filter.id)
+              if (resource) {
+                removeResource(resource.id)
+              } else {
+                console.warn(`Не удалось найти ресурс фильтра с ID ${filter.id} для удаления`)
+              }
             }}
             isAdded={isAdded}
             size={size}
