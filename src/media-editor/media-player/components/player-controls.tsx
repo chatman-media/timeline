@@ -669,14 +669,23 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
   // Улучшаем handlePlayPause: НЕ устанавливаем флаг isChangingCamera при переключении
   const handlePlayPause = useCallback(() => {
-    if (!video) return
+    // Проверяем, есть ли активное видео или видео в шаблоне или параллельные видео
+    const hasActiveVideo = !!video
+    const hasTemplateVideos = appliedTemplate?.videos && appliedTemplate.videos.length > 0
+    const hasParallelVideos = parallelVideos && parallelVideos.length > 0
+
+    // Если нет ни активного видео, ни видео в шаблоне, ни параллельных видео, выходим
+    if (!hasActiveVideo && !hasTemplateVideos && !hasParallelVideos) {
+      console.log("[handlePlayPause] Нет видео для воспроизведения")
+      return
+    }
 
     // Не устанавливаем флаг isChangingCamera при переключении между паузой и воспроизведением,
     // так как это приводит к сбросу времени
     console.log("[handlePlayPause] Переключение воспроизведения")
 
-    // Если начинаем воспроизведение, устанавливаем текущее время видео в displayTime
-    if (!isPlaying && video.id && videoRefs[video.id]) {
+    // Если начинаем воспроизведение и есть активное видео, устанавливаем текущее время видео в displayTime
+    if (!isPlaying && hasActiveVideo && video.id && videoRefs[video.id]) {
       const videoElement = videoRefs[video.id]
 
       // Если currentTime - это Unix timestamp, используем displayTime
@@ -687,16 +696,37 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
         videoElement.currentTime = displayTime
 
         // Сохраняем это время для текущего видео
-        if (video.id) {
-          console.log(
-            `[handlePlayPause] Сохраняем displayTime ${displayTime.toFixed(3)} для видео ${video.id}`,
-          )
-        }
+        console.log(
+          `[handlePlayPause] Сохраняем displayTime ${displayTime.toFixed(3)} для видео ${video.id}`,
+        )
       }
     }
 
+    // Проверяем готовность видео перед началом воспроизведения
+    if (!isPlaying && hasActiveVideo && video.id && videoRefs[video.id]) {
+      const videoElement = videoRefs[video.id]
+
+      // Проверяем готовность видео
+      if (videoElement.readyState < 3) {
+        console.log(`[handlePlayPause] Видео ${video.id} не готово, ожидаем загрузку...`)
+
+        // Показываем индикатор загрузки
+        // Это можно реализовать через состояние в контексте плеера, если нужно
+      }
+    }
+
+    // В любом случае переключаем состояние воспроизведения
     setIsPlaying(!isPlaying)
-  }, [isPlaying, setIsPlaying, video, videoRefs, currentTime, displayTime])
+  }, [
+    isPlaying,
+    setIsPlaying,
+    video,
+    videoRefs,
+    currentTime,
+    displayTime,
+    appliedTemplate,
+    parallelVideos,
+  ])
 
   return (
     <div className="flex w-full flex-col">

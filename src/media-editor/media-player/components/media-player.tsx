@@ -12,6 +12,7 @@ import {
   VideoTemplateStyle,
 } from "@/media-editor/media-player/services/template-service"
 import { useProject } from "@/media-editor/project-settings/project-provider"
+import { MediaFile } from "@/types/media"
 
 export function MediaPlayer() {
   // Для локализации
@@ -19,6 +20,14 @@ export function MediaPlayer() {
 
   // Используем состояние для хранения текста, чтобы избежать проблем с гидратацией
   const [noVideoText, setNoVideoText] = useState("")
+
+  // Состояние для отслеживания готовности видео
+  const [videoReadyState, setVideoReadyState] = useState<Record<string, number>>({})
+
+  // Функция для проверки готовности видео
+  const isVideoReady = (videoId: string): boolean => {
+    return videoReadyState[videoId] >= 3 // HAVE_FUTURE_DATA или HAVE_ENOUGH_DATA
+  }
 
   // Обновляем текст при изменении языка
   useEffect(() => {
@@ -1485,11 +1494,21 @@ export function MediaPlayer() {
 
   // Эффект для обработки изменения состояния воспроизведения
   useEffect(() => {
-    if (!video?.id) return
+    // Проверяем, есть ли активное видео или видео в шаблоне
+    const hasActiveVideo = !!video?.id
+    const hasTemplateVideos = appliedTemplate?.videos && appliedTemplate.videos.length > 0
+    const hasParallelVideos = parallelVideos && parallelVideos.length > 0
 
-    // Получаем видео элемент
-    const videoElement = videoRefs[video.id]
-    if (!videoElement) return
+    // Если нет ни активного видео, ни видео в шаблоне, ни параллельных видео, выходим
+    if (!hasActiveVideo && !hasTemplateVideos && !hasParallelVideos) {
+      console.log("[PlayPauseEffect] Нет видео для воспроизведения")
+      return
+    }
+
+    // Получаем видео элемент, если есть активное видео
+    const videoElement = hasActiveVideo ? videoRefs[video.id] : null
+    // Если есть активное видео, но нет элемента, и нет других видео, выходим
+    if (hasActiveVideo && !videoElement && !hasTemplateVideos && !hasParallelVideos) return
 
     // Предотвращаем множественные вызовы в течение короткого промежутка времени
     const now = Date.now()
@@ -1502,23 +1521,25 @@ export function MediaPlayer() {
     isHandlingPlayPauseEffectRef.current = true
     lastPlayPauseEffectTimeRef.current = now
 
-    // Сохраняем текущее время видео перед изменением состояния воспроизведения
-    const currentVideoTime = videoElement.currentTime
-    if (currentVideoTime > 0) {
-      videoTimesRef.current[video.id] = currentVideoTime
-      lastSentTimeRef.current = currentVideoTime
+    // Сохраняем текущее время видео перед изменением состояния воспроизведения, если есть активное видео и элемент
+    if (hasActiveVideo && videoElement) {
+      const currentVideoTime = videoElement.currentTime
+      if (currentVideoTime > 0) {
+        videoTimesRef.current[video.id] = currentVideoTime
+        lastSentTimeRef.current = currentVideoTime
 
-      // Сохраняем время для текущего сектора
-      if (currentSectorRef.current) {
-        sectorTimesRef.current[currentSectorRef.current] = currentVideoTime
+        // Сохраняем время для текущего сектора
+        if (currentSectorRef.current) {
+          sectorTimesRef.current[currentSectorRef.current] = currentVideoTime
+          console.log(
+            `[PlayPause] Сохраняем время для сектора ${currentSectorRef.current}: ${currentVideoTime.toFixed(3)}`,
+          )
+        }
+
         console.log(
-          `[PlayPause] Сохраняем время для сектора ${currentSectorRef.current}: ${currentVideoTime.toFixed(3)}`,
+          `[PlayPause] Сохраняем время для видео ${video.id}: ${currentVideoTime.toFixed(3)}`,
         )
       }
-
-      console.log(
-        `[PlayPause] Сохраняем время для видео ${video.id}: ${currentVideoTime.toFixed(3)}`,
-      )
     }
 
     // Обрабатываем изменение состояния воспроизведения без установки флага isChangingCamera
@@ -1526,54 +1547,81 @@ export function MediaPlayer() {
     if (!isChangingCamera && !isCameraChangeLockRef.current) {
       // Если используется шаблон с несколькими видео, управляем всеми видео
       if (appliedTemplate?.template && parallelVideos.length > 0) {
-        // Обрабатываем все видео в шаблоне
-        parallelVideos.forEach((parallelVideo) => {
-          if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-            const parallelVideoElement = videoRefs[parallelVideo.id]
-
-            if (isPlaying) {
-              // Если видео на паузе, запускаем воспроизведение
-              if (parallelVideoElement.paused) {
-                // Используем setTimeout для предотвращения конфликта с другими операциями
-                setTimeout(() => {
-                  // Проверяем, что видео элемент все еще существует и доступен
-                  if (
-                    parallelVideoElement &&
-                    document.body.contains(parallelVideoElement) &&
-                    isPlaying &&
-                    !isChangingCamera &&
-                    !isCameraChangeLockRef.current
-                  ) {
-                    console.log(
-                      `[PlayPause] Запускаем воспроизведение для видео ${parallelVideo.id} в шаблоне`,
-                    )
-                    parallelVideoElement.play().catch((err: Error) => {
-                      if (err.name !== "AbortError") {
-                        console.error(
-                          `[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`,
-                          err,
-                        )
-                      }
-                    })
-                  }
-                }, 100) // Увеличиваем задержку для большей надежности
-              }
-            } else {
-              // Если видео воспроизводится, ставим на паузу
-              if (!parallelVideoElement.paused) {
-                console.log(`[PlayPause] Ставим на паузу видео ${parallelVideo.id} в шаблоне`)
-                parallelVideoElement.pause()
-              }
-            }
-          }
+        // Проверяем наличие видео в шаблоне
+        const hasValidVideos = parallelVideos.some((parallelVideo) => {
+          return parallelVideo.id && videoRefs[parallelVideo.id]
         })
+
+        // Если нет валидных видео, выходим
+        if (!hasValidVideos) {
+          console.log(`[PlayPause] Нет валидных видео в шаблоне`)
+          return
+        }
+
+        // Запускаем все видео одновременно, не дожидаясь их готовности
+        // Это позволит браузеру самостоятельно управлять загрузкой и запуском
+        if (isPlaying) {
+          console.log(`[PlayPause] Запускаем синхронное воспроизведение всех видео`)
+
+          // Используем requestAnimationFrame для запуска всех видео в одном кадре отрисовки
+          requestAnimationFrame(() => {
+            // Запускаем воспроизведение всех видео одновременно
+            const playPromises = parallelVideos.map((parallelVideo) => {
+              if (parallelVideo.id && videoRefs[parallelVideo.id]) {
+                const videoElement = videoRefs[parallelVideo.id]
+                if (videoElement.paused) {
+                  // Устанавливаем приоритет загрузки для всех видео
+                  videoElement.preload = "auto"
+
+                  return videoElement.play().catch((err) => {
+                    if (err.name !== "AbortError") {
+                      console.error(
+                        `[PlayPause] Ошибка при синхронном воспроизведении видео ${parallelVideo.id}:`,
+                        err,
+                      )
+                    }
+                  })
+                }
+              }
+              return Promise.resolve()
+            })
+
+            // Не ждем завершения всех промисов, чтобы не блокировать интерфейс
+            // Просто логируем результат
+            Promise.all(playPromises)
+              .then(() => {
+                console.log(`[PlayPause] Все видео успешно запущены синхронно`)
+              })
+              .catch((err) => {
+                console.error(`[PlayPause] Ошибка при синхронном запуске видео:`, err)
+              })
+          })
+        } else {
+          // Если нужно поставить на паузу, останавливаем все видео одновременно
+          console.log(`[PlayPause] Останавливаем все видео в шаблоне`)
+
+          // Используем requestAnimationFrame для остановки всех видео в одном кадре отрисовки
+          requestAnimationFrame(() => {
+            parallelVideos.forEach((parallelVideo) => {
+              if (parallelVideo.id && videoRefs[parallelVideo.id]) {
+                const parallelVideoElement = videoRefs[parallelVideo.id]
+
+                // Если видео воспроизводится, ставим на паузу
+                if (!parallelVideoElement.paused) {
+                  console.log(`[PlayPause] Ставим на паузу видео ${parallelVideo.id} в шаблоне`)
+                  parallelVideoElement.pause()
+                }
+              }
+            })
+          })
+        }
       }
       // Если нет шаблона, управляем только активным видео
-      else if (videoElement && document.body.contains(videoElement)) {
+      else if (hasActiveVideo && videoElement && document.body.contains(videoElement)) {
         if (isPlaying) {
           // Если видео на паузе, запускаем воспроизведение
           if (videoElement.paused) {
-            // Используем setTimeout для предотвращения конфликта с другими операциями
+            // Используем setTimeout с минимальной задержкой для предотвращения конфликта с другими операциями
             setTimeout(() => {
               // Проверяем, что видео элемент все еще существует и доступен
               // и что не началось новое переключение камеры
@@ -1584,15 +1632,49 @@ export function MediaPlayer() {
                 !isChangingCamera &&
                 !isCameraChangeLockRef.current
               ) {
-                console.log(`[PlayPause] Запускаем воспроизведение для видео ${video.id}`)
-                videoElement.play().catch((err: Error) => {
-                  if (err.name !== "AbortError") {
-                    console.error("[PlayPause] Ошибка при воспроизведении:", err)
-                    setIsPlaying(false)
+                // Проверяем готовность видео к воспроизведению
+                if (videoElement.readyState >= 3 || isVideoReady(video.id)) {
+                  // HAVE_FUTURE_DATA или выше - видео готово к воспроизведению
+                  console.log(`[PlayPause] Запускаем воспроизведение для видео ${video.id}`)
+                  videoElement.play().catch((err: Error) => {
+                    if (err.name !== "AbortError") {
+                      console.error("[PlayPause] Ошибка при воспроизведении:", err)
+                      setIsPlaying(false)
+                    }
+                  })
+                } else {
+                  // Если видео не готово, добавляем одноразовый слушатель для запуска
+                  console.log(`[PlayPause] Видео ${video.id} не готово, ожидаем событие canplay`)
+
+                  // Функция для проверки готовности видео
+                  const checkVideoReady = () => {
+                    if (videoElement.readyState >= 3 || isVideoReady(video.id)) {
+                      console.log(
+                        `[PlayPause] Видео ${video.id} готово к воспроизведению после ожидания`,
+                      )
+                      if (isPlaying && !isChangingCamera && !isCameraChangeLockRef.current) {
+                        videoElement.play().catch((err: Error) => {
+                          if (err.name !== "AbortError") {
+                            console.error("[PlayPause] Ошибка при отложенном воспроизведении:", err)
+                            setIsPlaying(false)
+                          }
+                        })
+                      }
+                      clearInterval(checkInterval)
+                    }
                   }
-                })
+
+                  // Запускаем интервал для проверки готовности видео с более частыми проверками
+                  const checkInterval = setInterval(checkVideoReady, 50)
+
+                  // Устанавливаем таймаут для остановки интервала, если видео не будет готово в течение 10 секунд
+                  setTimeout(() => {
+                    clearInterval(checkInterval)
+                    console.log(`[PlayPause] Превышено время ожидания готовности видео ${video.id}`)
+                  }, 10000)
+                }
               }
-            }, 100) // Увеличиваем задержку для большей надежности
+            }, 10) // Уменьшаем задержку для более быстрого запуска
           }
         } else {
           // Если видео воспроизводится, ставим на паузу
@@ -1602,7 +1684,9 @@ export function MediaPlayer() {
           }
         }
       } else {
-        console.log(`[PlayPause] Видео элемент ${video?.id} не найден или удален из DOM`)
+        console.log(
+          `[PlayPause] Видео элемент ${hasActiveVideo ? video.id : "неизвестно"} не найден или удален из DOM`,
+        )
       }
     } else {
       console.log(
@@ -1650,9 +1734,8 @@ export function MediaPlayer() {
   // Удаляем проверку на наличие видео, чтобы плеер всегда отображался
   // if (!video?.id) return null
 
-  // Для видео всегда возвращаем true, чтобы оно отображалось
+  // Для видео всегда считаем, что оно в диапазоне времени
   // Это предотвращает проблемы с отображением при разных типах времени
-  const isTimeInRange = true
 
   // Определяем, какое видео активно
   // Если есть активное видео, используем его ID
@@ -1669,19 +1752,121 @@ export function MediaPlayer() {
   )
 
   // Определяем, какие видео нужно отображать в зависимости от шаблона
-  const videosToDisplay = appliedTemplate?.template
-    ? // Если есть примененный шаблон, используем видео из него
-    appliedTemplate.videos.length > 0
-      ? appliedTemplate.videos
-      : parallelVideos.length > 0
-        ? parallelVideos.slice(0, appliedTemplate.template.screens || 1) // Ограничиваем количество видео количеством экранов в шаблоне
-        : video
-          ? [video]
-          : []
-    : // Если нет примененного шаблона, используем стандартный подход
-    video
-      ? [video]
-      : [] // Если нет активного видео, возвращаем пустой массив
+  let videosToDisplay: MediaFile[] = []
+
+  // Если есть примененный шаблон
+  if (appliedTemplate?.template) {
+    // Если в шаблоне есть видео, используем их
+    if (appliedTemplate.videos.length > 0) {
+      videosToDisplay = appliedTemplate.videos
+      console.log(`[MediaPlayer] Используем ${videosToDisplay.length} видео из шаблона`)
+    }
+    // Если в шаблоне нет видео, но есть параллельные видео, используем их
+    else if (parallelVideos.length > 0) {
+      videosToDisplay = parallelVideos.slice(0, appliedTemplate.template.screens || 1)
+      console.log(
+        `[MediaPlayer] Используем ${videosToDisplay.length} параллельных видео для шаблона`,
+      )
+    }
+    // Если есть активное видео, добавляем его
+    else if (video) {
+      videosToDisplay = [video]
+      console.log(`[MediaPlayer] Используем активное видео ${video.id} для шаблона`)
+    }
+  }
+  // Если нет примененного шаблона, но есть активное видео
+  else if (video) {
+    videosToDisplay = [video]
+    console.log(`[MediaPlayer] Используем активное видео ${video.id}`)
+  }
+
+  // Всегда добавляем активное видео в список, если оно есть и еще не включено
+  if (video && !videosToDisplay.some((v) => v.id === video.id)) {
+    console.log(`[MediaPlayer] Добавляем активное видео ${video.id} в список для отображения`)
+    videosToDisplay.push(video)
+  }
+
+  // Предварительно загружаем все видео для более быстрого запуска
+  useEffect(() => {
+    if (videosToDisplay.length > 0) {
+      console.log(`[MediaPlayer] Предварительная загрузка ${videosToDisplay.length} видео`)
+
+      // Для каждого видео в списке
+      const preloadVideos = async () => {
+        // Создаем массив промисов для загрузки видео
+        const loadPromises = videosToDisplay.map((videoItem) => {
+          return new Promise<void>((resolve) => {
+            if (videoItem.id && videoItem.path) {
+              // Если видео элемент уже существует, проверяем его готовность
+              if (videoRefs[videoItem.id]) {
+                const videoElement = videoRefs[videoItem.id]
+
+                // Если видео еще не загружено, запускаем загрузку
+                if (videoElement.readyState < 3) {
+                  console.log(`[MediaPlayer] Предварительная загрузка видео ${videoItem.id}`)
+
+                  // Устанавливаем атрибуты для предварительной загрузки
+                  videoElement.preload = "auto"
+
+                  // Если src не установлен или отличается от пути видео, устанавливаем его
+                  if (!videoElement.src || !videoElement.src.includes(videoItem.id)) {
+                    videoElement.src = videoItem.path
+                    videoElement.load()
+
+                    // Добавляем обработчик события canplaythrough для отслеживания загрузки
+                    const handleCanPlayThrough = () => {
+                      console.log(
+                        `[MediaPlayer] Видео ${videoItem.id} полностью загружено и готово к воспроизведению`,
+                      )
+                      videoElement.removeEventListener("canplaythrough", handleCanPlayThrough)
+                      resolve()
+                    }
+
+                    // Если видео уже загружено, сразу резолвим промис
+                    if (videoElement.readyState >= 3) {
+                      resolve()
+                    } else {
+                      videoElement.addEventListener("canplaythrough", handleCanPlayThrough, {
+                        once: true,
+                      })
+
+                      // Добавляем таймаут на случай, если событие не сработает
+                      setTimeout(() => {
+                        videoElement.removeEventListener("canplaythrough", handleCanPlayThrough)
+                        console.log(
+                          `[MediaPlayer] Таймаут предварительной загрузки видео ${videoItem.id}`,
+                        )
+                        resolve()
+                      }, 5000)
+                    }
+                  } else {
+                    resolve()
+                  }
+                } else {
+                  resolve()
+                }
+              } else {
+                resolve()
+              }
+            } else {
+              resolve()
+            }
+          })
+        })
+
+        // Ждем загрузки всех видео
+        try {
+          await Promise.all(loadPromises)
+          console.log(`[MediaPlayer] Все видео предварительно загружены`)
+        } catch (err) {
+          console.error(`[MediaPlayer] Ошибка при предварительной загрузке видео:`, err)
+        }
+      }
+
+      // Запускаем предварительную загрузку
+      preloadVideos()
+    }
+  }, [videosToDisplay, videoRefs])
 
   // Логируем информацию о видео для отладки
   console.log(
@@ -1850,6 +2035,11 @@ export function MediaPlayer() {
                                   console.log(
                                     `[MediaPlayer] Метаданные загружены для видео ${videoItem.id}`,
                                   )
+                                  // Обновляем состояние готовности видео
+                                  setVideoReadyState((prev) => ({
+                                    ...prev,
+                                    [videoItem.id]: Math.max(prev[videoItem.id] || 0, 1), // HAVE_METADATA
+                                  }))
                                 }
 
                                 // Устанавливаем обработчик загрузки данных
@@ -1857,6 +2047,35 @@ export function MediaPlayer() {
                                   console.log(
                                     `[MediaPlayer] Данные загружены для видео ${videoItem.id}`,
                                   )
+                                  // Обновляем состояние готовности видео
+                                  setVideoReadyState((prev) => ({
+                                    ...prev,
+                                    [videoItem.id]: Math.max(prev[videoItem.id] || 0, 2), // HAVE_CURRENT_DATA
+                                  }))
+                                }
+
+                                // Устанавливаем обработчик для события canplay
+                                el.oncanplay = () => {
+                                  console.log(
+                                    `[MediaPlayer] Видео ${videoItem.id} может начать воспроизведение`,
+                                  )
+                                  // Обновляем состояние готовности видео
+                                  setVideoReadyState((prev) => ({
+                                    ...prev,
+                                    [videoItem.id]: Math.max(prev[videoItem.id] || 0, 3), // HAVE_FUTURE_DATA
+                                  }))
+                                }
+
+                                // Устанавливаем обработчик для события canplaythrough
+                                el.oncanplaythrough = () => {
+                                  console.log(
+                                    `[MediaPlayer] Видео ${videoItem.id} может воспроизводиться без буферизации`,
+                                  )
+                                  // Обновляем состояние готовности видео
+                                  setVideoReadyState((prev) => ({
+                                    ...prev,
+                                    [videoItem.id]: Math.max(prev[videoItem.id] || 0, 4), // HAVE_ENOUGH_DATA
+                                  }))
                                 }
 
                                 // Устанавливаем обработчик ошибок напрямую
@@ -1895,9 +2114,12 @@ export function MediaPlayer() {
                             className="object-contain"
                             style={{
                               ...videoStyle,
-                              // Если нет шаблона, показываем только активное видео
+                              // Всегда показываем видео, если оно есть в шаблоне или является активным
                               display:
-                                videoItem.id === activeId && videoItem.path ? "block" : "none",
+                                videoItem.path &&
+                                (appliedTemplate?.template || videoItem.id === activeId)
+                                  ? "block"
+                                  : "none",
                             }}
                             data-video-id={videoItem.id} // Добавляем атрибут для отладки
                             onClick={handlePlayPause}
