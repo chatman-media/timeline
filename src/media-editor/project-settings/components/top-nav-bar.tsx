@@ -31,12 +31,12 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
   const { t } = useTranslation()
   const { handleOpenModal, handleCloseModal, activeModal } = useModalContext()
   const [isEditing, setIsEditing] = useState(false)
-  const [isExportOpen, setIsExportOpen] = useState(false)
 
   // Определяем состояния модальных окон на основе activeModal
   const isSettingsOpen = activeModal === "project-settings"
   const isUserSettingsOpen = activeModal === "user-settings"
   const isKeyboardShortcutsOpen = activeModal === "keyboard-shortcuts"
+  const [isExportOpen, setIsExportOpen] = useState(false)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value)
@@ -214,7 +214,12 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           <Upload className="h-5 w-5" />
         </Button>
       </div>
-      <ExportDialog open={isExportOpen} onOpenChange={setIsExportOpen} />
+      <ExportDialog
+        open={isExportOpen}
+        onOpenChange={(open) => {
+          setIsExportOpen(open)
+        }}
+      />
       <ProjectSettingsDialog
         open={isSettingsOpen}
         onOpenChange={(open) => {

@@ -15,7 +15,15 @@ import { useProject } from "@/media-editor/project-settings/project-provider"
 
 export function MediaPlayer() {
   // Для локализации
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+
+  // Используем состояние для хранения текста, чтобы избежать проблем с гидратацией
+  const [noVideoText, setNoVideoText] = useState("Выберите видео для воспроизведения")
+
+  // Обновляем текст при изменении языка
+  useEffect(() => {
+    setNoVideoText(t("timeline.player.noVideoSelected", "Выберите видео для воспроизведения"))
+  }, [t, i18n.language])
 
   // Массив для хранения refs контейнеров видео
   const videoContainerRefs = useRef<Record<string, React.RefObject<HTMLDivElement | null>>>({})
@@ -1914,7 +1922,7 @@ export function MediaPlayer() {
                   // Если нет видео для отображения
                   <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-black">
                     <span className="text-lg text-white">
-                      {t("timeline.player.noVideoSelected", "Выберите видео для воспроизведения")}
+                      {noVideoText}
                     </span>
                   </div>
                 )}

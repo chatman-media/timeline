@@ -93,6 +93,103 @@
       "externalDisplayRequired": "External display required"
     }
   },
+  "ui": {
+    "topNavBar": {
+      "layout": "Layout",
+      "keyboardShortcuts": "Keyboard Shortcuts",
+      "projectSettings": "Project Settings",
+      "saveChanges": "Save changes",
+      "allChangesSaved": "All changes saved",
+      "publish": "Publish",
+      "publicationTasks": "Publication Tasks",
+      "editingTasks": "Editing Tasks",
+      "projectTasks": "Project Tasks",
+      "userSettings": "User Settings",
+      "export": "Export"
+    },
+    "dialogs": {
+      "projectSettings": {
+        "title": "Project Settings",
+        "aspectRatio": "Aspect Ratio:",
+        "resolution": "Resolution:",
+        "frameRate": "Frame Rate:",
+        "colorSpace": "Color Space:",
+        "cancel": "Cancel",
+        "save": "OK"
+      },
+      "userSettings": {
+        "title": "User Settings",
+        "interfaceLanguage": "Interface Language:",
+        "screenshotsPath": "Screenshots Save Path:",
+        "selectFolder": "Select Folder",
+        "selectFolderPrompt": "Choose a folder to save screenshots or enter your own path:",
+        "clearPath": "Clear",
+        "defaultPathHint": "Default path for saving screenshots",
+        "customPathHint": "Screenshots will be saved to: {{path}}",
+        "cancel": "Cancel",
+        "save": "Save"
+      },
+      "export": {
+        "title": "Export",
+        "local": "Local",
+        "device": "Device",
+        "socialNetworks": "Social Networks",
+        "dvd": "DVD",
+        "youtube": "YouTube",
+        "tiktok": "TikTok",
+        "telegram": "Telegram",
+        "notLoggedIn": "Not logged in",
+        "loginPrompt": {
+          "youtube": "Sign in to your YouTube account for additional information.",
+          "tiktok": "Sign in to your TikTok account to publish videos.",
+          "telegram": "Sign in to your Telegram account to send videos to channels and groups."
+        },
+        "login": "Sign In",
+        "cover": "Cover",
+        "edit": "Edit",
+        "outputSettings": "Output Settings",
+        "name": "Name",
+        "saveTo": "Save to",
+        "preset": "Preset",
+        "defaultPreset": "Default",
+        "custom": "Custom",
+        "format": "Format",
+        "quality": "Quality",
+        "normal": "Normal",
+        "good": "Good",
+        "best": "Best",
+        "resolution": "Resolution",
+        "frameRate": "Frame Rate",
+        "advancedCompression": "Advanced Compression",
+        "cloudBackup": "Cloud Backup",
+        "enableGPUEncoding": "Enable GPU-accelerated video encoding",
+        "useLastSettings": "Use last export settings for local file",
+        "length": "Length",
+        "size": "Size",
+        "approximate": "Approximate",
+        "titles": "Titles",
+        "device_types": {
+          "iphone": "iPhone",
+          "ipad": "iPad",
+          "android": "Android"
+        },
+        "codec": "Codec",
+        "additional": "Additional",
+        "fps": "fps",
+        "kbps": "kbps",
+        "sdr": "SDR - Rec.709",
+        "otherNetworks": "Other social networks"
+      }
+    },
+    "templates": {
+      "verticalSplit": "Vertical Split",
+      "horizontalSplit": "Horizontal Split",
+      "diagonalSplit": "Diagonal Split",
+      "grid2x2": "Grid 2×2",
+      "grid3x3": "Grid 3×3",
+      "grid4x4": "Grid 4×4"
+    }
+  },
   "dialogs": {
     "projectSettings": {
       "title": "Project Settings",
@@ -180,7 +277,51 @@
       "local": "Local",
       "device": "Device",
       "socialNetworks": "Social Networks",
-      "dvd": "DVD"
+      "dvd": "DVD",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "telegram": "Telegram",
+      "notLoggedIn": "Not logged in",
+      "loginPrompt": {
+        "youtube": "Sign in to your YouTube account for additional information.",
+        "tiktok": "Sign in to your TikTok account to publish videos.",
+        "telegram": "Sign in to your Telegram account to send videos to channels and groups."
+      },
+      "login": "Sign In",
+      "cover": "Cover",
+      "edit": "Edit",
+      "outputSettings": "Output Settings",
+      "name": "Name",
+      "saveTo": "Save to",
+      "preset": "Preset",
+      "defaultPreset": "Default",
+      "custom": "Custom",
+      "format": "Format",
+      "quality": "Quality",
+      "normal": "Normal",
+      "good": "Good",
+      "best": "Best",
+      "resolution": "Resolution",
+      "frameRate": "Frame Rate",
+      "advancedCompression": "Advanced Compression",
+      "cloudBackup": "Cloud Backup",
+      "enableGPUEncoding": "Enable GPU-accelerated video encoding",
+      "useLastSettings": "Use last export settings for local file",
+      "length": "Length",
+      "size": "Size",
+      "approximate": "Approximate",
+      "titles": "Titles",
+      "device_types": {
+        "iphone": "iPhone",
+        "ipad": "iPad",
+        "android": "Android"
+      },
+      "codec": "Codec",
+      "additional": "Additional",
+      "fps": "fps",
+      "kbps": "kbps",
+      "sdr": "SDR - Rec.709",
+      "otherNetworks": "Other social networks"
     },
     "keyboardShortcuts": {
       "title": "Keyboard Shortcuts",
@@ -271,7 +412,22 @@
   },
   "language": {
     "ru": "Russian",
-    "en": "English"
+    "en": "English",
+    "native": {
+      "ru": "Русский",
+      "en": "English",
+      "zh": "中文",
+      "es": "Español",
+      "fr": "Français",
+      "de": "Deutsch",
+      "it": "Italiano",
+      "ja": "日本語",
+      "ko": "한국어",
+      "pt": "Português",
+      "ar": "العربية",
+      "hi": "हिन्दी",
+      "tr": "Türkçe"
+    }
   },
   "browser": {
     "tabs": {

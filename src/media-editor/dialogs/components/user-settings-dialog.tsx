@@ -118,8 +118,8 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
                 <SelectValue placeholder={t("dialogs.userSettings.interfaceLanguage")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ru">{t("language.ru")}</SelectItem>
-                <SelectItem value="en">{t("language.en")}</SelectItem>
+                <SelectItem value="ru">{t("language.native.ru")}</SelectItem>
+                <SelectItem value="en">{t("language.native.en")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
