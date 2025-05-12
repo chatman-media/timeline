@@ -24,9 +24,26 @@ export function MediaPlayer() {
   // Состояние для отслеживания готовности видео
   const [videoReadyState, setVideoReadyState] = useState<Record<string, number>>({})
 
+  // Состояние для отслеживания источника видео (медиа машина или таймлайн)
+  const [videoSources, setVideoSources] = useState<Record<string, 'media' | 'timeline'>>({})
+
   // Функция для проверки готовности видео
   const isVideoReady = (videoId: string): boolean => {
     return videoReadyState[videoId] >= 3 // HAVE_FUTURE_DATA или HAVE_ENOUGH_DATA
+  }
+
+  // Функция для определения источника видео
+  const getVideoSource = (videoId: string): 'media' | 'timeline' | null => {
+    return videoSources[videoId] || null
+  }
+
+  // Функция для установки источника видео
+  const setVideoSource = (videoId: string, source: 'media' | 'timeline'): void => {
+    setVideoSources(prev => ({
+      ...prev,
+      [videoId]: source
+    }))
+    console.log(`[MediaPlayer] Установлен источник для видео ${videoId}: ${source}`)
   }
 
   // Обновляем текст при изменении языка
@@ -390,9 +407,17 @@ export function MediaPlayer() {
 
     // Используем setTimeout, чтобы дать время для монтирования видео элемента
     const timer = setTimeout(() => {
+      // Проверяем, что видео ID не изменился с момента запуска таймера
+      if (video?.id !== lastProcessedVideoRef.current.id) {
+        console.log(`[MediaPlayer] ID видео изменился с момента запуска таймера, пропускаем обработку`)
+        return
+      }
+
       const videoElement = videoRefs[video.id]
       if (videoElement) {
-        console.log(`[MediaPlayer] Видео элемент ${video.id} готов к использованию`)
+        // Определяем источник видео
+        const source = getVideoSource(video.id)
+        console.log(`[MediaPlayer] Видео элемент ${video.id} готов к использованию, источник: ${source || 'неизвестен'}`)
 
         // Проверяем, что src установлен правильно
         if (!videoElement.src || !videoElement.src.includes(video.id)) {
@@ -400,6 +425,13 @@ export function MediaPlayer() {
           if (video.path) {
             console.log(`[MediaPlayer] Устанавливаем src для видео ${video.id}: ${video.path}`)
             videoElement.src = video.path
+
+            // Если источник не определен, устанавливаем его на основе наличия startTime
+            if (!source) {
+              const newSource = video.startTime !== undefined ? 'timeline' : 'media'
+              setVideoSource(video.id, newSource)
+              console.log(`[MediaPlayer] Установлен источник для видео ${video.id}: ${newSource}`)
+            }
           } else {
             console.error(`[MediaPlayer] Ошибка: путь к видео ${video.id} не определен`)
             // Сбрасываем флаг isChangingCamera при ошибке
@@ -522,9 +554,20 @@ export function MediaPlayer() {
           }
         }
 
-        // Добавляем обработчик ошибок
+        // Добавляем обработчик ошибок с более подробной диагностикой
         const handleError = () => {
           console.error(`[MediaPlayer] Ошибка загрузки видео ${video.id}:`, videoElement.error)
+          console.error(`[MediaPlayer] Детали ошибки для ${video.id}: networkState=${videoElement.networkState}, readyState=${videoElement.readyState}, error=${videoElement.error?.code}`)
+
+          // Проверяем, что элемент все еще в DOM
+          if (!document.body.contains(videoElement)) {
+            console.error(`[MediaPlayer] Видео элемент ${video.id} был удален из DOM`)
+            // Сбрасываем флаг isChangingCamera при ошибке
+            if (isChangingCamera) {
+              setIsChangingCamera(false)
+            }
+            return;
+          }
 
           // Сбрасываем флаг isChangingCamera при ошибке
           if (isChangingCamera) {
@@ -536,16 +579,36 @@ export function MediaPlayer() {
             setIsPlaying(false)
           }
 
-          // Пробуем перезагрузить видео
-          try {
-            if (video.path) {
-              console.log(`[MediaPlayer] Пробуем перезагрузить видео ${video.id}`)
-              videoElement.src = video.path
-              videoElement.load()
+          // Пробуем перезагрузить видео с задержкой
+          setTimeout(() => {
+            try {
+              // Проверяем, что элемент все еще существует и находится в DOM
+              if (videoElement && document.body.contains(videoElement) && video.path) {
+                console.log(`[MediaPlayer] Пробуем перезагрузить видео ${video.id} после задержки`)
+                videoElement.src = video.path
+                videoElement.load()
+
+                // Добавляем обработчик для проверки успешности перезагрузки
+                const checkReloadSuccess = () => {
+                  if (videoElement.readyState >= 2) {
+                    console.log(`[MediaPlayer] Видео ${video.id} успешно перезагружено`)
+                    videoElement.removeEventListener('loadeddata', checkReloadSuccess)
+                  }
+                };
+
+                videoElement.addEventListener('loadeddata', checkReloadSuccess, { once: true })
+
+                // Устанавливаем таймаут для проверки успешности перезагрузки
+                setTimeout(() => {
+                  if (videoElement.readyState < 2) {
+                    console.error(`[MediaPlayer] Не удалось перезагрузить видео ${video.id} после таймаута`)
+                  }
+                }, 3000)
+              }
+            } catch (loadError) {
+              console.error(`[MediaPlayer] Ошибка при перезагрузке видео ${video.id}:`, loadError)
             }
-          } catch (loadError) {
-            console.error(`[MediaPlayer] Ошибка при перезагрузке видео ${video.id}:`, loadError)
-          }
+          }, 500) // Добавляем задержку перед перезагрузкой
         }
 
         videoElement.addEventListener("loadedmetadata", handleLoadedMetadata)
@@ -559,11 +622,126 @@ export function MediaPlayer() {
           videoElement.removeEventListener("error", handleError)
         }
       } else {
-        console.error(`[MediaPlayer] Видео элемент ${video.id} не найден после таймаута`)
-        // Сбрасываем флаг isChangingCamera при ошибке
-        setIsChangingCamera(false)
+        console.warn(`[MediaPlayer] Видео элемент ${video.id} не найден после таймаута, пробуем повторно`)
+
+        // Создаем механизм повторных попыток с увеличивающимся интервалом
+        let retryCount = 0;
+        const maxRetries = 5; // Увеличиваем максимальное количество попыток
+
+        // Функция для создания видео элемента программно, если он не существует
+        const createVideoElement = () => {
+          if (!videoRefs[video.id] && video.path) {
+            console.log(`[MediaPlayer] Создаем видео элемент для ${video.id} программно`)
+
+            // Создаем видео элемент
+            const videoElement = document.createElement('video')
+            videoElement.id = `video-${video.id}`
+            videoElement.preload = 'auto'
+            videoElement.playsInline = true
+            videoElement.controls = false
+            videoElement.autoplay = false
+            videoElement.loop = false
+            videoElement.muted = true
+            videoElement.src = video.path
+
+            // Добавляем элемент в DOM (скрытый)
+            videoElement.style.position = 'absolute'
+            videoElement.style.width = '1px'
+            videoElement.style.height = '1px'
+            videoElement.style.opacity = '0'
+            videoElement.style.pointerEvents = 'none'
+            document.body.appendChild(videoElement)
+
+            // Сохраняем ссылку на элемент
+            videoRefs[video.id] = videoElement
+
+            // Определяем источник видео
+            const source = video.startTime !== undefined ? 'timeline' : 'media'
+            setVideoSource(video.id, source)
+            console.log(`[MediaPlayer] Видео ${video.id} программно создано и определено как ${source}`)
+
+            // Начинаем загрузку
+            videoElement.load()
+
+            return videoElement
+          }
+          return null
+        }
+
+        // Пробуем создать элемент сразу
+        const createdElement = createVideoElement()
+        if (createdElement) {
+          console.log(`[MediaPlayer] Видео элемент ${video.id} создан программно`)
+          return
+        }
+
+        const retryInterval = setInterval(() => {
+          retryCount++;
+
+          // Проверяем, что видео ID не изменился с момента запуска таймера
+          if (video?.id !== lastProcessedVideoRef.current.id) {
+            console.log(`[MediaPlayer] ID видео изменился во время повторных попыток, останавливаем`)
+            clearInterval(retryInterval);
+            return;
+          }
+
+          // Проверяем, существует ли элемент
+          let videoElement = videoRefs[video.id];
+
+          // Если элемент не существует, пробуем создать его программно
+          if (!videoElement) {
+            const newElement = createVideoElement()
+            if (newElement) {
+              videoElement = newElement
+            }
+          }
+
+          if (videoElement) {
+            console.log(`[MediaPlayer] Видео элемент ${video.id} найден после повторной попытки ${retryCount}`)
+            clearInterval(retryInterval);
+
+            // Проверяем, что элемент находится в DOM
+            if (!document.body.contains(videoElement)) {
+              console.warn(`[MediaPlayer] Видео элемент ${video.id} не находится в DOM, добавляем его`)
+              document.body.appendChild(videoElement)
+            }
+
+            // Проверяем, что src установлен правильно
+            if (!videoElement.src || !videoElement.src.includes(video.id)) {
+              // Проверяем, что путь к видео существует
+              if (video.path) {
+                console.log(`[MediaPlayer] Устанавливаем src для видео ${video.id}: ${video.path}`)
+                videoElement.src = video.path
+                videoElement.load()
+
+                // Добавляем обработчик для проверки успешности загрузки
+                const checkLoadSuccess = () => {
+                  console.log(`[MediaPlayer] Видео ${video.id} успешно загружено после повторной попытки`)
+                  videoElement.removeEventListener('loadeddata', checkLoadSuccess)
+                };
+
+                videoElement.addEventListener('loadeddata', checkLoadSuccess, { once: true })
+              }
+            }
+          } else if (retryCount >= maxRetries) {
+            console.error(`[MediaPlayer] Видео элемент ${video.id} не найден после ${maxRetries} повторных попыток`)
+            clearInterval(retryInterval);
+            // Сбрасываем флаг isChangingCamera при ошибке
+            setIsChangingCamera(false);
+
+            // Последняя попытка создать элемент программно
+            createVideoElement()
+          } else {
+            console.log(`[MediaPlayer] Повторная попытка ${retryCount}/${maxRetries} найти видео элемент ${video.id}`)
+          }
+        }, 500); // Увеличиваем интервал между повторными попытками
+
+        // Очищаем интервал при размонтировании компонента
+        return () => {
+          clearInterval(retryInterval);
+        };
       }
-    }, 200) // Увеличиваем задержку для гарантии монтирования
+    }, 500) // Увеличиваем задержку для гарантии монтирования
 
     return () => {
       clearTimeout(timer)
@@ -785,19 +963,60 @@ export function MediaPlayer() {
 
           // Пробуем получить элемент снова через небольшую задержку
           setTimeout(() => {
+            // Проверяем, что видео ID не изменился с момента запуска таймера
+            if (video?.id !== currentVideoIdRef.current) {
+              console.log(`[PlayVideo] ID видео изменился с момента запуска таймера, пропускаем повторную попытку`)
+              return;
+            }
+
             const refreshedElement = videoRefs[video.id]
             if (refreshedElement && document.body.contains(refreshedElement)) {
               console.log("[PlayVideo] Повторная попытка воспроизведения после задержки")
 
-              if (isPlaying) {
+              // Проверяем, что src установлен правильно
+              if (video.path && (!refreshedElement.src || !refreshedElement.src.includes(video.id))) {
+                console.log(`[PlayVideo] Устанавливаем src для видео ${video.id} перед повторной попыткой: ${video.path}`)
+                refreshedElement.src = video.path
+                refreshedElement.load()
+
+                // Добавляем обработчик для запуска воспроизведения после загрузки
+                const handleCanPlay = () => {
+                  if (isPlaying && !isChangingCamera) {
+                    console.log(`[PlayVideo] Запускаем воспроизведение после загрузки src`)
+                    refreshedElement.play().catch((err) => {
+                      if (err.name !== "AbortError") {
+                        console.error("[PlayVideo] Ошибка при воспроизведении после загрузки:", err)
+                      }
+                    })
+                  }
+                  refreshedElement.removeEventListener('canplay', handleCanPlay)
+                };
+
+                refreshedElement.addEventListener('canplay', handleCanPlay, { once: true })
+
+                // Устанавливаем таймаут на случай, если событие canplay не сработает
+                setTimeout(() => {
+                  refreshedElement.removeEventListener('canplay', handleCanPlay)
+                  if (isPlaying && !isChangingCamera && refreshedElement.paused) {
+                    console.log(`[PlayVideo] Запускаем воспроизведение после таймаута`)
+                    refreshedElement.play().catch((err) => {
+                      if (err.name !== "AbortError") {
+                        console.error("[PlayVideo] Ошибка при воспроизведении после таймаута:", err)
+                      }
+                    })
+                  }
+                }, 2000)
+              } else if (isPlaying && !isChangingCamera) {
                 refreshedElement.play().catch((err) => {
                   if (err.name !== "AbortError") {
                     console.error("[PlayVideo] Ошибка при повторной попытке:", err)
                   }
                 })
               }
+            } else {
+              console.error(`[PlayVideo] Видео элемент ${video.id} не найден после повторной попытки`)
             }
-          }, 300)
+          }, 500) // Увеличиваем задержку для более надежной повторной попытки
 
           return
         }
@@ -1434,9 +1653,20 @@ export function MediaPlayer() {
         // Вычисляем относительную позицию для текущего видео
         const relativePosition = localTime / (video.duration || 1)
 
+        // Определяем источник текущего видео
+        const currentVideoSource = getVideoSource(video.id)
+
         // Обновляем время для всех параллельных видео
         parallelVideos.forEach((parallelVideo) => {
           if (parallelVideo.id !== video.id && videoRefs[parallelVideo.id]) {
+            // Определяем источник параллельного видео
+            const parallelVideoSource = getVideoSource(parallelVideo.id)
+
+            // Если источники разные, логируем это
+            if (currentVideoSource && parallelVideoSource && currentVideoSource !== parallelVideoSource) {
+              console.log(`[MediaPlayer] Синхронизация между видео из разных источников: ${currentVideoSource} -> ${parallelVideoSource}`)
+            }
+
             const parallelVideoDuration = parallelVideo.duration || 1
             const newParallelTime = relativePosition * parallelVideoDuration
 
@@ -1569,9 +1799,21 @@ export function MediaPlayer() {
             const playPromises = parallelVideos.map((parallelVideo) => {
               if (parallelVideo.id && videoRefs[parallelVideo.id]) {
                 const videoElement = videoRefs[parallelVideo.id]
+
+                // Проверяем, что элемент существует и находится в DOM
+                if (!videoElement || !document.body.contains(videoElement)) {
+                  console.warn(`[PlayPause] Видео элемент ${parallelVideo.id} не найден или удален из DOM`)
+                  return Promise.resolve()
+                }
+
+                // Определяем источник видео
+                const source = getVideoSource(parallelVideo.id)
+
                 if (videoElement.paused) {
                   // Устанавливаем приоритет загрузки для всех видео
                   videoElement.preload = "auto"
+
+                  console.log(`[PlayPause] Запускаем воспроизведение видео ${parallelVideo.id} (источник: ${source || 'неизвестен'})`)
 
                   return videoElement.play().catch((err) => {
                     if (err.name !== "AbortError") {
@@ -1793,6 +2035,43 @@ export function MediaPlayer() {
 
       // Для каждого видео в списке
       const preloadVideos = async () => {
+        // Сначала создаем все видео элементы, если они еще не созданы
+        for (const videoItem of videosToDisplay) {
+          if (videoItem && videoItem.id && videoItem.path && !videoRefs[videoItem.id]) {
+            console.log(`[MediaPlayer] Создаем видео элемент для ${videoItem.id} заранее`)
+
+            // Создаем видео элемент программно
+            const videoElement = document.createElement('video')
+            videoElement.id = `video-${videoItem.id}`
+            videoElement.preload = 'auto'
+            videoElement.playsInline = true
+            videoElement.controls = false
+            videoElement.autoplay = false
+            videoElement.loop = false
+            videoElement.muted = true
+            videoElement.src = videoItem.path
+
+            // Добавляем элемент в DOM (скрытый)
+            videoElement.style.position = 'absolute'
+            videoElement.style.width = '1px'
+            videoElement.style.height = '1px'
+            videoElement.style.opacity = '0'
+            videoElement.style.pointerEvents = 'none'
+            document.body.appendChild(videoElement)
+
+            // Сохраняем ссылку на элемент
+            videoRefs[videoItem.id] = videoElement
+
+            // Определяем источник видео
+            const source = videoItem.startTime !== undefined ? 'timeline' : 'media'
+            setVideoSource(videoItem.id, source)
+            console.log(`[MediaPlayer] Видео ${videoItem.id} предварительно создано и определено как ${source}`)
+
+            // Начинаем загрузку
+            videoElement.load()
+          }
+        }
+
         // Создаем массив промисов для загрузки видео
         const loadPromises = videosToDisplay.map((videoItem) => {
           return new Promise<void>((resolve) => {
@@ -1837,7 +2116,7 @@ export function MediaPlayer() {
                           `[MediaPlayer] Таймаут предварительной загрузки видео ${videoItem.id}`,
                         )
                         resolve()
-                      }, 5000)
+                      }, 8000) // Увеличиваем таймаут до 8 секунд
                     }
                   } else {
                     resolve()
@@ -2016,6 +2295,12 @@ export function MediaPlayer() {
                                 )
 
                                 videoRefs[videoItem.id] = el
+
+                                // Определяем источник видео (по умолчанию считаем, что это медиа машина)
+                                // Если видео имеет startTime, то это видео из таймлайна
+                                const source = videoItem.startTime !== undefined ? 'timeline' : 'media'
+                                setVideoSource(videoItem.id, source)
+                                console.log(`[MediaPlayer] Видео ${videoItem.id} определено как ${source}`)
 
                                 // Проверяем, что путь к видео существует
                                 if (videoItem.path) {

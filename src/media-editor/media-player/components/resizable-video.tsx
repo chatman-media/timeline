@@ -4,6 +4,12 @@ import { useTranslation } from "react-i18next"
 import { usePlayerContext } from "@/media-editor/media-player"
 import { MediaFile } from "@/types/media"
 
+// Функция для определения источника видео
+const getVideoSource = (video: MediaFile): 'media' | 'timeline' => {
+  // Если видео имеет startTime, то это видео из таймлайна
+  return video.startTime !== undefined ? 'timeline' : 'media'
+}
+
 interface ResizableVideoProps {
   video: MediaFile
   isActive: boolean
@@ -70,47 +76,96 @@ export const ResizableVideo = React.memo(
       const videoElement = videoRef.current
       if (!videoElement || !videoRefs) return
 
-      // Добавляем видео элемент в videoRefs
-      if (video.id && (!videoRefs[video.id] || videoRefs[video.id] !== videoElement)) {
-        console.log(`[ResizableVideo] Добавляем видео элемент ${video.id} в videoRefs`)
-        videoRefs[video.id] = videoElement
+      // Добавляем видео элемент в videoRefs с проверкой на существование и валидность
+      if (video.id) {
+        // Проверяем, нужно ли обновить ссылку в videoRefs
+        const needsUpdate = !videoRefs[video.id] || videoRefs[video.id] !== videoElement;
 
-        // Проверяем, что src установлен правильно
-        if (video.path && (!videoElement.src || !videoElement.src.includes(video.path))) {
-          console.log(`[ResizableVideo] Устанавливаем src для видео ${video.id}: ${video.path}`)
+        // Проверяем, что элемент не был удален из DOM
+        const isInDOM = document.body.contains(videoElement);
 
-          try {
-            // Проверяем, что путь к видео корректный
-            if (!video.path.startsWith("/")) {
-              console.error(`[ResizableVideo] Некорректный путь к видео ${video.id}: ${video.path}`)
-              // Пытаемся исправить путь
-              const correctedPath = `/${video.path.replace(/^\.\//, "")}`
-              console.log(
-                `[ResizableVideo] Пытаемся исправить путь для ${video.id}: ${correctedPath}`,
-              )
-              videoElement.src = correctedPath
-            } else {
-              videoElement.src = video.path
-            }
+        if (needsUpdate && isInDOM) {
+          console.log(`[ResizableVideo] Добавляем видео элемент ${video.id} в videoRefs`)
 
-            // Загружаем видео
-            videoElement.load()
+          // Сохраняем ссылку на элемент в videoRefs
+          videoRefs[video.id] = videoElement
 
-            // Проверяем, что видео загружается
-            setTimeout(() => {
-              if (videoElement.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
-                console.error(
-                  `[ResizableVideo] Не удалось загрузить видео ${video.id}: источник недоступен`,
+          // Определяем источник видео
+          const source = getVideoSource(video)
+          console.log(`[ResizableVideo] Видео ${video.id} определено как ${source}`)
+
+          // Проверяем, что src установлен правильно
+          const srcNeedsUpdate = video.path && (!videoElement.src || !videoElement.src.includes(video.id));
+
+          if (srcNeedsUpdate) {
+            console.log(`[ResizableVideo] Устанавливаем src для видео ${video.id}: ${video.path}`)
+
+            try {
+              // Проверяем, что путь к видео корректный
+              if (!video.path.startsWith("/")) {
+                console.error(`[ResizableVideo] Некорректный путь к видео ${video.id}: ${video.path}`)
+                // Пытаемся исправить путь
+                const correctedPath = `/${video.path.replace(/^\.\//, "")}`
+                console.log(
+                  `[ResizableVideo] Пытаемся исправить путь для ${video.id}: ${correctedPath}`,
                 )
+                videoElement.src = correctedPath
+              } else {
+                videoElement.src = video.path
               }
-            }, 1000)
-          } catch (err) {
-            console.error(`[ResizableVideo] Ошибка при установке src для видео ${video.id}:`, err)
+
+              // Загружаем видео
+              videoElement.load()
+
+              // Проверяем, что видео загружается
+              setTimeout(() => {
+                // Проверяем, что элемент все еще существует и находится в DOM
+                if (videoElement && document.body.contains(videoElement)) {
+                  if (videoElement.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+                    console.error(
+                      `[ResizableVideo] Не удалось загрузить видео ${video.id}: источник недоступен`,
+                    )
+                  } else if (videoElement.readyState >= 2) {
+                    console.log(`[ResizableVideo] Видео ${video.id} успешно загружено, readyState: ${videoElement.readyState}`)
+                  }
+                }
+              }, 1000)
+            } catch (err) {
+              console.error(`[ResizableVideo] Ошибка при установке src для видео ${video.id}:`, err)
+            }
           }
+        } else if (!isInDOM && videoRefs[video.id] === videoElement) {
+          // Если элемент был удален из DOM, но ссылка на него все еще в videoRefs,
+          // логируем это, но не удаляем ссылку, так как она может использоваться в других местах
+          console.warn(`[ResizableVideo] Видео элемент ${video.id} был удален из DOM, но ссылка на него сохранена в videoRefs`)
         }
       }
 
+      // Функция для проверки состояния видео элемента
+      const checkVideoState = () => {
+        if (videoElement && document.body.contains(videoElement) && video.id) {
+          // Проверяем, что элемент все еще в videoRefs
+          if (videoRefs[video.id] !== videoElement) {
+            console.log(`[ResizableVideo] Восстанавливаем ссылку на видео элемент ${video.id} в videoRefs`)
+            videoRefs[video.id] = videoElement
+          }
+
+          // Проверяем, что src установлен правильно
+          if (video.path && (!videoElement.src || !videoElement.src.includes(video.id))) {
+            console.log(`[ResizableVideo] Восстанавливаем src для видео ${video.id}: ${video.path}`)
+            videoElement.src = video.path
+            videoElement.load()
+          }
+        }
+      };
+
+      // Запускаем проверку через 500мс после монтирования
+      const checkTimer = setTimeout(checkVideoState, 500);
+
       return () => {
+        // Очищаем таймер при размонтировании
+        clearTimeout(checkTimer);
+
         // При размонтировании компонента не удаляем элемент из videoRefs,
         // так как он может использоваться в других местах
       }
