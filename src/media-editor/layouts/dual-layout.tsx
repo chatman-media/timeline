@@ -4,7 +4,11 @@ import { MediaPlayer } from "@/media-editor/media-player/components"
 import { Options } from "@/media-editor/options"
 import { TimelineLayout } from "@/media-editor/timeline/components"
 
+import { useBrowserVisibility } from "../browser/providers/browser-visibility-provider"
+
 export function DualMediaEditor() {
+  const { isBrowserVisible } = useBrowserVisibility()
+
   return (
     <ResizablePanelGroup
       direction="vertical"
@@ -31,13 +35,17 @@ export function DualMediaEditor() {
 
       <ResizablePanel defaultSize={50} minSize={30} maxSize={70}>
         <ResizablePanelGroup direction="vertical" autoSaveId="dual-bottom-layout">
-          <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
-            <div className="relative h-full flex-1">
-              <Browser />
-            </div>
-          </ResizablePanel>
-          <ResizableHandle />
-          <ResizablePanel defaultSize={60} minSize={40} maxSize={80}>
+          {isBrowserVisible ? (
+            <>
+              <ResizablePanel defaultSize={40} minSize={20} maxSize={60}>
+                <div className="relative h-full flex-1">
+                  <Browser />
+                </div>
+              </ResizablePanel>
+              <ResizableHandle />
+            </>
+          ) : null}
+          <ResizablePanel defaultSize={isBrowserVisible ? 60 : 100} minSize={40} maxSize={100}>
             <div className="h-full flex-1">
               <TimelineLayout />
             </div>

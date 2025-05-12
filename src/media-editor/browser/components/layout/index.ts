@@ -1,4 +1,5 @@
 export * from "./add-media-button"
 export * from "./audio-player"
+export * from "./browser-toggle"
 export * from "./no-files"
 export * from "./status-bar"

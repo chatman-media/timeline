@@ -3,6 +3,7 @@
 import { createBrowserInspector } from "@statelyai/inspect"
 import { ReactNode } from "react"
 
+import { BrowserVisibilityProvider } from "@/media-editor/browser/providers/browser-visibility-provider"
 import { MediaProvider } from "@/media-editor/browser/providers/media-provider"
 import { UserSettingsProvider } from "@/media-editor/browser/providers/user-settings-provider"
 import { ModalProvider } from "@/media-editor/dialogs"
@@ -31,6 +32,7 @@ const AppProvider = composeProviders(
   MediaProvider,
   ProjectProvider,
   UserSettingsProvider,
+  BrowserVisibilityProvider,
   DisplayTimeProvider,
   PlayerProvider,
   ModalProvider,

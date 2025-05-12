@@ -10,6 +10,7 @@ import { ExportDialog, ProjectSettingsDialog, UserSettingsDialog } from "@/media
 import { type LayoutMode, LayoutPreviews } from "@/media-editor/layouts"
 import { useProject } from "@/media-editor/project-settings/project-provider"
 
+import { BrowserToggleButton } from "./browser-toggle-button"
 import { ThemeToggle } from "./theme-toggle"
 
 interface TopNavBarProps {
@@ -51,6 +52,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
   return (
     <div className="relative flex w-full items-center justify-between border border-b bg-gray-200 px-1 py-[2px] dark:bg-[#1b1a1f]">
       <div className="flex h-6 items-center">
+        <BrowserToggleButton />
         <ThemeToggle />
         <Popover>
           <PopoverTrigger asChild>

@@ -1733,10 +1733,10 @@ export const landscapeTemplates: MediaTemplate[] = [
       <div className="relative h-full w-full">
         {/* Создаем сетку 5x5 */}
         {Array.from({ length: 25 }).map((_, index) => {
-          const rowIndex = Math.floor(index / 5);
-          const colIndex = index % 5;
-          const cellIndex = index + 1;
-          const isEvenCell = (rowIndex + colIndex) % 2 === 0;
+          const rowIndex = Math.floor(index / 5)
+          const colIndex = index % 5
+          const cellIndex = index + 1
+          const isEvenCell = (rowIndex + colIndex) % 2 === 0
           return (
             <div
               key={`cell-${rowIndex}-${colIndex}`}
@@ -1755,7 +1755,7 @@ export const landscapeTemplates: MediaTemplate[] = [
             >
               {cellIndex}
             </div>
-          );
+          )
         })}
 
         {/* Горизонтальные линии разделения */}

@@ -84,6 +84,7 @@
     "projectTasks": "Задачи Проекта",
     "userSettings": "Настройки пользователя",
     "export": "Экспорт",
+    "toggleBrowser": "Показать/скрыть браузер (Cmd+B)",
     "layouts": {
       "default": "По умолчанию",
       "options": "Опции",
@@ -209,6 +210,8 @@
       "filters": "Фильтры",
       "templates": "Шаблоны"
     },
+    "hide": "Скрыть браузер",
+    "show": "Показать браузер",
     "common": {
       "unknown": "Неизвестно"
     },

@@ -84,6 +84,7 @@
     "projectTasks": "Project Tasks",
     "userSettings": "User Settings",
     "export": "Export",
+    "toggleBrowser": "Toggle browser (Cmd+B)",
     "layouts": {
       "default": "Default",
       "options": "Options",
@@ -209,6 +210,8 @@
       "filters": "Filters",
       "templates": "Templates"
     },
+    "hide": "Hide browser",
+    "show": "Show browser",
     "common": {
       "unknown": "Unknown"
     },
