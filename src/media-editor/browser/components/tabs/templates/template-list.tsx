@@ -201,14 +201,9 @@ export function TemplateList() {
     }
 
     // Поиск по локализованным названиям
-    const labels = getTemplateLabels(template.id)
-    if (labels) {
-      if (
-        labels.ru.toLowerCase().includes(searchLower) ||
-        labels.en.toLowerCase().includes(searchLower)
-      ) {
-        return true
-      }
+    const label = getTemplateLabels(template.id)
+    if (label && label.toLowerCase().includes(searchLower)) {
+      return true
     }
 
     return false
@@ -239,8 +234,7 @@ export function TemplateList() {
     setActiveTemplate(template)
 
     // Получаем локализованное название шаблона
-    const labels = getTemplateLabels(template.id)
-    const templateName = labels ? labels[i18n.language === "en" ? "en" : "ru"] : template.id
+    const templateName = getTemplateLabels(template.id) || template.id
 
     console.log("Applying template:", template.id, templateName)
 
@@ -372,15 +366,13 @@ export function TemplateList() {
               <div key={screenCount} className="mb-4">
                 <h3 className="mb-3 text-sm font-medium text-gray-400">
                   {screenCount}{" "}
-                  {i18n.language === "en"
-                    ? screenCount === 1
-                      ? "screen"
-                      : "screens"
-                    : screenCount === 1
-                      ? "экран"
-                      : screenCount < 5
-                        ? "экрана"
-                        : "экранов"}
+                  {t(
+                    `browser.templateScreens.${screenCount === 1 ? "one" : i18n.language === "ru" && screenCount < 5 ? "few" : "many"}`,
+                    {
+                      count: screenCount,
+                      defaultValue: screenCount === 1 ? "screen" : "screens",
+                    },
+                  )}
                 </h3>
                 <div
                   className="flex flex-wrap gap-4"
@@ -396,14 +388,10 @@ export function TemplateList() {
                       />
                       <div
                         className="mt-1 truncate text-center text-xs text-gray-400"
-                        title={
-                          getTemplateLabels(template.id)?.[i18n.language === "en" ? "en" : "ru"] ||
-                          template.id
-                        }
+                        title={getTemplateLabels(template.id) || template.id}
                         style={{ width: `${previewSize}px` }}
                       >
-                        {getTemplateLabels(template.id)?.[i18n.language === "en" ? "en" : "ru"] ||
-                          template.id}
+                        {getTemplateLabels(template.id) || template.id}
                       </div>
                     </div>
                   ))}

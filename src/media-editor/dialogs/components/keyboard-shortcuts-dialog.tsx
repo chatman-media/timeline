@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select"
 
 // Импортируем типы и функции из наших новых модулей
-import { createPresets, PresetType, Shortcut,ShortcutCategory } from "./keyboard-shortcuts"
+import { createPresets, PresetType, Shortcut, ShortcutCategory } from "./keyboard-shortcuts"
 
 interface KeyboardShortcutsDialogProps {
   open: boolean

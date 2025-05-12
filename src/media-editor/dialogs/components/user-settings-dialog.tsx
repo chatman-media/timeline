@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { LANGUAGES, Language } from "@/media-editor/browser/machines/user-settings-machine"
+import { Language,LANGUAGES } from "@/media-editor/browser/machines/user-settings-machine"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
 
 interface UserSettingsDialogProps {

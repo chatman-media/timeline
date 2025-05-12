@@ -1,1188 +1,177 @@
-export interface TemplateLabels {
-  ru: string
-  en: string
-}
+import i18n from "@/i18n"
 
 export interface TemplateDescription {
   id: string
-  labels: TemplateLabels
-  description?: {
-    ru: string
-    en: string
-  }
 }
 
+/**
+ * Функция для получения локализованного названия шаблона по id
+ * @param id Идентификатор шаблона
+ * @returns Локализованное название шаблона
+ */
+export function getTemplateLabels(id: string): string {
+  return i18n.t(`templates.templateLabels.${id}`)
+}
+
+/**
+ * Функция для получения локализованного описания шаблона по id
+ * @param id Идентификатор шаблона
+ * @returns Локализованное описание шаблона
+ */
+export function getTemplateDescription(id: string): string {
+  return i18n.t(`templates.templateDescriptions.${id}`)
+}
+
+// Список всех доступных шаблонов
 export const templateLabels: TemplateDescription[] = [
   // Шаблоны с 2 экранами - Ландшафтный формат
-  {
-    id: "split-vertical-landscape",
-    labels: {
-      ru: "2 экрана по вертикали",
-      en: "2 screens vertical",
-    },
-    description: {
-      ru: "Два экрана, разделенные вертикальной линией",
-      en: "Two screens divided by a vertical line",
-    },
-  },
-  {
-    id: "split-horizontal-landscape",
-    labels: {
-      ru: "2 экрана по горизонтали",
-      en: "2 screens horizontal",
-    },
-    description: {
-      ru: "Два экрана, разделенные горизонтальной линией",
-      en: "Two screens divided by a horizontal line",
-    },
-  },
-  {
-    id: "split-diagonal-landscape",
-    labels: {
-      ru: "Диагональное разделение",
-      en: "Diagonal Split",
-    },
-    description: {
-      ru: "Два экрана, разделенные диагональной линией",
-      en: "Two screens divided by a diagonal line",
-    },
-  },
+  { id: "split-vertical-landscape" },
+  { id: "split-horizontal-landscape" },
+  { id: "split-diagonal-landscape" },
 
   // Шаблоны с 3 экранами - Ландшафтный формат
-  {
-    id: "split-vertical-3-landscape",
-    labels: {
-      ru: "3 экрана по вертикали",
-      en: "3 screens vertical",
-    },
-    description: {
-      ru: "Три экрана, разделенные вертикальными линиями",
-      en: "Three screens divided by vertical lines",
-    },
-  },
-  {
-    id: "split-horizontal-3-landscape",
-    labels: {
-      ru: "3 экрана по горизонтали",
-      en: "3 screens horizontal",
-    },
-    description: {
-      ru: "Три экрана, разделенные горизонтальными линиями",
-      en: "Three screens divided by horizontal lines",
-    },
-  },
-  {
-    id: "split-mixed-1-landscape",
-    labels: {
-      ru: "1 сверху + 2 снизу",
-      en: "1 top + 2 bottom",
-    },
-    description: {
-      ru: "Один экран сверху, два экрана снизу",
-      en: "One screen on top, two screens below",
-    },
-  },
-  {
-    id: "split-mixed-2-landscape",
-    labels: {
-      ru: "1 слева + 2 справа",
-      en: "1 left + 2 right",
-    },
-    description: {
-      ru: "Один экран слева, два экрана справа",
-      en: "One screen on the left, two screens on the right",
-    },
-  },
+  { id: "split-vertical-3-landscape" },
+  { id: "split-horizontal-3-landscape" },
+  { id: "split-mixed-1-landscape" },
+  { id: "split-mixed-2-landscape" },
 
   // Шаблоны с 4 экранами - Ландшафтный формат
-  {
-    id: "split-grid-2x2-landscape",
-    labels: {
-      ru: "Сетка 2×2",
-      en: "Grid 2×2",
-    },
-    description: {
-      ru: "Четыре экрана в сетке 2×2",
-      en: "Four screens in a 2×2 grid",
-    },
-  },
-  {
-    id: "split-vertical-4-landscape",
-    labels: {
-      ru: "4 экрана по вертикали",
-      en: "4 screens vertical",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные вертикальными линиями",
-      en: "Four screens divided by vertical lines",
-    },
-  },
-  {
-    id: "split-1-3-landscape",
-    labels: {
-      ru: "1 слева + 3 справа",
-      en: "1 left + 3 right",
-    },
-    description: {
-      ru: "Один экран слева, три экрана справа",
-      en: "One screen on the left, three screens on the right",
-    },
-  },
-  {
-    id: "split-3-1-landscape",
-    labels: {
-      ru: "3 сверху + 1 снизу",
-      en: "3 top + 1 bottom",
-    },
-    description: {
-      ru: "Три экрана сверху, один экран снизу",
-      en: "Three screens on top, one screen below",
-    },
-  },
-  {
-    id: "split-3-1-right-landscape",
-    labels: {
-      ru: "3 слева + 1 справа",
-      en: "3 left + 1 right",
-    },
-    description: {
-      ru: "Три экрана слева, один экран справа",
-      en: "Three screens on the left, one screen on the right",
-    },
-  },
-  {
-    id: "split-1-3-bottom-landscape",
-    labels: {
-      ru: "1 сверху + 3 снизу",
-      en: "1 top + 3 bottom",
-    },
-    description: {
-      ru: "Один экран сверху, три экрана снизу",
-      en: "One screen on top, three screens below",
-    },
-  },
-  {
-    id: "split-diagonal-cross-landscape",
-    labels: {
-      ru: "Диагональный крест",
-      en: "Diagonal Cross",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные диагональными линиями в форме креста",
-      en: "Four screens divided by diagonal lines in a cross shape",
-    },
-  },
-  {
-    id: "split-custom-5-1-landscape",
-    labels: {
-      ru: "1 слева + 4 справа",
-      en: "1 left + 4 right",
-    },
-    description: {
-      ru: "Один большой экран слева, четыре экрана справа (2 сверху, 2 снизу)",
-      en: "One large screen on the left, four screens on the right (2 top, 2 bottom)",
-    },
-  },
-  {
-    id: "split-custom-5-2-landscape",
-    labels: {
-      ru: "4 слева + 1 справа",
-      en: "4 left + 1 right",
-    },
-    description: {
-      ru: "Один большой экран справа, четыре экрана слева (2 сверху, 2 снизу)",
-      en: "One large screen on the right, four screens on the left (2 top, 2 bottom)",
-    },
-  },
-  {
-    id: "split-custom-5-3-landscape",
-    labels: {
-      ru: "2 + 1 широкий + 2",
-      en: "2 + 1 wide + 2",
-    },
-    description: {
-      ru: "Два экрана сверху, один посередине, два экрана снизу",
-      en: "Two screens on top, one in the middle, two screens below",
-    },
-  },
+  { id: "split-grid-2x2-landscape" },
+  { id: "split-vertical-4-landscape" },
+  { id: "split-1-3-landscape" },
+  { id: "split-3-1-landscape" },
+  { id: "split-3-1-right-landscape" },
+  { id: "split-1-3-bottom-landscape" },
+  { id: "split-diagonal-cross-landscape" },
+
+  // Шаблоны с 5 экранами - Ландшафтный формат
+  { id: "split-custom-5-1-landscape" },
+  { id: "split-custom-5-2-landscape" },
+  { id: "split-custom-5-3-landscape" },
 
   // Шаблоны с 6 экранами - Ландшафтный формат
-  {
-    id: "split-grid-3x2-landscape",
-    labels: {
-      ru: "Сетка 3×2",
-      en: "Grid 3×2",
-    },
-    description: {
-      ru: "Шесть экранов в сетке 3×2",
-      en: "Six screens in a 3×2 grid",
-    },
-  },
+  { id: "split-grid-3x2-landscape" },
 
   // Шаблоны с 8 экранами - Ландшафтный формат
-  {
-    id: "split-grid-4x2-landscape",
-    labels: {
-      ru: "Сетка 4×2",
-      en: "Grid 4×2",
-    },
-    description: {
-      ru: "Восемь экранов в сетке 4×2",
-      en: "Eight screens in a 4×2 grid",
-    },
-  },
+  { id: "split-grid-4x2-landscape" },
 
   // Шаблоны с 9 экранами - Ландшафтный формат
-  {
-    id: "split-grid-3x3-landscape",
-    labels: {
-      ru: "Сетка 3×3",
-      en: "Grid 3×3",
-    },
-    description: {
-      ru: "Девять экранов в сетке 3×3",
-      en: "Nine screens in a 3×3 grid",
-    },
-  },
+  { id: "split-grid-3x3-landscape" },
 
   // Шаблоны с 10 экранами - Ландшафтный формат
-  {
-    id: "split-grid-5x2-landscape",
-    labels: {
-      ru: "Сетка 5×2",
-      en: "Grid 5×2",
-    },
-    description: {
-      ru: "Десять экранов в сетке 5×2",
-      en: "Ten screens in a 5×2 grid",
-    },
-  },
+  { id: "split-grid-5x2-landscape" },
 
   // Шаблоны с 12 экранами - Ландшафтный формат
-  {
-    id: "split-grid-4x3-landscape",
-    labels: {
-      ru: "Сетка 4×3",
-      en: "Grid 4×3",
-    },
-    description: {
-      ru: "Двенадцать экранов в сетке 4×3",
-      en: "Twelve screens in a 4×3 grid",
-    },
-  },
-
-  // Шаблон с 12 экранами - Ландшафтный формат (3x4)
-  {
-    id: "split-grid-3x4-landscape",
-    labels: {
-      ru: "Сетка 3×4",
-      en: "Grid 3×4",
-    },
-    description: {
-      ru: "Двенадцать экранов в сетке 3×4",
-      en: "Twelve screens in a 3×4 grid",
-    },
-  },
+  { id: "split-grid-4x3-landscape" },
+  { id: "split-grid-3x4-landscape" },
 
   // Шаблоны с 16 экранами - Ландшафтный формат
-  {
-    id: "split-grid-4x4-landscape",
-    labels: {
-      ru: "Сетка 4×4",
-      en: "Grid 4×4",
-    },
-    description: {
-      ru: "Шестнадцать экранов в сетке 4×4",
-      en: "Sixteen screens in a 4×4 grid",
-    },
-  },
+  { id: "split-grid-4x4-landscape" },
 
   // Шаблоны с 25 экранами - Ландшафтный формат
-  {
-    id: "split-grid-5x5-landscape",
-    labels: {
-      ru: "Сетка 5×5",
-      en: "Grid 5×5",
-    },
-    description: {
-      ru: "Двадцать пять экранов в сетке 5×5",
-      en: "Twenty-five screens in a 5×5 grid",
-    },
-  },
+  { id: "split-grid-5x5-landscape" },
 
   // Шаблоны с 2 экранами - Портретный формат
-  {
-    id: "split-vertical-portrait",
-    labels: {
-      ru: "Вертикальное разделение",
-      en: "Vertical Split",
-    },
-    description: {
-      ru: "Два экрана, разделенные вертикальной линией",
-      en: "Two screens divided by a vertical line",
-    },
-  },
-  {
-    id: "split-horizontal-portrait",
-    labels: {
-      ru: "Горизонтальное разделение",
-      en: "Horizontal Split",
-    },
-    description: {
-      ru: "Два экрана, разделенные горизонтальной линией",
-      en: "Two screens divided by a horizontal line",
-    },
-  },
-  {
-    id: "split-diagonal-portrait",
-    labels: {
-      ru: "Диагональное разделение",
-      en: "Diagonal Split",
-    },
-    description: {
-      ru: "Два экрана, разделенные диагональной линией",
-      en: "Two screens divided by a diagonal line",
-    },
-  },
+  { id: "split-vertical-portrait" },
+  { id: "split-horizontal-portrait" },
+  { id: "split-diagonal-portrait" },
 
   // Шаблоны с 3 экранами - Портретный формат
-  {
-    id: "split-vertical-3-portrait",
-    labels: {
-      ru: "3 экрана по вертикали",
-      en: "3 screens vertical",
-    },
-    description: {
-      ru: "Три экрана, разделенные вертикальными линиями",
-      en: "Three screens divided by vertical lines",
-    },
-  },
-  {
-    id: "split-horizontal-3-portrait",
-    labels: {
-      ru: "3 экрана по горизонтали",
-      en: "3 screens horizontal",
-    },
-    description: {
-      ru: "Три экрана, разделенные горизонтальными линиями",
-      en: "Three screens divided by horizontal lines",
-    },
-  },
-  {
-    id: "split-mixed-1-portrait",
-    labels: {
-      ru: "1 сверху + 2 снизу",
-      en: "1 top + 2 bottom",
-    },
-    description: {
-      ru: "Один экран сверху, два экрана снизу",
-      en: "One screen on top, two screens below",
-    },
-  },
-  {
-    id: "split-mixed-2-portrait",
-    labels: {
-      ru: "1 слева + 2 справа",
-      en: "1 left + 2 right",
-    },
-    description: {
-      ru: "Один экран слева, два экрана справа",
-      en: "One screen on the left, two screens on the right",
-    },
-  },
+  { id: "split-vertical-3-portrait" },
+  { id: "split-horizontal-3-portrait" },
+  { id: "split-mixed-1-portrait" },
+  { id: "split-mixed-2-portrait" },
 
   // Шаблоны с 4 экранами - Портретный формат
-  {
-    id: "split-grid-2x2-portrait",
-    labels: {
-      ru: "Сетка 2×2",
-      en: "Grid 2×2",
-    },
-    description: {
-      ru: "Четыре экрана в сетке 2×2",
-      en: "Four screens in a 2×2 grid",
-    },
-  },
-  {
-    id: "split-3-1-right-portrait",
-    labels: {
-      ru: "1 слева + 3 справа",
-      en: "1 left + 3 right",
-    },
-    description: {
-      ru: "Один экран слева, три экрана справа",
-      en: "One screen on the left, three screens on the right",
-    },
-  },
-  {
-    id: "split-vertical-4-portrait",
-    labels: {
-      ru: "4 экрана по вертикали",
-      en: "4 screens vertical",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные вертикальными линиями",
-      en: "Four screens divided by vertical lines",
-    },
-  },
-  {
-    id: "split-horizontal-4-portrait",
-    labels: {
-      ru: "4 экрана по горизонтали",
-      en: "4 screens horizontal",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные горизонтальными линиями",
-      en: "Four screens divided by horizontal lines",
-    },
-  },
-  {
-    id: "split-diagonal-cross-portrait",
-    labels: {
-      ru: "Диагональный крест",
-      en: "Diagonal Cross",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные диагональными линиями в форме креста",
-      en: "Four screens divided by diagonal lines in a cross shape",
-    },
-  },
-  {
-    id: "split-1-3-portrait",
-    labels: {
-      ru: "1 сверху + 3 снизу",
-      en: "1 top + 3 bottom",
-    },
-    description: {
-      ru: "Один экран сверху, три экрана снизу",
-      en: "One screen on top, three screens below",
-    },
-  },
-  {
-    id: "split-3-1-portrait",
-    labels: {
-      ru: "3 слева + 1 справа",
-      en: "3 left + 1 right",
-    },
-    description: {
-      ru: "Три экрана слева, один экран справа",
-      en: "Three screens on the left, one screen on the right",
-    },
-  },
-  {
-    id: "split-1-3-bottom-portrait",
-    labels: {
-      ru: "3 сверху + 1 снизу",
-      en: "3 top + 1 bottom",
-    },
-    description: {
-      ru: "Три экрана сверху, один экран снизу",
-      en: "Three screens on top, one screen below",
-    },
-  },
+  { id: "split-grid-2x2-portrait" },
+  { id: "split-3-1-right-portrait" },
+  { id: "split-vertical-4-portrait" },
+  { id: "split-horizontal-4-portrait" },
+  { id: "split-diagonal-cross-portrait" },
+  { id: "split-1-3-portrait" },
+  { id: "split-3-1-portrait" },
+  { id: "split-1-3-bottom-portrait" },
 
   // Шаблоны с 5 экранами - Портретный формат
-  {
-    id: "split-custom-5-1-portrait",
-    labels: {
-      ru: "1 сверху + 4 снизу",
-      en: "1 top + 4 bottom",
-    },
-    description: {
-      ru: "Один большой экран сверху, четыре экрана снизу (2 слева, 2 справа)",
-      en: "One large screen on top, four screens below (2 left, 2 right)",
-    },
-  },
-  {
-    id: "split-custom-5-2-portrait",
-    labels: {
-      ru: "1 снизу + 4 сверху",
-      en: "1 bottom + 4 top",
-    },
-    description: {
-      ru: "Один большой экран снизу, четыре экрана сверху (2 слева, 2 справа)",
-      en: "One large screen on bottom, four screens above (2 left, 2 right)",
-    },
-  },
-  {
-    id: "split-custom-5-3-portrait",
-    labels: {
-      ru: "1 посередине + 4 по краям",
-      en: "1 middle + 4 around",
-    },
-    description: {
-      ru: "Один экран посередине, по два экрана сверху и снизу",
-      en: "One screen in the middle, two screens on top and two below",
-    },
-  },
+  { id: "split-custom-5-1-portrait" },
+  { id: "split-custom-5-2-portrait" },
+  { id: "split-custom-5-3-portrait" },
 
   // Шаблоны с 6 экранами - Портретный формат
-  {
-    id: "split-grid-2x3-portrait",
-    labels: {
-      ru: "Сетка 2×3",
-      en: "Grid 2×3",
-    },
-    description: {
-      ru: "Шесть экранов в сетке 2×3",
-      en: "Six screens in a 2×3 grid",
-    },
-  },
-  {
-    id: "split-grid-2x3-alt-portrait",
-    labels: {
-      ru: "Сетка 3×2",
-      en: "Grid 3×2",
-    },
-    description: {
-      ru: "Шесть экранов в сетке 3×2 (три колонки, два ряда)",
-      en: "Six screens in a 3×2 grid (three columns, two rows)",
-    },
-  },
+  { id: "split-grid-2x3-portrait" },
+  { id: "split-grid-2x3-alt-portrait" },
 
   // Шаблоны с 8 экранами - Портретный формат
-  {
-    id: "split-grid-2x4-portrait",
-    labels: {
-      ru: "Сетка 2×4",
-      en: "Grid 2×4",
-    },
-    description: {
-      ru: "Восемь экранов в сетке 2×4",
-      en: "Eight screens in a 2×4 grid",
-    },
-  },
+  { id: "split-grid-2x4-portrait" },
 
   // Шаблоны с 10 экранами - Портретный формат
-  {
-    id: "split-grid-2x5-portrait",
-    labels: {
-      ru: "Сетка 2×5",
-      en: "Grid 2×5",
-    },
-    description: {
-      ru: "Десять экранов в сетке 2×5",
-      en: "Ten screens in a 2×5 grid",
-    },
-  },
+  { id: "split-grid-2x5-portrait" },
 
   // Шаблоны с 12 экранами - Портретный формат
-  {
-    id: "split-grid-3x4-portrait",
-    labels: {
-      ru: "Сетка 3×4",
-      en: "Grid 3×4",
-    },
-    description: {
-      ru: "Двенадцать экранов в сетке 3×4",
-      en: "Twelve screens in a 3×4 grid",
-    },
-  },
-
-  // Шаблон с 12 экранами - Портретный формат (4x3)
-  {
-    id: "split-grid-4x3-portrait",
-    labels: {
-      ru: "Сетка 4×3",
-      en: "Grid 4×3",
-    },
-    description: {
-      ru: "Двенадцать экранов в сетке 4×3",
-      en: "Twelve screens in a 4×3 grid",
-    },
-  },
+  { id: "split-grid-3x4-portrait" },
+  { id: "split-grid-4x3-portrait" },
 
   // Шаблоны с 9 экранами - Портретный формат
-  {
-    id: "split-grid-3x3-portrait",
-    labels: {
-      ru: "Сетка 3×3",
-      en: "Grid 3×3",
-    },
-    description: {
-      ru: "Девять экранов в сетке 3×3",
-      en: "Nine screens in a 3×3 grid",
-    },
-  },
+  { id: "split-grid-3x3-portrait" },
 
   // Шаблоны с 16 экранами - Портретный формат
-  {
-    id: "split-grid-4x4-portrait",
-    labels: {
-      ru: "Сетка 4×4",
-      en: "Grid 4×4",
-    },
-    description: {
-      ru: "Шестнадцать экранов в сетке 4×4",
-      en: "Sixteen screens in a 4×4 grid",
-    },
-  },
+  { id: "split-grid-4x4-portrait" },
 
   // Шаблоны с 25 экранами - Портретный формат
-  {
-    id: "split-grid-5x5-portrait",
-    labels: {
-      ru: "Сетка 5×5",
-      en: "Grid 5×5",
-    },
-    description: {
-      ru: "Двадцать пять экранов в сетке 5×5",
-      en: "Twenty-five screens in a 5×5 grid",
-    },
-  },
+  { id: "split-grid-5x5-portrait" },
 
   // Шаблоны с 2 экранами - Квадратный формат
-  {
-    id: "split-vertical-square",
-    labels: {
-      ru: "Вертикальное разделение",
-      en: "Vertical Split",
-    },
-    description: {
-      ru: "Два экрана, разделенные вертикальной линией",
-      en: "Two screens divided by a vertical line",
-    },
-  },
-  {
-    id: "split-horizontal-square",
-    labels: {
-      ru: "Горизонтальное разделение",
-      en: "Horizontal Split",
-    },
-    description: {
-      ru: "Два экрана, разделенные горизонтальной линией",
-      en: "Two screens divided by a horizontal line",
-    },
-  },
-  {
-    id: "split-diagonal-square",
-    labels: {
-      ru: "Диагональное разделение",
-      en: "Diagonal Split",
-    },
-    description: {
-      ru: "Два экрана, разделенные диагональной линией",
-      en: "Two screens divided by a diagonal line",
-    },
-  },
+  { id: "split-vertical-square" },
+  { id: "split-horizontal-square" },
+  { id: "split-diagonal-square" },
 
   // Шаблоны с 3 экранами - Квадратный формат
-  {
-    id: "split-vertical-3-square",
-    labels: {
-      ru: "3 экрана по вертикали",
-      en: "3 screens vertical",
-    },
-    description: {
-      ru: "Три экрана, разделенные вертикальными линиями",
-      en: "Three screens divided by vertical lines",
-    },
-  },
-  {
-    id: "split-horizontal-3-square",
-    labels: {
-      ru: "3 экрана по горизонтали",
-      en: "3 screens horizontal",
-    },
-    description: {
-      ru: "Три экрана, разделенные горизонтальными линиями",
-      en: "Three screens divided by horizontal lines",
-    },
-  },
-  {
-    id: "split-mixed-1-square",
-    labels: {
-      ru: "1 сверху + 2 снизу",
-      en: "1 top + 2 bottom",
-    },
-    description: {
-      ru: "Один экран сверху, два экрана снизу",
-      en: "One screen on top, two screens below",
-    },
-  },
-  {
-    id: "split-mixed-2-square",
-    labels: {
-      ru: "1 слева + 2 справа",
-      en: "1 left + 2 right",
-    },
-    description: {
-      ru: "Один экран слева, два экрана справа",
-      en: "One screen on the left, two screens on the right",
-    },
-  },
+  { id: "split-vertical-3-square" },
+  { id: "split-horizontal-3-square" },
+  { id: "split-mixed-1-square" },
+  { id: "split-mixed-2-square" },
 
   // Шаблоны с 4 экранами - Квадратный формат
-  {
-    id: "split-grid-2x2-square",
-    labels: {
-      ru: "Сетка 2×2",
-      en: "Grid 2×2",
-    },
-    description: {
-      ru: "Четыре экрана в сетке 2×2",
-      en: "Four screens in a 2×2 grid",
-    },
-  },
-  {
-    id: "split-diagonal-4-square",
-    labels: {
-      ru: "Четыре диагональных экрана",
-      en: "Four Diagonal Screens",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные диагональными линиями",
-      en: "Four screens divided by diagonal lines",
-    },
-  },
-  {
-    id: "split-vertical-4-square",
-    labels: {
-      ru: "4 экрана по вертикали",
-      en: "4 screens vertical",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные вертикальными линиями",
-      en: "Four screens divided by vertical lines",
-    },
-  },
-  {
-    id: "split-horizontal-4-square",
-    labels: {
-      ru: "4 экрана по горизонтали",
-      en: "4 screens horizontal",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные горизонтальными линиями",
-      en: "Four screens divided by horizontal lines",
-    },
-  },
+  { id: "split-grid-2x2-square" },
+  { id: "split-diagonal-4-square" },
+  { id: "split-vertical-4-square" },
+  { id: "split-horizontal-4-square" },
 
   // Шаблоны с 8 экранами - Квадратный формат
-  {
-    id: "split-grid-2x4-square",
-    labels: {
-      ru: "Сетка 2×4",
-      en: "Grid 2×4",
-    },
-    description: {
-      ru: "Восемь экранов в сетке 2×4",
-      en: "Eight screens in a 2×4 grid",
-    },
-  },
-  {
-    id: "split-grid-4x2-square",
-    labels: {
-      ru: "Сетка 4×2",
-      en: "Grid 4×2",
-    },
-    description: {
-      ru: "Восемь экранов в сетке 4×2",
-      en: "Eight screens in a 4×2 grid",
-    },
-  },
-  {
-    id: "split-diagonal-cross-square",
-    labels: {
-      ru: "Диагональный крест",
-      en: "Diagonal Cross",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные диагональными линиями в форме креста",
-      en: "Four screens divided by diagonal lines in a cross shape",
-    },
-  },
-  {
-    id: "split-1-3-square",
-    labels: {
-      ru: "1 слева + 3 справа",
-      en: "1 left + 3 right",
-    },
-    description: {
-      ru: "Один экран слева, три экрана справа",
-      en: "One screen on the left, three screens on the right",
-    },
-  },
-  {
-    id: "split-3-1-square",
-    labels: {
-      ru: "3 сверху + 1 снизу",
-      en: "3 top + 1 bottom",
-    },
-    description: {
-      ru: "Три экрана сверху, один экран снизу",
-      en: "Three screens on top, one screen below",
-    },
-  },
-  {
-    id: "split-3-1-right-square",
-    labels: {
-      ru: "3 слева + 1 справа",
-      en: "3 left + 1 right",
-    },
-    description: {
-      ru: "Три экрана слева, один экран справа",
-      en: "Three screens on the left, one screen on the right",
-    },
-  },
-  {
-    id: "split-1-3-bottom-square",
-    labels: {
-      ru: "1 сверху + 3 снизу",
-      en: "1 top + 3 bottom",
-    },
-    description: {
-      ru: "Один экран сверху, три экрана снизу",
-      en: "One screen on top, three screens below",
-    },
-  },
-  {
-    id: "split-diagonal-vertical-square",
-    labels: {
-      ru: "Диагональное вертикальное разделение",
-      en: "Diagonal Vertical Split",
-    },
-    description: {
-      ru: "Экраны, разделенные диагональной и вертикальной линиями",
-      en: "Screens divided by diagonal and vertical lines",
-    },
-  },
-  {
-    id: "split-quad-square",
-    labels: {
-      ru: "Четыре равных сектора",
-      en: "Four Equal Sectors",
-    },
-    description: {
-      ru: "Четыре экрана, разделенные на равные сектора",
-      en: "Four screens divided into equal sectors",
-    },
-  },
-  {
-    id: "split-custom-5-3-square",
-    labels: {
-      ru: "1 посередине + по 2 сверху и снизу",
-      en: "1 middle + 2×2 around",
-    },
-    description: {
-      ru: "Один экран посередине на всю ширину, по два экрана сверху и снизу",
-      en: "One screen in the middle across full width, two screens on top and two below",
-    },
-  },
-  {
-    id: "split-custom-5-4-square",
-    labels: {
-      ru: "5 экранов: 2 + 1 + 2 (по бокам)",
-      en: "5 screens: 2 + 1 + 2 (sides)",
-    },
-    description: {
-      ru: "Один экран посередине на всю высоту, по два экрана слева и справа",
-      en: "One screen in the middle across full height, two screens on left and two on right",
-    },
-  },
-  {
-    id: "split-custom-7-1-square",
-    labels: {
-      ru: "7 экранов (вариант 1)",
-      en: "7 screens (variant 1)",
-    },
-    description: {
-      ru: "Большой экран справа внизу, 6 маленьких экранов слева и сверху",
-      en: "Large screen in bottom right, 6 small screens on left and top",
-    },
-  },
-  {
-    id: "split-custom-7-2-square",
-    labels: {
-      ru: "7 экранов (вариант 2)",
-      en: "7 screens (variant 2)",
-    },
-    description: {
-      ru: "Большой экран слева внизу, 6 маленьких экранов справа и сверху",
-      en: "Large screen in bottom left, 6 small screens on right and top",
-    },
-  },
-  {
-    id: "split-custom-7-3-square",
-    labels: {
-      ru: "7 экранов (вариант 3)",
-      en: "7 screens (variant 3)",
-    },
-    description: {
-      ru: "Большой экран слева вверху, 6 маленьких экранов справа и снизу",
-      en: "Large screen in top left, 6 small screens on right and bottom",
-    },
-  },
-  {
-    id: "split-custom-7-4-square",
-    labels: {
-      ru: "7 экранов (вариант 4)",
-      en: "7 screens (variant 4)",
-    },
-    description: {
-      ru: "Большой экран справа вверху, 6 маленьких экранов слева и снизу",
-      en: "Large screen in top right, 6 small screens on left and bottom",
-    },
-  },
-  {
-    id: "split-grid-2x3-square",
-    labels: {
-      ru: "Сетка 2×3",
-      en: "Grid 2×3",
-    },
-    description: {
-      ru: "Шесть экранов в сетке 2×3",
-      en: "Six screens in a 2×3 grid",
-    },
-  },
+  { id: "split-grid-2x4-square" },
+  { id: "split-grid-4x2-square" },
+  { id: "split-diagonal-cross-square" },
+  { id: "split-1-3-square" },
+  { id: "split-3-1-square" },
+  { id: "split-3-1-right-square" },
+  { id: "split-1-3-bottom-square" },
+  { id: "split-diagonal-vertical-square" },
+  { id: "split-quad-square" },
 
-  // Шаблоны с 6 экранами - Квадратный формат
-  {
-    id: "split-grid-3x2-square",
-    labels: {
-      ru: "Сетка 3×2",
-      en: "Grid 3×2",
-    },
-    description: {
-      ru: "Шесть экранов в сетке 3×2",
-      en: "Six screens in a 3×2 grid",
-    },
-  },
+  // Шаблоны с 5 экранами - Квадратный формат
+  { id: "split-custom-5-3-square" },
+  { id: "split-custom-5-4-square" },
 
-  // Шаблоны с 9 экранами - Квадратный формат
-  {
-    id: "split-grid-3x3-square",
-    labels: {
-      ru: "Сетка 3×3",
-      en: "Grid 3×3",
-    },
-    description: {
-      ru: "Девять экранов в сетке 3×3",
-      en: "Nine screens in a 3×3 grid",
-    },
-  },
-
-  // Шаблоны с 10 экранами - Квадратный формат
-  {
-    id: "split-grid-5x2-square",
-    labels: {
-      ru: "Сетка 5×2",
-      en: "Grid 5×2",
-    },
-    description: {
-      ru: "Десять экранов в сетке 5×2",
-      en: "Ten screens in a 5×2 grid",
-    },
-  },
-  {
-    id: "split-grid-2x5-square",
-    labels: {
-      ru: "Сетка 2×5",
-      en: "Grid 2×5",
-    },
-    description: {
-      ru: "Десять экранов в сетке 2×5",
-      en: "Ten screens in a 2×5 grid",
-    },
-  },
-
-  // Шаблоны с 12 экранами - Квадратный формат
-  {
-    id: "split-grid-4x3-square",
-    labels: {
-      ru: "Сетка 4×3",
-      en: "Grid 4×3",
-    },
-    description: {
-      ru: "Двенадцать экранов в сетке 4×3",
-      en: "Twelve screens in a 4×3 grid",
-    },
-  },
-  {
-    id: "split-grid-3x4-square",
-    labels: {
-      ru: "Сетка 3×4",
-      en: "Grid 3×4",
-    },
-    description: {
-      ru: "Двенадцать экранов в сетке 3×4",
-      en: "Twelve screens in a 3×4 grid",
-    },
-  },
-
-  // Шаблоны с 16 экранами - Квадратный формат
-  {
-    id: "split-grid-4x4-square",
-    labels: {
-      ru: "Сетка 4×4",
-      en: "Grid 4×4",
-    },
-    description: {
-      ru: "Шестнадцать экранов в сетке 4×4",
-      en: "Sixteen screens in a 4×4 grid",
-    },
-  },
-
-  // Шаблоны с 25 экранами - Квадратный формат
-  {
-    id: "split-grid-5x5-square",
-    labels: {
-      ru: "Сетка 5×5",
-      en: "Grid 5×5",
-    },
-    description: {
-      ru: "Двадцать пять экранов в сетке 5×5",
-      en: "Twenty-five screens in a 5×5 grid",
-    },
-  },
-
-  // Шаблоны с 7 экранами - Ландшафтный формат
-  {
-    id: "split-custom-7-1-landscape",
-    labels: {
-      ru: "7 экранов: большой справа внизу",
-      en: "7 screens: large bottom right",
-    },
-    description: {
-      ru: "Семь экранов: один большой справа внизу, шесть маленьких слева и сверху",
-      en: "Seven screens: one large at bottom right, six small on left and top",
-    },
-  },
-  {
-    id: "split-custom-7-2-landscape",
-    labels: {
-      ru: "7 экранов: большой слева внизу",
-      en: "7 screens: large bottom left",
-    },
-    description: {
-      ru: "Семь экранов: один большой слева внизу, шесть маленьких справа и сверху",
-      en: "Seven screens: one large at bottom left, six small on right and top",
-    },
-  },
-  {
-    id: "split-custom-7-3-landscape",
-    labels: {
-      ru: "7 экранов: большой слева вверху",
-      en: "7 screens: large top left",
-    },
-    description: {
-      ru: "Семь экранов: один большой слева вверху, шесть маленьких справа и снизу",
-      en: "Seven screens: one large at top left, six small on right and bottom",
-    },
-  },
-  {
-    id: "split-custom-7-4-landscape",
-    labels: {
-      ru: "7 экранов: большой справа вверху",
-      en: "7 screens: large top right",
-    },
-    description: {
-      ru: "Семь экранов: один большой справа вверху, шесть маленьких слева и снизу",
-      en: "Seven screens: one large at top right, six small on left and bottom",
-    },
-  },
-
-  // Шаблоны с 7 экранами - Портретный формат
-  {
-    id: "split-custom-7-1-portrait",
-    labels: {
-      ru: "7 экранов: большой справа внизу",
-      en: "7 screens: large bottom right",
-    },
-    description: {
-      ru: "Семь экранов: один большой справа внизу, шесть маленьких слева и сверху",
-      en: "Seven screens: one large at bottom right, six small on left and top",
-    },
-  },
-  {
-    id: "split-custom-7-2-portrait",
-    labels: {
-      ru: "7 экранов: большой слева внизу",
-      en: "7 screens: large bottom left",
-    },
-    description: {
-      ru: "Семь экранов: один большой слева внизу, шесть маленьких справа и сверху",
-      en: "Seven screens: one large at bottom left, six small on right and top",
-    },
-  },
-  {
-    id: "split-custom-7-3-portrait",
-    labels: {
-      ru: "7 экранов: большой слева вверху",
-      en: "7 screens: large top left",
-    },
-    description: {
-      ru: "Семь экранов: один большой слева вверху, шесть маленьких справа и снизу",
-      en: "Seven screens: one large at top left, six small on right and bottom",
-    },
-  },
-  {
-    id: "split-custom-7-4-portrait",
-    labels: {
-      ru: "7 экранов: большой справа вверху",
-      en: "7 screens: large top right",
-    },
-    description: {
-      ru: "Семь экранов: один большой справа вверху, шесть маленьких слева и снизу",
-      en: "Seven screens: one large at top right, six small on left and bottom",
-    },
-  },
-
-  // Шаблоны с 7 экранами - Квадратный формат
-  {
-    id: "split-custom-7-1-square",
-    labels: {
-      ru: "7 экранов: большой справа внизу",
-      en: "7 screens: large bottom right",
-    },
-    description: {
-      ru: "Семь экранов: один большой справа внизу, шесть маленьких слева и сверху",
-      en: "Seven screens: one large at bottom right, six small on left and top",
-    },
-  },
-  {
-    id: "split-custom-7-2-square",
-    labels: {
-      ru: "7 экранов: большой слева внизу",
-      en: "7 screens: large bottom left",
-    },
-    description: {
-      ru: "Семь экранов: один большой слева внизу, шесть маленьких справа и сверху",
-      en: "Seven screens: one large at bottom left, six small on right and top",
-    },
-  },
-  {
-    id: "split-custom-7-3-square",
-    labels: {
-      ru: "7 экранов: большой слева вверху",
-      en: "7 screens: large top left",
-    },
-    description: {
-      ru: "Семь экранов: один большой слева вверху, шесть маленьких справа и снизу",
-      en: "Seven screens: one large at top left, six small on right and bottom",
-    },
-  },
-  {
-    id: "split-custom-7-4-square",
-    labels: {
-      ru: "7 экранов: большой справа вверху",
-      en: "7 screens: large top right",
-    },
-    description: {
-      ru: "Семь экранов: один большой справа вверху, шесть маленьких слева и снизу",
-      en: "Seven screens: one large at top right, six small on left and bottom",
-    },
-  },
+  // Шаблоны с 7 экранами
+  { id: "split-custom-7-1-square" },
+  { id: "split-custom-7-2-square" },
+  { id: "split-custom-7-3-square" },
+  { id: "split-custom-7-4-square" },
+  { id: "split-grid-2x3-square" },
+  { id: "split-grid-3x2-square" },
+  { id: "split-grid-3x3-square" },
+  { id: "split-grid-5x2-square" },
+  { id: "split-grid-2x5-square" },
+  { id: "split-grid-4x3-square" },
+  { id: "split-grid-3x4-square" },
+  { id: "split-grid-4x4-square" },
+  { id: "split-grid-5x5-square" },
+  { id: "split-custom-7-1-landscape" },
+  { id: "split-custom-7-2-landscape" },
+  { id: "split-custom-7-3-landscape" },
+  { id: "split-custom-7-4-landscape" },
+  { id: "split-custom-7-1-portrait" },
+  { id: "split-custom-7-2-portrait" },
+  { id: "split-custom-7-3-portrait" },
+  { id: "split-custom-7-4-portrait" },
 ]
-
-// Функция для получения локализованных названий шаблонов по id
-export function getTemplateLabels(id: string): TemplateLabels | undefined {
-  const template = templateLabels.find((template) => template.id === id)
-  return template?.labels
-}
-
-// Функция для получения локализованного описания шаблона по id
-export function getTemplateDescription(id: string): TemplateLabels | undefined {
-  const template = templateLabels.find((template) => template.id === id)
-  return template?.description
-}

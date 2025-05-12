@@ -28,12 +28,12 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background h-[66%] w-[50%] max-w-[1200px] gap-0 overflow-hidden p-0 dark:bg-[#1b1a1f] [&>button]:hidden flex flex-col">
+      <DialogContent className="bg-background flex h-[66%] w-[50%] max-w-[1200px] flex-col gap-0 overflow-hidden p-0 dark:bg-[#1b1a1f] [&>button]:hidden">
         <div className="flex items-center justify-center border-b py-2">
           <h2 className="text-base font-semibold">{t("dialogs.export.title")}</h2>
         </div>
 
-        <Tabs defaultValue="local" className="flex flex-col flex-1">
+        <Tabs defaultValue="local" className="flex flex-1 flex-col">
           <div className="bg-gray-50 dark:bg-[#1b1a1f]">
             <TabsList className="mx-4 mt-2 mb-2 h-8 w-auto bg-transparent">
               <TabsTrigger
@@ -210,10 +210,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                   <div className="space-y-2">
                     <Label>{t("dialogs.export.titles")}</Label>
                     <div className="grid grid-cols-[1fr,auto] items-center gap-2">
-                      <Input
-                        placeholder={t("dialogs.export.name")}
-                        defaultValue="Room"
-                      />
+                      <Input placeholder={t("dialogs.export.name")} defaultValue="Room" />
                       <Button variant="ghost" size="icon">
                         <Info className="h-4 w-4" />
                       </Button>
@@ -251,9 +248,15 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                           <SelectValue placeholder="iPhone" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="iphone">{t("dialogs.export.device_types.iphone")}</SelectItem>
-                          <SelectItem value="ipad">{t("dialogs.export.device_types.ipad")}</SelectItem>
-                          <SelectItem value="android">{t("dialogs.export.device_types.android")}</SelectItem>
+                          <SelectItem value="iphone">
+                            {t("dialogs.export.device_types.iphone")}
+                          </SelectItem>
+                          <SelectItem value="ipad">
+                            {t("dialogs.export.device_types.ipad")}
+                          </SelectItem>
+                          <SelectItem value="android">
+                            {t("dialogs.export.device_types.android")}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -288,9 +291,9 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-sm">30 {t("dialogs.export.fps")}</span>
-                      <span className="text-sm mx-2">•</span>
+                      <span className="mx-2 text-sm">•</span>
                       <span className="text-sm">6000 {t("dialogs.export.kbps")}</span>
-                      <span className="text-sm mx-2">•</span>
+                      <span className="mx-2 text-sm">•</span>
                       <span className="text-sm">{t("dialogs.export.sdr")}</span>
                     </div>
                     <Button variant="link" className="text-[#00CCC0]">
@@ -326,30 +329,54 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                     className={`flex cursor-pointer items-center gap-2 rounded p-2 ${selectedSocialNetwork === "youtube" ? "bg-accent" : "hover:bg-accent"}`}
                     onClick={() => setSelectedSocialNetwork("youtube")}
                   >
-                    <Image src="/youtube-new.svg" width={24} height={24} className="h-6 w-6" alt="YouTube" />
+                    <Image
+                      src="/youtube-new.svg"
+                      width={24}
+                      height={24}
+                      className="h-6 w-6"
+                      alt="YouTube"
+                    />
                     <div>
                       <div>{t("dialogs.export.youtube")}</div>
-                      <div className="text-muted-foreground text-xs">{t("dialogs.export.notLoggedIn")}</div>
+                      <div className="text-muted-foreground text-xs">
+                        {t("dialogs.export.notLoggedIn")}
+                      </div>
                     </div>
                   </div>
                   <div
                     className={`flex cursor-pointer items-center gap-2 rounded p-2 ${selectedSocialNetwork === "tiktok" ? "bg-accent" : "hover:bg-accent"}`}
                     onClick={() => setSelectedSocialNetwork("tiktok")}
                   >
-                    <Image src="/tiktok-new.svg" width={24} height={24} className="h-6 w-6" alt="TikTok" />
+                    <Image
+                      src="/tiktok-new.svg"
+                      width={24}
+                      height={24}
+                      className="h-6 w-6"
+                      alt="TikTok"
+                    />
                     <div>
                       <div>{t("dialogs.export.tiktok")}</div>
-                      <div className="text-muted-foreground text-xs">{t("dialogs.export.notLoggedIn")}</div>
+                      <div className="text-muted-foreground text-xs">
+                        {t("dialogs.export.notLoggedIn")}
+                      </div>
                     </div>
                   </div>
                   <div
                     className={`flex cursor-pointer items-center gap-2 rounded p-2 ${selectedSocialNetwork === "telegram" ? "bg-accent" : "hover:bg-accent"}`}
                     onClick={() => setSelectedSocialNetwork("telegram")}
                   >
-                    <Image src="/telegram.svg" width={24} height={24} className="h-6 w-6" alt="Telegram" />
+                    <Image
+                      src="/telegram.svg"
+                      width={24}
+                      height={24}
+                      className="h-6 w-6"
+                      alt="Telegram"
+                    />
                     <div>
                       <div>{t("dialogs.export.telegram")}</div>
-                      <div className="text-muted-foreground text-xs">{t("dialogs.export.notLoggedIn")}</div>
+                      <div className="text-muted-foreground text-xs">
+                        {t("dialogs.export.notLoggedIn")}
+                      </div>
                     </div>
                   </div>
                   {/* {t("dialogs.export.otherNetworks")} */}
@@ -357,28 +384,40 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
                 <div className="flex items-center justify-center">
                   {selectedSocialNetwork === "youtube" && (
                     <div className="space-y-4 text-center">
-                      <Image src="/youtube-new.svg" width={96} height={96} className="mx-auto h-24 w-24" alt="YouTube" />
-                      <div>
-                        {t("dialogs.export.loginPrompt.youtube")}
-                      </div>
+                      <Image
+                        src="/youtube-new.svg"
+                        width={96}
+                        height={96}
+                        className="mx-auto h-24 w-24"
+                        alt="YouTube"
+                      />
+                      <div>{t("dialogs.export.loginPrompt.youtube")}</div>
                       <Button>{t("dialogs.export.login")}</Button>
                     </div>
                   )}
                   {selectedSocialNetwork === "tiktok" && (
                     <div className="space-y-4 text-center">
-                      <Image src="/tiktok-new.svg" width={96} height={96} className="mx-auto h-24 w-24" alt="TikTok" />
-                      <div>
-                        {t("dialogs.export.loginPrompt.tiktok")}
-                      </div>
+                      <Image
+                        src="/tiktok-new.svg"
+                        width={96}
+                        height={96}
+                        className="mx-auto h-24 w-24"
+                        alt="TikTok"
+                      />
+                      <div>{t("dialogs.export.loginPrompt.tiktok")}</div>
                       <Button>{t("dialogs.export.login")}</Button>
                     </div>
                   )}
                   {selectedSocialNetwork === "telegram" && (
                     <div className="space-y-4 text-center">
-                      <Image src="/telegram.svg" width={96} height={96} className="mx-auto h-24 w-24" alt="Telegram" />
-                      <div>
-                        {t("dialogs.export.loginPrompt.telegram")}
-                      </div>
+                      <Image
+                        src="/telegram.svg"
+                        width={96}
+                        height={96}
+                        className="mx-auto h-24 w-24"
+                        alt="Telegram"
+                      />
+                      <div>{t("dialogs.export.loginPrompt.telegram")}</div>
                       <Button>{t("dialogs.export.login")}</Button>
                     </div>
                   )}
@@ -399,7 +438,9 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
             <div className="text-sm">
               <span>{t("dialogs.export.length")}: 00:16:44</span>
               <span className="mx-2">•</span>
-              <span>{t("dialogs.export.size")}: 4813.87 MB ({t("dialogs.export.approximate")})</span>
+              <span>
+                {t("dialogs.export.size")}: 4813.87 MB ({t("dialogs.export.approximate")})
+              </span>
             </div>
             <Button className="cursor-pointer bg-[#00CCC0] px-6 text-black hover:bg-[#00AAA0]">
               {t("dialogs.export.title")}

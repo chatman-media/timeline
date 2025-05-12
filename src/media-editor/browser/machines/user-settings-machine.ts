@@ -29,7 +29,7 @@ export const BROWSER_TABS = [
 export const DEFAULT_TAB = "media"
 
 // Допустимые значения для языка
-export const LANGUAGES = ["ru", "en"] as const
+export const LANGUAGES = ["ru", "en", "es"] as const
 export const DEFAULT_LANGUAGE = "ru"
 
 // Допустимые значения для макета

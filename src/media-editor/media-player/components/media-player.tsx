@@ -1921,9 +1921,7 @@ export function MediaPlayer() {
                 ) : (
                   // Если нет видео для отображения
                   <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-black">
-                    <span className="text-lg text-white">
-                      {noVideoText}
-                    </span>
+                    <span className="text-lg text-white">{noVideoText}</span>
                   </div>
                 )}
               </div>
