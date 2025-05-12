@@ -113,9 +113,7 @@ const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
           />
         </div>
       </div>
-      <div className="mt-1 text-xs text-gray-300">
-        {t(`filters.presets.${filter.id}`)}
-      </div>
+      <div className="mt-1 text-xs text-gray-300">{t(`filters.presets.${filter.id}`)}</div>
     </div>
   )
 }
@@ -137,10 +135,7 @@ export function FilterList() {
   const filteredFilters = filters.filter((filter) => {
     const searchLower = searchQuery.toLowerCase()
     const localizedName = t(`filters.presets.${filter.id}`).toLowerCase()
-    return (
-      localizedName.includes(searchLower) ||
-      filter.name.toLowerCase().includes(searchLower)
-    )
+    return localizedName.includes(searchLower) || filter.name.toLowerCase().includes(searchLower)
   })
 
   const handleFilterClick = (filter: VideoFilter) => {

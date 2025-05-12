@@ -133,57 +133,7 @@
         "cancel": "Abbrechen",
         "save": "Speichern"
       },
-      "export": {
-        "title": "Exportieren",
-        "local": "Lokal",
-        "device": "Gerät",
-        "socialNetworks": "Soziale Netzwerke",
-        "dvd": "DVD",
-        "youtube": "YouTube",
-        "tiktok": "TikTok",
-        "telegram": "Telegram",
-        "notLoggedIn": "Nicht angemeldet",
-        "loginPrompt": {
-          "youtube": "Melden Sie sich bei Ihrem YouTube-Konto an, um zusätzliche Informationen zu erhalten.",
-          "tiktok": "Melden Sie sich bei Ihrem TikTok-Konto an, um Videos zu veröffentlichen.",
-          "telegram": "Melden Sie sich bei Ihrem Telegram-Konto an, um Videos an Kanäle und Gruppen zu senden."
-        },
-        "login": "Anmelden",
-        "cover": "Cover",
-        "edit": "Bearbeiten",
-        "outputSettings": "Ausgabeeinstellungen",
-        "name": "Name",
-        "saveTo": "Speichern unter",
-        "preset": "Voreinstellung",
-        "defaultPreset": "Standard",
-        "custom": "Benutzerdefiniert",
-        "format": "Format",
-        "quality": "Qualität",
-        "normal": "Normal",
-        "good": "Gut",
-        "best": "Beste",
-        "resolution": "Auflösung",
-        "frameRate": "Bildrate",
-        "advancedCompression": "Erweiterte Kompression",
-        "cloudBackup": "Cloud-Backup",
-        "enableGPUEncoding": "GPU-beschleunigte Videokodierung aktivieren",
-        "useLastSettings": "Letzte Exporteinstellungen für lokale Datei verwenden",
-        "length": "Länge",
-        "size": "Größe",
-        "approximate": "Ungefähr",
-        "titles": "Titel",
-        "device_types": {
-          "iphone": "iPhone",
-          "ipad": "iPad",
-          "android": "Android"
-        },
-        "codec": "Codec",
-        "additional": "Zusätzlich",
-        "fps": "FPS",
-        "kbps": "kbps",
-        "sdr": "SDR - Rec.709",
-        "otherNetworks": "Andere soziale Netzwerke"
-      },
+
       "keyboardShortcuts": {
         "title": "Tastaturkürzel",
         "switchPreset": "Zu einer anderen Tastaturkürzel-Voreinstellung wechseln:",
@@ -379,7 +329,59 @@
       }
     }
   },
+
   "dialogs": {
+    "export": {
+      "title": "Exportieren",
+      "local": "Lokal",
+      "device": "Gerät",
+      "socialNetworks": "Soziale Netzwerke",
+      "dvd": "DVD",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "telegram": "Telegram",
+      "notLoggedIn": "Nicht angemeldet",
+      "loginPrompt": {
+        "youtube": "Melden Sie sich bei Ihrem YouTube-Konto an, um zusätzliche Informationen zu erhalten.",
+        "tiktok": "Melden Sie sich bei Ihrem TikTok-Konto an, um Videos zu veröffentlichen.",
+        "telegram": "Melden Sie sich bei Ihrem Telegram-Konto an, um Videos an Kanäle und Gruppen zu senden."
+      },
+      "login": "Anmelden",
+      "cover": "Cover",
+      "edit": "Bearbeiten",
+      "outputSettings": "Ausgabeeinstellungen",
+      "name": "Name",
+      "saveTo": "Speichern unter",
+      "preset": "Voreinstellung",
+      "defaultPreset": "Standard",
+      "custom": "Benutzerdefiniert",
+      "format": "Format",
+      "quality": "Qualität",
+      "normal": "Normal",
+      "good": "Gut",
+      "best": "Beste",
+      "resolution": "Auflösung",
+      "frameRate": "Bildrate",
+      "advancedCompression": "Erweiterte Kompression",
+      "cloudBackup": "Cloud-Backup",
+      "enableGPUEncoding": "GPU-beschleunigte Videokodierung aktivieren",
+      "useLastSettings": "Letzte Exporteinstellungen für lokale Datei verwenden",
+      "length": "Länge",
+      "size": "Größe",
+      "approximate": "Ungefähr",
+      "titles": "Titel",
+      "device_types": {
+        "iphone": "iPhone",
+        "ipad": "iPad",
+        "android": "Android"
+      },
+      "codec": "Codec",
+      "additional": "Zusätzlich",
+      "fps": "FPS",
+      "kbps": "kbps",
+      "sdr": "SDR - Rec.709",
+      "otherNetworks": "Andere soziale Netzwerke"
+    },
     "projectSettings": {
       "title": "Projekteinstellungen",
       "aspectRatio": "Seitenverhältnis:",
@@ -475,6 +477,18 @@
       "refreshDevices": "Geräte aktualisieren",
       "savePath": "Speichern unter",
       "hint": "Klicken Sie auf die Aufnahmetaste, um zu beginnen. Die Aufnahme wird automatisch zur Medienbibliothek hinzugefügt."
+    },
+    "userSettings": {
+      "title": "Benutzereinstellungen",
+      "interfaceLanguage": "Oberflächensprache:",
+      "screenshotsPath": "Speicherpfad für Screenshots:",
+      "selectFolder": "Ordner auswählen",
+      "selectFolderPrompt": "Wählen Sie einen Ordner zum Speichern von Screenshots oder geben Sie Ihren eigenen Pfad ein:",
+      "clearPath": "Löschen",
+      "defaultPathHint": "Standardpfad zum Speichern von Screenshots",
+      "customPathHint": "Screenshots werden gespeichert unter: {{path}}",
+      "cancel": "Abbrechen",
+      "save": "OK"
     }
   },
   "timeline": {

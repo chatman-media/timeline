@@ -133,57 +133,7 @@
         "cancel": "Annuler",
         "save": "Enregistrer"
       },
-      "export": {
-        "title": "Exporter",
-        "local": "Local",
-        "device": "Appareil",
-        "socialNetworks": "Réseaux sociaux",
-        "dvd": "DVD",
-        "youtube": "YouTube",
-        "tiktok": "TikTok",
-        "telegram": "Telegram",
-        "notLoggedIn": "Non connecté",
-        "loginPrompt": {
-          "youtube": "Connectez-vous à votre compte YouTube pour des informations supplémentaires.",
-          "tiktok": "Connectez-vous à votre compte TikTok pour publier des vidéos.",
-          "telegram": "Connectez-vous à votre compte Telegram pour envoyer des vidéos aux canaux et groupes."
-        },
-        "login": "Se connecter",
-        "cover": "Couverture",
-        "edit": "Modifier",
-        "outputSettings": "Paramètres de sortie",
-        "name": "Nom",
-        "saveTo": "Enregistrer dans",
-        "preset": "Préréglage",
-        "defaultPreset": "Par défaut",
-        "custom": "Personnalisé",
-        "format": "Format",
-        "quality": "Qualité",
-        "normal": "Normale",
-        "good": "Bonne",
-        "best": "Meilleure",
-        "resolution": "Résolution",
-        "frameRate": "Images par seconde",
-        "advancedCompression": "Compression avancée",
-        "cloudBackup": "Sauvegarde cloud",
-        "enableGPUEncoding": "Activer l'encodage vidéo accéléré par GPU",
-        "useLastSettings": "Utiliser les derniers paramètres d'exportation pour le fichier local",
-        "length": "Durée",
-        "size": "Taille",
-        "approximate": "Approximative",
-        "titles": "Titres",
-        "device_types": {
-          "iphone": "iPhone",
-          "ipad": "iPad",
-          "android": "Android"
-        },
-        "codec": "Codec",
-        "additional": "Supplémentaire",
-        "fps": "ips",
-        "kbps": "kbps",
-        "sdr": "SDR - Rec.709",
-        "otherNetworks": "Autres réseaux sociaux"
-      },
+
       "keyboardShortcuts": {
         "title": "Raccourcis clavier",
         "switchPreset": "Passer à un autre préréglage de raccourcis :",
@@ -330,7 +280,59 @@
       "split-grid-5x5-landscape": "Vingt-cinq écrans dans une grille 5×5"
     }
   },
+
   "dialogs": {
+    "export": {
+      "title": "Exporter",
+      "local": "Local",
+      "device": "Appareil",
+      "socialNetworks": "Réseaux sociaux",
+      "dvd": "DVD",
+      "youtube": "YouTube",
+      "tiktok": "TikTok",
+      "telegram": "Telegram",
+      "notLoggedIn": "Non connecté",
+      "loginPrompt": {
+        "youtube": "Connectez-vous à votre compte YouTube pour des informations supplémentaires.",
+        "tiktok": "Connectez-vous à votre compte TikTok pour publier des vidéos.",
+        "telegram": "Connectez-vous à votre compte Telegram pour envoyer des vidéos aux canaux et groupes."
+      },
+      "login": "Se connecter",
+      "cover": "Couverture",
+      "edit": "Modifier",
+      "outputSettings": "Paramètres de sortie",
+      "name": "Nom",
+      "saveTo": "Enregistrer dans",
+      "preset": "Préréglage",
+      "defaultPreset": "Par défaut",
+      "custom": "Personnalisé",
+      "format": "Format",
+      "quality": "Qualité",
+      "normal": "Normale",
+      "good": "Bonne",
+      "best": "Meilleure",
+      "resolution": "Résolution",
+      "frameRate": "Images par seconde",
+      "advancedCompression": "Compression avancée",
+      "cloudBackup": "Sauvegarde cloud",
+      "enableGPUEncoding": "Activer l'encodage vidéo accéléré par GPU",
+      "useLastSettings": "Utiliser les derniers paramètres d'exportation pour le fichier local",
+      "length": "Durée",
+      "size": "Taille",
+      "approximate": "Approximative",
+      "titles": "Titres",
+      "device_types": {
+        "iphone": "iPhone",
+        "ipad": "iPad",
+        "android": "Android"
+      },
+      "codec": "Codec",
+      "additional": "Supplémentaire",
+      "fps": "ips",
+      "kbps": "kbps",
+      "sdr": "SDR - Rec.709",
+      "otherNetworks": "Autres réseaux sociaux"
+    },
     "projectSettings": {
       "title": "Paramètres du projet",
       "aspectRatio": "Rapport d'aspect :",
@@ -426,6 +428,18 @@
       "refreshDevices": "Actualiser les périphériques",
       "savePath": "Enregistrer dans",
       "hint": "Cliquez sur le bouton d'enregistrement pour commencer. L'enregistrement sera automatiquement ajouté à la bibliothèque multimédia."
+    },
+    "userSettings": {
+      "title": "Paramètres utilisateur",
+      "interfaceLanguage": "Langue de l'interface :",
+      "screenshotsPath": "Chemin de sauvegarde des captures d'écran :",
+      "selectFolder": "Sélectionner un dossier",
+      "selectFolderPrompt": "Choisissez un dossier pour enregistrer les captures d'écran ou entrez votre propre chemin :",
+      "clearPath": "Effacer",
+      "defaultPathHint": "Chemin par défaut pour enregistrer les captures d'écran",
+      "customPathHint": "Les captures d'écran seront enregistrées dans : {{path}}",
+      "cancel": "Annuler",
+      "save": "OK"
     }
   },
   "browser": {

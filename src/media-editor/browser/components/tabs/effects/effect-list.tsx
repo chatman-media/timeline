@@ -175,9 +175,7 @@ const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
           />
         </div>
       </div>
-      <div className="mt-1 text-xs text-gray-300">
-        {t(`effects.presets.${effectType}`)}
-      </div>
+      <div className="mt-1 text-xs text-gray-300">{t(`effects.presets.${effectType}`)}</div>
     </div>
   )
 }
@@ -198,10 +196,7 @@ export function EffectList() {
   const filteredEffects = effects.filter((effect) => {
     const searchLower = searchQuery.toLowerCase()
     const localizedName = t(`effects.presets.${effect.type}`).toLowerCase()
-    return (
-      localizedName.includes(searchLower) ||
-      effect.name.toLowerCase().includes(searchLower)
-    )
+    return localizedName.includes(searchLower) || effect.name.toLowerCase().includes(searchLower)
   })
 
   const handleEffectClick = (effect: VideoEffect) => {

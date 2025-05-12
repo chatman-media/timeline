@@ -131,8 +131,8 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
             <Label className="text-xs font-medium">
               {t("dialogs.userSettings.screenshotsPath")}
             </Label>
-            <div className="grid grid-cols-[1fr,auto] gap-2">
-              <div className="relative">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
                 <Input
                   value={selectedScreenshotsPath}
                   onChange={handleScreenshotsPathInput}
@@ -178,11 +178,6 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
                 <Folder className="h-4 w-4" />
               </Button>
             </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              {selectedScreenshotsPath === "public/screenshots"
-                ? t("dialogs.userSettings.defaultPathHint")
-                : t("dialogs.userSettings.customPathHint", { path: selectedScreenshotsPath })}
-            </p>
           </div>
         </div>
         <DialogFooter className="flex justify-between space-x-4">

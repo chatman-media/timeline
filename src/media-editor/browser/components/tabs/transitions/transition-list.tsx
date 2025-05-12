@@ -307,9 +307,7 @@ const TransitionPreview = ({
           )}
         </div>
       </div>
-      <div className="mt-1 text-xs text-gray-300">
-        {t(`transitions.types.${transitionType}`)}
-      </div>
+      <div className="mt-1 text-xs text-gray-300">{t(`transitions.types.${transitionType}`)}</div>
     </div>
   )
 }
@@ -466,10 +464,7 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
   const filteredTransitions = transitions.filter((transition) => {
     const searchLower = searchQuery.toLowerCase()
     const localizedName = t(`transitions.types.${transition.type}`).toLowerCase()
-    return (
-      localizedName.includes(searchLower) ||
-      transition.id.toLowerCase().includes(searchLower)
-    )
+    return localizedName.includes(searchLower) || transition.id.toLowerCase().includes(searchLower)
   })
 
   return (
