@@ -2,6 +2,7 @@
 
 import { Check, Globe } from "lucide-react"
 import * as React from "react"
+import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -45,6 +46,7 @@ export function TimeZoneSelect({
   value: string
   onValueChange: (value: string) => void
 }) {
+  const { t } = useTranslation()
   const [open, setOpen] = React.useState(false)
 
   return (
@@ -59,12 +61,12 @@ export function TimeZoneSelect({
           <Globe className="mr-2 h-3 w-3" />
           {value
             ? timezones.find((timezone) => timezone.value === value)?.label
-            : "Select timezone"}
+            : t("common.timezone.select")}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0">
         <Command>
-          <CommandInput placeholder="Search timezone..." className="h-8" />
+          <CommandInput placeholder={t("common.timezone.search")} className="h-8" />
           <CommandEmpty>No timezone found.</CommandEmpty>
           <CommandGroup>
             {timezones.map((timezone) => (

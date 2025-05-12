@@ -3,14 +3,16 @@ import LanguageDetector from "i18next-browser-languagedetector"
 import { initReactI18next } from "react-i18next"
 
 // Импорт констант для языков
-import { DEFAULT_LANGUAGE, isSupportedLanguage,LanguageCode } from "./constants"
+import { DEFAULT_LANGUAGE, isSupportedLanguage, LanguageCode } from "./constants"
 
 // Проверка, что код выполняется в браузере
 const isBrowser = typeof window !== "undefined"
 
 // Импорт ресурсов переводов
+import translationDE from "./locales/de.json"
 import translationEN from "./locales/en.json"
 import translationES from "./locales/es.json"
+import translationFR from "./locales/fr.json"
 import translationRU from "./locales/ru.json"
 
 // Ресурсы переводов
@@ -23,6 +25,12 @@ const resources = {
   },
   es: {
     translation: translationES,
+  },
+  fr: {
+    translation: translationFR,
+  },
+  de: {
+    translation: translationDE,
   },
 }
 
@@ -52,7 +60,7 @@ const initI18n = () => {
   instance.init({
     resources,
     lng: savedLanguage, // Используем сохраненный язык
-    fallbackLng: "ru", // Язык по умолчанию, если сохраненный недоступен
+    fallbackLng: "en", // Язык по умолчанию, если сохраненный недоступен
     debug: process.env.NODE_ENV === "development", // Включаем отладку только в режиме разработки
 
     interpolation: {

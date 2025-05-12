@@ -31,7 +31,11 @@
     "delete": "Удалить",
     "create": "Создать",
     "update": "Обновить",
-    "allFilesAdded": "Все файлы добавлены"
+    "allFilesAdded": "Все файлы добавлены",
+    "timezone": {
+      "select": "Выберите часовой пояс",
+      "search": "Поиск часового пояса..."
+    }
   },
   "dates": {
     "today": "Сегодня",
@@ -259,6 +263,33 @@
       "saving": "Сохранение...",
       "saveVideo": "Сохранить видео",
       "seconds": "сек."
+    },
+    "voiceRecord": {
+      "title": "Запись аудио",
+      "description": "Запись аудио с микрофона.",
+      "selectMicrophone": "Выберите микрофон:",
+      "startRecording": "Начать запись",
+      "stopRecording": "Остановить запись",
+      "countdown": "Обратный отсчет:",
+      "seconds": "секунд",
+      "recordingTime": "Время записи:",
+      "noDevices": "Устройства не найдены",
+      "permissionDenied": "Доступ к микрофону запрещен. Пожалуйста, разрешите доступ в настройках браузера.",
+      "deviceNotFound": "Микрофон не найден. Пожалуйста, подключите устройство и попробуйте снова.",
+      "errorAccess": "Ошибка доступа к устройствам:",
+      "unknownError": "Неизвестная ошибка при запросе доступа к устройствам",
+      "loadingCapabilities": "Загрузка возможностей устройства...",
+      "initializingMicrophone": "Инициализация микрофона...",
+      "device": "Устройство",
+      "audioDevice": "Аудио устройство",
+      "determiningCapabilities": "Определение возможностей...",
+      "retryRequest": "Повторить запрос",
+      "retry": "Повторить",
+      "requestingPermissions": "Запрашиваем разрешения...",
+      "permissionError": "Не удалось получить доступ к микрофону. Пожалуйста, проверьте настройки разрешений в браузере.",
+      "refreshDevices": "Обновить устройства",
+      "savePath": "Сохранить в",
+      "hint": "Нажмите кнопку записи, чтобы начать. Запись автоматически добавится в медиатеку."
     },
     "userSettings": {
       "title": "Настройки пользователя",
@@ -584,6 +615,22 @@
     "common": {
       "unknown": "Неизвестно"
     },
+    "noFiles": {
+      "title": "Файлы не найдены",
+      "addFilesPrompt": "Добавьте медиафайлы в следующие папки:",
+      "mediaTypes": "Видео, аудио, фото",
+      "musicType": "Музыка",
+      "supportedVideoFormats": "Поддерживаемые форматы видео: MP4, MOV, AVI, MKV, WEBM, INSV (360°)",
+      "supportedAudioFormats": "Поддерживаемые форматы аудио: MP3, WAV, AAC, ALAC, OGG, FLAC"
+    },
+    "subtitles": {
+      "search": "Поиск...",
+      "dragHint": "Перетащите субтитры на таймлайн, чтобы добавить их к проекту"
+    },
+    "stickers": {
+      "search": "Поиск...",
+      "dragHint": "Перетащите стикер на таймлайн, чтобы добавить его к проекту"
+    },
     "media": {
       "noMedia": "Нет медиафайлов",
       "addMedia": "Файлы",
@@ -705,7 +752,8 @@
     "player": {
       "camera": "Камера",
       "videoUnavailable": "Видео недоступно",
-      "noVideoSelected": "Выберите видео для воспроизведения"
+      "noVideoSelected": "Выберите видео для воспроизведения",
+      "videoLoadError": "Ошибка загрузки видео"
     },
     "zoom": {
       "zoomIn": "Увеличить",
@@ -818,6 +866,44 @@
       "negative": "Негатив",
       "polaroid": "Полароид",
       "fadeColor": "Выцветание"
+    },
+    "presets": {
+      "s-log": "S-Log",
+      "d-log": "D-Log",
+      "v-log": "V-Log",
+      "hlg": "HLG",
+      "rec709": "Rec.709",
+      "rec2020": "Rec.2020",
+      "cinestyle": "CineStyle",
+      "flat": "Плоский",
+      "neutral": "Нейтральный",
+      "portrait": "Портрет",
+      "landscape": "Пейзаж"
+    }
+  },
+  "transitions": {
+    "add": "Добавить переход",
+    "edit": "Редактировать переход",
+    "remove": "Удалить переход",
+    "duration": "Длительность",
+    "intensity": "Интенсивность",
+    "types": {
+      "zoom": "Зум",
+      "fade": "Затухание",
+      "slide": "Слайд",
+      "scale": "Уменьшение",
+      "rotate": "Поворот",
+      "flip": "Переворот",
+      "push": "Выталкивание",
+      "squeeze": "Сжатие",
+      "diagonal": "Диагональ",
+      "spiral": "Спираль",
+      "fold": "Складывание",
+      "wave": "Волна",
+      "shutter": "Жалюзи",
+      "bounce": "Отскок",
+      "swirl": "Вихрь",
+      "dissolve": "Растворение"
     }
   },
   "effects": {
@@ -856,6 +942,28 @@
       "mirror": "Зеркало",
       "split": "Разделение",
       "picture": "Картинка в картинке"
+    },
+    "presets": {
+      "brightness": "Яркость",
+      "contrast": "Контраст",
+      "saturation": "Насыщенность",
+      "sepia": "Сепия",
+      "grayscale": "Черно-белый",
+      "invert": "Инверсия",
+      "hue-rotate": "Поворот оттенка",
+      "vintage": "Винтаж",
+      "duotone": "Дуотон",
+      "speed": "Скорость",
+      "noir": "Нуар",
+      "cyberpunk": "Киберпанк",
+      "dreamy": "Мечтательный",
+      "infrared": "Инфракрасный",
+      "matrix": "Матрица",
+      "arctic": "Арктика",
+      "sunset": "Закат",
+      "lomo": "Ломо",
+      "twilight": "Сумерки",
+      "neon": "Неон"
     }
   },
   "project": {

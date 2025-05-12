@@ -31,7 +31,11 @@
     "delete": "Delete",
     "create": "Create",
     "update": "Update",
-    "allFilesAdded": "All files added"
+    "allFilesAdded": "All files added",
+    "timezone": {
+      "select": "Select timezone",
+      "search": "Search timezone..."
+    }
   },
   "dates": {
     "today": "Today",
@@ -259,6 +263,33 @@
       "saving": "Saving...",
       "saveVideo": "Save Video",
       "seconds": "sec."
+    },
+    "voiceRecord": {
+      "title": "Audio Recording",
+      "description": "Record audio from your microphone.",
+      "selectMicrophone": "Select microphone:",
+      "startRecording": "Start Recording",
+      "stopRecording": "Stop Recording",
+      "countdown": "Countdown:",
+      "seconds": "seconds",
+      "recordingTime": "Recording time:",
+      "noDevices": "No devices found",
+      "permissionDenied": "Microphone access denied. Please allow access in browser settings.",
+      "deviceNotFound": "Microphone not found. Please connect a device and try again.",
+      "errorAccess": "Error accessing devices:",
+      "unknownError": "Unknown error requesting device access",
+      "loadingCapabilities": "Loading device capabilities...",
+      "initializingMicrophone": "Initializing microphone...",
+      "device": "Device",
+      "audioDevice": "Audio device",
+      "determiningCapabilities": "Determining capabilities...",
+      "retryRequest": "Retry request",
+      "retry": "Retry",
+      "requestingPermissions": "Requesting permissions...",
+      "permissionError": "Could not get access to microphone. Please check permission settings in your browser.",
+      "refreshDevices": "Refresh devices",
+      "savePath": "Save to",
+      "hint": "Click the record button to start. The recording will be automatically added to the media library."
     },
     "userSettings": {
       "title": "User Settings",
@@ -582,6 +613,22 @@
     "common": {
       "unknown": "Unknown"
     },
+    "noFiles": {
+      "title": "No files found",
+      "addFilesPrompt": "Add media files to the following folders:",
+      "mediaTypes": "Video, audio, photos",
+      "musicType": "Music",
+      "supportedVideoFormats": "Supported video formats: MP4, MOV, AVI, MKV, WEBM, INSV (360°)",
+      "supportedAudioFormats": "Supported audio formats: MP3, WAV, AAC, ALAC, OGG, FLAC"
+    },
+    "subtitles": {
+      "search": "Search...",
+      "dragHint": "Drag subtitle to timeline to add it to your project"
+    },
+    "stickers": {
+      "search": "Search...",
+      "dragHint": "Drag sticker to timeline to add it to your project"
+    },
     "media": {
       "noMedia": "No media files",
       "addMedia": "File",
@@ -703,7 +750,8 @@
     "player": {
       "camera": "Camera",
       "videoUnavailable": "Unavailable",
-      "noVideoSelected": "Select a video to play"
+      "noVideoSelected": "Select a video to play",
+      "videoLoadError": "Video loading error"
     },
     "zoom": {
       "zoomIn": "Zoom in",
@@ -753,6 +801,16 @@
       "unmuteAudio": "Unmute audio",
       "fullscreen": "Fullscreen mode",
       "exitFullscreen": "Exit fullscreen mode"
+    },
+    "track": {
+      "hideTrack": "Hide track",
+      "showTrack": "Show track",
+      "lockTrack": "Lock track",
+      "unlockTrack": "Unlock track",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "videoTrack": "Video {{index}}",
+      "audioTrack": "Audio {{index}}"
     }
   },
   "titles": {
@@ -816,6 +874,44 @@
       "negative": "Negative",
       "polaroid": "Polaroid",
       "fadeColor": "Fade Color"
+    },
+    "presets": {
+      "s-log": "S-Log",
+      "d-log": "D-Log",
+      "v-log": "V-Log",
+      "hlg": "HLG",
+      "rec709": "Rec.709",
+      "rec2020": "Rec.2020",
+      "cinestyle": "CineStyle",
+      "flat": "Flat",
+      "neutral": "Neutral",
+      "portrait": "Portrait",
+      "landscape": "Landscape"
+    }
+  },
+  "transitions": {
+    "add": "Add transition",
+    "edit": "Edit transition",
+    "remove": "Remove transition",
+    "duration": "Duration",
+    "intensity": "Intensity",
+    "types": {
+      "zoom": "Zoom",
+      "fade": "Fade",
+      "slide": "Slide",
+      "scale": "Scale",
+      "rotate": "Rotate",
+      "flip": "Flip",
+      "push": "Push",
+      "squeeze": "Squeeze",
+      "diagonal": "Diagonal",
+      "spiral": "Spiral",
+      "fold": "Fold",
+      "wave": "Wave",
+      "shutter": "Shutter",
+      "bounce": "Bounce",
+      "swirl": "Swirl",
+      "dissolve": "Dissolve"
     }
   },
   "effects": {
@@ -854,6 +950,28 @@
       "mirror": "Mirror",
       "split": "Split",
       "picture": "Picture in Picture"
+    },
+    "presets": {
+      "brightness": "Brightness",
+      "contrast": "Contrast",
+      "saturation": "Saturation",
+      "sepia": "Sepia",
+      "grayscale": "Grayscale",
+      "invert": "Invert",
+      "hue-rotate": "Hue Rotate",
+      "vintage": "Vintage",
+      "duotone": "Duotone",
+      "speed": "Speed",
+      "noir": "Noir",
+      "cyberpunk": "Cyberpunk",
+      "dreamy": "Dreamy",
+      "infrared": "Infrared",
+      "matrix": "Matrix",
+      "arctic": "Arctic",
+      "sunset": "Sunset",
+      "lomo": "Lomo",
+      "twilight": "Twilight",
+      "neon": "Neon"
     }
   },
   "project": {

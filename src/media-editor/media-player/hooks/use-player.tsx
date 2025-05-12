@@ -1,12 +1,17 @@
+import { useTranslation } from "react-i18next"
+
 import { usePlayerContext } from ".."
 
 export function usePlayer() {
+  const { t } = useTranslation()
   const { video, isVideoLoading, isVideoReady } = usePlayerContext()
 
   if (!video) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-black">
-        <p className="text-white">Выберите видео для воспроизведения</p>
+        <p className="text-white">
+          {t("timeline.player.noVideoSelected", "Select a video to play")}
+        </p>
       </div>
     )
   }
@@ -22,7 +27,7 @@ export function usePlayer() {
   if (!isVideoReady) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-black">
-        <p className="text-white">Ошибка загрузки видео</p>
+        <p className="text-white">{t("timeline.player.videoLoadError", "Video loading error")}</p>
       </div>
     )
   }

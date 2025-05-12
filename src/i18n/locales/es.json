@@ -31,7 +31,11 @@
     "delete": "Eliminar",
     "create": "Crear",
     "update": "Actualizar",
-    "allFilesAdded": "Todos los archivos añadidos"
+    "allFilesAdded": "Todos los archivos añadidos",
+    "timezone": {
+      "select": "Seleccionar zona horaria",
+      "search": "Buscar zona horaria..."
+    }
   },
   "dates": {
     "today": "Hoy",
@@ -93,7 +97,175 @@
       "externalDisplayRequired": "Se requiere pantalla externa"
     }
   },
+  "ui": {
+    "topNavBar": {
+      "layout": "Diseño",
+      "keyboardShortcuts": "Atajos de teclado",
+      "projectSettings": "Configuración del proyecto",
+      "saveChanges": "Guardar cambios",
+      "allChangesSaved": "Todos los cambios guardados",
+      "publish": "Publicar",
+      "publicationTasks": "Tareas de publicación",
+      "editingTasks": "Tareas de edición",
+      "projectTasks": "Tareas del proyecto",
+      "userSettings": "Configuración de usuario",
+      "export": "Exportar"
+    },
+    "dialogs": {
+      "projectSettings": {
+        "title": "Configuración del proyecto",
+        "aspectRatio": "Relación de aspecto:",
+        "resolution": "Resolución:",
+        "frameRate": "Velocidad de fotogramas:",
+        "colorSpace": "Espacio de color:",
+        "cancel": "Cancelar",
+        "save": "OK"
+      },
+      "userSettings": {
+        "title": "Configuración de usuario",
+        "interfaceLanguage": "Idioma de la interfaz:",
+        "screenshotsPath": "Ruta para guardar capturas:",
+        "selectFolder": "Seleccionar carpeta",
+        "selectFolderPrompt": "Elija una carpeta para guardar capturas o ingrese su propia ruta:",
+        "clearPath": "Limpiar",
+        "defaultPathHint": "Ruta predeterminada para guardar capturas",
+        "customPathHint": "Las capturas se guardarán en: {{path}}",
+        "cancel": "Cancelar",
+        "save": "Guardar"
+      },
+      "export": {
+        "title": "Exportar",
+        "local": "Local",
+        "device": "Dispositivo",
+        "socialNetworks": "Redes sociales",
+        "dvd": "DVD",
+        "youtube": "YouTube",
+        "tiktok": "TikTok",
+        "telegram": "Telegram",
+        "notLoggedIn": "No ha iniciado sesión",
+        "loginPrompt": {
+          "youtube": "Inicie sesión en su cuenta de YouTube para obtener información adicional.",
+          "tiktok": "Inicie sesión en su cuenta de TikTok para publicar videos.",
+          "telegram": "Inicie sesión en su cuenta de Telegram para enviar videos a canales y grupos."
+        },
+        "login": "Iniciar sesión",
+        "cover": "Portada",
+        "edit": "Editar",
+        "outputSettings": "Configuración de salida",
+        "name": "Nombre",
+        "saveTo": "Guardar en",
+        "preset": "Preajuste",
+        "defaultPreset": "Predeterminado",
+        "custom": "Personalizado",
+        "format": "Formato",
+        "quality": "Calidad",
+        "normal": "Normal",
+        "good": "Buena",
+        "best": "Mejor",
+        "resolution": "Resolución",
+        "frameRate": "Velocidad de fotogramas",
+        "advancedCompression": "Compresión avanzada",
+        "cloudBackup": "Copia de seguridad en la nube",
+        "enableGPUEncoding": "Habilitar codificación de video acelerada por GPU",
+        "useLastSettings": "Usar la última configuración de exportación para archivo local",
+        "length": "Duración",
+        "size": "Tamaño",
+        "approximate": "Aproximado",
+        "titles": "Títulos",
+        "device_types": {
+          "iphone": "iPhone",
+          "ipad": "iPad",
+          "android": "Android"
+        },
+        "codec": "Códec",
+        "additional": "Adicional",
+        "fps": "fps",
+        "kbps": "kbps",
+        "sdr": "SDR - Rec.709",
+        "otherNetworks": "Otras redes sociales"
+      }
+    },
+    "templates": {
+      "verticalSplit": "División vertical",
+      "horizontalSplit": "División horizontal",
+      "diagonalSplit": "División diagonal",
+      "grid2x2": "Cuadrícula 2×2",
+      "grid3x3": "Cuadrícula 3×3",
+      "grid4x4": "Cuadrícula 4×4"
+    }
+  },
   "dialogs": {
+    "cameraCapture": {
+      "title": "Grabación de cámara",
+      "description": "Grabe video desde su cámara con la resolución y velocidad de fotogramas seleccionadas.",
+      "selectCamera": "Seleccionar cámara:",
+      "selectMicrophone": "Seleccionar micrófono:",
+      "selectResolution": "Seleccionar resolución:",
+      "selectFrameRate": "Seleccionar velocidad de fotogramas:",
+      "startRecording": "Iniciar grabación",
+      "stopRecording": "Detener grabación",
+      "countdown": "Cuenta regresiva:",
+      "seconds": "segundos",
+      "recordingTime": "Tiempo de grabación:",
+      "noDevices": "No se encontraron dispositivos",
+      "permissionDenied": "Acceso a cámara y micrófono denegado. Por favor, permita el acceso en la configuración del navegador.",
+      "deviceNotFound": "Cámara o micrófono no encontrado. Por favor, conecte los dispositivos e intente nuevamente.",
+      "errorAccess": "Error al acceder a los dispositivos:",
+      "unknownError": "Error desconocido al solicitar acceso a dispositivos",
+      "loadingCapabilities": "Cargando capacidades del dispositivo...",
+      "initializingCamera": "Inicializando cámara...",
+      "device": "Dispositivo",
+      "audioDevice": "Dispositivo de audio",
+      "resolution": "Resolución",
+      "frameRate": "Velocidad de fotogramas",
+      "determiningCapabilities": "Determinando capacidades...",
+      "supportedResolutions": "Soportadas: {{count}} resoluciones",
+      "supportedFrameRates": "Soportadas: {{frameRates}} fps",
+      "retryRequest": "Reintentar solicitud",
+      "retry": "Reintentar",
+      "currentResolution": "Resolución actual: {{width}}x{{height}}",
+      "requestedResolution": "Solicitada: {{resolution}}"
+    },
+    "cameraPreview": {
+      "title": "Vista previa de grabación",
+      "description": "Revise su video grabado antes de guardarlo. Después de hacer clic en el botón \"Guardar video\", el archivo se descargará. Muévalo a la carpeta public/media del proyecto para agregarlo a la línea de tiempo.",
+      "loadingVideo": "Cargando video...",
+      "fileName": "Nombre de archivo",
+      "duration": "Duración",
+      "resolution": "Resolución",
+      "fileSize": "Tamaño de archivo",
+      "cancel": "Cancelar",
+      "saving": "Guardando...",
+      "saveVideo": "Guardar video",
+      "seconds": "seg."
+    },
+    "voiceRecord": {
+      "title": "Grabación de audio",
+      "description": "Grabe audio desde su micrófono.",
+      "selectMicrophone": "Seleccionar micrófono:",
+      "startRecording": "Iniciar grabación",
+      "stopRecording": "Detener grabación",
+      "countdown": "Cuenta regresiva:",
+      "seconds": "segundos",
+      "recordingTime": "Tiempo de grabación:",
+      "noDevices": "No se encontraron dispositivos",
+      "permissionDenied": "Acceso al micrófono denegado. Por favor, permita el acceso en la configuración del navegador.",
+      "deviceNotFound": "Micrófono no encontrado. Por favor, conecte un dispositivo e intente nuevamente.",
+      "errorAccess": "Error al acceder a los dispositivos:",
+      "unknownError": "Error desconocido al solicitar acceso a dispositivos",
+      "loadingCapabilities": "Cargando capacidades del dispositivo...",
+      "initializingMicrophone": "Inicializando micrófono...",
+      "device": "Dispositivo",
+      "audioDevice": "Dispositivo de audio",
+      "determiningCapabilities": "Determinando capacidades...",
+      "retryRequest": "Reintentar solicitud",
+      "retry": "Reintentar",
+      "requestingPermissions": "Solicitando permisos...",
+      "permissionError": "No se pudo obtener acceso al micrófono. Por favor, verifique la configuración de permisos en su navegador.",
+      "refreshDevices": "Actualizar dispositivos",
+      "savePath": "Guardar en",
+      "hint": "Haga clic en el botón de grabación para comenzar. La grabación se agregará automáticamente a la biblioteca de medios."
+    },
     "userSettings": {
       "title": "Configuración de usuario",
       "interfaceLanguage": "Idioma de la interfaz:",
@@ -298,6 +470,22 @@
     "common": {
       "unknown": "Desconocido"
     },
+    "noFiles": {
+      "title": "No se encontraron archivos",
+      "addFilesPrompt": "Añada archivos multimedia a las siguientes carpetas:",
+      "mediaTypes": "Video, audio, fotos",
+      "musicType": "Música",
+      "supportedVideoFormats": "Formatos de video compatibles: MP4, MOV, AVI, MKV, WEBM, INSV (360°)",
+      "supportedAudioFormats": "Formatos de audio compatibles: MP3, WAV, AAC, ALAC, OGG, FLAC"
+    },
+    "subtitles": {
+      "search": "Buscar...",
+      "dragHint": "Arrastre el subtítulo a la línea de tiempo para añadirlo a su proyecto"
+    },
+    "stickers": {
+      "search": "Buscar...",
+      "dragHint": "Arrastre el sticker a la línea de tiempo para añadirlo a su proyecto"
+    },
     "media": {
       "noMedia": "No hay archivos multimedia",
       "addMedia": "Archivo",
@@ -387,7 +575,8 @@
     "player": {
       "camera": "Cámara",
       "videoUnavailable": "No disponible",
-      "noVideoSelected": "Seleccione un video para reproducir"
+      "noVideoSelected": "Seleccione un video para reproducir",
+      "videoLoadError": "Error al cargar el video"
     },
     "controlsMain": {
       "resizableMode": "Modo redimensionable",
@@ -676,6 +865,44 @@
       "negative": "Negativo",
       "polaroid": "Polaroid",
       "fadeColor": "Desvanecer color"
+    },
+    "presets": {
+      "s-log": "S-Log",
+      "d-log": "D-Log",
+      "v-log": "V-Log",
+      "hlg": "HLG",
+      "rec709": "Rec.709",
+      "rec2020": "Rec.2020",
+      "cinestyle": "CineStyle",
+      "flat": "Plano",
+      "neutral": "Neutral",
+      "portrait": "Retrato",
+      "landscape": "Paisaje"
+    }
+  },
+  "transitions": {
+    "add": "Añadir transición",
+    "edit": "Editar transición",
+    "remove": "Eliminar transición",
+    "duration": "Duración",
+    "intensity": "Intensidad",
+    "types": {
+      "zoom": "Zoom",
+      "fade": "Desvanecer",
+      "slide": "Deslizar",
+      "scale": "Escalar",
+      "rotate": "Rotar",
+      "flip": "Voltear",
+      "push": "Empujar",
+      "squeeze": "Comprimir",
+      "diagonal": "Diagonal",
+      "spiral": "Espiral",
+      "fold": "Plegar",
+      "wave": "Onda",
+      "shutter": "Persiana",
+      "bounce": "Rebote",
+      "swirl": "Remolino",
+      "dissolve": "Disolver"
     }
   },
   "effects": {
@@ -714,6 +941,28 @@
       "mirror": "Espejo",
       "split": "División",
       "picture": "Imagen en imagen"
+    },
+    "presets": {
+      "brightness": "Brillo",
+      "contrast": "Contraste",
+      "saturation": "Saturación",
+      "sepia": "Sepia",
+      "grayscale": "Escala de grises",
+      "invert": "Invertir",
+      "hue-rotate": "Rotar tono",
+      "vintage": "Vintage",
+      "duotone": "Duotono",
+      "speed": "Velocidad",
+      "noir": "Noir",
+      "cyberpunk": "Cyberpunk",
+      "dreamy": "Soñador",
+      "infrared": "Infrarrojo",
+      "matrix": "Matrix",
+      "arctic": "Ártico",
+      "sunset": "Atardecer",
+      "lomo": "Lomo",
+      "twilight": "Crepúsculo",
+      "neon": "Neón"
     }
   },
   "project": {

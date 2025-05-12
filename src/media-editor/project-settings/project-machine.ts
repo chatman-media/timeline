@@ -53,11 +53,7 @@ const getDefaultProjectName = (): string => {
     return i18next.t("project.untitledProject", { number: 1 })
   }
 
-  // Если i18next недоступен, используем значение по умолчанию
-  const language =
-    typeof window !== "undefined" ? localStorage.getItem("app-language") || "ru" : "ru"
-
-  return language === "en" ? "Untitled #1" : "Без названия #1"
+  return "Untitled #1"
 }
 
 // Initialize with saved settings or defaults

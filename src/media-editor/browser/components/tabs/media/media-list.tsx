@@ -615,7 +615,7 @@ export const MediaFileList = memo(function MediaFileList({
       // Получаем текущий язык из i18n
       const currentLanguage = i18n.language || "ru"
       const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
-      const noDateText = i18n.t("dates.noDate", { defaultValue: "Без даты" })
+      const noDateText = i18n.t("dates.noDate", { defaultValue: "No date" })
 
       filteredAndSortedMedia.forEach((file) => {
         // Для изображений используем дату создания файла, если она доступна

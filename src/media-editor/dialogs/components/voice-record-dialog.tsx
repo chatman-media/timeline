@@ -3,7 +3,6 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
@@ -71,7 +70,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
       setErrorMessage(
         t("dialogs.voiceRecord.permissionError", {
           defaultValue:
-            "Не удалось получить доступ к микрофону. Пожалуйста, проверьте настройки разрешений в браузере.",
+            "Could not get access to microphone. Please check permission settings in your browser.",
         }),
       )
     }
@@ -90,7 +89,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
             device.label ||
             t("dialogs.voiceRecord.microphoneWithNumber", {
               number: devices.indexOf(device) + 1,
-              defaultValue: `Микрофон ${devices.indexOf(device) + 1}`,
+              defaultValue: `Microphone ${devices.indexOf(device) + 1}`,
             })
           // Удаляем текст в скобках, если он присутствует
           label = label.replace(/\s*\([^)]*\)\s*$/, "")
@@ -157,8 +156,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
       console.error("Ошибка при инициализации микрофона:", error)
       setErrorMessage(
         t("dialogs.voiceRecord.initError", {
-          defaultValue:
-            "Не удалось инициализировать микрофон. Пожалуйста, проверьте настройки и разрешения.",
+          defaultValue: "Failed to initialize microphone. Please check settings and permissions.",
         }),
       )
       setIsDeviceReady(false)
@@ -333,7 +331,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
         aria-describedby="voice-record-description"
       >
         <DialogTitle className="border-b border-[#333] p-4 text-lg font-semibold">
-          {t("dialogs.voiceRecord.title", { defaultValue: "Запись аудио" })}
+          {t("dialogs.voiceRecord.title", { defaultValue: "Audio Recording" })}
         </DialogTitle>
 
         <div className="p-6">
@@ -341,7 +339,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
           {permissionStatus === "pending" && (
             <div className="mb-4 text-center text-sm">
               {t("dialogs.voiceRecord.requestingPermissions", {
-                defaultValue: "Запрашиваем разрешения...",
+                defaultValue: "Requesting permissions...",
               })}
             </div>
           )}
@@ -351,7 +349,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
               {errorMessage}
               <div className="mt-2">
                 <Button className="w-full bg-red-600 hover:bg-red-700" onClick={requestPermissions}>
-                  {t("dialogs.voiceRecord.retryRequest", { defaultValue: "Повторить запрос" })}
+                  {t("dialogs.voiceRecord.retryRequest", { defaultValue: "Retry request" })}
                 </Button>
               </div>
             </div>
@@ -362,7 +360,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
               {errorMessage}
               <div className="mt-2">
                 <Button className="w-full bg-red-600 hover:bg-red-700" onClick={requestPermissions}>
-                  {t("dialogs.voiceRecord.retryRequest", { defaultValue: "Повторить запрос" })}
+                  {t("dialogs.voiceRecord.retryRequest", { defaultValue: "Retry request" })}
                 </Button>
               </div>
             </div>
@@ -377,7 +375,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
               {/* Настройки устройств */}
               <div className="mb-8 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-5">
                 <div className="text-sm text-gray-300">
-                  {t("dialogs.voiceRecord.device", { defaultValue: "Устройство" })}:
+                  {t("dialogs.voiceRecord.device", { defaultValue: "Device" })}:
                 </div>
                 <div className="flex items-center gap-2">
                   <Select
@@ -409,7 +407,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
                     className="h-10 w-10 border-[#444] bg-[#222] hover:bg-[#333]"
                     onClick={getDevices}
                     title={t("dialogs.voiceRecord.refreshDevices", {
-                      defaultValue: "Обновить устройства",
+                      defaultValue: "Refresh devices",
                     })}
                   >
                     <RefreshCw size={16} />
@@ -417,7 +415,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
                 </div>
 
                 <div className="text-sm text-gray-300">
-                  {t("dialogs.voiceRecord.savePath", { defaultValue: "Сохранить в" })}:
+                  {t("dialogs.voiceRecord.savePath", { defaultValue: "Save to" })}:
                 </div>
                 <Input
                   value={savePath}
@@ -428,7 +426,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
                 />
 
                 <div className="text-sm text-gray-300">
-                  {t("dialogs.voiceRecord.countdown", { defaultValue: "Обратный отсчет" })}:
+                  {t("dialogs.voiceRecord.countdown", { defaultValue: "Countdown" })}:
                 </div>
                 <Input
                   type="number"
@@ -454,7 +452,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
                 {isRecording && (
                   <div className="mb-4 text-center">
                     <div className="text-lg font-semibold">
-                      {t("dialogs.voiceRecord.recordingTime", { defaultValue: "Время записи" })}{" "}
+                      {t("dialogs.voiceRecord.recordingTime", { defaultValue: "Recording time" })}{" "}
                       {formatTime(recordingTime)}
                     </div>
                     <div className="mt-2 h-2 w-full bg-gray-700">
@@ -473,10 +471,10 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
                       onClick={startCountdown}
                       disabled={!isDeviceReady}
                       title={t("dialogs.voiceRecord.startRecording", {
-                        defaultValue: "Начать запись",
+                        defaultValue: "Start Recording",
                       })}
                       aria-label={t("dialogs.voiceRecord.startRecording", {
-                        defaultValue: "Начать запись",
+                        defaultValue: "Start Recording",
                       })}
                     >
                       <div className="h-5 w-5 animate-pulse rounded-full bg-white" />
@@ -486,10 +484,10 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
                       className="mb-0 flex h-16 w-16 items-center justify-center rounded-full border-2 border-white bg-red-600 shadow-lg hover:bg-red-700"
                       onClick={stopRecording}
                       title={t("dialogs.voiceRecord.stopRecording", {
-                        defaultValue: "Остановить запись",
+                        defaultValue: "Stop Recording",
                       })}
                       aria-label={t("dialogs.voiceRecord.stopRecording", {
-                        defaultValue: "Остановить запись",
+                        defaultValue: "Stop Recording",
                       })}
                     >
                       <div className="h-5 w-5 rounded bg-white" />
@@ -500,7 +498,7 @@ export function VoiceRecordDialog({ isOpen, onClose }: VoiceRecordDialogProps) {
                 <div className="mt-4 text-center text-xs text-gray-400">
                   {t("dialogs.voiceRecord.hint", {
                     defaultValue:
-                      "Нажмите кнопку записи, чтобы начать. Запись автоматически добавится в медиатеку.",
+                      "Click the record button to start. The recording will be automatically added to the media library.",
                   })}
                 </div>
               </div>

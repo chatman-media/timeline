@@ -1,7 +1,9 @@
 import { Smile } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 export function StickersList() {
+  const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
 
   return (
@@ -10,7 +12,7 @@ export function StickersList() {
         <div className="relative w-[50%]">
           <input
             type="text"
-            placeholder="Поиск..."
+            placeholder={t("browser.stickers.search")}
             className="focus:ring-primary w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm focus:ring-2 focus:outline-none dark:border-gray-700"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -20,7 +22,7 @@ export function StickersList() {
 
         <div className="mt-6">
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Перетащите стикер на таймлайн, чтобы добавить его к проекту
+            {t("browser.stickers.dragHint")}
           </p>
         </div>
       </div>

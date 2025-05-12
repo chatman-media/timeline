@@ -43,7 +43,7 @@ const TransitionPreview = ({
   onClick,
   size,
 }: TransitionPreviewProps) => {
-  const { i18n } = useTranslation()
+  const { t } = useTranslation()
   const { addTransition, isTransitionAdded, removeResource, transitionResources } = useTimeline()
   const [isHovering, setIsHovering] = useState(false)
   const [isError, setIsError] = useState(false)
@@ -252,7 +252,7 @@ const TransitionPreview = ({
         >
           {isError ? (
             <div className="flex h-full items-center justify-center text-white">
-              {i18n.language === "en" ? "Video loading error" : "Ошибка загрузки видео"}
+              {t("timeline.player.videoLoadError")}
             </div>
           ) : (
             <div className="relative flex h-full w-full cursor-pointer items-center justify-center rounded-md">
@@ -308,11 +308,7 @@ const TransitionPreview = ({
         </div>
       </div>
       <div className="mt-1 text-xs text-gray-300">
-        {
-          transitions.find((t) => t.type === transitionType)?.labels[
-            i18n.language === "en" ? "en" : "ru"
-          ]
-        }
+        {t(`transitions.types.${transitionType}`)}
       </div>
     </div>
   )
@@ -469,9 +465,9 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
 
   const filteredTransitions = transitions.filter((transition) => {
     const searchLower = searchQuery.toLowerCase()
+    const localizedName = t(`transitions.types.${transition.type}`).toLowerCase()
     return (
-      transition.labels.ru.toLowerCase().includes(searchLower) ||
-      transition.labels.en.toLowerCase().includes(searchLower) ||
+      localizedName.includes(searchLower) ||
       transition.id.toLowerCase().includes(searchLower)
     )
   })

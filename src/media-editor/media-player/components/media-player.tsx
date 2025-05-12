@@ -18,11 +18,11 @@ export function MediaPlayer() {
   const { t, i18n } = useTranslation()
 
   // Используем состояние для хранения текста, чтобы избежать проблем с гидратацией
-  const [noVideoText, setNoVideoText] = useState("Выберите видео для воспроизведения")
+  const [noVideoText, setNoVideoText] = useState("")
 
   // Обновляем текст при изменении языка
   useEffect(() => {
-    setNoVideoText(t("timeline.player.noVideoSelected", "Выберите видео для воспроизведения"))
+    setNoVideoText(t("timeline.player.noVideoSelected"))
   }, [t, i18n.language])
 
   // Массив для хранения refs контейнеров видео

@@ -98,24 +98,35 @@ export function CameraCaptureDialog({
       setPermissionStatus("granted")
       await getDevices()
     } catch (error) {
-      console.error("Ошибка при запросе разрешений:", error)
+      console.error("Error requesting permissions:", error)
       setPermissionStatus("error")
 
       if (error instanceof DOMException) {
         if (error.name === "NotAllowedError") {
           setErrorMessage(
-            "Доступ к камере и микрофону запрещен. Пожалуйста, разрешите доступ в настройках браузера.",
+            t(
+              "dialogs.cameraCapture.permissionDenied",
+              "Camera and microphone access denied. Please allow access in browser settings.",
+            ),
           )
           setPermissionStatus("denied")
         } else if (error.name === "NotFoundError") {
           setErrorMessage(
-            "Камера или микрофон не найдены. Пожалуйста, подключите устройства и попробуйте снова.",
+            t(
+              "dialogs.cameraCapture.deviceNotFound",
+              "Camera or microphone not found. Please connect devices and try again.",
+            ),
           )
         } else {
-          setErrorMessage(`Ошибка доступа к устройствам: ${error.message}`)
+          setErrorMessage(
+            t("dialogs.cameraCapture.errorAccess", "Error accessing devices:") +
+              ` ${error.message}`,
+          )
         }
       } else {
-        setErrorMessage("Неизвестная ошибка при запросе доступа к устройствам")
+        setErrorMessage(
+          t("dialogs.cameraCapture.unknownError", "Unknown error requesting device access"),
+        )
       }
     }
   }, [])
@@ -287,7 +298,7 @@ export function CameraCaptureDialog({
             device.label ||
             t("timeline.tracks.cameraWithNumber", {
               number: devices.indexOf(device) + 1,
-              defaultValue: `Камера ${devices.indexOf(device) + 1}`,
+              defaultValue: `Camera ${devices.indexOf(device) + 1}`,
             })
           // Удаляем текст в скобках, если он присутствует
           label = label.replace(/\s*\([^)]*\)\s*$/, "")
@@ -306,7 +317,7 @@ export function CameraCaptureDialog({
             device.label ||
             t("timeline.tracks.audioWithNumber", {
               number: devices.indexOf(device) + 1,
-              defaultValue: `Микрофон ${devices.indexOf(device) + 1}`,
+              defaultValue: `Microphone ${devices.indexOf(device) + 1}`,
             })
           // Удаляем текст в скобках, если он присутствует
           label = label.replace(/\s*\([^)]*\)\s*$/, "")
@@ -345,8 +356,8 @@ export function CameraCaptureDialog({
 
       return true
     } catch (error) {
-      console.error("Ошибка при получении устройств:", error)
-      setErrorMessage("Не удалось получить список устройств")
+      console.error("Error getting devices:", error)
+      setErrorMessage(t("dialogs.cameraCapture.errorGettingDevices", "Failed to get device list"))
       return false
     }
   }, [selectedDevice, selectedAudioDevice, getDeviceCapabilities])
@@ -354,12 +365,12 @@ export function CameraCaptureDialog({
   // Инициализация потока с камеры
   const initCamera = useCallback(async () => {
     if (!selectedDevice) {
-      console.log("Устройство не выбрано")
+      console.log("No device selected")
       return
     }
 
     try {
-      console.log("Инициализация камеры с устройством:", selectedDevice)
+      console.log("Initializing camera with device:", selectedDevice)
 
       // Останавливаем предыдущий поток, если есть
       if (streamRef.current) {

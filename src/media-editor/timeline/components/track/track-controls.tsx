@@ -1,5 +1,6 @@
 import { Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 import { Slider } from "@/components/ui/slider"
 import { Track } from "@/types/media"
@@ -17,6 +18,7 @@ export function TrackControls({
   onLockChange,
   onVolumeChange,
 }: TrackControlsProps) {
+  const { t } = useTranslation()
   const [isVisible, setIsVisible] = useState(true)
   const [isLocked, setIsLocked] = useState(false)
   const [isMuted, setIsMuted] = useState(false)
@@ -56,7 +58,7 @@ export function TrackControls({
       <button
         onClick={handleVisibilityToggle}
         className="rounded p-1 hover:bg-gray-700"
-        title={isVisible ? "Скрыть трек" : "Показать трек"}
+        title={isVisible ? t("timeline.track.hideTrack") : t("timeline.track.showTrack")}
       >
         {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
       </button>
@@ -64,7 +66,7 @@ export function TrackControls({
       <button
         onClick={handleLockToggle}
         className="rounded p-1 hover:bg-gray-700"
-        title={isLocked ? "Разблокировать трек" : "Заблокировать трек"}
+        title={isLocked ? t("timeline.track.unlockTrack") : t("timeline.track.lockTrack")}
       >
         {isLocked ? <Lock className="h-4 w-4" /> : <LockOpen className="h-4 w-4" />}
       </button>
@@ -74,7 +76,7 @@ export function TrackControls({
           <button
             onClick={handleVolumeToggle}
             className="shrink-0 rounded p-1 hover:bg-gray-700"
-            title={isMuted ? "Включить звук" : "Выключить звук"}
+            title={isMuted ? t("timeline.track.unmute") : t("timeline.track.mute")}
           >
             {isMuted ? (
               <VolumeX className="h-4 w-4 text-gray-500" />
@@ -99,7 +101,9 @@ export function TrackControls({
       )}
 
       <div className="shrink-0 truncate text-sm text-gray-300">
-        {isVideoTrack ? `Видео ${track.index}` : `Аудио ${track.index}`}
+        {isVideoTrack
+          ? t("timeline.track.videoTrack", { index: track.index })
+          : t("timeline.track.audioTrack", { index: track.index })}
       </div>
     </div>
   )

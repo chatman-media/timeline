@@ -899,7 +899,7 @@ export function Timeline() {
             <DialogDescription>
               {t("timeline.section.deleteConfirmation", {
                 section: deletingSectionDate ? formatSectionDate(deletingSectionDate) : "",
-                defaultValue: `Вы уверены, что хотите удалить секцию {{section}}? Это действие нельзя отменить.`,
+                defaultValue: `Are you sure you want to delete the section {{section}}? This action cannot be undone.`,
               })}
             </DialogDescription>
           </DialogHeader>

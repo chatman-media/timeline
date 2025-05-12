@@ -33,7 +33,7 @@ export function VideoPanel({
     return (
       <div className="relative flex h-full w-full items-center justify-center bg-black">
         <span className="text-white">
-          {t("timeline.player.videoUnavailable", "Видео недоступно")}
+          {t("timeline.player.videoUnavailable", "Video unavailable")}
         </span>
       </div>
     )

@@ -120,7 +120,7 @@ export function getTopDateWithRemainingFiles(
 export const groupFilesByDate = (media: MediaFile[]): DateGroup[] => {
   // Получаем текущий язык из i18next
   const currentLanguage = i18next.language || "ru"
-  const noDateText = i18next.t("dates.noDate", { defaultValue: "Без даты" })
+  const noDateText = i18next.t("dates.noDate", { defaultValue: "No date" })
 
   const videoFilesByDate = media.reduce<Record<string, MediaFile[]>>((acc, file) => {
     // Форматируем дату с помощью универсального метода
@@ -358,7 +358,7 @@ export const createTracksFromFiles = (
       id: nanoid(),
       name: i18n.t("timeline.section.sectorName", {
         date: formattedDate,
-        defaultValue: `Сектор ${formattedDate}`,
+        defaultValue: `Section ${formattedDate}`,
       }),
       tracks: [],
       timeRanges: [],
@@ -418,7 +418,7 @@ export const createTracksFromFiles = (
           let trackCameraId = null
 
           // Проверяем имя дорожки
-          const trackNameMatch = track.name?.match(/Камера (\d+)/)
+          const trackNameMatch = track.name?.match(/Camera (\d+)/)
           if (trackNameMatch) {
             trackCameraId = trackNameMatch[1]
           }
@@ -438,9 +438,9 @@ export const createTracksFromFiles = (
           let trackCameraId = null
           const trackVideo = track.videos[0]
 
-          // Сначала проверяем имя дорожки, если оно в формате "Камера X"
+          // Сначала проверяем имя дорожки, если оно в формате "Camera X"
           // Это имеет приоритет над другими методами определения ID камеры
-          const trackNameMatch = track.name?.match(/Камера (\d+)/)
+          const trackNameMatch = track.name?.match(/Camera (\d+)/)
           if (trackNameMatch) {
             // Используем номер камеры из имени дорожки
             trackCameraId = trackNameMatch[1]
@@ -651,9 +651,9 @@ export const createTracksFromFiles = (
         // Находим максимальный номер камеры в текущем секторе
         let maxCameraNumber = 0
 
-        // Ищем дорожки с названием "Камера X" и находим максимальный номер
+        // Ищем дорожки с названием "Camera X" и находим максимальный номер
         for (const track of sector.tracks) {
-          const cameraMatch = track.name?.match(/Камера (\d+)/)
+          const cameraMatch = track.name?.match(/Camera (\d+)/)
           if (cameraMatch) {
             const cameraNumber = parseInt(cameraMatch[1], 10)
             if (cameraNumber > maxCameraNumber) {
@@ -662,13 +662,13 @@ export const createTracksFromFiles = (
           }
         }
 
-        // Всегда используем формат "Камера X" для видео треков
+        // Всегда используем формат "Camera X" для видео треков
         const nextCameraNumber = maxCameraNumber + 1
         const trackName = i18n.t("timeline.tracks.cameraWithNumber", {
           number: nextCameraNumber,
-          defaultValue: `Камера ${nextCameraNumber}`,
+          defaultValue: `Camera ${nextCameraNumber}`,
         })
-        // Всегда устанавливаем cameraName в формате "Камера X"
+        // Всегда устанавливаем cameraName в формате "Camera X"
         const trackCameraName = trackName
 
         console.log(`Creating new track with name: ${trackName} for camera ID: ${cameraId}`)
@@ -757,7 +757,7 @@ export const createTracksFromFiles = (
       id: nanoid(),
       name: i18n.t("timeline.section.sectorName", {
         date: formattedDate,
-        defaultValue: `Сектор ${formattedDate}`,
+        defaultValue: `Section ${formattedDate}`,
       }),
       tracks: [],
       timeRanges: [],
@@ -849,7 +849,7 @@ export const createTracksFromFiles = (
         const nextAudioNumber = maxAudioIndex + 1
         const audioTrackName = i18n.t("timeline.tracks.audioWithNumber", {
           number: nextAudioNumber,
-          defaultValue: `Аудио ${nextAudioNumber}`,
+          defaultValue: `Audio ${nextAudioNumber}`,
         })
 
         sector.tracks.push({

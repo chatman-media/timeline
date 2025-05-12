@@ -19,7 +19,7 @@ interface FilterPreviewProps {
 }
 
 const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
-  const { i18n } = useTranslation()
+  const { t } = useTranslation()
   const { addFilter, isFilterAdded, removeResource, filterResources } = useTimeline()
   const [isHovering, setIsHovering] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -114,7 +114,7 @@ const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
         </div>
       </div>
       <div className="mt-1 text-xs text-gray-300">
-        {filters.find((f) => f.id === filter.id)?.labels[i18n.language === "en" ? "en" : "ru"]}
+        {t(`filters.presets.${filter.id}`)}
       </div>
     </div>
   )
@@ -136,9 +136,9 @@ export function FilterList() {
 
   const filteredFilters = filters.filter((filter) => {
     const searchLower = searchQuery.toLowerCase()
+    const localizedName = t(`filters.presets.${filter.id}`).toLowerCase()
     return (
-      filter.labels.ru.toLowerCase().includes(searchLower) ||
-      filter.labels.en.toLowerCase().includes(searchLower) ||
+      localizedName.includes(searchLower) ||
       filter.name.toLowerCase().includes(searchLower)
     )
   })

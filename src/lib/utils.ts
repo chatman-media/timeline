@@ -105,7 +105,7 @@ export function formatTimeWithMilliseconds(
   return timeString
 }
 
-import { DEFAULT_LANGUAGE, formatDateByLanguage,LanguageCode } from "@/i18n/constants"
+import { DEFAULT_LANGUAGE, formatDateByLanguage, LanguageCode } from "@/i18n/constants"
 
 export function formatDate(timestamp: number): string {
   // Получаем текущий язык из localStorage или используем значение по умолчанию

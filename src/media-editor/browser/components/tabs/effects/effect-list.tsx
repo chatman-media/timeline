@@ -19,7 +19,7 @@ interface EffectPreviewProps {
 }
 
 const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
-  const { i18n } = useTranslation()
+  const { t } = useTranslation()
   const { addEffect, isEffectAdded, removeResource, effectResources } = useTimeline()
   const [isHovering, setIsHovering] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -176,7 +176,7 @@ const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
         </div>
       </div>
       <div className="mt-1 text-xs text-gray-300">
-        {effects.find((e) => e.type === effectType)?.labels[i18n.language === "en" ? "en" : "ru"]}
+        {t(`effects.presets.${effectType}`)}
       </div>
     </div>
   )
@@ -197,9 +197,9 @@ export function EffectList() {
 
   const filteredEffects = effects.filter((effect) => {
     const searchLower = searchQuery.toLowerCase()
+    const localizedName = t(`effects.presets.${effect.type}`).toLowerCase()
     return (
-      effect.labels.ru.toLowerCase().includes(searchLower) ||
-      effect.labels.en.toLowerCase().includes(searchLower) ||
+      localizedName.includes(searchLower) ||
       effect.name.toLowerCase().includes(searchLower)
     )
   })
