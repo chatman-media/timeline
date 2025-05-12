@@ -382,10 +382,11 @@
       "videoWithNumber": "Video {{number}}",
       "audioWithNumber": "Audio {{number}}"
     },
-    "controls": {
+    "controlsMain": {
       "resizableMode": "Resizable Mode",
       "fixedSizeMode": "Fixed Size Mode",
       "resetTemplate": "Reset Template",
+      "applyTemplate": "Apply Template",
       "switchCamera": "Switch Camera",
       "takeSnapshot": "Take Snapshot",
       "settings": "Settings",
@@ -406,7 +407,8 @@
     },
     "player": {
       "camera": "Camera",
-      "videoUnavailable": "Unavailable"
+      "videoUnavailable": "Unavailable",
+      "noVideoSelected": "Select a video to play"
     },
     "zoom": {
       "zoomIn": "Zoom in",

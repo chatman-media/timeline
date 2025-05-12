@@ -387,6 +387,7 @@
       "resizableMode": "Режим изменения размеров",
       "fixedSizeMode": "Режим фиксированных размеров",
       "resetTemplate": "Сбросить шаблон",
+      "applyTemplate": "Применить шаблон",
       "switchCamera": "Переключить камеру",
       "takeSnapshot": "Сделать снимок",
       "settings": "Настройки",
@@ -407,7 +408,8 @@
     },
     "player": {
       "camera": "Камера",
-      "videoUnavailable": "Видео недоступно"
+      "videoUnavailable": "Видео недоступно",
+      "noVideoSelected": "Выберите видео для воспроизведения"
     },
     "zoom": {
       "zoomIn": "Увеличить",
