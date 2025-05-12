@@ -6,7 +6,12 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { ExportDialog, ProjectSettingsDialog, UserSettingsDialog } from "@/media-editor/dialogs"
+import {
+  ExportDialog,
+  KeyboardShortcutsDialog,
+  ProjectSettingsDialog,
+  UserSettingsDialog,
+} from "@/media-editor/dialogs"
 import { type LayoutMode, LayoutPreviews } from "@/media-editor/layouts"
 import { useProject } from "@/media-editor/project-settings/project-provider"
 
@@ -26,6 +31,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isUserSettingsOpen, setIsUserSettingsOpen] = useState(false)
+  const [isKeyboardShortcutsOpen, setIsKeyboardShortcutsOpen] = useState(false)
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value)
@@ -78,6 +84,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           variant="ghost"
           size="icon"
           title={t("topNavBar.keyboardShortcuts")}
+          onClick={() => setIsKeyboardShortcutsOpen(true)}
         >
           <Keyboard className="h-5 w-5" />
         </Button>
@@ -202,6 +209,10 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
       <ExportDialog open={isExportOpen} onOpenChange={setIsExportOpen} />
       <ProjectSettingsDialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen} />
       <UserSettingsDialog open={isUserSettingsOpen} onOpenChange={setIsUserSettingsOpen} />
+      <KeyboardShortcutsDialog
+        open={isKeyboardShortcutsOpen}
+        onOpenChange={setIsKeyboardShortcutsOpen}
+      />
     </div>
   )
 }

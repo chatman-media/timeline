@@ -286,6 +286,7 @@
 /* Add these styles */
 .scale-control {
   -webkit-appearance: none;
+  appearance: none;
   height: 4px;
   border-radius: 2px;
   background: rgb(25, 102, 107);
