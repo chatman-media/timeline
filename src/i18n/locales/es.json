@@ -463,6 +463,8 @@
     },
     "templateScreens": {
       "one": "pantalla",
+      "few": "pantallas",
+      "many": "pantallas",
       "other": "pantallas"
     },
     "hide": "Ocultar navegador",

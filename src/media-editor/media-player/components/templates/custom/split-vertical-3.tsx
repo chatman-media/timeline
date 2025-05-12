@@ -108,7 +108,7 @@ export function SplitVertical3({
         </Panel>
         <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
         {/* Третья секция */}
-        <Panel defaultSize={33.33} minSize={10}>
+        <Panel defaultSize={33.34} minSize={10}>
           <VideoPanel
             video={validVideos[2]}
             isActive={validVideos[2]?.id === activeVideoId}

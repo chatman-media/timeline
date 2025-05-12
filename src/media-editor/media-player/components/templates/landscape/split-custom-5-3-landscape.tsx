@@ -139,7 +139,7 @@ export function SplitCustom53Landscape({
         </Panel>
         <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
         {/* Нижний ряд */}
-        <Panel defaultSize={33.33} minSize={10}>
+        <Panel defaultSize={33.34} minSize={10}>
           <PanelGroup direction="horizontal">
             {/* Нижнее левое видео */}
             <Panel defaultSize={50} minSize={10}>

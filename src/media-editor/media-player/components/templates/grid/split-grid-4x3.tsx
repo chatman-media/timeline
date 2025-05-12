@@ -176,7 +176,7 @@ export function SplitGrid4x3({
         <PanelGroup direction="vertical">
           {[0, 1, 2].map((rowIndex) => (
             <React.Fragment key={`row-${rowIndex}`}>
-              <Panel defaultSize={33.33} minSize={10}>
+              <Panel defaultSize={rowIndex === 2 ? 33.34 : 33.33} minSize={10}>
                 <PanelGroup direction="horizontal">
                   {[0, 1, 2, 3].map((colIndex) => {
                     const videoIndex = rowIndex * 4 + colIndex
@@ -214,7 +214,7 @@ export function SplitGrid4x3({
         <PanelGroup direction="vertical">
           {[0, 1, 2].map((rowIndex) => (
             <React.Fragment key={`row-${rowIndex}`}>
-              <Panel defaultSize={33.33} minSize={10}>
+              <Panel defaultSize={rowIndex === 2 ? 33.34 : 33.33} minSize={10}>
                 <PanelGroup direction="horizontal">
                   {[0, 1, 2, 3].map((colIndex) => {
                     const videoIndex = rowIndex * 4 + colIndex

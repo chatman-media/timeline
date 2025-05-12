@@ -157,6 +157,7 @@
         },
         "shortcuts": {
           "preferences": "Préférences",
+          "project-settings": "Paramètres du projet",
           "shortcuts": "Raccourcis clavier",
           "new-project": "Nouveau projet",
           "open-project": "Ouvrir un projet",
@@ -453,6 +454,8 @@
     },
     "templateScreens": {
       "one": "écran",
+      "few": "écrans",
+      "many": "écrans",
       "other": "écrans"
     },
     "hide": "Masquer le navigateur",

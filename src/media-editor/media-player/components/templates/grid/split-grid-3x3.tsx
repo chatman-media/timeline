@@ -181,7 +181,7 @@ export function SplitGrid3x3({
             </Panel>
             <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
             {/* Верхний правый экран */}
-            <Panel defaultSize={33.33} minSize={10}>
+            <Panel defaultSize={33.34} minSize={10}>
               <VideoPanel
                 video={validVideos[2]}
                 isActive={validVideos[2]?.id === activeVideoId}
@@ -216,7 +216,7 @@ export function SplitGrid3x3({
             </Panel>
             <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
             {/* Средний правый экран */}
-            <Panel defaultSize={33.33} minSize={10}>
+            <Panel defaultSize={33.34} minSize={10}>
               <VideoPanel
                 video={validVideos[5]}
                 isActive={validVideos[5]?.id === activeVideoId}
@@ -228,7 +228,7 @@ export function SplitGrid3x3({
         </Panel>
         <PanelResizeHandle className="h-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
         {/* Нижний ряд */}
-        <Panel defaultSize={33.33} minSize={10}>
+        <Panel defaultSize={33.34} minSize={10}>
           <PanelGroup direction="horizontal">
             {/* Нижний левый экран */}
             <Panel defaultSize={33.33} minSize={10}>
@@ -251,7 +251,7 @@ export function SplitGrid3x3({
             </Panel>
             <PanelResizeHandle className="w-1 bg-[#35d1c1] hover:bg-[#35d1c1]" />
             {/* Нижний правый экран */}
-            <Panel defaultSize={33.33} minSize={10}>
+            <Panel defaultSize={33.34} minSize={10}>
               <VideoPanel
                 video={validVideos[8]}
                 isActive={validVideos[8]?.id === activeVideoId}

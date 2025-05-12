@@ -377,6 +377,7 @@
       },
       "shortcuts": {
         "preferences": "Preferences",
+        "project-settings": "Project Settings",
         "shortcuts": "Keyboard Shortcuts",
         "new-project": "New Project",
         "open-project": "Open Project",
@@ -606,6 +607,8 @@
     },
     "templateScreens": {
       "one": "screen",
+      "few": "screens",
+      "many": "screens",
       "other": "screens"
     },
     "hide": "Hide browser",

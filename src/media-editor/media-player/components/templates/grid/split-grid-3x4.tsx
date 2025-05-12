@@ -335,7 +335,7 @@ export function SplitGrid3x4({
                     const videoIndex = rowIndex * 3 + colIndex
                     return (
                       <React.Fragment key={`cell-${videoIndex}`}>
-                        <Panel defaultSize={33.33} minSize={10}>
+                        <Panel defaultSize={33.34} minSize={10}>
                           <VideoPanel
                             video={filledVideos[videoIndex]}
                             isActive={filledVideos[videoIndex]?.id === activeVideoId}
@@ -374,7 +374,7 @@ export function SplitGrid3x4({
                     const videoIndex = rowIndex * 3 + colIndex
                     return (
                       <React.Fragment key={`cell-${videoIndex}`}>
-                        <Panel defaultSize={33.33} minSize={10}>
+                        <Panel defaultSize={33.34} minSize={10}>
                           <VideoPanel
                             video={filledVideos[videoIndex]}
                             isActive={filledVideos[videoIndex]?.id === activeVideoId}

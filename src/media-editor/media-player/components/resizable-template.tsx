@@ -924,7 +924,7 @@ export function ResizableTemplate({
       <PanelGroup direction={direction} onLayout={(sizes) => setPanelSizes(sizes)}>
         {validVideos.slice(0, videoCount).map((video, index) => (
           <React.Fragment key={`fragment-${video.id}-${index}`}>
-            <Panel key={`panel-${video.id}`} minSize={10}>
+            <Panel key={`panel-${video.id}-${index}`} minSize={10}>
               <VideoPanel
                 video={video}
                 isActive={video.id === activeVideoId}

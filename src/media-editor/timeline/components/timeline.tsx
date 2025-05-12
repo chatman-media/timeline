@@ -23,40 +23,42 @@ import { TimelineScale } from "./timeline-scale/timeline-scale"
 import { VideoTrack } from "./track"
 
 // Функция для форматирования даты секции с учетом локализации
-function formatSectionDate(dateString: string): string {
-  try {
-    // Если дата в формате ISO (YYYY-MM-DD), добавляем время
-    const date = new Date(dateString + "T00:00:00")
-    if (isNaN(date.getTime())) {
-      return "Неверный формат даты"
-    }
+// Используем замыкание для доступа к i18n
+const createFormatSectionDate =
+  (i18n: any) =>
+    (dateString: string): string => {
+      try {
+      // Если дата в формате ISO (YYYY-MM-DD), добавляем время
+        const date = new Date(dateString + "T00:00:00")
+        if (isNaN(date.getTime())) {
+          return "Неверный формат даты"
+        }
 
-    // Получаем текущий язык из i18next
-    let currentLanguage = "ru"
-    try {
-      // Проверяем, что мы на клиенте
-      if (typeof window !== "undefined") {
-        const i18next = require("i18next").default
-        currentLanguage = i18next.language || "ru"
+        // Получаем текущий язык из i18n
+        let currentLanguage = "ru"
+
+        // Безопасно получаем язык из i18n
+        if (i18n && typeof i18n.language === "string") {
+          currentLanguage = i18n.language
+        }
+
+        // Используем универсальный метод форматирования даты
+        return formatDateByLanguage(date, currentLanguage, {
+          includeYear: true,
+          longFormat: true,
+          addYearSuffix: currentLanguage === "ru",
+        })
+      } catch (e) {
+        console.error("Error formatting section date:", e)
+        return "Ошибка форматирования даты"
       }
-    } catch (error) {
-      console.error("Error getting current language:", error)
     }
-
-    // Используем универсальный метод форматирования даты
-    return formatDateByLanguage(date, currentLanguage, {
-      includeYear: true,
-      longFormat: true,
-      addYearSuffix: currentLanguage === "ru",
-    })
-  } catch (e) {
-    console.error("Error formatting section date:", e)
-    return "Ошибка форматирования даты"
-  }
-}
 
 export function Timeline() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+
+  // Создаем функцию форматирования даты с доступом к i18n
+  const formatSectionDate = createFormatSectionDate(i18n)
   const context = useTimeline()
   if (!context) {
     throw new Error("Timeline must be used within a TimelineProvider")
@@ -90,7 +92,7 @@ export function Timeline() {
   const [deletingSectionDate, setDeletingSectionDate] = useState<string | null>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   // Используем ширину контейнера для расчетов
-  const [containerWidth, setContainerWidth] = useState(1000) // Начальное значение по умолчанию
+  const [, setContainerWidth] = useState(1000) // Начальное значение по умолчанию
 
   // Реф для контейнера таймлайна
   const timelineContainerRef = React.useRef<HTMLDivElement>(null)
@@ -731,7 +733,7 @@ export function Timeline() {
                 )
 
                 // Общая длительность секции
-                const sectionTotalDuration = maxEndTime - minStartTime
+                // const sectionTotalDuration = maxEndTime - minStartTime
 
                 // Константы для расчета высоты
                 const TRACK_HEIGHT = 72 // высота одной дорожки в пикселях
@@ -802,6 +804,8 @@ export function Timeline() {
                             startTime={sector.startTime}
                             endTime={sector.endTime}
                             height={sectorHeight - SCALE_HEIGHT - PADDING}
+                            sectionStartTime={minStartTime}
+                            sectionDuration={maxEndTime - minStartTime}
                           />
                         </div>
                         {/* Дорожки */}

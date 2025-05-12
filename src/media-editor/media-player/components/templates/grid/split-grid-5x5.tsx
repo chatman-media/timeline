@@ -28,7 +28,13 @@ export function SplitGrid5x5({
       `[SplitGrid5x5] Доступно только ${videoCount} видео, дублируем для заполнения 25 ячеек`,
     )
     for (let i = videoCount; i < 25; i++) {
-      filledVideos[i] = validVideos[i % videoCount]
+      // Создаем копию объекта видео с новым ID, чтобы избежать дублирования ключей
+      const sourceVideo = validVideos[i % videoCount]
+      filledVideos[i] = {
+        ...sourceVideo,
+        // Добавляем индекс к ID, чтобы сделать его уникальным
+        id: `${sourceVideo.id}-copy-${i}`,
+      }
     }
   }
 
