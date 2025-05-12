@@ -43,35 +43,40 @@ export const AddMediaButton = memo(function AddMediaButton({
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const prevIsAddedRef = useRef(isAdded)
 
-  // Отслеживаем изменение состояния isAdded
+  // Немедленно устанавливаем состояние при изменении isAdded
   useEffect(() => {
-    // Если файл только что был добавлен (isAdded изменился с false на true)
-    if (isAdded && !prevIsAddedRef.current) {
-      setIsRecentlyAdded(true)
+    // Обновляем состояние немедленно при изменении isAdded
+    if (isAdded !== prevIsAddedRef.current) {
+      console.log(`Файл ${file.name} ${isAdded ? 'добавлен' : 'удален'}, обновляем состояние`)
 
-      // Очищаем предыдущий таймер, если он есть
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-      }
+      // Если файл добавлен, устанавливаем флаг isRecentlyAdded
+      if (isAdded) {
+        setIsRecentlyAdded(true)
 
-      // Через 3 секунды сбрасываем флаг
-      timerRef.current = setTimeout(() => {
+        // Очищаем предыдущий таймер, если он есть
+        if (timerRef.current) {
+          clearTimeout(timerRef.current)
+        }
+
+        // Через 3 секунды сбрасываем флаг
+        timerRef.current = setTimeout(() => {
+          setIsRecentlyAdded(false)
+          timerRef.current = null
+        }, 3000)
+      } else {
+        // Если файл удален, сбрасываем флаг isRecentlyAdded
         setIsRecentlyAdded(false)
-        timerRef.current = null
-      }, 3000)
-    } else if (!isAdded && prevIsAddedRef.current) {
-      // Файл был удален (isAdded изменился с true на false)
-      setIsRecentlyAdded(false)
 
-      // Очищаем таймер
-      if (timerRef.current) {
-        clearTimeout(timerRef.current)
-        timerRef.current = null
+        // Очищаем таймер
+        if (timerRef.current) {
+          clearTimeout(timerRef.current)
+          timerRef.current = null
+        }
       }
-    }
 
-    // Обновляем предыдущее значение isAdded
-    prevIsAddedRef.current = isAdded
+      // Обновляем предыдущее значение isAdded
+      prevIsAddedRef.current = isAdded
+    }
 
     // Очищаем таймер при размонтировании компонента
     return () => {
@@ -81,6 +86,23 @@ export const AddMediaButton = memo(function AddMediaButton({
       }
     }
   }, [isAdded, file.name])
+
+  // Принудительно обновляем состояние при монтировании компонента
+  useEffect(() => {
+    // Если файл уже добавлен при монтировании компонента
+    if (isAdded) {
+      console.log(`Файл ${file.name} уже добавлен при монтировании, устанавливаем состояние`)
+      setIsRecentlyAdded(true)
+      prevIsAddedRef.current = true
+
+      // Через 3 секунды сбрасываем флаг
+      const timer = setTimeout(() => {
+        setIsRecentlyAdded(false)
+      }, 3000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [])
 
   if (!onAddMedia) return null
 
@@ -100,16 +122,25 @@ export const AddMediaButton = memo(function AddMediaButton({
         size > 100 ? "right-[5px] bottom-1" : "right-1 bottom-0.5",
         isAdded
           ? isRecentlyAdded
-            ? "scale-110 bg-[#38dacac3] dark:bg-[#35d1c1]" // Яркий цвет и увеличенный размер для недавно добавленных
-            : "bg-[#38dacac3] dark:bg-[#35d1c1]"
+            ? "scale-110 bg-[#38dacac3] dark:bg-[#35d1c1] visible" // Яркий цвет и увеличенный размер для недавно добавленных
+            : "bg-[#38dacac3] dark:bg-[#35d1c1] visible" // Добавлен класс visible
           : "bg-[#2f2d38] group-hover:bg-[#35d1c1]/75 hover:bg-[#35d1c1] dark:group-hover:bg-[#35d1c1] dark:hover:bg-[#35d1c1]",
       )}
       onClick={(e) => {
         e.stopPropagation()
+        // Предотвращаем двойные клики
+        e.preventDefault()
+
         if (isAdded && isHovering && canShowRemoveButton) {
+          console.log(`Удаляем файл ${file.name}`)
           handleRemove(e, file)
-        } else {
+        } else if (!isAdded) {
+          console.log(`Добавляем файл ${file.name}`)
           onAddMedia(e, file)
+          // Немедленно обновляем визуальное состояние
+          setIsRecentlyAdded(true)
+        } else {
+          console.log(`Файл ${file.name} уже добавлен, но не в режиме удаления`)
         }
       }}
       onMouseEnter={() => setIsHovering(true)}

@@ -28,6 +28,8 @@ interface TemplatePreviewProps {
 
 export function TemplatePreview({ template, onClick, size, dimensions }: TemplatePreviewProps) {
   const [width, height] = dimensions
+  // Локальное состояние для отслеживания добавления шаблона
+  const [localIsAdded, setLocalIsAdded] = useState(false)
 
   // Вычисляем размеры превью, сохраняя соотношение сторон
   const calculateDimensions = (): { width: number; height: number } => {
@@ -56,15 +58,35 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
   const renderedTemplate = template.render()
 
   // Проверяем, добавлен ли шаблон уже в хранилище
-  const isAdded = isTemplateAdded(template)
+  const isAddedFromStore = isTemplateAdded(template)
+
+  // При изменении состояния в хранилище, обновляем локальное состояние
+  useEffect(() => {
+    setLocalIsAdded(isAddedFromStore)
+  }, [isAddedFromStore])
+
+  // Используем комбинированное состояние - либо из хранилища, либо локальное
+  const isAdded = isAddedFromStore || localIsAdded
 
   const handleAddTemplate = (e: React.MouseEvent, _file: MediaFile) => {
     e.stopPropagation()
+    // Немедленно обновляем локальное состояние
+    setLocalIsAdded(true)
+    // Добавляем шаблон в хранилище
     addTemplate(template)
+
+    // Принудительно обновляем состояние, чтобы кнопка стала видимой сразу
+    setTimeout(() => {
+      // Это вызовет перерисовку компонента
+      const isAdded = isTemplateAdded(template)
+      console.log(`Шаблон ${template.id} добавлен: ${isAdded}`)
+    }, 10)
   }
 
   const handleRemoveTemplate = (e: React.MouseEvent, _file: MediaFile) => {
     e.stopPropagation()
+    // Немедленно обновляем локальное состояние
+    setLocalIsAdded(false)
     // Находим ресурс с этим шаблоном и удаляем его
     const resource = templateResources.find((res) => res.resourceId === template.id)
 
@@ -87,7 +109,10 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
     >
       {React.cloneElement(renderedTemplate, { key: `template-preview-${template.id}` })}
       <div
-        className={`${isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-200`}
+        className={`transition-opacity duration-200 ${
+          isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+        }`}
+        style={{ visibility: isAdded ? "visible" : "inherit" }}
       >
         <AddMediaButton
           file={{ id: template.id, path: "", name: template.id }}
