@@ -67,7 +67,6 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
     <div className="relative flex w-full items-center justify-between border border-b bg-gray-200 px-1 py-[2px] dark:bg-[#1b1a1f]">
       <div className="flex h-6 items-center">
         <BrowserToggleButton />
-        <ThemeToggle />
         <Popover>
           <PopoverTrigger asChild>
             <Button
@@ -87,6 +86,9 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
             />
           </PopoverContent>
         </Popover>
+      </div>
+      <div className="flex items-center">
+        <ThemeToggle />
         <Button
           className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
           variant="ghost"
@@ -96,8 +98,6 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
         >
           <Keyboard className="h-5 w-5" />
         </Button>
-      </div>
-      <div className="flex items-center">
         <Button
           className="hover:bg-secondary h-7 w-7 cursor-pointer p-0"
           variant="ghost"
