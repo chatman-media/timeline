@@ -43,9 +43,9 @@ export const AddMediaButton = memo(function AddMediaButton({
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const prevIsAddedRef = useRef(isAdded)
 
-  // Немедленно устанавливаем состояние при изменении isAdded
+  // Обновляем состояние при изменении isAdded
   useEffect(() => {
-    // Обновляем состояние немедленно при изменении isAdded
+    // Обновляем состояние при изменении isAdded
     if (isAdded !== prevIsAddedRef.current) {
       console.log(`Файл ${file.name} ${isAdded ? "добавлен" : "удален"}, обновляем состояние`)
 
@@ -62,7 +62,7 @@ export const AddMediaButton = memo(function AddMediaButton({
         timerRef.current = setTimeout(() => {
           setIsRecentlyAdded(false)
           timerRef.current = null
-        }, 3000)
+        }, 1500)
       } else {
         // Если файл удален, сбрасываем флаг isRecentlyAdded
         setIsRecentlyAdded(false)
@@ -98,7 +98,7 @@ export const AddMediaButton = memo(function AddMediaButton({
       // Через 3 секунды сбрасываем флаг
       const timer = setTimeout(() => {
         setIsRecentlyAdded(false)
-      }, 3000)
+      }, 1500)
 
       return () => clearTimeout(timer)
     }
@@ -118,13 +118,13 @@ export const AddMediaButton = memo(function AddMediaButton({
   return (
     <div
       className={cn(
-        "absolute z-10 cursor-pointer rounded-full p-1 text-white transition-all duration-150 dark:hover:text-black",
+        "absolute z-10 cursor-pointer rounded-full p-1 text-white transition-all duration-150 dark:hover:text-black/50",
         size > 100 ? "right-[5px] bottom-1" : "right-1 bottom-0.5",
         isAdded
           ? isRecentlyAdded
             ? "visible scale-110 bg-[#38dacac3] dark:bg-[#35d1c1]" // Яркий цвет и увеличенный размер для недавно добавленных
             : "visible bg-[#38dacac3] dark:bg-[#35d1c1]" // Добавлен класс visible
-          : "invisible bg-[#2f2d38] group-hover:visible group-hover:bg-[#35d1c1]/75 hover:bg-[#35d1c1] dark:group-hover:bg-[#35d1c1] dark:hover:bg-[#35d1c1]", // Скрыта по умолчанию, видима при наведении
+          : "invisible bg-[#38dacac3] group-hover:visible group-hover:bg-[#35d1c1]/75 hover:bg-[#35d1c1] dark:group-hover:bg-[#35d1c1] dark:hover:bg-[#35d1c1]", // Скрыта по умолчанию, видима при наведении
       )}
       onClick={(e) => {
         e.stopPropagation()
@@ -157,10 +157,10 @@ export const AddMediaButton = memo(function AddMediaButton({
         isHovering && canShowRemoveButton ? (
           <X className={`${iconSize} text-black/50`} strokeWidth={3} />
         ) : (
-          <Check className={`${iconSize} text-white`} strokeWidth={3} />
+          <Check className={`${iconSize} text-white`} strokeWidth={2} />
         )
       ) : (
-        <Plus className={iconSize} strokeWidth={3} />
+        <Plus className={`${iconSize} fill-white transition-transform duration-150 hover:scale-110`} strokeWidth={2} />
       )}
     </div>
   )

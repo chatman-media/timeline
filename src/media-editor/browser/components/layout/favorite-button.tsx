@@ -120,7 +120,7 @@ export const FavoriteButton = memo(function FavoriteButton({
   return (
     <div
       className={cn(
-        "absolute z-10 cursor-pointer rounded-full p-1 text-white transition-all duration-150 dark:hover:text-black",
+        "absolute z-10 cursor-pointer rounded-full p-1 text-white transition-all duration-150 dark:hover:text-black/70",
         size > 100 ? "right-[36px] bottom-1" : "right-[28px] bottom-0.5",
         isFavorite
           ? isRecentlyAdded

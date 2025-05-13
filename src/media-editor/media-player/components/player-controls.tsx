@@ -31,6 +31,7 @@ import { VolumeSlider } from "@/media-editor/media-player/components/volume-slid
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
 import { useTimeline } from "@/media-editor/timeline/services"
+import { MediaFile } from "@/types/media"
 
 import { usePlayerContext } from ".."
 
@@ -48,6 +49,8 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   const [localVideoSources, setLocalVideoSources] = useState<Record<string, "media" | "timeline">>(
     {},
   )
+
+
 
   const {
     isPlaying,
@@ -97,53 +100,202 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   const handleSkipBackward = useCallback(() => {
     if (!video) return
 
-    const videoStartTime = video.startTime || 0
-    if (Math.abs(currentTime - videoStartTime) < 0.01) return
+    // Определяем размер шага (один кадр)
+    let frameTime = 1 / 25 // По умолчанию 25 кадров в секунду
 
-    let newTime
-    if (!video?.probeData?.streams?.[0]?.r_frame_rate) {
-      newTime = Math.max(videoStartTime, currentTime - 1 / 25)
-    } else {
+    // Определяем минимальное время (начало видео или трека)
+    let minTime = video.startTime || 0
+    let currentVideoOrTrack = video
+
+    // Пытаемся получить точное значение FPS из метаданных видео
+    if (video?.probeData?.streams?.[0]?.r_frame_rate) {
       const fpsStr = video.probeData.streams[0].r_frame_rate
       const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
-      const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
+      try {
+        const fps = fpsMatch
+          ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
+          : parseFloat(fpsStr)
 
-      if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) return
-
-      const frameTime = 1 / fps
-      newTime = Math.max(videoStartTime, currentTime - frameTime)
+        if (!isNaN(fps) && fps > 0) {
+          frameTime = 1 / fps
+          console.log(`[handleSkipBackward] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`)
+        }
+      } catch (e) {
+        console.error("[handleSkipBackward] Ошибка при вычислении fps:", e)
+      }
     }
 
+    // Если есть активный трек, используем его для определения минимального времени
+    if (activeTrackId) {
+      const activeTrack = tracks.find((track) => track.id === activeTrackId)
+      if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
+        // Находим видео в треке, которое содержит текущее время
+        const currentTrackVideo = activeTrack.videos.find(
+          (v) => {
+            const videoStart = v.startTime || 0
+            const videoEnd = videoStart + (v.duration || 0)
+            return currentTime >= videoStart && currentTime <= videoEnd
+          }
+        )
+
+        if (currentTrackVideo) {
+          currentVideoOrTrack = currentTrackVideo
+          const videoStart = currentTrackVideo.startTime || 0
+
+          // Проверяем, есть ли предыдущее видео в треке
+          const currentIndex = activeTrack.videos.indexOf(currentTrackVideo)
+          if (currentIndex > 0 && Math.abs(currentTime - videoStart) < 0.01) {
+            // Если мы в начале текущего видео и есть предыдущее, используем конец предыдущего
+            const prevVideo = activeTrack.videos[currentIndex - 1]
+            const prevVideoEnd = (prevVideo.startTime || 0) + (prevVideo.duration || 0)
+            minTime = prevVideoEnd - frameTime // Устанавливаем на последний кадр предыдущего видео
+            console.log(`[handleSkipBackward] Переход к предыдущему видео в треке: ${prevVideo.id}, endTime: ${minTime}`)
+          } else {
+            // Иначе используем начало текущего видео
+            minTime = videoStart
+            console.log(`[handleSkipBackward] Используем видео из трека: ${currentTrackVideo.id}, minTime: ${minTime}`)
+          }
+        } else {
+          // Если не нашли видео, содержащее текущее время, используем первое видео в треке
+          const firstVideo = activeTrack.videos[0]
+          minTime = firstVideo.startTime || 0
+          console.log(`[handleSkipBackward] Используем первое видео из трека: ${firstVideo.id}, minTime: ${minTime}`)
+        }
+      }
+    }
+
+    // Проверяем, не находимся ли мы уже в начале видео или трека
+    if (Math.abs(currentTime - minTime) < 0.01) {
+      console.log(`[handleSkipBackward] Уже в начале видео/трека: ${currentTime} ≈ ${minTime}`)
+      return
+    }
+
+    // Обновляем frameTime для текущего видео, если оно изменилось
+    if (currentVideoOrTrack !== video && currentVideoOrTrack?.probeData?.streams?.[0]?.r_frame_rate) {
+      const fpsStr = currentVideoOrTrack.probeData.streams[0].r_frame_rate
+      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
+      try {
+        const fps = fpsMatch
+          ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
+          : parseFloat(fpsStr)
+
+        if (!isNaN(fps) && fps > 0) {
+          frameTime = 1 / fps
+          console.log(`[handleSkipBackward] Обновлен FPS для текущего видео: ${fps}, frameTime: ${frameTime}`)
+        }
+      } catch (e) {
+        console.error("[handleSkipBackward] Ошибка при вычислении fps:", e)
+      }
+    }
+
+    // Вычисляем новое время
+    const newTime = Math.max(minTime, currentTime - frameTime)
+    console.log(`[handleSkipBackward] Перемещение на один кадр назад: ${currentTime} -> ${newTime}`)
+
+    // Устанавливаем новое время и останавливаем воспроизведение
     setCurrentTime(newTime)
     setIsPlaying(false)
-  }, [video, currentTime, setCurrentTime, setIsPlaying])
+  }, [video, currentTime, setCurrentTime, setIsPlaying, activeTrackId, tracks])
 
   // Переписываем handleSkipForward: используем currentTime, вызываем setCurrentTime
   const handleSkipForward = useCallback(() => {
     if (!video) return
 
-    const videoStartTime = video.startTime || 0
-    const videoDuration = video.duration || 0
-    const videoEndTime = videoStartTime + videoDuration
-    if (Math.abs(currentTime - videoEndTime) < 0.01) return
+    // Определяем размер шага (один кадр)
+    let frameTime = 1 / 25 // По умолчанию 25 кадров в секунду
 
-    let newTime
-    if (!video?.probeData?.streams?.[0]?.r_frame_rate) {
-      newTime = Math.min(videoEndTime, currentTime + 1 / 25)
-    } else {
+    // Определяем максимальное время (конец видео или трека)
+    let maxTime = (video.startTime || 0) + (video.duration || 0)
+    let currentVideoOrTrack = video
+
+    // Пытаемся получить точное значение FPS из метаданных видео
+    if (video?.probeData?.streams?.[0]?.r_frame_rate) {
       const fpsStr = video.probeData.streams[0].r_frame_rate
       const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
-      const fps = fpsMatch ? parseInt(fpsMatch[1]) / parseInt(fpsMatch[2]) : eval(fpsStr)
+      try {
+        const fps = fpsMatch
+          ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
+          : parseFloat(fpsStr)
 
-      if (typeof fps !== "number" || fps <= 0 || isNaN(fps)) return
-
-      const frameTime = 1 / fps
-      newTime = Math.min(videoEndTime, currentTime + frameTime)
+        if (!isNaN(fps) && fps > 0) {
+          frameTime = 1 / fps
+          console.log(`[handleSkipForward] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`)
+        }
+      } catch (e) {
+        console.error("[handleSkipForward] Ошибка при вычислении fps:", e)
+      }
     }
 
+    // Если есть активный трек, используем его для определения максимального времени
+    if (activeTrackId) {
+      const activeTrack = tracks.find((track) => track.id === activeTrackId)
+      if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
+        // Находим видео в треке, которое содержит текущее время
+        const currentTrackVideo = activeTrack.videos.find(
+          (v) => {
+            const videoStart = v.startTime || 0
+            const videoEnd = videoStart + (v.duration || 0)
+            return currentTime >= videoStart && currentTime <= videoEnd
+          }
+        )
+
+        if (currentTrackVideo) {
+          currentVideoOrTrack = currentTrackVideo
+          const videoEnd = (currentTrackVideo.startTime || 0) + (currentTrackVideo.duration || 0)
+
+          // Проверяем, есть ли следующее видео в треке
+          const currentIndex = activeTrack.videos.indexOf(currentTrackVideo)
+          if (currentIndex < activeTrack.videos.length - 1 && Math.abs(currentTime - videoEnd) < 0.01) {
+            // Если мы в конце текущего видео и есть следующее, используем начало следующего
+            const nextVideo = activeTrack.videos[currentIndex + 1]
+            maxTime = nextVideo.startTime || 0
+            console.log(`[handleSkipForward] Переход к следующему видео в треке: ${nextVideo.id}, startTime: ${maxTime}`)
+          } else {
+            // Иначе используем конец текущего видео
+            maxTime = videoEnd
+            console.log(`[handleSkipForward] Используем видео из трека: ${currentTrackVideo.id}, maxTime: ${maxTime}`)
+          }
+        } else {
+          // Если не нашли видео, содержащее текущее время, используем последнее видео в треке
+          const lastVideo = activeTrack.videos[activeTrack.videos.length - 1]
+          maxTime = (lastVideo.startTime || 0) + (lastVideo.duration || 0)
+          console.log(`[handleSkipForward] Используем последнее видео из трека: ${lastVideo.id}, maxTime: ${maxTime}`)
+        }
+      }
+    }
+
+    // Проверяем, не находимся ли мы уже в конце видео или трека
+    if (Math.abs(currentTime - maxTime) < 0.01) {
+      console.log(`[handleSkipForward] Уже в конце видео/трека: ${currentTime} ≈ ${maxTime}`)
+      return
+    }
+
+    // Обновляем frameTime для текущего видео, если оно изменилось
+    if (currentVideoOrTrack !== video && currentVideoOrTrack?.probeData?.streams?.[0]?.r_frame_rate) {
+      const fpsStr = currentVideoOrTrack.probeData.streams[0].r_frame_rate
+      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
+      try {
+        const fps = fpsMatch
+          ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
+          : parseFloat(fpsStr)
+
+        if (!isNaN(fps) && fps > 0) {
+          frameTime = 1 / fps
+          console.log(`[handleSkipForward] Обновлен FPS для текущего видео: ${fps}, frameTime: ${frameTime}`)
+        }
+      } catch (e) {
+        console.error("[handleSkipForward] Ошибка при вычислении fps:", e)
+      }
+    }
+
+    // Вычисляем новое время
+    const newTime = Math.min(maxTime, currentTime + frameTime)
+    console.log(`[handleSkipForward] Перемещение на один кадр вперед: ${currentTime} -> ${newTime}`)
+
+    // Устанавливаем новое время и останавливаем воспроизведение
     setCurrentTime(newTime)
     setIsPlaying(false)
-  }, [video, currentTime, setCurrentTime, setIsPlaying])
+  }, [video, currentTime, setCurrentTime, setIsPlaying, activeTrackId, tracks])
 
   // Используем useRef для хранения последнего значения громкости и предотвращения лишних рендеров
   const volumeRef = useRef(volume)
@@ -814,10 +966,20 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     setIsPlaying,
   ])
 
-  // Улучшенный handleTimeChange для корректной работы с параллельными видео
+  // Функция для получения видео для отображения (первое видео в шаблоне или текущее видео)
+  const getDisplayVideo = useCallback(() => {
+    return (appliedTemplate?.videos && appliedTemplate.videos.length > 0)
+      ? appliedTemplate.videos[0]
+      : video
+  }, [appliedTemplate, video])
+
+  // Улучшенный handleTimeChange для корректной работы с параллельными видео и шаблонами
   const handleTimeChange = useCallback(
     (value: number[]) => {
-      if (!video) return
+      // Определяем, какое видео использовать для изменения времени
+      const videoToUse = getDisplayVideo()
+
+      if (!videoToUse) return
 
       // Если идет процесс переключения камеры, игнорируем изменение времени
       if (isChangingCamera) {
@@ -825,7 +987,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
         return
       }
 
-      const videoDuration = video.duration || 0
+      const videoDuration = videoToUse.duration || 0
       const sliderValue = value[0]
 
       // Проверка валидности значения
@@ -842,8 +1004,8 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
       // Вычисляем локальное время для сравнения
       const localTime =
-        currentTime > 365 * 24 * 60 * 60 && video.startTime
-          ? Math.max(0, currentTime - (video.startTime || 0))
+        currentTime > 365 * 24 * 60 * 60 && videoToUse.startTime
+          ? Math.max(0, currentTime - (videoToUse.startTime || 0))
           : currentTime
 
       // Проверяем, существенно ли изменилось время
@@ -870,44 +1032,53 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
             `[handleTimeChange] Установка относительного прогресса: ${clampedTime.toFixed(3)}`,
           )
 
-          // Устанавливаем время напрямую для текущего видео
-          if (video.id && videoRefs[video.id]) {
-            videoRefs[video.id].currentTime = clampedTime
-            console.log(
-              `[handleTimeChange] Установлено время ${clampedTime.toFixed(3)} для видео ${video.id}`,
-            )
+          // Определяем, какие видео нужно обновить
+          let videosToUpdate: MediaFile[] = []
 
-            // Обновляем локальное отображаемое время
-            setLocalDisplayTime(clampedTime)
-
-            // Сохраняем время для текущего видео в videoTimesRef
-            if (video.id) {
-              // Используем функцию из контекста для сохранения времени
-              // Это обеспечит синхронизацию с другими компонентами
-              console.log(
-                `[handleTimeChange] Сохраняем время ${clampedTime.toFixed(3)} для видео ${video.id}`,
-              )
-            }
-
-            // Если есть параллельные видео, обновляем их время пропорционально
-            if (parallelVideos && parallelVideos.length > 1) {
-              // Вычисляем относительную позицию для текущего видео
-              const relativePosition = clampedTime / (video.duration || 1)
-
-              // Обновляем время для всех параллельных видео
-              parallelVideos.forEach((parallelVideo) => {
-                if (parallelVideo.id !== video.id && videoRefs[parallelVideo.id]) {
-                  const parallelVideoDuration = parallelVideo.duration || 1
-                  const newParallelTime = relativePosition * parallelVideoDuration
-
-                  videoRefs[parallelVideo.id].currentTime = newParallelTime
-                  console.log(
-                    `[handleTimeChange] Синхронизировано время ${newParallelTime.toFixed(3)} для видео ${parallelVideo.id}`,
-                  )
-                }
-              })
-            }
+          // Если применен шаблон, обновляем все видео в шаблоне
+          if (appliedTemplate?.videos && appliedTemplate.videos.length > 0) {
+            videosToUpdate = appliedTemplate.videos
+            console.log(`[handleTimeChange] Обновляем ${videosToUpdate.length} видео в шаблоне`)
           }
+          // Если есть параллельные видео, обновляем их
+          else if (parallelVideos && parallelVideos.length > 0) {
+            videosToUpdate = parallelVideos
+            console.log(`[handleTimeChange] Обновляем ${videosToUpdate.length} параллельных видео`)
+          }
+          // Иначе обновляем только текущее видео
+          else if (videoToUse) {
+            videosToUpdate = [videoToUse]
+            console.log(`[handleTimeChange] Обновляем только текущее видео: ${videoToUse.id}`)
+          }
+
+          // Вычисляем относительную позицию для текущего видео
+          const relativePosition = clampedTime / (videoToUse.duration || 1)
+          console.log(`[handleTimeChange] Относительная позиция: ${relativePosition.toFixed(3)}`)
+
+          // Обновляем время для всех видео
+          videosToUpdate.forEach((updateVideo) => {
+            if (updateVideo?.id && videoRefs[updateVideo.id]) {
+              // Если это первое видео (или единственное), устанавливаем точное время
+              if (updateVideo.id === videoToUse.id) {
+                videoRefs[updateVideo.id].currentTime = clampedTime
+                console.log(
+                  `[handleTimeChange] Установлено точное время ${clampedTime.toFixed(3)} для видео ${updateVideo.id}`,
+                )
+
+                // Обновляем локальное отображаемое время по первому видео
+                setLocalDisplayTime(clampedTime)
+              }
+              // Для остальных видео вычисляем пропорциональное время
+              else {
+                const updateVideoDuration = updateVideo.duration || 1
+                const newTime = relativePosition * updateVideoDuration
+                videoRefs[updateVideo.id].currentTime = newTime
+                console.log(
+                  `[handleTimeChange] Синхронизировано время ${newTime.toFixed(3)} для видео ${updateVideo.id}`,
+                )
+              }
+            }
+          })
 
           // Сбрасываем флаг seeking после небольшой задержки
           setTimeout(() => {
@@ -919,8 +1090,8 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
         // Для обычного времени преобразуем относительное время в абсолютное
         let newTime = clampedTime
-        if (video.startTime) {
-          newTime = video.startTime + clampedTime
+        if (videoToUse.startTime) {
+          newTime = videoToUse.startTime + clampedTime
           console.log(`[handleTimeChange] Преобразование времени: ${clampedTime} -> ${newTime}`)
         }
 
@@ -939,26 +1110,40 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       currentTime,
       isChangingCamera,
       parallelVideos,
+      appliedTemplate,
       setLocalDisplayTime,
     ],
   )
 
   // Переписываем handleChevronFirst: используем currentTime, вызываем setCurrentTime
   const handleChevronFirst = useCallback(() => {
-    if (!video || !activeTrackId) return
+    if (!video) return
 
-    // Находим активный трек
-    const activeTrack = tracks.find((track) => track.id === activeTrackId)
-    if (!activeTrack) return
+    // Если есть активный трек, используем его
+    if (activeTrackId) {
+      // Находим активный трек
+      const activeTrack = tracks.find((track) => track.id === activeTrackId)
+      if (activeTrack) {
+        // Находим первое видео в треке
+        const firstVideo = activeTrack.videos?.[0]
+        if (firstVideo) {
+          const startTime = firstVideo.startTime || 0
+          if (Math.abs(currentTime - startTime) < 0.01) return
 
-    // Находим первое видео в треке
-    const firstVideo = activeTrack.videos?.[0]
-    if (!firstVideo) return
+          console.log(`[handleChevronFirst] Перемещение в начало трека: ${startTime}`)
+          setCurrentTime(startTime)
+          setIsPlaying(false)
+          return
+        }
+      }
+    }
 
-    const startTime = firstVideo.startTime || 0
-    if (Math.abs(currentTime - startTime) < 0.01) return
+    // Если нет активного трека или в треке нет видео, используем текущее видео
+    const videoStartTime = video.startTime || 0
+    if (Math.abs(currentTime - videoStartTime) < 0.01) return
 
-    setCurrentTime(startTime)
+    console.log(`[handleChevronFirst] Перемещение в начало видео: ${videoStartTime}`)
+    setCurrentTime(videoStartTime)
     setIsPlaying(false)
   }, [video, activeTrackId, tracks, currentTime, setCurrentTime, setIsPlaying])
 
@@ -966,20 +1151,44 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   const handleChevronLast = useCallback(() => {
     if (!video) return
 
+    // Если есть активный трек, используем его
+    if (activeTrackId) {
+      // Находим активный трек
+      const activeTrack = tracks.find((track) => track.id === activeTrackId)
+      if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
+        // Находим последнее видео в треке
+        const lastVideo = activeTrack.videos[activeTrack.videos.length - 1]
+        if (lastVideo) {
+          const startTime = lastVideo.startTime || 0
+          const duration = lastVideo.duration || 0
+          const endTime = startTime + duration
+
+          if (Math.abs(currentTime - endTime) < 0.01) return
+
+          console.log(`[handleChevronLast] Перемещение в конец трека: ${endTime}`)
+          setCurrentTime(endTime)
+          setIsPlaying(false)
+          return
+        }
+      }
+    }
+
+    // Если нет активного трека или в треке нет видео, используем текущее видео
     const videoStartTime = video.startTime || 0
     const videoDuration = video.duration || 0
     const videoEndTime = videoStartTime + videoDuration
 
     if (Math.abs(currentTime - videoEndTime) < 0.01) return
 
+    console.log(`[handleChevronLast] Перемещение в конец видео: ${videoEndTime}`)
     setCurrentTime(videoEndTime)
     setIsPlaying(false)
-  }, [video, currentTime, setCurrentTime, setIsPlaying])
+  }, [video, activeTrackId, tracks, currentTime, setCurrentTime, setIsPlaying])
 
   // Используем currentTime для isFirstFrame / isLastFrame
   // Безопасно вычисляем fps из строки формата "num/den"
   const fpsStr = video?.probeData?.streams?.[0]?.r_frame_rate || ""
-  let frameTime = 0
+  let frameTime = 1 / 25 // По умолчанию 25 кадров в секунду
   try {
     if (fpsStr) {
       const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
@@ -989,14 +1198,12 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
       if (!isNaN(fps) && fps > 0) {
         frameTime = 1 / fps
+        console.log(`[PlayerControls] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`)
       }
     }
   } catch (e) {
     console.error("[PlayerControls] Ошибка при вычислении fps:", e)
   }
-  const isFirstFrame = Math.abs(currentTime - (video?.startTime || 0)) < frameTime
-  const videoEndTimeForLastFrame = (video?.startTime || 0) + (video?.duration || 0)
-  const isLastFrame = Math.abs(currentTime - videoEndTimeForLastFrame) < frameTime
 
   // Функция форматирования относительного времени
   const formatRelativeTime = (time: number): string => {
@@ -1035,29 +1242,49 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
   // videoRefs уже получен выше
 
+
+
   // Обновляем локальное время при воспроизведении
   useEffect(() => {
-    if (!video?.id || !videoRefs[video.id]) return
+    // Определяем, какое видео использовать для отслеживания времени
+    const videoToTrack = getDisplayVideo()
 
-    const videoElement = videoRefs[video.id]
+    // Если нет активного видео или его ID, выходим
+    if (!videoToTrack?.id) return
+
+    // Получаем элемент видео для отслеживания
+    const videoElementToTrack = videoRefs[videoToTrack.id]
+
+    // Если нет элемента видео для отслеживания, выходим
+    if (!videoElementToTrack) {
+      console.log(`[PlayerControls] Нет элемента видео для отслеживания времени: ${videoToTrack.id}`)
+      return
+    }
+
+    console.log(`[PlayerControls] Отслеживаем время по видео: ${videoToTrack.id}`)
 
     // Функция обновления времени
     const updateTime = () => {
-      setLocalDisplayTime(videoElement.currentTime)
+      setLocalDisplayTime(videoElementToTrack.currentTime)
+      console.log(`[PlayerControls] Обновлено localDisplayTime: ${videoElementToTrack.currentTime.toFixed(3)}`)
     }
 
     // Добавляем обработчик события timeupdate
     if (isPlaying) {
-      videoElement.addEventListener("timeupdate", updateTime)
+      videoElementToTrack.addEventListener("timeupdate", updateTime)
+      console.log(`[PlayerControls] Добавлен обработчик timeupdate для видео: ${videoToTrack.id}`)
     }
 
     return () => {
-      videoElement.removeEventListener("timeupdate", updateTime)
+      videoElementToTrack.removeEventListener("timeupdate", updateTime)
+      console.log(`[PlayerControls] Удален обработчик timeupdate для видео: ${videoToTrack.id}`)
     }
-  }, [video?.id, videoRefs, isPlaying])
+  }, [video?.id, videoRefs, isPlaying, appliedTemplate, getDisplayVideo])
 
   // Импортируем контекст для обмена данными с TimelineBar
   const { setDisplayTime } = useDisplayTime()
+
+
 
   // Нормализуем currentTime для отображения, если это Unix timestamp
   const displayTime = useMemo(() => {
@@ -1088,6 +1315,42 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     }
   }, [preferredSource, isHydrated])
 
+  // Создаем мемоизированные значения для начального и конечного времени
+  const startTimeForFirstFrame = useMemo(() => {
+    if (activeTrackId) {
+      const activeTrack = tracks.find((track) => track.id === activeTrackId)
+      if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
+        const firstVideo = activeTrack.videos[0]
+        if (firstVideo) {
+          return firstVideo.startTime || 0
+        }
+      }
+    }
+    return video?.startTime || 0
+  }, [activeTrackId, tracks, video])
+
+  const endTimeForLastFrame = useMemo(() => {
+    if (activeTrackId) {
+      const activeTrack = tracks.find((track) => track.id === activeTrackId)
+      if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
+        const lastVideo = activeTrack.videos[activeTrack.videos.length - 1]
+        if (lastVideo) {
+          return (lastVideo.startTime || 0) + (lastVideo.duration || 0)
+        }
+      }
+    }
+    return (video?.startTime || 0) + (video?.duration || 0)
+  }, [activeTrackId, tracks, video])
+
+  // Определяем isFirstFrame и isLastFrame на основе мемоизированных значений
+  const isFirstFrame = useMemo(() => {
+    return Math.abs(currentTime - startTimeForFirstFrame) < frameTime
+  }, [currentTime, startTimeForFirstFrame, frameTime])
+
+  const isLastFrame = useMemo(() => {
+    return Math.abs(currentTime - endTimeForLastFrame) < frameTime
+  }, [currentTime, endTimeForLastFrame, frameTime])
+
   // Ограничиваем логирование, чтобы не перегружать консоль
   useEffect(() => {
     console.log(
@@ -1095,8 +1358,16 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       currentTime,
       "displayTime:",
       displayTime,
+      "isFirstFrame:",
+      isFirstFrame,
+      "isLastFrame:",
+      isLastFrame,
+      "startTimeForFirstFrame:",
+      startTimeForFirstFrame,
+      "endTimeForLastFrame:",
+      endTimeForLastFrame
     )
-  }, [currentTime, displayTime])
+  }, [currentTime, displayTime, isFirstFrame, isLastFrame, startTimeForFirstFrame, endTimeForLastFrame])
 
   // Улучшаем handlePlayPause: НЕ устанавливаем флаг isChangingCamera при переключении
   const handlePlayPause = useCallback(() => {
@@ -1168,18 +1439,18 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
             <div className="relative h-1 w-full rounded-full border border-white bg-gray-800">
               <div
                 className="absolute top-0 left-0 h-full rounded-full bg-white"
-                style={{ width: `${(Math.max(0, displayTime) / (video?.duration || 100)) * 100}%` }}
+                style={{ width: `${(Math.max(0, displayTime) / (getDisplayVideo()?.duration || 100)) * 100}%` }}
               />
               <div
                 className="absolute top-1/2 h-[13px] w-[13px] -translate-y-1/2 rounded-full border border-white bg-white"
                 style={{
-                  left: `calc(${(Math.max(0, displayTime) / (video?.duration || 100)) * 100}% - 6px)`,
+                  left: `calc(${(Math.max(0, displayTime) / (getDisplayVideo()?.duration || 100)) * 100}% - 6px)`,
                 }}
               />
               <Slider
                 value={[Math.max(0, displayTime)]}
                 min={0}
-                max={video?.duration || 100}
+                max={getDisplayVideo()?.duration || 100}
                 step={0.001}
                 onValueChange={handleTimeChange}
                 className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
@@ -1189,14 +1460,14 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
           </div>
           <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
             {currentTime > 365 * 24 * 60 * 60
-              ? formatSectorTime(Math.max(0, displayTime), video?.startTime)
+              ? formatSectorTime(Math.max(0, displayTime), getDisplayVideo()?.startTime)
               : formatRelativeTime(Math.max(0, displayTime))}
           </span>
           <span className="mb-[3px]">/</span>
           <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
             {currentTime > 365 * 24 * 60 * 60
-              ? formatSectorTime(video?.duration || 0, video?.startTime)
-              : formatRelativeTime(video?.duration || 0)}
+              ? formatSectorTime(getDisplayVideo()?.duration || 0, getDisplayVideo()?.startTime)
+              : formatRelativeTime(getDisplayVideo()?.duration || 0)}
           </span>
 
           {/* Скрытый элемент для обновления компонента при воспроизведении */}
