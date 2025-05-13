@@ -1752,12 +1752,13 @@ export function MediaPlayer() {
                 `[PlayPause] Запускаем воспроизведение ${uniqueVideos.length} уникальных видео`,
               )
 
-              // Запускаем воспроизведение всех видео одновременно
-              // Сначала проверяем, какие видео уже загружены и готовы к воспроизведению
-              const readyVideos: typeof uniqueVideos = [];
-              const notReadyVideos: typeof uniqueVideos = [];
+              // Запускаем воспроизведение всех видео одновременно с использованием requestAnimationFrame
+              // Это позволит браузеру оптимизировать запуск всех видео в одном кадре отрисовки
 
-              // Разделяем видео на готовые и не готовые к воспроизведению
+              // Подготавливаем все видео к воспроизведению
+              console.log(`[PlayPause] Подготовка ${uniqueVideos.length} видео к синхронному запуску`);
+
+              // Предварительно загружаем все видео из кэша, если они там есть
               uniqueVideos.forEach(parallelVideo => {
                 if (parallelVideo.id && videoRefs[parallelVideo.id]) {
                   const videoElement = videoRefs[parallelVideo.id];
@@ -1770,86 +1771,59 @@ export function MediaPlayer() {
                     return;
                   }
 
-                  // Проверяем, готово ли видео к воспроизведению
-                  if (videoElement.readyState >= 2) {
-                    readyVideos.push(parallelVideo);
-                  } else {
-                    notReadyVideos.push(parallelVideo);
-                  }
-                }
-              });
-
-              console.log(`[PlayPause] Готовы к воспроизведению: ${readyVideos.length} видео, не готовы: ${notReadyVideos.length} видео`);
-
-              // Сначала запускаем все готовые видео
-              const playReadyPromises = readyVideos.map(async (parallelVideo) => {
-                if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-                  const videoElement = videoRefs[parallelVideo.id];
-                  const startTime = new Date().toISOString();
-
-                  console.log(`[PlayPause] ${startTime} | Запуск готового видео ${parallelVideo.id} | readyState: ${videoElement.readyState}`);
-
-                  if (videoElement.paused) {
-                    try {
-                      await videoElement.play();
-                      const playTime = new Date().toISOString();
-                      console.log(`[PlayPause] ${playTime} | Видео ${parallelVideo.id} успешно запущено`);
-                    } catch (err: any) {
-                      if (err.name !== "AbortError") {
-                        console.error(
-                          `[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`,
-                          err,
-                        )
-                      }
-                    }
-                  }
-                }
-              });
-
-              // Затем запускаем не готовые видео с приоритетом загрузки
-              const playNotReadyPromises = notReadyVideos.map(async (parallelVideo) => {
-                if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-                  const videoElement = videoRefs[parallelVideo.id];
-                  const startTime = new Date().toISOString();
-
-                  console.log(`[PlayPause] ${startTime} | Запуск не готового видео ${parallelVideo.id} | readyState: ${videoElement.readyState}`);
-
-                  // Устанавливаем высокий приоритет загрузки
+                  // Устанавливаем высокий приоритет загрузки для всех видео
                   videoElement.preload = "auto";
 
                   // Проверяем, есть ли видео в кэше
-                  const cachedVideo = window.videoElementCache && window.videoElementCache.has(parallelVideo.id) ?
-                    window.videoElementCache.get(parallelVideo.id) : null;
-
-                  if (cachedVideo && cachedVideo.readyState >= 2) {
-                    console.log(`[PlayPause] ${startTime} | Используем кэшированное видео для ${parallelVideo.id}`);
-
-                    // Копируем свойства из кэшированного видео
-                    videoElement.src = cachedVideo.src;
-
-                    // Даем небольшую задержку для применения свойств
-                    await new Promise(resolve => setTimeout(resolve, 50));
-                  }
-
-                  if (videoElement.paused) {
-                    try {
-                      await videoElement.play();
-                      const playTime = new Date().toISOString();
-                      console.log(`[PlayPause] ${playTime} | Не готовое видео ${parallelVideo.id} успешно запущено`);
-                    } catch (err: any) {
-                      if (err.name !== "AbortError") {
-                        console.error(
-                          `[PlayPause] Ошибка при воспроизведении не готового видео ${parallelVideo.id}:`,
-                          err,
-                        )
-                      }
+                  if (window.videoElementCache && window.videoElementCache.has(parallelVideo.id)) {
+                    const cachedVideo = window.videoElementCache.get(parallelVideo.id);
+                    if (cachedVideo && cachedVideo.readyState >= 2 && videoElement.readyState < 2) {
+                      // Копируем свойства из кэшированного видео
+                      videoElement.src = cachedVideo.src;
+                      console.log(`[PlayPause] Подготовлено видео ${parallelVideo.id} из кэша`);
                     }
                   }
                 }
               });
 
-              // Объединяем все промисы
-              const playPromises = [...playReadyPromises, ...playNotReadyPromises];
+              // Используем requestAnimationFrame для запуска всех видео в одном кадре отрисовки
+              // Это более эффективно, чем использование Promise.all с асинхронными функциями
+              requestAnimationFrame(() => {
+                // Создаем массив для хранения промисов воспроизведения
+                const playPromises: Promise<void>[] = [];
+
+                // Запускаем все видео одновременно
+                uniqueVideos.forEach(parallelVideo => {
+                  if (parallelVideo.id && videoRefs[parallelVideo.id]) {
+                    const videoElement = videoRefs[parallelVideo.id];
+
+                    // Проверяем, что элемент существует и находится в DOM
+                    if (!videoElement || !document.body.contains(videoElement)) {
+                      return;
+                    }
+
+                    // Запускаем воспроизведение, если видео на паузе
+                    if (videoElement.paused) {
+                      // Добавляем промис воспроизведения в массив
+                      const playPromise = videoElement.play().catch(err => {
+                        if (err.name !== "AbortError") {
+                          console.error(`[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`, err);
+                        }
+                      });
+
+                      playPromises.push(playPromise);
+                    }
+                  }
+                });
+
+                // Логируем результат после запуска всех видео
+                Promise.all(playPromises).then(() => {
+                  console.log(`[PlayPause] Все ${playPromises.length} видео запущены синхронно в одном кадре отрисовки`);
+                });
+              });
+
+              // Пустой массив промисов, так как мы используем requestAnimationFrame
+              const playPromises: Promise<void>[] = [];
 
               // Не ждем завершения всех промисов, чтобы не блокировать интерфейс
               // Просто логируем результат
@@ -2409,7 +2383,7 @@ export function MediaPlayer() {
       return
     }
 
-    // Для каждого нового видео создаем элемент и начинаем загрузку
+    // Оптимизированная версия загрузки видео с использованием пакетной обработки
     // Сортируем видео, чтобы первое видео загружалось с высшим приоритетом
     const sortedVideosToLoad = [...videosToLoad].sort((a, b) => {
       // Если это первое видео в шаблоне, даем ему высший приоритет
@@ -2420,88 +2394,69 @@ export function MediaPlayer() {
 
     console.log(`[MediaPlayer] Загрузка ${sortedVideosToLoad.length} видео с приоритетом для первого видео`);
 
-    for (const videoItem of sortedVideosToLoad) {
-      if (videoItem && videoItem.id && videoItem.path) {
-        const loadStartTime = new Date().toISOString();
-        console.log(`[MediaPlayer] ${loadStartTime} | Начало загрузки видео ${videoItem.id}`);
+    // Используем requestAnimationFrame для более эффективной загрузки видео
+    // Это позволит браузеру оптимизировать создание и загрузку видео элементов
+    requestAnimationFrame(() => {
+      // Создаем все видео элементы в одном кадре отрисовки
+      const videoElements: HTMLVideoElement[] = [];
 
-        // Проверяем, есть ли видео в глобальном кэше
-        let useCachedVideo = false;
-        if (window.videoElementCache && window.videoElementCache.has(videoItem.id)) {
-          const cachedVideo = window.videoElementCache.get(videoItem.id);
-          if (cachedVideo && cachedVideo.readyState >= 2) {
-            console.log(`[MediaPlayer] ${loadStartTime} | Используем видео ${videoItem.id} из кэша | readyState: ${cachedVideo.readyState}`);
+      // Первый проход: создаем все видео элементы и проверяем кэш
+      for (const videoItem of sortedVideosToLoad) {
+        if (videoItem && videoItem.id && videoItem.path) {
+          // Проверяем, есть ли видео в глобальном кэше
+          let videoElement: HTMLVideoElement | null = null;
 
-            // Клонируем кэшированное видео для использования в плеере
-            const clonedVideo = document.createElement("video");
-            clonedVideo.id = `video-${videoItem.id}`;
-            clonedVideo.preload = "auto";
-            clonedVideo.playsInline = true;
-            clonedVideo.controls = false;
-            clonedVideo.autoplay = false;
-            clonedVideo.loop = false;
-            clonedVideo.muted = videoItem.id !== videosToDisplay[0]?.id; // Звук только у первого видео
-            clonedVideo.volume = volume;
-            clonedVideo.src = cachedVideo.src;
+          if (window.videoElementCache && window.videoElementCache.has(videoItem.id)) {
+            const cachedVideo = window.videoElementCache.get(videoItem.id);
+            if (cachedVideo && cachedVideo.readyState >= 2) {
+              // Создаем новый элемент на основе кэшированного
+              videoElement = document.createElement("video");
+              videoElement.id = `video-${videoItem.id}`;
+              videoElement.preload = "auto";
+              videoElement.playsInline = true;
+              videoElement.controls = false;
+              videoElement.autoplay = false;
+              videoElement.loop = false;
+              videoElement.muted = videoItem.id !== videosToDisplay[0]?.id; // Звук только у первого видео
+              videoElement.volume = volume;
+              videoElement.src = cachedVideo.src;
 
-            // Добавляем элемент в DOM (скрытый)
-            clonedVideo.style.position = "absolute";
-            clonedVideo.style.width = "1px";
-            clonedVideo.style.height = "1px";
-            clonedVideo.style.opacity = "0";
-            clonedVideo.style.pointerEvents = "none";
-            document.body.appendChild(clonedVideo);
-
-            // Сохраняем ссылку на элемент
-            videoRefs[videoItem.id] = clonedVideo;
-
-            // Определяем источник видео
-            const source = videoItem.startTime !== undefined ? "timeline" : "media";
-            setVideoSource(videoItem.id, source);
-
-            useCachedVideo = true;
-
-            // Начинаем загрузку с небольшой задержкой, чтобы дать приоритет первому видео
-            setTimeout(() => {
-              clonedVideo.load();
-              console.log(`[MediaPlayer] ${new Date().toISOString()} | Загрузка кэшированного видео ${videoItem.id}`);
-            }, videoItem.id === videosToDisplay[0]?.id ? 0 : 100);
-          }
-        }
-
-        // Если не используем кэшированное видео, создаем новое
-        if (!useCachedVideo) {
-          // Создаем видео элемент программно
-          const videoElement = document.createElement("video");
-          videoElement.id = `video-${videoItem.id}`;
-          videoElement.preload = "auto";
-          videoElement.playsInline = true;
-          videoElement.controls = false;
-          videoElement.autoplay = false;
-          videoElement.loop = false;
-          videoElement.muted = videoItem.id !== videosToDisplay[0]?.id; // Звук только у первого видео
-          videoElement.volume = volume;
-          videoElement.src = videoItem.path;
-
-          // Добавляем обработчик события загрузки
-          videoElement.addEventListener("loadeddata", () => {
-            const loadedTime = new Date().toISOString();
-            console.log(`[MediaPlayer] ${loadedTime} | Видео ${videoItem.id} загружено | readyState: ${videoElement.readyState}`);
-
-            // Добавляем в глобальный кэш
-            if (window.videoElementCache && !window.videoElementCache.has(videoItem.id)) {
-              window.videoElementCache.set(videoItem.id, videoElement);
-              console.log(`[MediaPlayer] ${loadedTime} | Видео ${videoItem.id} добавлено в глобальный кэш`);
+              // Добавляем метку, что это кэшированное видео
+              videoElement.dataset.fromCache = "true";
             }
-          });
+          }
 
-          // Добавляем элемент в DOM (скрытый)
+          // Если не нашли в кэше, создаем новый элемент
+          if (!videoElement) {
+            videoElement = document.createElement("video");
+            videoElement.id = `video-${videoItem.id}`;
+            videoElement.preload = "auto";
+            videoElement.playsInline = true;
+            videoElement.controls = false;
+            videoElement.autoplay = false;
+            videoElement.loop = false;
+            videoElement.muted = videoItem.id !== videosToDisplay[0]?.id; // Звук только у первого видео
+            videoElement.volume = volume;
+            videoElement.src = videoItem.path;
+
+            // Добавляем метку, что это новое видео
+            videoElement.dataset.fromCache = "false";
+
+            // Добавляем обработчик события загрузки
+            videoElement.addEventListener("loadeddata", () => {
+              // Добавляем в глобальный кэш
+              if (window.videoElementCache && videoElement && !window.videoElementCache.has(videoItem.id)) {
+                window.videoElementCache.set(videoItem.id, videoElement);
+              }
+            });
+          }
+
+          // Общие настройки для всех видео элементов
           videoElement.style.position = "absolute";
           videoElement.style.width = "1px";
           videoElement.style.height = "1px";
           videoElement.style.opacity = "0";
           videoElement.style.pointerEvents = "none";
-          document.body.appendChild(videoElement);
 
           // Сохраняем ссылку на элемент
           videoRefs[videoItem.id] = videoElement;
@@ -2510,14 +2465,38 @@ export function MediaPlayer() {
           const source = videoItem.startTime !== undefined ? "timeline" : "media";
           setVideoSource(videoItem.id, source);
 
-          // Начинаем загрузку с небольшой задержкой, чтобы дать приоритет первому видео
-          setTimeout(() => {
-            videoElement.load();
-            console.log(`[MediaPlayer] ${new Date().toISOString()} | Загрузка нового видео ${videoItem.id}`);
-          }, videoItem.id === videosToDisplay[0]?.id ? 0 : 100);
+          // Добавляем элемент в массив для последующей обработки
+          videoElements.push(videoElement);
         }
       }
-    }
+
+      // Второй проход: добавляем все элементы в DOM и начинаем загрузку
+      // Используем requestAnimationFrame для добавления элементов в DOM в следующем кадре отрисовки
+      requestAnimationFrame(() => {
+        // Добавляем все элементы в DOM
+        videoElements.forEach(videoElement => {
+          document.body.appendChild(videoElement);
+        });
+
+        // Начинаем загрузку всех видео с приоритетом для первого видео
+        // Используем setTimeout с разными задержками для приоритизации
+        videoElements.forEach((videoElement, index) => {
+          const videoId = videoElement.id.replace('video-', '');
+          const isFirstVideo = videoId === videosToDisplay[0]?.id;
+          const isFromCache = videoElement.dataset.fromCache === "true";
+
+          // Определяем задержку в зависимости от приоритета и источника
+          const delay = isFirstVideo ? 0 : (isFromCache ? 50 : 100 + index * 20);
+
+          // Начинаем загрузку с соответствующей задержкой
+          setTimeout(() => {
+            if (document.body.contains(videoElement)) {
+              videoElement.load();
+            }
+          }, delay);
+        });
+      });
+    });
   }, [videosToDisplay, videoRefs, volume])
 
   // Используем ref для отслеживания предыдущего состояния логирования

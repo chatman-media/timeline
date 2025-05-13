@@ -170,20 +170,23 @@ export const ResizableVideo = React.memo(
         }
       }
 
-      // Функция для проверки состояния видео элемента
+      // Оптимизированная функция для проверки состояния видео элемента
       const checkVideoState = () => {
         // Получаем актуальный элемент
         const currentElement = videoRef.current;
-        const checkTime = new Date().toISOString()
-
-        console.log(`[VIDEO_LOG] ${checkTime} | CHECK | ID: ${videoStreamId} | Проверка состояния видео`)
 
         // Если элемент существует и находится в DOM
         if (currentElement && document.body.contains(currentElement) && video.id) {
           // Проверяем, что элемент в videoRefs
           if (videoRefs[video.id] !== currentElement) {
             videoRefs[video.id] = currentElement;
-            console.log(`[VIDEO_LOG] ${checkTime} | CHECK_REFS_UPDATE | ID: ${videoStreamId} | Обновление ссылки в videoRefs`)
+          }
+
+          // Проверяем, готово ли видео к воспроизведению
+          if (currentElement.readyState >= 2) {
+            // Если видео уже готово, просто устанавливаем флаг готовности
+            setIsReady(true);
+            return;
           }
 
           // Проверяем, есть ли видео в глобальном кэше
@@ -191,37 +194,43 @@ export const ResizableVideo = React.memo(
             window.videoElementCache.get(video.id) : null;
 
           // Если видео есть в кэше и оно уже загружено, используем его
-          if (cachedVideo && cachedVideo.readyState >= 2 && currentElement.readyState < 2) {
-            console.log(`[VIDEO_LOG] ${checkTime} | CHECK_USING_CACHE | ID: ${videoStreamId} | Использование кэшированного видео | readyState: ${cachedVideo.readyState}`)
-
+          if (cachedVideo && cachedVideo.readyState >= 2) {
             // Копируем свойства из кэшированного видео
             currentElement.src = cachedVideo.src;
 
-            // Не вызываем load(), так как это может сбросить состояние видео
-            console.log(`[VIDEO_LOG] ${checkTime} | CHECK_CACHE_APPLIED | ID: ${videoStreamId} | Применены свойства из кэша`)
+            // Устанавливаем флаг готовности
+            setIsReady(true);
+
+            // Если плеер в состоянии воспроизведения, запускаем видео немедленно
+            if (isPlaying && currentElement.paused) {
+              // Запускаем воспроизведение с небольшой задержкой
+              setTimeout(() => {
+                if (currentElement && document.body.contains(currentElement) && isPlaying) {
+                  currentElement.play().catch(err => {
+                    if (err.name !== "AbortError") {
+                      console.error(`[ResizableVideo] Ошибка при воспроизведении видео из кэша в checkVideoState: ${err}`);
+                    }
+                  });
+                }
+              }, 50);
+            }
           } else {
             // Проверяем, что элемент в кэше
             if (window.videoElementCache && !window.videoElementCache.has(video.id)) {
               window.videoElementCache.set(video.id, currentElement);
-              console.log(`[VIDEO_LOG] ${checkTime} | CHECK_CACHE_UPDATE | ID: ${videoStreamId} | Обновление ссылки в кэше`)
             }
 
             // Проверяем, что src установлен правильно
             if (video.path && (!currentElement.src || !currentElement.src.includes(video.id))) {
-              console.log(`[VIDEO_LOG] ${checkTime} | CHECK_SRC_UPDATE | ID: ${videoStreamId} | Обновление источника видео`)
               currentElement.src = video.path;
               currentElement.load();
             }
           }
-
-          console.log(`[VIDEO_LOG] ${checkTime} | CHECK_COMPLETE | ID: ${videoStreamId} | Проверка завершена | readyState: ${currentElement.readyState}`)
-        } else {
-          console.log(`[VIDEO_LOG] ${checkTime} | CHECK_FAILED | ID: ${videoStreamId} | Элемент не найден в DOM или ID не определен`)
         }
       };
 
-      // Запускаем проверку через 300мс после монтирования (уменьшаем задержку)
-      const checkTimer = setTimeout(checkVideoState, 300);
+      // Запускаем проверку через 50мс после монтирования для более быстрого запуска
+      const checkTimer = setTimeout(checkVideoState, 50);
 
       return () => {
         // Очищаем таймер при размонтировании
@@ -329,117 +338,106 @@ export const ResizableVideo = React.memo(
       }
     }, [isReady, video?.id])
 
-    // Эффект для синхронизации воспроизведения с состоянием плеера
+    // Эффект для синхронизации воспроизведения с состоянием плеера - оптимизированная версия
     useEffect(() => {
       if (!videoRef.current) return
 
       const videoElement = videoRef.current
-      const videoStreamId = `${video.id}-stream-${index}`
-      const currentTime = new Date().toISOString()
 
       // Всегда устанавливаем muted в зависимости от индекса
       // Звук только у первого видео (index === 0)
       videoElement.muted = index !== 0
 
-      // Проверяем, готово ли видео к воспроизведению
-      const isVideoReady = videoElement.readyState >= 2;
-
-      // Проверяем, есть ли видео в кэше
-      const cachedVideo = window.videoElementCache && window.videoElementCache.has(video.id) ?
-        window.videoElementCache.get(video.id) : null;
-      const hasCachedVideo = cachedVideo && cachedVideo.readyState >= 2;
-
-      // Упрощенная логика воспроизведения - без проверки готовности
-      // Это позволит всем видео запускаться одновременно
+      // Используем requestAnimationFrame для более эффективного запуска видео
+      // Это позволит браузеру оптимизировать запуск нескольких видео в одном кадре
       if (isPlaying) {
         // Если плеер играет и видео на паузе - запускаем воспроизведение
         if (videoElement.paused) {
-          // Логируем время запуска видео
-          console.log(`[VIDEO_LOG] ${currentTime} | PLAY | ID: ${videoStreamId} | Запуск видео | Готово: ${isVideoReady} | Кэш: ${hasCachedVideo}`)
+          // Проверяем, готово ли видео к воспроизведению
+          const isVideoReady = videoElement.readyState >= 2;
 
-          // Если видео не готово, но есть в кэше, используем кэшированное видео
-          if (!isVideoReady && hasCachedVideo && cachedVideo) {
-            console.log(`[VIDEO_LOG] ${currentTime} | PLAY_USING_CACHE | ID: ${videoStreamId} | Использование кэшированного видео для запуска`)
-
-            // Копируем свойства из кэшированного видео
-            videoElement.src = cachedVideo.src;
-
-            // Запускаем воспроизведение с небольшой задержкой, чтобы видео успело подготовиться
-            setTimeout(() => {
+          // Если видео готово, запускаем его немедленно
+          if (isVideoReady) {
+            // Используем requestAnimationFrame для запуска в следующем кадре отрисовки
+            requestAnimationFrame(() => {
               if (videoElement && document.body.contains(videoElement) && isPlaying) {
-                videoElement.play().then(() => {
-                  const cachePlayTime = new Date().toISOString()
-                  console.log(`[VIDEO_LOG] ${cachePlayTime} | PLAY_FROM_CACHE_SUCCESS | ID: ${videoStreamId} | Видео успешно запущено из кэша`)
-                }).catch(err => {
+                videoElement.play().catch((err) => {
+                  // Игнорируем ошибки AbortError
                   if (err.name !== "AbortError") {
-                    console.error(`[ResizableVideo] Ошибка при воспроизведении видео из кэша ${video.id}:`, err)
-                    const errorTime = new Date().toISOString()
-                    console.log(`[VIDEO_LOG] ${errorTime} | PLAY_FROM_CACHE_ERROR | ID: ${videoStreamId} | Ошибка запуска из кэша: ${err.name}`)
+                    console.error(`[ResizableVideo] Ошибка при воспроизведении видео ${video.id}:`, err)
                   }
                 });
               }
-            }, 100);
+            });
           } else {
-            // Используем Promise для запуска воспроизведения
-            videoElement.play().then(() => {
-              // Логируем успешный запуск видео с точным временем
-              const playStartedTime = new Date().toISOString()
-              console.log(`[VIDEO_LOG] ${playStartedTime} | PLAY_SUCCESS | ID: ${videoStreamId} | Видео успешно запущено`)
-            }).catch((err) => {
-              // Игнорируем ошибки AbortError, которые возникают при удалении видео из DOM
-              if (err.name !== "AbortError") {
-                console.error(`[ResizableVideo] Ошибка при воспроизведении видео ${video.id}:`, err)
-                // Логируем ошибку запуска
-                const errorTime = new Date().toISOString()
-                console.log(`[VIDEO_LOG] ${errorTime} | PLAY_ERROR | ID: ${videoStreamId} | Ошибка запуска: ${err.name}`)
-              }
-            })
+            // Если видео не готово, проверяем кэш
+            const cachedVideo = window.videoElementCache && window.videoElementCache.has(video.id) ?
+              window.videoElementCache.get(video.id) : null;
+
+            if (cachedVideo && cachedVideo.readyState >= 2) {
+              // Копируем свойства из кэшированного видео
+              videoElement.src = cachedVideo.src;
+
+              // Запускаем воспроизведение с минимальной задержкой
+              requestAnimationFrame(() => {
+                if (videoElement && document.body.contains(videoElement) && isPlaying) {
+                  videoElement.play().catch((err) => {
+                    // Игнорируем ошибки AbortError
+                    if (err.name !== "AbortError") {
+                      console.error(`[ResizableVideo] Ошибка при воспроизведении видео из кэша ${video.id}:`, err)
+                    }
+                  });
+                }
+              });
+            } else {
+              // Если видео не готово и нет в кэше, пробуем запустить его напрямую
+              // Браузер сам решит, когда его можно будет запустить
+              videoElement.play().catch((err) => {
+                // Игнорируем ошибки AbortError и ошибки, связанные с тем, что видео не готово
+                if (err.name !== "AbortError" && err.name !== "NotAllowedError") {
+                  console.error(`[ResizableVideo] Ошибка при воспроизведении видео ${video.id}:`, err)
+                }
+              });
+            }
           }
         }
       } else {
         // Если плеер на паузе, но видео играет - останавливаем воспроизведение
         if (!videoElement.paused) {
-          // Логируем время остановки видео
-          console.log(`[VIDEO_LOG] ${currentTime} | PAUSE | ID: ${videoStreamId} | Остановка видео`)
           videoElement.pause()
-          // Логируем успешную остановку видео
-          const pauseCompletedTime = new Date().toISOString()
-          console.log(`[VIDEO_LOG] ${pauseCompletedTime} | PAUSE_COMPLETE | ID: ${videoStreamId} | Видео успешно остановлено`)
         }
       }
     }, [isPlaying, video.id, index])
 
-    // Эффект для синхронизации текущего времени видео только при значительном расхождении
-    // Используем только начальную синхронизацию и синхронизацию при воспроизведении
+    // Эффект для синхронизации текущего времени видео - оптимизированная версия
     useEffect(() => {
+      // Пропускаем для первого видео (оно является эталоном)
       if (!videoRef.current || !videoRefs || index === 0) return
 
       const videoElement = videoRef.current
       const mainVideoElement = videoRefs[Object.keys(videoRefs)[0]]
-      const videoStreamId = `${video.id}-stream-${index}`
 
-      // Синхронизируем время только при начале воспроизведения
-      if (isPlaying && mainVideoElement && !videoElement.paused) {
+      // Синхронизируем время только при начале воспроизведения и если оба видео играют
+      if (isPlaying && mainVideoElement && !videoElement.paused && !mainVideoElement.paused) {
         try {
           // Синхронизируем только если разница больше 0.5 секунды
           const timeDifference = Math.abs(videoElement.currentTime - mainVideoElement.currentTime)
           if (timeDifference > 0.5) {
-            const syncTime = new Date().toISOString()
-            const oldTime = videoElement.currentTime.toFixed(2)
-            const newTime = mainVideoElement.currentTime.toFixed(2)
-
-            console.log(`[VIDEO_LOG] ${syncTime} | SYNC_TIME | ID: ${videoStreamId} | Синхронизация времени | Разница: ${timeDifference.toFixed(2)}с | Старое время: ${oldTime}с | Новое время: ${newTime}с`)
-
-            videoElement.currentTime = mainVideoElement.currentTime
-
-            // Логируем завершение синхронизации
-            const syncCompleteTime = new Date().toISOString()
-            console.log(`[VIDEO_LOG] ${syncCompleteTime} | SYNC_COMPLETE | ID: ${videoStreamId} | Синхронизация завершена | Время: ${videoElement.currentTime.toFixed(2)}с`)
+            // Используем requestAnimationFrame для более эффективной синхронизации
+            requestAnimationFrame(() => {
+              try {
+                // Проверяем, что элементы все еще существуют
+                if (videoElement && document.body.contains(videoElement) &&
+                    mainVideoElement && document.body.contains(mainVideoElement)) {
+                  // Синхронизируем время
+                  videoElement.currentTime = mainVideoElement.currentTime
+                }
+              } catch (err) {
+                // Игнорируем ошибки при установке currentTime
+              }
+            });
           }
         } catch (err) {
-          // Логируем ошибку синхронизации
-          const errorTime = new Date().toISOString()
-          console.log(`[VIDEO_LOG] ${errorTime} | SYNC_ERROR | ID: ${videoStreamId} | Ошибка синхронизации времени: ${err}`)
           // Игнорируем ошибки при установке currentTime
         }
       }
