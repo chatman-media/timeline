@@ -109,7 +109,7 @@ export const AddMediaButton = memo(function AddMediaButton({
   // Если функция удаления не передана, используем функцию добавления
   const handleRemove = onRemoveMedia || onAddMedia
 
-  const iconSize = size > 100 ? "h-4 w-4" : "h-3 w-3"
+  const iconSize = size > 100 ? "h-3.5 w-3.5" : "h-2.5 w-2.5"
 
   // Определяем, можно ли показывать кнопку удаления
   // Не показываем кнопку удаления в течение 3 секунд после добавления

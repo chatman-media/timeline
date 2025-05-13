@@ -59,7 +59,7 @@ export const FavoriteButton = memo(function FavoriteButton({
         timerRef.current = setTimeout(() => {
           setIsRecentlyAdded(false)
           timerRef.current = null
-        }, 3000)
+        }, 1500)
       } else {
         // Если элемент удален из избранного, сбрасываем флаг isRecentlyAdded
         setIsRecentlyAdded(false)
@@ -115,7 +115,7 @@ export const FavoriteButton = memo(function FavoriteButton({
     }
   }
 
-  const iconSize = size > 100 ? "h-4 w-4" : "h-3 w-3"
+  const iconSize = size > 100 ? "h-3.5 w-3.5" : "h-2.5 w-2.5"
 
   return (
     <div
