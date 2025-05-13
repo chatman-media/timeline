@@ -426,14 +426,15 @@ export function TimelineBar({
       <div
         className={`pointer-events-auto absolute flex cursor-ew-resize flex-col items-center hover:opacity-90 ${isActive ? "" : "opacity-50"}`}
         style={{
-          left: `calc(${displayPosition}% + 10px)` /* Добавляем отступ 10px для выравнивания с дорожками */,
-          top: "-30px" /* Поднимаем бар, чтобы он был виден на шкале */,
+          left: `${displayPosition}%`,
+          top: "0",
           transform: "translateX(-50%)",
-          height: `${height + 40}px` /* Увеличиваем высоту, чтобы бар доставал до шкалы */,
-          zIndex: 400 /* Увеличиваем z-index, чтобы бар был поверх шкалы */,
+          height: `${height}px`,
+          zIndex: 400,
         }}
         onMouseDown={handleMouseDown}
       >
+        {/* Верхняя часть индикатора (треугольник) */}
         <div className="flex flex-col items-center" style={{ zIndex: 400 }}>
           <div className={`h-[6px] w-[10px] ${barColor}`} style={{ zIndex: 400 }} />
           <div
@@ -441,6 +442,7 @@ export function TimelineBar({
             style={{ zIndex: 400 }}
           />
         </div>
+        {/* Вертикальная линия */}
         <div className={`mt-[-2px] ${barWidth} flex-1 ${barColor}`} style={{ zIndex: 400 }} />
       </div>
     </div>

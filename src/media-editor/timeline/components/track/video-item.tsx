@@ -322,10 +322,15 @@ export const VideoItem = memo(function VideoItem({
     trackEndTimeValue && trackStartTime ? trackEndTimeValue - trackStartTime : videoDuration
 
   // Рассчитываем позицию в процентах от ширины секции
-  const leftPercent = ((videoStart - referenceStart) / sectionDuration) * 100
+  // Ограничиваем значения, чтобы видео всегда было видимым
+  const leftPercent = Math.max(
+    0,
+    Math.min(100, ((videoStart - referenceStart) / sectionDuration) * 100),
+  )
 
   // Рассчитываем ширину в процентах от ширины секции
-  const widthPercent = (videoDuration / sectionDuration) * 100
+  // Минимальная ширина 0.5% для видимости очень коротких видео
+  const widthPercent = Math.max(0.5, Math.min(100, (videoDuration / sectionDuration) * 100))
 
   // Логируем расчеты для отладки
   console.log(

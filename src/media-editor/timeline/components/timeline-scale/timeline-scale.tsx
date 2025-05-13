@@ -64,35 +64,32 @@ export function TimelineScale({
     })
 
   return (
-    <div className={`relative mb-[13px] flex w-full flex-col`} style={{ zIndex: 300 }}>
-      {/* Добавляем заголовок и линию времени */}
-      <div className="flex">
-        {/* Удалена левая панель */}
-        <div className="relative w-full pl-[10px]" style={{ zIndex: 300 }}>
+    <div className="flex w-full flex-col" style={{ zIndex: 300 }}>
+      {/* Линия времени с метками */}
+      <div className="flex w-full">
+        <div className="relative w-full" style={{ zIndex: 300 }}>
+          {/* Горизонтальная линия */}
           <div
-            className="h-0.5"
+            className="h-[1px] w-full"
             style={{
               background: "rgb(47, 61, 62)",
-              height: "1px",
               zIndex: 300,
-              width: "100%",
             }}
-          >
-            {/* Не отображаем видеоклипы здесь, они будут отображаться в VideoTrack */}
-          </div>
+          />
+
+          {/* Метки времени */}
+          <TimelineMarks
+            startTime={adjustedRange.startTime}
+            endTime={adjustedRange.endTime}
+            duration={adjustedRange.duration}
+            timeStep={timeStep}
+            subStep={subStep}
+            isActive={isActive}
+            timeToPosition={calculatePosition}
+            sectionId={`section-${startTime?.toFixed(0) || "0"}-${endTime?.toFixed(0) || "0"}`}
+          />
         </div>
       </div>
-
-      <TimelineMarks
-        startTime={adjustedRange.startTime}
-        endTime={adjustedRange.endTime}
-        duration={adjustedRange.duration}
-        timeStep={timeStep}
-        subStep={subStep}
-        isActive={isActive}
-        timeToPosition={calculatePosition}
-        sectionId={`section-${startTime?.toFixed(0) || "0"}-${endTime?.toFixed(0) || "0"}`}
-      />
     </div>
   )
 }
