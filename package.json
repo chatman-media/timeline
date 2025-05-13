@@ -1,6 +1,9 @@
 {
   "name": "timeline-ui",
   "version": "0.0.1",
+  "license": "SEE LICENSE IN LICENSE",
+  "author": "Alexander Kireyev <ak.chatman.media@gmail.com>",
+  "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
