@@ -11,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { formatDateByLanguage } from "@/i18n/constants"
 import { TimelineTopPanel } from "@/media-editor"
 import { usePlayerContext } from "@/media-editor/media-player"
@@ -619,235 +620,245 @@ export function Timeline() {
 
   return (
     <div className="flex h-full w-full flex-col">
-      <TimelineTopPanel
-        tracks={tracks}
-        deleteTrack={() => {}}
-        cutTrack={() => {}}
-        handleScaleDecrease={handleScaleDecrease}
-        handleScaleIncrease={handleScaleIncrease}
-        handleSliderChange={handleSliderChange}
-        sliderValue={
-          // Обратное преобразование из zoomLevel в значение слайдера (0-100)
-          // Используем ту же логарифмическую шкалу
-          (() => {
-            const minZoom = 0.005
-            const maxZoom = 200
-            const logMin = Math.log(minZoom)
-            const logMax = Math.log(maxZoom)
-            const scale = (logMax - logMin) / 100
-            return Math.max(0, Math.min(100, (Math.log(zoomLevel) - logMin) / scale))
-          })()
-        }
-        maxScale={20000} // Увеличиваем максимальное значение слайдера
-        isAbleToScale={true}
-        isAbleToScaleUp={zoomLevel < 200} // Максимальное приближение
-        isAbleToScaleDown={zoomLevel > 0.005} // Минимальное отдаление
-        isAbleToFitToTracks={true}
-      />
-
-      {/* Скроллируемый контент с разделением на левую и правую части */}
+      {/* Скроллируемый контент с разделением на левую, среднюю и правую части */}
       <div className="timeline-container flex-1 overflow-y-auto" ref={timelineContainerRef}>
-        <div className="flex h-full w-full overflow-x-hidden">
-          {/* Правая часть - каждый сектор имеет свой собственный скролл */}
-          <div
-            className="flex h-full w-full flex-col"
-            style={{
-              height: `${sections?.reduce(
-                (acc, sector) => acc + 31 + 30 + sector.tracks.length * 72, // PADDING + SCALE_HEIGHT + tracks
-                0,
-              )}px`,
-            }}
-          >
-            <div className="h-full w-full flex-1">
-              {sections?.map((sector, index) => {
-                // Находим минимальное время начала видео в секторе
-                const minStartTime = Math.min(
-                  ...sector.tracks.flatMap((t) => (t.videos || []).map((v) => v.startTime || 0)),
-                  sector.startTime, // Используем startTime сектора как запасной вариант
-                )
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          {/* Левая панель (15% ширины) */}
+          <ResizablePanel defaultSize={15} minSize={10} maxSize={30}>
+            <div className="h-full w-full p-2">{/* Содержимое левой панели */}</div>
+          </ResizablePanel>
 
-                // Для каждого трека находим максимальное время окончания видео
-                const trackEndTimes = sector.tracks.map((t) => {
-                  if (!t.videos || t.videos.length === 0) return 0
-                  return Math.max(...t.videos.map((v) => (v.startTime || 0) + (v.duration || 0)))
-                })
+          <ResizableHandle />
 
-                // Находим максимальное время окончания среди всех треков
-                const maxEndTime = Math.max(
-                  ...trackEndTimes,
-                  sector.endTime, // Используем endTime сектора как запасной вариант
-                )
+          {/* Средняя панель (основная часть) */}
+          <ResizablePanel defaultSize={65} minSize={40}>
+            <div className="flex h-full w-full overflow-x-hidden">
+              {/* Основная часть - каждый сектор имеет свой собственный скролл */}
+              <div
+                className="flex h-full w-full flex-col"
+                style={{
+                  height: `${sections?.reduce(
+                    (acc, sector) => acc + 31 + 30 + sector.tracks.length * 72, // PADDING + SCALE_HEIGHT + tracks
+                    0,
+                  )}px`,
+                }}
+              >
+                <div className="h-full w-full flex-1">
+                  {sections?.map((sector, index) => {
+                    // Находим минимальное время начала видео в секторе
+                    const minStartTime = Math.min(
+                      ...sector.tracks.flatMap((t) =>
+                        (t.videos || []).map((v) => v.startTime || 0),
+                      ),
+                      sector.startTime, // Используем startTime сектора как запасной вариант
+                    )
 
-                // Общая длительность секции
-                // const sectionTotalDuration = maxEndTime - minStartTime
+                    // Для каждого трека находим максимальное время окончания видео
+                    const trackEndTimes = sector.tracks.map((t) => {
+                      if (!t.videos || t.videos.length === 0) return 0
+                      return Math.max(
+                        ...t.videos.map((v) => (v.startTime || 0) + (v.duration || 0)),
+                      )
+                    })
 
-                // Константы для расчета высоты
-                const TRACK_HEIGHT = 72 // высота одной дорожки в пикселях
-                const SCALE_HEIGHT = 30 // высота шкалы времени
-                const PADDING = 31 // дополнительная высота (отступы и т.д.)
+                    // Находим максимальное время окончания среди всех треков
+                    const maxEndTime = Math.max(
+                      ...trackEndTimes,
+                      sector.endTime, // Используем endTime сектора как запасной вариант
+                    )
 
-                // Расчет общей высоты сектора
-                const sectorHeight = PADDING + SCALE_HEIGHT + sector.tracks.length * TRACK_HEIGHT
+                    // Общая длительность секции
+                    // const sectionTotalDuration = maxEndTime - minStartTime
 
-                return (
-                  <div
-                    key={index}
-                    className="relative mb-4 flex-shrink-0"
-                    style={{
-                      width: "100%",
-                      height: `${sectorHeight}px`,
-                    }}
-                  >
-                    {/* Шкала времени - фиксированная, не скроллится */}
-                    <div
-                      className="sticky top-0 right-0 left-0 h-[30px] w-full flex-shrink-0 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
-                      style={{ zIndex: 300 }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <TimelineScale
-                          startTime={sector.startTime}
-                          endTime={sector.endTime}
-                          duration={sector.endTime - sector.startTime}
-                          sectorDate={sector.date}
-                          sectorZoomLevel={sectionZoomLevels[sector.date]}
-                        />
+                    // Константы для расчета высоты
+                    const TRACK_HEIGHT = 72 // высота одной дорожки в пикселях
+                    const SCALE_HEIGHT = 30 // высота шкалы времени
+                    const PADDING = 31 // дополнительная высота (отступы и т.д.)
 
-                        {/* Элементы управления масштабом для сектора */}
-                        <div className="mr-2 ml-2 flex items-center gap-2" style={{ zIndex: 300 }}>
-                          {/* Двунаправленная стрелка */}
-                          <button
-                            onClick={() => fitSectionToScreen(sector.date)}
-                            className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm hover:bg-[#dddbdd] dark:hover:bg-[#45444b]"
-                            title={t("timeline.toolbar.fitToScreen")}
-                          >
-                            <MoveHorizontal size={14} />
-                          </button>
+                    // Расчет общей высоты сектора
+                    const sectorHeight =
+                      PADDING + SCALE_HEIGHT + sector.tracks.length * TRACK_HEIGHT
 
-                          <TimelineControls
-                            minScale={0.005}
-                            maxScale={200}
-                            sectorDate={sector.date}
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Контейнер со скроллом только для треков */}
-                    <div
-                      className="overflow-x-auto"
-                      ref={(el) => {
-                        // Сохраняем ссылку на первый сектор для совместимости
-                        if (index === 0) scrollContainerRef.current = el
-                      }}
-                    >
+                    return (
                       <div
-                        className="relative"
+                        key={index}
+                        className="relative mb-4 flex-shrink-0"
                         style={{
-                          width: `${Math.max(1000, (maxEndTime - minStartTime) * 2 * (sectionZoomLevels[sector.date] || zoomLevel))}px`,
-                          height: "100%",
+                          width: "100%",
+                          height: `${sectorHeight}px`,
                         }}
                       >
-                        {/* TimelineBar поверх всех дорожек */}
+                        {/* Шкала времени - фиксированная, не скроллится */}
                         <div
-                          className="pointer-events-none absolute top-0 right-0 bottom-0 left-0"
-                          style={{ zIndex: 1000 }}
+                          className="sticky top-0 right-0 left-0 h-[30px] flex-shrink-0 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+                          style={{
+                            zIndex: 300,
+                            width: `${Math.max(1000, (maxEndTime - minStartTime) * 2 * (sectionZoomLevels[sector.date] || zoomLevel))}px`,
+                          }}
                         >
-                          <TimelineBar
-                            startTime={minStartTime}
-                            endTime={maxEndTime}
-                            height={sectorHeight - SCALE_HEIGHT - PADDING}
-                            sectionStartTime={minStartTime}
-                            sectionDuration={maxEndTime - minStartTime}
-                            isActive={sector.date === activeDate} // Передаем флаг активного сектора
-                          />
+                          <div className="flex items-center justify-between">
+                            <TimelineScale
+                              startTime={sector.startTime}
+                              endTime={sector.endTime}
+                              duration={sector.endTime - sector.startTime}
+                              sectorDate={sector.date}
+                              sectorZoomLevel={sectionZoomLevels[sector.date]}
+                            />
+
+                            {/* Элементы управления масштабом для сектора */}
+                            <div
+                              className="mr-2 ml-2 flex items-center gap-2"
+                              style={{ zIndex: 300 }}
+                            >
+                              {/* Двунаправленная стрелка */}
+                              <button
+                                onClick={() => fitSectionToScreen(sector.date)}
+                                className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm hover:bg-[#dddbdd] dark:hover:bg-[#45444b]"
+                                title={t("timeline.toolbar.fitToScreen")}
+                              >
+                                <MoveHorizontal size={14} />
+                              </button>
+
+                              <TimelineControls
+                                minScale={0.005}
+                                maxScale={200}
+                                sectorDate={sector.date}
+                              />
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Дорожки */}
-                        <div className="flex w-full flex-col gap-1 pl-[10px]">
-                          {sector.tracks.map((track: Track, trackIndex: number) => {
-                            // Рассчитываем координаты для VideoTrack
-                            const trackStartTime = track.startTime || 0
-
-                            // Рассчитываем координаты для каждого видео
-                            const videoCoordinates: Record<
-                              string,
-                              { left: number; width: number }
-                            > = {}
-
-                            // Находим минимальное время начала видео в секторе
-                            const minStartTime = Math.min(
-                              ...sector.tracks.flatMap((t) =>
-                                (t.videos || []).map((v) => v.startTime || 0),
-                              ),
-                              sector.startTime, // Используем startTime сектора как запасной вариант
-                            )
-
-                            // Находим максимальное время окончания видео в секторе
-                            const maxEndTime = Math.max(
-                              ...sector.tracks.flatMap((t) =>
-                                (t.videos || []).map((v) => (v.startTime || 0) + (v.duration || 0)),
-                              ),
-                              sector.endTime, // Используем endTime сектора как запасной вариант
-                            )
-
-                            // Общая длительность секции уже рассчитана выше
-
-                            // Для каждого трека находим минимальное время начала видео
-                            const trackMinStartTime =
-                              track.videos && track.videos.length > 0
-                                ? Math.min(...track.videos.map((v) => v.startTime || 0))
-                                : trackStartTime
-
-                            // Для каждого трека находим максимальное время окончания видео
-                            const trackMaxEndTime: number =
-                              track.videos && track.videos.length > 0
-                                ? Math.max(
-                                  ...track.videos.map(
-                                    (v) => (v.startTime || 0) + (v.duration || 0),
-                                  ),
-                                )
-                                : trackStartTime
-
-                            // Рассчитываем координаты трека
-                            // Используем масштаб сектора, если он задан, иначе используем общий масштаб
-                            const sectorZoomLevel = sectionZoomLevels[sector.date] || zoomLevel
-
-                            // Рассчитываем относительные координаты в процентах
-                            // Позиция трека относительно начала секции
-                            const trackRelativeStart = trackMinStartTime - minStartTime
-                            // Длительность трека
-                            const trackDuration = trackMaxEndTime - trackMinStartTime
-                            // Общая длительность секции
-                            const sectionTotalDuration = maxEndTime - minStartTime
-
-                            // Координаты в процентах от общей ширины
-                            const coordinates = {
-                              left: (trackRelativeStart / sectionTotalDuration) * 100,
-                              width: (trackDuration / sectionTotalDuration) * 100,
-                              videos: videoCoordinates,
-                            }
-
-                            return (
-                              <VideoTrack
-                                key={track.id || trackIndex}
-                                track={track}
-                                index={trackIndex}
-                                sectionStartTime={minStartTime} // Используем минимальное время начала видео в секторе
-                                sectionDuration={maxEndTime - minStartTime} // Используем общую длительность секции
-                                coordinates={coordinates}
-                                sectorZoomLevel={sectorZoomLevel}
+                        {/* Контейнер со скроллом только для треков */}
+                        <div
+                          className="overflow-x-auto"
+                          ref={(el) => {
+                            // Сохраняем ссылку на первый сектор для совместимости
+                            if (index === 0) scrollContainerRef.current = el
+                          }}
+                          style={{
+                            position: "relative",
+                            zIndex: 200,
+                          }}
+                        >
+                          <div
+                            className="relative"
+                            style={{
+                              width: `${Math.max(1000, (maxEndTime - minStartTime) * 2 * (sectionZoomLevels[sector.date] || zoomLevel))}px`,
+                              height: "100%",
+                            }}
+                          >
+                            {/* TimelineBar поверх всех дорожек */}
+                            <div
+                              className="pointer-events-none absolute top-0 right-0 bottom-0 left-0"
+                              style={{ zIndex: 1000 }}
+                            >
+                              <TimelineBar
+                                startTime={minStartTime}
+                                endTime={maxEndTime}
+                                height={sectorHeight - SCALE_HEIGHT - PADDING}
+                                sectionStartTime={minStartTime}
+                                sectionDuration={maxEndTime - minStartTime}
+                                isActive={sector.date === activeDate} // Передаем флаг активного сектора
                               />
-                            )
-                          })}
+                            </div>
+
+                            {/* Дорожки */}
+                            <div className="flex w-full flex-col gap-1 pl-[10px]">
+                              {sector.tracks.map((track: Track, trackIndex: number) => {
+                                // Рассчитываем координаты для VideoTrack
+                                const trackStartTime = track.startTime || 0
+
+                                // Рассчитываем координаты для каждого видео
+                                const videoCoordinates: Record<
+                                  string,
+                                  { left: number; width: number }
+                                > = {}
+
+                                // Находим минимальное время начала видео в секторе
+                                const minStartTime = Math.min(
+                                  ...sector.tracks.flatMap((t) =>
+                                    (t.videos || []).map((v) => v.startTime || 0),
+                                  ),
+                                  sector.startTime, // Используем startTime сектора как запасной вариант
+                                )
+
+                                // Находим максимальное время окончания видео в секторе
+                                const maxEndTime = Math.max(
+                                  ...sector.tracks.flatMap((t) =>
+                                    (t.videos || []).map(
+                                      (v) => (v.startTime || 0) + (v.duration || 0),
+                                    ),
+                                  ),
+                                  sector.endTime, // Используем endTime сектора как запасной вариант
+                                )
+
+                                // Общая длительность секции уже рассчитана выше
+
+                                // Для каждого трека находим минимальное время начала видео
+                                const trackMinStartTime =
+                                  track.videos && track.videos.length > 0
+                                    ? Math.min(...track.videos.map((v) => v.startTime || 0))
+                                    : trackStartTime
+
+                                // Для каждого трека находим максимальное время окончания видео
+                                const trackMaxEndTime: number =
+                                  track.videos && track.videos.length > 0
+                                    ? Math.max(
+                                      ...track.videos.map(
+                                        (v) => (v.startTime || 0) + (v.duration || 0),
+                                      ),
+                                    )
+                                    : trackStartTime
+
+                                // Рассчитываем координаты трека
+                                // Используем масштаб сектора, если он задан, иначе используем общий масштаб
+                                const sectorZoomLevel = sectionZoomLevels[sector.date] || zoomLevel
+
+                                // Рассчитываем относительные координаты в процентах
+                                // Позиция трека относительно начала секции
+                                const trackRelativeStart = trackMinStartTime - minStartTime
+                                // Длительность трека
+                                const trackDuration = trackMaxEndTime - trackMinStartTime
+                                // Общая длительность секции
+                                const sectionTotalDuration = maxEndTime - minStartTime
+
+                                // Координаты в процентах от общей ширины
+                                const coordinates = {
+                                  left: (trackRelativeStart / sectionTotalDuration) * 100,
+                                  width: (trackDuration / sectionTotalDuration) * 100,
+                                  videos: videoCoordinates,
+                                }
+
+                                return (
+                                  <VideoTrack
+                                    key={track.id || trackIndex}
+                                    track={track}
+                                    index={trackIndex}
+                                    sectionStartTime={minStartTime} // Используем минимальное время начала видео в секторе
+                                    sectionDuration={maxEndTime - minStartTime} // Используем общую длительность секции
+                                    coordinates={coordinates}
+                                    sectorZoomLevel={sectorZoomLevel}
+                                  />
+                                )
+                              })}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          </ResizablePanel>
+
+          <ResizableHandle />
+
+          {/* Правая панель (20% ширины) */}
+          <ResizablePanel defaultSize={20} minSize={10} maxSize={40}>
+            <div className="h-full w-full p-2">{/* Содержимое правой панели */}</div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
 
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

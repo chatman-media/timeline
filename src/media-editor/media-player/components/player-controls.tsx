@@ -28,7 +28,6 @@ import {
   findTemplateContainer,
   takeScreenshot,
 } from "@/media-editor/media-player/components/take-screenshot"
-
 import { VolumeSlider } from "@/media-editor/media-player/components/volume-slider"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
@@ -1280,31 +1279,31 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   // Упрощенный механизм отслеживания времени видео
   useEffect(() => {
     // Если нет видео или не воспроизводится, выходим
-    if (!video?.id || !videoRefs || !isPlaying) return;
+    if (!video?.id || !videoRefs || !isPlaying) return
 
     // Получаем видео для отслеживания времени
-    const videoToTrack = getDisplayVideo();
-    if (!videoToTrack?.id) return;
+    const videoToTrack = getDisplayVideo()
+    if (!videoToTrack?.id) return
 
     // Получаем элемент видео
-    const videoElement = videoRefs[videoToTrack.id];
-    if (!videoElement) return;
+    const videoElement = videoRefs[videoToTrack.id]
+    if (!videoElement) return
 
     // Простая функция обновления времени
     const handleTimeUpdate = () => {
-      const newTime = videoElement.currentTime;
-      setLocalDisplayTime(newTime);
-      setDisplayTime(newTime);
-    };
+      const newTime = videoElement.currentTime
+      setLocalDisplayTime(newTime)
+      setDisplayTime(newTime)
+    }
 
     // Добавляем обработчик события timeupdate
-    videoElement.addEventListener("timeupdate", handleTimeUpdate);
+    videoElement.addEventListener("timeupdate", handleTimeUpdate)
 
     // Функция очистки
     return () => {
-      videoElement.removeEventListener("timeupdate", handleTimeUpdate);
-    };
-  }, [video?.id, videoRefs, isPlaying, setDisplayTime]);
+      videoElement.removeEventListener("timeupdate", handleTimeUpdate)
+    }
+  }, [video?.id, videoRefs, isPlaying, setDisplayTime])
 
   // Нормализуем currentTime для отображения, если это Unix timestamp
   const calculatedDisplayTime = useMemo(() => {
@@ -1317,19 +1316,19 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   }, [currentTime, localDisplayTime])
 
   // Ref для отслеживания предыдущего значения calculatedDisplayTime
-  const prevTimeRef = useRef(calculatedDisplayTime);
+  const prevTimeRef = useRef(calculatedDisplayTime)
 
   // Обновляем контекст при изменении calculatedDisplayTime
   // Но только если не воспроизводится видео, чтобы избежать конфликта с updateTime
   useEffect(() => {
     // Обновляем только если время изменилось существенно и видео не воспроизводится
     if (!isPlaying && Math.abs(prevTimeRef.current - calculatedDisplayTime) > 0.05) {
-      setDisplayTime(calculatedDisplayTime);
+      setDisplayTime(calculatedDisplayTime)
 
       // Убираем лишнее логирование для улучшения производительности
 
       // Обновляем предыдущее значение
-      prevTimeRef.current = calculatedDisplayTime;
+      prevTimeRef.current = calculatedDisplayTime
     }
   }, [calculatedDisplayTime, setDisplayTime, isPlaying])
 
@@ -1415,7 +1414,6 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       // Проверяем готовность видео
       if (videoElement.readyState < 3) {
         // Убираем лишнее логирование для улучшения производительности
-
         // Показываем индикатор загрузки
         // Это можно реализовать через состояние в контексте плеера, если нужно
       }

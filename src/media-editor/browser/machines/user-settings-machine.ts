@@ -95,7 +95,10 @@ type UpdateActiveTabEvent = { type: "UPDATE_ACTIVE_TAB"; tab: BrowserTab }
 type UpdateLanguageEvent = { type: "UPDATE_LANGUAGE"; language: Language }
 type UpdateLayoutEvent = { type: "UPDATE_LAYOUT"; layoutMode: LayoutMode }
 type UpdateScreenshotsPathEvent = { type: "UPDATE_SCREENSHOTS_PATH"; path: string }
-type UpdatePreviewClickBehaviorEvent = { type: "UPDATE_PREVIEW_CLICK_BEHAVIOR"; behavior: PreviewClickBehavior }
+type UpdatePreviewClickBehaviorEvent = {
+  type: "UPDATE_PREVIEW_CLICK_BEHAVIOR"
+  behavior: PreviewClickBehavior
+}
 
 export type UserSettingsEvent =
   | LoadUserSettingsEvent
@@ -349,11 +352,17 @@ export const userSettingsMachine = createMachine(
           const savedBehavior = localStorage.getItem(STORAGE_KEYS.PREVIEW_CLICK_BEHAVIOR)
           console.log("Loaded preview click behavior from localStorage:", savedBehavior)
 
-          if (savedBehavior && PREVIEW_CLICK_BEHAVIORS.includes(savedBehavior as PreviewClickBehavior)) {
+          if (
+            savedBehavior &&
+            PREVIEW_CLICK_BEHAVIORS.includes(savedBehavior as PreviewClickBehavior)
+          ) {
             previewClickBehavior = savedBehavior as PreviewClickBehavior
             console.log("Using saved preview click behavior:", previewClickBehavior)
           } else {
-            console.log("No valid saved preview click behavior found, using default:", previewClickBehavior)
+            console.log(
+              "No valid saved preview click behavior found, using default:",
+              previewClickBehavior,
+            )
           }
         } catch (error) {
           console.error("Error loading preview click behavior:", error)
@@ -362,7 +371,10 @@ export const userSettingsMachine = createMachine(
         // Сохраняем значение по умолчанию для поведения при клике на превью, если его нет
         if (localStorage.getItem(STORAGE_KEYS.PREVIEW_CLICK_BEHAVIOR) === null) {
           try {
-            localStorage.setItem(STORAGE_KEYS.PREVIEW_CLICK_BEHAVIOR, DEFAULT_PREVIEW_CLICK_BEHAVIOR)
+            localStorage.setItem(
+              STORAGE_KEYS.PREVIEW_CLICK_BEHAVIOR,
+              DEFAULT_PREVIEW_CLICK_BEHAVIOR,
+            )
           } catch (error) {
             console.error("Error saving default preview click behavior:", error)
           }
@@ -628,7 +640,10 @@ export const userSettingsMachine = createMachine(
 
             // Проверяем, что значение поведения является допустимым
             if (!PREVIEW_CLICK_BEHAVIORS.includes(event.behavior)) {
-              console.error("Invalid preview click behavior value when saving to localStorage:", event.behavior)
+              console.error(
+                "Invalid preview click behavior value when saving to localStorage:",
+                event.behavior,
+              )
               return
             }
 

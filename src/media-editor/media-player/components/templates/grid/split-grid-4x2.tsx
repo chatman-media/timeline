@@ -26,7 +26,6 @@ export function SplitGrid4x2({
     ? templateId.includes("portrait") || templateId === "split-grid-2x4-square"
     : false
 
-
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 8) {
     return <div className="h-full w-full bg-black" />

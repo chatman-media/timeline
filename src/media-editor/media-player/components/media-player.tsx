@@ -73,6 +73,8 @@ export function MediaPlayer() {
     volume,
     setVolume,
     preferredSource,
+    setVideoReady, // Добавляем функцию setVideoReady
+    setVideoLoading, // Добавляем функцию setVideoLoading
   } = usePlayerContext()
 
   // Получаем displayTime из контекста
@@ -110,12 +112,16 @@ export function MediaPlayer() {
 
         // Устанавливаем предпочтительный источник
         if (source === "media") {
-          console.log("[MediaPlayer] Устанавливаем preferredSource: media из сообщения SOURCE_CHANGED")
+          console.log(
+            "[MediaPlayer] Устанавливаем preferredSource: media из сообщения SOURCE_CHANGED",
+          )
           setPreferredSource("media")
 
           // Если есть видео, устанавливаем их как параллельные
           if (videos && videos.length > 0) {
-            console.log(`[MediaPlayer] Устанавливаем ${videos.length} параллельных видео из сообщения SOURCE_CHANGED`)
+            console.log(
+              `[MediaPlayer] Устанавливаем ${videos.length} параллельных видео из сообщения SOURCE_CHANGED`,
+            )
             setParallelVideos(videos)
 
             // Устанавливаем первое видео как активное, если нет активного
@@ -338,7 +344,9 @@ export function MediaPlayer() {
     const isVideoChanged = currentVideoIdRef.current !== video.id
 
     if (isVideoChanged) {
-      console.log(`[MediaPlayer] Видео изменилось: ${currentVideoIdRef.current || 'none'} -> ${video.id}`)
+      console.log(
+        `[MediaPlayer] Видео изменилось: ${currentVideoIdRef.current || "none"} -> ${video.id}`,
+      )
     }
 
     // Сохраняем ID текущего видео
@@ -349,7 +357,9 @@ export function MediaPlayer() {
 
     // Если видео элемента нет или он был удален из DOM, создаем новый
     if (!videoElement || !document.body.contains(videoElement)) {
-      console.log(`[MediaPlayer] Создаем новый видео элемент для ${video.id} в эффекте изменения видео`)
+      console.log(
+        `[MediaPlayer] Создаем новый видео элемент для ${video.id} в эффекте изменения видео`,
+      )
 
       // Создаем видео элемент программно
       videoElement = document.createElement("video")
@@ -376,7 +386,9 @@ export function MediaPlayer() {
 
       // Добавляем видео элемент в глобальный реестр для отслеживания
       allVideoElementsRef.current.add(videoElement)
-      console.log(`[MediaPlayer] Добавлен видео элемент в глобальный реестр: ${video.id}, всего элементов: ${allVideoElementsRef.current.size}`)
+      console.log(
+        `[MediaPlayer] Добавлен видео элемент в глобальный реестр: ${video.id}, всего элементов: ${allVideoElementsRef.current.size}`,
+      )
 
       // Определяем источник видео
       const source = video.startTime !== undefined ? "timeline" : "media"
@@ -401,15 +413,21 @@ export function MediaPlayer() {
         if (videoTimesRef.current[video.id] !== undefined) {
           // Используем сохраненное время для этого видео
           videoElement.currentTime = videoTimesRef.current[video.id]
-          console.log(`[MediaPlayer] Устанавливаем сохраненное время для видео ${video.id}: ${videoTimesRef.current[video.id].toFixed(3)}`)
+          console.log(
+            `[MediaPlayer] Устанавливаем сохраненное время для видео ${video.id}: ${videoTimesRef.current[video.id].toFixed(3)}`,
+          )
         } else if (video.startTime) {
           // Для видео из таймлайна учитываем startTime
           videoElement.currentTime = Math.max(0, currentTime - (video.startTime || 0))
-          console.log(`[MediaPlayer] Устанавливаем время с учетом startTime для видео ${video.id}: ${videoElement.currentTime.toFixed(3)}`)
+          console.log(
+            `[MediaPlayer] Устанавливаем время с учетом startTime для видео ${video.id}: ${videoElement.currentTime.toFixed(3)}`,
+          )
         } else {
           // Для видео из браузера используем текущее время
           videoElement.currentTime = currentTime
-          console.log(`[MediaPlayer] Устанавливаем текущее время для видео ${video.id}: ${currentTime.toFixed(3)}`)
+          console.log(
+            `[MediaPlayer] Устанавливаем текущее время для видео ${video.id}: ${currentTime.toFixed(3)}`,
+          )
         }
 
         // Устанавливаем громкость
@@ -423,9 +441,12 @@ export function MediaPlayer() {
         // Если нужно воспроизвести видео и оно не воспроизводится
         if (isPlaying && !isChangingCamera && videoElement.paused) {
           console.log(`[MediaPlayer] Воспроизводим видео ${video.id} после загрузки метаданных`)
-          videoElement.play().catch(err => {
+          videoElement.play().catch((err) => {
             if (err.name !== "AbortError") {
-              console.error(`[MediaPlayer] Ошибка при воспроизведении видео ${video.id} после загрузки метаданных:`, err)
+              console.error(
+                `[MediaPlayer] Ошибка при воспроизведении видео ${video.id} после загрузки метаданных:`,
+                err,
+              )
             }
           })
         }
@@ -451,9 +472,12 @@ export function MediaPlayer() {
         // Если нужно воспроизвести видео и оно не воспроизводится
         if (isPlaying && !isChangingCamera && videoElement.paused) {
           console.log(`[MediaPlayer] Воспроизводим видео ${video.id} после события canplay`)
-          videoElement.play().catch(err => {
+          videoElement.play().catch((err) => {
             if (err.name !== "AbortError") {
-              console.error(`[MediaPlayer] Ошибка при воспроизведении видео ${video.id} после canplay:`, err)
+              console.error(
+                `[MediaPlayer] Ошибка при воспроизведении видео ${video.id} после canplay:`,
+                err,
+              )
             }
           })
         }
@@ -486,7 +510,9 @@ export function MediaPlayer() {
 
   // Функция для остановки всех видео элементов
   const pauseAllVideos = useCallback(() => {
-    console.log(`[MediaPlayer] Останавливаем все видео элементы (${allVideoElementsRef.current.size})`)
+    console.log(
+      `[MediaPlayer] Останавливаем все видео элементы (${allVideoElementsRef.current.size})`,
+    )
 
     // Перебираем все видео элементы в реестре
     allVideoElementsRef.current.forEach((videoElement) => {
@@ -495,10 +521,12 @@ export function MediaPlayer() {
         if (videoElement && !videoElement.paused) {
           // Сохраняем текущее время видео перед паузой
           if (videoElement.id) {
-            const videoId = videoElement.id.replace('video-', '')
+            const videoId = videoElement.id.replace("video-", "")
             const currentVideoTime = videoElement.currentTime
             videoTimesRef.current[videoId] = currentVideoTime
-            console.log(`[MediaPlayer] Сохраняем время для видео ${videoId} перед глобальной паузой: ${currentVideoTime.toFixed(3)}`)
+            console.log(
+              `[MediaPlayer] Сохраняем время для видео ${videoId} перед глобальной паузой: ${currentVideoTime.toFixed(3)}`,
+            )
           }
 
           // Останавливаем видео
@@ -512,13 +540,15 @@ export function MediaPlayer() {
     // Дополнительно останавливаем все видео элементы на странице
     // Это гарантирует, что даже если видео не было добавлено в реестр, оно будет остановлено
     try {
-      const allVideoElements = document.querySelectorAll('video')
-      console.log(`[MediaPlayer] Дополнительно останавливаем все видео элементы на странице (${allVideoElements.length})`)
+      const allVideoElements = document.querySelectorAll("video")
+      console.log(
+        `[MediaPlayer] Дополнительно останавливаем все видео элементы на странице (${allVideoElements.length})`,
+      )
 
       allVideoElements.forEach((videoElement) => {
         if (videoElement && !videoElement.paused) {
           // Сохраняем ID для логирования
-          const videoId = videoElement.id || 'unknown'
+          const videoId = videoElement.id || "unknown"
           console.log(`[MediaPlayer] Останавливаем видео элемент: ${videoId}`)
 
           // Останавливаем видео
@@ -609,14 +639,35 @@ export function MediaPlayer() {
         console.log(`[MediaPlayer] Установлена базовая метка времени: ${baseTimestampRef.current}`)
       } else {
         // Вычисляем относительное время от базовой метки
-        videoStartTime.current = rawStartTime - baseTimestampRef.current
-        console.log(
-          `[MediaPlayer] Относительное startTime: ${videoStartTime.current.toFixed(3)} (от базы ${baseTimestampRef.current})`,
-        )
+        // Если разница слишком большая (больше суток), считаем это новой базовой меткой
+        const timeDiff = rawStartTime - baseTimestampRef.current
+        if (Math.abs(timeDiff) > 24 * 60 * 60) {
+          console.log(
+            `[MediaPlayer] Обнаружена новая базовая метка времени: ${rawStartTime} (старая: ${baseTimestampRef.current})`,
+          )
+          baseTimestampRef.current = rawStartTime
+          videoStartTime.current = 0
+        } else {
+          videoStartTime.current = timeDiff
+          console.log(
+            `[MediaPlayer] Относительное startTime: ${videoStartTime.current.toFixed(3)} (от базы ${baseTimestampRef.current})`,
+          )
+        }
       }
     } else {
       // Если это уже относительное время, используем как есть
       videoStartTime.current = rawStartTime
+    }
+
+    // Для видео из таймлайна всегда устанавливаем флаг готовности
+    // Проверяем наличие startTime для определения источника
+    if (video.startTime && video.startTime > 0) {
+      console.log(
+        `[MediaPlayer] Видео ${video.id} из таймлайна (startTime=${video.startTime}), устанавливаем флаг готовности`,
+      )
+      // Используем функции из контекста плеера для установки флагов
+      setVideoReady(true)
+      setVideoLoading(false)
     }
 
     // Оптимизированный обработчик timeupdate для плавного обновления timeline bar
@@ -772,7 +823,9 @@ export function MediaPlayer() {
 
             // Добавляем видео элемент в глобальный реестр для отслеживания
             allVideoElementsRef.current.add(newVideoElement)
-            console.log(`[PlayVideo] Добавлен новый видео элемент в глобальный реестр: ${video.id}, всего элементов: ${allVideoElementsRef.current.size}`)
+            console.log(
+              `[PlayVideo] Добавлен новый видео элемент в глобальный реестр: ${video.id}, всего элементов: ${allVideoElementsRef.current.size}`,
+            )
 
             // Добавляем обработчик события loadedmetadata
             const handleLoadedMetadata = () => {
@@ -781,18 +834,27 @@ export function MediaPlayer() {
               // Устанавливаем время воспроизведения
               if (videoTimesRef.current[video.id] !== undefined) {
                 newVideoElement.currentTime = videoTimesRef.current[video.id]
-                console.log(`[PlayVideo] Установлено сохраненное время ${videoTimesRef.current[video.id].toFixed(3)} для нового видео ${video.id}`)
+                console.log(
+                  `[PlayVideo] Установлено сохраненное время ${videoTimesRef.current[video.id].toFixed(3)} для нового видео ${video.id}`,
+                )
               } else if (currentTime > 0 && currentTime < 100000) {
                 newVideoElement.currentTime = currentTime
-                console.log(`[PlayVideo] Установлено текущее время ${currentTime.toFixed(3)} для нового видео ${video.id}`)
+                console.log(
+                  `[PlayVideo] Установлено текущее время ${currentTime.toFixed(3)} для нового видео ${video.id}`,
+                )
               }
 
               // Если нужно воспроизвести видео и оно не воспроизводится
               if (isPlaying && !isChangingCamera && newVideoElement.paused) {
-                console.log(`[PlayVideo] Воспроизводим новое видео ${video.id} после загрузки метаданных`)
-                newVideoElement.play().catch(err => {
+                console.log(
+                  `[PlayVideo] Воспроизводим новое видео ${video.id} после загрузки метаданных`,
+                )
+                newVideoElement.play().catch((err) => {
                   if (err.name !== "AbortError") {
-                    console.error(`[PlayVideo] Ошибка при воспроизведении нового видео ${video.id}:`, err)
+                    console.error(
+                      `[PlayVideo] Ошибка при воспроизведении нового видео ${video.id}:`,
+                      err,
+                    )
                   }
                 })
               }
@@ -882,7 +944,9 @@ export function MediaPlayer() {
 
               // Если элемент все еще не найден, пробуем создать его
               if (video?.id && video?.path && !videoRefs[video.id]) {
-                console.log(`[PlayVideo] Создаем новый видео элемент для ${video.id} после неудачной повторной попытки`)
+                console.log(
+                  `[PlayVideo] Создаем новый видео элемент для ${video.id} после неудачной повторной попытки`,
+                )
 
                 // Создаем видео элемент программно (аналогично коду выше)
                 const newVideoElement = document.createElement("video")
@@ -1756,74 +1820,81 @@ export function MediaPlayer() {
               // Это позволит браузеру оптимизировать запуск всех видео в одном кадре отрисовки
 
               // Подготавливаем все видео к воспроизведению
-              console.log(`[PlayPause] Подготовка ${uniqueVideos.length} видео к синхронному запуску`);
+              console.log(
+                `[PlayPause] Подготовка ${uniqueVideos.length} видео к синхронному запуску`,
+              )
 
               // Предварительно загружаем все видео из кэша, если они там есть
-              uniqueVideos.forEach(parallelVideo => {
+              uniqueVideos.forEach((parallelVideo) => {
                 if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-                  const videoElement = videoRefs[parallelVideo.id];
+                  const videoElement = videoRefs[parallelVideo.id]
 
                   // Проверяем, что элемент существует и находится в DOM
                   if (!videoElement || !document.body.contains(videoElement)) {
                     console.warn(
                       `[PlayPause] Видео элемент ${parallelVideo.id} не найден или удален из DOM`,
                     )
-                    return;
+                    return
                   }
 
                   // Устанавливаем высокий приоритет загрузки для всех видео
-                  videoElement.preload = "auto";
+                  videoElement.preload = "auto"
 
                   // Проверяем, есть ли видео в кэше
                   if (window.videoElementCache && window.videoElementCache.has(parallelVideo.id)) {
-                    const cachedVideo = window.videoElementCache.get(parallelVideo.id);
+                    const cachedVideo = window.videoElementCache.get(parallelVideo.id)
                     if (cachedVideo && cachedVideo.readyState >= 2 && videoElement.readyState < 2) {
                       // Копируем свойства из кэшированного видео
-                      videoElement.src = cachedVideo.src;
-                      console.log(`[PlayPause] Подготовлено видео ${parallelVideo.id} из кэша`);
+                      videoElement.src = cachedVideo.src
+                      console.log(`[PlayPause] Подготовлено видео ${parallelVideo.id} из кэша`)
                     }
                   }
                 }
-              });
+              })
 
               // Используем requestAnimationFrame для запуска всех видео в одном кадре отрисовки
               // Это более эффективно, чем использование Promise.all с асинхронными функциями
               requestAnimationFrame(() => {
                 // Создаем массив для хранения промисов воспроизведения
-                const playPromises: Promise<void>[] = [];
+                const playPromises: Promise<void>[] = []
 
                 // Запускаем все видео одновременно
-                uniqueVideos.forEach(parallelVideo => {
+                uniqueVideos.forEach((parallelVideo) => {
                   if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-                    const videoElement = videoRefs[parallelVideo.id];
+                    const videoElement = videoRefs[parallelVideo.id]
 
                     // Проверяем, что элемент существует и находится в DOM
                     if (!videoElement || !document.body.contains(videoElement)) {
-                      return;
+                      return
                     }
 
                     // Запускаем воспроизведение, если видео на паузе
                     if (videoElement.paused) {
                       // Добавляем промис воспроизведения в массив
-                      const playPromise = videoElement.play().catch(err => {
+                      const playPromise = videoElement.play().catch((err) => {
                         if (err.name !== "AbortError") {
-                          console.error(`[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`, err);
+                          console.error(
+                            `[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`,
+                            err,
+                          )
                         }
-                      });
+                      })
 
-                      playPromises.push(playPromise);
+                      playPromises.push(playPromise)
                     }
                   }
-                });
+                })
 
                 // Логируем результат после запуска всех видео
                 Promise.all(playPromises).then(() => {
-                  console.log(`[PlayPause] Все ${playPromises.length} видео запущены синхронно в одном кадре отрисовки`);
-                });
-              });
+                  console.log(
+                    `[PlayPause] Все ${playPromises.length} видео запущены синхронно в одном кадре отрисовки`,
+                  )
+                })
+              })
 
               // Пустой массив промисов, так как мы используем requestAnimationFrame
-              const playPromises: Promise<void>[] = [];
+              const playPromises: Promise<void>[] = []
 
               // Не ждем завершения всех промисов, чтобы не блокировать интерфейс
               // Просто логируем результат
@@ -1939,14 +2010,18 @@ export function MediaPlayer() {
             const currentVideoTime = videoElement.currentTime
             videoTimesRef.current[video.id] = currentVideoTime
             lastSentTimeRef.current = currentVideoTime
-            console.log(`[PlayPause] Сохраняем текущее время видео при паузе: ${currentVideoTime.toFixed(3)}`)
+            console.log(
+              `[PlayPause] Сохраняем текущее время видео при паузе: ${currentVideoTime.toFixed(3)}`,
+            )
 
             // Останавливаем все видео для гарантии
             pauseAllVideos()
 
             // Повторно проверяем через небольшую задержку, что все видео остановлены
             setTimeout(() => {
-              console.log(`[PlayPause] Повторная проверка остановки всех видео после паузы одного видео`)
+              console.log(
+                `[PlayPause] Повторная проверка остановки всех видео после паузы одного видео`,
+              )
               pauseAllVideos()
             }, 100)
           }
@@ -2078,7 +2153,9 @@ export function MediaPlayer() {
 
         // Обновляем список видео для отображения
         setVideosToDisplay([...parallelVideos])
-        console.log(`[MediaPlayer] Обновлен список видео для отображения: ${parallelVideos.length} видео`)
+        console.log(
+          `[MediaPlayer] Обновлен список видео для отображения: ${parallelVideos.length} видео`,
+        )
 
         // Если есть примененный шаблон и в нем нет видео
         if (
@@ -2098,7 +2175,9 @@ export function MediaPlayer() {
 
         // Если нет активного видео, устанавливаем первое видео из параллельных как активное
         if ((!video || !video.id) && parallelVideos.length > 0) {
-          console.log(`[MediaPlayer] Устанавливаем первое видео из браузера как активное: ${parallelVideos[0].id}`)
+          console.log(
+            `[MediaPlayer] Устанавливаем первое видео из браузера как активное: ${parallelVideos[0].id}`,
+          )
           setActiveVideoId(parallelVideos[0].id)
           setVideo(parallelVideos[0])
         } else if (video && video.id) {
@@ -2106,7 +2185,16 @@ export function MediaPlayer() {
         }
       }
     }
-  }, [preferredSource, parallelVideos, appliedTemplate, video, setActiveVideoId, setVideo, setAppliedTemplate, setVideosToDisplay])
+  }, [
+    preferredSource,
+    parallelVideos,
+    appliedTemplate,
+    video,
+    setActiveVideoId,
+    setVideo,
+    setAppliedTemplate,
+    setVideosToDisplay,
+  ])
 
   // Используем ref для отслеживания предыдущего состояния
   const prevStateRef = useRef({
@@ -2220,61 +2308,100 @@ export function MediaPlayer() {
         console.log(`[MediaPlayer] Шаблон будет показан с пустыми ячейками (черный экран)`)
       }
     }
-    // Если нет примененного шаблона, но есть активное видео из предпочтительного источника
-    else if (
-      video &&
-      (!videoSources || !video.id || videoSources[video.id] === storedPreferredSource)
-    ) {
-      newVideosToDisplay = [video]
-      console.log(`[MediaPlayer] Используем активное видео ${video.id}`)
+    // Если нет примененного шаблона, но есть активное видео
+    else if (video) {
+      // Если видео из таймлайна, всегда используем его
+      if (video.startTime && video.startTime > 0) {
+        newVideosToDisplay = [video]
+        console.log(
+          `[MediaPlayer] Используем активное видео ${video.id} из таймлайна (startTime=${video.startTime})`,
+        )
+      }
+      // Иначе проверяем источник
+      else if (!videoSources || !video.id || videoSources[video.id] === storedPreferredSource) {
+        newVideosToDisplay = [video]
+        console.log(
+          `[MediaPlayer] Используем активное видео ${video.id} из источника ${videoSources[video.id] || "неизвестно"}`,
+        )
+      }
     }
-    // Если нет примененного шаблона и нет активного видео из предпочтительного источника,
-    // но есть параллельные видео из предпочтительного источника
-    else if (parallelVideos.length > 0 && storedPreferredSource === "media") {
-      console.log(`[MediaPlayer] Режим браузера: проверяем параллельные видео (${parallelVideos.length})`)
+    // Если нет примененного шаблона и нет активного видео,
+    // но есть параллельные видео
+    else if (parallelVideos.length > 0) {
+      console.log(`[MediaPlayer] Проверяем параллельные видео (${parallelVideos.length})`)
 
-      // Фильтруем видео по источнику
-      const filteredVideos = parallelVideos.filter((v) => {
-        // Если нет информации о источнике для этого видео, включаем его
-        if (!v.id || !videoSources[v.id]) {
-          console.log(`[MediaPlayer] Включаем видео ${v.id} без информации о источнике`)
-          return true
-        }
+      // Сначала проверяем, есть ли среди параллельных видео видео из таймлайна
+      const timelineVideos = parallelVideos.filter((v) => v.startTime && v.startTime > 0)
 
-        // Включаем только видео из предпочтительного источника
-        const isFromPreferredSource = videoSources[v.id] === storedPreferredSource
-        console.log(`[MediaPlayer] Видео ${v.id} из источника ${videoSources[v.id]}, включаем: ${isFromPreferredSource}`)
-        return isFromPreferredSource
-      })
+      if (timelineVideos.length > 0 && storedPreferredSource === "timeline") {
+        newVideosToDisplay = timelineVideos
+        console.log(
+          `[MediaPlayer] Используем параллельные видео из таймлайна: ${timelineVideos
+            .map((v) => v.id)
+            .join(", ")}`,
+        )
+      }
+      // Если предпочтительный источник - медиа, фильтруем по источнику
+      else if (storedPreferredSource === "media") {
+        // Фильтруем видео по источнику
+        const filteredVideos = parallelVideos.filter((v) => {
+          // Если нет информации о источнике для этого видео, включаем его
+          if (!v.id || !videoSources[v.id]) {
+            console.log(`[MediaPlayer] Включаем видео ${v.id} без информации о источнике`)
+            return true
+          }
 
-      if (filteredVideos.length > 0) {
-        newVideosToDisplay = [filteredVideos[0]]
-        console.log(`[MediaPlayer] Используем первое видео из браузера ${filteredVideos[0].id}`)
-      } else {
-        console.log(`[MediaPlayer] Нет подходящих видео из браузера после фильтрации`)
+          // Включаем только видео из предпочтительного источника
+          const isFromPreferredSource = videoSources[v.id] === storedPreferredSource
+          console.log(
+            `[MediaPlayer] Видео ${v.id} из источника ${videoSources[v.id]}, включаем: ${isFromPreferredSource}`,
+          )
+          return isFromPreferredSource
+        })
 
-        // Если после фильтрации нет видео, но есть параллельные видео, используем первое
-        if (parallelVideos.length > 0) {
-          console.log(`[MediaPlayer] Используем первое параллельное видео без фильтрации: ${parallelVideos[0].id}`)
-          newVideosToDisplay = [parallelVideos[0]]
+        if (filteredVideos.length > 0) {
+          newVideosToDisplay = [filteredVideos[0]]
+          console.log(`[MediaPlayer] Используем первое видео из браузера ${filteredVideos[0].id}`)
+        } else {
+          console.log(`[MediaPlayer] Нет подходящих видео из браузера после фильтрации`)
 
-          // Устанавливаем источник этого видео как "media"
-          if (parallelVideos[0].id) {
-            setVideoSource(parallelVideos[0].id, "media")
+          // Если после фильтрации нет видео, но есть параллельные видео, используем первое
+          if (parallelVideos.length > 0) {
+            console.log(
+              `[MediaPlayer] Используем первое параллельное видео без фильтрации: ${parallelVideos[0].id}`,
+            )
+            newVideosToDisplay = [parallelVideos[0]]
+
+            // Устанавливаем источник этого видео как "media"
+            if (parallelVideos[0].id) {
+              setVideoSource(parallelVideos[0].id, "media")
+            }
           }
         }
       }
+      // Если нет видео из предпочтительного источника, используем все параллельные видео
+      else if (newVideosToDisplay.length === 0) {
+        newVideosToDisplay = [parallelVideos[0]]
+        console.log(`[MediaPlayer] Используем первое параллельное видео: ${parallelVideos[0].id}`)
+      }
     }
 
-    // Добавляем активное видео в список только если оно не включено, нет шаблона и оно из предпочтительного источника
-    if (
-      video &&
-      !newVideosToDisplay.some((v) => v.id === video.id) &&
-      !appliedTemplate?.template &&
-      (!videoSources || !video.id || videoSources[video.id] === storedPreferredSource)
-    ) {
-      console.log(`[MediaPlayer] Добавляем активное видео ${video.id} в список для отображения`)
-      newVideosToDisplay.push(video)
+    // Добавляем активное видео в список только если оно не включено и нет шаблона
+    if (video && !newVideosToDisplay.some((v) => v.id === video.id) && !appliedTemplate?.template) {
+      // Если видео из таймлайна, всегда добавляем его
+      if (video.startTime && video.startTime > 0) {
+        console.log(
+          `[MediaPlayer] Добавляем активное видео ${video.id} из таймлайна в список для отображения`,
+        )
+        newVideosToDisplay.push(video)
+      }
+      // Иначе проверяем источник
+      else if (!videoSources || !video.id || videoSources[video.id] === storedPreferredSource) {
+        console.log(
+          `[MediaPlayer] Добавляем активное видео ${video.id} из источника ${videoSources[video.id] || "неизвестно"} в список для отображения`,
+        )
+        newVideosToDisplay.push(video)
+      }
     }
 
     // Проверяем, изменился ли список видео для отображения
@@ -2387,86 +2514,92 @@ export function MediaPlayer() {
     // Сортируем видео, чтобы первое видео загружалось с высшим приоритетом
     const sortedVideosToLoad = [...videosToLoad].sort((a, b) => {
       // Если это первое видео в шаблоне, даем ему высший приоритет
-      if (a.id === videosToDisplay[0]?.id) return -1;
-      if (b.id === videosToDisplay[0]?.id) return 1;
-      return 0;
-    });
+      if (a.id === videosToDisplay[0]?.id) return -1
+      if (b.id === videosToDisplay[0]?.id) return 1
+      return 0
+    })
 
-    console.log(`[MediaPlayer] Загрузка ${sortedVideosToLoad.length} видео с приоритетом для первого видео`);
+    console.log(
+      `[MediaPlayer] Загрузка ${sortedVideosToLoad.length} видео с приоритетом для первого видео`,
+    )
 
     // Используем requestAnimationFrame для более эффективной загрузки видео
     // Это позволит браузеру оптимизировать создание и загрузку видео элементов
     requestAnimationFrame(() => {
       // Создаем все видео элементы в одном кадре отрисовки
-      const videoElements: HTMLVideoElement[] = [];
+      const videoElements: HTMLVideoElement[] = []
 
       // Первый проход: создаем все видео элементы и проверяем кэш
       for (const videoItem of sortedVideosToLoad) {
         if (videoItem && videoItem.id && videoItem.path) {
           // Проверяем, есть ли видео в глобальном кэше
-          let videoElement: HTMLVideoElement | null = null;
+          let videoElement: HTMLVideoElement | null = null
 
           if (window.videoElementCache && window.videoElementCache.has(videoItem.id)) {
-            const cachedVideo = window.videoElementCache.get(videoItem.id);
+            const cachedVideo = window.videoElementCache.get(videoItem.id)
             if (cachedVideo && cachedVideo.readyState >= 2) {
               // Создаем новый элемент на основе кэшированного
-              videoElement = document.createElement("video");
-              videoElement.id = `video-${videoItem.id}`;
-              videoElement.preload = "auto";
-              videoElement.playsInline = true;
-              videoElement.controls = false;
-              videoElement.autoplay = false;
-              videoElement.loop = false;
-              videoElement.muted = videoItem.id !== videosToDisplay[0]?.id; // Звук только у первого видео
-              videoElement.volume = volume;
-              videoElement.src = cachedVideo.src;
+              videoElement = document.createElement("video")
+              videoElement.id = `video-${videoItem.id}`
+              videoElement.preload = "auto"
+              videoElement.playsInline = true
+              videoElement.controls = false
+              videoElement.autoplay = false
+              videoElement.loop = false
+              videoElement.muted = videoItem.id !== videosToDisplay[0]?.id // Звук только у первого видео
+              videoElement.volume = volume
+              videoElement.src = cachedVideo.src
 
               // Добавляем метку, что это кэшированное видео
-              videoElement.dataset.fromCache = "true";
+              videoElement.dataset.fromCache = "true"
             }
           }
 
           // Если не нашли в кэше, создаем новый элемент
           if (!videoElement) {
-            videoElement = document.createElement("video");
-            videoElement.id = `video-${videoItem.id}`;
-            videoElement.preload = "auto";
-            videoElement.playsInline = true;
-            videoElement.controls = false;
-            videoElement.autoplay = false;
-            videoElement.loop = false;
-            videoElement.muted = videoItem.id !== videosToDisplay[0]?.id; // Звук только у первого видео
-            videoElement.volume = volume;
-            videoElement.src = videoItem.path;
+            videoElement = document.createElement("video")
+            videoElement.id = `video-${videoItem.id}`
+            videoElement.preload = "auto"
+            videoElement.playsInline = true
+            videoElement.controls = false
+            videoElement.autoplay = false
+            videoElement.loop = false
+            videoElement.muted = videoItem.id !== videosToDisplay[0]?.id // Звук только у первого видео
+            videoElement.volume = volume
+            videoElement.src = videoItem.path
 
             // Добавляем метку, что это новое видео
-            videoElement.dataset.fromCache = "false";
+            videoElement.dataset.fromCache = "false"
 
             // Добавляем обработчик события загрузки
             videoElement.addEventListener("loadeddata", () => {
               // Добавляем в глобальный кэш
-              if (window.videoElementCache && videoElement && !window.videoElementCache.has(videoItem.id)) {
-                window.videoElementCache.set(videoItem.id, videoElement);
+              if (
+                window.videoElementCache &&
+                videoElement &&
+                !window.videoElementCache.has(videoItem.id)
+              ) {
+                window.videoElementCache.set(videoItem.id, videoElement)
               }
-            });
+            })
           }
 
           // Общие настройки для всех видео элементов
-          videoElement.style.position = "absolute";
-          videoElement.style.width = "1px";
-          videoElement.style.height = "1px";
-          videoElement.style.opacity = "0";
-          videoElement.style.pointerEvents = "none";
+          videoElement.style.position = "absolute"
+          videoElement.style.width = "1px"
+          videoElement.style.height = "1px"
+          videoElement.style.opacity = "0"
+          videoElement.style.pointerEvents = "none"
 
           // Сохраняем ссылку на элемент
-          videoRefs[videoItem.id] = videoElement;
+          videoRefs[videoItem.id] = videoElement
 
           // Определяем источник видео
-          const source = videoItem.startTime !== undefined ? "timeline" : "media";
-          setVideoSource(videoItem.id, source);
+          const source = videoItem.startTime !== undefined ? "timeline" : "media"
+          setVideoSource(videoItem.id, source)
 
           // Добавляем элемент в массив для последующей обработки
-          videoElements.push(videoElement);
+          videoElements.push(videoElement)
         }
       }
 
@@ -2474,29 +2607,29 @@ export function MediaPlayer() {
       // Используем requestAnimationFrame для добавления элементов в DOM в следующем кадре отрисовки
       requestAnimationFrame(() => {
         // Добавляем все элементы в DOM
-        videoElements.forEach(videoElement => {
-          document.body.appendChild(videoElement);
-        });
+        videoElements.forEach((videoElement) => {
+          document.body.appendChild(videoElement)
+        })
 
         // Начинаем загрузку всех видео с приоритетом для первого видео
         // Используем setTimeout с разными задержками для приоритизации
         videoElements.forEach((videoElement, index) => {
-          const videoId = videoElement.id.replace('video-', '');
-          const isFirstVideo = videoId === videosToDisplay[0]?.id;
-          const isFromCache = videoElement.dataset.fromCache === "true";
+          const videoId = videoElement.id.replace("video-", "")
+          const isFirstVideo = videoId === videosToDisplay[0]?.id
+          const isFromCache = videoElement.dataset.fromCache === "true"
 
           // Определяем задержку в зависимости от приоритета и источника
-          const delay = isFirstVideo ? 0 : (isFromCache ? 50 : 100 + index * 20);
+          const delay = isFirstVideo ? 0 : isFromCache ? 50 : 100 + index * 20
 
           // Начинаем загрузку с соответствующей задержкой
           setTimeout(() => {
             if (document.body.contains(videoElement)) {
-              videoElement.load();
+              videoElement.load()
             }
-          }, delay);
-        });
-      });
-    });
+          }, delay)
+        })
+      })
+    })
   }, [videosToDisplay, videoRefs, volume])
 
   // Используем ref для отслеживания предыдущего состояния логирования
@@ -2578,6 +2711,13 @@ export function MediaPlayer() {
                 {videosToDisplay && videosToDisplay.length > 0 ? (
                   // Если есть видео для отображения
                   <div className="h-full w-full">
+                    {/* Логируем информацию о видео для отображения */}
+                    <>
+                      {console.log(
+                        `[MediaPlayer] Отображаем видео: ${videosToDisplay.map((v) => v.id).join(", ")}, activeId=${activeId}, isVideoReady=${isVideoReady}`,
+                      )}
+                    </>
+
                     {/* Если есть примененный шаблон и он настраиваемый, используем ResizableTemplate */}
                     {appliedTemplate?.template && appliedTemplate.template.resizable ? (
                       <ResizableTemplate
@@ -2716,7 +2856,7 @@ export function MediaPlayer() {
                                 }
 
                                 // Создаем функцию для логирования с ограничением частоты
-                                const shouldLog = () => Math.random() < 0.2; // Логируем только 20% событий
+                                const shouldLog = () => Math.random() < 0.2 // Логируем только 20% событий
 
                                 // Устанавливаем обработчик загрузки метаданных
                                 el.onloadedmetadata = () => {

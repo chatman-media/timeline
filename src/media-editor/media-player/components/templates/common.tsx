@@ -33,7 +33,7 @@ export const VideoPanel = React.memo(
     // Убрали логирование для улучшения производительности
     React.useEffect(() => {
       // Не выводим ошибку для пустых видео с id, начинающимся с "empty-"
-      if ((!video || !video.path) && (!video?.id || !video.id.startsWith('empty-'))) {
+      if ((!video || !video.path) && (!video?.id || !video.id.startsWith("empty-"))) {
         console.error(`[VideoPanel] Ошибка: видео не определено или не имеет пути`, video)
       }
     }, [video])
@@ -41,7 +41,7 @@ export const VideoPanel = React.memo(
     // Если видео не существует или не имеет пути, показываем сообщение об ошибке
     // Для пустых видео с id, начинающимся с "empty-", показываем пустой черный экран
     if (!video || !video.path) {
-      if (video?.id && video.id.startsWith('empty-')) {
+      if (video?.id && video.id.startsWith("empty-")) {
         return <div className="relative h-full w-full bg-black"></div>
       }
 
@@ -80,18 +80,19 @@ export const VideoPanel = React.memo(
 
     // Добавляем проверку на существование video перед доступом к его свойствам
     if (!prevProps.video || !nextProps.video) {
-      return prevProps.video === nextProps.video;
+      return prevProps.video === nextProps.video
     }
 
     // Проверяем только важные свойства, которые влияют на отображение
-    const sameVideo = prevProps.video.id === nextProps.video.id &&
-                      prevProps.video.path === nextProps.video.path;
-    const sameActive = prevProps.isActive === nextProps.isActive;
-    const sameIndex = prevProps.index === nextProps.index;
-    const sameLabel = prevProps.hideLabel === nextProps.hideLabel &&
-                      prevProps.labelPosition === nextProps.labelPosition;
+    const sameVideo =
+      prevProps.video.id === nextProps.video.id && prevProps.video.path === nextProps.video.path
+    const sameActive = prevProps.isActive === nextProps.isActive
+    const sameIndex = prevProps.index === nextProps.index
+    const sameLabel =
+      prevProps.hideLabel === nextProps.hideLabel &&
+      prevProps.labelPosition === nextProps.labelPosition
 
     // Не сравниваем videoRefs, так как это объект, который может меняться по ссылке
-    return sameVideo && sameActive && sameIndex && sameLabel;
+    return sameVideo && sameActive && sameIndex && sameLabel
   },
 )

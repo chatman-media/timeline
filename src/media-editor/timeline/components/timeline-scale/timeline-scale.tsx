@@ -70,8 +70,13 @@ export function TimelineScale({
         {/* Удалена левая панель */}
         <div className="relative w-full pl-[10px]" style={{ zIndex: 300 }}>
           <div
-            className="h-0.5 w-full"
-            style={{ background: "rgb(47, 61, 62)", height: "1px", zIndex: 300 }}
+            className="h-0.5"
+            style={{
+              background: "rgb(47, 61, 62)",
+              height: "1px",
+              zIndex: 300,
+              width: "100%",
+            }}
           >
             {/* Не отображаем видеоклипы здесь, они будут отображаться в VideoTrack */}
           </div>

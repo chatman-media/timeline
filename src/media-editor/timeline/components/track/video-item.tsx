@@ -75,22 +75,27 @@ export const VideoItem = memo(function VideoItem({
     isVideo: true,
     isAudio: false,
     isImage: false,
+    source: "timeline", // Всегда устанавливаем источник как timeline для видео из таймлайна
   }
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
+      console.log(`[VideoItem] Клик по видео ${video.id} (${video.name})`)
 
       try {
         // Проверяем, не является ли видео уже активным, чтобы избежать лишних обновлений
         if (track.id === activeTrackId && activeVideo?.id === video.id) {
+          console.log(`[VideoItem] Видео ${video.id} уже активно, пропускаем обработку клика`)
           return // Видео уже активно, не нужно ничего делать
         }
 
         // Устанавливаем активную дорожку
+        console.log(`[VideoItem] Устанавливаем активную дорожку: ${track.id}`)
         setActiveTrack(track.id)
 
         // Устанавливаем состояние загрузки
+        console.log(`[VideoItem] Устанавливаем состояние загрузки видео`)
         setVideoLoading(true)
 
         // Находим все параллельные видео (видео с того же времени, но с разных камер)
@@ -111,7 +116,7 @@ export const VideoItem = memo(function VideoItem({
             isVideo: true,
             isAudio: false,
             isImage: false,
-            source: v.startTime !== undefined ? "timeline" : "media", // Помечаем источник видео
+            source: "timeline", // Всегда устанавливаем источник как timeline для видео из таймлайна
           }))
 
           // Удаляем дубликаты из массива параллельных видео
@@ -126,14 +131,18 @@ export const VideoItem = memo(function VideoItem({
           }
 
           // Устанавливаем параллельные видео в контекст
+          console.log(`[VideoItem] Устанавливаем параллельные видео в контекст`)
           setParallelVideos(uniqueParallelVideos)
 
           // Устанавливаем активное видео ID
+          console.log(`[VideoItem] Устанавливаем активное видео ID: ${video.id}`)
           setActiveVideoId(video.id)
 
           // Устанавливаем источник для активного видео
           if (video.id && typeof setVideoSource === "function") {
-            setVideoSource(video.id, video.startTime !== undefined ? "timeline" : "media")
+            const source = "timeline" // Всегда устанавливаем источник как timeline для видео из таймлайна
+            console.log(`[VideoItem] Устанавливаем источник для видео ${video.id}: ${source}`)
+            setVideoSource(video.id, source)
           }
 
           console.log(
@@ -147,7 +156,14 @@ export const VideoItem = memo(function VideoItem({
           setActiveVideoId(video.id)
         }
 
+        // Устанавливаем предпочтительный источник как timeline
+        console.log(`[VideoItem] Устанавливаем предпочтительный источник: timeline`)
+        setPreferredSource("timeline")
+
         // Устанавливаем активное видео (минимальную версию) для обратной совместимости
+        console.log(
+          `[VideoItem] Устанавливаем активное видео: ${minimalVideo.id} (${minimalVideo.name})`,
+        )
         setActiveVideo(minimalVideo)
 
         // Всегда устанавливаем текущее время на начало видео
@@ -156,24 +172,62 @@ export const VideoItem = memo(function VideoItem({
         seek(videoStartTime)
 
         // Создаем временный элемент для проверки готовности видео
+        console.log(
+          `[VideoItem] Создаем временный элемент для проверки готовности видео: ${video.path}`,
+        )
         const tempVideo = document.createElement("video")
         tempVideo.src = video.path
         tempVideo.preload = "metadata"
 
+        // Добавляем обработчик для отслеживания состояния загрузки
+        tempVideo.addEventListener("loadedmetadata", () => {
+          console.log(`[VideoItem] Метаданные видео ${video.id} загружены`)
+        })
+
+        tempVideo.addEventListener("canplay", () => {
+          console.log(`[VideoItem] Видео ${video.id} может воспроизводиться (canplay)`)
+        })
+
+        tempVideo.addEventListener("canplaythrough", () => {
+          console.log(
+            `[VideoItem] Видео ${video.id} может воспроизводиться без буферизации (canplaythrough)`,
+          )
+        })
+
         tempVideo.onloadeddata = () => {
+          console.log(`[VideoItem] Видео ${video.id} загружено успешно (loadeddata)`)
           setVideoReady(true)
           setVideoLoading(false)
         }
 
-        tempVideo.onerror = () => {
+        tempVideo.onerror = (e) => {
+          console.error(`[VideoItem] Ошибка загрузки видео ${video.id}:`, e)
           setVideoLoading(false)
         }
 
         // Если метаданные уже загружены, сразу вызываем обработчик
         if (tempVideo.readyState >= 1) {
+          console.log(
+            `[VideoItem] Метаданные видео ${video.id} уже загружены, readyState=${tempVideo.readyState}`,
+          )
           setVideoReady(true)
           setVideoLoading(false)
         }
+
+        // Принудительно устанавливаем флаг готовности видео через небольшую задержку
+        // Это нужно для случаев, когда события загрузки не срабатывают корректно
+        setTimeout(() => {
+          console.log(`[VideoItem] Принудительно устанавливаем флаг готовности видео ${video.id}`)
+          setVideoReady(true)
+          setVideoLoading(false)
+
+          // Повторно проверяем через дополнительную задержку
+          setTimeout(() => {
+            console.log(`[VideoItem] Повторная проверка готовности видео ${video.id}`)
+            setVideoReady(true)
+            setVideoLoading(false)
+          }, 1000)
+        }, 500)
       } catch (error) {
         console.error("[VideoItem] Ошибка при обработке клика:", error)
         setVideoLoading(false)
@@ -193,6 +247,8 @@ export const VideoItem = memo(function VideoItem({
       setActiveVideoId,
       setVideoSource,
       setPreferredSource,
+      video.id,
+      video.name,
     ],
   )
 
@@ -272,7 +328,12 @@ export const VideoItem = memo(function VideoItem({
   const widthPercent = (videoDuration / sectionDuration) * 100
 
   // Логируем расчеты для отладки
-  // console.log(`[VideoItem] ${video.name}: start=${videoStart}, duration=${videoDuration}, left=${leftPercent}%, width=${widthPercent}%`)
+  console.log(
+    `[VideoItem] ${video.name}: start=${videoStart}, duration=${videoDuration}, left=${leftPercent}%, width=${widthPercent}%, zoomLevel=${zoomLevel}`,
+  )
+  console.log(
+    `[VideoItem] Параметры расчета: referenceStart=${referenceStart}, sectionDuration=${sectionDuration}`,
+  )
 
   // Отключаем эффект для логирования активного состояния для повышения производительности
   // useEffect(() => {
@@ -294,6 +355,7 @@ export const VideoItem = memo(function VideoItem({
         cursor: "pointer",
         zIndex: isActive ? 10 : 1,
         opacity: 1, // Полная непрозрачность для видеосегмента
+        pointerEvents: "auto", // Убедимся, что клики обрабатываются
       }}
       onClick={handleClick}
     >

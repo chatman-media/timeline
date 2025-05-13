@@ -719,8 +719,6 @@ export function ResizableTemplate({
           // Получаем стили для видео в зависимости от шаблона
           const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
 
-
-
           return (
             <div
               key={`fixed-video-${video.id}-${index}`}
@@ -770,7 +768,6 @@ export function ResizableTemplate({
             ))}
           </div>
         )}
-
       </div>
     )
   }
@@ -807,8 +804,6 @@ export function ResizableTemplate({
         >
           {/* Рендерим видео с оптимизированной загрузкой */}
           {validVideos.slice(0, videoCount).map((video, index) => {
-
-
             return (
               <div
                 key={`fixed-video-${video.id}-${index}`}
@@ -829,7 +824,6 @@ export function ResizableTemplate({
                   index={index}
                   hideLabel={false}
                   labelPosition={index % 2 === 0 ? "left" : "right"}
-
                 />
               </div>
             )
@@ -922,8 +916,6 @@ export function ResizableTemplate({
     <div className="h-full w-full" style={{ overflow: "visible" }}>
       <PanelGroup direction={direction} onLayout={(sizes) => setPanelSizes(sizes)}>
         {validVideos.slice(0, videoCount).map((video, index) => {
-
-
           return (
             <React.Fragment key={`fragment-${video.id}-${index}`}>
               <Panel key={`panel-${video.id}-${index}`} minSize={10}>
@@ -933,7 +925,6 @@ export function ResizableTemplate({
                   isActive={video.id === activeVideoId}
                   videoRefs={videoRefs}
                   index={index}
-
                 />
               </Panel>
               {index < videoCount - 1 && (
@@ -947,7 +938,7 @@ export function ResizableTemplate({
                 />
               )}
             </React.Fragment>
-          );
+          )
         })}
       </PanelGroup>
     </div>

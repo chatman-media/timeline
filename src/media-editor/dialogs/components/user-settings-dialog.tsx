@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -20,6 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
 import {
   Language,
   LANGUAGES,
@@ -39,12 +39,13 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
     previewClickBehavior,
     handleLanguageChange,
     handleScreenshotsPathChange,
-    handlePreviewClickBehaviorChange
+    handlePreviewClickBehaviorChange,
   } = useUserSettings()
   const { t, i18n } = useTranslation()
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(language)
   const [selectedScreenshotsPath, setSelectedScreenshotsPath] = useState<string>(screenshotsPath)
-  const [selectedPreviewClickBehavior, setSelectedPreviewClickBehavior] = useState<PreviewClickBehavior>(previewClickBehavior)
+  const [selectedPreviewClickBehavior, setSelectedPreviewClickBehavior] =
+    useState<PreviewClickBehavior>(previewClickBehavior)
 
   // Обновляем выбранный язык при изменении языка в контексте
   useEffect(() => {
@@ -158,7 +159,10 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
 
           <div className="flex items-center justify-between">
             <Label className="text-xs font-medium">
-              {t("dialogs.userSettings.previewClickBehavior", "Не дублировать превью видео в плеере")}
+              {t(
+                "dialogs.userSettings.previewClickBehavior",
+                "Не дублировать превью видео в плеере",
+              )}
             </Label>
             <Switch
               checked={selectedPreviewClickBehavior === "preview"}

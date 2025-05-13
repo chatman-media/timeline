@@ -47,6 +47,17 @@ const TimelineTrack = memo(function TimelineTrack({
     ...track.videos.map((v) => (v.startTime || 0) + (v.duration || 0)),
   )
 
+  // Логируем информацию о треке для отладки
+  console.log(
+    `[VideoTrack] Рендеринг трека ${track.id} (${track.name}), zoomLevel=${zoomLevel}, videos=${track.videos?.length || 0}`,
+  )
+  console.log(
+    `[VideoTrack] Параметры трека: sectionStartTime=${sectionStartTime}, sectionDuration=${sectionDuration}`,
+  )
+  console.log(
+    `[VideoTrack] Границы трека: trackMinStartTime=${trackMinStartTime}, trackMaxEndTime=${trackMaxEndTime}`,
+  )
+
   return (
     <div className="flex" ref={containerRef}>
       <div className="h-full w-full">

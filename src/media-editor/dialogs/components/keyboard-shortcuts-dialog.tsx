@@ -30,10 +30,7 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
   const [selectedPreset, setSelectedPreset] = useState<PresetType>("Timeline")
 
   // Получаем категории на основе выбранной предустановки
-  const categories = useMemo(() =>
-    PRESETS[selectedPreset],
-    [PRESETS, selectedPreset]
-  )
+  const categories = useMemo(() => PRESETS[selectedPreset], [PRESETS, selectedPreset])
   const [editingShortcut, setEditingShortcut] = useState<{
     categoryIndex: number
     shortcutIndex: number
@@ -240,7 +237,7 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
 
     // Вместо обновления категорий, просто обновляем выбранную предустановку
     // Это вызовет пересчет useMemo для categories
-    setSelectedPreset(prev => {
+    setSelectedPreset((prev) => {
       // Обновляем предустановку в PRESETS напрямую
       // Это безопасно, так как PRESETS - это объект, созданный с помощью useMemo
       const { categoryIndex, shortcutIndex } = editingShortcut
@@ -442,7 +439,7 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
                   // Обновляем PRESETS напрямую
                   Object.assign(PRESETS, freshPresets)
                   // Вызываем перерендер, обновляя предустановку
-                  setSelectedPreset(prev => prev)
+                  setSelectedPreset((prev) => prev)
                   setEditingShortcut(null)
                   setListeningForKeys(false)
                 }}

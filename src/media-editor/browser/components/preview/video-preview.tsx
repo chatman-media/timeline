@@ -3,8 +3,8 @@ import { memo, useCallback, useEffect, useRef, useState } from "react"
 
 import { cn, formatDuration, formatResolution } from "@/lib/utils"
 import { calculateAdaptiveWidth, calculateWidth, parseRotation } from "@/lib/video-utils"
-import { usePlayerContext } from "@/media-editor/media-player"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
+import { usePlayerContext } from "@/media-editor/media-player"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
 
@@ -132,8 +132,11 @@ export const VideoPreview = memo(function VideoPreview({
         if (!videoRef) return
 
         // Синхронизируем текущее время, если оно предоставлено и существенно отличается
-        if (playerCurrentTime !== undefined && playerCurrentTime > 0 &&
-            Math.abs(videoRef.currentTime - playerCurrentTime) > 0.5) {
+        if (
+          playerCurrentTime !== undefined &&
+          playerCurrentTime > 0 &&
+          Math.abs(videoRef.currentTime - playerCurrentTime) > 0.5
+        ) {
           videoRef.currentTime = playerCurrentTime
         }
 
@@ -186,7 +189,7 @@ export const VideoPreview = memo(function VideoPreview({
         "current state:",
         isPlaying,
         "previewClickBehavior:",
-        previewClickBehavior
+        previewClickBehavior,
       )
 
       // Определяем новое состояние воспроизведения (противоположное текущему)
@@ -223,9 +226,13 @@ export const VideoPreview = memo(function VideoPreview({
         if (hoverTime !== null) {
           videoRef.currentTime = hoverTime
         }
-        videoRef.play().catch(err => console.error("[VideoPreview] Ошибка воспроизведения в превью:", err))
+        videoRef
+          .play()
+          .catch((err) => console.error("[VideoPreview] Ошибка воспроизведения в превью:", err))
         setIsPlaying(true)
-        console.log(`[VideoPreview] Мгновенно запускаем воспроизведение в превью для видео ${file.id}`)
+        console.log(
+          `[VideoPreview] Мгновенно запускаем воспроизведение в превью для видео ${file.id}`,
+        )
       } else {
         // Если нужно остановить, останавливаем видео в превью
         videoRef.pause()
@@ -265,11 +272,16 @@ export const VideoPreview = memo(function VideoPreview({
         // Устанавливаем текущее время видео
         if (videoRef && videoRef.currentTime) {
           updates.currentTime = currentVideoTime
-          console.log(`[VideoPreview] Передаем текущее время видео в медиаплеер: ${currentVideoTime.toFixed(3)}`)
+          console.log(
+            `[VideoPreview] Передаем текущее время видео в медиаплеер: ${currentVideoTime.toFixed(3)}`,
+          )
         }
 
         // Применяем все обновления сразу
-        console.log("[VideoPreview] Применяем пакетные обновления:", Object.keys(updates).join(", "))
+        console.log(
+          "[VideoPreview] Применяем пакетные обновления:",
+          Object.keys(updates).join(", "),
+        )
 
         // Устанавливаем предпочтительный источник в "media" (браузер)
         playerContext.setPreferredSource("media")
@@ -431,7 +443,8 @@ export const VideoPreview = memo(function VideoPreview({
                   onTimeUpdate={(e) => {
                     // Ограничиваем частоту логирования, чтобы не перегружать консоль
                     // и не создавать лишнюю нагрузку
-                    if (Math.random() < 0.05) { // Логируем примерно 5% событий
+                    if (Math.random() < 0.05) {
+                      // Логируем примерно 5% событий
                       console.log(
                         "Time update for stream:",
                         stream.index,
@@ -454,18 +467,20 @@ export const VideoPreview = memo(function VideoPreview({
                     setIsLoaded(true)
 
                     // Добавляем видео в глобальный кэш для повторного использования в шаблонах
-                    if (typeof window !== 'undefined') {
+                    if (typeof window !== "undefined") {
                       // Инициализируем кэш, если он еще не создан
                       if (!window.videoElementCache) {
-                        window.videoElementCache = new Map();
+                        window.videoElementCache = new Map()
                       }
 
                       // Добавляем видео в кэш по ID файла
                       if (window.videoElementCache && videoRefs.current[key]) {
-                        const videoElement = videoRefs.current[key];
+                        const videoElement = videoRefs.current[key]
                         // Используем ID файла как ключ для кэша
-                        window.videoElementCache.set(file.id, videoElement);
-                        console.log(`[VideoPreview] Видео ${file.id} добавлено в глобальный кэш для повторного использования`)
+                        window.videoElementCache.set(file.id, videoElement)
+                        console.log(
+                          `[VideoPreview] Видео ${file.id} добавлено в глобальный кэш для повторного использования`,
+                        )
                       }
                     }
                   }}

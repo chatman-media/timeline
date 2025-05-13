@@ -100,8 +100,11 @@ export function TimelineMarks({
     <div className="flex">
       {/* Удалена левая панель */}
       <div
-        className={`relative h-8 w-full pl-[10px] ${isActive ? "" : "bg-muted/50"}`}
-        style={{ zIndex: 300 }}
+        className={`relative h-8 pl-[10px] ${isActive ? "" : "bg-muted/50"}`}
+        style={{
+          zIndex: 300,
+          width: "100%",
+        }}
       >
         {marks}
       </div>

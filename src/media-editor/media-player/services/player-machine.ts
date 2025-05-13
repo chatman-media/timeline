@@ -235,7 +235,26 @@ export const playerMachine = createMachine({
           actions: [
             assign({ video: ({ event }) => event.video }),
             assign({ isVideoLoading: true }),
-            assign({ isVideoReady: false }),
+            // Устанавливаем флаг isVideoReady в true для видео из таймлайна
+            assign({
+              isVideoReady: ({ event }) => {
+                // Если видео из таймлайна (имеет startTime), сразу устанавливаем флаг готовности
+                if (event.video?.startTime && event.video.startTime > 0) {
+                  console.log(
+                    `[PlayerMachine] Видео ${event.video?.id} из таймлайна (startTime=${event.video.startTime}), устанавливаем флаг готовности`,
+                  )
+                  return true
+                }
+                // Иначе сохраняем текущее значение
+                return false
+              },
+            }),
+            // Добавляем логирование
+            ({ event }) => {
+              console.log(
+                `[PlayerMachine] Установлено видео: ${event.video?.id}, path=${event.video?.path}, source=${event.video?.source}`,
+              )
+            },
             // Отключаем сохранение состояния при изменении видео
             // ({ context }) => persistPlayerState({ context }),
           ],
@@ -308,6 +327,10 @@ export const playerMachine = createMachine({
           target: "ready",
           actions: [
             assign({ isVideoReady: true, isVideoLoading: false }),
+            // Добавляем логирование
+            ({ context }) => {
+              console.log(`[PlayerMachine] Видео ${context.video?.id} готово к воспроизведению`)
+            },
             // Отключаем сохранение состояния при изменении готовности видео
             // ({ context }) => persistPlayerState({ context }),
           ],
@@ -386,7 +409,26 @@ export const playerMachine = createMachine({
           actions: [
             assign({ video: ({ event }) => event.video }),
             assign({ isVideoLoading: true }),
-            assign({ isVideoReady: false }),
+            // Устанавливаем флаг isVideoReady в true для видео из таймлайна
+            assign({
+              isVideoReady: ({ event }) => {
+                // Если видео из таймлайна (имеет startTime), сразу устанавливаем флаг готовности
+                if (event.video?.startTime && event.video.startTime > 0) {
+                  console.log(
+                    `[PlayerMachine] Видео ${event.video?.id} из таймлайна (startTime=${event.video.startTime}), устанавливаем флаг готовности`,
+                  )
+                  return true
+                }
+                // Иначе сохраняем текущее значение
+                return false
+              },
+            }),
+            // Добавляем логирование
+            ({ event }) => {
+              console.log(
+                `[PlayerMachine] Установлено видео в состоянии ready: ${event.video?.id}, path=${event.video?.path}, source=${event.video?.source}`,
+              )
+            },
             // Отключаем сохранение состояния при изменении видео
             // ({ context }) => persistPlayerState({ context }),
           ],
