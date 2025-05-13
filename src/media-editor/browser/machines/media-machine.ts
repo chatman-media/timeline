@@ -2,12 +2,23 @@ import { assign, createMachine, fromPromise } from "xstate"
 
 import { MediaFile } from "@/types/media"
 
+export type FavoritesType = {
+  [key: string]: any[]
+  media: MediaFile[]
+  audio: MediaFile[]
+  transition: any[]
+  effect: any[]
+  template: any[]
+  filter: any[]
+}
+
 export type MediaContextType = {
   allMediaFiles: MediaFile[]
   includedFiles: MediaFile[]
   error: string | null
   isLoading: boolean
   unavailableFiles: MediaFile[]
+  favorites: FavoritesType
 }
 
 export type MediaEventType =
@@ -22,6 +33,9 @@ export type MediaEventType =
   | { type: "setLoading"; loading: boolean }
   | { type: "FETCH_MEDIA" }
   | { type: "RELOAD" }
+  | { type: "ADD_TO_FAVORITES"; item: any; itemType: string }
+  | { type: "REMOVE_FROM_FAVORITES"; item: any; itemType: string }
+  | { type: "CLEAR_FAVORITES"; itemType?: string }
 
 const fetchMedia = fromPromise(async () => {
   const response = await fetch("/api/media")
@@ -59,6 +73,14 @@ export const mediaMachine = createMachine({
     error: null,
     isLoading: false,
     unavailableFiles: [],
+    favorites: {
+      media: [],
+      audio: [],
+      transition: [],
+      effect: [],
+      template: [],
+      filter: [],
+    },
   } as MediaContextType,
   states: {
     idle: {
@@ -139,6 +161,67 @@ export const mediaMachine = createMachine({
         setLoading: {
           actions: assign({
             isLoading: ({ event }) => event.loading,
+          }),
+        },
+        ADD_TO_FAVORITES: {
+          actions: assign({
+            favorites: ({ context, event }) => {
+              const { item, itemType } = event
+              const currentFavorites = { ...context.favorites }
+
+              // Создаем массив, если его еще нет
+              if (!currentFavorites[itemType]) {
+                currentFavorites[itemType] = []
+              }
+
+              // Проверяем, есть ли уже такой элемент в избранном
+              const isAlreadyFavorite = currentFavorites[itemType].some(
+                (favItem: any) => favItem.id === item.id,
+              )
+
+              // Если элемента еще нет в избранном, добавляем его
+              if (!isAlreadyFavorite) {
+                currentFavorites[itemType] = [...currentFavorites[itemType], item]
+              }
+
+              return currentFavorites
+            },
+          }),
+        },
+        REMOVE_FROM_FAVORITES: {
+          actions: assign({
+            favorites: ({ context, event }) => {
+              const { item, itemType } = event
+              const currentFavorites = { ...context.favorites }
+
+              // Если массив существует, удаляем элемент
+              if (currentFavorites[itemType]) {
+                currentFavorites[itemType] = currentFavorites[itemType].filter(
+                  (favItem: any) => favItem.id !== item.id,
+                )
+              }
+
+              return currentFavorites
+            },
+          }),
+        },
+        CLEAR_FAVORITES: {
+          actions: assign({
+            favorites: ({ context, event }) => {
+              const currentFavorites = { ...context.favorites }
+
+              // Если указан тип, очищаем только его
+              if (event.itemType) {
+                currentFavorites[event.itemType] = []
+              } else {
+                // Иначе очищаем все типы
+                Object.keys(currentFavorites).forEach((key) => {
+                  currentFavorites[key] = []
+                })
+              }
+
+              return currentFavorites
+            },
           }),
         },
         RELOAD: "loading",

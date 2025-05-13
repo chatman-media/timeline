@@ -12,12 +12,14 @@ interface MusicContext {
   viewMode: "list" | "thumbnails"
   groupBy: "none" | "artist" | "genre" | "album"
   availableExtensions: string[]
+  showFavoritesOnly: boolean
   error?: string
 }
 
 type SearchEvent = {
   type: "SEARCH"
   query: string
+  mediaContext?: any
 }
 
 type SortEvent = {
@@ -28,6 +30,7 @@ type SortEvent = {
 type FilterEvent = {
   type: "FILTER"
   filterType: string
+  mediaContext?: any
 }
 
 type ChangeOrderEvent = {
@@ -48,6 +51,11 @@ type RetryEvent = {
   type: "RETRY"
 }
 
+type ToggleFavoritesEvent = {
+  type: "TOGGLE_FAVORITES"
+  mediaContext?: any
+}
+
 type MusicEvent =
   | SearchEvent
   | SortEvent
@@ -55,6 +63,7 @@ type MusicEvent =
   | ChangeOrderEvent
   | ChangeViewModeEvent
   | ChangeGroupByEvent
+  | ToggleFavoritesEvent
   | RetryEvent
 
 type FetchInput = {
@@ -109,7 +118,13 @@ const sortFiles = (files: MediaFile[], sortBy: string, sortOrder: "asc" | "desc"
   })
 }
 
-const filterFiles = (files: MediaFile[], searchQuery: string, filterType: string) => {
+const filterFiles = (
+  files: MediaFile[],
+  searchQuery: string,
+  filterType: string,
+  showFavoritesOnly: boolean = false,
+  mediaContext: any = null,
+) => {
   let filtered = files
   console.log("Всего файлов:", files.length)
 
@@ -120,6 +135,14 @@ const filterFiles = (files: MediaFile[], searchQuery: string, filterType: string
       return extension === filterType
     })
     console.log("После фильтрации по типу:", filtered.length)
+  }
+
+  // Фильтрация по избранному
+  if (showFavoritesOnly && mediaContext) {
+    filtered = filtered.filter((file) => {
+      return mediaContext.isItemFavorite(file, "audio")
+    })
+    console.log("После фильтрации по избранному:", filtered.length)
   }
 
   // Фильтрация по поисковому запросу
@@ -163,6 +186,7 @@ export const musicMachine = createMachine({
     viewMode: "list",
     groupBy: "none",
     availableExtensions: [],
+    showFavoritesOnly: false,
   } as MusicContext,
   types: {
     context: {} as MusicContext,
@@ -186,6 +210,7 @@ export const musicMachine = createMachine({
                 event.output.media,
                 context.searchQuery,
                 context.filterType,
+                context.showFavoritesOnly,
               )
               console.log("Итоговое количество файлов:", filtered.length)
               return sortFiles(filtered, context.sortBy, context.sortOrder)
@@ -216,7 +241,13 @@ export const musicMachine = createMachine({
           actions: assign({
             searchQuery: ({ event }) => event.query,
             filteredFiles: ({ context, event }) => {
-              const filtered = filterFiles(context.musicFiles, event.query, context.filterType)
+              const filtered = filterFiles(
+                context.musicFiles,
+                event.query,
+                context.filterType,
+                context.showFavoritesOnly,
+                event.mediaContext,
+              )
               return sortFiles(filtered, context.sortBy, context.sortOrder)
             },
           }),
@@ -237,6 +268,8 @@ export const musicMachine = createMachine({
                 context.musicFiles,
                 context.searchQuery,
                 event.filterType,
+                context.showFavoritesOnly,
+                event.mediaContext,
               )
               return sortFiles(filtered, context.sortBy, context.sortOrder)
             },
@@ -259,6 +292,27 @@ export const musicMachine = createMachine({
         CHANGE_GROUP_BY: {
           actions: assign({
             groupBy: ({ event }) => event.groupBy,
+          }),
+        },
+        TOGGLE_FAVORITES: {
+          actions: assign({
+            showFavoritesOnly: ({ context }) => !context.showFavoritesOnly,
+            filteredFiles: ({ context, event }) => {
+              // Получаем новое значение showFavoritesOnly (инвертированное текущее)
+              const newShowFavoritesOnly = !context.showFavoritesOnly
+
+              // Перефильтровываем файлы с новым значением showFavoritesOnly
+              // Примечание: mediaContext передается из MusicFileList при вызове toggleFavorites
+              const filtered = filterFiles(
+                context.musicFiles,
+                context.searchQuery,
+                context.filterType,
+                newShowFavoritesOnly,
+                event.mediaContext,
+              )
+
+              return sortFiles(filtered, context.sortBy, context.sortOrder)
+            },
           }),
         },
       },

@@ -15,6 +15,7 @@ export function useMusicMachine() {
     viewMode,
     groupBy,
     availableExtensions,
+    showFavoritesOnly,
     error,
   } = state.context
 
@@ -22,16 +23,16 @@ export function useMusicMachine() {
   const isLoading = state.matches("loading")
   const isError = state.matches("error")
 
-  const search = (query: string) => {
-    send({ type: "SEARCH", query })
+  const search = (query: string, mediaContext?: any) => {
+    send({ type: "SEARCH", query, mediaContext })
   }
 
   const sort = (sortBy: string) => {
     send({ type: "SORT", sortBy })
   }
 
-  const filter = (filterType: string) => {
-    send({ type: "FILTER", filterType })
+  const filter = (filterType: string, mediaContext?: any) => {
+    send({ type: "FILTER", filterType, mediaContext })
   }
 
   const changeOrder = () => {
@@ -44,6 +45,10 @@ export function useMusicMachine() {
 
   const changeGroupBy = (groupBy: "none" | "artist" | "genre" | "album") => {
     send({ type: "CHANGE_GROUP_BY", groupBy })
+  }
+
+  const toggleFavorites = (mediaContext: any) => {
+    send({ type: "TOGGLE_FAVORITES", mediaContext })
   }
 
   const retry = () => {
@@ -61,6 +66,7 @@ export function useMusicMachine() {
     viewMode,
     groupBy,
     availableExtensions,
+    showFavoritesOnly,
     error,
     isPlaying,
     isLoading,
@@ -73,6 +79,7 @@ export function useMusicMachine() {
     changeOrder,
     changeViewMode,
     changeGroupBy,
+    toggleFavorites,
     retry,
   }
 }

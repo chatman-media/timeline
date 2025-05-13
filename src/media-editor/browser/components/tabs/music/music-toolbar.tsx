@@ -9,6 +9,7 @@ import {
   List,
   ListFilterPlus,
   SortDesc,
+  Star,
 } from "lucide-react"
 import React, { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -42,6 +43,8 @@ interface MusicToolbarProps {
   currentFilterType?: string
   currentGroupBy?: string
   availableExtensions: string[]
+  showFavoritesOnly?: boolean
+  onToggleFavorites?: () => void
 }
 
 /**
@@ -80,6 +83,8 @@ export function MusicToolbar({
   currentFilterType = "all",
   currentGroupBy = "none",
   availableExtensions,
+  showFavoritesOnly = false,
+  onToggleFavorites = () => {},
 }: MusicToolbarProps) {
   const { t } = useTranslation()
   // Внутренний стейт для управления текущим выбором
@@ -179,6 +184,26 @@ export function MusicToolbar({
       </div>
 
       <div className="flex items-end gap-2">
+        {/* Кнопка избранного */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "mr-1 h-6 w-6 cursor-pointer",
+                  showFavoritesOnly ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                )}
+                onClick={onToggleFavorites}
+              >
+                <Star size={16} className={showFavoritesOnly ? "fill-current" : ""} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t("browser.media.favorites")}</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         {/* Кнопки режима отображения */}
         <TooltipProvider>
           <div className="flex overflow-hidden rounded-md">

@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from "react"
+import React, { useCallback, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { useMedia, usePreviewSize } from "@/media-editor/browser"
 import { AddMediaButton } from "@/media-editor/browser/components/layout/add-media-button"
+import { FavoriteButton } from "@/media-editor/browser/components/layout/favorite-button"
 import { TemplateListToolbar } from "@/media-editor/browser/components/tabs/templates"
 import { usePlayerContext } from "@/media-editor/media-player"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
@@ -108,6 +109,14 @@ export function TemplatePreview({ template, onClick, size, dimensions }: Templat
       onClick={onClick}
     >
       {React.cloneElement(renderedTemplate, { key: `template-preview-${template.id}` })}
+
+      {/* Кнопка избранного */}
+      <FavoriteButton
+        file={{ id: template.id, path: "", name: template.id }}
+        size={previewWidth}
+        type="template"
+      />
+
       <div
         className={`transition-opacity duration-200 ${
           isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"
@@ -133,13 +142,18 @@ export function TemplateList() {
   const [, setCurrentGroup] = useState<"landscape" | "portrait" | "square">("landscape")
   const [currentDimensions, setCurrentDimensions] = useState<[number, number]>([1920, 1080])
   const [templates, setTemplates] = useState<MediaTemplate[]>([])
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const { settings } = useProject()
+
+  const handleToggleFavorites = useCallback(() => {
+    setShowFavoritesOnly((prev) => !prev)
+  }, [])
 
   // Получаем доступ к контексту плеера для работы с параллельными видео и шаблонами
   const { parallelVideos, setAppliedTemplate } = usePlayerContext()
 
   // Получаем доступ к контексту медиа для работы с медиафайлами
-  const { allMediaFiles } = useMedia()
+  const media = useMedia()
 
   const {
     previewSize,
@@ -175,7 +189,17 @@ export function TemplateList() {
   const filteredTemplates = templates.filter((template) => {
     const searchLower = searchQuery.toLowerCase().trim()
 
-    // Если поисковый запрос пустой, возвращаем все шаблоны
+    // Фильтрация по избранному
+    const matchesFavorites =
+      !showFavoritesOnly ||
+      media.isItemFavorite({ id: template.id, path: "", name: template.id }, "template")
+
+    // Если не проходит фильтр по избранному, сразу возвращаем false
+    if (!matchesFavorites) {
+      return false
+    }
+
+    // Если поисковый запрос пустой, возвращаем все шаблоны (с учетом фильтра по избранному)
     if (!searchLower) {
       return true
     }
@@ -300,14 +324,16 @@ export function TemplateList() {
       }
 
       setAppliedTemplate(appliedTemplate)
-    } else if (allMediaFiles.length > 0) {
+    } else if (media.allMediaFiles.length > 0) {
       // Если на таймлайне нет видео и нет параллельных видео, но есть медиафайлы, используем их
       console.log(
-        `На таймлайне нет видео, используем ${allMediaFiles.length} медиафайлов из библиотеки`,
+        `На таймлайне нет видео, используем ${media.allMediaFiles.length} медиафайлов из библиотеки`,
       )
 
       // Фильтруем только видеофайлы с путями
-      const validMediaFiles = allMediaFiles.filter((file) => file.isVideo && file.path)
+      const validMediaFiles = media.allMediaFiles.filter(
+        (file: MediaFile) => file.isVideo && file.path,
+      )
 
       if (validMediaFiles.length > 0) {
         const screensCount = template.screens || 1
@@ -319,7 +345,7 @@ export function TemplateList() {
 
         // Подробное логирование видео для отладки
         console.log("Детали видео из библиотеки для шаблона:")
-        availableVideos.forEach((v, i) => {
+        availableVideos.forEach((v: MediaFile, i: number) => {
           console.log(
             `Видео ${i + 1}/${availableVideos.length}: id=${v.id}, path=${v.path}, name=${v.name}`,
           )
@@ -350,6 +376,8 @@ export function TemplateList() {
         canIncreaseSize={canIncreaseSize}
         handleDecreaseSize={handleDecreaseSize}
         handleIncreaseSize={handleIncreaseSize}
+        showFavoritesOnly={showFavoritesOnly}
+        onToggleFavorites={handleToggleFavorites}
       />
 
       <div className="scrollbar-hide hover:scrollbar-default min-h-0 flex-1 overflow-y-auto p-3 dark:bg-[#1b1a1f]">

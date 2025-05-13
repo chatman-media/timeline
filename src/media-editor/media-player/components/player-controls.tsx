@@ -3,6 +3,7 @@ import {
   ChevronFirst,
   ChevronLast,
   CircleDot,
+  GalleryThumbnails,
   LayoutPanelTop,
   Maximize2,
   Minimize2,
@@ -10,6 +11,7 @@ import {
   Play,
   StepBack,
   StepForward,
+  TvMinimalPlay,
   UnfoldHorizontal,
   Volume2,
   VolumeX,
@@ -34,12 +36,19 @@ import { usePlayerContext } from ".."
 
 interface PlayerControlsProps {
   currentTime: number
+  videoSources?: Record<string, "media" | "timeline">
 }
 
-export function PlayerControls({ currentTime }: PlayerControlsProps) {
+export function PlayerControls({ currentTime, videoSources }: PlayerControlsProps) {
   const { t } = useTranslation()
   const { tracks, activeTrackId } = useTimeline()
   const { screenshotsPath } = useUserSettings()
+
+  // Состояние для отслеживания источника видео (медиа машина или таймлайн)
+  const [localVideoSources, setLocalVideoSources] = useState<Record<string, "media" | "timeline">>(
+    {},
+  )
+
   const {
     isPlaying,
     setIsPlaying,
@@ -60,13 +69,15 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setActiveVideoId,
     isResizableMode,
     setIsResizableMode,
+    preferredSource,
+    setPreferredSource,
+    lastAppliedTemplate,
+    setLastAppliedTemplate,
   } = usePlayerContext()
 
   // Используем состояние для хранения текущего времени воспроизведения
   const [localDisplayTime, setLocalDisplayTime] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
-  // Сохраняем последний примененный шаблон
-  const [lastAppliedTemplate, setLastAppliedTemplate] = useState<AppliedTemplate | null>(null)
   const lastSaveTime = useRef(0)
   const SAVE_INTERVAL = 5000 // Сохраняем каждые 3 секунды
 
@@ -137,23 +148,25 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   // Используем useRef для хранения последнего значения громкости и предотвращения лишних рендеров
   const volumeRef = useRef(volume)
   const volumeChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isVolumeChangingRef = useRef(false)
+  const lastVolumeUpdateTimeRef = useRef(0)
 
-  // Оптимизированная функция изменения громкости с дебаунсингом
-  const handleVolumeChange = useCallback(
-    (value: number[]) => {
-      const newVolume = value[0]
-
-      // Обновляем значение в ref без вызова setVolume на каждое изменение
-      volumeRef.current = newVolume
-
-      // Применяем громкость напрямую к видео элементам для мгновенной обратной связи
+  // Функция для применения громкости к видео элементам без обновления состояния
+  const applyVolumeToVideoElements = useCallback(
+    (newVolume: number) => {
+      // Применяем громкость напрямую к активному видео
       if (video?.id && videoRefs[video.id]) {
         videoRefs[video.id].volume = newVolume
       }
 
       // Если используется шаблон с несколькими видео, применяем громкость ко всем видео
       if (appliedTemplate?.template && parallelVideos.length > 0) {
-        parallelVideos.forEach((parallelVideo) => {
+        // Создаем массив уникальных видео для обновления громкости
+        const uniqueVideos = parallelVideos.filter(
+          (v, i, arr) => arr.findIndex((item) => item.id === v.id) === i,
+        )
+
+        uniqueVideos.forEach((parallelVideo) => {
           if (parallelVideo.id && videoRefs[parallelVideo.id]) {
             // Устанавливаем громкость для всех видео в шаблоне
             videoRefs[parallelVideo.id].volume = newVolume
@@ -161,61 +174,92 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
           }
         })
       }
-
-      // Используем дебаунсинг для обновления состояния
-      if (volumeChangeTimeoutRef.current) {
-        clearTimeout(volumeChangeTimeoutRef.current)
-      }
-
-      volumeChangeTimeoutRef.current = setTimeout(() => {
-        setVolume(newVolume)
-        volumeChangeTimeoutRef.current = null
-      }, 100) // Обновляем состояние не чаще чем раз в 100мс
     },
-    [video, videoRefs, setVolume, appliedTemplate, parallelVideos],
+    [video, videoRefs, appliedTemplate, parallelVideos],
+  )
+
+  // Оптимизированная функция изменения громкости с дебаунсингом
+  const handleVolumeChange = useCallback(
+    (value: number[]) => {
+      const newVolume = value[0]
+      const now = performance.now()
+
+      // Устанавливаем флаг, что громкость меняется
+      isVolumeChangingRef.current = true
+
+      // Обновляем значение в ref без вызова setVolume на каждое изменение
+      volumeRef.current = newVolume
+
+      // Применяем громкость напрямую к видео элементам для мгновенной обратной связи
+      applyVolumeToVideoElements(newVolume)
+
+      // Используем дебаунсинг и троттлинг для обновления состояния
+      // Обновляем состояние только если прошло достаточно времени с последнего обновления
+      if (now - lastVolumeUpdateTimeRef.current > 200) {
+        lastVolumeUpdateTimeRef.current = now
+
+        // Очищаем предыдущий таймаут, если он был
+        if (volumeChangeTimeoutRef.current) {
+          clearTimeout(volumeChangeTimeoutRef.current)
+        }
+
+        // Устанавливаем новый таймаут для обновления состояния
+        volumeChangeTimeoutRef.current = setTimeout(() => {
+          // Обновляем состояние только если все еще меняется громкость
+          if (isVolumeChangingRef.current) {
+            setVolume(newVolume)
+          }
+          volumeChangeTimeoutRef.current = null
+        }, 100) // Обновляем состояние не чаще чем раз в 100мс
+      }
+    },
+    [applyVolumeToVideoElements, setVolume],
   )
 
   // Функция, которая вызывается при завершении изменения громкости (отпускании слайдера)
   const handleVolumeChangeEnd = useCallback(() => {
-    // Обновляем состояние сразу при отпускании слайдера
-    setVolume(volumeRef.current)
+    // Сбрасываем флаг изменения громкости
+    isVolumeChangingRef.current = false
 
-    // Сохраняем значение громкости в localStorage только при отпускании слайдера
-    if (typeof window !== "undefined") {
-      localStorage.setItem("player-volume", volumeRef.current.toString())
-      console.log(`[PlayerControls] Сохранен уровень звука: ${volumeRef.current}`)
+    // Очищаем таймаут, если он был установлен
+    if (volumeChangeTimeoutRef.current) {
+      clearTimeout(volumeChangeTimeoutRef.current)
+      volumeChangeTimeoutRef.current = null
     }
+
+    // Обновляем состояние сразу при отпускании слайдера
+    // Используем setTimeout с нулевой задержкой, чтобы отделить обновление от события UI
+    setTimeout(() => {
+      setVolume(volumeRef.current)
+
+      // Сохраняем значение громкости в localStorage только при отпускании слайдера
+      if (typeof window !== "undefined") {
+        localStorage.setItem("player-volume", volumeRef.current.toString())
+        console.log(`[PlayerControls] Сохранен уровень звука: ${volumeRef.current}`)
+      }
+    }, 0)
   }, [setVolume])
 
   const handleToggleMute = useCallback(() => {
     const newVolume = volume === 0 ? 1 : 0
-    setVolume(newVolume)
 
     // Сохраняем текущее значение громкости в ref
     volumeRef.current = newVolume
 
     // Применяем громкость напрямую к видео элементам для мгновенной обратной связи
-    if (video?.id && videoRefs[video.id]) {
-      videoRefs[video.id].volume = newVolume
-    }
+    applyVolumeToVideoElements(newVolume)
 
-    // Если используется шаблон с несколькими видео, применяем громкость ко всем видео
-    if (appliedTemplate?.template && parallelVideos.length > 0) {
-      parallelVideos.forEach((parallelVideo) => {
-        if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-          // Устанавливаем громкость для всех видео в шаблоне
-          videoRefs[parallelVideo.id].volume = newVolume
-          videoRefs[parallelVideo.id].muted = newVolume === 0
-        }
-      })
-    }
+    // Обновляем состояние с небольшой задержкой, чтобы избежать лагов
+    setTimeout(() => {
+      setVolume(newVolume)
 
-    // При переключении mute сразу сохраняем значение в localStorage
-    if (typeof window !== "undefined") {
-      localStorage.setItem("player-volume", newVolume.toString())
-      console.log(`[PlayerControls] Сохранен уровень звука при переключении: ${newVolume}`)
-    }
-  }, [volume, setVolume, video, videoRefs, appliedTemplate, parallelVideos])
+      // При переключении mute сразу сохраняем значение в localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("player-volume", newVolume.toString())
+        console.log(`[PlayerControls] Сохранен уровень звука при переключении: ${newVolume}`)
+      }
+    }, 0)
+  }, [volume, setVolume, applyVolumeToVideoElements])
 
   const handleFullscreen = useCallback(() => {
     setIsFullscreen(!isFullscreen)
@@ -260,6 +304,134 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     }
   }, [video, videoRefs, screenshotsPath, appliedTemplate])
 
+  // Функция для применения последнего шаблона
+  const handleApplyLastTemplate = useCallback(() => {
+    console.log("[handleApplyLastTemplate] Вызвана функция применения последнего шаблона")
+
+    // Проверяем, есть ли сохраненный шаблон в контексте плеера
+    if (lastAppliedTemplate) {
+      console.log(
+        "[handleApplyLastTemplate] Применяем шаблон из контекста плеера:",
+        lastAppliedTemplate.template?.id,
+      )
+
+      // Создаем копию шаблона для безопасного применения
+      const templateCopy = JSON.parse(JSON.stringify(lastAppliedTemplate))
+
+      // Проверяем, нужно ли заполнить шаблон видео в зависимости от предпочтительного источника
+      if (templateCopy.videos.length === 0) {
+        console.log("[handleApplyLastTemplate] Шаблон не содержит видео, пытаемся заполнить его")
+
+        // Если текущий источник - браузер, ищем видео из браузера
+        if (preferredSource === "media") {
+          const browserVideos = parallelVideos.filter(
+            (v) =>
+              v.id &&
+              ((videoSources && videoSources[v.id] === "media") ||
+                (localVideoSources && localVideoSources[v.id] === "media")),
+          )
+
+          if (browserVideos.length > 0) {
+            console.log(
+              `[handleApplyLastTemplate] Найдено ${browserVideos.length} видео из браузера`,
+            )
+
+            // Заполняем шаблон видео из браузера
+            templateCopy.videos = browserVideos.slice(0, templateCopy.template?.screens || 1)
+
+            console.log(
+              `[handleApplyLastTemplate] Добавлено ${templateCopy.videos.length} видео из браузера в шаблон`,
+            )
+          }
+        }
+        // Если текущий источник - таймлайн, ищем видео из таймлайна
+        else if (preferredSource === "timeline") {
+          const timelineVideos = parallelVideos.filter(
+            (v) =>
+              v.id &&
+              ((videoSources && videoSources[v.id] === "timeline") ||
+                (localVideoSources && localVideoSources[v.id] === "timeline")),
+          )
+
+          if (timelineVideos.length > 0) {
+            console.log(
+              `[handleApplyLastTemplate] Найдено ${timelineVideos.length} видео из таймлайна`,
+            )
+
+            // Заполняем шаблон видео из таймлайна
+            templateCopy.videos = timelineVideos.slice(0, templateCopy.template?.screens || 1)
+
+            console.log(
+              `[handleApplyLastTemplate] Добавлено ${templateCopy.videos.length} видео из таймлайна в шаблон`,
+            )
+          }
+        }
+      }
+
+      // Применяем шаблон
+      setAppliedTemplate(templateCopy)
+
+      // Если в шаблоне есть видео, устанавливаем первое как активное
+      if (templateCopy.videos && templateCopy.videos.length > 0) {
+        setActiveVideoId(templateCopy.videos[0].id)
+        setVideo(templateCopy.videos[0])
+        console.log(
+          `[handleApplyLastTemplate] Установлено активное видео: ${templateCopy.videos[0].id}`,
+        )
+      }
+      // Если в шаблоне нет видео, но выбран источник "media", пытаемся показать любое видео из браузера
+      else if (preferredSource === "media") {
+        // Находим любое видео из браузера
+        const anyBrowserVideo = parallelVideos.find(
+          (v) =>
+            v.id &&
+            ((videoSources && videoSources[v.id] === "media") ||
+              (localVideoSources && localVideoSources[v.id] === "media")),
+        )
+
+        if (anyBrowserVideo) {
+          console.log(
+            `[handleApplyLastTemplate] Нет видео в шаблоне, но найдено видео из браузера: ${anyBrowserVideo.id}`,
+          )
+          setActiveVideoId(anyBrowserVideo.id)
+          setVideo(anyBrowserVideo)
+        }
+      }
+    }
+    // Если нет сохраненного шаблона в контексте плеера
+    else {
+      console.log("[handleApplyLastTemplate] Нет сохраненного шаблона в контексте плеера")
+
+      // Если выбран источник "media", пытаемся показать любое видео из браузера
+      if (preferredSource === "media") {
+        // Находим любое видео из браузера
+        const anyBrowserVideo = parallelVideos.find(
+          (v) =>
+            v.id &&
+            ((videoSources && videoSources[v.id] === "media") ||
+              (localVideoSources && localVideoSources[v.id] === "media")),
+        )
+
+        if (anyBrowserVideo) {
+          console.log(
+            `[handleApplyLastTemplate] Нет шаблона, но найдено видео из браузера: ${anyBrowserVideo.id}`,
+          )
+          setActiveVideoId(anyBrowserVideo.id)
+          setVideo(anyBrowserVideo)
+        }
+      }
+    }
+  }, [
+    lastAppliedTemplate,
+    preferredSource,
+    parallelVideos,
+    videoSources,
+    localVideoSources,
+    setAppliedTemplate,
+    setActiveVideoId,
+    setVideo,
+  ])
+
   // Функция для сброса шаблона
   const handleResetTemplate = useCallback(() => {
     console.log("[handleResetTemplate] Вызвана функция сброса шаблона")
@@ -267,8 +439,17 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
     if (appliedTemplate) {
       console.log("[handleResetTemplate] Сбрасываем шаблон:", appliedTemplate.template?.id)
-      // Сохраняем текущий шаблон перед сбросом
-      setLastAppliedTemplate(appliedTemplate)
+
+      // Создаем копию текущего шаблона перед сбросом
+      const templateToSave = JSON.parse(JSON.stringify(appliedTemplate))
+
+      // Сохраняем текущий шаблон перед сбросом в контексте плеера
+      setLastAppliedTemplate(templateToSave)
+      console.log(
+        "[handleResetTemplate] Шаблон сохранен в контексте плеера:",
+        templateToSave.template?.id,
+      )
+
       // Принудительно устанавливаем null для сброса шаблона
       setAppliedTemplate(null)
 
@@ -412,6 +593,187 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     isPlaying,
     setIsPlaying,
     setActiveVideoId,
+  ])
+
+  // Функция для переключения между источниками видео (браузер/таймлайн)
+  const handleToggleSource = useCallback(() => {
+    // Переключаем предпочтительный источник
+    const newSource = preferredSource === "media" ? "timeline" : "media"
+    console.log(`[handleToggleSource] Переключаем источник: ${preferredSource} -> ${newSource}`)
+
+    // Устанавливаем новый предпочтительный источник в контексте плеера
+    setPreferredSource(newSource)
+
+    // Если переключаемся на источник "timeline"
+    if (newSource === "timeline") {
+      // Проверяем, есть ли активное видео из таймлайна
+      const hasTimelineVideo =
+        video?.id &&
+        ((videoSources && videoSources[video.id] === "timeline") ||
+          (localVideoSources && localVideoSources[video.id] === "timeline"))
+
+      if (!hasTimelineVideo) {
+        console.log(
+          `[handleToggleSource] Нет активного видео из таймлайна, показываем черный экран`,
+        )
+
+        // Если есть примененный шаблон, сохраняем его, но очищаем видео
+        if (appliedTemplate) {
+          console.log(
+            `[handleToggleSource] Есть примененный шаблон, сохраняем его, но очищаем видео`,
+          )
+          // Создаем копию шаблона
+          const templateCopy = { ...appliedTemplate }
+          // Очищаем список видео в шаблоне
+          templateCopy.videos = []
+          // Применяем обновленный шаблон
+          setAppliedTemplate(templateCopy)
+        }
+
+        // Сбрасываем активное видео, чтобы показать черный экран
+        setActiveVideoId(null)
+        // Используем undefined вместо null для совместимости с типом
+        setVideo(undefined as any)
+      }
+    }
+    // Если переключаемся на источник "media" (браузер)
+    else {
+      console.log(`[handleToggleSource] Переключаемся на источник "media" (браузер)`)
+
+      // Сначала помечаем все параллельные видео как видео из браузера
+      if (parallelVideos.length > 0) {
+        console.log(
+          `[handleToggleSource] Помечаем все параллельные видео (${parallelVideos.length}) как видео из браузера`,
+        )
+
+        // Создаем объект с источниками видео
+        const newVideoSources: Record<string, "media" | "timeline"> = {}
+
+        // Помечаем все параллельные видео как видео из браузера
+        parallelVideos.forEach((v) => {
+          if (v.id) {
+            newVideoSources[v.id] = "media"
+          }
+        })
+
+        // Обновляем состояние videoSources
+        setLocalVideoSources(newVideoSources)
+      }
+
+      // Теперь все параллельные видео считаются видео из браузера
+      const browserVideos = parallelVideos
+
+      console.log(`[handleToggleSource] Найдено ${browserVideos.length} видео из браузера`)
+
+      // Если есть видео из браузера
+      if (browserVideos.length > 0) {
+        // Если есть примененный шаблон
+        if (appliedTemplate) {
+          console.log(
+            `[handleToggleSource] Есть примененный шаблон, заполняем его видео из браузера`,
+          )
+
+          // Создаем копию шаблона
+          const templateCopy = { ...appliedTemplate }
+
+          // Заполняем шаблон видео из браузера
+          templateCopy.videos = browserVideos.slice(0, appliedTemplate.template?.screens || 1)
+
+          console.log(
+            `[handleToggleSource] Добавлено ${templateCopy.videos.length} видео из браузера в шаблон`,
+          )
+
+          // Применяем обновленный шаблон
+          setAppliedTemplate(templateCopy)
+
+          // Устанавливаем первое видео из браузера как активное
+          setActiveVideoId(browserVideos[0].id)
+          setVideo(browserVideos[0])
+          console.log(
+            `[handleToggleSource] Установлено активное видео из браузера: ${browserVideos[0].id}`,
+          )
+        }
+        // Если нет примененного шаблона, но есть последний примененный шаблон
+        else if (lastAppliedTemplate) {
+          console.log(
+            `[handleToggleSource] Нет активного шаблона, но есть последний примененный шаблон: ${lastAppliedTemplate.template?.id}`,
+          )
+
+          // Создаем копию последнего шаблона
+          const templateCopy = JSON.parse(JSON.stringify(lastAppliedTemplate))
+
+          // Заполняем шаблон видео из браузера
+          templateCopy.videos = browserVideos.slice(0, templateCopy.template?.screens || 1)
+
+          console.log(
+            `[handleToggleSource] Добавлено ${templateCopy.videos.length} видео из браузера в последний шаблон`,
+          )
+
+          // Применяем обновленный шаблон
+          setAppliedTemplate(templateCopy)
+
+          // Устанавливаем первое видео из браузера как активное
+          setActiveVideoId(browserVideos[0].id)
+          setVideo(browserVideos[0])
+          console.log(
+            `[handleToggleSource] Установлено активное видео из браузера: ${browserVideos[0].id}`,
+          )
+        }
+        // Если нет ни активного, ни последнего шаблона
+        else {
+          console.log(`[handleToggleSource] Нет шаблонов, просто показываем видео из браузера`)
+
+          // Устанавливаем первое видео из браузера как активное
+          setActiveVideoId(browserVideos[0].id)
+          setVideo(browserVideos[0])
+          console.log(
+            `[handleToggleSource] Установлено активное видео из браузера: ${browserVideos[0].id}`,
+          )
+        }
+      }
+      // Если нет видео из браузера
+      else {
+        console.log(`[handleToggleSource] Нет доступных видео из браузера`)
+
+        // Если есть примененный шаблон, очищаем его
+        if (appliedTemplate) {
+          console.log(`[handleToggleSource] Есть примененный шаблон, очищаем его`)
+
+          // Создаем копию шаблона
+          const templateCopy = { ...appliedTemplate }
+          // Очищаем список видео в шаблоне
+          templateCopy.videos = []
+          // Применяем обновленный шаблон
+          setAppliedTemplate(templateCopy)
+        }
+        // Если есть последний примененный шаблон, применяем его с пустыми видео
+        else if (lastAppliedTemplate) {
+          console.log(`[handleToggleSource] Применяем последний шаблон без видео`)
+
+          // Создаем копию последнего шаблона
+          const templateCopy = JSON.parse(JSON.stringify(lastAppliedTemplate))
+          // Очищаем список видео в шаблоне
+          templateCopy.videos = []
+          // Применяем обновленный шаблон
+          setAppliedTemplate(templateCopy)
+        }
+
+        // Сбрасываем активное видео
+        setActiveVideoId(null)
+        setVideo(undefined as any)
+      }
+    }
+  }, [
+    preferredSource,
+    video,
+    videoSources,
+    setVideo,
+    setActiveVideoId,
+    appliedTemplate,
+    lastAppliedTemplate,
+    setAppliedTemplate,
+    parallelVideos,
+    setLocalVideoSources,
   ])
 
   // Улучшенный handleRecordToggle для корректной работы с параллельными видео
@@ -712,6 +1074,20 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setDisplayTime(displayTime)
   }, [displayTime, setDisplayTime])
 
+  // Эффект для обновления иконки источника после гидратации
+  const [isHydrated, setIsHydrated] = useState(false)
+  useEffect(() => {
+    // Устанавливаем флаг гидратации после монтирования компонента
+    setIsHydrated(true)
+  }, [])
+
+  // Эффект для логирования изменений preferredSource
+  useEffect(() => {
+    if (isHydrated) {
+      console.log(`[PlayerControls] preferredSource изменен на: ${preferredSource}`)
+    }
+  }, [preferredSource, isHydrated])
+
   // Ограничиваем логирование, чтобы не перегружать консоль
   useEffect(() => {
     console.log(
@@ -832,17 +1208,40 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
       <div className="h-full w-full p-1">
         <div className="flex items-center justify-between px-2 py-0" style={{ minWidth: "1000px" }}>
-          {/* Левая часть: кнопки для камер и шаблонов */}
+          {/* Левая часть: индикатор источника, кнопки для камер и шаблонов */}
           <div className="flex items-center gap-2" style={{ minWidth: "150px" }}>
+            {/* Индикатор источника видео - всегда отображается и работает как переключатель */}
+            <Button
+              className={`h-8 w-8 cursor-pointer ${!isHydrated || preferredSource === "timeline" ? "bg-[#45444b] hover:bg-[#45444b]/80" : "hover:bg-[#45444b]/80"}`}
+              variant="ghost"
+              size="icon"
+              title={
+                !isHydrated
+                  ? "Timeline"
+                  : preferredSource === "timeline"
+                    ? t("timeline.source.timeline", "Таймлайн")
+                    : t("timeline.source.browser", "Браузер")
+              }
+              onClick={handleToggleSource}
+            >
+              {/* Используем isHydrated для условного рендеринга иконки */}
+              {!isHydrated || preferredSource === "timeline" ? (
+                <TvMinimalPlay className="h-8 w-8" />
+              ) : (
+                <GalleryThumbnails className="h-8 w-8" />
+              )}
+            </Button>
             {/* Кнопка переключения режима resizable - показываем только если применен шаблон */}
             <Button
               className={`h-8 w-8 cursor-pointer ${isResizableMode ? "bg-[#45444b] hover:bg-[#45444b]/80" : "hover:bg-[#45444b]/80"}`}
               variant="ghost"
               size="icon"
               title={
-                isResizableMode
-                  ? t("timeline.controlsMain.fixedSizeMode")
-                  : t("timeline.controlsMain.resizableMode")
+                typeof window !== "undefined"
+                  ? isResizableMode
+                    ? t("timeline.controlsMain.fixedSizeMode")
+                    : t("timeline.controlsMain.resizableMode")
+                  : "Fixed Size Mode"
               }
               onClick={() => setIsResizableMode(!isResizableMode)}
               disabled={!appliedTemplate}
@@ -856,15 +1255,13 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               variant="ghost"
               size="icon"
               title={
-                appliedTemplate
-                  ? t("timeline.controlsMain.resetTemplate")
-                  : t("timeline.controlsMain.applyTemplate") || "Применить шаблон"
+                typeof window !== "undefined"
+                  ? appliedTemplate
+                    ? t("timeline.controlsMain.resetTemplate")
+                    : t("timeline.controlsMain.applyTemplate") || "Применить шаблон"
+                  : "Apply Template"
               }
-              onClick={
-                appliedTemplate
-                  ? handleResetTemplate
-                  : () => setAppliedTemplate(lastAppliedTemplate)
-              }
+              onClick={appliedTemplate ? handleResetTemplate : handleApplyLastTemplate}
             >
               {appliedTemplate ? (
                 <svg
@@ -890,7 +1287,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title={t("timeline.controls.takeSnapshot")}
+              title={
+                typeof window !== "undefined"
+                  ? t("timeline.controls.takeSnapshot")
+                  : "Take snapshot"
+              }
               onClick={handleTakeSnapshot}
             >
               <Camera className="h-8 w-8" />
@@ -902,7 +1303,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 className={`h-8 w-8 cursor-pointer ${isChangingCamera ? "animate-pulse" : ""}`}
                 variant="ghost"
                 size="icon"
-                title={`${t("timeline.controlsMain.switchCamera")} (${parallelVideos.findIndex((v) => v.id === video?.id) + 1}/${parallelVideos.length})`}
+                title={
+                  typeof window !== "undefined"
+                    ? `${t("timeline.controlsMain.switchCamera")} (${parallelVideos.findIndex((v) => v.id === video?.id) + 1}/${parallelVideos.length})`
+                    : "Switch Camera"
+                }
                 onClick={handleSwitchCamera}
                 disabled={isChangingCamera}
               >
@@ -936,7 +1341,9 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title={t("timeline.controls.firstFrame")}
+              title={
+                typeof window !== "undefined" ? t("timeline.controls.firstFrame") : "First frame"
+              }
               onClick={handleChevronFirst}
               disabled={isFirstFrame || isPlaying || isChangingCamera}
             >
@@ -947,7 +1354,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title={t("timeline.controls.previousFrame")}
+              title={
+                typeof window !== "undefined"
+                  ? t("timeline.controls.previousFrame")
+                  : "Previous frame"
+              }
               onClick={handleSkipBackward}
               disabled={isFirstFrame || isPlaying || isChangingCamera}
             >
@@ -958,7 +1369,13 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title={isPlaying ? t("timeline.controls.pause") : t("timeline.controls.play")}
+              title={
+                typeof window !== "undefined"
+                  ? isPlaying
+                    ? t("timeline.controls.pause")
+                    : t("timeline.controls.play")
+                  : "Play"
+              }
               onClick={handlePlayPause}
               disabled={isChangingCamera}
             >
@@ -969,7 +1386,9 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title={t("timeline.controls.nextFrame")}
+              title={
+                typeof window !== "undefined" ? t("timeline.controls.nextFrame") : "Next frame"
+              }
               onClick={handleSkipForward}
               disabled={isLastFrame || isPlaying || isChangingCamera}
             >
@@ -980,7 +1399,9 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
-              title={t("timeline.controls.lastFrame")}
+              title={
+                typeof window !== "undefined" ? t("timeline.controls.lastFrame") : "Last frame"
+              }
               onClick={handleChevronLast}
               disabled={isLastFrame || isPlaying || isChangingCamera}
             >
@@ -992,7 +1413,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               variant="ghost"
               size="icon"
               title={
-                isRecording ? t("timeline.controls.stopRecord") : t("timeline.controls.record")
+                typeof window !== "undefined"
+                  ? isRecording
+                    ? t("timeline.controls.stopRecord")
+                    : t("timeline.controls.record")
+                  : "Record"
               }
               onClick={handleRecordToggle}
               disabled={isChangingCamera} // Отключаем кнопку во время переключения камеры
@@ -1019,9 +1444,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 variant="ghost"
                 size="icon"
                 title={
-                  volume === 0
-                    ? t("timeline.controls.unmuteAudio")
-                    : t("timeline.controls.muteAudio")
+                  typeof window !== "undefined"
+                    ? volume === 0
+                      ? t("timeline.controls.unmuteAudio")
+                      : t("timeline.controls.muteAudio")
+                    : "Mute audio"
                 }
                 onClick={handleToggleMute}
               >
@@ -1042,9 +1469,11 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               variant="ghost"
               size="icon"
               title={
-                isFullscreen
-                  ? t("timeline.controls.exitFullscreen")
-                  : t("timeline.controls.fullscreen")
+                typeof window !== "undefined"
+                  ? isFullscreen
+                    ? t("timeline.controls.exitFullscreen")
+                    : t("timeline.controls.fullscreen")
+                  : "Fullscreen"
               }
               onClick={handleFullscreen}
             >

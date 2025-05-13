@@ -1,5 +1,5 @@
-import { ZoomIn, ZoomOut } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { Star, ZoomIn, ZoomOut } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 import { usePreviewSize } from "@/media-editor/browser"
 import { AddMediaButton } from "@/media-editor/browser/components/layout/add-media-button"
+import { FavoriteButton } from "@/media-editor/browser/components/layout/favorite-button"
+import { useMedia } from "@/media-editor/browser/contexts"
 import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 
 import { filters, VideoFilter } from "./filters"
@@ -89,6 +91,14 @@ const FilterPreview = ({ filter, onClick, size }: FilterPreviewProps) => {
           playsInline
           preload="auto"
         />
+
+        {/* Кнопка избранного */}
+        <FavoriteButton
+          file={{ id: filter.id, path: "", name: filter.name }}
+          size={size}
+          type="filter"
+        />
+
         <div
           className={`${isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-200`}
         >
@@ -122,6 +132,8 @@ export function FilterList() {
   const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
   const [, setActiveFilter] = useState<VideoFilter | null>(null)
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+  const media = useMedia()
 
   const {
     previewSize,
@@ -132,10 +144,23 @@ export function FilterList() {
     canDecreaseSize,
   } = usePreviewSize("TRANSITIONS")
 
+  const handleToggleFavorites = useCallback(() => {
+    setShowFavoritesOnly((prev) => !prev)
+  }, [])
+
   const filteredFilters = filters.filter((filter) => {
+    // Фильтрация по поисковому запросу
     const searchLower = searchQuery.toLowerCase()
     const localizedName = t(`filters.presets.${filter.id}`).toLowerCase()
-    return localizedName.includes(searchLower) || filter.name.toLowerCase().includes(searchLower)
+    const matchesSearch =
+      localizedName.includes(searchLower) || filter.name.toLowerCase().includes(searchLower)
+
+    // Фильтрация по избранному
+    const matchesFavorites =
+      !showFavoritesOnly ||
+      media.isItemFavorite({ id: filter.id, path: "", name: filter.name }, "filter")
+
+    return matchesSearch && matchesFavorites
   })
 
   const handleFilterClick = (filter: VideoFilter) => {
@@ -160,13 +185,31 @@ export function FilterList() {
           {/* Кнопки изменения размера */}
           <TooltipProvider>
             <div className="mr-2 flex overflow-hidden rounded-md">
+              {/* Кнопка избранного */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "mr-1 h-6 w-6 cursor-pointer",
+                      "mr-0 ml-1 h-6 w-6 cursor-pointer",
+                      showFavoritesOnly ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                    )}
+                    onClick={handleToggleFavorites}
+                  >
+                    <Star size={16} className={showFavoritesOnly ? "fill-current" : ""} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("browser.media.favorites")}</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "mr-1 ml-2 h-6 w-6 cursor-pointer",
                       !canDecreaseSize && "cursor-not-allowed opacity-50",
                     )}
                     onClick={handleDecreaseSize}

@@ -655,6 +655,9 @@
       "added": "Added",
       "add": "Add",
       "remove": "Remove",
+      "addToFavorites": "Add to favorites",
+      "removeFromFavorites": "Remove from favorites",
+      "favorites": "Favorites",
       "sortBy": "Sort by",
       "groupBy": "Group by",
       "filterBy": "Filter by",
@@ -755,6 +758,10 @@
       "videoUnavailable": "Unavailable",
       "noVideoSelected": "Select a video to play",
       "videoLoadError": "Video loading error"
+    },
+    "source": {
+      "timeline": "Timeline",
+      "browser": "Browser"
     },
     "zoom": {
       "zoomIn": "Zoom in",

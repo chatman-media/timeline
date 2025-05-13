@@ -34,6 +34,8 @@ interface PlayerContextType {
 
   // Поля для поддержки шаблонов
   appliedTemplate: AppliedTemplate | null // Примененный шаблон
+  preferredSource: "media" | "timeline" // Предпочтительный источник видео (браузер или таймлайн)
+  lastAppliedTemplate: AppliedTemplate | null // Последний примененный шаблон
 
   setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) => void
   setVideo: (video: MediaFile) => void
@@ -55,6 +57,12 @@ interface PlayerContextType {
   // Методы для управления шаблонами
   setAppliedTemplate: (template: AppliedTemplate | null) => void
   setIsResizableMode: (isResizableMode: boolean) => void
+
+  // Методы для управления предпочтительным источником видео
+  setPreferredSource: (source: "media" | "timeline") => void
+
+  // Методы для управления последним примененным шаблоном
+  setLastAppliedTemplate: (template: AppliedTemplate | null) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined)
@@ -126,6 +134,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       send({ type: "setAppliedTemplate", appliedTemplate }),
     setIsResizableMode: (isResizableMode: boolean) =>
       send({ type: "setIsResizableMode", isResizableMode }),
+    setPreferredSource: (preferredSource: "media" | "timeline") =>
+      send({ type: "setPreferredSource", preferredSource }),
+    setLastAppliedTemplate: (lastAppliedTemplate: AppliedTemplate | null) =>
+      send({ type: "setLastAppliedTemplate", lastAppliedTemplate }),
   }
 
   return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>

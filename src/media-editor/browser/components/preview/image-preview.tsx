@@ -4,6 +4,7 @@ import { memo } from "react"
 import { MediaFile } from "@/types/media"
 
 import { AddMediaButton } from "../layout/add-media-button"
+import { FavoriteButton } from "../layout/favorite-button"
 
 interface ImagePreviewProps {
   file: MediaFile
@@ -71,6 +72,9 @@ export const ImagePreview = memo(function ImagePreview({
       >
         <Image size={size > 100 ? 16 : 12} />
       </div>
+
+      {/* Кнопка избранного */}
+      <FavoriteButton file={file} size={size} type="media" />
 
       {onAddMedia && (
         <AddMediaButton file={file} onAddMedia={onAddMedia} isAdded={isAdded} size={size} />

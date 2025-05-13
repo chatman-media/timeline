@@ -7,6 +7,7 @@ import { MediaFile } from "@/types/media"
 
 import { PreviewTimeline } from ".."
 import { AddMediaButton } from "../layout/add-media-button"
+import { FavoriteButton } from "../layout/favorite-button"
 
 interface AudioPreviewProps {
   file: MediaFile
@@ -196,6 +197,9 @@ export const AudioPreview = memo(function AudioPreview({
           {file.name}
         </div>
       )}
+
+      {/* Кнопка избранного */}
+      <FavoriteButton file={file} size={size} type="audio" />
 
       {/* кнопка добавления */}
       {onAddMedia && isLoaded && (

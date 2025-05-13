@@ -271,16 +271,16 @@ export const userSettingsMachine = createMachine(
           console.log("STORAGE_KEYS.LAYOUT:", STORAGE_KEYS.LAYOUT)
 
           // Проверяем все ключи в localStorage
-          console.log("All localStorage keys in loadSettings:")
+          // console.log("All localStorage keys in loadSettings:")
           for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i)
             if (key) {
-              console.log(`${key}: ${localStorage.getItem(key)}`)
+              // console.log(`${key}: ${localStorage.getItem(key)}`)
             }
           }
 
           const savedLayout = localStorage.getItem(STORAGE_KEYS.LAYOUT)
-          console.log("Loaded layout from localStorage:", savedLayout)
+          // console.log("Loaded layout from localStorage:", savedLayout)
 
           // Проверяем, что значение макета является допустимым
           if (savedLayout && LAYOUTS.includes(savedLayout as LayoutMode)) {

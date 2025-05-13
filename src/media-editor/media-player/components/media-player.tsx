@@ -69,7 +69,8 @@ export function MediaPlayer() {
     videoRefs,
     parallelVideos,
     appliedTemplate,
-    volume, // Добавляем volume из контекста плеера
+    volume,
+    preferredSource,
   } = usePlayerContext()
 
   // Получаем displayTime из контекста
@@ -92,26 +93,99 @@ export function MediaPlayer() {
     })
   }, [settings.aspectRatio])
 
+  // Добавляем обработчик сообщений от VideoPreview
+  useEffect(() => {
+    // Функция-обработчик сообщений
+    const handleMessage = (event: MessageEvent) => {
+      // Проверяем, что сообщение имеет нужный тип
+      if (event.data && event.data.type === "VIDEO_PREVIEW_CLICK") {
+        const { file, play, source } = event.data.data
+
+        console.log("[MediaPlayer] Получено сообщение от VideoPreview:", file.name)
+
+        // Устанавливаем источник видео
+        if (file.id) {
+          setVideoSource(file.id, source)
+        }
+
+        // Обновляем состояние плеера
+        // Используем setTimeout, чтобы избежать бесконечного цикла обновлений
+        setTimeout(() => {
+          // Устанавливаем предпочтительный источник
+          if (source === "media") {
+            console.log("[MediaPlayer] Устанавливаем предпочтительный источник: media (браузер)")
+          }
+
+          // Устанавливаем текущее видео как активное в плеере
+          if (file) {
+            console.log("[MediaPlayer] Устанавливаем видео из браузера:", file.name)
+          }
+
+          // Запускаем воспроизведение, если нужно
+          if (play) {
+            console.log("[MediaPlayer] Запускаем воспроизведение видео из браузера")
+          }
+        }, 0)
+      }
+    }
+
+    // Добавляем обработчик сообщений
+    window.addEventListener("message", handleMessage)
+
+    // Удаляем обработчик при размонтировании компонента
+    return () => {
+      window.removeEventListener("message", handleMessage)
+    }
+  }, [])
+
+  // Используем ref для отслеживания последнего значения громкости
+  const lastVolumeRef = useRef(volume)
+  // Используем ref для отслеживания времени последнего обновления громкости
+  const lastVolumeUpdateTimeRef = useRef(0)
+
   // Эффект для обработки изменения громкости
   useEffect(() => {
     // Если нет видео или рефов, выходим
     if (!videoRefs) return
 
-    // Определяем активное видео ID
-    const currentActiveId = video?.id || null
+    // Проверяем, изменилась ли громкость с последнего обновления
+    if (Math.abs(lastVolumeRef.current - volume) < 0.01) {
+      return // Пропускаем обновление при незначительных изменениях
+    }
+
+    // Проверяем, прошло ли достаточно времени с последнего обновления
+    const now = performance.now()
+    if (now - lastVolumeUpdateTimeRef.current < 100) {
+      return // Ограничиваем частоту обновлений
+    }
+
+    // Обновляем время последнего обновления
+    lastVolumeUpdateTimeRef.current = now
+    // Сохраняем новое значение громкости
+    lastVolumeRef.current = volume
+
+    // Активное видео ID уже доступно через video?.id
 
     // Если используется шаблон с несколькими видео, применяем громкость ко всем видео
     if (appliedTemplate?.template && parallelVideos.length > 0) {
-      parallelVideos.forEach((parallelVideo) => {
+      // Создаем массив уникальных видео для обновления громкости
+      const uniqueVideos = parallelVideos.filter(
+        (v, i, arr) => arr.findIndex((item) => item.id === v.id) === i,
+      )
+
+      uniqueVideos.forEach((parallelVideo) => {
         if (parallelVideo.id && videoRefs[parallelVideo.id]) {
           const videoElement = videoRefs[parallelVideo.id]
 
           // Устанавливаем громкость для всех видео в шаблоне
           videoElement.volume = volume
           videoElement.muted = false
-          console.log(
-            `[Volume] Установлена громкость ${volume} для видео ${parallelVideo.id} в шаблоне`,
-          )
+          // Уменьшаем количество логов
+          if (Math.abs(videoElement.volume - volume) > 0.1) {
+            console.log(
+              `[Volume] Установлена громкость ${volume} для видео ${parallelVideo.id} в шаблоне`,
+            )
+          }
         }
       })
     }
@@ -120,11 +194,15 @@ export function MediaPlayer() {
       // Получаем элемент видео
       const videoElement = videoRefs[video.id]
 
-      // Устанавливаем громкость
-      videoElement.volume = volume
+      // Устанавливаем громкость только если она действительно изменилась
+      if (Math.abs(videoElement.volume - volume) > 0.01) {
+        videoElement.volume = volume
 
-      // Убираем лишние логи для уменьшения шума в консоли
-      // console.log(`[Volume] Установлена громкость ${volume} для видео ${video.id}`)
+        // Логируем только значительные изменения громкости
+        if (Math.abs(videoElement.volume - volume) > 0.1) {
+          console.log(`[Volume] Установлена громкость ${volume} для видео ${video.id}`)
+        }
+      }
     }
 
     // Сохранение в localStorage перенесено в компонент player-controls.tsx
@@ -233,6 +311,9 @@ export function MediaPlayer() {
       initCountRef.current > 2
     ) {
       // Пропускаем повторную инициализацию того же видео после нескольких инициализаций
+      console.log(
+        `[MediaPlayer] Пропускаем повторную инициализацию видео ${video.id} (count: ${initCountRef.current})`,
+      )
       return
     }
 
@@ -256,6 +337,9 @@ export function MediaPlayer() {
       isVideoChangedRef.current = false
       // Сбрасываем счетчик инициализаций при смене видео
       initCountRef.current = 1
+
+      // Сохраняем ID текущего видео
+      currentVideoIdRef.current = video.id
 
       // Обрабатываем переключение между параллельными видео
       if (parallelVideos && parallelVideos.length > 1 && currentVideoIdRef.current) {
@@ -1831,53 +1915,61 @@ export function MediaPlayer() {
           console.log(`[PlayPause] Запускаем синхронное воспроизведение всех видео`)
 
           // Используем requestAnimationFrame для запуска всех видео в одном кадре отрисовки
-          requestAnimationFrame(() => {
-            // Запускаем воспроизведение всех видео одновременно
-            const playPromises = parallelVideos.map((parallelVideo) => {
-              if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-                const videoElement = videoRefs[parallelVideo.id]
+          requestAnimationFrame(async () => {
+            try {
+              // Создаем массив уникальных видео для воспроизведения
+              const uniqueVideos = parallelVideos.filter(
+                (v, i, arr) => arr.findIndex((item) => item.id === v.id) === i,
+              )
 
-                // Проверяем, что элемент существует и находится в DOM
-                if (!videoElement || !document.body.contains(videoElement)) {
-                  console.warn(
-                    `[PlayPause] Видео элемент ${parallelVideo.id} не найден или удален из DOM`,
-                  )
-                  return Promise.resolve()
+              console.log(
+                `[PlayPause] Запускаем воспроизведение ${uniqueVideos.length} уникальных видео`,
+              )
+
+              // Запускаем воспроизведение всех видео одновременно
+              const playPromises = uniqueVideos.map((parallelVideo) => {
+                if (parallelVideo.id && videoRefs[parallelVideo.id]) {
+                  const videoElement = videoRefs[parallelVideo.id]
+
+                  // Проверяем, что элемент существует и находится в DOM
+                  if (!videoElement || !document.body.contains(videoElement)) {
+                    console.warn(
+                      `[PlayPause] Видео элемент ${parallelVideo.id} не найден или удален из DOM`,
+                    )
+                    return Promise.resolve()
+                  }
+
+                  // Определяем источник видео
+                  const source = getVideoSource(parallelVideo.id)
+
+                  if (videoElement.paused) {
+                    // Устанавливаем приоритет загрузки для всех видео
+                    videoElement.preload = "auto"
+
+                    console.log(
+                      `[PlayPause] Запускаем воспроизведение видео ${parallelVideo.id} (источник: ${source || "неизвестен"})`,
+                    )
+
+                    return videoElement.play().catch((err) => {
+                      if (err.name !== "AbortError") {
+                        console.error(
+                          `[PlayPause] Ошибка при синхронном воспроизведении видео ${parallelVideo.id}:`,
+                          err,
+                        )
+                      }
+                    })
+                  }
                 }
-
-                // Определяем источник видео
-                const source = getVideoSource(parallelVideo.id)
-
-                if (videoElement.paused) {
-                  // Устанавливаем приоритет загрузки для всех видео
-                  videoElement.preload = "auto"
-
-                  console.log(
-                    `[PlayPause] Запускаем воспроизведение видео ${parallelVideo.id} (источник: ${source || "неизвестен"})`,
-                  )
-
-                  return videoElement.play().catch((err) => {
-                    if (err.name !== "AbortError") {
-                      console.error(
-                        `[PlayPause] Ошибка при синхронном воспроизведении видео ${parallelVideo.id}:`,
-                        err,
-                      )
-                    }
-                  })
-                }
-              }
-              return Promise.resolve()
-            })
-
-            // Не ждем завершения всех промисов, чтобы не блокировать интерфейс
-            // Просто логируем результат
-            Promise.all(playPromises)
-              .then(() => {
-                console.log(`[PlayPause] Все видео успешно запущены синхронно`)
+                return Promise.resolve()
               })
-              .catch((err) => {
-                console.error(`[PlayPause] Ошибка при синхронном запуске видео:`, err)
-              })
+
+              // Не ждем завершения всех промисов, чтобы не блокировать интерфейс
+              // Просто логируем результат
+              await Promise.all(playPromises)
+              console.log(`[PlayPause] Все видео успешно запущены синхронно`)
+            } catch (err) {
+              console.error(`[PlayPause] Ошибка при синхронном запуске видео:`, err)
+            }
           })
         } else {
           // Если нужно поставить на паузу, останавливаем все видео одновременно
@@ -1885,7 +1977,14 @@ export function MediaPlayer() {
 
           // Используем requestAnimationFrame для остановки всех видео в одном кадре отрисовки
           requestAnimationFrame(() => {
-            parallelVideos.forEach((parallelVideo) => {
+            // Создаем массив уникальных видео для остановки
+            const uniqueVideos = parallelVideos.filter(
+              (v, i, arr) => arr.findIndex((item) => item.id === v.id) === i,
+            )
+
+            console.log(`[PlayPause] Останавливаем ${uniqueVideos.length} уникальных видео`)
+
+            uniqueVideos.forEach((parallelVideo) => {
               if (parallelVideo.id && videoRefs[parallelVideo.id]) {
                 const parallelVideoElement = videoRefs[parallelVideo.id]
 
@@ -2014,12 +2113,6 @@ export function MediaPlayer() {
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [isPlaying, video?.id, setIsPlaying, videoRefs])
 
-  // Удаляем проверку на наличие видео, чтобы плеер всегда отображался
-  // if (!video?.id) return null
-
-  // Для видео всегда считаем, что оно в диапазоне времени
-  // Это предотвращает проблемы с отображением при разных типах времени
-
   // Определяем, какое видео активно
   // Если есть активное видео, используем его ID
   // Если нет активного видео, но есть примененный шаблон с видео, используем ID первого видео из шаблона
@@ -2035,39 +2128,286 @@ export function MediaPlayer() {
   )
 
   // Определяем, какие видео нужно отображать в зависимости от шаблона
-  let videosToDisplay: MediaFile[] = []
+  const [videosToDisplay, setVideosToDisplay] = useState<MediaFile[]>([])
 
-  // Если есть примененный шаблон
-  if (appliedTemplate?.template) {
-    // Если в шаблоне есть видео, используем их
-    if (appliedTemplate.videos.length > 0) {
-      videosToDisplay = appliedTemplate.videos
-      console.log(`[MediaPlayer] Используем ${videosToDisplay.length} видео из шаблона`)
+  // Получаем функции из контекста плеера
+  const { setActiveVideoId, setVideo, setAppliedTemplate } = usePlayerContext()
+
+  // Эффект для инициализации видео из браузера при загрузке страницы
+  useEffect(() => {
+    // Выполняем только на клиенте и только при первом рендере
+    if (typeof window !== "undefined") {
+      // Проверяем, выбран ли источник "media" (браузер)
+      if (preferredSource === "media") {
+        console.log("[MediaPlayer] Инициализация: выбран источник 'media' (браузер)")
+
+        // Всегда пытаемся найти и отобразить видео из браузера
+        if (true) {
+          console.log("[MediaPlayer] Инициализация: ищем видео из браузера для отображения")
+
+          // Сначала помечаем все параллельные видео как видео из браузера
+          if (parallelVideos.length > 0) {
+            console.log(
+              `[MediaPlayer] Помечаем все параллельные видео (${parallelVideos.length}) как видео из браузера`,
+            )
+            parallelVideos.forEach((v) => {
+              if (v.id) {
+                setVideoSource(v.id, "media")
+              }
+            })
+          }
+
+          // Находим видео из браузера
+          const browserVideos = parallelVideos
+
+          // Если есть видео из браузера
+          if (browserVideos.length > 0) {
+            console.log(
+              `[MediaPlayer] Инициализация: найдено ${browserVideos.length} видео из браузера`,
+            )
+
+            // Проверяем, есть ли примененный шаблон
+            if (appliedTemplate) {
+              console.log(
+                `[MediaPlayer] Инициализация: есть примененный шаблон, заполняем его видео из браузера`,
+              )
+
+              // Создаем копию шаблона
+              const templateCopy = JSON.parse(JSON.stringify(appliedTemplate))
+
+              // Заполняем шаблон видео из браузера
+              templateCopy.videos = browserVideos.slice(0, templateCopy.template?.screens || 1)
+
+              console.log(
+                `[MediaPlayer] Инициализация: добавлено ${templateCopy.videos.length} видео из браузера в шаблон`,
+              )
+
+              // Применяем обновленный шаблон
+              setAppliedTemplate(templateCopy)
+
+              // Устанавливаем первое видео из браузера как активное
+              setActiveVideoId(browserVideos[0].id)
+              setVideo(browserVideos[0])
+              console.log(
+                `[MediaPlayer] Инициализация: установлено активное видео из браузера: ${browserVideos[0].id}`,
+              )
+            } else {
+              // Если нет шаблона, просто устанавливаем первое видео из браузера как активное
+              const firstBrowserVideo = browserVideos[0]
+              console.log(
+                `[MediaPlayer] Инициализация: устанавливаем видео ${firstBrowserVideo.id} как активное`,
+              )
+
+              setActiveVideoId(firstBrowserVideo.id)
+              setVideo(firstBrowserVideo)
+            }
+          }
+          // Если нет видео из браузера, но есть параллельные видео, устанавливаем первое как активное
+          // и помечаем его как видео из браузера
+          else if (parallelVideos.length > 0) {
+            console.log(
+              `[MediaPlayer] Инициализация: нет видео из браузера, используем первое параллельное видео`,
+            )
+
+            const firstVideo = parallelVideos[0]
+            console.log(
+              `[MediaPlayer] Инициализация: устанавливаем видео ${firstVideo.id} как активное`,
+            )
+
+            // Устанавливаем видео как активное
+            setActiveVideoId(firstVideo.id)
+            setVideo(firstVideo)
+
+            // Помечаем видео как видео из браузера
+            if (firstVideo.id) {
+              setVideoSource(firstVideo.id, "media")
+            }
+          }
+          // Если нет ни видео из браузера, ни параллельных видео, но есть активное видео
+          else if (video) {
+            console.log(
+              `[MediaPlayer] Инициализация: нет видео из браузера и параллельных видео, используем активное видео`,
+            )
+
+            // Помечаем активное видео как видео из браузера
+            if (video.id) {
+              setVideoSource(video.id, "media")
+            }
+          }
+        }
+      }
     }
-    // Если в шаблоне нет видео, но есть параллельные видео, используем их
-    else if (parallelVideos.length > 0) {
-      videosToDisplay = parallelVideos.slice(0, appliedTemplate.template.screens || 1)
+  }, [
+    preferredSource,
+    video,
+    parallelVideos,
+    videoSources,
+    appliedTemplate,
+    setAppliedTemplate,
+    setActiveVideoId,
+    setVideo,
+    setVideoSource,
+  ])
+
+  // Эффект для обновления списка видео для отображения
+  useEffect(() => {
+    let newVideosToDisplay: MediaFile[] = []
+
+    // Используем значение из контекста плеера
+    const storedPreferredSource = preferredSource || "timeline"
+
+    // Если есть примененный шаблон
+    if (appliedTemplate?.template) {
+      // Если в шаблоне есть видео, используем их
+      if (appliedTemplate.videos && appliedTemplate.videos.length > 0) {
+        // Создаем новый массив, чтобы избежать мутации исходного массива
+        newVideosToDisplay = [...appliedTemplate.videos]
+        console.log(`[MediaPlayer] Используем ${newVideosToDisplay.length} видео из шаблона`)
+      }
+      // Если в шаблоне нет видео, но есть параллельные видео, используем их с учетом предпочтительного источника
+      else if (parallelVideos.length > 0) {
+        // Фильтруем видео по источнику, если есть информация о источниках
+        let filteredVideos = parallelVideos
+
+        if (videoSources && Object.keys(videoSources).length > 0) {
+          filteredVideos = parallelVideos.filter((v) => {
+            // Если нет информации о источнике для этого видео, включаем его
+            if (!v.id || !videoSources[v.id]) return true
+
+            // Включаем только видео из предпочтительного источника
+            return videoSources[v.id] === storedPreferredSource
+          })
+
+          console.log(
+            `[MediaPlayer] Отфильтровано ${filteredVideos.length} видео из ${parallelVideos.length} по источнику ${storedPreferredSource}`,
+          )
+        }
+
+        // Создаем новый массив с уникальными видео, чтобы избежать дубликатов
+        const uniqueVideos = filteredVideos.filter(
+          (v, i, arr) => arr.findIndex((item) => item.id === v.id) === i,
+        )
+
+        // Берем только нужное количество видео для шаблона
+        newVideosToDisplay = uniqueVideos.slice(0, appliedTemplate.template.screens || 1)
+        console.log(
+          `[MediaPlayer] Используем ${newVideosToDisplay.length} параллельных видео для шаблона`,
+        )
+      }
+      // Если есть активное видео и оно из предпочтительного источника, добавляем его
+      else if (
+        video &&
+        (!videoSources || !video.id || videoSources[video.id] === storedPreferredSource)
+      ) {
+        newVideosToDisplay = [video]
+        console.log(`[MediaPlayer] Используем активное видео ${video.id} для шаблона`)
+      }
+      // Иначе оставляем пустой список видео (шаблон будет показан с черными ячейками)
+      else {
+        console.log(`[MediaPlayer] Шаблон будет показан с пустыми ячейками (черный экран)`)
+      }
+    }
+    // Если нет примененного шаблона, но есть активное видео из предпочтительного источника
+    else if (
+      video &&
+      (!videoSources || !video.id || videoSources[video.id] === storedPreferredSource)
+    ) {
+      newVideosToDisplay = [video]
+      console.log(`[MediaPlayer] Используем активное видео ${video.id}`)
+    }
+    // Если нет примененного шаблона и нет активного видео из предпочтительного источника,
+    // но есть параллельные видео из предпочтительного источника
+    else if (parallelVideos.length > 0 && storedPreferredSource === "media") {
+      // Фильтруем видео по источнику
+      const filteredVideos = parallelVideos.filter((v) => {
+        // Если нет информации о источнике для этого видео, включаем его
+        if (!v.id || !videoSources[v.id]) return true
+
+        // Включаем только видео из предпочтительного источника
+        return videoSources[v.id] === storedPreferredSource
+      })
+
+      if (filteredVideos.length > 0) {
+        newVideosToDisplay = [filteredVideos[0]]
+        console.log(`[MediaPlayer] Используем первое видео из браузера ${filteredVideos[0].id}`)
+      }
+    }
+
+    // Добавляем активное видео в список только если оно не включено, нет шаблона и оно из предпочтительного источника
+    if (
+      video &&
+      !newVideosToDisplay.some((v) => v.id === video.id) &&
+      !appliedTemplate?.template &&
+      (!videoSources || !video.id || videoSources[video.id] === storedPreferredSource)
+    ) {
+      console.log(`[MediaPlayer] Добавляем активное видео ${video.id} в список для отображения`)
+      newVideosToDisplay.push(video)
+    }
+
+    // Обновляем состояние
+    setVideosToDisplay(newVideosToDisplay)
+  }, [appliedTemplate, video, parallelVideos, activeId, videoSources, preferredSource])
+
+  // Эффект для применения шаблона с учетом источника видео
+  useEffect(() => {
+    if (!appliedTemplate?.template) return
+
+    console.log(`[MediaPlayer] Применяем шаблон: ${appliedTemplate.template.id}`)
+    console.log(`[MediaPlayer] Активное видео ID: ${activeId}`)
+    console.log(`[MediaPlayer] Соотношение сторон: ${JSON.stringify(aspectRatio)}`)
+
+    // Определяем источник видео для шаблона
+    // Если активное видео из таймлайна (имеет startTime), используем видео из таймлайна
+    // Иначе используем видео из браузера
+    const useTimelineVideos = video?.startTime !== undefined
+    console.log(
+      `[MediaPlayer] Используем видео из ${useTimelineVideos ? "таймлайна" : "браузера"} для шаблона`,
+    )
+
+    // Создаем копию видео из шаблона
+    let templateVideos = [...(appliedTemplate.videos || [])]
+
+    // Если в шаблоне нет видео, но есть активное видео, добавляем его в шаблон
+    if (templateVideos.length === 0 && video) {
+      console.log(`[MediaPlayer] Добавляем активное видео ${video.id} в шаблон`)
+      templateVideos = [video]
+    }
+
+    // Если в шаблоне меньше видео, чем нужно для шаблона, добавляем параллельные видео
+    if (
+      templateVideos.length < (appliedTemplate.template.screens || 1) &&
+      parallelVideos.length > 0
+    ) {
       console.log(
-        `[MediaPlayer] Используем ${videosToDisplay.length} параллельных видео для шаблона`,
+        `[MediaPlayer] Добавляем параллельные видео в шаблон (${templateVideos.length}/${appliedTemplate.template.screens})`,
+      )
+
+      // Фильтруем параллельные видео в зависимости от источника
+      const filteredParallelVideos = parallelVideos.filter((v) => {
+        const isTimelineVideo = v.startTime !== undefined
+        // Используем только видео из того же источника, что и активное видео
+        return useTimelineVideos === isTimelineVideo
+      })
+
+      console.log(
+        `[MediaPlayer] Отфильтровано ${filteredParallelVideos.length} видео из ${parallelVideos.length} по источнику`,
+      )
+
+      // Добавляем только недостающие видео
+      const missingCount = (appliedTemplate.template.screens || 1) - templateVideos.length
+      const additionalVideos = filteredParallelVideos
+        .filter((v) => !templateVideos.some((av) => av.id === v.id))
+        .slice(0, missingCount)
+
+      templateVideos = [...templateVideos, ...additionalVideos]
+      console.log(
+        `[MediaPlayer] Добавлено ${additionalVideos.length} параллельных видео в шаблон, всего: ${templateVideos.length}`,
       )
     }
-    // Если есть активное видео, добавляем его
-    else if (video) {
-      videosToDisplay = [video]
-      console.log(`[MediaPlayer] Используем активное видео ${video.id} для шаблона`)
-    }
-  }
-  // Если нет примененного шаблона, но есть активное видео
-  else if (video) {
-    videosToDisplay = [video]
-    console.log(`[MediaPlayer] Используем активное видео ${video.id}`)
-  }
 
-  // Всегда добавляем активное видео в список, если оно есть и еще не включено
-  if (video && !videosToDisplay.some((v) => v.id === video.id)) {
-    console.log(`[MediaPlayer] Добавляем активное видео ${video.id} в список для отображения`)
-    videosToDisplay.push(video)
-  }
+    // Обновляем видео в шаблоне
+    appliedTemplate.videos = templateVideos
+  }, [appliedTemplate, video, parallelVideos, activeId, aspectRatio])
 
   // Предварительно загружаем все видео для более быстрого запуска
   useEffect(() => {
@@ -2210,8 +2550,15 @@ export function MediaPlayer() {
   }
 
   // Логируем информацию о параллельных видео и активном видео
+  // Проверяем на дубликаты в параллельных видео
+  const uniqueParallelIds = [...new Set(parallelVideos.map((v) => v.id))]
+  if (uniqueParallelIds.length !== parallelVideos.length) {
+    console.warn(
+      `[MediaPlayer] Обнаружены дубликаты в параллельных видео! Уникальных: ${uniqueParallelIds.length}, всего: ${parallelVideos.length}`,
+    )
+  }
   console.log(
-    `[MediaPlayer] Параллельные видео: ${parallelVideos.map((v) => v.id).join(", ")}, активное видео: ${activeId}`,
+    `[MediaPlayer] Параллельные видео: ${uniqueParallelIds.join(", ")}, активное видео: ${activeId}`,
   )
 
   // Вычисляем соотношение сторон для AspectRatio
@@ -2329,6 +2676,17 @@ export function MediaPlayer() {
                         }
 
                         // Если шаблон не используется, используем стандартный подход
+                        // Проверяем, не является ли это видео дубликатом (одно и то же видео может быть в списке дважды)
+                        // Это может вызывать бесконечный цикл обновлений
+                        const isDuplicate =
+                          videosToDisplay.findIndex((v) => v.id === videoItem.id) !== index
+                        if (isDuplicate) {
+                          console.log(
+                            `[MediaPlayer] Пропускаем дублирующееся видео ${videoItem.id} в индексе ${index}`,
+                          )
+                          return null
+                        }
+
                         return (
                           <video
                             key={`${videoItem.id}-${index}`} // Добавляем индекс к ключу, чтобы сделать его уникальным
@@ -2486,7 +2844,7 @@ export function MediaPlayer() {
           </div>
         </div>
       </div>
-      <PlayerControls currentTime={currentTime} />
+      <PlayerControls currentTime={currentTime} videoSources={videoSources} />
     </div>
   )
 }

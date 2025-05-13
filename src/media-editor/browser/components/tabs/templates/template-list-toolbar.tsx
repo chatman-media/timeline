@@ -1,4 +1,4 @@
-import { ZoomIn, ZoomOut } from "lucide-react"
+import { Star, ZoomIn, ZoomOut } from "lucide-react"
 import type { ChangeEvent } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -14,6 +14,8 @@ interface TemplateListToolbarProps {
   canIncreaseSize: boolean
   handleDecreaseSize: () => void
   handleIncreaseSize: () => void
+  showFavoritesOnly?: boolean
+  onToggleFavorites?: () => void
 }
 
 export function TemplateListToolbar({
@@ -23,6 +25,8 @@ export function TemplateListToolbar({
   canIncreaseSize,
   handleDecreaseSize,
   handleIncreaseSize,
+  showFavoritesOnly = false,
+  onToggleFavorites = () => {},
 }: TemplateListToolbarProps) {
   const { t } = useTranslation()
 
@@ -42,13 +46,31 @@ export function TemplateListToolbar({
       <div className="flex items-center gap-1">
         <TooltipProvider>
           <div className="mr-2 flex overflow-hidden rounded-md">
+            {/* Кнопка избранного */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "mr-1 h-6 w-6 cursor-pointer",
+                    "mr-0 ml-1 h-6 w-6 cursor-pointer",
+                    showFavoritesOnly ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                  )}
+                  onClick={onToggleFavorites}
+                >
+                  <Star size={16} className={showFavoritesOnly ? "fill-current" : ""} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("browser.media.favorites")}</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "mr-1 ml-2 h-6 w-6 cursor-pointer",
                     !canDecreaseSize && "cursor-not-allowed opacity-50",
                   )}
                   onClick={handleDecreaseSize}

@@ -137,14 +137,7 @@ export const MediaFileList = memo(function MediaFileList({
   viewMode?: ViewMode
 }) {
   const { t } = useTranslation()
-  const {
-    isLoading,
-    allMediaFiles: media,
-    includedFiles,
-    includeFiles,
-    isFileAdded,
-    areAllFilesAdded,
-  } = useMedia()
+  const media = useMedia()
 
   const { addMediaFiles: timelineAddMediaFiles } = useTimeline()
 
@@ -165,6 +158,7 @@ export const MediaFileList = memo(function MediaFileList({
     (savedSettings?.sortOrder as "asc" | "desc") || "desc",
   )
   const [searchQuery, setSearchQuery] = useState<string>("")
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false)
 
   // Сохраняем настройки при их изменении
   useEffect(() => {
@@ -193,22 +187,22 @@ export const MediaFileList = memo(function MediaFileList({
   const addFilesToTimeline = useCallback(
     (files: MediaFile[]) => {
       const newFiles = files.filter(
-        (file) => !includedFiles.map((file: MediaFile) => file.path).includes(file.path),
+        (file) => !media.includedFiles.map((file: MediaFile) => file.path).includes(file.path),
       )
       console.log("Adding files to timeline:", {
         allFiles: files,
         newFiles,
-        includedFiles: includedFiles.map((file: MediaFile) => file.path),
+        includedFiles: media.includedFiles.map((file: MediaFile) => file.path),
       })
       if (newFiles.length > 0) {
         // Сначала добавляем в медиа
-        includeFiles(newFiles)
+        media.includeFiles(newFiles)
         // Затем добавляем на таймлайн
         console.log("Sending files to timeline machine:", newFiles)
         timelineAddMediaFiles(newFiles)
       }
     },
-    [includedFiles, includeFiles, timelineAddMediaFiles],
+    [media, timelineAddMediaFiles],
   )
 
   // Обертка для setPreviewSize, которая также сохраняет размер в localStorage
@@ -359,6 +353,15 @@ export const MediaFileList = memo(function MediaFileList({
     setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
   }, [])
 
+  const handleToggleFavorites = useCallback(() => {
+    console.log("[handleToggleFavorites] Toggling favorites filter")
+    setShowFavoritesOnly((prev) => {
+      const newValue = !prev
+      console.log("[handleToggleFavorites] New value:", newValue)
+      return newValue
+    })
+  }, [])
+
   const handleImportFile = () => {
     console.log("Импорт файла")
     // Показываем диалог выбора файлов
@@ -465,8 +468,8 @@ export const MediaFileList = memo(function MediaFileList({
     // Сначала фильтрация по типу
     let filtered =
       filterType === "all"
-        ? media
-        : media.filter((file: MediaFile) => {
+        ? media.allMediaFiles
+        : media.allMediaFiles.filter((file: MediaFile) => {
           if (filterType === "video" && file.probeData?.streams?.[0]?.codec_type === "video")
             return true
           if (filterType === "audio" && file.probeData?.streams?.[0]?.codec_type === "audio")
@@ -476,11 +479,30 @@ export const MediaFileList = memo(function MediaFileList({
           return false
         })
 
+    // Фильтрация по избранному
+    if (showFavoritesOnly) {
+      filtered = filtered.filter((file: MediaFile) => {
+        // Определяем тип файла для проверки в избранном
+        let itemType = "media"
+
+        // Для аудиофайлов используем тип "audio"
+        if (
+          file.isAudio ||
+          (file.probeData?.streams?.[0]?.codec_type === "audio" &&
+            !file.probeData?.streams?.some((stream) => stream.codec_type === "video"))
+        ) {
+          itemType = "audio"
+        }
+
+        return media.isItemFavorite(file, itemType)
+      })
+    }
+
     // Затем фильтрация по поисковому запросу
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
-        (file) =>
+        (file: MediaFile) =>
           file.name.toLowerCase().includes(query) ||
           String(file.probeData?.format.tags?.title || "")
             .toLowerCase()
@@ -569,7 +591,7 @@ export const MediaFileList = memo(function MediaFileList({
       const timeB = b.startTime || 0
       return orderMultiplier * (timeB - timeA)
     })
-  }, [media, filterType, sortBy, sortOrder, searchQuery])
+  }, [media, filterType, sortBy, sortOrder, searchQuery, showFavoritesOnly])
 
   // Группируем файлы
   const groupedFiles = useMemo<GroupedMediaFiles[]>(() => {
@@ -724,16 +746,16 @@ export const MediaFileList = memo(function MediaFileList({
   }, [filteredAndSortedMedia, groupBy, sortOrder])
 
   // Мемоизируем другие вычисления
-  const sortedDates = useMemo(() => groupFilesByDate(media), [media])
+  const sortedDates = useMemo(() => groupFilesByDate(media.allMediaFiles), [media.allMediaFiles])
 
   // Удаляем импорт rootStore
   // Заменяем все остальные вызовы rootStore.send
   const handleAddAllFiles = useCallback(() => {
-    const nonImageFiles = media.filter((file: MediaFile) => !file.isImage)
+    const nonImageFiles = media.allMediaFiles.filter((file: MediaFile) => !file.isImage)
     if (nonImageFiles.length > 0) {
       addFilesToTimeline(nonImageFiles)
     }
-  }, [media, addFilesToTimeline])
+  }, [media.allMediaFiles, addFilesToTimeline])
 
   const addDateFiles = useCallback(
     (files: MediaFile[]) => {
@@ -743,16 +765,16 @@ export const MediaFileList = memo(function MediaFileList({
   )
 
   const handleAddAllVideoFiles = useCallback(() => {
-    const videoFiles = media.filter((file: MediaFile) =>
+    const videoFiles = media.allMediaFiles.filter((file: MediaFile) =>
       file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "video"),
     )
     if (videoFiles.length > 0) {
       addFilesToTimeline(videoFiles)
     }
-  }, [media, addFilesToTimeline])
+  }, [media.allMediaFiles, addFilesToTimeline])
 
   const handleAddAllAudioFiles = useCallback(() => {
-    const audioFiles = media.filter(
+    const audioFiles = media.allMediaFiles.filter(
       (file: MediaFile) =>
         !file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "video") &&
         file.probeData?.streams?.some((stream: FfprobeStream) => stream.codec_type === "audio"),
@@ -760,7 +782,7 @@ export const MediaFileList = memo(function MediaFileList({
     if (audioFiles.length > 0) {
       addFilesToTimeline(audioFiles)
     }
-  }, [media, addFilesToTimeline])
+  }, [media.allMediaFiles, addFilesToTimeline])
 
   // Функция для сохранения выбранного размера в localStorage
   const saveSize = (mode: string, size: number): void => {
@@ -787,7 +809,7 @@ export const MediaFileList = memo(function MediaFileList({
       console.log("[handleAddMedia] Adding media file:", file.name)
 
       // Проверяем, не добавлен ли файл уже
-      if (isFileAdded(file)) {
+      if (media.isFileAdded(file)) {
         console.log(`[handleAddMedia] Файл ${file.name} уже добавлен в медиафайлы`)
         return
       }
@@ -804,14 +826,14 @@ export const MediaFileList = memo(function MediaFileList({
         addFilesToTimeline([file])
       }
     },
-    [addFilesToTimeline, isFileAdded],
+    [addFilesToTimeline, media],
   )
 
   // Мемоизируем функцию рендеринга файла
   const renderFile = useCallback(
     (file: MediaFile) => {
       const fileId = file.id || file.path || file.name
-      const isAdded = isFileAdded(file)
+      const isAdded = media.isFileAdded(file)
 
       switch (viewMode) {
       case "list":
@@ -894,7 +916,7 @@ export const MediaFileList = memo(function MediaFileList({
         )
       }
     },
-    [viewMode, previewSize, isFileAdded, handleAddMedia],
+    [viewMode, previewSize, media, handleAddMedia],
   )
 
   // Мемоизируем функцию рендеринга группы
@@ -906,7 +928,7 @@ export const MediaFileList = memo(function MediaFileList({
       }
 
       // Проверяем, все ли файлы в группе уже добавлены
-      const allFilesAdded = areAllFilesAdded(group.files)
+      const allFilesAdded = media.areAllFilesAdded(group.files)
 
       if (!group.title || group.title === "") {
         return (
@@ -927,7 +949,7 @@ export const MediaFileList = memo(function MediaFileList({
 
       return (
         <div key={group.title} className="mb-4">
-          <div className="mb-2 flex items-center justify-between px-2">
+          <div className="mb-2 flex items-center justify-between pl-2">
             <h3 className="text-sm font-medium">{group.title}</h3>
             <Button
               variant="secondary"
@@ -965,7 +987,7 @@ export const MediaFileList = memo(function MediaFileList({
         </div>
       )
     },
-    [viewMode, areAllFilesAdded, addFilesToTimeline, renderFile],
+    [viewMode, media, addFilesToTimeline, renderFile],
   )
 
   // Функция рендеринга контента
@@ -981,7 +1003,7 @@ export const MediaFileList = memo(function MediaFileList({
     return <div className="space-y-4 p-2">{groupedFiles.map((group) => renderGroup(group))}</div>
   }, [filteredAndSortedMedia, groupedFiles, renderGroup])
 
-  if (isLoading || !media || media.length === 0) {
+  if (media.isLoading || !media.allMediaFiles || media.allMediaFiles.length === 0) {
     return (
       <div className="flex flex-col overflow-hidden">
         <div className="flex-1 p-3 pb-1">
@@ -1004,7 +1026,7 @@ export const MediaFileList = memo(function MediaFileList({
     )
   }
 
-  if (!isLoading && !media) {
+  if (!media.isLoading && !media.allMediaFiles) {
     return <NoFiles />
   }
 
@@ -1033,10 +1055,10 @@ export const MediaFileList = memo(function MediaFileList({
         onDecreaseSize={handleDecreaseSize}
         canIncreaseSize={canIncreaseSize}
         canDecreaseSize={canDecreaseSize}
+        showFavoritesOnly={showFavoritesOnly}
+        onToggleFavorites={handleToggleFavorites}
       />
-      <div className="scrollbar-hide hover:scrollbar-default min-h-0 flex-1 overflow-y-auto p-0 dark:bg-[#1b1a1f]">
-        {renderContent()}
-      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-0 dark:bg-[#1b1a1f]">{renderContent()}</div>
       <div className="m-0 flex-shrink-0 py-0.5 transition-all duration-200 ease-in-out">
         <StatusBar
           media={filteredAndSortedMedia}
@@ -1045,7 +1067,7 @@ export const MediaFileList = memo(function MediaFileList({
           onAddDateFiles={addDateFiles}
           onAddAllFiles={handleAddAllFiles}
           sortedDates={sortedDates}
-          addedFiles={includedFiles}
+          addedFiles={media.includedFiles}
         />
       </div>
       {isRecordingModalOpen && (

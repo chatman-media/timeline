@@ -11,6 +11,7 @@ import {
   ListFilterPlus,
   Mic,
   SortDesc,
+  Star,
   Webcam,
   ZoomIn,
   ZoomOut,
@@ -54,6 +55,8 @@ interface MediaToolbarProps {
   onDecreaseSize?: () => void
   canIncreaseSize?: boolean
   canDecreaseSize?: boolean
+  showFavoritesOnly?: boolean
+  onToggleFavorites?: () => void
 }
 
 /**
@@ -105,6 +108,8 @@ function MediaToolbarClient({
   onDecreaseSize = () => {},
   canIncreaseSize = true,
   canDecreaseSize = true,
+  showFavoritesOnly = false,
+  onToggleFavorites = () => {},
 }: MediaToolbarProps) {
   const { t } = useTranslation()
   // Внутренний стейт для управления текущим выбором
@@ -233,13 +238,31 @@ function MediaToolbarClient({
         {/* Кнопки переключения режимов просмотра */}
         <TooltipProvider>
           <div className="mr-2 flex overflow-hidden rounded-md">
+            {/* Кнопка избранного */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className={cn(
-                    "mr-0 ml-3 h-6 w-6 cursor-pointer",
+                    "mr-0 ml-1 h-6 w-6 cursor-pointer",
+                    showFavoritesOnly ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                  )}
+                  onClick={onToggleFavorites}
+                >
+                  <Star size={16} className={showFavoritesOnly ? "fill-current" : ""} />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t("browser.media.favorites")}</TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "mr-0 ml-2 h-6 w-6 cursor-pointer",
                     viewMode === "grid" ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
                   )}
                   onClick={() => onViewModeChange("grid")}

@@ -29,6 +29,12 @@ export interface PlayerContextType {
 
   // Поля для поддержки шаблонов
   appliedTemplate: AppliedTemplate | null // Примененный шаблон
+
+  // Предпочтительный источник видео (браузер или таймлайн)
+  preferredSource: "media" | "timeline"
+
+  // Последний примененный шаблон
+  lastAppliedTemplate: AppliedTemplate | null
 }
 
 // Загружаем сохраненный уровень звука из localStorage
@@ -63,6 +69,8 @@ const initialContext: PlayerContextType = {
   parallelVideos: [],
   activeVideoId: null,
   appliedTemplate: null,
+  preferredSource: "timeline", // По умолчанию используем таймлайн как источник
+  lastAppliedTemplate: null,
 }
 
 type SetCurrentTimeEvent = {
@@ -145,6 +153,16 @@ type SetIsResizableModeEvent = {
   isResizableMode: boolean
 }
 
+type SetPreferredSourceEvent = {
+  type: "setPreferredSource"
+  preferredSource: "media" | "timeline"
+}
+
+type SetLastAppliedTemplateEvent = {
+  type: "setLastAppliedTemplate"
+  lastAppliedTemplate: AppliedTemplate | null
+}
+
 export type PlayerEvent =
   | SetCurrentTimeEvent
   | SetIsPlayingEvent
@@ -162,6 +180,8 @@ export type PlayerEvent =
   | SetActiveVideoIdEvent
   | SetAppliedTemplateEvent
   | SetIsResizableModeEvent
+  | SetPreferredSourceEvent
+  | SetLastAppliedTemplateEvent
 
 // Функция для сохранения состояния плеера в IndexedDB - временно отключена
 const persistPlayerState = async (_: { context: PlayerContextType }): Promise<void> => {
@@ -259,6 +279,12 @@ export const playerMachine = createMachine({
         setIsResizableMode: {
           actions: assign({ isResizableMode: ({ event }) => event.isResizableMode }),
         },
+        setPreferredSource: {
+          actions: assign({ preferredSource: ({ event }) => event.preferredSource }),
+        },
+        setLastAppliedTemplate: {
+          actions: assign({ lastAppliedTemplate: ({ event }) => event.lastAppliedTemplate }),
+        },
       },
     },
     loading: {
@@ -327,6 +353,12 @@ export const playerMachine = createMachine({
         setIsResizableMode: {
           actions: assign({ isResizableMode: ({ event }) => event.isResizableMode }),
         },
+        setPreferredSource: {
+          actions: assign({ preferredSource: ({ event }) => event.preferredSource }),
+        },
+        setLastAppliedTemplate: {
+          actions: assign({ lastAppliedTemplate: ({ event }) => event.lastAppliedTemplate }),
+        },
       },
     },
     ready: {
@@ -392,6 +424,12 @@ export const playerMachine = createMachine({
         },
         setIsResizableMode: {
           actions: assign({ isResizableMode: ({ event }) => event.isResizableMode }),
+        },
+        setPreferredSource: {
+          actions: assign({ preferredSource: ({ event }) => event.preferredSource }),
+        },
+        setLastAppliedTemplate: {
+          actions: assign({ lastAppliedTemplate: ({ event }) => event.lastAppliedTemplate }),
         },
       },
     },

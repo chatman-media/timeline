@@ -654,6 +654,9 @@
       "added": "Добавлено",
       "add": "Добавить",
       "remove": "Удалить",
+      "addToFavorites": "Добавить в избранное",
+      "removeFromFavorites": "Удалить из избранного",
+      "favorites": "Избранное",
       "sortBy": "Сортировать по",
       "groupBy": "Группировать по",
       "filterBy": "Фильтровать по",
@@ -754,6 +757,10 @@
       "videoUnavailable": "Видео недоступно",
       "noVideoSelected": "Выберите видео для воспроизведения",
       "videoLoadError": "Ошибка загрузки видео"
+    },
+    "source": {
+      "timeline": "Таймлайн",
+      "browser": "Браузер"
     },
     "zoom": {
       "zoomIn": "Увеличить",

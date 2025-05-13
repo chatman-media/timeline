@@ -1,5 +1,5 @@
-import { ZoomIn, ZoomOut } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { Star, ZoomIn, ZoomOut } from "lucide-react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
@@ -8,6 +8,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 import { usePreviewSize } from "@/media-editor/browser"
 import { AddMediaButton } from "@/media-editor/browser/components/layout/add-media-button"
+import { FavoriteButton } from "@/media-editor/browser/components/layout/favorite-button"
+import { useMedia } from "@/media-editor/browser/contexts"
 import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 
 import { effects, type VideoEffect } from "."
@@ -147,6 +149,16 @@ const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
           playsInline
           preload="auto"
         />
+
+        {/* Кнопка избранного */}
+        {effect && (
+          <FavoriteButton
+            file={{ id: effect.id, path: "", name: effect.name }}
+            size={size}
+            type="effect"
+          />
+        )}
+
         <div
           className={`${isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-200`}
         >
@@ -183,6 +195,8 @@ const EffectPreview = ({ effectType, onClick, size }: EffectPreviewProps) => {
 export function EffectList() {
   const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+  const media = useMedia()
 
   const {
     previewSize,
@@ -193,10 +207,23 @@ export function EffectList() {
     canDecreaseSize,
   } = usePreviewSize("TRANSITIONS")
 
+  const handleToggleFavorites = useCallback(() => {
+    setShowFavoritesOnly((prev) => !prev)
+  }, [])
+
   const filteredEffects = effects.filter((effect) => {
+    // Фильтрация по поисковому запросу
     const searchLower = searchQuery.toLowerCase()
     const localizedName = t(`effects.presets.${effect.type}`).toLowerCase()
-    return localizedName.includes(searchLower) || effect.name.toLowerCase().includes(searchLower)
+    const matchesSearch =
+      localizedName.includes(searchLower) || effect.name.toLowerCase().includes(searchLower)
+
+    // Фильтрация по избранному
+    const matchesFavorites =
+      !showFavoritesOnly ||
+      media.isItemFavorite({ id: effect.id, path: "", name: effect.name }, "effect")
+
+    return matchesSearch && matchesFavorites
   })
 
   const handleEffectClick = (effect: VideoEffect) => {
@@ -220,13 +247,31 @@ export function EffectList() {
           {/* Кнопки изменения размера */}
           <TooltipProvider>
             <div className="mr-2 flex overflow-hidden rounded-md">
+              {/* Кнопка избранного */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "mr-1 h-6 w-6 cursor-pointer",
+                      "mr-0 ml-1 h-6 w-6 cursor-pointer",
+                      showFavoritesOnly ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                    )}
+                    onClick={handleToggleFavorites}
+                  >
+                    <Star size={16} className={showFavoritesOnly ? "fill-current" : ""} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("browser.media.favorites")}</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "mr-1 ml-2 h-6 w-6 cursor-pointer",
                       !canDecreaseSize && "cursor-not-allowed opacity-50",
                     )}
                     onClick={handleDecreaseSize}

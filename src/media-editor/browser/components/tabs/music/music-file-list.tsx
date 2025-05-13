@@ -3,8 +3,10 @@ import type { MouseEvent } from "react"
 import { useMemo, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
-import { cn, formatFileSize, formatTime } from "@/lib/utils"
+import { cn, formatTime } from "@/lib/utils"
 import { AddMediaButton, MusicToolbar } from "@/media-editor/browser"
+import { FavoriteButton } from "@/media-editor/browser/components/layout/favorite-button"
+import { useMedia } from "@/media-editor/browser/contexts"
 import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 import { MediaFile } from "@/types/media"
 
@@ -28,6 +30,7 @@ export function MusicFileList() {
     filterType,
     viewMode,
     availableExtensions,
+    showFavoritesOnly,
     search,
     sort,
     filter,
@@ -35,7 +38,10 @@ export function MusicFileList() {
     changeViewMode,
     groupBy,
     changeGroupBy,
+    toggleFavorites,
   } = useMusicMachine()
+
+  const media = useMedia()
 
   // useEffect(() => {
   //   if (!audioRef.current) return
@@ -80,12 +86,17 @@ export function MusicFileList() {
   // }, [activeFile])
 
   const groupedFiles = useMemo(() => {
+    // Фильтруем файлы по избранному, если включена соответствующая опция
+    const favoritesFilteredFiles = showFavoritesOnly
+      ? filteredFiles.filter((file) => media.isItemFavorite(file, "audio"))
+      : filteredFiles
+
     if (groupBy === "none") {
-      return { "": filteredFiles }
+      return { "": favoritesFilteredFiles }
     }
 
     const unknownLabel = t("browser.common.unknown")
-    const groups = filteredFiles.reduce(
+    const groups = favoritesFilteredFiles.reduce(
       (acc, file) => {
         const key = file.probeData?.format.tags?.[groupBy] || unknownLabel
         if (!acc[key]) {
@@ -227,12 +238,12 @@ export function MusicFileList() {
         viewMode={viewMode}
         onViewModeChange={changeViewMode}
         searchQuery={searchQuery}
-        setSearchQuery={search}
+        setSearchQuery={(query) => search(query, media)}
         onImport={handleImport}
         onImportFile={handleImportFile}
         onImportFolder={handleImportFolder}
         onSort={sort}
-        onFilter={filter}
+        onFilter={(filterType) => filter(filterType, media)}
         onChangeOrder={changeOrder}
         sortOrder={sortOrder}
         currentSortBy={sortBy}
@@ -240,6 +251,8 @@ export function MusicFileList() {
         availableExtensions={availableExtensions}
         currentGroupBy={groupBy}
         onGroupBy={changeGroupBy}
+        showFavoritesOnly={showFavoritesOnly}
+        onToggleFavorites={() => toggleFavorites(media)}
       />
       <div className="flex-1 overflow-y-auto p-1 dark:bg-[#1b1a1f]">
         {Object.entries(groupedFiles).map(([group, files]) => (
@@ -278,9 +291,9 @@ export function MusicFileList() {
                             {file.probeData?.format.tags?.title || file.name}
                           </p>
                           <p className="min-w-12 text-right text-xs text-gray-900 dark:text-gray-100">
-                            {file.probeData?.format.size && (
+                            {file.probeData?.format.duration && (
                               <span className="text-gray-500 dark:text-gray-400">
-                                {formatFileSize(file.probeData.format.size)}
+                                {formatTime(file.probeData.format.duration)}
                               </span>
                             )}
                           </p>
@@ -316,18 +329,19 @@ export function MusicFileList() {
                           </div>
 
                           <div className="w-20 truncate text-right text-xs text-gray-500">
-                            {file.probeData?.format.duration && (
-                              <span>{formatTime(file.probeData.format.duration)}</span>
-                            )}
+                            {/* Пустой блок для сохранения структуры */}
                           </div>
                         </div>
                       </div>
-                      <AddMediaButton
-                        file={file}
-                        onAddMedia={handleAdd}
-                        onRemoveMedia={handleRemove}
-                        isAdded={isMusicFileAdded(file)}
-                      />
+                      <div className="flex items-center">
+                        <FavoriteButton file={file} size={60} type="audio" />
+                        <AddMediaButton
+                          file={file}
+                          onAddMedia={handleAdd}
+                          onRemoveMedia={handleRemove}
+                          isAdded={isMusicFileAdded(file)}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -379,28 +393,35 @@ export function MusicFileList() {
                           />
                           )} */}
                         </div>
-                        <p className="w-[170px] truncate text-xs font-medium">
-                          {file.probeData?.format.tags?.title || file.name}
-                        </p>
                         <div className="flex w-[170px] items-center justify-between">
-                          <span className="max-w-[140px] truncate text-xs text-gray-500">
+                          <p className="max-w-[120px] truncate text-xs font-medium">
+                            {file.probeData?.format.tags?.title || file.name}
+                          </p>
+                          <p className="min-w-12 text-right text-xs text-gray-500">
+                            {file.probeData?.format.duration && (
+                              <span className="text-gray-500 dark:text-gray-400">
+                                {formatTime(file.probeData.format.duration)}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <div className="flex w-[170px] items-center justify-between">
+                          <span className="max-w-[170px] truncate text-xs text-gray-500">
                             {file.probeData?.format.tags?.artist || ""}
                           </span>
-                          {file.probeData?.format.duration && (
-                            <span className="text-xs whitespace-nowrap text-gray-500">
-                              {formatTime(file.probeData.format.duration)}
-                            </span>
-                          )}
                         </div>
                       </div>
 
-                      <AddMediaButton
-                        file={file}
-                        size={120}
-                        onAddMedia={handleAdd}
-                        onRemoveMedia={handleRemove}
-                        isAdded={isMusicFileAdded(file)}
-                      />
+                      <div className="flex items-center">
+                        <FavoriteButton file={file} size={120} type="audio" />
+                        <AddMediaButton
+                          file={file}
+                          size={120}
+                          onAddMedia={handleAdd}
+                          onRemoveMedia={handleRemove}
+                          isAdded={isMusicFileAdded(file)}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

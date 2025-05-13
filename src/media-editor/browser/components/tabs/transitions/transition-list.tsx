@@ -1,4 +1,4 @@
-import { ZoomIn, ZoomOut } from "lucide-react"
+import { Star, ZoomIn, ZoomOut } from "lucide-react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -8,6 +8,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils"
 import { usePreviewSize } from "@/media-editor/browser"
 import { AddMediaButton } from "@/media-editor/browser/components/layout/add-media-button"
+import { FavoriteButton } from "@/media-editor/browser/components/layout/favorite-button"
+import { useMedia } from "@/media-editor/browser/contexts"
 import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 import { MediaFile } from "@/types/media"
 import { transitions as transitionEffects } from "@/types/transitions"
@@ -72,9 +74,9 @@ const TransitionPreview = ({
   const isAdded = isTransitionAdded(transitionObj)
 
   // Отладочный вывод
-  useEffect(() => {
-    console.log(`Transition ${transitionObj.id} (${transitionType}) isAdded:`, isAdded)
-  }, [transitionObj, transitionType, isAdded])
+  // useEffect(() => {
+  //   console.log(`Transition ${transitionObj.id} (${transitionType}) isAdded:`, isAdded)
+  // }, [transitionObj, transitionType, isAdded])
 
   const resetVideos = useCallback(() => {
     if (!sourceVideoRef.current || !targetVideoRef.current) return
@@ -274,6 +276,13 @@ const TransitionPreview = ({
                 preload="auto"
                 onError={() => setIsError(true)}
               />
+              {/* Кнопка избранного */}
+              <FavoriteButton
+                file={{ id: transitionObj.id, path: "", name: transitionObj.name }}
+                size={size}
+                type="transition"
+              />
+
               <div
                 className={`${isAdded ? "opacity-100" : "opacity-0 group-hover:opacity-100"} transition-opacity duration-200`}
               >
@@ -446,6 +455,8 @@ const transitions = [
 export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void }) {
   const { t } = useTranslation()
   const [searchQuery, setSearchQuery] = useState("")
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+  const media = useMedia()
 
   const {
     previewSize,
@@ -456,15 +467,28 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
     canDecreaseSize,
   } = usePreviewSize("TRANSITIONS")
 
+  const handleToggleFavorites = useCallback(() => {
+    setShowFavoritesOnly((prev) => !prev)
+  }, [])
+
   const demoVideos = {
     source: { path: "t1.mp4" } as MediaFile,
     target: { path: "t2.mp4" } as MediaFile,
   }
 
   const filteredTransitions = transitions.filter((transition) => {
+    // Фильтрация по поисковому запросу
     const searchLower = searchQuery.toLowerCase()
     const localizedName = t(`transitions.types.${transition.type}`).toLowerCase()
-    return localizedName.includes(searchLower) || transition.id.toLowerCase().includes(searchLower)
+    const matchesSearch =
+      localizedName.includes(searchLower) || transition.id.toLowerCase().includes(searchLower)
+
+    // Фильтрация по избранному
+    const matchesFavorites =
+      !showFavoritesOnly ||
+      media.isItemFavorite({ id: transition.id, path: "", name: transition.id }, "transition")
+
+    return matchesSearch && matchesFavorites
   })
 
   return (
@@ -484,13 +508,31 @@ export function TransitionsList({ onSelect }: { onSelect?: (id: string) => void 
           {/* Кнопки изменения размера */}
           <TooltipProvider>
             <div className="mr-2 flex overflow-hidden rounded-md">
+              {/* Кнопка избранного */}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     variant="ghost"
                     size="icon"
                     className={cn(
-                      "mr-1 h-6 w-6 cursor-pointer",
+                      "mr-0 ml-1 h-6 w-6 cursor-pointer",
+                      showFavoritesOnly ? "bg-[#dddbdd] dark:bg-[#45444b]" : "",
+                    )}
+                    onClick={handleToggleFavorites}
+                  >
+                    <Star size={16} className={showFavoritesOnly ? "fill-current" : ""} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>{t("browser.media.favorites")}</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "mr-1 ml-2 h-6 w-6 cursor-pointer",
                       !canDecreaseSize && "cursor-not-allowed opacity-50",
                     )}
                     onClick={handleDecreaseSize}
