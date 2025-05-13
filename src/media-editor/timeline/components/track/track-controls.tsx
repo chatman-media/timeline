@@ -54,7 +54,7 @@ export function TrackControls({
   )
 
   return (
-    <div className="flex w-[200px] items-center gap-2 border-r border-gray-800 bg-[#012325] px-2 py-1">
+    <div className="flex w-[130px] items-center gap-2 border-r border-gray-800 bg-[#012325] px-2 py-1">
       <button
         onClick={handleVisibilityToggle}
         className="rounded p-1 hover:bg-gray-700"

@@ -648,63 +648,9 @@ export function Timeline() {
       {/* Скроллируемый контент с разделением на левую и правую части */}
       <div className="timeline-container flex-1 overflow-y-auto" ref={timelineContainerRef}>
         <div className="flex h-full w-full overflow-x-hidden">
-          {/* Левая панель фиксированной ширины */}
-          <div
-            className="sticky left-0 z-200 h-full min-h-full w-[200px] flex-shrink-0 border-r border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-900"
-            style={{
-              height: `${sections?.reduce(
-                (acc, sector) => acc + 31 + 30 + sector.tracks.length * 72, // PADDING + SCALE_HEIGHT + tracks
-                0,
-              )}px`,
-            }}
-          >
-            {sections?.map((sector, index) => (
-              <div key={index} className="flex w-full flex-col gap-1 p-2">
-                <div className="z-10 flex h-[26px] w-full flex-shrink-0 items-center justify-between">
-                  <div className="text-sm font-medium">{formatSectionDate(sector.date)}</div>
-                  <button
-                    onClick={() => handleDeleteSection(sector.date)}
-                    className="flex h-6 w-6 items-center justify-center rounded-sm hover:bg-red-500/20"
-                    title={t("timeline.section.delete")}
-                  >
-                    <Trash2 size={14} className="text-red-500" />
-                  </button>
-                </div>
-                {sector.tracks.map((track: Track, i: number) => (
-                  <div
-                    key={i}
-                    className="min-h-[72px] w-full flex-1 bg-[#033032] p-2 text-sm"
-                    style={{ height: `72px` }}
-                  >
-                    {editingTrackId === track.id ? (
-                      <input
-                        type="text"
-                        value={editingTrackName}
-                        onChange={(e) => setEditingTrackName(e.target.value)}
-                        onBlur={handleSaveTrackName}
-                        onKeyDown={handleTrackNameKeyDown}
-                        className="w-full border-none bg-transparent focus:outline-none"
-                        autoFocus
-                      />
-                    ) : (
-                      <div
-                        className="block cursor-pointer truncate pl-[1px] hover:border hover:border-[#35d1c1] hover:pl-[0px]"
-                        onClick={() => handleEditTrackName(track)}
-                        title={t("timeline.section.editTrackName")}
-                      >
-                        {track.cameraName ? track.cameraName : track.name}
-                      </div>
-                    )}
-                  </div>
-                ))}
-                <div className="h-[11px] w-full flex-shrink-0"></div>
-              </div>
-            ))}
-          </div>
-
           {/* Правая часть - каждый сектор имеет свой собственный скролл */}
           <div
-            className="flex h-full w-[calc(100%-200px)] flex-col"
+            className="flex h-full w-full flex-col"
             style={{
               height: `${sections?.reduce(
                 (acc, sector) => acc + 31 + 30 + sector.tracks.length * 72, // PADDING + SCALE_HEIGHT + tracks
@@ -748,12 +694,15 @@ export function Timeline() {
                     key={index}
                     className="relative mb-4 flex-shrink-0"
                     style={{
-                      width: `${Math.max(1000, (maxEndTime - minStartTime) * 2 * (sectionZoomLevels[sector.date] || zoomLevel))}px`,
+                      width: "100%",
                       height: `${sectorHeight}px`,
                     }}
                   >
                     {/* Шкала времени - фиксированная, не скроллится */}
-                    <div className="sticky top-0 right-0 left-0 z-10 h-[30px] w-full flex-shrink-0 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
+                    <div
+                      className="sticky top-0 right-0 left-0 h-[30px] w-full flex-shrink-0 border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800"
+                      style={{ zIndex: 300 }}
+                    >
                       <div className="flex items-center justify-between">
                         <TimelineScale
                           startTime={sector.startTime}
@@ -764,7 +713,7 @@ export function Timeline() {
                         />
 
                         {/* Элементы управления масштабом для сектора */}
-                        <div className="z-10 mr-2 ml-2 flex items-center gap-2">
+                        <div className="mr-2 ml-2 flex items-center gap-2" style={{ zIndex: 300 }}>
                           {/* Двунаправленная стрелка */}
                           <button
                             onClick={() => fitSectionToScreen(sector.date)}
@@ -799,17 +748,22 @@ export function Timeline() {
                         }}
                       >
                         {/* TimelineBar поверх всех дорожек */}
-                        <div className="pointer-events-none absolute top-0 right-0 bottom-0 left-0 z-20">
+                        <div
+                          className="pointer-events-none absolute top-0 right-0 bottom-0 left-0"
+                          style={{ zIndex: 1000 }}
+                        >
                           <TimelineBar
-                            startTime={sector.startTime}
-                            endTime={sector.endTime}
+                            startTime={minStartTime}
+                            endTime={maxEndTime}
                             height={sectorHeight - SCALE_HEIGHT - PADDING}
                             sectionStartTime={minStartTime}
                             sectionDuration={maxEndTime - minStartTime}
+                            isActive={sector.date === activeDate} // Передаем флаг активного сектора
                           />
                         </div>
+
                         {/* Дорожки */}
-                        <div className="flex w-full flex-col gap-1 p-2">
+                        <div className="flex w-full flex-col gap-1 pl-[10px]">
                           {sector.tracks.map((track: Track, trackIndex: number) => {
                             // Рассчитываем координаты для VideoTrack
                             const trackStartTime = track.startTime || 0
@@ -878,8 +832,8 @@ export function Timeline() {
                                 key={track.id || trackIndex}
                                 track={track}
                                 index={trackIndex}
-                                sectionStartTime={0} // Начинаем с 0 для относительного времени
-                                sectionDuration={sector.endTime - sector.startTime}
+                                sectionStartTime={minStartTime} // Используем минимальное время начала видео в секторе
+                                sectionDuration={maxEndTime - minStartTime} // Используем общую длительность секции
                                 coordinates={coordinates}
                                 sectorZoomLevel={sectorZoomLevel}
                               />

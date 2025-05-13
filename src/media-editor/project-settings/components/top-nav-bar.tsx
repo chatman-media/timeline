@@ -27,7 +27,7 @@ interface TopNavBarProps {
 }
 
 function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: TopNavBarProps) {
-  const { name, isDirty, setName, setDirty } = useProject()
+  const { name, isDirty, settings, setName, setDirty } = useProject()
   const { t } = useTranslation()
   const { handleOpenModal, handleCloseModal, activeModal } = useModalContext()
   const [isEditing, setIsEditing] = useState(false)
@@ -40,6 +40,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setName(e.target.value)
+    setDirty(true)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -52,8 +53,49 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
     console.log("isUserSettingsOpen", isUserSettingsOpen)
   }, [isUserSettingsOpen])
 
-  const handleSave = () => {
-    setDirty(false)
+  const handleSave = async () => {
+    try {
+      // Собираем данные проекта для сохранения
+      const projectData = {
+        name,
+        settings,
+        version: "1.0.0",
+        createdAt: new Date().toISOString(),
+      }
+
+      // Формируем имя файла на основе имени проекта
+      const sanitizedName = name.replace(/[^a-zA-Z0-9-_]/g, "_").toLowerCase()
+      const fileName = `${sanitizedName}.json`
+
+      console.log("[TopNavBar] Сохраняем проект:", { name, fileName })
+
+      // Отправляем запрос на сервер для сохранения проекта
+      const response = await fetch("/api/save-project", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          projectData,
+          fileName,
+          projectsPath: "public/projects",
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(`Ошибка сохранения проекта: ${errorData.error || response.statusText}`)
+      }
+
+      const result = await response.json()
+      console.log("[TopNavBar] Проект успешно сохранен:", result)
+
+      // Обновляем состояние isDirty
+      setDirty(false)
+    } catch (error) {
+      console.error("[TopNavBar] Ошибка при сохранении проекта:", error)
+      // Здесь можно добавить отображение ошибки пользователю
+    }
   }
 
   const handleExport = () => {
@@ -110,20 +152,20 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
         <Button
           className={cn(
             "hover:bg-secondary h-7 w-7 cursor-pointer p-0",
-            isDirty ? "opacity-50 hover:opacity-50" : "hover:bg-accent opacity-100",
+            isDirty ? "hover:bg-accent opacity-100" : "opacity-50 hover:opacity-50",
           )}
           variant="ghost"
           size="icon"
-          title={isDirty ? t("topNavBar.allChangesSaved") : t("topNavBar.saveChanges")}
+          title={isDirty ? t("topNavBar.saveChanges") : t("topNavBar.allChangesSaved")}
           onClick={handleSave}
-          disabled={isDirty}
+          disabled={!isDirty}
         >
           <Save className="h-5 w-5" />
         </Button>
 
         <div
           className={cn(
-            "group relative ml-1 w-[200px] text-xs",
+            "group relative ml-1 w-[130px] text-xs",
             isEditing
               ? "ring-1 ring-[#35d1c1]"
               : "transition-colors group-hover:ring-1 group-hover:ring-[#35d1c1]",

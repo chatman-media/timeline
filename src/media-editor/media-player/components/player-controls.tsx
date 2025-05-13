@@ -44,13 +44,12 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   const { t } = useTranslation()
   const { tracks, activeTrackId } = useTimeline()
   const { screenshotsPath } = useUserSettings()
+  const { displayTime, setDisplayTime } = useDisplayTime()
 
   // Состояние для отслеживания источника видео (медиа машина или таймлайн)
   const [localVideoSources, setLocalVideoSources] = useState<Record<string, "media" | "timeline">>(
     {},
   )
-
-
 
   const {
     isPlaying,
@@ -118,7 +117,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
         if (!isNaN(fps) && fps > 0) {
           frameTime = 1 / fps
-          console.log(`[handleSkipBackward] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`)
+          console.log(
+            `[handleSkipBackward] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`,
+          )
         }
       } catch (e) {
         console.error("[handleSkipBackward] Ошибка при вычислении fps:", e)
@@ -130,13 +131,11 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       const activeTrack = tracks.find((track) => track.id === activeTrackId)
       if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
         // Находим видео в треке, которое содержит текущее время
-        const currentTrackVideo = activeTrack.videos.find(
-          (v) => {
-            const videoStart = v.startTime || 0
-            const videoEnd = videoStart + (v.duration || 0)
-            return currentTime >= videoStart && currentTime <= videoEnd
-          }
-        )
+        const currentTrackVideo = activeTrack.videos.find((v) => {
+          const videoStart = v.startTime || 0
+          const videoEnd = videoStart + (v.duration || 0)
+          return currentTime >= videoStart && currentTime <= videoEnd
+        })
 
         if (currentTrackVideo) {
           currentVideoOrTrack = currentTrackVideo
@@ -149,17 +148,23 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
             const prevVideo = activeTrack.videos[currentIndex - 1]
             const prevVideoEnd = (prevVideo.startTime || 0) + (prevVideo.duration || 0)
             minTime = prevVideoEnd - frameTime // Устанавливаем на последний кадр предыдущего видео
-            console.log(`[handleSkipBackward] Переход к предыдущему видео в треке: ${prevVideo.id}, endTime: ${minTime}`)
+            console.log(
+              `[handleSkipBackward] Переход к предыдущему видео в треке: ${prevVideo.id}, endTime: ${minTime}`,
+            )
           } else {
             // Иначе используем начало текущего видео
             minTime = videoStart
-            console.log(`[handleSkipBackward] Используем видео из трека: ${currentTrackVideo.id}, minTime: ${minTime}`)
+            console.log(
+              `[handleSkipBackward] Используем видео из трека: ${currentTrackVideo.id}, minTime: ${minTime}`,
+            )
           }
         } else {
           // Если не нашли видео, содержащее текущее время, используем первое видео в треке
           const firstVideo = activeTrack.videos[0]
           minTime = firstVideo.startTime || 0
-          console.log(`[handleSkipBackward] Используем первое видео из трека: ${firstVideo.id}, minTime: ${minTime}`)
+          console.log(
+            `[handleSkipBackward] Используем первое видео из трека: ${firstVideo.id}, minTime: ${minTime}`,
+          )
         }
       }
     }
@@ -171,7 +176,10 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     }
 
     // Обновляем frameTime для текущего видео, если оно изменилось
-    if (currentVideoOrTrack !== video && currentVideoOrTrack?.probeData?.streams?.[0]?.r_frame_rate) {
+    if (
+      currentVideoOrTrack !== video &&
+      currentVideoOrTrack?.probeData?.streams?.[0]?.r_frame_rate
+    ) {
       const fpsStr = currentVideoOrTrack.probeData.streams[0].r_frame_rate
       const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
       try {
@@ -181,7 +189,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
         if (!isNaN(fps) && fps > 0) {
           frameTime = 1 / fps
-          console.log(`[handleSkipBackward] Обновлен FPS для текущего видео: ${fps}, frameTime: ${frameTime}`)
+          console.log(
+            `[handleSkipBackward] Обновлен FPS для текущего видео: ${fps}, frameTime: ${frameTime}`,
+          )
         }
       } catch (e) {
         console.error("[handleSkipBackward] Ошибка при вычислении fps:", e)
@@ -219,7 +229,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
         if (!isNaN(fps) && fps > 0) {
           frameTime = 1 / fps
-          console.log(`[handleSkipForward] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`)
+          console.log(
+            `[handleSkipForward] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`,
+          )
         }
       } catch (e) {
         console.error("[handleSkipForward] Ошибка при вычислении fps:", e)
@@ -231,13 +243,11 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       const activeTrack = tracks.find((track) => track.id === activeTrackId)
       if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
         // Находим видео в треке, которое содержит текущее время
-        const currentTrackVideo = activeTrack.videos.find(
-          (v) => {
-            const videoStart = v.startTime || 0
-            const videoEnd = videoStart + (v.duration || 0)
-            return currentTime >= videoStart && currentTime <= videoEnd
-          }
-        )
+        const currentTrackVideo = activeTrack.videos.find((v) => {
+          const videoStart = v.startTime || 0
+          const videoEnd = videoStart + (v.duration || 0)
+          return currentTime >= videoStart && currentTime <= videoEnd
+        })
 
         if (currentTrackVideo) {
           currentVideoOrTrack = currentTrackVideo
@@ -245,21 +255,30 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
           // Проверяем, есть ли следующее видео в треке
           const currentIndex = activeTrack.videos.indexOf(currentTrackVideo)
-          if (currentIndex < activeTrack.videos.length - 1 && Math.abs(currentTime - videoEnd) < 0.01) {
+          if (
+            currentIndex < activeTrack.videos.length - 1 &&
+            Math.abs(currentTime - videoEnd) < 0.01
+          ) {
             // Если мы в конце текущего видео и есть следующее, используем начало следующего
             const nextVideo = activeTrack.videos[currentIndex + 1]
             maxTime = nextVideo.startTime || 0
-            console.log(`[handleSkipForward] Переход к следующему видео в треке: ${nextVideo.id}, startTime: ${maxTime}`)
+            console.log(
+              `[handleSkipForward] Переход к следующему видео в треке: ${nextVideo.id}, startTime: ${maxTime}`,
+            )
           } else {
             // Иначе используем конец текущего видео
             maxTime = videoEnd
-            console.log(`[handleSkipForward] Используем видео из трека: ${currentTrackVideo.id}, maxTime: ${maxTime}`)
+            console.log(
+              `[handleSkipForward] Используем видео из трека: ${currentTrackVideo.id}, maxTime: ${maxTime}`,
+            )
           }
         } else {
           // Если не нашли видео, содержащее текущее время, используем последнее видео в треке
           const lastVideo = activeTrack.videos[activeTrack.videos.length - 1]
           maxTime = (lastVideo.startTime || 0) + (lastVideo.duration || 0)
-          console.log(`[handleSkipForward] Используем последнее видео из трека: ${lastVideo.id}, maxTime: ${maxTime}`)
+          console.log(
+            `[handleSkipForward] Используем последнее видео из трека: ${lastVideo.id}, maxTime: ${maxTime}`,
+          )
         }
       }
     }
@@ -271,7 +290,10 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     }
 
     // Обновляем frameTime для текущего видео, если оно изменилось
-    if (currentVideoOrTrack !== video && currentVideoOrTrack?.probeData?.streams?.[0]?.r_frame_rate) {
+    if (
+      currentVideoOrTrack !== video &&
+      currentVideoOrTrack?.probeData?.streams?.[0]?.r_frame_rate
+    ) {
       const fpsStr = currentVideoOrTrack.probeData.streams[0].r_frame_rate
       const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
       try {
@@ -281,7 +303,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
         if (!isNaN(fps) && fps > 0) {
           frameTime = 1 / fps
-          console.log(`[handleSkipForward] Обновлен FPS для текущего видео: ${fps}, frameTime: ${frameTime}`)
+          console.log(
+            `[handleSkipForward] Обновлен FPS для текущего видео: ${fps}, frameTime: ${frameTime}`,
+          )
         }
       } catch (e) {
         console.error("[handleSkipForward] Ошибка при вычислении fps:", e)
@@ -968,7 +992,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
   // Функция для получения видео для отображения (первое видео в шаблоне или текущее видео)
   const getDisplayVideo = useCallback(() => {
-    return (appliedTemplate?.videos && appliedTemplate.videos.length > 0)
+    return appliedTemplate?.videos && appliedTemplate.videos.length > 0
       ? appliedTemplate.videos[0]
       : video
   }, [appliedTemplate, video])
@@ -1198,7 +1222,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
       if (!isNaN(fps) && fps > 0) {
         frameTime = 1 / fps
-        console.log(`[PlayerControls] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`)
+        console.log(
+          `[PlayerControls] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`,
+        )
       }
     }
   } catch (e) {
@@ -1242,8 +1268,6 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
   // videoRefs уже получен выше
 
-
-
   // Обновляем локальное время при воспроизведении
   useEffect(() => {
     // Определяем, какое видео использовать для отслеживания времени
@@ -1257,7 +1281,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
     // Если нет элемента видео для отслеживания, выходим
     if (!videoElementToTrack) {
-      console.log(`[PlayerControls] Нет элемента видео для отслеживания времени: ${videoToTrack.id}`)
+      console.log(
+        `[PlayerControls] Нет элемента видео для отслеживания времени: ${videoToTrack.id}`,
+      )
       return
     }
 
@@ -1265,8 +1291,23 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
     // Функция обновления времени
     const updateTime = () => {
-      setLocalDisplayTime(videoElementToTrack.currentTime)
-      console.log(`[PlayerControls] Обновлено localDisplayTime: ${videoElementToTrack.currentTime.toFixed(3)}`)
+      const newTime = videoElementToTrack.currentTime
+
+      // Всегда обновляем localDisplayTime и displayTime при каждом событии timeupdate
+      // Это необходимо для плавного движения таймлайн бара
+      setLocalDisplayTime(newTime)
+
+      // Всегда обновляем displayTime в контексте для синхронизации с TimelineBar
+      // Это необходимо для корректного движения бара при воспроизведении видео из сектора
+      setDisplayTime(newTime)
+
+      // Логируем только при существенном изменении времени, чтобы не засорять консоль
+      if (Math.abs(newTime - localDisplayTime) > 0.1) {
+        console.log(`[PlayerControls] Обновлено localDisplayTime: ${newTime.toFixed(3)}`)
+        console.log(
+          `[PlayerControls] Обновлен displayTime в контексте: ${newTime.toFixed(3)}, currentTime: ${currentTime}`,
+        )
+      }
     }
 
     // Добавляем обработчик события timeupdate
@@ -1279,15 +1320,18 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       videoElementToTrack.removeEventListener("timeupdate", updateTime)
       console.log(`[PlayerControls] Удален обработчик timeupdate для видео: ${videoToTrack.id}`)
     }
-  }, [video?.id, videoRefs, isPlaying, appliedTemplate, getDisplayVideo])
-
-  // Импортируем контекст для обмена данными с TimelineBar
-  const { setDisplayTime } = useDisplayTime()
-
-
+  }, [
+    video?.id,
+    videoRefs,
+    isPlaying,
+    appliedTemplate,
+    getDisplayVideo,
+    currentTime,
+    setDisplayTime,
+  ])
 
   // Нормализуем currentTime для отображения, если это Unix timestamp
-  const displayTime = useMemo(() => {
+  const calculatedDisplayTime = useMemo(() => {
     if (currentTime > 365 * 24 * 60 * 60) {
       // Если время больше года в секундах, это, вероятно, Unix timestamp
       // Используем локальное время для отображения
@@ -1296,10 +1340,16 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     return currentTime
   }, [currentTime, localDisplayTime])
 
-  // Обновляем контекст при изменении displayTime
+  // Обновляем контекст при изменении calculatedDisplayTime
+  // Но только если не воспроизводится видео, чтобы избежать конфликта с updateTime
   useEffect(() => {
-    setDisplayTime(displayTime)
-  }, [displayTime, setDisplayTime])
+    if (!isPlaying) {
+      setDisplayTime(calculatedDisplayTime)
+      console.log(
+        `[PlayerControls] Обновлен displayTime в контексте (из useEffect): ${calculatedDisplayTime.toFixed(3)}`,
+      )
+    }
+  }, [calculatedDisplayTime, setDisplayTime, isPlaying])
 
   // Эффект для обновления иконки источника после гидратации
   const [isHydrated, setIsHydrated] = useState(false)
@@ -1365,9 +1415,16 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       "startTimeForFirstFrame:",
       startTimeForFirstFrame,
       "endTimeForLastFrame:",
-      endTimeForLastFrame
+      endTimeForLastFrame,
     )
-  }, [currentTime, displayTime, isFirstFrame, isLastFrame, startTimeForFirstFrame, endTimeForLastFrame])
+  }, [
+    currentTime,
+    displayTime,
+    isFirstFrame,
+    isLastFrame,
+    startTimeForFirstFrame,
+    endTimeForLastFrame,
+  ])
 
   // Улучшаем handlePlayPause: НЕ устанавливаем флаг isChangingCamera при переключении
   const handlePlayPause = useCallback(() => {
@@ -1393,13 +1450,13 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       // Если currentTime - это Unix timestamp, используем displayTime
       if (currentTime > 365 * 24 * 60 * 60) {
         console.log(
-          `[handlePlayPause] Установка времени видео в displayTime: ${displayTime.toFixed(3)}`,
+          `[handlePlayPause] Установка времени видео в calculatedDisplayTime: ${calculatedDisplayTime.toFixed(3)}`,
         )
-        videoElement.currentTime = displayTime
+        videoElement.currentTime = calculatedDisplayTime
 
         // Сохраняем это время для текущего видео
         console.log(
-          `[handlePlayPause] Сохраняем displayTime ${displayTime.toFixed(3)} для видео ${video.id}`,
+          `[handlePlayPause] Сохраняем calculatedDisplayTime ${calculatedDisplayTime.toFixed(3)} для видео ${video.id}`,
         )
       }
     }
@@ -1439,16 +1496,18 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
             <div className="relative h-1 w-full rounded-full border border-white bg-gray-800">
               <div
                 className="absolute top-0 left-0 h-full rounded-full bg-white"
-                style={{ width: `${(Math.max(0, displayTime) / (getDisplayVideo()?.duration || 100)) * 100}%` }}
+                style={{
+                  width: `${(Math.max(0, calculatedDisplayTime) / (getDisplayVideo()?.duration || 100)) * 100}%`,
+                }}
               />
               <div
                 className="absolute top-1/2 h-[13px] w-[13px] -translate-y-1/2 rounded-full border border-white bg-white"
                 style={{
-                  left: `calc(${(Math.max(0, displayTime) / (getDisplayVideo()?.duration || 100)) * 100}% - 6px)`,
+                  left: `calc(${(Math.max(0, calculatedDisplayTime) / (getDisplayVideo()?.duration || 100)) * 100}% - 6px)`,
                 }}
               />
               <Slider
-                value={[Math.max(0, displayTime)]}
+                value={[Math.max(0, calculatedDisplayTime)]}
                 min={0}
                 max={getDisplayVideo()?.duration || 100}
                 step={0.001}
@@ -1460,8 +1519,8 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
           </div>
           <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
             {currentTime > 365 * 24 * 60 * 60
-              ? formatSectorTime(Math.max(0, displayTime), getDisplayVideo()?.startTime)
-              : formatRelativeTime(Math.max(0, displayTime))}
+              ? formatSectorTime(Math.max(0, calculatedDisplayTime), getDisplayVideo()?.startTime)
+              : formatRelativeTime(Math.max(0, calculatedDisplayTime))}
           </span>
           <span className="mb-[3px]">/</span>
           <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
@@ -1472,7 +1531,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
           {/* Скрытый элемент для обновления компонента при воспроизведении */}
           {currentTime > 365 * 24 * 60 * 60 && (
-            <span className="hidden">{localDisplayTime.toFixed(3)}</span>
+            <span className="hidden">
+              {localDisplayTime.toFixed(3)} - {calculatedDisplayTime.toFixed(3)}
+            </span>
           )}
         </div>
       </div>

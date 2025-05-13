@@ -64,12 +64,15 @@ export function TimelineScale({
     })
 
   return (
-    <div className={`relative mb-[13px] flex w-full flex-col`}>
+    <div className={`relative mb-[13px] flex w-full flex-col`} style={{ zIndex: 300 }}>
       {/* Добавляем заголовок и линию времени */}
       <div className="flex">
-        <div className="sticky left-0 z-10 min-w-[120px]"></div>
-        <div className="relative w-full">
-          <div className="h-0.5 w-full" style={{ background: "rgb(47, 61, 62)", height: "1px" }}>
+        {/* Удалена левая панель */}
+        <div className="relative w-full pl-[10px]" style={{ zIndex: 300 }}>
+          <div
+            className="h-0.5 w-full"
+            style={{ background: "rgb(47, 61, 62)", height: "1px", zIndex: 300 }}
+          >
             {/* Не отображаем видеоклипы здесь, они будут отображаться в VideoTrack */}
           </div>
         </div>

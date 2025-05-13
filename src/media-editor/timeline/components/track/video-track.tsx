@@ -49,10 +49,6 @@ const TimelineTrack = memo(function TimelineTrack({
 
   return (
     <div className="flex" ref={containerRef}>
-      {/* Название трека с фиксированной позицией */}
-      <div className="sticky left-0 z-10 flex h-full min-w-[120px] items-center bg-[#014a4f] px-2 text-white">
-        <span className="truncate">{track.name || track.id}</span>
-      </div>
       <div className="h-full w-full">
         <div className="relative h-full w-full">
           <div

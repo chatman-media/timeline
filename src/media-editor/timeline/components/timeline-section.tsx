@@ -67,7 +67,7 @@ export function TimelineSection({
   return (
     <div className={`timeline-section ${isActive ? "" : "bg-muted/50"}`}>
       <div className="relative">
-        <div className="absolute top-[-12px] right-4 z-10 flex w-[200px] items-center gap-2">
+        <div className="absolute top-[-22px] right-4 z-10 flex w-[130px] items-center gap-2">
           <Slider
             defaultValue={[1]}
             min={0.2}
@@ -79,14 +79,6 @@ export function TimelineSection({
           />
         </div>
 
-        <TimelineBar
-          startTime={startTime}
-          endTime={endTime}
-          sectionStartTime={adjustedRange.startTime}
-          sectionDuration={adjustedRange.duration}
-          height={tracks.length * 88}
-        />
-
         <div className="flex w-full flex-col gap-2">
           <TimelineScale
             timeStep={timeStep}
@@ -94,6 +86,15 @@ export function TimelineSection({
             adjustedRange={adjustedRange}
             isActive={isActive}
             timeToPosition={timeToPosition}
+          />
+
+          <TimelineBar
+            startTime={startTime}
+            endTime={endTime}
+            sectionStartTime={adjustedRange.startTime}
+            sectionDuration={adjustedRange.duration}
+            height={tracks.length * 72 + 66}
+            isActive={isActive} // Передаем флаг активного сектора
           />
 
           {tracks.map((track, index) => (

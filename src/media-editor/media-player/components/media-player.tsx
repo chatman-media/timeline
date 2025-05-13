@@ -68,13 +68,14 @@ export function MediaPlayer() {
     setIsRecording,
     videoRefs,
     parallelVideos,
+    setParallelVideos,
     appliedTemplate,
     volume,
     preferredSource,
   } = usePlayerContext()
 
   // Получаем displayTime из контекста
-  const { displayTime } = useDisplayTime()
+  const { displayTime, setDisplayTime } = useDisplayTime()
 
   // Получаем настройки проекта
   const { settings } = useProject()
@@ -973,6 +974,18 @@ export function MediaPlayer() {
 
         // Если текущее глобальное время - Unix timestamp, обрабатываем особым образом
         if (currentTime > 365 * 24 * 60 * 60) {
+          // Обновляем displayTime в контексте для синхронизации с TimelineBar
+          // Всегда обновляем displayTime при каждом событии timeupdate
+          // Это необходимо для плавного движения таймлайн бара
+          setDisplayTime(localVideoTime)
+
+          // Логируем только при существенном изменении времени, чтобы не засорять консоль
+          if (Math.abs(localVideoTime - displayTime) > 0.1) {
+            console.log(
+              `[MediaPlayer] Обновлен displayTime в контексте: ${localVideoTime.toFixed(3)}, старое значение: ${displayTime.toFixed(3)}`,
+            )
+          }
+
           // Сохраняем относительный прогресс (без учета startTime)
           const relativeProgress = localVideoTime
 
@@ -1290,6 +1303,7 @@ export function MediaPlayer() {
     isSeeking,
     currentTime,
     displayTime,
+    setDisplayTime,
     // resetCamera,
   ])
 
@@ -1845,6 +1859,53 @@ export function MediaPlayer() {
 
   // Эффект для обработки изменения состояния воспроизведения
   useEffect(() => {
+    // Проверяем на дубликаты в параллельных видео
+    const uniqueParallelIds = [...new Set(parallelVideos.map((v) => v.id))]
+    if (uniqueParallelIds.length !== parallelVideos.length) {
+      console.warn(
+        `[PlayPauseEffect] Обнаружены дубликаты в параллельных видео! Уникальных: ${uniqueParallelIds.length}, всего: ${parallelVideos.length}`,
+      )
+
+      // Удаляем дубликаты из массива параллельных видео, предпочитая видео из предпочтительного источника
+      const uniqueParallelVideos: MediaFile[] = []
+      const processedIds = new Set<string>()
+
+      // Получаем предпочтительный источник
+      const source = preferredSource || "timeline"
+
+      // Сначала добавляем видео из предпочтительного источника
+      parallelVideos.forEach((video) => {
+        if (video.id && !processedIds.has(video.id)) {
+          // Определяем источник видео
+          const videoSource =
+            getVideoSource(video.id) || (video.startTime !== undefined ? "timeline" : "media")
+
+          if (videoSource === source) {
+            uniqueParallelVideos.push(video)
+            processedIds.add(video.id)
+          }
+        }
+      })
+
+      // Затем добавляем оставшиеся видео, если такого ID еще нет
+      parallelVideos.forEach((video) => {
+        if (video.id && !processedIds.has(video.id)) {
+          uniqueParallelVideos.push(video)
+          processedIds.add(video.id)
+        }
+      })
+
+      // Обновляем массив параллельных видео без дубликатов
+      if (uniqueParallelVideos.length !== parallelVideos.length) {
+        console.log(
+          `[PlayPauseEffect] Удаляем дубликаты из параллельных видео, новый размер: ${uniqueParallelVideos.length}`,
+        )
+        console.log(`[PlayPauseEffect] Приоритет отдан видео из источника: ${source}`)
+        setParallelVideos(uniqueParallelVideos)
+        return // Выходим из эффекта, он будет вызван повторно с обновленным массивом
+      }
+    }
+
     // Проверяем, есть ли активное видео или видео в шаблоне
     const hasActiveVideo = !!video?.id
     const hasTemplateVideos = appliedTemplate?.videos && appliedTemplate.videos.length > 0
@@ -2080,7 +2141,15 @@ export function MediaPlayer() {
     setTimeout(() => {
       isHandlingPlayPauseEffectRef.current = false
     }, 300)
-  }, [isPlaying, video?.id, videoRefs, isChangingCamera, setIsPlaying])
+  }, [
+    isPlaying,
+    video?.id,
+    videoRefs,
+    isChangingCamera,
+    setIsPlaying,
+    parallelVideos,
+    setParallelVideos,
+  ])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent): void => {
@@ -2550,15 +2619,8 @@ export function MediaPlayer() {
   }
 
   // Логируем информацию о параллельных видео и активном видео
-  // Проверяем на дубликаты в параллельных видео
-  const uniqueParallelIds = [...new Set(parallelVideos.map((v) => v.id))]
-  if (uniqueParallelIds.length !== parallelVideos.length) {
-    console.warn(
-      `[MediaPlayer] Обнаружены дубликаты в параллельных видео! Уникальных: ${uniqueParallelIds.length}, всего: ${parallelVideos.length}`,
-    )
-  }
   console.log(
-    `[MediaPlayer] Параллельные видео: ${uniqueParallelIds.join(", ")}, активное видео: ${activeId}`,
+    `[MediaPlayer] Параллельные видео: ${parallelVideos.map((v) => v.id).join(", ")}, активное видео: ${activeId}`,
   )
 
   // Вычисляем соотношение сторон для AspectRatio

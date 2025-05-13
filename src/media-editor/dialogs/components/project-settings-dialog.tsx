@@ -36,7 +36,7 @@ interface ProjectSettingsDialogProps {
 
 export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDialogProps) {
   const { t } = useTranslation()
-  const { settings, updateSettings } = useProject()
+  const { settings, updateSettings, setDirty } = useProject()
   const [availableResolutions, setAvailableResolutions] = useState<ResolutionOption[]>([])
   const [customWidth, setCustomWidth] = useState<number>(1920)
   const [customHeight, setCustomHeight] = useState<number>(1080)
@@ -540,6 +540,9 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
               // This will trigger a re-render of all components that depend on settings
               // and ensure the settings are saved to localStorage
               updateSettings(currentSettings)
+
+              // Устанавливаем флаг "грязного" состояния проекта
+              setDirty(true)
 
               console.log("[ProjectSettingsDialog] Applied settings:", currentSettings)
 

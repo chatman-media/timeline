@@ -160,7 +160,10 @@ export const AddMediaButton = memo(function AddMediaButton({
           <Check className={`${iconSize} text-white`} strokeWidth={2} />
         )
       ) : (
-        <Plus className={`${iconSize} fill-white transition-transform duration-150 hover:scale-110`} strokeWidth={2} />
+        <Plus
+          className={`${iconSize} fill-white transition-transform duration-150 hover:scale-110`}
+          strokeWidth={2}
+        />
       )}
     </div>
   )

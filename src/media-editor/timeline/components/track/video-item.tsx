@@ -34,7 +34,15 @@ export const VideoItem = memo(function VideoItem({
     setParallelVideos,
     setActiveVideoId,
     parallelVideos,
+    setPreferredSource,
   } = usePlayerContext()
+
+  // Функция для установки источника видео
+  const setVideoSource = (videoId: string, source: "media" | "timeline"): void => {
+    // Устанавливаем предпочтительный источник
+    setPreferredSource(source)
+    console.log(`[VideoItem] Установлен источник для видео ${videoId}: ${source}`)
+  }
 
   // Создаем реф для видео элемента
   const videoElementRef = useRef<HTMLVideoElement | null>(null)
@@ -103,17 +111,34 @@ export const VideoItem = memo(function VideoItem({
             isVideo: true,
             isAudio: false,
             isImage: false,
+            source: v.startTime !== undefined ? "timeline" : "media", // Помечаем источник видео
           }))
 
+          // Удаляем дубликаты из массива параллельных видео
+          const uniqueParallelVideos = minimalParallelVideos.filter(
+            (video, index, self) => index === self.findIndex((v) => v.id === video.id),
+          )
+
+          if (uniqueParallelVideos.length !== minimalParallelVideos.length) {
+            console.log(
+              `[VideoItem] Удалены дубликаты из параллельных видео: ${minimalParallelVideos.length} -> ${uniqueParallelVideos.length}`,
+            )
+          }
+
           // Устанавливаем параллельные видео в контекст
-          setParallelVideos(minimalParallelVideos)
+          setParallelVideos(uniqueParallelVideos)
 
           // Устанавливаем активное видео ID
           setActiveVideoId(video.id)
 
+          // Устанавливаем источник для активного видео
+          if (video.id && typeof setVideoSource === "function") {
+            setVideoSource(video.id, video.startTime !== undefined ? "timeline" : "media")
+          }
+
           console.log(
             `[VideoItem] Установлены параллельные видео:`,
-            minimalParallelVideos.map((v) => v.id).join(", "),
+            uniqueParallelVideos.map((v) => v.id).join(", "),
           )
         } else {
           // Если параллельных видео нет, используем стандартный подход
@@ -166,6 +191,8 @@ export const VideoItem = memo(function VideoItem({
       minimalVideo,
       setParallelVideos,
       setActiveVideoId,
+      setVideoSource,
+      setPreferredSource,
     ],
   )
 
@@ -183,6 +210,9 @@ export const VideoItem = memo(function VideoItem({
     // Массив для хранения параллельных видео
     const parallelVideos: MediaFile[] = [currentVideo]
 
+    // Создаем Set для отслеживания уже добавленных ID видео
+    const addedVideoIds = new Set<string>([currentVideo.id])
+
     // Ищем видео с тем же startTime на других треках
     for (const t of allTracks) {
       // Пропускаем текущий трек
@@ -192,15 +222,31 @@ export const VideoItem = memo(function VideoItem({
       const matchingVideos =
         t.videos?.filter(
           (v: MediaFile) =>
-            v.startTime !== undefined && Math.abs(v.startTime - (currentVideo.startTime || 0)) < 1, // Допускаем разницу в 1 секунду
+            v.startTime !== undefined &&
+            Math.abs(v.startTime - (currentVideo.startTime || 0)) < 1 && // Допускаем разницу в 1 секунду
+            v.id &&
+            !addedVideoIds.has(v.id), // Проверяем, что видео еще не добавлено
         ) || []
 
-      // Добавляем найденные видео в массив
-      parallelVideos.push(...matchingVideos)
+      // Добавляем найденные видео в массив и отмечаем их ID как добавленные
+      for (const video of matchingVideos) {
+        if (video.id) {
+          // Помечаем видео как видео из таймлайна, так как оно имеет startTime
+          if (video.startTime !== undefined) {
+            // Здесь мы не можем напрямую вызвать setVideoSource, так как это не хук
+            // Но мы можем пометить видео как из таймлайна через свойство
+            // @ts-ignore - добавляем свойство source динамически
+            video.source = "timeline"
+          }
+
+          addedVideoIds.add(video.id)
+          parallelVideos.push(video)
+        }
+      }
     }
 
     console.log(
-      `[findParallelVideos] Найдено ${parallelVideos.length} параллельных видео для ${currentVideo.id}`,
+      `[findParallelVideos] Найдено ${parallelVideos.length} уникальных параллельных видео для ${currentVideo.id}`,
     )
 
     return parallelVideos
@@ -253,7 +299,7 @@ export const VideoItem = memo(function VideoItem({
     >
       <div className="relative h-full w-full">
         <div
-          className="video-metadata m-0 flex h-full w-full flex-row items-start justify-between truncate rounded border border-gray-800 p-1 py-[3px] text-xs text-white shadow-md hover:border-gray-100 dark:border-gray-800 dark:hover:border-gray-100"
+          className="video-metadata m-0 flex h-full w-full flex-row items-start justify-between truncate rounded border border-gray-800 py-[3px] text-xs text-white shadow-md hover:border-gray-100 dark:border-gray-800 dark:hover:border-gray-100"
           style={{
             backgroundColor: isActive ? "#0a6066" : "#005a5e",
             lineHeight: "13px",

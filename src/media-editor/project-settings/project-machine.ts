@@ -136,7 +136,14 @@ export const projectMachine = createMachine({
         },
         SET_DIRTY: {
           actions: assign({
-            isDirty: (_, event) => (event as any).isDirty,
+            isDirty: (_, event) => {
+              // Проверяем, есть ли свойство isDirty в событии
+              if (typeof (event as any).isDirty === "boolean") {
+                return (event as any).isDirty
+              }
+              // Если свойства нет, возвращаем true по умолчанию
+              return true
+            },
           }),
         },
       },

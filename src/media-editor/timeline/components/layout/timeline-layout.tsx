@@ -36,7 +36,7 @@ export function TimelineLayout() {
         <div className="flex h-full">
           {/* Левая панель фиксированной ширины */}
           <div
-            className="sticky left-0 h-full min-h-full w-[200px] flex-shrink-0 border-r border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-900"
+            className="sticky left-0 h-full min-h-full w-[130px] flex-shrink-0 border-r border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-900"
             style={{
               height: `${sectors?.reduce(
                 (acc, sector) => acc + 61 + sector.tracks.length * 72,
