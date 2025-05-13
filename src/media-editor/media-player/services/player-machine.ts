@@ -293,7 +293,17 @@ export const playerMachine = createMachine({
           actions: assign({ duration: ({ event }) => event.duration }),
         },
         setVolume: {
-          actions: assign({ volume: ({ event }) => event.volume }),
+          actions: [
+            // Обновляем значение громкости в контексте плеера
+            assign({ volume: ({ event }) => event.volume }),
+            // Сохраняем уровень звука в localStorage
+            ({ event }) => {
+              if (typeof window !== "undefined") {
+                localStorage.setItem("player-volume", event.volume.toString())
+                console.log(`[PlayerMachine] Сохранен уровень звука: ${event.volume}`)
+              }
+            },
+          ],
         },
         setParallelVideos: {
           actions: assign({ parallelVideos: ({ event }) => event.parallelVideos }),

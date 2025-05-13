@@ -5,9 +5,9 @@ import { usePlayerContext } from "@/media-editor/media-player"
 import { MediaFile } from "@/types/media"
 
 // Функция для определения источника видео
-const getVideoSource = (video: MediaFile): 'media' | 'timeline' => {
+const getVideoSource = (video: MediaFile): "media" | "timeline" => {
   // Если видео имеет startTime, то это видео из таймлайна
-  return video.startTime !== undefined ? 'timeline' : 'media'
+  return video.startTime !== undefined ? "timeline" : "media"
 }
 
 interface ResizableVideoProps {
@@ -79,10 +79,10 @@ export const ResizableVideo = React.memo(
       // Добавляем видео элемент в videoRefs с проверкой на существование и валидность
       if (video.id) {
         // Проверяем, нужно ли обновить ссылку в videoRefs
-        const needsUpdate = !videoRefs[video.id] || videoRefs[video.id] !== videoElement;
+        const needsUpdate = !videoRefs[video.id] || videoRefs[video.id] !== videoElement
 
         // Проверяем, что элемент не был удален из DOM
-        const isInDOM = document.body.contains(videoElement);
+        const isInDOM = document.body.contains(videoElement)
 
         if (needsUpdate && isInDOM) {
           console.log(`[ResizableVideo] Добавляем видео элемент ${video.id} в videoRefs`)
@@ -95,7 +95,8 @@ export const ResizableVideo = React.memo(
           console.log(`[ResizableVideo] Видео ${video.id} определено как ${source}`)
 
           // Проверяем, что src установлен правильно
-          const srcNeedsUpdate = video.path && (!videoElement.src || !videoElement.src.includes(video.id));
+          const srcNeedsUpdate =
+            video.path && (!videoElement.src || !videoElement.src.includes(video.id))
 
           if (srcNeedsUpdate) {
             console.log(`[ResizableVideo] Устанавливаем src для видео ${video.id}: ${video.path}`)
@@ -103,7 +104,9 @@ export const ResizableVideo = React.memo(
             try {
               // Проверяем, что путь к видео корректный
               if (!video.path.startsWith("/")) {
-                console.error(`[ResizableVideo] Некорректный путь к видео ${video.id}: ${video.path}`)
+                console.error(
+                  `[ResizableVideo] Некорректный путь к видео ${video.id}: ${video.path}`,
+                )
                 // Пытаемся исправить путь
                 const correctedPath = `/${video.path.replace(/^\.\//, "")}`
                 console.log(
@@ -126,7 +129,9 @@ export const ResizableVideo = React.memo(
                       `[ResizableVideo] Не удалось загрузить видео ${video.id}: источник недоступен`,
                     )
                   } else if (videoElement.readyState >= 2) {
-                    console.log(`[ResizableVideo] Видео ${video.id} успешно загружено, readyState: ${videoElement.readyState}`)
+                    console.log(
+                      `[ResizableVideo] Видео ${video.id} успешно загружено, readyState: ${videoElement.readyState}`,
+                    )
                   }
                 }
               }, 1000)
@@ -137,7 +142,9 @@ export const ResizableVideo = React.memo(
         } else if (!isInDOM && videoRefs[video.id] === videoElement) {
           // Если элемент был удален из DOM, но ссылка на него все еще в videoRefs,
           // логируем это, но не удаляем ссылку, так как она может использоваться в других местах
-          console.warn(`[ResizableVideo] Видео элемент ${video.id} был удален из DOM, но ссылка на него сохранена в videoRefs`)
+          console.warn(
+            `[ResizableVideo] Видео элемент ${video.id} был удален из DOM, но ссылка на него сохранена в videoRefs`,
+          )
         }
       }
 
@@ -146,7 +153,9 @@ export const ResizableVideo = React.memo(
         if (videoElement && document.body.contains(videoElement) && video.id) {
           // Проверяем, что элемент все еще в videoRefs
           if (videoRefs[video.id] !== videoElement) {
-            console.log(`[ResizableVideo] Восстанавливаем ссылку на видео элемент ${video.id} в videoRefs`)
+            console.log(
+              `[ResizableVideo] Восстанавливаем ссылку на видео элемент ${video.id} в videoRefs`,
+            )
             videoRefs[video.id] = videoElement
           }
 
@@ -157,14 +166,14 @@ export const ResizableVideo = React.memo(
             videoElement.load()
           }
         }
-      };
+      }
 
       // Запускаем проверку через 500мс после монтирования
-      const checkTimer = setTimeout(checkVideoState, 500);
+      const checkTimer = setTimeout(checkVideoState, 500)
 
       return () => {
         // Очищаем таймер при размонтировании
-        clearTimeout(checkTimer);
+        clearTimeout(checkTimer)
 
         // При размонтировании компонента не удаляем элемент из videoRefs,
         // так как он может использоваться в других местах

@@ -3,15 +3,11 @@ import {
   ChevronFirst,
   ChevronLast,
   CircleDot,
-  LayoutPanelLeft,
   LayoutPanelTop,
-  Maximize,
   Maximize2,
-  Minimize,
+  Minimize2,
   Pause,
   Play,
-  Scaling,
-  SquareStack,
   StepBack,
   StepForward,
   UnfoldHorizontal,
@@ -29,6 +25,7 @@ import {
   findTemplateContainer,
   takeScreenshot,
 } from "@/media-editor/media-player/components/take-screenshot"
+import { VolumeSlider } from "@/media-editor/media-player/components/volume-slider"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
 import { useTimeline } from "@/media-editor/timeline/services"
@@ -71,7 +68,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   // Сохраняем последний примененный шаблон
   const [lastAppliedTemplate, setLastAppliedTemplate] = useState<AppliedTemplate | null>(null)
   const lastSaveTime = useRef(0)
-  const SAVE_INTERVAL = 3000 // Сохраняем каждые 3 секунды
+  const SAVE_INTERVAL = 5000 // Сохраняем каждые 3 секунды
 
   // Временно отключаем сохранение состояния периодически
   useEffect(() => {
@@ -137,30 +134,66 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setIsPlaying(false)
   }, [video, currentTime, setCurrentTime, setIsPlaying])
 
+  // Используем useRef для хранения последнего значения громкости и предотвращения лишних рендеров
+  const volumeRef = useRef(volume)
+  const volumeChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Оптимизированная функция изменения громкости с дебаунсингом
   const handleVolumeChange = useCallback(
     (value: number[]) => {
       const newVolume = value[0]
-      setVolume(newVolume)
 
-      // Сохраняем уровень звука в localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("player-volume", newVolume.toString())
-        console.log(`[PlayerControls] Сохранен уровень звука: ${newVolume}`)
+      // Обновляем значение в ref без вызова setVolume на каждое изменение
+      volumeRef.current = newVolume
+
+      // Применяем громкость напрямую к видео элементам для мгновенной обратной связи
+      if (video?.id && videoRefs[video.id]) {
+        videoRefs[video.id].volume = newVolume
       }
+
+      // Используем дебаунсинг для обновления состояния
+      if (volumeChangeTimeoutRef.current) {
+        clearTimeout(volumeChangeTimeoutRef.current)
+      }
+
+      volumeChangeTimeoutRef.current = setTimeout(() => {
+        setVolume(newVolume)
+        volumeChangeTimeoutRef.current = null
+      }, 100) // Обновляем состояние не чаще чем раз в 100мс
     },
-    [setVolume],
+    [video, videoRefs, setVolume],
   )
+
+  // Функция, которая вызывается при завершении изменения громкости (отпускании слайдера)
+  const handleVolumeChangeEnd = useCallback(() => {
+    // Обновляем состояние сразу при отпускании слайдера
+    setVolume(volumeRef.current)
+
+    // Сохраняем значение громкости в localStorage только при отпускании слайдера
+    if (typeof window !== "undefined") {
+      localStorage.setItem("player-volume", volumeRef.current.toString())
+      console.log(`[PlayerControls] Сохранен уровень звука: ${volumeRef.current}`)
+    }
+  }, [setVolume])
 
   const handleToggleMute = useCallback(() => {
     const newVolume = volume === 0 ? 1 : 0
     setVolume(newVolume)
 
-    // Сохраняем уровень звука в localStorage
+    // Сохраняем текущее значение громкости в ref
+    volumeRef.current = newVolume
+
+    // Применяем громкость напрямую к видео элементам для мгновенной обратной связи
+    if (video?.id && videoRefs[video.id]) {
+      videoRefs[video.id].volume = newVolume
+    }
+
+    // При переключении mute сразу сохраняем значение в localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("player-volume", newVolume.toString())
       console.log(`[PlayerControls] Сохранен уровень звука при переключении: ${newVolume}`)
     }
-  }, [volume, setVolume])
+  }, [volume, setVolume, video, videoRefs])
 
   const handleFullscreen = useCallback(() => {
     setIsFullscreen(!isFullscreen)
@@ -776,15 +809,12 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       </div>
 
       <div className="h-full w-full p-1">
-        <div
-          className="flex items-center justify-between rounded-md border border-white px-2 py-0.5"
-          style={{ minWidth: "1000px" }}
-        >
+        <div className="flex items-center justify-between px-2 py-0" style={{ minWidth: "1000px" }}>
           {/* Левая часть: кнопки для камер и шаблонов */}
           <div className="flex items-center gap-2" style={{ minWidth: "150px" }}>
             {/* Кнопка переключения режима resizable - показываем только если применен шаблон */}
             <Button
-              className={`h-6 w-6 cursor-pointer ${isResizableMode ? "bg-[#45444b] hover:bg-[#45444b]/80" : "hover:bg-[#45444b]/80"}`}
+              className={`h-8 w-8 cursor-pointer ${isResizableMode ? "bg-[#45444b] hover:bg-[#45444b]/80" : "hover:bg-[#45444b]/80"}`}
               variant="ghost"
               size="icon"
               title={
@@ -795,12 +825,12 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               onClick={() => setIsResizableMode(!isResizableMode)}
               disabled={!appliedTemplate}
             >
-              {<UnfoldHorizontal size={14} />}
+              {<UnfoldHorizontal className="h-8 w-8" />}
             </Button>
 
             {/* Кнопка шаблона - всегда активна, переключает режим шаблона */}
             <Button
-              className="h-6 w-6 cursor-pointer"
+              className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
               title={
@@ -817,8 +847,8 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               {appliedTemplate ? (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
+                  width="24"
+                  height="24"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -830,24 +860,24 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                   <line x1="4" y1="4" x2="20" y2="20" />
                 </svg>
               ) : (
-                <LayoutPanelTop size={16} />
+                <LayoutPanelTop className="h-8 w-8" />
               )}
             </Button>
 
             <Button
-              className="h-6 w-6 cursor-pointer"
+              className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
               title={t("timeline.controls.takeSnapshot")}
               onClick={handleTakeSnapshot}
             >
-              <Camera className="h-4 w-4" />
+              <Camera className="h-8 w-8" />
             </Button>
 
             {/* Кнопка переключения между камерами - показываем только если есть параллельные видео */}
             {parallelVideos && parallelVideos.length > 1 && (
               <Button
-                className={`h-6 w-6 cursor-pointer ${isChangingCamera ? "animate-pulse" : ""}`}
+                className={`h-8 w-8 cursor-pointer ${isChangingCamera ? "animate-pulse" : ""}`}
                 variant="ghost"
                 size="icon"
                 title={`${t("timeline.controlsMain.switchCamera")} (${parallelVideos.findIndex((v) => v.id === video?.id) + 1}/${parallelVideos.length})`}
@@ -856,8 +886,8 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
+                  width="24"
+                  height="24"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -888,7 +918,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               onClick={handleChevronFirst}
               disabled={isFirstFrame || isPlaying || isChangingCamera}
             >
-              <ChevronFirst className="h-6 w-6" />
+              <ChevronFirst className="h-8 w-8" />
             </Button>
 
             <Button
@@ -899,7 +929,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               onClick={handleSkipBackward}
               disabled={isFirstFrame || isPlaying || isChangingCamera}
             >
-              <StepBack className="h-6 w-6" />
+              <StepBack className="h-8 w-8" />
             </Button>
 
             <Button
@@ -910,7 +940,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               onClick={handlePlayPause}
               disabled={isChangingCamera}
             >
-              {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+              {isPlaying ? <Pause className="h-8 w-8" /> : <Play className="h-8 w-8" />}
             </Button>
 
             <Button
@@ -921,7 +951,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               onClick={handleSkipForward}
               disabled={isLastFrame || isPlaying || isChangingCamera}
             >
-              <StepForward className="h-6 w-6" />
+              <StepForward className="h-8 w-8" />
             </Button>
 
             <Button
@@ -932,7 +962,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               onClick={handleChevronLast}
               disabled={isLastFrame || isPlaying || isChangingCamera}
             >
-              <ChevronLast className="h-6 w-6" />
+              <ChevronLast className="h-8 w-8" />
             </Button>
 
             <Button
@@ -947,7 +977,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
             >
               <CircleDot
                 className={cn(
-                  "h-4 w-4",
+                  "h-8 w-8",
                   isRecording
                     ? "animate-pulse text-red-500 hover:text-red-600"
                     : "text-white hover:text-gray-300",
@@ -963,7 +993,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
           >
             <div className="flex items-center gap-2">
               <Button
-                className="h-6 w-6 cursor-pointer"
+                className="h-8 w-8 cursor-pointer"
                 variant="ghost"
                 size="icon"
                 title={
@@ -973,32 +1003,20 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
                 }
                 onClick={handleToggleMute}
               >
-                {volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                {volume === 0 ? <VolumeX className="h-8 w-8" /> : <Volume2 className="h-8 w-8" />}
               </Button>
               <div className="w-20">
-                <div className="relative h-1 w-full rounded-full border border-white bg-gray-800">
-                  <div
-                    className="absolute top-0 left-0 h-full rounded-full bg-white"
-                    style={{ width: `${volume * 100}%` }}
-                  />
-                  <div
-                    className="absolute top-1/2 h-[11px] w-[11px] -translate-y-1/2 rounded-full border border-white bg-white"
-                    style={{ left: `calc(${volume * 100}% - 5px)` }}
-                  />
-                  <Slider
-                    value={[volume]}
-                    min={0}
-                    max={1}
-                    step={0.01}
-                    onValueChange={handleVolumeChange}
-                    className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                  />
-                </div>
+                <VolumeSlider
+                  volume={volume}
+                  volumeRef={volumeRef}
+                  onValueChange={handleVolumeChange}
+                  onValueCommit={handleVolumeChangeEnd}
+                />
               </div>
             </div>
 
             <Button
-              className="h-6 w-6 cursor-pointer"
+              className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
               title={
@@ -1008,7 +1026,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               }
               onClick={handleFullscreen}
             >
-              <Maximize2 className="h-4 w-4" />
+              {isFullscreen ? <Minimize2 className="h-8 w-8" /> : <Maximize2 className="h-8 w-8" />}
             </Button>
           </div>
         </div>
