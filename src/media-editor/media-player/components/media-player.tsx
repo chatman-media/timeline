@@ -106,17 +106,12 @@ export function MediaPlayer() {
         if (parallelVideo.id && videoRefs[parallelVideo.id]) {
           const videoElement = videoRefs[parallelVideo.id]
 
-          // Устанавливаем громкость только для активного видео, остальные заглушены
-          if (parallelVideo.id === currentActiveId) {
-            videoElement.volume = volume
-            videoElement.muted = false
-            console.log(
-              `[Volume] Установлена громкость ${volume} для активного видео ${parallelVideo.id} в шаблоне`,
-            )
-          } else {
-            videoElement.muted = true
-            console.log(`[Volume] Заглушено неактивное видео ${parallelVideo.id} в шаблоне`)
-          }
+          // Устанавливаем громкость для всех видео в шаблоне
+          videoElement.volume = volume
+          videoElement.muted = false
+          console.log(
+            `[Volume] Установлена громкость ${volume} для видео ${parallelVideo.id} в шаблоне`,
+          )
         }
       })
     }
@@ -128,14 +123,11 @@ export function MediaPlayer() {
       // Устанавливаем громкость
       videoElement.volume = volume
 
-      // Логируем изменение громкости
-      console.log(`[Volume] Установлена громкость ${volume} для видео ${video.id}`)
+      // Убираем лишние логи для уменьшения шума в консоли
+      // console.log(`[Volume] Установлена громкость ${volume} для видео ${video.id}`)
     }
 
-    // Сохраняем уровень звука в localStorage
-    if (typeof window !== "undefined") {
-      localStorage.setItem("player-volume", volume.toString())
-    }
+    // Сохранение в localStorage перенесено в компонент player-controls.tsx
   }, [video, videoRefs, volume, appliedTemplate, parallelVideos])
 
   // Используем ref для хранения последнего времени обновления, чтобы избежать слишком частых обновлений
@@ -550,6 +542,10 @@ export function MediaPlayer() {
             console.log(`[MediaPlayer] Установлено начальное время: ${localTime.toFixed(3)}`)
           }
 
+          // Устанавливаем громкость
+          videoElement.volume = volume
+          console.log(`[MediaPlayer] Установлена начальная громкость: ${volume}`)
+
           // Сбрасываем флаг isChangingCamera после загрузки метаданных
           // Используем setTimeout, чтобы избежать бесконечного цикла обновлений
           if (isChangingCamera && !autoResetTimerRef.current) {
@@ -651,8 +647,10 @@ export function MediaPlayer() {
             videoElement.controls = false
             videoElement.autoplay = false
             videoElement.loop = false
-            videoElement.muted = true
+            videoElement.muted = false
+            videoElement.volume = volume
             videoElement.src = video.path
+            console.log(`[MediaPlayer] Создан видео элемент для ${video.id} с громкостью ${volume}`)
 
             // Добавляем элемент в DOM (скрытый)
             videoElement.style.position = "absolute"
@@ -2091,8 +2089,12 @@ export function MediaPlayer() {
             videoElement.controls = false
             videoElement.autoplay = false
             videoElement.loop = false
-            videoElement.muted = true
+            videoElement.muted = false
+            videoElement.volume = volume
             videoElement.src = videoItem.path
+            console.log(
+              `[MediaPlayer] Создан видео элемент для ${videoItem.id} с громкостью ${volume}`,
+            )
 
             // Добавляем элемент в DOM (скрытый)
             videoElement.style.position = "absolute"
@@ -2462,7 +2464,7 @@ export function MediaPlayer() {
                             autoPlay={false}
                             loop={false}
                             disablePictureInPicture
-                            muted={videoItem.id !== activeId} // Звук только у активного видео
+                            muted={false} // Звук у всех видео
                             onLoadedData={() =>
                               console.log(
                                 `[MediaPlayer] Видео ${videoItem.id} загружено и готово к воспроизведению`,

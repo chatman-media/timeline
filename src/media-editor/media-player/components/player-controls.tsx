@@ -151,6 +151,17 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
         videoRefs[video.id].volume = newVolume
       }
 
+      // Если используется шаблон с несколькими видео, применяем громкость ко всем видео
+      if (appliedTemplate?.template && parallelVideos.length > 0) {
+        parallelVideos.forEach((parallelVideo) => {
+          if (parallelVideo.id && videoRefs[parallelVideo.id]) {
+            // Устанавливаем громкость для всех видео в шаблоне
+            videoRefs[parallelVideo.id].volume = newVolume
+            videoRefs[parallelVideo.id].muted = false
+          }
+        })
+      }
+
       // Используем дебаунсинг для обновления состояния
       if (volumeChangeTimeoutRef.current) {
         clearTimeout(volumeChangeTimeoutRef.current)
@@ -161,7 +172,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
         volumeChangeTimeoutRef.current = null
       }, 100) // Обновляем состояние не чаще чем раз в 100мс
     },
-    [video, videoRefs, setVolume],
+    [video, videoRefs, setVolume, appliedTemplate, parallelVideos],
   )
 
   // Функция, которая вызывается при завершении изменения громкости (отпускании слайдера)
@@ -188,12 +199,23 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       videoRefs[video.id].volume = newVolume
     }
 
+    // Если используется шаблон с несколькими видео, применяем громкость ко всем видео
+    if (appliedTemplate?.template && parallelVideos.length > 0) {
+      parallelVideos.forEach((parallelVideo) => {
+        if (parallelVideo.id && videoRefs[parallelVideo.id]) {
+          // Устанавливаем громкость для всех видео в шаблоне
+          videoRefs[parallelVideo.id].volume = newVolume
+          videoRefs[parallelVideo.id].muted = newVolume === 0
+        }
+      })
+    }
+
     // При переключении mute сразу сохраняем значение в localStorage
     if (typeof window !== "undefined") {
       localStorage.setItem("player-volume", newVolume.toString())
       console.log(`[PlayerControls] Сохранен уровень звука при переключении: ${newVolume}`)
     }
-  }, [volume, setVolume, video, videoRefs])
+  }, [volume, setVolume, video, videoRefs, appliedTemplate, parallelVideos])
 
   const handleFullscreen = useCallback(() => {
     setIsFullscreen(!isFullscreen)
