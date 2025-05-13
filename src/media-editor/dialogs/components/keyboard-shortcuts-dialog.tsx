@@ -28,7 +28,12 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
 
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedPreset, setSelectedPreset] = useState<PresetType>("Timeline")
-  const [categories, setCategories] = useState<ShortcutCategory[]>(PRESETS["Timeline"])
+
+  // Получаем категории на основе выбранной предустановки
+  const categories = useMemo(() =>
+    PRESETS[selectedPreset],
+    [PRESETS, selectedPreset]
+  )
   const [editingShortcut, setEditingShortcut] = useState<{
     categoryIndex: number
     shortcutIndex: number
@@ -72,15 +77,14 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
     }
   }, [categories, searchQuery])
 
-  // Обновляем категории при изменении предустановки или языка
+  // Инициализируем массив refs при изменении категорий
   useEffect(() => {
-    setCategories(PRESETS[selectedPreset])
     // Инициализируем массив refs при изменении категорий
-    sectionRefs.current = Array(PRESETS[selectedPreset].length).fill(null)
+    sectionRefs.current = Array(categories.length).fill(null)
     // Сбрасываем режим редактирования при смене предустановки
     setEditingShortcut(null)
     setListeningForKeys(false)
-  }, [selectedPreset, PRESETS])
+  }, [categories])
 
   // Добавляем обработчик клика вне для отмены редактирования
   useEffect(() => {
@@ -234,13 +238,16 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
     // Формируем строку с горячей клавишей
     const keyString = [...modifiers, key].join("")
 
-    // Обновляем категории с новой горячей клавишей
-    const newCategories = [...categories]
-    const { categoryIndex, shortcutIndex } = editingShortcut
+    // Вместо обновления категорий, просто обновляем выбранную предустановку
+    // Это вызовет пересчет useMemo для categories
+    setSelectedPreset(prev => {
+      // Обновляем предустановку в PRESETS напрямую
+      // Это безопасно, так как PRESETS - это объект, созданный с помощью useMemo
+      const { categoryIndex, shortcutIndex } = editingShortcut
+      PRESETS[prev][categoryIndex].shortcuts[shortcutIndex].keys = keyString
+      return prev
+    })
 
-    newCategories[categoryIndex].shortcuts[shortcutIndex].keys = keyString
-
-    setCategories(newCategories)
     setEditingShortcut(null)
     setListeningForKeys(false)
   }
@@ -432,7 +439,10 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
                 onClick={() => {
                   // Сбрасываем настройки к значениям по умолчанию
                   const freshPresets = createPresets(t)
-                  setCategories(freshPresets[selectedPreset])
+                  // Обновляем PRESETS напрямую
+                  Object.assign(PRESETS, freshPresets)
+                  // Вызываем перерендер, обновляя предустановку
+                  setSelectedPreset(prev => prev)
                   setEditingShortcut(null)
                   setListeningForKeys(false)
                 }}

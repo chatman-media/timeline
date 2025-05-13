@@ -6,6 +6,7 @@ import {
   Language,
   LANGUAGES,
   LayoutMode,
+  PreviewClickBehavior,
   STORAGE_KEYS,
   userSettingsMachine,
 } from "@/media-editor/browser/machines/user-settings-machine"
@@ -16,10 +17,12 @@ interface UserSettingsContextValue {
   language: Language
   layoutMode: LayoutMode
   screenshotsPath: string
+  previewClickBehavior: PreviewClickBehavior
   handleTabChange: (value: string) => void
   handleLanguageChange: (value: Language) => void
   handleLayoutChange: (value: LayoutMode) => void
   handleScreenshotsPathChange: (value: string) => void
+  handlePreviewClickBehaviorChange: (value: PreviewClickBehavior) => void
 }
 
 export const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(undefined)
@@ -66,7 +69,7 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i)
         if (key) {
-          console.log(`${key}: ${localStorage.getItem(key)}`)
+          // console.log(`${key}: ${localStorage.getItem(key)}`)
         }
       }
 
@@ -92,6 +95,7 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
     language: state.context.language,
     layoutMode: state.context.layoutMode,
     screenshotsPath: state.context.screenshotsPath,
+    previewClickBehavior: state.context.previewClickBehavior,
     handleTabChange: (value: string) => {
       console.log("Tab change requested:", value)
       // Проверяем, что значение является допустимым BrowserTab
@@ -122,6 +126,16 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
       console.log("Screenshots path change requested:", value)
       send({ type: "UPDATE_SCREENSHOTS_PATH", path: value })
       console.log("UPDATE_SCREENSHOTS_PATH event sent with path:", value)
+    },
+    handlePreviewClickBehaviorChange: (value: PreviewClickBehavior) => {
+      console.log("Preview click behavior change requested:", value)
+      // Проверяем, что значение является допустимым PreviewClickBehavior
+      if (["preview", "player"].includes(value)) {
+        send({ type: "UPDATE_PREVIEW_CLICK_BEHAVIOR", behavior: value })
+        console.log("UPDATE_PREVIEW_CLICK_BEHAVIOR event sent with behavior:", value)
+      } else {
+        console.error("Invalid preview click behavior value:", value)
+      }
     },
   }
 

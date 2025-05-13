@@ -15,6 +15,7 @@ export const STORAGE_KEYS = {
   LAYOUT: "app-layout-mode",
   VOLUME: "player-volume",
   SCREENSHOTS_PATH: "screenshots-save-path",
+  PREVIEW_CLICK_BEHAVIOR: "preview-click-behavior",
 } as const
 
 // Допустимые значения для активного таба
@@ -38,10 +39,17 @@ export const LANGUAGES = SUPPORTED_LANGUAGES
 export const LAYOUTS = ["default", "options", "vertical", "dual"] as const
 export const DEFAULT_LAYOUT = "default"
 
+// Допустимые значения для поведения при клике на превью
+// "preview" - воспроизводить в превью (не дублировать в плеере)
+// "player" - воспроизводить в медиа плеере (дублировать)
+export const PREVIEW_CLICK_BEHAVIORS = ["preview", "player"] as const
+export const DEFAULT_PREVIEW_CLICK_BEHAVIOR = "player"
+
 export type PreviewSize = (typeof PREVIEW_SIZES)[number]
 export type BrowserTab = (typeof BROWSER_TABS)[number]
 export type Language = (typeof LANGUAGES)[number]
 export type LayoutMode = (typeof LAYOUTS)[number]
+export type PreviewClickBehavior = (typeof PREVIEW_CLICK_BEHAVIORS)[number]
 export type StorageKey = keyof typeof STORAGE_KEYS
 
 export interface UserSettingsContext {
@@ -50,6 +58,7 @@ export interface UserSettingsContext {
   language: Language
   layoutMode: LayoutMode
   screenshotsPath: string
+  previewClickBehavior: PreviewClickBehavior
   isLoaded: boolean
 }
 
@@ -63,6 +72,7 @@ const initialContext: UserSettingsContext = {
   language: DEFAULT_LANGUAGE,
   layoutMode: DEFAULT_LAYOUT,
   screenshotsPath: "public/screenshots",
+  previewClickBehavior: DEFAULT_PREVIEW_CLICK_BEHAVIOR,
   isLoaded: false,
 }
 
@@ -74,6 +84,7 @@ type UserSettingsLoadedEvent = {
   language: Language
   layoutMode: LayoutMode
   screenshotsPath: string
+  previewClickBehavior: PreviewClickBehavior
 }
 type UpdatePreviewSizeEvent = {
   type: "UPDATE_PREVIEW_SIZE"
@@ -84,6 +95,7 @@ type UpdateActiveTabEvent = { type: "UPDATE_ACTIVE_TAB"; tab: BrowserTab }
 type UpdateLanguageEvent = { type: "UPDATE_LANGUAGE"; language: Language }
 type UpdateLayoutEvent = { type: "UPDATE_LAYOUT"; layoutMode: LayoutMode }
 type UpdateScreenshotsPathEvent = { type: "UPDATE_SCREENSHOTS_PATH"; path: string }
+type UpdatePreviewClickBehaviorEvent = { type: "UPDATE_PREVIEW_CLICK_BEHAVIOR"; behavior: PreviewClickBehavior }
 
 export type UserSettingsEvent =
   | LoadUserSettingsEvent
@@ -93,6 +105,7 @@ export type UserSettingsEvent =
   | UpdateLanguageEvent
   | UpdateLayoutEvent
   | UpdateScreenshotsPathEvent
+  | UpdatePreviewClickBehaviorEvent
 
 export const userSettingsMachine = createMachine(
   {
@@ -128,6 +141,9 @@ export const userSettingsMachine = createMachine(
           },
           UPDATE_SCREENSHOTS_PATH: {
             actions: ["updateScreenshotsPath", "saveScreenshotsPathToStorage"],
+          },
+          UPDATE_PREVIEW_CLICK_BEHAVIOR: {
+            actions: ["updatePreviewClickBehavior", "savePreviewClickBehaviorToStorage"],
           },
         },
       },
@@ -327,6 +343,31 @@ export const userSettingsMachine = createMachine(
           }
         }
 
+        // Загружаем сохраненное поведение при клике на превью
+        let previewClickBehavior = DEFAULT_PREVIEW_CLICK_BEHAVIOR
+        try {
+          const savedBehavior = localStorage.getItem(STORAGE_KEYS.PREVIEW_CLICK_BEHAVIOR)
+          console.log("Loaded preview click behavior from localStorage:", savedBehavior)
+
+          if (savedBehavior && PREVIEW_CLICK_BEHAVIORS.includes(savedBehavior as PreviewClickBehavior)) {
+            previewClickBehavior = savedBehavior as PreviewClickBehavior
+            console.log("Using saved preview click behavior:", previewClickBehavior)
+          } else {
+            console.log("No valid saved preview click behavior found, using default:", previewClickBehavior)
+          }
+        } catch (error) {
+          console.error("Error loading preview click behavior:", error)
+        }
+
+        // Сохраняем значение по умолчанию для поведения при клике на превью, если его нет
+        if (localStorage.getItem(STORAGE_KEYS.PREVIEW_CLICK_BEHAVIOR) === null) {
+          try {
+            localStorage.setItem(STORAGE_KEYS.PREVIEW_CLICK_BEHAVIOR, DEFAULT_PREVIEW_CLICK_BEHAVIOR)
+          } catch (error) {
+            console.error("Error saving default preview click behavior:", error)
+          }
+        }
+
         return {
           type: "SETTINGS_LOADED",
           previewSizes,
@@ -334,6 +375,7 @@ export const userSettingsMachine = createMachine(
           language,
           layoutMode,
           screenshotsPath,
+          previewClickBehavior,
         }
       },
       updateSettings: assign({
@@ -356,6 +398,10 @@ export const userSettingsMachine = createMachine(
         screenshotsPath: (_, event) => {
           const typedEvent = event as UserSettingsLoadedEvent
           return typedEvent.screenshotsPath || "public/screenshots"
+        },
+        previewClickBehavior: (_, event) => {
+          const typedEvent = event as UserSettingsLoadedEvent
+          return typedEvent.previewClickBehavior || DEFAULT_PREVIEW_CLICK_BEHAVIOR
         },
         isLoaded: (_) => true,
       }),
@@ -556,6 +602,44 @@ export const userSettingsMachine = createMachine(
             console.log("Verified saved screenshots path value:", savedValue)
           } catch (error) {
             console.error(`Error saving screenshots path:`, error)
+          }
+        }
+      },
+      updatePreviewClickBehavior: assign({
+        previewClickBehavior: (_, event: any) => {
+          if (event.type === "UPDATE_PREVIEW_CLICK_BEHAVIOR") {
+            console.log("Updating preview click behavior in machine:", event.behavior)
+
+            // Проверяем, что значение поведения является допустимым
+            if (!PREVIEW_CLICK_BEHAVIORS.includes(event.behavior)) {
+              console.error("Invalid preview click behavior value in machine:", event.behavior)
+              return DEFAULT_PREVIEW_CLICK_BEHAVIOR
+            }
+
+            return event.behavior
+          }
+          return DEFAULT_PREVIEW_CLICK_BEHAVIOR
+        },
+      }),
+      savePreviewClickBehaviorToStorage: (_, event: any) => {
+        if (event.type === "UPDATE_PREVIEW_CLICK_BEHAVIOR") {
+          try {
+            console.log("Saving preview click behavior to localStorage:", event.behavior)
+
+            // Проверяем, что значение поведения является допустимым
+            if (!PREVIEW_CLICK_BEHAVIORS.includes(event.behavior)) {
+              console.error("Invalid preview click behavior value when saving to localStorage:", event.behavior)
+              return
+            }
+
+            localStorage.setItem(STORAGE_KEYS.PREVIEW_CLICK_BEHAVIOR, event.behavior)
+            console.log("Preview click behavior saved to localStorage successfully")
+
+            // Проверяем, что значение было сохранено правильно
+            const savedValue = localStorage.getItem(STORAGE_KEYS.PREVIEW_CLICK_BEHAVIOR)
+            console.log("Verified saved preview click behavior value:", savedValue)
+          } catch (error) {
+            console.error(`Error saving preview click behavior:`, error)
           }
         }
       },

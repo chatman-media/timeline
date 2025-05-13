@@ -5,7 +5,7 @@ export type LanguageCode = "ru" | "en" | "es" | "fr" | "de"
 export const SUPPORTED_LANGUAGES: LanguageCode[] = ["ru", "en", "es", "fr", "de"]
 
 // Язык по умолчанию
-export const DEFAULT_LANGUAGE: LanguageCode = "en"
+export const DEFAULT_LANGUAGE: LanguageCode = "ru"
 
 // Соответствие языков и локалей
 export const LANGUAGE_LOCALES: Record<LanguageCode, string> = {

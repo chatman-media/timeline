@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
 import {
   Select,
   SelectContent,
@@ -19,7 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Language, LANGUAGES } from "@/media-editor/browser/machines/user-settings-machine"
+import {
+  Language,
+  LANGUAGES,
+  PreviewClickBehavior,
+} from "@/media-editor/browser/machines/user-settings-machine"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
 
 interface UserSettingsDialogProps {
@@ -28,11 +33,18 @@ interface UserSettingsDialogProps {
 }
 
 export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogProps) {
-  const { language, screenshotsPath, handleLanguageChange, handleScreenshotsPathChange } =
-    useUserSettings()
+  const {
+    language,
+    screenshotsPath,
+    previewClickBehavior,
+    handleLanguageChange,
+    handleScreenshotsPathChange,
+    handlePreviewClickBehaviorChange
+  } = useUserSettings()
   const { t, i18n } = useTranslation()
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(language)
   const [selectedScreenshotsPath, setSelectedScreenshotsPath] = useState<string>(screenshotsPath)
+  const [selectedPreviewClickBehavior, setSelectedPreviewClickBehavior] = useState<PreviewClickBehavior>(previewClickBehavior)
 
   // Обновляем выбранный язык при изменении языка в контексте
   useEffect(() => {
@@ -43,6 +55,11 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
   useEffect(() => {
     setSelectedScreenshotsPath(screenshotsPath)
   }, [screenshotsPath])
+
+  // Обновляем выбранное поведение при клике на превью при изменении в контексте
+  useEffect(() => {
+    setSelectedPreviewClickBehavior(previewClickBehavior)
+  }, [previewClickBehavior])
 
   // Проверяем соответствие языка в i18n и localStorage при открытии диалога
   useEffect(() => {
@@ -90,12 +107,24 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
     setSelectedScreenshotsPath(newPath)
   }
 
+  // Обработчик изменения поведения при клике на превью
+  const handlePreviewClickBehaviorSelect = (value: string) => {
+    const newBehavior = value as PreviewClickBehavior
+    setSelectedPreviewClickBehavior(newBehavior)
+  }
+
   // Обработчик сохранения настроек
   const handleSaveSettings = () => {
     // Применяем изменения пути скриншотов
     if (selectedScreenshotsPath !== screenshotsPath) {
       console.log("Applying screenshots path change:", selectedScreenshotsPath)
       handleScreenshotsPathChange(selectedScreenshotsPath)
+    }
+
+    // Применяем изменения поведения при клике на превью
+    if (selectedPreviewClickBehavior !== previewClickBehavior) {
+      console.log("Applying preview click behavior change:", selectedPreviewClickBehavior)
+      handlePreviewClickBehaviorChange(selectedPreviewClickBehavior)
     }
 
     // Закрываем диалог
@@ -125,6 +154,18 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <Label className="text-xs font-medium">
+              {t("dialogs.userSettings.previewClickBehavior", "Не дублировать превью видео в плеере")}
+            </Label>
+            <Switch
+              checked={selectedPreviewClickBehavior === "preview"}
+              onCheckedChange={(checked) =>
+                handlePreviewClickBehaviorSelect(checked ? "preview" : "player")
+              }
+            />
           </div>
 
           <div className="flex flex-col space-y-2">

@@ -300,6 +300,7 @@
       "clearPath": "Clear",
       "defaultPathHint": "Default path for saving screenshots",
       "customPathHint": "Screenshots will be saved to: {{path}}",
+      "previewClickBehavior": "Don't duplicate preview video in player",
       "cancel": "Cancel",
       "save": "OK"
     },

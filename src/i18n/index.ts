@@ -60,7 +60,7 @@ const initI18n = () => {
   instance.init({
     resources,
     lng: savedLanguage, // Используем сохраненный язык
-    fallbackLng: "en", // Язык по умолчанию, если сохраненный недоступен
+    fallbackLng: "ru", // Язык по умолчанию, если сохраненный недоступен
     debug: process.env.NODE_ENV === "development", // Включаем отладку только в режиме разработки
 
     interpolation: {

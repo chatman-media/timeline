@@ -275,6 +275,7 @@
       "clearPath": "Limpiar",
       "defaultPathHint": "Ruta predeterminada para guardar capturas",
       "customPathHint": "Las capturas se guardarán en: {{path}}",
+      "previewClickBehavior": "No duplicar video de vista previa en el reproductor",
       "cancel": "Cancelar",
       "save": "Guardar"
     },

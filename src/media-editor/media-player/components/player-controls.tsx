@@ -9,6 +9,7 @@ import {
   Minimize2,
   Pause,
   Play,
+  Settings,
   StepBack,
   StepForward,
   TvMinimalPlay,
@@ -27,6 +28,7 @@ import {
   findTemplateContainer,
   takeScreenshot,
 } from "@/media-editor/media-player/components/take-screenshot"
+
 import { VolumeSlider } from "@/media-editor/media-player/components/volume-slider"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
@@ -80,8 +82,11 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   // Используем состояние для хранения текущего времени воспроизведения
   const [localDisplayTime, setLocalDisplayTime] = useState(0)
   const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const lastSaveTime = useRef(0)
-  const SAVE_INTERVAL = 5000 // Сохраняем каждые 3 секунды
+  const SAVE_INTERVAL = 5000 // Сохраняем каждые 5 секунд
+
+  // Удаляем неиспользуемый ref
 
   // Временно отключаем сохранение состояния периодически
   useEffect(() => {
@@ -829,11 +834,15 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
         parallelVideos.forEach((v) => {
           if (v.id) {
             newVideoSources[v.id] = "media"
+            console.log(`[handleToggleSource] Видео ${v.id} помечено как видео из браузера`)
           }
         })
 
         // Обновляем состояние videoSources
         setLocalVideoSources(newVideoSources)
+
+        // Удаляем отправку сообщений, так как теперь используем только контекст плеера
+        console.log(`[handleToggleSource] Обновлен контекст плеера с источником "media"`)
       }
 
       // Теперь все параллельные видео считаются видео из браузера
@@ -1268,67 +1277,34 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
   // videoRefs уже получен выше
 
-  // Обновляем локальное время при воспроизведении
+  // Упрощенный механизм отслеживания времени видео
   useEffect(() => {
-    // Определяем, какое видео использовать для отслеживания времени
-    const videoToTrack = getDisplayVideo()
+    // Если нет видео или не воспроизводится, выходим
+    if (!video?.id || !videoRefs || !isPlaying) return;
 
-    // Если нет активного видео или его ID, выходим
-    if (!videoToTrack?.id) return
+    // Получаем видео для отслеживания времени
+    const videoToTrack = getDisplayVideo();
+    if (!videoToTrack?.id) return;
 
-    // Получаем элемент видео для отслеживания
-    const videoElementToTrack = videoRefs[videoToTrack.id]
+    // Получаем элемент видео
+    const videoElement = videoRefs[videoToTrack.id];
+    if (!videoElement) return;
 
-    // Если нет элемента видео для отслеживания, выходим
-    if (!videoElementToTrack) {
-      console.log(
-        `[PlayerControls] Нет элемента видео для отслеживания времени: ${videoToTrack.id}`,
-      )
-      return
-    }
-
-    console.log(`[PlayerControls] Отслеживаем время по видео: ${videoToTrack.id}`)
-
-    // Функция обновления времени
-    const updateTime = () => {
-      const newTime = videoElementToTrack.currentTime
-
-      // Всегда обновляем localDisplayTime и displayTime при каждом событии timeupdate
-      // Это необходимо для плавного движения таймлайн бара
-      setLocalDisplayTime(newTime)
-
-      // Всегда обновляем displayTime в контексте для синхронизации с TimelineBar
-      // Это необходимо для корректного движения бара при воспроизведении видео из сектора
-      setDisplayTime(newTime)
-
-      // Логируем только при существенном изменении времени, чтобы не засорять консоль
-      if (Math.abs(newTime - localDisplayTime) > 0.1) {
-        console.log(`[PlayerControls] Обновлено localDisplayTime: ${newTime.toFixed(3)}`)
-        console.log(
-          `[PlayerControls] Обновлен displayTime в контексте: ${newTime.toFixed(3)}, currentTime: ${currentTime}`,
-        )
-      }
-    }
+    // Простая функция обновления времени
+    const handleTimeUpdate = () => {
+      const newTime = videoElement.currentTime;
+      setLocalDisplayTime(newTime);
+      setDisplayTime(newTime);
+    };
 
     // Добавляем обработчик события timeupdate
-    if (isPlaying) {
-      videoElementToTrack.addEventListener("timeupdate", updateTime)
-      console.log(`[PlayerControls] Добавлен обработчик timeupdate для видео: ${videoToTrack.id}`)
-    }
+    videoElement.addEventListener("timeupdate", handleTimeUpdate);
 
+    // Функция очистки
     return () => {
-      videoElementToTrack.removeEventListener("timeupdate", updateTime)
-      console.log(`[PlayerControls] Удален обработчик timeupdate для видео: ${videoToTrack.id}`)
-    }
-  }, [
-    video?.id,
-    videoRefs,
-    isPlaying,
-    appliedTemplate,
-    getDisplayVideo,
-    currentTime,
-    setDisplayTime,
-  ])
+      videoElement.removeEventListener("timeupdate", handleTimeUpdate);
+    };
+  }, [video?.id, videoRefs, isPlaying, setDisplayTime]);
 
   // Нормализуем currentTime для отображения, если это Unix timestamp
   const calculatedDisplayTime = useMemo(() => {
@@ -1340,14 +1316,20 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     return currentTime
   }, [currentTime, localDisplayTime])
 
+  // Ref для отслеживания предыдущего значения calculatedDisplayTime
+  const prevTimeRef = useRef(calculatedDisplayTime);
+
   // Обновляем контекст при изменении calculatedDisplayTime
   // Но только если не воспроизводится видео, чтобы избежать конфликта с updateTime
   useEffect(() => {
-    if (!isPlaying) {
-      setDisplayTime(calculatedDisplayTime)
-      console.log(
-        `[PlayerControls] Обновлен displayTime в контексте (из useEffect): ${calculatedDisplayTime.toFixed(3)}`,
-      )
+    // Обновляем только если время изменилось существенно и видео не воспроизводится
+    if (!isPlaying && Math.abs(prevTimeRef.current - calculatedDisplayTime) > 0.05) {
+      setDisplayTime(calculatedDisplayTime);
+
+      // Убираем лишнее логирование для улучшения производительности
+
+      // Обновляем предыдущее значение
+      prevTimeRef.current = calculatedDisplayTime;
     }
   }, [calculatedDisplayTime, setDisplayTime, isPlaying])
 
@@ -1358,12 +1340,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     setIsHydrated(true)
   }, [])
 
-  // Эффект для логирования изменений preferredSource
-  useEffect(() => {
-    if (isHydrated) {
-      console.log(`[PlayerControls] preferredSource изменен на: ${preferredSource}`)
-    }
-  }, [preferredSource, isHydrated])
+  // Убираем эффект для логирования изменений preferredSource для улучшения производительности
 
   // Создаем мемоизированные значения для начального и конечного времени
   const startTimeForFirstFrame = useMemo(() => {
@@ -1401,30 +1378,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     return Math.abs(currentTime - endTimeForLastFrame) < frameTime
   }, [currentTime, endTimeForLastFrame, frameTime])
 
-  // Ограничиваем логирование, чтобы не перегружать консоль
-  useEffect(() => {
-    console.log(
-      "[PlayerControls] Rendering with currentTime:",
-      currentTime,
-      "displayTime:",
-      displayTime,
-      "isFirstFrame:",
-      isFirstFrame,
-      "isLastFrame:",
-      isLastFrame,
-      "startTimeForFirstFrame:",
-      startTimeForFirstFrame,
-      "endTimeForLastFrame:",
-      endTimeForLastFrame,
-    )
-  }, [
-    currentTime,
-    displayTime,
-    isFirstFrame,
-    isLastFrame,
-    startTimeForFirstFrame,
-    endTimeForLastFrame,
-  ])
+  // Полностью отключаем логирование рендеринга для улучшения производительности
 
   // Улучшаем handlePlayPause: НЕ устанавливаем флаг isChangingCamera при переключении
   const handlePlayPause = useCallback(() => {
@@ -1441,7 +1395,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
     // Не устанавливаем флаг isChangingCamera при переключении между паузой и воспроизведением,
     // так как это приводит к сбросу времени
-    console.log("[handlePlayPause] Переключение воспроизведения")
+    // Убираем лишнее логирование для улучшения производительности
 
     // Если начинаем воспроизведение и есть активное видео, устанавливаем текущее время видео в displayTime
     if (!isPlaying && hasActiveVideo && video.id && videoRefs[video.id]) {
@@ -1449,15 +1403,8 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
       // Если currentTime - это Unix timestamp, используем displayTime
       if (currentTime > 365 * 24 * 60 * 60) {
-        console.log(
-          `[handlePlayPause] Установка времени видео в calculatedDisplayTime: ${calculatedDisplayTime.toFixed(3)}`,
-        )
+        // Убираем лишнее логирование для улучшения производительности
         videoElement.currentTime = calculatedDisplayTime
-
-        // Сохраняем это время для текущего видео
-        console.log(
-          `[handlePlayPause] Сохраняем calculatedDisplayTime ${calculatedDisplayTime.toFixed(3)} для видео ${video.id}`,
-        )
       }
     }
 
@@ -1467,7 +1414,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
       // Проверяем готовность видео
       if (videoElement.readyState < 3) {
-        console.log(`[handlePlayPause] Видео ${video.id} не готово, ожидаем загрузку...`)
+        // Убираем лишнее логирование для улучшения производительности
 
         // Показываем индикатор загрузки
         // Это можно реализовать через состояние в контексте плеера, если нужно
@@ -1810,6 +1757,20 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
               onClick={handleFullscreen}
             >
               {isFullscreen ? <Minimize2 className="h-8 w-8" /> : <Maximize2 className="h-8 w-8" />}
+            </Button>
+
+            <Button
+              className="h-8 w-8 cursor-pointer"
+              variant="ghost"
+              size="icon"
+              title={
+                typeof window !== "undefined"
+                  ? t("timeline.controls.settings", "Настройки")
+                  : "Settings"
+              }
+              onClick={() => setIsSettingsOpen(true)}
+            >
+              <Settings className="h-8 w-8" />
             </Button>
           </div>
         </div>

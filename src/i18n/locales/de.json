@@ -493,6 +493,7 @@
       "clearPath": "Löschen",
       "defaultPathHint": "Standardpfad zum Speichern von Screenshots",
       "customPathHint": "Screenshots werden gespeichert unter: {{path}}",
+      "previewClickBehavior": "Vorschauvideo nicht im Player duplizieren",
       "cancel": "Abbrechen",
       "save": "OK"
     }

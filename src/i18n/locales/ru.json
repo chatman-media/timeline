@@ -300,6 +300,7 @@
       "clearPath": "Очистить",
       "defaultPathHint": "Стандартный путь для сохранения скриншотов",
       "customPathHint": "Скриншоты будут сохраняться в: {{path}}",
+      "previewClickBehavior": "Не дублировать превью видео в плеере",
       "cancel": "Отменить",
       "save": "OK"
     },

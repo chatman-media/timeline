@@ -35,6 +35,11 @@ export interface PlayerContextType {
 
   // Последний примененный шаблон
   lastAppliedTemplate: AppliedTemplate | null
+
+  // Настройка для проигрывания видео при клике по превью
+  // "preview" - проигрывать в превью (старое поведение)
+  // "player" - проигрывать в медиа плеере (новое поведение)
+  previewClickBehavior: "preview" | "player"
 }
 
 // Загружаем сохраненный уровень звука из localStorage
@@ -71,6 +76,7 @@ const initialContext: PlayerContextType = {
   appliedTemplate: null,
   preferredSource: "timeline", // По умолчанию используем таймлайн как источник
   lastAppliedTemplate: null,
+  previewClickBehavior: "player", // По умолчанию проигрываем в медиа плеере (новое поведение)
 }
 
 type SetCurrentTimeEvent = {
@@ -163,6 +169,11 @@ type SetLastAppliedTemplateEvent = {
   lastAppliedTemplate: AppliedTemplate | null
 }
 
+type SetPreviewClickBehaviorEvent = {
+  type: "setPreviewClickBehavior"
+  previewClickBehavior: "preview" | "player"
+}
+
 export type PlayerEvent =
   | SetCurrentTimeEvent
   | SetIsPlayingEvent
@@ -182,6 +193,7 @@ export type PlayerEvent =
   | SetIsResizableModeEvent
   | SetPreferredSourceEvent
   | SetLastAppliedTemplateEvent
+  | SetPreviewClickBehaviorEvent
 
 // Функция для сохранения состояния плеера в IndexedDB - временно отключена
 const persistPlayerState = async (_: { context: PlayerContextType }): Promise<void> => {
@@ -285,6 +297,9 @@ export const playerMachine = createMachine({
         setLastAppliedTemplate: {
           actions: assign({ lastAppliedTemplate: ({ event }) => event.lastAppliedTemplate }),
         },
+        setPreviewClickBehavior: {
+          actions: assign({ previewClickBehavior: ({ event }) => event.previewClickBehavior }),
+        },
       },
     },
     loading: {
@@ -359,6 +374,9 @@ export const playerMachine = createMachine({
         setLastAppliedTemplate: {
           actions: assign({ lastAppliedTemplate: ({ event }) => event.lastAppliedTemplate }),
         },
+        setPreviewClickBehavior: {
+          actions: assign({ previewClickBehavior: ({ event }) => event.previewClickBehavior }),
+        },
       },
     },
     ready: {
@@ -430,6 +448,9 @@ export const playerMachine = createMachine({
         },
         setLastAppliedTemplate: {
           actions: assign({ lastAppliedTemplate: ({ event }) => event.lastAppliedTemplate }),
+        },
+        setPreviewClickBehavior: {
+          actions: assign({ previewClickBehavior: ({ event }) => event.previewClickBehavior }),
         },
       },
     },

@@ -26,10 +26,6 @@ export function SplitGrid4x2({
     ? templateId.includes("portrait") || templateId === "split-grid-2x4-square"
     : false
 
-  console.log(`[SplitGrid4x2] Рендеринг шаблона ${templateId} с параметрами:`, {
-    isPortrait,
-    isResizable,
-  })
 
   // Если недостаточно видео, возвращаем пустой div
   if (videoCount < 8) {

@@ -17,18 +17,9 @@ export function SplitGrid4x3({
 }: TemplateProps & { templateId?: string }) {
   // Проверяем, что у нас есть видео с путями
   const validVideos = videos.filter((v) => v && v.path)
-  const videoCount = Math.min(validVideos.length, 12)
 
   // Определяем ориентацию и тип шаблона на основе ID шаблона
   const isPortrait = templateId ? templateId.includes("portrait") : false
-  const isSquare = templateId ? templateId.includes("square") : false
-  const isLandscape = templateId ? templateId.includes("landscape") : false
-
-  console.log(`[SplitGrid4x3] Рендеринг шаблона ${templateId} с параметрами:`, {
-    isPortrait,
-    isSquare,
-    isLandscape,
-  })
 
   // Если видео меньше 12, заполняем оставшиеся ячейки пустыми видео
   const filledVideos = [...validVideos]
@@ -40,7 +31,7 @@ export function SplitGrid4x3({
   if (!isResizable) {
     // Для портретного режима 4x3
     if (isPortrait) {
-      console.log(`[SplitGrid4x3] Рендеринг в режиме 4x3 (портретный)`)
+      // Портретный режим 4x3
       return (
         <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           {/* Рендерим видео */}
@@ -102,7 +93,7 @@ export function SplitGrid4x3({
       )
     } else {
       // Ландшафтный или квадратный режим
-      console.log(`[SplitGrid4x3] Рендеринг в режиме 4x3 (ландшафтный или квадратный)`)
+      // Ландшафтный или квадратный режим 4x3
       return (
         <div className="relative h-full w-full" style={{ border: "1px solid #35d1c1" }}>
           {/* Рендерим видео */}
@@ -166,11 +157,10 @@ export function SplitGrid4x3({
   }
 
   // Рендеринг в режиме с возможностью изменения размеров
-  console.log(`[SplitGrid4x3] Рендеринг в режиме resizable для шаблона ${templateId}`)
 
   // Для портретного режима 4x3
   if (isPortrait) {
-    console.log(`[SplitGrid4x3] Рендеринг в режиме resizable 4x3 (портретный)`)
+    // Портретный режим resizable 4x3
     return (
       <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
         <PanelGroup direction="vertical">
@@ -208,7 +198,6 @@ export function SplitGrid4x3({
     )
   } else {
     // Ландшафтный или квадратный режим
-    console.log(`[SplitGrid4x3] Рендеринг в режиме resizable 4x3 (ландшафтный или квадратный)`)
     return (
       <div className="h-full w-full" style={{ overflow: "visible", border: "1px solid #35d1c1" }}>
         <PanelGroup direction="vertical">

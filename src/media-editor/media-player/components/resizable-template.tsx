@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels"
 
-import { AspectRatio } from "@/components/ui/aspect-ratio"
 import {
   AppliedTemplate,
   getVideoStyleForTemplate,
@@ -76,10 +75,6 @@ export function ResizableTemplate({
 
   // Проверяем, что у нас есть видео с путями
   const validVideos = videos.filter((v) => v && v.path)
-  console.log(
-    "[ResizableTemplate] Валидные видео:",
-    validVideos.map((v) => v.id),
-  )
 
   const videoCount = Math.min(validVideos.length, template?.screens || 1)
 
@@ -719,10 +714,12 @@ export function ResizableTemplate({
         {/* Рендерим модифицированный шаблон как фон */}
         {modifiedTemplate}
 
-        {/* Рендерим видео поверх шаблона */}
+        {/* Рендерим видео поверх шаблона с оптимизированной загрузкой */}
         {validVideos.slice(0, videoCount).map((video, index) => {
           // Получаем стили для видео в зависимости от шаблона
           const videoStyle = getVideoStyleForTemplate(template, index, videoCount)
+
+
 
           return (
             <div
@@ -774,7 +771,6 @@ export function ResizableTemplate({
           </div>
         )}
 
-        {/* Убираем разделительные линии для шаблонов с типом Grid */}
       </div>
     )
   }
@@ -809,8 +805,10 @@ export function ResizableTemplate({
           className="relative h-full w-full"
           style={{ border: "1px solid #35d1c1" }}
         >
-          {/* Рендерим видео */}
+          {/* Рендерим видео с оптимизированной загрузкой */}
           {validVideos.slice(0, videoCount).map((video, index) => {
+
+
             return (
               <div
                 key={`fixed-video-${video.id}-${index}`}
@@ -831,6 +829,7 @@ export function ResizableTemplate({
                   index={index}
                   hideLabel={false}
                   labelPosition={index % 2 === 0 ? "left" : "right"}
+
                 />
               </div>
             )
@@ -918,32 +917,38 @@ export function ResizableTemplate({
     return renderFixedTemplate()
   }
 
-  // Для всех остальных шаблонов используем PanelGroup
+  // Для всех остальных шаблонов используем PanelGroup с оптимизированной загрузкой
   return (
     <div className="h-full w-full" style={{ overflow: "visible" }}>
       <PanelGroup direction={direction} onLayout={(sizes) => setPanelSizes(sizes)}>
-        {validVideos.slice(0, videoCount).map((video, index) => (
-          <React.Fragment key={`fragment-${video.id}-${index}`}>
-            <Panel key={`panel-${video.id}-${index}`} minSize={10}>
-              <VideoPanel
-                video={video}
-                isActive={video.id === activeVideoId}
-                videoRefs={videoRefs}
-                index={index}
-              />
-            </Panel>
-            {index < videoCount - 1 && (
-              <PanelResizeHandle
-                key={`handle-${index}`}
-                className={
-                  direction === "horizontal"
-                    ? "w-1 bg-gray-700 hover:bg-gray-500"
-                    : "h-1 bg-gray-700 hover:bg-gray-500"
-                }
-              />
-            )}
-          </React.Fragment>
-        ))}
+        {validVideos.slice(0, videoCount).map((video, index) => {
+
+
+          return (
+            <React.Fragment key={`fragment-${video.id}-${index}`}>
+              <Panel key={`panel-${video.id}-${index}`} minSize={10}>
+                {/* Для видео с низким приоритетом используем отложенную загрузку */}
+                <VideoPanel
+                  video={video}
+                  isActive={video.id === activeVideoId}
+                  videoRefs={videoRefs}
+                  index={index}
+
+                />
+              </Panel>
+              {index < videoCount - 1 && (
+                <PanelResizeHandle
+                  key={`handle-${index}`}
+                  className={
+                    direction === "horizontal"
+                      ? "w-1 bg-gray-700 hover:bg-gray-500"
+                      : "h-1 bg-gray-700 hover:bg-gray-500"
+                  }
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
       </PanelGroup>
     </div>
   )

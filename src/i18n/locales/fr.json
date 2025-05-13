@@ -439,6 +439,7 @@
       "clearPath": "Effacer",
       "defaultPathHint": "Chemin par défaut pour enregistrer les captures d'écran",
       "customPathHint": "Les captures d'écran seront enregistrées dans : {{path}}",
+      "previewClickBehavior": "Ne pas dupliquer la vidéo d'aperçu dans le lecteur",
       "cancel": "Annuler",
       "save": "OK"
     }
