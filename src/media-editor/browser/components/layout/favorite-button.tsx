@@ -94,7 +94,7 @@ export const FavoriteButton = memo(function FavoriteButton({
       // Через 3 секунды сбрасываем флаг
       const timer = setTimeout(() => {
         setIsRecentlyAdded(false)
-      }, 3000)
+      }, 1500)
 
       return () => clearTimeout(timer)
     }
