@@ -581,6 +581,12 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     if (isRecording) {
       console.log("[handleRecordToggle] Останавливаем запись")
       setIsRecording(false)
+
+      // Также останавливаем воспроизведение при остановке записи
+      if (isPlaying) {
+        console.log("[handleRecordToggle] Автоматически останавливаем воспроизведение при остановке записи")
+        setIsPlaying(false)
+      }
     } else {
       const trackId = activeTrackId || video?.id || ""
       if (trackId) {
