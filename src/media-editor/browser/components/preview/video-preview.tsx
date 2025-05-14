@@ -63,13 +63,13 @@ export const VideoPreview = memo(function VideoPreview({
 
   // Функции для условного логирования
   const logDebug = (message: string, ...args: any[]) => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       console.log(message, ...args)
     }
   }
 
   const logError = (message: string, ...args: any[]) => {
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV !== "production") {
       console.error(message, ...args)
     }
   }
@@ -252,206 +252,205 @@ export const VideoPreview = memo(function VideoPreview({
   return (
     <div className={cn("flex h-full w-full items-center justify-center")}>
       {videoData.videoStreams.map((stream: FfprobeStream) => {
-          const key = stream.streamKey || `stream-${stream.index}`
-          const isMultipleStreams = videoData.isMultipleStreams
-          const width = calculateWidth(
-            stream.width || 0,
-            stream.height || 0,
-            size,
-            parseRotation(stream.rotation),
-          )
+        const key = stream.streamKey || `stream-${stream.index}`
+        const isMultipleStreams = videoData.isMultipleStreams
+        const width = calculateWidth(
+          stream.width || 0,
+          stream.height || 0,
+          size,
+          parseRotation(stream.rotation),
+        )
 
-          const adptivedWidth = calculateAdaptiveWidth(
-            width,
-            isMultipleStreams,
-            stream.display_aspect_ratio,
-          )
+        const adptivedWidth = calculateAdaptiveWidth(
+          width,
+          isMultipleStreams,
+          stream.display_aspect_ratio,
+        )
 
-          // Исправляем проблему с деструктуризацией
-          const aspectRatio = stream.display_aspect_ratio?.split(":").map(Number) || [16, 9]
-          const ratio = aspectRatio[0] / aspectRatio[1]
+        // Исправляем проблему с деструктуризацией
+        const aspectRatio = stream.display_aspect_ratio?.split(":").map(Number) || [16, 9]
+        const ratio = aspectRatio[0] / aspectRatio[1]
 
-          return (
+        return (
+          <div
+            key={key}
+            className="relative flex-shrink-0"
+            style={{
+              height: `${size}px`,
+              width:
+                ratio > 1
+                  ? ignoreRatio
+                    ? width
+                    : adptivedWidth
+                  : isMultipleStreams && ignoreRatio
+                    ? width
+                    : adptivedWidth,
+            }}
+            onClick={(e) => handlePlayPause(e, stream)}
+          >
             <div
-              key={key}
-              className="relative flex-shrink-0"
-              style={{
-                height: `${size}px`,
-                width:
-                  ratio > 1
-                    ? ignoreRatio
-                      ? width
-                      : adptivedWidth
-                    : isMultipleStreams && ignoreRatio
-                      ? width
-                      : adptivedWidth,
-              }}
-              onClick={(e) => handlePlayPause(e, stream)}
+              className="group relative h-full w-full"
+              onMouseMove={(e) => handleMouseMove(e, stream)}
+              onMouseLeave={handleMouseLeave}
             >
-              <div
-                className="group relative h-full w-full"
-                onMouseMove={(e) => handleMouseMove(e, stream)}
-                onMouseLeave={handleMouseLeave}
-              >
-                <video
-                  ref={(el) => {
-                    videoRefs.current[key] = el
-                  }}
-                  src={getVideoUrl()}
-                  preload="auto"
-                  tabIndex={0}
-                  playsInline
-                  muted={false} // Включаем звук в превью по запросу пользователя
-                  data-video-id={file.id} // Добавляем атрибут с ID видео для возможности остановки всех видео, кроме активного
-                  className={cn(
-                    "absolute inset-0 h-full w-full focus:outline-none",
-                    isAdded ? "opacity-50" : "",
-                  )}
-                  style={{
-                    transition: "opacity 0.2s ease-in-out",
-                  }}
-                  onEnded={() => {
-                    logDebug("Video ended for stream:", stream.index)
-                    setIsPlaying(false)
-                  }}
-                  onPlay={(e) => {
-                    logDebug("Video playing for stream:", stream.index)
-                    const video = e.currentTarget
-                    const currentTime = hoverTime
-                    if (currentTime !== undefined && currentTime !== null) {
-                      video.currentTime = currentTime
+              <video
+                ref={(el) => {
+                  videoRefs.current[key] = el
+                }}
+                src={getVideoUrl()}
+                preload="auto"
+                tabIndex={0}
+                playsInline
+                muted={false} // Включаем звук в превью по запросу пользователя
+                data-video-id={file.id} // Добавляем атрибут с ID видео для возможности остановки всех видео, кроме активного
+                className={cn(
+                  "absolute inset-0 h-full w-full focus:outline-none",
+                  isAdded ? "opacity-50" : "",
+                )}
+                style={{
+                  transition: "opacity 0.2s ease-in-out",
+                }}
+                onEnded={() => {
+                  logDebug("Video ended for stream:", stream.index)
+                  setIsPlaying(false)
+                }}
+                onPlay={(e) => {
+                  logDebug("Video playing for stream:", stream.index)
+                  const video = e.currentTarget
+                  const currentTime = hoverTime
+                  if (currentTime !== undefined && currentTime !== null) {
+                    video.currentTime = currentTime
+                  }
+                }}
+                onTimeUpdate={(e) => {
+                  // Обновляем только каждые 500 мс вместо случайного выбора
+                  const now = Date.now()
+                  if (now - lastUpdateTimeRef.current > 500) {
+                    lastUpdateTimeRef.current = now
+                    logDebug(
+                      "Time update for stream:",
+                      stream.index,
+                      "current time:",
+                      e.currentTarget.currentTime.toFixed(2),
+                    )
+                  }
+                }}
+                onError={(e) => {
+                  logError("Video error for stream:", stream.index, e)
+                }}
+                onKeyDown={(e) => {
+                  if (e.code === "Space") {
+                    e.preventDefault()
+                    handlePlayPause(e as unknown as React.MouseEvent, stream)
+                  }
+                }}
+                onLoadedData={() => {
+                  logDebug("Video loaded for stream:", stream.index)
+                  setIsLoaded(true)
+
+                  // Добавляем видео в глобальный кэш для повторного использования в шаблонах
+                  if (typeof window !== "undefined") {
+                    // Инициализируем кэш, если он еще не создан
+                    if (!window.videoElementCache) {
+                      window.videoElementCache = new Map()
                     }
-                  }}
-                  onTimeUpdate={(e) => {
-                    // Обновляем только каждые 500 мс вместо случайного выбора
-                    const now = Date.now()
-                    if (now - lastUpdateTimeRef.current > 500) {
-                      lastUpdateTimeRef.current = now
+
+                    // Добавляем видео в кэш по ID файла
+                    if (window.videoElementCache && videoRefs.current[key]) {
+                      const videoElement = videoRefs.current[key]
+                      // Используем ID файла как ключ для кэша
+                      window.videoElementCache.set(file.id, videoElement)
                       logDebug(
-                        "Time update for stream:",
-                        stream.index,
-                        "current time:",
-                        e.currentTarget.currentTime.toFixed(2),
+                        `[VideoPreview] Видео ${file.id} добавлено в глобальный кэш для повторного использования`,
                       )
                     }
-                  }}
-                  onError={(e) => {
-                    logError("Video error for stream:", stream.index, e)
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.code === "Space") {
-                      e.preventDefault()
-                      handlePlayPause(e as unknown as React.MouseEvent, stream)
-                    }
-                  }}
-                  onLoadedData={() => {
-                    logDebug("Video loaded for stream:", stream.index)
-                    setIsLoaded(true)
+                  }
+                }}
+              />
 
-                    // Добавляем видео в глобальный кэш для повторного использования в шаблонах
-                    if (typeof window !== "undefined") {
-                      // Инициализируем кэш, если он еще не создан
-                      if (!window.videoElementCache) {
-                        window.videoElementCache = new Map()
-                      }
-
-                      // Добавляем видео в кэш по ID файла
-                      if (window.videoElementCache && videoRefs.current[key]) {
-                        const videoElement = videoRefs.current[key]
-                        // Используем ID файла как ключ для кэша
-                        window.videoElementCache.set(file.id, videoElement)
-                        logDebug(
-                          `[VideoPreview] Видео ${file.id} добавлено в глобальный кэш для повторного использования`,
-                        )
-                      }
-                    }
+              {/* Продолжительность видео */}
+              {!hideTime && !(isMultipleStreams && stream.index === 0) && (
+                <div
+                  className={cn(
+                    "pointer-events-none absolute rounded-xs bg-black/50 text-xs leading-[16px] text-white",
+                    size > 100
+                      ? "top-1 right-1 px-[4px] py-[2px]"
+                      : "top-0.5 right-0.5 px-0.5 py-0",
+                  )}
+                  style={{
+                    fontSize: size > 100 ? "13px" : "11px",
                   }}
+                >
+                  {formatDuration(file.duration || 0, 0, true)}
+                </div>
+              )}
+
+              {/* Иконка видео */}
+              {!(isMultipleStreams && stream.index !== 0) && (
+                <div
+                  className={cn(
+                    "pointer-events-none absolute rounded-xs bg-black/50 p-0.5 text-white",
+                    size > 100 ? "bottom-1 left-1" : "bottom-0.5 left-0.5",
+                  )}
+                >
+                  <Film size={size > 100 ? 16 : 12} />
+                </div>
+              )}
+
+              {/* Кнопка избранного */}
+              {!(isMultipleStreams && stream.index !== 0) && (
+                <FavoriteButton file={file} size={size} type="media" />
+              )}
+
+              {/* Разрешение видео */}
+              {isLoaded && !(isMultipleStreams && stream.index !== 0) && (
+                <div
+                  className={`pointer-events-none absolute ${
+                    size > 100 ? "left-[28px]" : "left-[22px]"
+                  } rounded-xs bg-black/50 text-xs leading-[16px] ${size > 100 ? "bottom-1" : "bottom-0.5"} ${
+                    size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
+                  } text-white`}
+                  style={{
+                    fontSize: size > 100 ? "13px" : "11px",
+                  }}
+                >
+                  {formatResolution(stream.width || 0, stream.height || 0)}
+                </div>
+              )}
+
+              {/* Имя файла */}
+              {showFileName && !(isMultipleStreams && stream.index !== 0) && (
+                <div
+                  className={`absolute font-medium ${size > 100 ? "top-1" : "top-0.5"} ${
+                    size > 100 ? "left-1" : "left-0.5"
+                  } ${
+                    size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
+                  } line-clamp-1 rounded-xs bg-black/50 text-xs leading-[16px] text-white ${isMultipleStreams ? "max-w-[100%]" : "max-w-[60%]"}`}
+                  style={{
+                    fontSize: size > 100 ? "13px" : "11px",
+                  }}
+                >
+                  {file.name}
+                </div>
+              )}
+
+              {/* Кнопка добавления */}
+              {onAddMedia &&
+                isLoaded &&
+                stream.index ===
+                  (file.probeData?.streams?.filter((s) => s.codec_type === "video")?.length || 0) -
+                    1 && (
+                <AddMediaButton
+                  file={file}
+                  onAddMedia={onAddMedia}
+                  isAdded={isAdded}
+                  size={size}
                 />
-
-                {/* Продолжительность видео */}
-                {!hideTime && !(isMultipleStreams && stream.index === 0) && (
-                  <div
-                    className={cn(
-                      "pointer-events-none absolute rounded-xs bg-black/50 text-xs leading-[16px] text-white",
-                      size > 100
-                        ? "top-1 right-1 px-[4px] py-[2px]"
-                        : "top-0.5 right-0.5 px-0.5 py-0",
-                    )}
-                    style={{
-                      fontSize: size > 100 ? "13px" : "11px",
-                    }}
-                  >
-                    {formatDuration(file.duration || 0, 0, true)}
-                  </div>
-                )}
-
-                {/* Иконка видео */}
-                {!(isMultipleStreams && stream.index !== 0) && (
-                  <div
-                    className={cn(
-                      "pointer-events-none absolute rounded-xs bg-black/50 p-0.5 text-white",
-                      size > 100 ? "bottom-1 left-1" : "bottom-0.5 left-0.5",
-                    )}
-                  >
-                    <Film size={size > 100 ? 16 : 12} />
-                  </div>
-                )}
-
-                {/* Кнопка избранного */}
-                {!(isMultipleStreams && stream.index !== 0) && (
-                  <FavoriteButton file={file} size={size} type="media" />
-                )}
-
-                {/* Разрешение видео */}
-                {isLoaded && !(isMultipleStreams && stream.index !== 0) && (
-                  <div
-                    className={`pointer-events-none absolute ${
-                      size > 100 ? "left-[28px]" : "left-[22px]"
-                    } rounded-xs bg-black/50 text-xs leading-[16px] ${size > 100 ? "bottom-1" : "bottom-0.5"} ${
-                      size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                    } text-white`}
-                    style={{
-                      fontSize: size > 100 ? "13px" : "11px",
-                    }}
-                  >
-                    {formatResolution(stream.width || 0, stream.height || 0)}
-                  </div>
-                )}
-
-                {/* Имя файла */}
-                {showFileName && !(isMultipleStreams && stream.index !== 0) && (
-                  <div
-                    className={`absolute font-medium ${size > 100 ? "top-1" : "top-0.5"} ${
-                      size > 100 ? "left-1" : "left-0.5"
-                    } ${
-                      size > 100 ? "px-[4px] py-[2px]" : "px-[2px] py-0"
-                    } line-clamp-1 rounded-xs bg-black/50 text-xs leading-[16px] text-white ${isMultipleStreams ? "max-w-[100%]" : "max-w-[60%]"}`}
-                    style={{
-                      fontSize: size > 100 ? "13px" : "11px",
-                    }}
-                  >
-                    {file.name}
-                  </div>
-                )}
-
-                {/* Кнопка добавления */}
-                {onAddMedia &&
-                  isLoaded &&
-                  stream.index ===
-                    (file.probeData?.streams?.filter((s) => s.codec_type === "video")?.length ||
-                      0) -
-                      1 && (
-                  <AddMediaButton
-                    file={file}
-                    onAddMedia={onAddMedia}
-                    isAdded={isAdded}
-                    size={size}
-                  />
-                )}
-              </div>
+              )}
             </div>
-          )
-        })}
+          </div>
+        )
+      })}
     </div>
   )
 })
