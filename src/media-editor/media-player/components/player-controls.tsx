@@ -99,6 +99,36 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     return () => clearInterval(interval)
   }, [video])
 
+  // Добавляем слушатель события изменения полноэкранного режима
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen =
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+
+      setIsFullscreen(!!isCurrentlyFullscreen)
+      console.log(
+        `[FullscreenChange] Полноэкранный режим ${isCurrentlyFullscreen ? "включен" : "выключен"}`,
+      )
+    }
+
+    // Добавляем слушатели для разных браузеров
+    document.addEventListener("fullscreenchange", handleFullscreenChange)
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange)
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange)
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange)
+
+    return () => {
+      // Удаляем слушатели при размонтировании
+      document.removeEventListener("fullscreenchange", handleFullscreenChange)
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange)
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange)
+      document.removeEventListener("MSFullscreenChange", handleFullscreenChange)
+    }
+  }, [])
+
   // Переписываем handleSkipBackward: используем currentTime, вызываем setCurrentTime
   const handleSkipBackward = useCallback(() => {
     if (!video) return
@@ -441,9 +471,57 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     }, 0)
   }, [volume, setVolume, applyVolumeToVideoElements])
 
+  // Функция для переключения полноэкранного режима
   const handleFullscreen = useCallback(() => {
-    setIsFullscreen(!isFullscreen)
-  }, [isFullscreen])
+    // Проверяем, есть ли активное видео
+    if (!video && !parallelVideos.length) {
+      console.log("[handleFullscreen] Нет активного видео для отображения в полноэкранном режиме")
+      return
+    }
+
+    // Находим контейнер медиаплеера
+    const playerContainer = document.querySelector(".media-player-container") as HTMLElement
+
+    if (!playerContainer) {
+      console.error("[handleFullscreen] Не найден контейнер медиаплеера")
+      return
+    }
+
+    // Проверяем, находимся ли мы в полноэкранном режиме
+    const isCurrentlyFullscreen =
+      document.fullscreenElement ||
+      (document as any).webkitFullscreenElement ||
+      (document as any).mozFullScreenElement ||
+      (document as any).msFullscreenElement
+
+    if (isCurrentlyFullscreen) {
+      // Выходим из полноэкранного режима
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+      } else if ((document as any).webkitExitFullscreen) {
+        ;(document as any).webkitExitFullscreen()
+      } else if ((document as any).mozCancelFullScreen) {
+        ;(document as any).mozCancelFullScreen()
+      } else if ((document as any).msExitFullscreen) {
+        ;(document as any).msExitFullscreen()
+      }
+      setIsFullscreen(false)
+      console.log("[handleFullscreen] Выход из полноэкранного режима")
+    } else {
+      // Входим в полноэкранный режим
+      if (playerContainer.requestFullscreen) {
+        playerContainer.requestFullscreen()
+      } else if ((playerContainer as any).webkitRequestFullscreen) {
+        ;(playerContainer as any).webkitRequestFullscreen()
+      } else if ((playerContainer as any).mozRequestFullScreen) {
+        ;(playerContainer as any).mozRequestFullScreen()
+      } else if ((playerContainer as any).msRequestFullscreen) {
+        ;(playerContainer as any).msRequestFullscreen()
+      }
+      setIsFullscreen(true)
+      console.log("[handleFullscreen] Вход в полноэкранный режим")
+    }
+  }, [video, parallelVideos.length])
 
   // Функция для создания и сохранения скриншота
   const handleTakeSnapshot = useCallback(async () => {
@@ -1484,9 +1562,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       </div>
 
       <div className="h-full w-full p-1">
-        <div className="flex items-center justify-between px-2 py-0" style={{ minWidth: "1000px" }}>
+        <div className="flex items-center justify-between px-1 py-0">
           {/* Левая часть: индикатор источника, кнопки для камер и шаблонов */}
-          <div className="flex items-center gap-2" style={{ minWidth: "150px" }}>
+          <div className="flex items-center gap-2">
             {/* Индикатор источника видео - всегда отображается и работает как переключатель */}
             <Button
               className={`h-8 w-8 cursor-pointer ${!isHydrated || preferredSource === "timeline" ? "bg-[#45444b] hover:bg-[#45444b]/80" : "hover:bg-[#45444b]/80"}`}
@@ -1660,6 +1738,30 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
             </Button>
 
             <Button
+              className={"h-8 w-8 cursor-pointer"}
+              variant="ghost"
+              size="icon"
+              title={
+                typeof window !== "undefined"
+                  ? isRecording
+                    ? t("timeline.controls.stopRecord")
+                    : t("timeline.controls.record")
+                  : "Record"
+              }
+              onClick={handleRecordToggle}
+              disabled={isChangingCamera} // Отключаем кнопку во время переключения камеры
+            >
+              <CircleDot
+                className={cn(
+                  "h-8 w-8",
+                  isRecording
+                    ? "animate-pulse text-red-500 hover:text-red-600"
+                    : "text-white hover:text-gray-300",
+                )}
+              />
+            </Button>
+
+            <Button
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
               size="icon"
@@ -1684,37 +1786,10 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
             >
               <ChevronLast className="h-8 w-8" />
             </Button>
-
-            <Button
-              className={"h-8 w-8 cursor-pointer"}
-              variant="ghost"
-              size="icon"
-              title={
-                typeof window !== "undefined"
-                  ? isRecording
-                    ? t("timeline.controls.stopRecord")
-                    : t("timeline.controls.record")
-                  : "Record"
-              }
-              onClick={handleRecordToggle}
-              disabled={isChangingCamera} // Отключаем кнопку во время переключения камеры
-            >
-              <CircleDot
-                className={cn(
-                  "h-8 w-8",
-                  isRecording
-                    ? "animate-pulse text-red-500 hover:text-red-600"
-                    : "text-white hover:text-gray-300",
-                )}
-              />
-            </Button>
           </div>
 
           {/* Правая часть: кнопки управления звуком и полноэкранным режимом */}
-          <div
-            className="flex items-center gap-2"
-            style={{ minWidth: "150px", justifyContent: "flex-end" }}
-          >
+          <div className="flex items-center gap-2" style={{ justifyContent: "flex-end" }}>
             <div className="flex items-center gap-2">
               <Button
                 className="h-8 w-8 cursor-pointer"
@@ -1742,7 +1817,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
             </div>
 
             <Button
-              className="h-8 w-8 cursor-pointer"
+              className={`ml-1 h-8 w-8 ${!video && !parallelVideos.length ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
               variant="ghost"
               size="icon"
               title={
@@ -1753,22 +1828,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
                   : "Fullscreen"
               }
               onClick={handleFullscreen}
+              disabled={!video && !parallelVideos.length}
             >
               {isFullscreen ? <Minimize2 className="h-8 w-8" /> : <Maximize2 className="h-8 w-8" />}
-            </Button>
-
-            <Button
-              className="h-8 w-8 cursor-pointer"
-              variant="ghost"
-              size="icon"
-              title={
-                typeof window !== "undefined"
-                  ? t("timeline.controls.settings", "Настройки")
-                  : "Settings"
-              }
-              onClick={() => setIsSettingsOpen(true)}
-            >
-              <Settings className="h-8 w-8" />
             </Button>
           </div>
         </div>

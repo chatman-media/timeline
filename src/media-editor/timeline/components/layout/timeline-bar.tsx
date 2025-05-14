@@ -28,6 +28,7 @@ function useSectionTime({
   currentTime: propCurrentTime,
   displayTime: propDisplayTime,
 }: SectionTimeProps) {
+  // Используем sectorTimes из глобальной переменной
   // Получаем значения из контекста
   const playerContext = usePlayerContext()
   const displayTimeContext = useDisplayTime()
@@ -92,6 +93,23 @@ function useSectionTime({
       if (Math.abs(lastTimeRef.current - currentTime) > 0.01) {
         console.log(
           `[useSectionTime] Обнаружен Unix timestamp (${currentTime}), используем относительное время из контекста: ${effectiveCurrentTime}`,
+        )
+      }
+    }
+
+    // Если displayTime равно 0, но есть сохраненное время для этого сектора,
+    // используем сохраненное время
+    if (displayTime === 0 && sectorTimes && Object.keys(sectorTimes).length > 0) {
+      // Получаем дату сектора из currentTime, если это Unix timestamp
+      const sectorDate =
+        currentTime > 365 * 24 * 60 * 60
+          ? new Date(currentTime * 1000).toISOString().split("T")[0]
+          : null
+
+      if (sectorDate && sectorTimes[sectorDate] !== undefined) {
+        effectiveCurrentTime = sectorTimes[sectorDate]
+        console.log(
+          `[useSectionTime] Используем сохраненное время ${effectiveCurrentTime.toFixed(2)} для сектора ${sectorDate}`,
         )
       }
     }
@@ -400,7 +418,8 @@ function useSectionTime({
 
 // Объект для хранения времени для каждого сектора
 // Используем глобальную переменную, чтобы сохранять время между рендерами
-const sectorTimes: Record<string, number> = {}
+// Экспортируем, чтобы использовать в функции useSectionTime
+export const sectorTimes: Record<string, number> = {}
 
 export function TimelineBar({
   sectionStartTime,
@@ -419,20 +438,21 @@ export function TimelineBar({
 
   // Добавляем логирование для отладки
   useEffect(() => {
-    if (isActive && video) {
+    if (video) {
       console.log(
-        `[TimelineBar] Активное видео: ${video.id}, startTime=${video.startTime}, displayTime=${displayTime}`,
+        `[TimelineBar] Видео: ${video.id}, startTime=${video.startTime}, displayTime=${displayTime}, isActive=${isActive}`,
       )
 
       // Если есть дата сектора, сохраняем текущее displayTime для этого сектора
-      if (sectorDate) {
+      // Сохраняем время для всех секторов, не только для активного
+      if (sectorDate && displayTime > 0) {
         sectorTimes[sectorDate] = displayTime
         console.log(
-          `[TimelineBar] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate}`,
+          `[TimelineBar] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate}, isActive=${isActive}`,
         )
       }
     }
-  }, [isActive, video, displayTime, sectorDate])
+  }, [video, displayTime, sectorDate, isActive])
 
   // Длительность видео доступна через duration, но не используется напрямую в этом компоненте
 
@@ -444,6 +464,39 @@ export function TimelineBar({
   const { setCurrentTime } = usePlayerContext()
   const { setDisplayTime } = useDisplayTime()
   const { seek } = useTimeline()
+
+  // Эффект для обработки события preserve-sectors-state
+  useEffect(() => {
+    const handlePreserveSectorsState = (e: CustomEvent) => {
+      const { currentSectorDate, newSectorDate } = e.detail || {}
+
+      // Если это наш сектор и он не активен, сохраняем его состояние
+      if (sectorDate && sectorDate !== newSectorDate) {
+        console.log(
+          `[TimelineBar] Сохраняем состояние сектора ${sectorDate} при переключении с ${currentSectorDate} на ${newSectorDate}`,
+        )
+
+        // Сохраняем текущее время для этого сектора
+        if (displayTime > 0) {
+          sectorTimes[sectorDate] = displayTime
+          console.log(
+            `[TimelineBar] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate} при переключении`,
+          )
+        }
+      }
+    }
+
+    // Добавляем слушатель события
+    window.addEventListener("preserve-sectors-state", handlePreserveSectorsState as EventListener)
+
+    return () => {
+      // Удаляем слушатель события при размонтировании
+      window.removeEventListener(
+        "preserve-sectors-state",
+        handlePreserveSectorsState as EventListener,
+      )
+    }
+  }, [sectorDate, displayTime])
 
   // Эффект для восстановления времени при активации сектора
   useEffect(() => {
@@ -486,22 +539,67 @@ export function TimelineBar({
   const normalizedEndTime = effectiveSectionStartTime + effectiveSectionDuration
 
   // Используем useSectionTime с передачей displayTime для корректной работы с видео из сектора
-  // Но только если сектор активен
+  // Для неактивных секторов используем сохраненное время
+  const savedDisplayTime =
+    sectorDate && sectorTimes[sectorDate] !== undefined ? sectorTimes[sectorDate] : displayTime
+
+  // Создаем собственный обработчик для перемещения бара
+  const handleBarMouseDown = (e: React.MouseEvent) => {
+    // Если сектор неактивен, сначала делаем его активным
+    if (!isActive && sectorDate) {
+      // Сохраняем текущее состояние всех секторов
+      console.log(`[TimelineBar] Сохраняем состояние всех секторов перед активацией ${sectorDate}`)
+
+      // Отправляем событие для активации сектора
+      window.dispatchEvent(
+        new CustomEvent("activate-sector", {
+          detail: {
+            sectorDate,
+            preserveOtherSectors: true, // Флаг для сохранения состояния других секторов
+          },
+        }),
+      )
+
+      // Логируем активацию сектора
+      console.log(`[TimelineBar] Активируем сектор ${sectorDate}`)
+
+      // Затем продолжаем с перемещением бара
+      setTimeout(() => {
+        // Получаем обработчик перемещения из useSectionTime
+        const { handleMouseDown } = useSectionTime({
+          startTime: normalizedStartTime,
+          endTime: normalizedEndTime,
+          currentTime: currentTime,
+          displayTime: savedDisplayTime,
+        })
+
+        // Вызываем обработчик перемещения
+        if (handleMouseDown) {
+          handleMouseDown(e)
+        }
+      }, 100)
+    } else {
+      // Если сектор уже активен, просто вызываем обработчик перемещения
+      handleMouseDown(e)
+    }
+  }
+
+  // Получаем позицию из useSectionTime
   const { position, handleMouseDown } = useSectionTime({
     startTime: normalizedStartTime,
     endTime: normalizedEndTime,
-    currentTime: isActive ? currentTime : 0, // Передаем currentTime только для активного сектора
-    displayTime: isActive ? displayTime : 0, // Передаем displayTime только для активного сектора
+    currentTime: currentTime, // Всегда передаем currentTime
+    displayTime: isActive ? displayTime : savedDisplayTime, // Для неактивных секторов используем сохраненное время
   })
 
   // Добавляем логирование для отладки позиции
   useEffect(() => {
-    if (isActive) {
-      console.log(
-        `[TimelineBar] Позиция бара: ${position}%, displayTime=${displayTime}, currentTime=${currentTime}`,
-      )
-    }
-  }, [isActive, position, displayTime, currentTime])
+    // Логируем позицию для всех секторов, не только для активных
+    const effectiveDisplayTime = isActive ? displayTime : savedDisplayTime
+    console.log(
+      `[TimelineBar] Позиция бара: ${position}%, displayTime=${effectiveDisplayTime}, currentTime=${currentTime}, isActive=${isActive}, sectorDate=${sectorDate}`,
+    )
+  }, [isActive, position, displayTime, currentTime, savedDisplayTime, sectorDate])
 
   // Если позиция отрицательная, устанавливаем ее в 0
   const displayPosition = position < 0 ? 0 : position
@@ -511,25 +609,28 @@ export function TimelineBar({
   const barWidth = isActive ? "w-[3px]" : "w-[2px]" // Увеличиваем ширину активного бара
 
   // Рассчитываем позицию бара так же, как и для видео
-  // Если есть активное видео, используем его startTime
+  // Если есть видео, используем его startTime
   let barPosition = displayPosition
-  if (video && video.startTime !== undefined && isActive) {
+  if (video && video.startTime !== undefined) {
     const videoStartTime = video.startTime || 0
     const sectionDuration = normalizedEndTime - normalizedStartTime
 
     // Проверяем, есть ли displayTime и находится ли оно в пределах видео
-    if (displayTime > 0) {
+    // Для неактивных секторов используем сохраненное время
+    const effectiveDisplayTime = isActive ? displayTime : savedDisplayTime
+
+    if (effectiveDisplayTime > 0) {
       // Используем формулу с учетом displayTime
       barPosition = Math.max(
         0,
         Math.min(
           100,
-          ((videoStartTime - normalizedStartTime + displayTime) / sectionDuration) * 100,
+          ((videoStartTime - normalizedStartTime + effectiveDisplayTime) / sectionDuration) * 100,
         ),
       )
 
       console.log(
-        `[TimelineBar] Позиция бара для видео с displayTime: ${barPosition}%, videoStartTime=${videoStartTime}, normalizedStartTime=${normalizedStartTime}, displayTime=${displayTime}, sectionDuration=${sectionDuration}`,
+        `[TimelineBar] Позиция бара для видео с displayTime: ${barPosition}%, videoStartTime=${videoStartTime}, normalizedStartTime=${normalizedStartTime}, displayTime=${effectiveDisplayTime}, sectionDuration=${sectionDuration}, isActive=${isActive}`,
       )
     } else {
       // Используем ту же формулу, что и в VideoItem, без учета displayTime
@@ -562,7 +663,9 @@ export function TimelineBar({
         // Добавляем дополнительные атрибуты для отладки
         data-position={barPosition}
         data-video-id={video?.id}
-        onMouseDown={handleMouseDown}
+        data-active={isActive}
+        data-sector-date={sectorDate}
+        onMouseDown={handleBarMouseDown}
       >
         {/* Верхняя часть индикатора (треугольник) */}
         <div className="flex flex-col items-center" style={{ zIndex: 400 }}>

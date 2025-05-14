@@ -580,7 +580,7 @@ export function Timeline() {
     }, 10)
   }, [zoomLevel])
 
-  // Эффект для обработки события sector-fit-to-screen и sector-zoom-change
+  // Эффект для обработки события sector-fit-to-screen, sector-zoom-change и activate-sector
   React.useEffect(() => {
     const handleSectorFitToScreen = (e: CustomEvent) => {
       const { sectorDate } = e.detail || {}
@@ -609,14 +609,80 @@ export function Timeline() {
       }
     }
 
+    // Обработчик события activate-sector
+    const handleActivateSector = (e: CustomEvent) => {
+      const { sectorDate, preserveOtherSectors } = e.detail || {}
+      if (sectorDate) {
+        console.log(
+          `[Timeline] Активируем сектор ${sectorDate}, preserveOtherSectors=${preserveOtherSectors}`,
+        )
+
+        // Сохраняем текущее состояние активного сектора перед переключением
+        if (activeDate) {
+          // Сохраняем текущее состояние в sectorTimes
+          const currentSector = sections.find((s) => s.date === activeDate)
+          if (currentSector) {
+            console.log(`[Timeline] Сохраняем состояние сектора ${activeDate}`)
+
+            // Если нужно сохранить состояние других секторов, отправляем событие
+            if (preserveOtherSectors) {
+              console.log(`[Timeline] Сохраняем состояние всех секторов`)
+
+              // Отправляем событие для сохранения состояния всех секторов
+              window.dispatchEvent(
+                new CustomEvent("preserve-sectors-state", {
+                  detail: {
+                    currentSectorDate: activeDate,
+                    newSectorDate: sectorDate,
+                  },
+                }),
+              )
+            }
+          }
+        }
+
+        // Устанавливаем активный сектор
+        setActiveDate(sectorDate)
+
+        // Находим сектор по дате
+        const sector = sections.find((s) => s.date === sectorDate)
+        if (sector) {
+          // Если есть видео в секторе, устанавливаем первое видео из первого трека
+          if (sector.tracks && sector.tracks.length > 0) {
+            const firstTrack = sector.tracks[0]
+
+            // Устанавливаем активный трек
+            if (firstTrack && firstTrack.id) {
+              setActiveTrack(firstTrack.id)
+
+              // Если у трека есть видео, устанавливаем первое видео
+              if (firstTrack.videos && firstTrack.videos.length > 0) {
+                const firstVideo = firstTrack.videos[0]
+
+                // Устанавливаем видео
+                if (firstVideo) {
+                  setVideo(firstVideo)
+                  console.log(
+                    `[Timeline] Установлен активный трек ${firstTrack.id} и видео ${firstVideo.id}`,
+                  )
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
     window.addEventListener("sector-fit-to-screen", handleSectorFitToScreen as EventListener)
     window.addEventListener("sector-zoom-change", handleSectorZoomChange as EventListener)
+    window.addEventListener("activate-sector", handleActivateSector as EventListener)
 
     return () => {
       window.removeEventListener("sector-fit-to-screen", handleSectorFitToScreen as EventListener)
       window.removeEventListener("sector-zoom-change", handleSectorZoomChange as EventListener)
+      window.removeEventListener("activate-sector", handleActivateSector as EventListener)
     }
-  }, [sections])
+  }, [sections, setActiveDate, setActiveTrack, setVideo, fitSectionToScreen, activeDate])
 
   return (
     <div className="flex h-full w-full flex-col">
