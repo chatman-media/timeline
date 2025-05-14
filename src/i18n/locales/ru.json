@@ -983,5 +983,34 @@
     "deleteProject": "Удалить проект",
     "exportProject": "Экспортировать проект",
     "importProject": "Импортировать проект"
+  },
+  "timeline": {
+    "title": "Таймлайн",
+    "noTracks": "Нет дорожек",
+    "addTrack": "Добавить дорожку",
+    "deleteTrack": "Удалить дорожку",
+    "cutTrack": "Вырезать дорожку",
+    "fitToScreen": "По размеру экрана",
+    "zoomIn": "Увеличить",
+    "zoomOut": "Уменьшить",
+    "scale": "Масштаб",
+    "player": {
+      "videoUnavailable": "Видео недоступно"
+    },
+    "section": {
+      "delete": "Удалить секцию",
+      "deleteConfirmation": "Вы уверены, что хотите удалить секцию {{section}}? Это действие нельзя отменить."
+    },
+    "chat": {
+      "title": "Чат",
+      "selectAgent": "Модель",
+      "messagePlaceholder": "Type your message here...",
+      "noMessages": "Нет сообщений. Начните диалог.",
+      "savingProgress": "Прогресс сохранения",
+      "saveSuccess": "Видео успешно сохранено!",
+      "send": "Отправить",
+      "stop": "Остановить",
+      "processing": "Обработка..."
+    }
   }
 }

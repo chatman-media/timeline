@@ -17,6 +17,16 @@ import {
 import { TimeRange } from "@/types/time-range"
 import { TransitionEffect } from "@/types/transitions"
 
+// Интерфейс для сообщений чата
+export interface ChatMessage {
+  id: string
+  text: string
+  sender: "user" | "agent"
+  agentId?: string
+  timestamp: string
+  isProcessing?: boolean
+}
+
 export interface TimelineContext {
   isDirty: boolean
   zoomLevel: number
@@ -41,6 +51,10 @@ export interface TimelineContext {
   transitionResources: TimelineResource[] // Переходы
   templateResources: TimelineResource[] // Шаблоны
   musicResources: TimelineResource[] // Музыкальные файлы
+
+  // Чат
+  chatMessages: ChatMessage[] // Сообщения чата
+  selectedAgentId: string | null // Выбранный агент
 }
 
 export type TimelineEvent =
@@ -59,6 +73,10 @@ export type TimelineEvent =
   | { type: "SET_VIDEO_REF"; fileId: string; video: HTMLVideoElement | null }
   | { type: "SET_LOADED_VIDEO"; fileId: string; loaded: boolean }
   | { type: "PRELOAD_ALL_VIDEOS" }
+  // События для чата
+  | { type: "SEND_CHAT_MESSAGE"; message: string }
+  | { type: "RECEIVE_CHAT_MESSAGE"; message: ChatMessage }
+  | { type: "SELECT_AGENT"; agentId: string }
   | { type: "SET_TRACKS"; tracks: Track[] }
   | { type: "UNDO" }
   | { type: "REDO" }
@@ -97,6 +115,10 @@ const initialContext: TimelineContext = {
   transitionResources: [],
   templateResources: [],
   musicResources: [],
+
+  // Чат
+  chatMessages: [],
+  selectedAgentId: null
 }
 
 const addToHistory = ({
@@ -694,6 +716,57 @@ export const timelineMachine = createMachine({
             currentStateIndex: newIndex,
             canUndo: true,
             canRedo: newIndex < context.previousStates.length - 1,
+          }
+        }),
+      ],
+    },
+
+    // Обработчики событий для чата
+    SEND_CHAT_MESSAGE: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SEND_CHAT_MESSAGE") return context
+
+          const newMessage: ChatMessage = {
+            id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            text: event.message,
+            sender: "user",
+            timestamp: new Date().toISOString(),
+            isProcessing: false
+          }
+
+          return {
+            ...context,
+            chatMessages: [...context.chatMessages, newMessage],
+            isDirty: true
+          }
+        }),
+      ],
+    },
+
+    RECEIVE_CHAT_MESSAGE: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "RECEIVE_CHAT_MESSAGE") return context
+
+          return {
+            ...context,
+            chatMessages: [...context.chatMessages, event.message],
+            isDirty: true
+          }
+        }),
+      ],
+    },
+
+    SELECT_AGENT: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SELECT_AGENT") return context
+
+          return {
+            ...context,
+            selectedAgentId: event.agentId,
+            isDirty: true
           }
         }),
       ],

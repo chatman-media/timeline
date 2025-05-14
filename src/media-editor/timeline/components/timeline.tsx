@@ -18,6 +18,7 @@ import { usePlayerContext } from "@/media-editor/media-player"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile, Track } from "@/types/media"
 
+import { TimelineChat } from "./chat"
 import { SectionHeader } from "./layout/section-header"
 import { TimelineBar } from "./layout/timeline-bar"
 import { TimelineScale } from "./timeline-scale/timeline-scale"
@@ -685,9 +686,9 @@ export function Timeline() {
   }, [sections, setActiveDate, setActiveTrack, setVideo, fitSectionToScreen, activeDate])
 
   return (
-    <div className="flex h-full w-full flex-col">
-      <div className="timeline-container flex-1" ref={timelineContainerRef}>
-        <ResizablePanelGroup direction="horizontal" className="h-full">
+    <div className="flex h-full w-full flex-col overflow-hidden">
+      <div className="timeline-container flex-1 overflow-hidden" ref={timelineContainerRef}>
+        <ResizablePanelGroup direction="horizontal" className="h-full overflow-hidden">
           <ResizablePanel defaultSize={15} minSize={10} maxSize={30}>
             <div className="h-full w-full p-2">{/* Содержимое левой панели */}</div>
           </ResizablePanel>
@@ -695,10 +696,10 @@ export function Timeline() {
           <ResizableHandle />
 
           {/* Средняя панель (основная часть) */}
-          <ResizablePanel defaultSize={65} minSize={40}>
-            <div className="flex h-full w-full overflow-y-auto">
+          <ResizablePanel defaultSize={65} minSize={40} className="overflow-hidden">
+            <div className="flex h-full w-full">
               {/* Основная часть - каждый сектор имеет свой собственный скролл */}
-              <div className="w-full">
+              <div className="w-full h-full overflow-y-auto">
                 {sections?.map((sector, index) => {
                   // Находим минимальное время начала видео в секторе
                   const minStartTime = Math.min(
@@ -881,9 +882,9 @@ export function Timeline() {
 
           <ResizableHandle />
 
-          {/* Правая панель (20% ширины) */}
-          <ResizablePanel defaultSize={20} minSize={10} maxSize={40}>
-            <div className="h-full w-full p-2">{/* Содержимое правой панели */}</div>
+          {/* Правая панель (20% ширины) - Чат */}
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={40} className="min-h-[200px] flex-shrink-0 z-50">
+            <TimelineChat />
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>

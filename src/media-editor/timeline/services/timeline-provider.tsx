@@ -8,6 +8,7 @@ import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/
 import {
   type TimelineContext,
   timelineMachine,
+  ChatMessage
 } from "@/media-editor/timeline/services/timeline-machine"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
@@ -39,6 +40,13 @@ interface TimelineContextType {
   transitionResources: TimelineResource[] // Переходы
   templateResources: TimelineResource[] // Шаблоны
   musicResources: TimelineResource[] // Музыкальные файлы
+
+  // Чат
+  chatMessages: ChatMessage[] // Сообщения чата
+  selectedAgentId: string | null // Выбранный агент
+  sendChatMessage: (message: string) => void // Отправить сообщение
+  receiveChatMessage: (message: ChatMessage) => void // Получить сообщение от агента
+  selectAgent: (agentId: string) => void // Выбрать агента
 
   zoom: (level: number) => void
   fitToScreen: (containerWidth: number) => void
@@ -258,6 +266,28 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [send],
   )
 
+  // Методы для работы с чатом
+  const handleSendChatMessage = React.useCallback(
+    (message: string) => {
+      send({ type: "SEND_CHAT_MESSAGE", message })
+    },
+    [send],
+  )
+
+  const handleReceiveChatMessage = React.useCallback(
+    (message: ChatMessage) => {
+      send({ type: "RECEIVE_CHAT_MESSAGE", message })
+    },
+    [send],
+  )
+
+  const handleSelectAgent = React.useCallback(
+    (agentId: string) => {
+      send({ type: "SELECT_AGENT", agentId })
+    },
+    [send],
+  )
+
   // Методы для проверки наличия ресурса в хранилище
   // Создаем кэш для результатов проверки эффектов
   const effectAddedCache = React.useRef<Record<string, boolean>>({})
@@ -434,6 +464,11 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     addMusic: handleAddMusic,
     removeResource: handleRemoveResource,
     updateResource: handleUpdateResource,
+
+    // Методы для работы с чатом
+    sendChatMessage: handleSendChatMessage,
+    receiveChatMessage: handleReceiveChatMessage,
+    selectAgent: handleSelectAgent,
 
     // Методы для проверки наличия ресурса в хранилище
     isEffectAdded,
