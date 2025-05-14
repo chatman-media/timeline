@@ -62,12 +62,10 @@ export function formatDateByLanguage(
   }
 
   // Форматируем дату
-  let formattedDate = date.toLocaleDateString(locale, formatOptions)
+  const formattedDate = date.toLocaleDateString(locale, formatOptions)
 
-  // Добавляем суффикс года для русского языка, если нужно
-  if (language === "ru" && includeYear && addYearSuffix) {
-    formattedDate += " г."
-  }
+  // Для русского языка суффикс "г." уже добавляется автоматически в toLocaleDateString,
+  // поэтому не нужно добавлять его вручную
 
   return formattedDate
 }

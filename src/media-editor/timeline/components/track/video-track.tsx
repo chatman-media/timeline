@@ -85,8 +85,6 @@ const TimelineTrack = memo(function TimelineTrack({
                         }}
                         sectionStart={sectionStartTime}
                         zoomLevel={zoomLevel}
-                        trackStartTime={trackMinStartTime}
-                        trackEndTime={trackMaxEndTime}
                       />
                     ))}
                   </div>

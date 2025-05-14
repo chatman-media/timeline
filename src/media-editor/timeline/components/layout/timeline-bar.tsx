@@ -153,9 +153,44 @@ function useSectionTime({
         console.log(`[useSectionTime] Некорректная длительность секции: ${sectionDuration}`)
         positionPercent = 0
       } else {
-        // Рассчитываем позицию как процент от длительности секции
-        // Используем displayTime как относительное время от начала секции
-        positionPercent = (displayTime / sectionDuration) * 100
+        // Используем видео из контекста, переданного в параметрах
+        const video = playerContext.video
+
+        // Если есть активное видео с startTime, учитываем его при расчете позиции
+        if (video && video.startTime && video.startTime > 0) {
+          // Используем точно такой же алгоритм расчета, как в VideoItem
+          // Рассчитываем позицию в процентах от ширины секции
+          const videoStartTime = video.startTime || 0
+          const relativeDisplayTime = displayTime || 0
+
+          // Рассчитываем позицию как процент от длительности секции
+          // Используем точно такую же формулу, как в VideoItem
+          positionPercent = Math.max(
+            0,
+            Math.min(
+              100,
+              ((videoStartTime - startTime + relativeDisplayTime) / sectionDuration) * 100,
+            ),
+          )
+
+          console.log(
+            `[useSectionTime] Расчет позиции для видео из таймлайна: videoStartTime=${videoStartTime.toFixed(2)}, startTime=${startTime.toFixed(2)}, relativeDisplayTime=${relativeDisplayTime.toFixed(2)}, sectionDuration=${sectionDuration.toFixed(2)}, positionPercent=${positionPercent.toFixed(2)}%`,
+          )
+
+          // Принудительно обновляем позицию, если displayTime равен 0
+          // Это нужно для корректного позиционирования бара при клике на видео
+          if (relativeDisplayTime === 0) {
+            console.log(`[useSectionTime] Принудительное обновление позиции для displayTime=0`)
+            positionPercent = Math.max(
+              0,
+              Math.min(100, ((videoStartTime - startTime) / sectionDuration) * 100),
+            )
+          }
+        } else {
+          // Рассчитываем позицию как процент от длительности секции
+          // Используем displayTime как относительное время от начала секции
+          positionPercent = (displayTime / sectionDuration) * 100
+        }
 
         // Ограничиваем позицию в пределах 0-100%
         positionPercent = Math.max(0, Math.min(100, positionPercent))
@@ -266,7 +301,7 @@ function useSectionTime({
       if (!container) return
 
       const rect = container.getBoundingClientRect()
-      // Не учитываем смещение, так как левая панель удалена
+      // Не учитываем отступ, так как он уже учтен в позиции видео
       const x = moveEvent.clientX - rect.left
       const width = rect.width
 
@@ -279,7 +314,7 @@ function useSectionTime({
       // Рассчитываем новое время (с учетом смещения)
       const percent = Math.max(0, Math.min(1, x / width))
 
-      // Проверяем, используем ли мы Unix timestamp
+      // Определяем, используем ли мы Unix timestamp
       const isUnixTimestamp = currentTime > 365 * 24 * 60 * 60
 
       let newTime
@@ -345,8 +380,17 @@ export function TimelineBar({
   isActive = false,
 }: TimelineBarProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { currentTime, duration } = usePlayerContext()
+  const { currentTime, duration, video } = usePlayerContext()
   const { displayTime } = useDisplayTime()
+
+  // Добавляем логирование для отладки
+  useEffect(() => {
+    if (isActive && video) {
+      console.log(
+        `[TimelineBar] Активное видео: ${video.id}, startTime=${video.startTime}, displayTime=${displayTime}`,
+      )
+    }
+  }, [isActive, video, displayTime])
 
   // Получаем длительность видео из контекста
   const videoDuration = duration || sectionDuration || 20 // Используем длительность видео, длительность секции или 20 секунд по умолчанию
@@ -355,11 +399,8 @@ export function TimelineBar({
   const effectiveSectionStartTime = sectionStartTime || 0
   const effectiveSectionDuration = sectionDuration || 20 // Используем 20 секунд по умолчанию, если длительность не задана
 
-  // Определяем, используем ли мы Unix timestamp
-  const isUnixTimestamp = currentTime > 365 * 24 * 60 * 60
-
   // Для Unix timestamp используем относительные значения для startTime и endTime
-  // Для Unix timestamp используем реальные значения startTime и endTime
+  // Для обычного времени используем реальные значения startTime и endTime
   // Это обеспечит корректное соответствие масштабу дорожки
   const normalizedStartTime = effectiveSectionStartTime
   const normalizedEndTime = effectiveSectionStartTime + effectiveSectionDuration
@@ -374,48 +415,39 @@ export function TimelineBar({
     videoDuration: videoDuration, // Передаем длительность видео
   })
 
-  // Если позиция отрицательная, устанавливаем ее в 0
-  const displayPosition = position < 0 ? 0 : position
-
-  // Добавляем отладочную информацию для активного сектора только при изменении
+  // Добавляем логирование для отладки позиции
   useEffect(() => {
     if (isActive) {
       console.log(
-        `[TimelineBar] Активный сектор: ${isActive}, normalizedStartTime: ${normalizedStartTime}, normalizedEndTime: ${normalizedEndTime}, displayTime: ${displayTime}, position: ${position}%, displayPosition: ${displayPosition}%, videoDuration: ${videoDuration}`,
+        `[TimelineBar] Позиция бара: ${position}%, displayTime=${displayTime}, currentTime=${currentTime}`,
       )
     }
-  }, [
-    isActive,
-    normalizedStartTime,
-    normalizedEndTime,
-    displayTime,
-    position,
-    displayPosition,
-    videoDuration,
-  ])
+  }, [isActive, position, displayTime, currentTime])
 
-  // Добавляем логирование для отладки только при изменении параметров секции
-  useEffect(() => {
-    console.log(
-      `TimelineBar: normalizedStartTime=${normalizedStartTime}, normalizedEndTime=${normalizedEndTime}, isUnixTimestamp=${isUnixTimestamp}, isActive=${isActive}, videoDuration=${videoDuration}`,
-    )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [normalizedStartTime, normalizedEndTime, isActive, videoDuration])
-
-  // Добавляем логирование для отладки времени
-  useEffect(() => {
-    if (isActive && currentTime > 365 * 24 * 60 * 60) {
-      console.log(
-        `TimelineBar: currentTime=${currentTime} (Unix timestamp), displayTime=${displayTime.toFixed(2)}, position=${position.toFixed(2)}%, displayPosition=${displayPosition.toFixed(2)}%, isActive=${isActive}, videoDuration=${videoDuration.toFixed(2)}`,
-      )
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentTime, displayTime, position, displayPosition, isActive, videoDuration])
-
+  // Если позиция отрицательная, устанавливаем ее в 0
+  const displayPosition = position < 0 ? 0 : position
   // Определяем цвет бара в зависимости от активности сектора
   const barColor = isActive ? "bg-red-600" : "bg-gray-400"
   const borderColor = isActive ? "border-t-red-600" : "border-t-gray-400"
   const barWidth = isActive ? "w-[3px]" : "w-[2px]" // Увеличиваем ширину активного бара
+
+  // Рассчитываем позицию бара так же, как и для видео
+  // Если есть активное видео, используем его startTime
+  let barPosition = displayPosition
+  if (video && video.startTime !== undefined && isActive) {
+    const videoStartTime = video.startTime || 0
+    const sectionDuration = normalizedEndTime - normalizedStartTime
+
+    // Используем ту же формулу, что и в VideoItem
+    barPosition = Math.max(
+      0,
+      Math.min(100, ((videoStartTime - normalizedStartTime) / sectionDuration) * 100),
+    )
+
+    console.log(
+      `[TimelineBar] Позиция бара для видео: ${barPosition}%, videoStartTime=${videoStartTime}, normalizedStartTime=${normalizedStartTime}, sectionDuration=${sectionDuration}`,
+    )
+  }
 
   return (
     <div
@@ -426,12 +458,15 @@ export function TimelineBar({
       <div
         className={`pointer-events-auto absolute flex cursor-ew-resize flex-col items-center hover:opacity-90 ${isActive ? "" : "opacity-50"}`}
         style={{
-          left: `${displayPosition}%`,
-          top: "0",
+          left: `${barPosition}%`,
+          top: "-30px",
           transform: "translateX(-50%)",
           height: `${height}px`,
           zIndex: 400,
         }}
+        // Добавляем дополнительные атрибуты для отладки
+        data-position={barPosition}
+        data-video-id={video?.id}
         onMouseDown={handleMouseDown}
       >
         {/* Верхняя часть индикатора (треугольник) */}

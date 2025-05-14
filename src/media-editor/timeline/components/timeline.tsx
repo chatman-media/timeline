@@ -1,4 +1,4 @@
-import { MoveHorizontal, Trash2 } from "lucide-react"
+import { Trash2 } from "lucide-react"
 import React, { useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
 
@@ -18,8 +18,8 @@ import { usePlayerContext } from "@/media-editor/media-player"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile, Track } from "@/types/media"
 
+import { SectionHeader } from "./layout/section-header"
 import { TimelineBar } from "./layout/timeline-bar"
-import { TimelineControls } from "./layout/timeline-controls"
 import { TimelineScale } from "./timeline-scale/timeline-scale"
 import { VideoTrack } from "./track"
 
@@ -47,7 +47,7 @@ const createFormatSectionDate =
         return formatDateByLanguage(date, currentLanguage, {
           includeYear: true,
           longFormat: true,
-          addYearSuffix: currentLanguage === "ru",
+          addYearSuffix: false, // Не добавляем суффикс "г." вручную, он добавляется автоматически
         })
       } catch (e) {
         console.error("Error formatting section date:", e)
@@ -689,29 +689,13 @@ export function Timeline() {
                         }}
                       >
                         {/* Заголовок секции и элементы управления - фиксированные */}
-                        <div className="sticky top-0 z-[400] flex h-[30px] items-center justify-between border-b border-gray-200 bg-gray-50 px-2 dark:border-gray-700 dark:bg-gray-800">
-                          <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                            {formatSectionDate(sector.date)}
-                          </h3>
-
-                          {/* Элементы управления масштабом для сектора */}
-                          <div className="flex items-center gap-2">
-                            {/* Двунаправленная стрелка */}
-                            <button
-                              onClick={() => fitSectionToScreen(sector.date)}
-                              className="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm hover:bg-[#dddbdd] dark:hover:bg-[#45444b]"
-                              title={t("timeline.toolbar.fitToScreen")}
-                            >
-                              <MoveHorizontal size={14} />
-                            </button>
-
-                            <TimelineControls
-                              minScale={0.005}
-                              maxScale={200}
-                              sectorDate={sector.date}
-                            />
-                          </div>
-                        </div>
+                        <SectionHeader
+                          date={sector.date}
+                          formattedDate={formatSectionDate(sector.date)}
+                          onFitToScreen={fitSectionToScreen}
+                          minScale={0.005}
+                          maxScale={200}
+                        />
 
                         {/* Общий контейнер со скроллом для шкалы и треков */}
                         <div
@@ -734,15 +718,13 @@ export function Timeline() {
                           {/* Контейнер для содержимого - на всю ширину с отступом слева */}
                           <div className="w-full pl-[10px]">
                             {/* Шкала времени - скроллится вместе с дорожками */}
-                            <div className="sticky top-0 z-[300] h-[30px] border-b border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800">
-                              <TimelineScale
-                                startTime={sector.startTime}
-                                endTime={sector.endTime}
-                                duration={sector.endTime - sector.startTime}
-                                sectorDate={sector.date}
-                                sectorZoomLevel={sectionZoomLevels[sector.date]}
-                              />
-                            </div>
+                            <TimelineScale
+                              startTime={sector.startTime}
+                              endTime={sector.endTime}
+                              duration={sector.endTime - sector.startTime}
+                              sectorDate={sector.date}
+                              sectorZoomLevel={sectionZoomLevels[sector.date]}
+                            />
 
                             {/* Контейнер для дорожек */}
                             <div
@@ -759,7 +741,7 @@ export function Timeline() {
                                 <TimelineBar
                                   startTime={minStartTime}
                                   endTime={maxEndTime}
-                                  height={sectorHeight - SCALE_HEIGHT - PADDING}
+                                  height={sectorHeight - PADDING}
                                   sectionStartTime={minStartTime}
                                   sectionDuration={maxEndTime - minStartTime}
                                   isActive={sector.date === activeDate} // Передаем флаг активного сектора

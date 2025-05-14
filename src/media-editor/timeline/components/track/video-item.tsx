@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 
 import { formatBitrate, formatDuration, formatTimeWithMilliseconds } from "@/lib/utils"
 import { usePlayerContext } from "@/media-editor/media-player"
+import { useDisplayTime } from "@/media-editor/media-player/contexts"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile, Track, VideoSegment } from "@/types/media"
 
@@ -12,18 +13,16 @@ interface VideoItemProps {
   track: Track
   sectionStart: number
   zoomLevel: number
-  trackStartTime?: number
-  trackEndTime?: number
 }
 
 export const VideoItem = memo(function VideoItem({
   video,
   track,
   sectionStart,
-  zoomLevel,
-  trackStartTime,
-  trackEndTime,
+  zoomLevel, // Используется в закомментированном логировании
 }: VideoItemProps) {
+  // Подавляем предупреждение о неиспользуемом параметре
+  void zoomLevel
   const { t } = useTranslation()
   const { activeTrackId, setActiveTrack, setVideoRef, seek, tracks } = useTimeline()
   const {
@@ -33,9 +32,13 @@ export const VideoItem = memo(function VideoItem({
     setVideoReady,
     setParallelVideos,
     setActiveVideoId,
-    parallelVideos,
+    // parallelVideos, // Не используется в этом компоненте
     setPreferredSource,
+    currentTime,
   } = usePlayerContext()
+
+  // Получаем displayTime и setDisplayTime из контекста displayTime
+  const { displayTime, setDisplayTime } = useDisplayTime()
 
   // Функция для установки источника видео
   const setVideoSource = (videoId: string, source: "media" | "timeline"): void => {
@@ -166,68 +169,66 @@ export const VideoItem = memo(function VideoItem({
         )
         setActiveVideo(minimalVideo)
 
-        // Всегда устанавливаем текущее время на начало видео
+        // Всегда устанавливаем время на начало видео при клике
         const videoStartTime = video.startTime || 0
-        console.log(`[VideoItem] Устанавливаем время на начало видео: ${videoStartTime}`)
+        console.log(`[VideoItem] Устанавливаем время на начало видео: ${videoStartTime.toFixed(2)}`)
+
+        // Устанавливаем время только один раз
         seek(videoStartTime)
 
-        // Создаем временный элемент для проверки готовности видео
-        console.log(
-          `[VideoItem] Создаем временный элемент для проверки готовности видео: ${video.path}`,
-        )
-        const tempVideo = document.createElement("video")
-        tempVideo.src = video.path
-        tempVideo.preload = "metadata"
+        // Не устанавливаем displayTime в 0, так как это делает компонент TimelineBarPosition
+        // Это позволяет избежать конфликтов и дублирования кода
 
-        // Добавляем обработчик для отслеживания состояния загрузки
-        tempVideo.addEventListener("loadedmetadata", () => {
-          console.log(`[VideoItem] Метаданные видео ${video.id} загружены`)
-        })
+        // Проверяем, загружено ли видео уже в кэше
+        // Используем sessionStorage для кэширования загруженных видео
+        const videoId = video.id || video.path
+        const isVideoCached = sessionStorage.getItem(`video_cache_${videoId}`) === "true"
 
-        tempVideo.addEventListener("canplay", () => {
-          console.log(`[VideoItem] Видео ${video.id} может воспроизводиться (canplay)`)
-        })
-
-        tempVideo.addEventListener("canplaythrough", () => {
+        if (isVideoCached) {
+          console.log(`[VideoItem] Видео ${videoId} уже загружено в кэше, используем его`)
+          setVideoReady(true)
+          setVideoLoading(false)
+        } else {
+          // Создаем временный элемент для проверки готовности видео
           console.log(
-            `[VideoItem] Видео ${video.id} может воспроизводиться без буферизации (canplaythrough)`,
+            `[VideoItem] Создаем временный элемент для проверки готовности видео: ${video.path}`,
           )
-        })
+          const tempVideo = document.createElement("video")
+          tempVideo.src = video.path
+          tempVideo.preload = "metadata"
 
-        tempVideo.onloadeddata = () => {
-          console.log(`[VideoItem] Видео ${video.id} загружено успешно (loadeddata)`)
-          setVideoReady(true)
-          setVideoLoading(false)
-        }
-
-        tempVideo.onerror = (e) => {
-          console.error(`[VideoItem] Ошибка загрузки видео ${video.id}:`, e)
-          setVideoLoading(false)
-        }
-
-        // Если метаданные уже загружены, сразу вызываем обработчик
-        if (tempVideo.readyState >= 1) {
-          console.log(
-            `[VideoItem] Метаданные видео ${video.id} уже загружены, readyState=${tempVideo.readyState}`,
-          )
-          setVideoReady(true)
-          setVideoLoading(false)
-        }
-
-        // Принудительно устанавливаем флаг готовности видео через небольшую задержку
-        // Это нужно для случаев, когда события загрузки не срабатывают корректно
-        setTimeout(() => {
-          console.log(`[VideoItem] Принудительно устанавливаем флаг готовности видео ${video.id}`)
-          setVideoReady(true)
-          setVideoLoading(false)
-
-          // Повторно проверяем через дополнительную задержку
-          setTimeout(() => {
-            console.log(`[VideoItem] Повторная проверка готовности видео ${video.id}`)
+          // Добавляем обработчик для отслеживания состояния загрузки
+          tempVideo.onloadeddata = () => {
+            console.log(`[VideoItem] Видео ${videoId} загружено успешно (loadeddata)`)
+            // Сохраняем видео в кэше
+            sessionStorage.setItem(`video_cache_${videoId}`, "true")
             setVideoReady(true)
             setVideoLoading(false)
-          }, 1000)
-        }, 500)
+          }
+
+          tempVideo.onerror = (e) => {
+            console.error(`[VideoItem] Ошибка загрузки видео ${videoId}:`, e)
+            setVideoLoading(false)
+          }
+
+          // Если метаданные уже загружены, сразу вызываем обработчик
+          if (tempVideo.readyState >= 1) {
+            console.log(
+              `[VideoItem] Метаданные видео ${videoId} уже загружены, readyState=${tempVideo.readyState}`,
+            )
+            // Сохраняем видео в кэше
+            sessionStorage.setItem(`video_cache_${videoId}`, "true")
+            setVideoReady(true)
+            setVideoLoading(false)
+          }
+
+          // Устанавливаем флаг готовности видео через небольшую задержку
+          // Это нужно для случаев, когда события загрузки не срабатывают корректно
+          setTimeout(() => {
+            setVideoReady(true)
+            setVideoLoading(false)
+          }, 500)
+        }
       } catch (error) {
         console.error("[VideoItem] Ошибка при обработке клика:", error)
         setVideoLoading(false)
@@ -249,6 +250,9 @@ export const VideoItem = memo(function VideoItem({
       setPreferredSource,
       video.id,
       video.name,
+      currentTime,
+      displayTime,
+      setDisplayTime, // Добавляем setDisplayTime в зависимости
     ],
   )
 
@@ -312,14 +316,16 @@ export const VideoItem = memo(function VideoItem({
   const videoStart = video.startTime || 0
   const videoDuration = video.duration || 0
 
-  // Если указаны границы трека, используем их для расчета позиции
-  const referenceStart = trackStartTime !== undefined ? trackStartTime : sectionStart
+  // Всегда используем sectionStart как точку отсчета для всех дорожек
+  // Это обеспечит выравнивание видео по времени на разных дорожках
+  const referenceStart = sectionStart
 
-  // Рассчитываем позицию в процентах относительно видимого диапазона
+  // Рассчитываем длительность секции
   // Используем длительность секции для расчета, чтобы видео соответствовало шкале времени
-  const trackEndTimeValue = trackEndTime || 0
-  const sectionDuration =
-    trackEndTimeValue && trackStartTime ? trackEndTimeValue - trackStartTime : videoDuration
+  const sectionDuration = track.sectionDuration || videoDuration
+
+  // Логирование отключено для повышения производительности
+  // console.log(`[VideoItem] ${video.name}: videoStart=${videoStart}, sectionStart=${sectionStart}, sectionDuration=${sectionDuration}`)
 
   // Рассчитываем позицию в процентах от ширины секции
   // Ограничиваем значения, чтобы видео всегда было видимым
@@ -332,13 +338,16 @@ export const VideoItem = memo(function VideoItem({
   // Минимальная ширина 0.5% для видимости очень коротких видео
   const widthPercent = Math.max(0.5, Math.min(100, (videoDuration / sectionDuration) * 100))
 
-  // Логируем расчеты для отладки
-  console.log(
-    `[VideoItem] ${video.name}: start=${videoStart}, duration=${videoDuration}, left=${leftPercent}%, width=${widthPercent}%, zoomLevel=${zoomLevel}`,
-  )
-  console.log(
-    `[VideoItem] Параметры расчета: referenceStart=${referenceStart}, sectionDuration=${sectionDuration}`,
-  )
+  // Отключаем избыточное логирование для повышения производительности
+  // Игнорируем неиспользуемый параметр zoomLevel
+
+  // Логирование отключено для повышения производительности
+  // console.log(
+  //   `[VideoItem] ${video.name}: start=${videoStart}, duration=${videoDuration}, left=${leftPercent}%, width=${widthPercent}%`,
+  // )
+  // console.log(
+  //   `[VideoItem] Параметры расчета: referenceStart=${referenceStart}, sectionDuration=${sectionDuration}`,
+  // )
 
   // Отключаем эффект для логирования активного состояния для повышения производительности
   // useEffect(() => {
