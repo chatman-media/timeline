@@ -1,9 +1,8 @@
 import { Film } from "lucide-react"
-import { memo, useCallback, useEffect, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { cn, formatDuration, formatResolution } from "@/lib/utils"
 import { calculateAdaptiveWidth, calculateWidth, parseRotation } from "@/lib/video-utils"
-import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
 import {
   stopAllVideos,
   stopAllVideosExceptActive,
@@ -22,7 +21,6 @@ interface VideoPreviewProps {
   size?: number
   showFileName?: boolean
   hideTime?: boolean
-  dimensions?: [number, number]
   ignoreRatio?: boolean
 }
 
@@ -43,7 +41,7 @@ interface VideoPreviewProps {
  * @param size - Размер превью в пикселях (по умолчанию 60)
  * @param showFileName - Флаг для отображения имени файла (по умолчанию false)
  * @param hideTime - Флаг для скрытия времени (по умолчанию false)
- * @param dimensions - Фиксированное соотношение сторон контейнера [ширина, высота], по умолчанию [16, 9]
+
  * @param ignoreRatio - Флаг для игнорирования соотношения сторон (по умолчанию false)
  */
 export const VideoPreview = memo(function VideoPreview({
@@ -53,13 +51,28 @@ export const VideoPreview = memo(function VideoPreview({
   size = 60,
   showFileName = false,
   hideTime = false,
-  dimensions,
   ignoreRatio = false,
 }: VideoPreviewProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [hoverTime, setHoverTime] = useState<number | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement | null }>({})
+
+  // Используем useRef для хранения времени последнего обновления
+  const lastUpdateTimeRef = useRef(0)
+
+  // Функции для условного логирования
+  const logDebug = (message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(message, ...args)
+    }
+  }
+
+  const logError = (message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.error(message, ...args)
+    }
+  }
 
   // Создаем стабильные ключи для рефов
   useEffect(() => {
@@ -83,13 +96,10 @@ export const VideoPreview = memo(function VideoPreview({
       const percentage = x / rect.width
       const newTime = percentage * (file.duration || 0)
 
-      // Обновляем ref вместо состояния
+      // Обновляем ref и состояние при каждом движении мыши
       hoverTimeRef.current = newTime
-      // Обновляем состояние только если разница существенная (более 0.5 сек)
-      // или если это первое движение мыши
-      if (hoverTime === null || Math.abs((hoverTime || 0) - newTime) > 0.5) {
-        setHoverTime(newTime)
-      }
+      // Обновляем состояние без задержки
+      setHoverTime(newTime)
 
       const key = stream.streamKey || `stream-${stream.index}`
       const videoRef = videoRefs.current[key]
@@ -98,7 +108,7 @@ export const VideoPreview = memo(function VideoPreview({
         videoRef.currentTime = newTime
       }
     },
-    [file.duration, hoverTime],
+    [file.duration], // Удалили hoverTime из зависимостей, так как он не используется для условной проверки
   )
 
   const handleMouseLeave = useCallback(() => {
@@ -175,10 +185,9 @@ export const VideoPreview = memo(function VideoPreview({
     isPlaying,
   ])
 
-  // Получаем настройку поведения при клике на превью
-  const { previewClickBehavior } = useUserSettings()
+  // Больше не используем настройку поведения при клике на превью, так как всегда воспроизводим только в превью
 
-  // Функция handlePlayPause, которая управляет воспроизведением в превью и отправляет видео в медиаплеер
+  // Функция handlePlayPause, которая управляет воспроизведением только в превью
   const handlePlayPause = useCallback(
     (e: React.MouseEvent, stream: FfprobeStream) => {
       e.preventDefault()
@@ -186,201 +195,65 @@ export const VideoPreview = memo(function VideoPreview({
       const videoRef = videoRefs.current[key]
       if (!videoRef) return
 
-      console.log(
+      logDebug(
         "[VideoPreview] Play/Pause clicked for stream:",
         stream.index,
         "current state:",
         isPlaying,
-        "previewClickBehavior:",
-        previewClickBehavior,
       )
 
       // Определяем новое состояние воспроизведения (противоположное текущему)
       const newPlayingState = !isPlaying
 
-      // Проверяем настройку "Не дублировать превью видео в плеере"
-      if (previewClickBehavior === "preview") {
-        // Опция "Не дублировать" включена - воспроизводим только в превью
-        if (newPlayingState) {
-          // Запускаем воспроизведение в превью
-          if (hoverTime !== null) {
-            videoRef.currentTime = hoverTime
-          }
-          videoRef
-            .play()
-            .catch((err) => console.error("[VideoPreview] Ошибка воспроизведения в превью:", err))
-        } else {
-          // Останавливаем воспроизведение в превью
-          videoRef.pause()
-        }
-
-        // Обновляем локальное состояние воспроизведения
-        setIsPlaying(newPlayingState)
-
-        // Не отправляем видео в медиаплеер - просто выходим из функции
-        return
-      }
-
-      // Опция "Не дублировать" выключена - воспроизводим в медиа плеере
-
-      // Начинаем воспроизведение в превью мгновенно, чтобы пользователь видел отклик
+      // Воспроизводим только в превью
       if (newPlayingState) {
-        // Если нужно воспроизвести, запускаем видео в превью
+        // Запускаем воспроизведение в превью
         if (hoverTime !== null) {
           videoRef.currentTime = hoverTime
         }
         videoRef
           .play()
           .catch((err) => console.error("[VideoPreview] Ошибка воспроизведения в превью:", err))
-        setIsPlaying(true)
-        console.log(
-          `[VideoPreview] Мгновенно запускаем воспроизведение в превью для видео ${file.id}`,
-        )
       } else {
-        // Если нужно остановить, останавливаем все видео, кроме видео в шаблоне
-        stopAllVideos(true)
-        setIsPlaying(false)
-        console.log(
-          `[VideoPreview] Останавливаем воспроизведение всех видео, кроме видео в шаблоне`,
-        )
+        // Останавливаем воспроизведение в превью
+        videoRef.pause()
       }
 
-      // Проверяем, что контекст плеера доступен
-      try {
-        if (!playerContext) {
-          console.error("[VideoPreview] Контекст плеера недоступен")
-          return
-        }
+      // Обновляем локальное состояние воспроизведения
+      setIsPlaying(newPlayingState)
 
-        // Оптимизируем обновления состояния, чтобы уменьшить количество перерисовок
-        // Используем пакетное обновление состояния
-
-        // Получаем текущее время видео для синхронизации
-        const currentVideoTime = videoRef?.currentTime || 0
-
-        // Создаем объект с обновлениями состояния
-        const updates: Record<string, any> = {
-          preferredSource: "media",
-          video: file,
-        }
-
-        // Добавляем обновления только если необходимо
-        if (playerContext.activeVideoId !== file.id) {
-          updates.activeVideoId = file.id
-          updates.parallelVideos = [file]
-        }
-
-        if (playerContext.isPlaying !== newPlayingState) {
-          updates.isPlaying = newPlayingState
-        }
-
-        // Устанавливаем текущее время видео
-        if (videoRef && videoRef.currentTime) {
-          updates.currentTime = currentVideoTime
-          console.log(
-            `[VideoPreview] Передаем текущее время видео в медиаплеер: ${currentVideoTime.toFixed(3)}`,
-          )
-        }
-
-        // Применяем все обновления сразу
-        console.log(
-          "[VideoPreview] Применяем пакетные обновления:",
-          Object.keys(updates).join(", "),
-        )
-
-        // Останавливаем все видео, кроме активного
+      // Останавливаем все другие видео в превью, кроме текущего
+      if (newPlayingState) {
         stopAllVideosExceptActive(file.id)
-
-        // Устанавливаем предпочтительный источник в "media" (браузер)
-        playerContext.setPreferredSource("media")
-
-        // Устанавливаем текущее видео как активное в плеере
-        playerContext.setVideo(file)
-
-        // Добавляем видео в список параллельных видео (если нужно)
-        if (updates.activeVideoId) {
-          playerContext.setActiveVideoId(updates.activeVideoId)
-          playerContext.setParallelVideos(updates.parallelVideos)
-        }
-
-        // Синхронизируем состояние воспроизведения
-        if (updates.isPlaying !== undefined) {
-          playerContext.setIsPlaying(updates.isPlaying)
-        }
-
-        // Синхронизируем текущее время видео
-        if (updates.currentTime !== undefined) {
-          // Устанавливаем текущее время в контексте плеера
-          playerContext.setCurrentTime(updates.currentTime)
-        }
-
-        console.log(
-          `[VideoPreview] Видео ${newPlayingState ? "запущено" : "остановлено"} в медиаплеере:`,
-          file.name,
-        )
-
-        // Удаляем отправку сообщений, так как теперь используем только контекст плеера
-        console.log(`[VideoPreview] Обновлен контекст плеера для видео ${file.id}`)
-      } catch (error) {
-        console.error("[VideoPreview] Ошибка при обновлении состояния плеера:", error)
       }
+
+      logDebug(
+        `[VideoPreview] Видео ${newPlayingState ? "запущено" : "остановлено"} в превью:`,
+        file.name,
+      )
     },
-    [isPlaying, hoverTime, file, playerContext, previewClickBehavior],
+    [isPlaying, hoverTime, file],
   )
 
-  // Функция для получения URL видео для конкретного потока
-  const getVideoUrl = useCallback(
-    (stream: FfprobeStream) => {
-      // Для INSV файлов с массивом прокси
-      // if (file.name.toLowerCase().endsWith(".insv") && Array.isArray(file.proxies)) {
-      //   const proxyForStream = file.proxies.find((p) => p.streamKey === stream.streamKey)
-      //   if (proxyForStream && proxyForStream.path) {
-      //     // Проверяем, существует ли прокси
-      //     const proxyUrl = proxyForStream.path
-      //     const video = videoRefs.current[stream.streamKey || `stream-${stream.index}`]
-      //     if (video) {
-      //       // Пробуем загрузить прокси
-      //       video.src = proxyUrl
-      //       video.onerror = () => {
-      //         // Если прокси не загрузился, используем оригинал
-      //         video.src = file.path
-      //       }
-      //     }
-      //     return proxyUrl
-      //   }
-      //   return file.path
-      // }
+  // Функция для получения URL видео
+  const getVideoUrl = useCallback(() => {
+    // Просто возвращаем путь к файлу
+    return file.path
+  }, [file])
 
-      // Для обычных файлов с одним прокси
-      // if (file.proxy?.path) {
-      //   const proxyUrl = file.proxy.path
-      //   const video = videoRefs.current["default"]
-      //   if (video) {
-      //     // Пробуем загрузить прокси
-      //     video.src = proxyUrl
-      //     video.onerror = () => {
-      //       // Если прокси не загрузился, используем оригинал
-      //       video.src = file.path
-      //     }
-      //   }
-      //   return proxyUrl
-      // }
+  // Оптимизируем вычисления с помощью useMemo
+  const videoData = useMemo(() => {
+    const videoStreams = file.probeData?.streams?.filter((s) => s.codec_type === "video") ?? []
+    const isMultipleStreams = videoStreams?.length > 1
 
-      // Для файлов без прокси
-      return file.path
-    },
-    [file],
-  )
+    return { videoStreams, isMultipleStreams }
+  }, [file.probeData?.streams])
 
   return (
     <div className={cn("flex h-full w-full items-center justify-center")}>
-      {file.probeData?.streams
-        ?.filter((stream) => stream.codec_type === "video")
-        .map((stream) => {
+      {videoData.videoStreams.map((stream: FfprobeStream) => {
           const key = stream.streamKey || `stream-${stream.index}`
-          const videoStreams =
-            file.probeData?.streams?.filter((s) => s.codec_type === "video") ?? []
-          const isMultipleStreams = videoStreams?.length > 1
+          const isMultipleStreams = videoData.isMultipleStreams
           const width = calculateWidth(
             stream.width || 0,
             stream.height || 0,
@@ -424,7 +297,7 @@ export const VideoPreview = memo(function VideoPreview({
                   ref={(el) => {
                     videoRefs.current[key] = el
                   }}
-                  src={getVideoUrl(stream)}
+                  src={getVideoUrl()}
                   preload="auto"
                   tabIndex={0}
                   playsInline
@@ -438,11 +311,11 @@ export const VideoPreview = memo(function VideoPreview({
                     transition: "opacity 0.2s ease-in-out",
                   }}
                   onEnded={() => {
-                    console.log("Video ended for stream:", stream.index)
+                    logDebug("Video ended for stream:", stream.index)
                     setIsPlaying(false)
                   }}
                   onPlay={(e) => {
-                    console.log("Video playing for stream:", stream.index)
+                    logDebug("Video playing for stream:", stream.index)
                     const video = e.currentTarget
                     const currentTime = hoverTime
                     if (currentTime !== undefined && currentTime !== null) {
@@ -450,11 +323,11 @@ export const VideoPreview = memo(function VideoPreview({
                     }
                   }}
                   onTimeUpdate={(e) => {
-                    // Ограничиваем частоту логирования, чтобы не перегружать консоль
-                    // и не создавать лишнюю нагрузку
-                    if (Math.random() < 0.05) {
-                      // Логируем примерно 5% событий
-                      console.log(
+                    // Обновляем только каждые 500 мс вместо случайного выбора
+                    const now = Date.now()
+                    if (now - lastUpdateTimeRef.current > 500) {
+                      lastUpdateTimeRef.current = now
+                      logDebug(
                         "Time update for stream:",
                         stream.index,
                         "current time:",
@@ -463,7 +336,7 @@ export const VideoPreview = memo(function VideoPreview({
                     }
                   }}
                   onError={(e) => {
-                    console.error("Video error for stream:", stream.index, e)
+                    logError("Video error for stream:", stream.index, e)
                   }}
                   onKeyDown={(e) => {
                     if (e.code === "Space") {
@@ -472,7 +345,7 @@ export const VideoPreview = memo(function VideoPreview({
                     }
                   }}
                   onLoadedData={() => {
-                    console.log("Video loaded for stream:", stream.index)
+                    logDebug("Video loaded for stream:", stream.index)
                     setIsLoaded(true)
 
                     // Добавляем видео в глобальный кэш для повторного использования в шаблонах
@@ -487,7 +360,7 @@ export const VideoPreview = memo(function VideoPreview({
                         const videoElement = videoRefs.current[key]
                         // Используем ID файла как ключ для кэша
                         window.videoElementCache.set(file.id, videoElement)
-                        console.log(
+                        logDebug(
                           `[VideoPreview] Видео ${file.id} добавлено в глобальный кэш для повторного использования`,
                         )
                       }
