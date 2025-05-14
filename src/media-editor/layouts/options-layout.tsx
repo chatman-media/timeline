@@ -2,7 +2,7 @@ import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/componen
 import { Browser } from "@/media-editor/browser/components"
 import { MediaPlayer } from "@/media-editor/media-player/components"
 import { Options } from "@/media-editor/options"
-import { TimelineLayout } from "@/media-editor/timeline/components"
+import { Timeline, TimelineLayout } from "@/media-editor/timeline/components"
 
 import { useBrowserVisibility } from "../browser/providers/browser-visibility-provider"
 
@@ -45,7 +45,7 @@ export function OptionsMediaEditor() {
           <ResizableHandle />
           <ResizablePanel defaultSize={50}>
             <div className="relative h-full flex-1">
-              <TimelineLayout />
+          <Timeline />
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>
