@@ -11,6 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { FRAME_RATES } from "@/media-editor/project-settings/project-settings-machine"
+import { RESOLUTIONS_16_9 } from "@/types/project"
 
 interface CaptureDevice {
   deviceId: string
@@ -29,13 +31,20 @@ interface CameraCaptureDialogProps {
   onVideoRecorded: (blob: Blob, fileName: string) => void
 }
 
-const COMMON_RESOLUTIONS: Resolution[] = [
-  { width: 1920, height: 1080, label: "1920x1080" }, // Full HD
-  { width: 1280, height: 720, label: "1280x720" }, // HD
-  { width: 640, height: 480, label: "640x480" }, // VGA
-]
+// Используем разрешения из project-settings-machine
+const COMMON_RESOLUTIONS: Resolution[] = RESOLUTIONS_16_9.map((res) => ({
+  width: res.width,
+  height: res.height,
+  label: res.label, // Используем полную метку разрешения
+}))
 
-const COMMON_FRAMERATES = [30, 60, 24, 25]
+// Добавляем VGA разрешение, если его нет в RESOLUTIONS_16_9
+if (!COMMON_RESOLUTIONS.some((res) => res.width === 640 && res.height === 480)) {
+  COMMON_RESOLUTIONS.push({ width: 640, height: 480, label: "640x480" }) // VGA
+}
+
+// Используем частоты кадров из project-settings-machine
+const COMMON_FRAMERATES = FRAME_RATES.map((fr) => parseInt(fr.value)).filter((fr) => !isNaN(fr))
 
 export function CameraCaptureDialog({
   isOpen,

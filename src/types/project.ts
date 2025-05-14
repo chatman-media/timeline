@@ -90,7 +90,16 @@ export interface ProjectSettings {
 }
 
 export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
-  aspectRatio: ASPECT_RATIOS[0],
+  aspectRatio: {
+    label: "16:9",
+    textLabel: "Широкоэкнранный",
+    description: "YouTube",
+    value: {
+      width: 1920,
+      height: 1080,
+      name: "16:9",
+    },
+  },
   resolution: "1920x1080",
   frameRate: "30",
   colorSpace: "sdr",

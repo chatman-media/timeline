@@ -3,35 +3,11 @@ import { assign, createMachine } from "xstate"
 
 import { DEFAULT_PROJECT_SETTINGS, type ProjectSettings } from "@/types/project"
 
-// Key for storing project settings in localStorage
-const PROJECT_SETTINGS_STORAGE_KEY = "timeline-project-settings"
-
-// Function to load settings from localStorage
-const loadSavedSettings = (): ProjectSettings | null => {
-  if (typeof window === "undefined") return null
-
-  try {
-    const savedSettings = localStorage.getItem(PROJECT_SETTINGS_STORAGE_KEY)
-    if (savedSettings) {
-      return JSON.parse(savedSettings)
-    }
-  } catch (error) {
-    console.error("[ProjectMachine] Error loading settings from localStorage:", error)
-  }
-
-  return null
-}
-
-// Function to save settings to localStorage
-const saveSettings = (settings: ProjectSettings): void => {
-  if (typeof window === "undefined") return
-
-  try {
-    localStorage.setItem(PROJECT_SETTINGS_STORAGE_KEY, JSON.stringify(settings))
-  } catch (error) {
-    console.error("[ProjectMachine] Error saving settings to localStorage:", error)
-  }
-}
+import {
+  loadSavedSettings,
+  PROJECT_SETTINGS_STORAGE_KEY,
+  saveSettings,
+} from "./project-settings-machine"
 
 export type ProjectContext = {
   settings: ProjectSettings
@@ -151,7 +127,7 @@ export const projectMachine = createMachine({
         },
         SET_DIRTY: {
           actions: assign({
-            isDirty: ({ context, event }) => {
+            isDirty: ({ event }) => {
               // Проверяем, есть ли свойство isDirty в событии
               // Используем безопасный доступ к свойству через оператор ?.
               if (typeof (event as any)?.isDirty === "boolean") {

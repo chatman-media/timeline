@@ -20,15 +20,14 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useProject } from "@/media-editor/project-settings/project-provider"
-import { useProjectSettings } from "@/media-editor/project-settings/project-settings-provider"
 import {
   ASPECT_RATIOS,
-  type ColorSpace,
-  type FrameRate,
+  getAspectRatioByDimensions,
   getDefaultResolutionForAspectRatio,
   getResolutionsForAspectRatio,
-  type ResolutionOption,
-} from "@/types/project"
+} from "@/media-editor/project-settings/project-settings-machine"
+import { useProjectSettings } from "@/media-editor/project-settings/project-settings-provider"
+import { type AspectRatio, type ColorSpace, type FrameRate } from "@/types/project"
 
 interface ProjectSettingsDialogProps {
   open: boolean
@@ -49,7 +48,6 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
     updateCustomHeight,
     updateAspectRatioLocked,
     updateAvailableResolutions,
-    updateAspectRatio
   } = useProjectSettings()
 
   // Функция для получения локализованного названия соотношения сторон
@@ -98,6 +96,11 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
   // Обновляем доступные разрешения при изменении соотношения сторон
   useEffect(() => {
     if (settings.aspectRatio) {
+      console.log(
+        "[ProjectSettingsDialog] useEffect: Обновление разрешений для соотношения сторон:",
+        settings.aspectRatio.label,
+      )
+
       const resolutions = getResolutionsForAspectRatio(settings.aspectRatio.label)
       updateAvailableResolutions(resolutions)
 
@@ -106,60 +109,85 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
       updateCustomHeight(settings.aspectRatio.value.height)
 
       console.log("[ProjectSettingsDialog] Доступные разрешения обновлены:", resolutions)
+      console.log("[ProjectSettingsDialog] Текущее разрешение:", settings.resolution)
     }
-  }, [settings.aspectRatio, updateAvailableResolutions, updateCustomWidth, updateCustomHeight])
+  }, [
+    settings.aspectRatio.label,
+    updateAvailableResolutions,
+    updateCustomWidth,
+    updateCustomHeight,
+  ])
+
+  // Удаляем этот useEffect, так как он вызывает бесконечный цикл обновлений
 
   // Функция для обновления соотношения сторон и автоматического обновления разрешения
   const handleAspectRatioChange = (value: string) => {
-    const newAspectRatio = ASPECT_RATIOS.find((item) => item.label === value)
+    console.log("[ProjectSettingsDialog] Изменение соотношения сторон на:", value)
+    console.log(
+      "[ProjectSettingsDialog] Все доступные соотношения сторон:",
+      ASPECT_RATIOS.map((ar) => ar.label),
+    )
+
+    const newAspectRatio = ASPECT_RATIOS.find((item: AspectRatio) => item.label === value)
     if (newAspectRatio) {
+      console.log("[ProjectSettingsDialog] Найдено соотношение сторон:", newAspectRatio)
+
       // Если выбрано пользовательское соотношение сторон, отключаем блокировку
       if (value === "custom" && aspectRatioLocked) {
         updateAspectRatioLocked(false)
       }
 
-      // Получаем рекомендуемое разрешение для нового соотношения сторон
-      const recommendedResolution = getDefaultResolutionForAspectRatio(value)
+      let newSettings
 
-      // Обновляем настройки проекта с новым соотношением сторон и разрешением
-      const newSettings = {
-        ...settings,
-        aspectRatio: newAspectRatio,
-        resolution: value === "custom" ? "custom" : recommendedResolution.value,
-      }
-
-      // Обновляем размеры в соответствии с рекомендуемым разрешением или пользовательскими значениями
       if (value === "custom") {
         // Для пользовательского соотношения используем текущие значения ширины и высоты
-        newSettings.aspectRatio = {
-          ...newSettings.aspectRatio,
-          value: {
-            ...newSettings.aspectRatio.value,
-            width: customWidth,
-            height: customHeight,
+        newSettings = {
+          ...settings,
+          aspectRatio: {
+            ...newAspectRatio,
+            value: {
+              ...newAspectRatio.value,
+              width: customWidth,
+              height: customHeight,
+            },
           },
+          resolution: "custom",
         }
-      } else if (recommendedResolution) {
-        // Для стандартных соотношений используем рекомендуемое разрешение
-        newSettings.aspectRatio = {
-          ...newSettings.aspectRatio,
-          value: {
-            ...newSettings.aspectRatio.value,
-            width: recommendedResolution.width,
-            height: recommendedResolution.height,
-          },
-        }
+      } else {
+        // Для стандартных соотношений сторон
+        // Получаем рекомендуемое разрешение
+        const recommendedResolution = getDefaultResolutionForAspectRatio(value)
+        console.log("[ProjectSettingsDialog] Рекомендуемое разрешение:", recommendedResolution)
+
+        // Обновляем доступные разрешения
+        const newResolutions = getResolutionsForAspectRatio(value)
+        updateAvailableResolutions(newResolutions)
+        console.log("[ProjectSettingsDialog] Обновлены доступные разрешения:", newResolutions)
 
         // Обновляем значения пользовательской ширины и высоты
         updateCustomWidth(recommendedResolution.width)
         updateCustomHeight(recommendedResolution.height)
+
+        // Создаем новые настройки
+        newSettings = {
+          ...settings,
+          aspectRatio: {
+            ...newAspectRatio,
+            value: {
+              ...newAspectRatio.value,
+              width: recommendedResolution.width,
+              height: recommendedResolution.height,
+            },
+          },
+          resolution: recommendedResolution.value,
+        }
       }
 
       // Применяем новые настройки
       updateSettings(newSettings)
 
       console.log("[ProjectSettingsDialog] Соотношение сторон изменено:", {
-        aspectRatio: newAspectRatio.label,
+        aspectRatio: newSettings.aspectRatio.label,
         resolution: newSettings.resolution,
         width: newSettings.aspectRatio.value.width,
         height: newSettings.aspectRatio.value.height,
@@ -173,6 +201,14 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
       }, 50)
     }
   }
+
+  // Логируем текущие настройки перед рендерингом
+  console.log("[ProjectSettingsDialog] Рендеринг с настройками:", {
+    aspectRatio: settings.aspectRatio.label,
+    resolution: settings.resolution,
+    availableResolutions: availableResolutions.map((r) => r.value),
+    resolutionExists: availableResolutions.some((r) => r.value === settings.resolution),
+  })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -190,7 +226,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
-                {ASPECT_RATIOS.map((item) => (
+                {ASPECT_RATIOS.map((item: AspectRatio) => (
                   <SelectItem key={item.label} value={item.label} className="">
                     {item.label === "custom"
                       ? t("dialogs.projectSettings.aspectRatioLabels.custom")
@@ -204,8 +240,14 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
           <div className="flex items-center justify-end">
             <Label className="mr-2 text-xs">{t("dialogs.projectSettings.resolution")}</Label>
             <Select
-              value={settings.aspectRatio.label === "custom" ? "custom" : settings.resolution}
+              value={settings.resolution}
               onValueChange={(value: string) => {
+                console.log("[ProjectSettingsDialog] Выбрано разрешение:", value)
+                console.log("[ProjectSettingsDialog] Текущее разрешение:", settings.resolution)
+                console.log(
+                  "[ProjectSettingsDialog] Доступные разрешения:",
+                  availableResolutions.map((r) => r.value),
+                )
                 if (settings.aspectRatio.label === "custom") {
                   // Для пользовательского соотношения сторон всегда используем пользовательское разрешение
                   return
@@ -213,30 +255,87 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
 
                 // Находим выбранное разрешение в списке доступных
                 const selectedResolution = availableResolutions.find((res) => res.value === value)
+                console.log("[ProjectSettingsDialog] Выбранное разрешение:", selectedResolution)
+                console.log(
+                  "[ProjectSettingsDialog] Текущее соотношение сторон:",
+                  settings.aspectRatio.label,
+                )
 
                 if (selectedResolution) {
-                  // Создаем новые настройки с обновленным разрешением и размерами
+                  // Обновляем значения пользовательской ширины и высоты
+                  updateCustomWidth(selectedResolution.width)
+                  updateCustomHeight(selectedResolution.height)
+
+                  // Определяем соотношение сторон по размерам выбранного разрешения
+                  const detectedAspectRatio = getAspectRatioByDimensions(
+                    selectedResolution.width,
+                    selectedResolution.height,
+                  )
+
+                  console.log(
+                    "[ProjectSettingsDialog] Detected aspect ratio:",
+                    detectedAspectRatio.label,
+                  )
+
+                  // Проверяем, изменилось ли соотношение сторон
+                  const aspectRatioChanged =
+                    detectedAspectRatio.label !== settings.aspectRatio.label
+                  console.log(
+                    "[ProjectSettingsDialog] Соотношение сторон изменилось:",
+                    aspectRatioChanged,
+                  )
+
+                  // Создаем новые настройки с обновленным разрешением
                   const newSettings = {
                     ...settings,
                     resolution: value,
-                    aspectRatio: {
+                  }
+
+                  // Если соотношение сторон изменилось, обновляем его
+                  if (aspectRatioChanged) {
+                    console.log(
+                      "[ProjectSettingsDialog] Обновляем соотношение сторон на:",
+                      detectedAspectRatio.label,
+                    )
+
+                    // Сначала получаем доступные разрешения для нового соотношения сторон
+                    const newResolutions = getResolutionsForAspectRatio(detectedAspectRatio.label)
+                    console.log(
+                      "[ProjectSettingsDialog] Новые доступные разрешения:",
+                      newResolutions,
+                    )
+                    updateAvailableResolutions(newResolutions)
+
+                    // Находим рекомендуемое разрешение для нового соотношения сторон
+                    const recommendedResolution = getDefaultResolutionForAspectRatio(
+                      detectedAspectRatio.label,
+                    )
+                    console.log(
+                      "[ProjectSettingsDialog] Рекомендуемое разрешение для нового соотношения сторон:",
+                      recommendedResolution,
+                    )
+
+                    // Теперь обновляем настройки с новым соотношением сторон и рекомендуемым разрешением
+                    newSettings.aspectRatio = detectedAspectRatio
+                    newSettings.resolution = recommendedResolution.value
+                  } else {
+                    // Если соотношение сторон не изменилось, просто обновляем размеры
+                    console.log("[ProjectSettingsDialog] Обновляем только размеры")
+                    newSettings.aspectRatio = {
                       ...settings.aspectRatio,
                       value: {
                         ...settings.aspectRatio.value,
                         width: selectedResolution.width,
                         height: selectedResolution.height,
                       },
-                    },
+                    }
                   }
 
                   // Применяем новые настройки
                   updateSettings(newSettings)
-
-                  // Обновляем значения пользовательской ширины и высоты
-                  updateCustomWidth(selectedResolution.width)
-                  updateCustomHeight(selectedResolution.height)
                 } else {
                   // Если разрешение не найдено, просто обновляем значение
+                  console.log("[ProjectSettingsDialog] Разрешение не найдено:", value)
                   updateSettings({
                     ...settings,
                     resolution: value,
@@ -248,16 +347,22 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
-                {settings.aspectRatio.label === "custom" ? (
-                  <SelectItem value="custom" className="">
-                    {t("dialogs.projectSettings.aspectRatioLabels.custom")}
-                  </SelectItem>
-                ) : (
-                  availableResolutions.map((option) => (
+                {availableResolutions.map((option) => {
+                  console.log("[ProjectSettingsDialog] Опция разрешения:", {
+                    value: option.value,
+                    label: option.label,
+                    isSelected: option.value === settings.resolution,
+                  })
+                  return (
                     <SelectItem key={option.value} value={option.value} className="">
                       {option.label}
                     </SelectItem>
-                  ))
+                  )
+                })}
+                {settings.aspectRatio.label === "custom" && (
+                  <SelectItem value="custom" className="">
+                    {t("dialogs.projectSettings.aspectRatioLabels.custom")}
+                  </SelectItem>
                 )}
               </SelectContent>
             </Select>
@@ -297,19 +402,66 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                       }
                       updateSettings(newSettings)
                     } else {
-                      // Если соотношение сторон не заблокировано или пользовательское, просто обновляем ширину
+                      // Если соотношение сторон не заблокировано или пользовательское
+                      // Определяем соотношение сторон по новым размерам
+                      const detectedAspectRatio = getAspectRatioByDimensions(width, customHeight)
+
+                      console.log(
+                        "[ProjectSettingsDialog] Detected aspect ratio from width change:",
+                        detectedAspectRatio.label,
+                      )
+
+                      // Обновляем настройки проекта с новыми размерами и соотношением сторон
                       const newSettings = {
                         ...settings,
-                        aspectRatio: {
-                          ...settings.aspectRatio,
-                          value: {
-                            ...settings.aspectRatio.value,
-                            width,
-                          },
-                        },
+                        aspectRatio:
+                          detectedAspectRatio.label === "custom"
+                            ? {
+                              ...settings.aspectRatio,
+                              value: {
+                                ...settings.aspectRatio.value,
+                                width,
+                              },
+                            }
+                            : {
+                              ...detectedAspectRatio,
+                              value: {
+                                ...detectedAspectRatio.value,
+                                width,
+                                height: customHeight,
+                              },
+                            },
                         resolution: `${width}x${customHeight}`,
                       }
                       updateSettings(newSettings)
+
+                      // Обновляем доступные разрешения в соответствии с новым соотношением сторон
+                      if (
+                        detectedAspectRatio.label !== "custom" &&
+                        detectedAspectRatio.label !== settings.aspectRatio.label
+                      ) {
+                        // Сначала получаем доступные разрешения для нового соотношения сторон
+                        const newResolutions = getResolutionsForAspectRatio(
+                          detectedAspectRatio.label,
+                        )
+                        console.log(
+                          "[ProjectSettingsDialog] Новые доступные разрешения:",
+                          newResolutions,
+                        )
+                        updateAvailableResolutions(newResolutions)
+
+                        // Находим рекомендуемое разрешение для нового соотношения сторон
+                        const recommendedResolution = getDefaultResolutionForAspectRatio(
+                          detectedAspectRatio.label,
+                        )
+                        console.log(
+                          "[ProjectSettingsDialog] Рекомендуемое разрешение для нового соотношения сторон:",
+                          recommendedResolution,
+                        )
+
+                        // Обновляем разрешение в настройках
+                        newSettings.resolution = recommendedResolution.value
+                      }
                     }
                   }
                 }}
@@ -348,19 +500,49 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                       }
                       updateSettings(newSettings)
                     } else {
-                      // Если соотношение сторон не заблокировано или пользовательское, просто обновляем высоту
+                      // Если соотношение сторон не заблокировано или пользовательское
+                      // Определяем соотношение сторон по новым размерам
+                      const detectedAspectRatio = getAspectRatioByDimensions(customWidth, height)
+
+                      console.log(
+                        "[ProjectSettingsDialog] Detected aspect ratio from height change:",
+                        detectedAspectRatio.label,
+                      )
+
+                      // Обновляем настройки проекта с новыми размерами и соотношением сторон
                       const newSettings = {
                         ...settings,
-                        aspectRatio: {
-                          ...settings.aspectRatio,
-                          value: {
-                            ...settings.aspectRatio.value,
-                            height,
-                          },
-                        },
+                        aspectRatio:
+                          detectedAspectRatio.label === "custom"
+                            ? {
+                              ...settings.aspectRatio,
+                              value: {
+                                ...settings.aspectRatio.value,
+                                height,
+                              },
+                            }
+                            : {
+                              ...detectedAspectRatio,
+                              value: {
+                                ...detectedAspectRatio.value,
+                                width: customWidth,
+                                height,
+                              },
+                            },
                         resolution: `${customWidth}x${height}`,
                       }
                       updateSettings(newSettings)
+
+                      // Обновляем доступные разрешения в соответствии с новым соотношением сторон
+                      if (
+                        detectedAspectRatio.label !== "custom" &&
+                        detectedAspectRatio.label !== settings.aspectRatio.label
+                      ) {
+                        const newResolutions = getResolutionsForAspectRatio(
+                          detectedAspectRatio.label,
+                        )
+                        updateAvailableResolutions(newResolutions)
+                      }
                     }
                   }
                 }}

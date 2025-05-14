@@ -49,7 +49,7 @@ interface ProjectSettingsContextValue {
 
 // Создаем контекст
 export const ProjectSettingsContext = createContext<ProjectSettingsContextValue | undefined>(
-  undefined
+  undefined,
 )
 
 // Провайдер настроек проекта
@@ -141,15 +141,11 @@ export function ProjectSettingsProvider({ children }: { children: React.ReactNod
         send({ type: "UPDATE_AVAILABLE_RESOLUTIONS", resolutions })
       },
     }),
-    [state.context, send]
+    [state.context, send],
   )
 
   // Возвращаем провайдер с контекстом
-  return (
-    <ProjectSettingsContext.Provider value={value}>
-      {children}
-    </ProjectSettingsContext.Provider>
-  )
+  return <ProjectSettingsContext.Provider value={value}>{children}</ProjectSettingsContext.Provider>
 }
 
 // Хук для использования настроек проекта
