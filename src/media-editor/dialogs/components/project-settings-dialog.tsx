@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useProject } from "@/media-editor/project-settings/project-provider"
+import { useProjectSettings } from "@/media-editor/project-settings/project-settings-provider"
 import {
   ASPECT_RATIOS,
   type ColorSpace,
@@ -37,10 +38,19 @@ interface ProjectSettingsDialogProps {
 export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDialogProps) {
   const { t } = useTranslation()
   const { settings, updateSettings, setDirty } = useProject()
-  const [availableResolutions, setAvailableResolutions] = useState<ResolutionOption[]>([])
-  const [customWidth, setCustomWidth] = useState<number>(1920)
-  const [customHeight, setCustomHeight] = useState<number>(1080)
-  const [aspectRatioLocked, setAspectRatioLocked] = useState<boolean>(true)
+  const {
+    frameRates,
+    colorSpaces,
+    availableResolutions,
+    customWidth,
+    customHeight,
+    aspectRatioLocked,
+    updateCustomWidth,
+    updateCustomHeight,
+    updateAspectRatioLocked,
+    updateAvailableResolutions,
+    updateAspectRatio
+  } = useProjectSettings()
 
   // Функция для получения локализованного названия соотношения сторон
   const getAspectRatioLabel = (textLabel: string): string => {
@@ -89,15 +99,15 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
   useEffect(() => {
     if (settings.aspectRatio) {
       const resolutions = getResolutionsForAspectRatio(settings.aspectRatio.label)
-      setAvailableResolutions(resolutions)
+      updateAvailableResolutions(resolutions)
 
       // Обновляем значения пользовательской ширины и высоты
-      setCustomWidth(settings.aspectRatio.value.width)
-      setCustomHeight(settings.aspectRatio.value.height)
+      updateCustomWidth(settings.aspectRatio.value.width)
+      updateCustomHeight(settings.aspectRatio.value.height)
 
       console.log("[ProjectSettingsDialog] Доступные разрешения обновлены:", resolutions)
     }
-  }, [settings.aspectRatio])
+  }, [settings.aspectRatio, updateAvailableResolutions, updateCustomWidth, updateCustomHeight])
 
   // Функция для обновления соотношения сторон и автоматического обновления разрешения
   const handleAspectRatioChange = (value: string) => {
@@ -105,7 +115,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
     if (newAspectRatio) {
       // Если выбрано пользовательское соотношение сторон, отключаем блокировку
       if (value === "custom" && aspectRatioLocked) {
-        setAspectRatioLocked(false)
+        updateAspectRatioLocked(false)
       }
 
       // Получаем рекомендуемое разрешение для нового соотношения сторон
@@ -141,8 +151,8 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
         }
 
         // Обновляем значения пользовательской ширины и высоты
-        setCustomWidth(recommendedResolution.width)
-        setCustomHeight(recommendedResolution.height)
+        updateCustomWidth(recommendedResolution.width)
+        updateCustomHeight(recommendedResolution.height)
       }
 
       // Применяем новые настройки
@@ -223,8 +233,8 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                   updateSettings(newSettings)
 
                   // Обновляем значения пользовательской ширины и высоты
-                  setCustomWidth(selectedResolution.width)
-                  setCustomHeight(selectedResolution.height)
+                  updateCustomWidth(selectedResolution.width)
+                  updateCustomHeight(selectedResolution.height)
                 } else {
                   // Если разрешение не найдено, просто обновляем значение
                   updateSettings({
@@ -263,14 +273,14 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                 onChange={(e) => {
                   const width = parseInt(e.target.value, 10)
                   if (!isNaN(width) && width > 0) {
-                    setCustomWidth(width)
+                    updateCustomWidth(width)
 
                     // Если соотношение сторон заблокировано, обновляем высоту пропорционально
                     if (aspectRatioLocked && settings.aspectRatio.label !== "custom") {
                       const aspectRatio =
                         settings.aspectRatio.value.width / settings.aspectRatio.value.height
                       const newHeight = Math.round(width / aspectRatio)
-                      setCustomHeight(newHeight)
+                      updateCustomHeight(newHeight)
 
                       // Обновляем настройки проекта с новыми размерами
                       const newSettings = {
@@ -314,14 +324,14 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                 onChange={(e) => {
                   const height = parseInt(e.target.value, 10)
                   if (!isNaN(height) && height > 0) {
-                    setCustomHeight(height)
+                    updateCustomHeight(height)
 
                     // Если соотношение сторон заблокировано, обновляем ширину пропорционально
                     if (aspectRatioLocked && settings.aspectRatio.label !== "custom") {
                       const aspectRatio =
                         settings.aspectRatio.value.width / settings.aspectRatio.value.height
                       const newWidth = Math.round(height * aspectRatio)
-                      setCustomWidth(newWidth)
+                      updateCustomWidth(newWidth)
 
                       // Обновляем настройки проекта с новыми размерами
                       const newSettings = {
@@ -363,7 +373,7 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                   variant="ghost"
                   size="icon"
                   className={`ml-2 h-7 w-7 cursor-pointer p-0 ${aspectRatioLocked ? "text-[#00CCC0]" : "text-gray-400 hover:text-gray-200"}`}
-                  onClick={() => setAspectRatioLocked(!aspectRatioLocked)}
+                  onClick={() => updateAspectRatioLocked(!aspectRatioLocked)}
                   title={
                     aspectRatioLocked
                       ? t("dialogs.projectSettings.unlockAspectRatio")
@@ -425,30 +435,11 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
-                <SelectItem value="23.97" className="">
-                  23.97 fps
-                </SelectItem>
-                <SelectItem value="24" className="">
-                  24 fps
-                </SelectItem>
-                <SelectItem value="25" className="">
-                  25 fps
-                </SelectItem>
-                <SelectItem value="29.97" className="">
-                  29.97 fps
-                </SelectItem>
-                <SelectItem value="30" className="">
-                  30 fps
-                </SelectItem>
-                <SelectItem value="50" className="">
-                  50 fps
-                </SelectItem>
-                <SelectItem value="59.94" className="">
-                  59.94 fps
-                </SelectItem>
-                <SelectItem value="60" className="">
-                  60 fps
-                </SelectItem>
+                {frameRates.map((frameRate) => (
+                  <SelectItem key={frameRate.value} value={frameRate.value} className="">
+                    {frameRate.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -468,21 +459,11 @@ export function ProjectSettingsDialog({ open, onOpenChange }: ProjectSettingsDia
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="">
-                <SelectItem value="sdr" className="">
-                  SDR - Rec.709
-                </SelectItem>
-                <SelectItem value="dci-p3" className="">
-                  DCI-P3
-                </SelectItem>
-                <SelectItem value="p3-d65" className="">
-                  P3-D65
-                </SelectItem>
-                <SelectItem value="hdr-hlg" className="">
-                  HDR - Rec.2100HLG
-                </SelectItem>
-                <SelectItem value="hdr-pq" className="">
-                  HDR - Rec.2100PQ
-                </SelectItem>
+                {colorSpaces.map((colorSpace) => (
+                  <SelectItem key={colorSpace.value} value={colorSpace.value} className="">
+                    {colorSpace.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

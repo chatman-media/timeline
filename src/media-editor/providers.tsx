@@ -10,6 +10,7 @@ import { ModalProvider } from "@/media-editor/dialogs"
 import { PlayerProvider } from "@/media-editor/media-player"
 import { DisplayTimeProvider } from "@/media-editor/media-player/contexts"
 import { ProjectProvider } from "@/media-editor/project-settings/project-provider"
+import { ProjectSettingsProvider } from "@/media-editor/project-settings/project-settings-provider"
 import { TimelineProvider } from "@/media-editor/timeline/services"
 
 interface ProvidersProps {
@@ -31,6 +32,7 @@ const composeProviders = (...providers: React.ComponentType<{ children: ReactNod
 const AppProvider = composeProviders(
   MediaProvider,
   ProjectProvider,
+  ProjectSettingsProvider,
   UserSettingsProvider,
   BrowserVisibilityProvider,
   DisplayTimeProvider,

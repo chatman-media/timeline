@@ -1,3 +1,5 @@
 export * from "./components"
 export * from "./project-machine"
 export * from "./project-provider"
+export * from "./project-settings-machine"
+export * from "./project-settings-provider"
