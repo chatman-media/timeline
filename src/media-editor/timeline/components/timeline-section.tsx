@@ -67,7 +67,7 @@ export function TimelineSection({
   return (
     <div className={`timeline-section ${isActive ? "" : "bg-muted/50"}`}>
       <div className="relative">
-        <div className="absolute top-[-22px] right-4 z-10 flex w-[130px] items-center gap-2">
+        <div className="absolute top-[22px] right-4 z-10 flex w-[130px] items-center gap-2">
           <Slider
             defaultValue={[1]}
             min={0.2}

@@ -576,10 +576,27 @@ export function MediaPlayer() {
         const prevVideoElement = videoRefs[currentVideoIdRef.current]
         if (prevVideoElement) {
           // Сохраняем текущее время предыдущего видео
-          videoTimesRef.current[currentVideoIdRef.current] = prevVideoElement.currentTime
+          const currentVideoTime = prevVideoElement.currentTime
+          videoTimesRef.current[currentVideoIdRef.current] = currentVideoTime
           console.log(
-            `[MediaPlayer] Сохраняем время для видео ${currentVideoIdRef.current}: ${prevVideoElement.currentTime.toFixed(3)}`,
+            `[MediaPlayer] Сохраняем время для видео ${currentVideoIdRef.current}: ${currentVideoTime.toFixed(3)}`,
           )
+
+          // Также сохраняем время для текущего сектора, если он есть
+          if (currentSectorRef.current) {
+            sectorTimesRef.current[currentSectorRef.current] = currentVideoTime
+            console.log(
+              `[MediaPlayer] Сохраняем время для сектора ${currentSectorRef.current}: ${currentVideoTime.toFixed(3)}`,
+            )
+          }
+
+          // Обновляем displayTime для синхронизации с таймлайн баром
+          if (setDisplayTime && currentVideoTime > 0) {
+            setDisplayTime(currentVideoTime)
+            console.log(
+              `[MediaPlayer] Обновляем displayTime при смене видео: ${currentVideoTime.toFixed(3)}`,
+            )
+          }
         }
       }
 
@@ -596,6 +613,14 @@ export function MediaPlayer() {
         console.log(
           `[MediaPlayer] Восстанавливаем сохраненное время для видео ${video.id}: ${lastSentTimeRef.current.toFixed(3)}`,
         )
+
+        // Обновляем displayTime для синхронизации с таймлайн баром
+        if (setDisplayTime && lastSentTimeRef.current > 0) {
+          setDisplayTime(lastSentTimeRef.current)
+          console.log(
+            `[MediaPlayer] Обновляем displayTime при восстановлении времени видео: ${lastSentTimeRef.current.toFixed(3)}`,
+          )
+        }
       }
       // Если нет сохраненного времени для видео, проверяем сохраненное время для сектора
       else if (
@@ -610,12 +635,54 @@ export function MediaPlayer() {
 
         // Сохраняем это время для текущего видео
         videoTimesRef.current[video.id] = lastSentTimeRef.current
+
+        // Обновляем displayTime для синхронизации с таймлайн баром
+        if (setDisplayTime && lastSentTimeRef.current > 0) {
+          setDisplayTime(lastSentTimeRef.current)
+          console.log(
+            `[MediaPlayer] Обновляем displayTime при восстановлении времени сектора: ${lastSentTimeRef.current.toFixed(3)}`,
+          )
+        }
+      }
+      // Проверяем, есть ли параллельные видео
+      else if (parallelVideos && parallelVideos.length > 1) {
+        // Если есть параллельные видео, сохраняем текущее время
+        console.log(
+          `[MediaPlayer] Найдены параллельные видео (${parallelVideos.length}), сохраняем текущее время: ${lastSentTimeRef.current.toFixed(3)}`,
+        )
+
+        // Сохраняем текущее время для нового видео
+        videoTimesRef.current[video.id] = lastSentTimeRef.current
+
+        // Также сохраняем время для текущего сектора, если он есть
+        if (currentSectorRef.current) {
+          sectorTimesRef.current[currentSectorRef.current] = lastSentTimeRef.current
+          console.log(
+            `[MediaPlayer] Сохраняем время для сектора ${currentSectorRef.current}: ${lastSentTimeRef.current.toFixed(3)}`,
+          )
+        }
+
+        // Обновляем displayTime для синхронизации с таймлайн баром
+        if (setDisplayTime && lastSentTimeRef.current > 0) {
+          setDisplayTime(lastSentTimeRef.current)
+          console.log(
+            `[MediaPlayer] Обновляем displayTime для параллельных видео: ${lastSentTimeRef.current.toFixed(3)}`,
+          )
+        }
       } else {
-        // Если нет сохраненного времени, начинаем с начала
+        // Если нет сохраненного времени и нет параллельных видео, начинаем с начала
         console.log(
           `[MediaPlayer] Нет сохраненного времени для видео ${video.id} и сектора ${currentSectorRef.current}, начинаем с начала`,
         )
         lastSentTimeRef.current = 0
+
+        // Сбрасываем displayTime
+        if (setDisplayTime) {
+          setDisplayTime(0)
+          console.log(
+            `[MediaPlayer] Сбрасываем displayTime в 0 при отсутствии сохраненного времени`,
+          )
+        }
       }
 
       // Сбрасываем флаг воспроизведения при смене видео, чтобы избежать автоматического воспроизведения
@@ -1503,12 +1570,18 @@ export function MediaPlayer() {
           `[MediaPlayer] Восстанавливаем время для сектора ${currentSector}: ${lastSentTimeRef.current.toFixed(3)}`,
         )
       } else {
-        // При смене сектора сбрасываем сохраненное время, если нет сохраненного времени для нового сектора
+        // Сохраняем текущее время при переключении между секторами
+        // Это позволит сохранить текущую позицию воспроизведения при переключении между дорожками
+        console.log(
+          `[MediaPlayer] Сохраняем текущее время при переключении сектора: ${lastSentTimeRef.current.toFixed(3)}`,
+        )
+        // Не сбрасываем lastSentTimeRef.current, чтобы сохранить текущую позицию воспроизведения
+        // Сохраняем текущее время для нового сектора
         if (lastSentTimeRef.current > 0 && lastSentTimeRef.current < 100000) {
+          sectorTimesRef.current[currentSector] = lastSentTimeRef.current
           console.log(
-            `[MediaPlayer] Сброс времени при смене сектора: ${lastSentTimeRef.current} -> 0`,
+            `[MediaPlayer] Сохраняем время для нового сектора ${currentSector}: ${lastSentTimeRef.current.toFixed(3)}`,
           )
-          lastSentTimeRef.current = 0
         }
       }
     }

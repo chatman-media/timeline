@@ -60,10 +60,10 @@ const TimelineTrack = memo(function TimelineTrack({
 
   return (
     <div className="flex w-full" ref={containerRef}>
-      <div className="h-full w-full">
-        <div className="relative h-full w-full">
+      <div className="w-full">
+        <div className="relative w-full">
           <div
-            className="drag--parent w-full flex-1"
+            className="drag--parent w-full"
             style={{
               cursor: "pointer",
               zIndex: 1,

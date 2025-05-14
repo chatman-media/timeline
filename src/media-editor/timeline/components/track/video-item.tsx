@@ -169,12 +169,65 @@ export const VideoItem = memo(function VideoItem({
         )
         setActiveVideo(minimalVideo)
 
-        // Всегда устанавливаем время на начало видео при клике
+        // Проверяем, находится ли текущее время воспроизведения в пределах выбранного видео
         const videoStartTime = video.startTime || 0
-        console.log(`[VideoItem] Устанавливаем время на начало видео: ${videoStartTime.toFixed(2)}`)
+        const videoEndTime = videoStartTime + (video.duration || 0)
 
-        // Устанавливаем время только один раз
-        seek(videoStartTime)
+        // Получаем относительное время для сравнения с границами видео
+        // Для Unix timestamp (большие числа) используем displayTime
+        let effectiveCurrentTime = currentTime
+        if (currentTime > 365 * 24 * 60 * 60) {
+          effectiveCurrentTime = displayTime
+          console.log(
+            `[VideoItem] Используем displayTime (${displayTime.toFixed(2)}) вместо currentTime (${currentTime.toFixed(2)}) для сравнения`,
+          )
+        }
+
+        // Проверяем, находится ли относительное время в пределах видео
+        // Для видео из таймлайна нужно сравнивать с абсолютным временем
+        const isTimeInVideoRange =
+          currentTime > 365 * 24 * 60 * 60
+            ? displayTime >= 0 && displayTime <= (video.duration || 0)
+            : currentTime >= videoStartTime && currentTime <= videoEndTime
+
+        // Проверяем, есть ли параллельные видео с тем же startTime
+        const hasParallelVideos = allParallelVideos.length > 1
+
+        // Если время в пределах видео или есть параллельные видео, сохраняем текущее время
+        if (isTimeInVideoRange || hasParallelVideos) {
+          console.log(
+            `[VideoItem] Сохраняем текущее время воспроизведения: ${effectiveCurrentTime.toFixed(2)} (в пределах видео ${videoStartTime.toFixed(2)}-${videoEndTime.toFixed(2)}, параллельные видео: ${hasParallelVideos})`,
+          )
+
+          // Если есть параллельные видео, но время не в пределах видео, устанавливаем время на начало видео
+          if (hasParallelVideos && !isTimeInVideoRange) {
+            console.log(
+              `[VideoItem] Устанавливаем время на начало видео для параллельного видео: ${videoStartTime.toFixed(2)}`,
+            )
+            seek(videoStartTime)
+
+            // Также обновляем displayTime для синхронизации
+            if (setDisplayTime) {
+              setDisplayTime(0)
+              console.log(`[VideoItem] Сбрасываем displayTime в 0 для параллельного видео`)
+            }
+          }
+          // Иначе не меняем текущее время, так как оно уже находится в пределах видео
+        } else {
+          console.log(
+            `[VideoItem] Устанавливаем время на начало видео: ${videoStartTime.toFixed(2)} (текущее время ${effectiveCurrentTime.toFixed(2)} вне пределов видео ${videoStartTime.toFixed(2)}-${videoEndTime.toFixed(2)})`,
+          )
+          // Устанавливаем время на начало видео
+          seek(videoStartTime)
+
+          // Также обновляем displayTime для синхронизации
+          if (setDisplayTime) {
+            setDisplayTime(0)
+            console.log(
+              `[VideoItem] Сбрасываем displayTime в 0 при установке времени на начало видео`,
+            )
+          }
+        }
 
         // Не устанавливаем displayTime в 0, так как это делает компонент TimelineBarPosition
         // Это позволяет избежать конфликтов и дублирования кода

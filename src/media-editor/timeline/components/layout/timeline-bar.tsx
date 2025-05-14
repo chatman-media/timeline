@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { usePlayerContext } from "@/media-editor/media-player"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
+import { useTimeline } from "@/media-editor/timeline/services"
 
 interface TimelineBarProps {
   startTime: number
@@ -18,7 +19,6 @@ interface SectionTimeProps {
   endTime: number
   currentTime?: number
   displayTime?: number
-  videoDuration?: number // Добавляем длительность видео
 }
 
 // Функция для расчета позиции и обработки перемещения курсора времени
@@ -27,23 +27,22 @@ function useSectionTime({
   endTime,
   currentTime: propCurrentTime,
   displayTime: propDisplayTime,
-  videoDuration: propVideoDuration,
 }: SectionTimeProps) {
   // Получаем значения из контекста
   const playerContext = usePlayerContext()
   const displayTimeContext = useDisplayTime()
+  const timelineContext = useTimeline()
 
   // Используем значения из пропсов, если они переданы, иначе из контекста
   const currentTime = propCurrentTime !== undefined ? propCurrentTime : playerContext.currentTime
   const displayTime =
     propDisplayTime !== undefined ? propDisplayTime : displayTimeContext.displayTime
   const setCurrentTime = playerContext.setCurrentTime
+  const seek = timelineContext.seek
   const isPlaying = playerContext.isPlaying
 
   // Получаем длительность видео из пропсов или из контекста
-  // Используем переданную длительность, длительность из контекста или 20 секунд по умолчанию
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const videoDuration = propVideoDuration || playerContext.duration || 20
+  // Но не используем ее в этой функции
 
   const [position, setPosition] = useState<number>(0)
   const isDraggingRef = useRef(false)
@@ -238,7 +237,7 @@ function useSectionTime({
 
     // Обновляем состояние
     setPosition(clampedPosition)
-  }, [currentTime, displayTime, startTime, endTime])
+  }, [currentTime, displayTime, startTime, endTime, seek, setCurrentTime])
 
   // Обновляем позицию при изменении currentTime или displayTime
   useEffect(() => {
@@ -286,7 +285,7 @@ function useSectionTime({
         cancelAnimationFrame(animationFrameId)
       }
     }
-  }, [currentTime, displayTime, calculatePosition, isPlaying])
+  }, [currentTime, displayTime, calculatePosition, isPlaying, seek, setCurrentTime])
 
   // Обработчик начала перетаскивания
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -336,7 +335,24 @@ function useSectionTime({
           )
         }
 
-        // Сохраняем тот же Unix timestamp
+        // Вычисляем абсолютное время для seek
+        const videoStartTime = playerContext.video?.startTime || 0
+        const absoluteTime = videoStartTime + newDisplayTime
+
+        // Вызываем seek с абсолютным временем
+        seek(absoluteTime)
+        console.log(
+          `[TimelineBar] Вызвана функция seek с абсолютным временем: ${absoluteTime.toFixed(2)} (startTime=${videoStartTime}, displayTime=${newDisplayTime.toFixed(2)})`,
+        )
+
+        // Обновляем currentTime в контексте плеера
+        // Это нужно для обновления элементов управления плеером
+        setCurrentTime(absoluteTime)
+        console.log(
+          `[TimelineBar] Обновлен currentTime в контексте плеера: ${absoluteTime.toFixed(2)}`,
+        )
+
+        // Сохраняем тот же Unix timestamp для совместимости
         newTime = currentTime
       } else {
         // Для обычного времени используем стандартный расчет
@@ -352,10 +368,19 @@ function useSectionTime({
         `[TimelineBar] Перетаскивание: x=${x}, width=${width}, percent=${percent.toFixed(2)}, newTime=${newTime.toFixed(2)}, isUnixTimestamp=${isUnixTimestamp}`,
       )
 
-      // Устанавливаем новое время для обычного времени (не Unix timestamp)
-      if (!isUnixTimestamp) {
+      // Устанавливаем новое время в зависимости от типа времени
+      if (isUnixTimestamp) {
+        // Для Unix timestamp уже вызвали seek выше
+      } else {
+        // Для обычного времени вызываем и setCurrentTime, и seek
         setCurrentTime(newTime)
-        console.log(`[TimelineBar] Установлено новое время: ${newTime.toFixed(2)}`)
+        console.log(
+          `[TimelineBar] Установлено новое время через setCurrentTime: ${newTime.toFixed(2)}`,
+        )
+
+        // Вызываем seek из контекста таймлайна для обновления времени видео
+        seek(newTime)
+        console.log(`[TimelineBar] Вызвана функция seek с временем: ${newTime.toFixed(2)}`)
       }
     }
 
@@ -373,6 +398,10 @@ function useSectionTime({
   return { position, handleMouseDown }
 }
 
+// Объект для хранения времени для каждого сектора
+// Используем глобальную переменную, чтобы сохранять время между рендерами
+const sectorTimes: Record<string, number> = {}
+
 export function TimelineBar({
   sectionStartTime,
   sectionDuration,
@@ -380,8 +409,13 @@ export function TimelineBar({
   isActive = false,
 }: TimelineBarProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { currentTime, duration, video } = usePlayerContext()
+  const { currentTime, video } = usePlayerContext()
   const { displayTime } = useDisplayTime()
+
+  // Получаем дату сектора из видео, если оно есть
+  const sectorDate = video?.startTime
+    ? new Date(video.startTime * 1000).toISOString().split("T")[0]
+    : null
 
   // Добавляем логирование для отладки
   useEffect(() => {
@@ -389,15 +423,61 @@ export function TimelineBar({
       console.log(
         `[TimelineBar] Активное видео: ${video.id}, startTime=${video.startTime}, displayTime=${displayTime}`,
       )
-    }
-  }, [isActive, video, displayTime])
 
-  // Получаем длительность видео из контекста
-  const videoDuration = duration || sectionDuration || 20 // Используем длительность видео, длительность секции или 20 секунд по умолчанию
+      // Если есть дата сектора, сохраняем текущее displayTime для этого сектора
+      if (sectorDate) {
+        sectorTimes[sectorDate] = displayTime
+        console.log(
+          `[TimelineBar] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate}`,
+        )
+      }
+    }
+  }, [isActive, video, displayTime, sectorDate])
+
+  // Длительность видео доступна через duration, но не используется напрямую в этом компоненте
 
   // Проверяем и корректируем параметры секции
   const effectiveSectionStartTime = sectionStartTime || 0
   const effectiveSectionDuration = sectionDuration || 20 // Используем 20 секунд по умолчанию, если длительность не задана
+
+  // Получаем функции из контекста
+  const { setCurrentTime } = usePlayerContext()
+  const { setDisplayTime } = useDisplayTime()
+  const { seek } = useTimeline()
+
+  // Эффект для восстановления времени при активации сектора
+  useEffect(() => {
+    // Восстанавливаем время только при активации сектора
+    if (isActive && sectorDate && sectorTimes[sectorDate] !== undefined) {
+      const savedTime = sectorTimes[sectorDate]
+
+      // Обновляем displayTime
+      if (savedTime !== displayTime) {
+        console.log(
+          `[TimelineBar] Восстановлено время ${savedTime.toFixed(2)} для сектора ${sectorDate}`,
+        )
+
+        // Обновляем displayTime через контекст
+        setDisplayTime(savedTime)
+
+        // Вычисляем абсолютное время для seek
+        if (video?.startTime) {
+          const videoStartTime = video.startTime
+          const absoluteTime = videoStartTime + savedTime
+
+          // Вызываем seek с абсолютным временем
+          seek(absoluteTime)
+
+          // Обновляем currentTime в контексте плеера
+          setCurrentTime(absoluteTime)
+
+          console.log(
+            `[TimelineBar] Установлено абсолютное время ${absoluteTime.toFixed(2)} для сектора ${sectorDate}`,
+          )
+        }
+      }
+    }
+  }, [isActive, sectorDate, displayTime, video, setDisplayTime, seek, setCurrentTime])
 
   // Для Unix timestamp используем относительные значения для startTime и endTime
   // Для обычного времени используем реальные значения startTime и endTime
@@ -412,7 +492,6 @@ export function TimelineBar({
     endTime: normalizedEndTime,
     currentTime: isActive ? currentTime : 0, // Передаем currentTime только для активного сектора
     displayTime: isActive ? displayTime : 0, // Передаем displayTime только для активного сектора
-    videoDuration: videoDuration, // Передаем длительность видео
   })
 
   // Добавляем логирование для отладки позиции
@@ -438,15 +517,31 @@ export function TimelineBar({
     const videoStartTime = video.startTime || 0
     const sectionDuration = normalizedEndTime - normalizedStartTime
 
-    // Используем ту же формулу, что и в VideoItem
-    barPosition = Math.max(
-      0,
-      Math.min(100, ((videoStartTime - normalizedStartTime) / sectionDuration) * 100),
-    )
+    // Проверяем, есть ли displayTime и находится ли оно в пределах видео
+    if (displayTime > 0) {
+      // Используем формулу с учетом displayTime
+      barPosition = Math.max(
+        0,
+        Math.min(
+          100,
+          ((videoStartTime - normalizedStartTime + displayTime) / sectionDuration) * 100,
+        ),
+      )
 
-    console.log(
-      `[TimelineBar] Позиция бара для видео: ${barPosition}%, videoStartTime=${videoStartTime}, normalizedStartTime=${normalizedStartTime}, sectionDuration=${sectionDuration}`,
-    )
+      console.log(
+        `[TimelineBar] Позиция бара для видео с displayTime: ${barPosition}%, videoStartTime=${videoStartTime}, normalizedStartTime=${normalizedStartTime}, displayTime=${displayTime}, sectionDuration=${sectionDuration}`,
+      )
+    } else {
+      // Используем ту же формулу, что и в VideoItem, без учета displayTime
+      barPosition = Math.max(
+        0,
+        Math.min(100, ((videoStartTime - normalizedStartTime) / sectionDuration) * 100),
+      )
+
+      console.log(
+        `[TimelineBar] Позиция бара для видео без displayTime: ${barPosition}%, videoStartTime=${videoStartTime}, normalizedStartTime=${normalizedStartTime}, sectionDuration=${sectionDuration}`,
+      )
+    }
   }
 
   return (
@@ -459,7 +554,7 @@ export function TimelineBar({
         className={`pointer-events-auto absolute flex cursor-ew-resize flex-col items-center hover:opacity-90 ${isActive ? "" : "opacity-50"}`}
         style={{
           left: `${barPosition}%`,
-          top: "-30px",
+          top: "-33px",
           transform: "translateX(-50%)",
           height: `${height}px`,
           zIndex: 400,

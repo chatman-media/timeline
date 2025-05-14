@@ -134,7 +134,7 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="rounded-sm dark:bg-[#1b1a1f] [&>button]:hidden">
+      <DialogContent className="z-[400] rounded-sm dark:bg-[#1b1a1f] [&>button]:hidden">
         <DialogHeader>
           <DialogTitle className="text-md text-center">
             {t("dialogs.userSettings.title")}

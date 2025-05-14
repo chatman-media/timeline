@@ -106,7 +106,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
   useAppHotkeys()
 
   return (
-    <div className="relative flex w-full items-center justify-between border border-b bg-gray-200 px-1 py-[2px] dark:bg-[#1b1a1f]">
+    <div className="relative flex w-full items-center justify-between border border-b bg-gray-200 px-1 py-0 dark:bg-[#1b1a1f]">
       <div className="flex h-6 items-center">
         <BrowserToggleButton />
         <Popover>
@@ -190,7 +190,7 @@ function TopNavBarClient({ onLayoutChange, layoutMode, hasExternalDisplay }: Top
           )}
         </div>
       </div>
-      <div className="flex h-6 items-center space-x-0">
+      <div className="flex h-6 items-center">
         <Popover>
           <PopoverTrigger asChild>
             <Button
