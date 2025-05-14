@@ -584,8 +584,17 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
       // Также останавливаем воспроизведение при остановке записи
       if (isPlaying) {
-        console.log("[handleRecordToggle] Автоматически останавливаем воспроизведение при остановке записи")
+        console.log(
+          "[handleRecordToggle] Автоматически останавливаем воспроизведение при остановке записи",
+        )
         setIsPlaying(false)
+
+        // Устанавливаем первый кадр видео
+        if (video) {
+          const videoStartTime = video.startTime || 0
+          console.log(`[handleRecordToggle] Устанавливаем первый кадр видео: ${videoStartTime}`)
+          setCurrentTime(videoStartTime)
+        }
       }
     } else {
       const trackId = activeTrackId || video?.id || ""

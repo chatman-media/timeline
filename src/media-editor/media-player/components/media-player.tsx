@@ -12,6 +12,7 @@ import {
   VideoTemplateStyle,
 } from "@/media-editor/media-player/services/template-service"
 import { useProject } from "@/media-editor/project-settings/project-provider"
+import { sectorTimes } from "@/media-editor/timeline/hooks/use-section-time"
 import { MediaFile } from "@/types/media"
 
 export function MediaPlayer() {
@@ -504,7 +505,7 @@ export function MediaPlayer() {
 
           // Также сохраняем время для текущего сектора, если он есть
           if (currentSectorRef.current) {
-            sectorTimesRef.current[currentSectorRef.current] = currentVideoTime
+            sectorTimes[currentSectorRef.current] = currentVideoTime
             console.log(
               `[MediaPlayer] Сохраняем время для сектора ${currentSectorRef.current}: ${currentVideoTime.toFixed(3)}`,
             )
@@ -543,12 +544,9 @@ export function MediaPlayer() {
         }
       }
       // Если нет сохраненного времени для видео, проверяем сохраненное время для сектора
-      else if (
-        currentSectorRef.current &&
-        sectorTimesRef.current[currentSectorRef.current] !== undefined
-      ) {
+      else if (currentSectorRef.current && sectorTimes[currentSectorRef.current] !== undefined) {
         // Используем сохраненное время для текущего сектора
-        lastSentTimeRef.current = sectorTimesRef.current[currentSectorRef.current]
+        lastSentTimeRef.current = sectorTimes[currentSectorRef.current]
         console.log(
           `[MediaPlayer] Восстанавливаем сохраненное время для сектора ${currentSectorRef.current}: ${lastSentTimeRef.current.toFixed(3)}`,
         )
@@ -576,7 +574,7 @@ export function MediaPlayer() {
 
         // Также сохраняем время для текущего сектора, если он есть
         if (currentSectorRef.current) {
-          sectorTimesRef.current[currentSectorRef.current] = lastSentTimeRef.current
+          sectorTimes[currentSectorRef.current] = lastSentTimeRef.current
           console.log(
             `[MediaPlayer] Сохраняем время для сектора ${currentSectorRef.current}: ${lastSentTimeRef.current.toFixed(3)}`,
           )
@@ -1426,8 +1424,7 @@ export function MediaPlayer() {
   // Используем ref для отслеживания текущего сектора (дня)
   const currentSectorRef = useRef<string | null>(null)
 
-  // Используем ref для хранения глобального времени для каждого сектора (дня)
-  const sectorTimesRef = useRef<Record<string, number>>({})
+  // Используем глобальный объект sectorTimes из хука useSectionTime
 
   // Эффект для синхронизации времени видео с общим состоянием - оптимизированная версия для плавного воспроизведения
   useEffect(() => {
@@ -1474,7 +1471,7 @@ export function MediaPlayer() {
         lastSentTimeRef.current > 0 &&
         lastSentTimeRef.current < 100000
       ) {
-        sectorTimesRef.current[currentSectorRef.current] = lastSentTimeRef.current
+        sectorTimes[currentSectorRef.current] = lastSentTimeRef.current
         console.log(
           `[MediaPlayer] Сохраняем время для сектора ${currentSectorRef.current}: ${lastSentTimeRef.current.toFixed(3)}`,
         )
@@ -1484,8 +1481,8 @@ export function MediaPlayer() {
       currentSectorRef.current = currentSector
 
       // Восстанавливаем время для нового сектора, если оно есть
-      if (sectorTimesRef.current[currentSector] !== undefined) {
-        lastSentTimeRef.current = sectorTimesRef.current[currentSector]
+      if (sectorTimes[currentSector] !== undefined) {
+        lastSentTimeRef.current = sectorTimes[currentSector]
         console.log(
           `[MediaPlayer] Восстанавливаем время для сектора ${currentSector}: ${lastSentTimeRef.current.toFixed(3)}`,
         )
@@ -1498,7 +1495,7 @@ export function MediaPlayer() {
         // Не сбрасываем lastSentTimeRef.current, чтобы сохранить текущую позицию воспроизведения
         // Сохраняем текущее время для нового сектора
         if (lastSentTimeRef.current > 0 && lastSentTimeRef.current < 100000) {
-          sectorTimesRef.current[currentSector] = lastSentTimeRef.current
+          sectorTimes[currentSector] = lastSentTimeRef.current
           console.log(
             `[MediaPlayer] Сохраняем время для нового сектора ${currentSector}: ${lastSentTimeRef.current.toFixed(3)}`,
           )
@@ -1536,12 +1533,9 @@ export function MediaPlayer() {
         )
       }
       // Если нет сохраненного времени для этого видео, проверяем сохраненное время для сектора
-      else if (
-        currentSectorRef.current &&
-        sectorTimesRef.current[currentSectorRef.current] !== undefined
-      ) {
+      else if (currentSectorRef.current && sectorTimes[currentSectorRef.current] !== undefined) {
         // Используем сохраненное время для текущего сектора
-        localTime = sectorTimesRef.current[currentSectorRef.current]
+        localTime = sectorTimes[currentSectorRef.current]
         console.log(
           `[Sync] Используем сохраненное время для сектора ${currentSectorRef.current}: ${localTime.toFixed(3)}`,
         )
@@ -1638,7 +1632,7 @@ export function MediaPlayer() {
 
       // Сохраняем время для текущего сектора
       if (currentSectorRef.current) {
-        sectorTimesRef.current[currentSectorRef.current] = localTime
+        sectorTimes[currentSectorRef.current] = localTime
         console.log(
           `[Sync] Сохраняем время для сектора ${currentSectorRef.current}: ${localTime.toFixed(3)}`,
         )
@@ -1659,7 +1653,7 @@ export function MediaPlayer() {
 
       // Сохраняем время для текущего сектора
       if (currentSectorRef.current) {
-        sectorTimesRef.current[currentSectorRef.current] = localTime
+        sectorTimes[currentSectorRef.current] = localTime
         console.log(
           `[Sync] Сохраняем время для сектора ${currentSectorRef.current}: ${localTime.toFixed(3)}`,
         )
@@ -1764,7 +1758,7 @@ export function MediaPlayer() {
 
         // Сохраняем время для текущего сектора
         if (currentSectorRef.current) {
-          sectorTimesRef.current[currentSectorRef.current] = currentVideoTime
+          sectorTimes[currentSectorRef.current] = currentVideoTime
           console.log(
             `[PlayPause] Сохраняем время для сектора ${currentSectorRef.current}: ${currentVideoTime.toFixed(3)}`,
           )
@@ -2019,7 +2013,7 @@ export function MediaPlayer() {
 
           // Сохраняем время для текущего сектора
           if (currentSectorRef.current) {
-            sectorTimesRef.current[currentSectorRef.current] = currentVideoTime
+            sectorTimes[currentSectorRef.current] = currentVideoTime
             console.log(
               `[KeyPress] Сохраняем время для сектора ${currentSectorRef.current}: ${currentVideoTime.toFixed(3)}`,
             )
