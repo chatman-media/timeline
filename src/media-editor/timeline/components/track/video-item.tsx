@@ -35,6 +35,10 @@ export const VideoItem = memo(function VideoItem({
     // parallelVideos, // Не используется в этом компоненте
     setPreferredSource,
     currentTime,
+    appliedTemplate,
+    setAppliedTemplate,
+    lastAppliedTemplate,
+    switchVideoSource,
   } = usePlayerContext()
 
   // Получаем displayTime и setDisplayTime из контекста displayTime
@@ -162,6 +166,21 @@ export const VideoItem = memo(function VideoItem({
         // Устанавливаем предпочтительный источник как timeline
         console.log(`[VideoItem] Устанавливаем предпочтительный источник: timeline`)
         setPreferredSource("timeline")
+
+        // Проверяем, есть ли примененный шаблон или последний примененный шаблон
+        if (lastAppliedTemplate) {
+          console.log(
+            `[VideoItem] Найден последний примененный шаблон, применяем его с видео из таймлайна`,
+          )
+
+          // Вызываем switchVideoSource для обновления видео в шаблоне
+          // Это обновит шаблон с видео из таймлайна
+          switchVideoSource(
+            tracks,
+            track.id,
+            allParallelVideos.length > 1 ? allParallelVideos : [minimalVideo],
+          )
+        }
 
         // Устанавливаем активное видео (минимальную версию) для обратной совместимости
         console.log(
@@ -306,6 +325,9 @@ export const VideoItem = memo(function VideoItem({
       currentTime,
       displayTime,
       setDisplayTime, // Добавляем setDisplayTime в зависимости
+      lastAppliedTemplate, // Добавляем lastAppliedTemplate в зависимости
+      switchVideoSource, // Добавляем switchVideoSource в зависимости
+      tracks, // Добавляем tracks в зависимости
     ],
   )
 

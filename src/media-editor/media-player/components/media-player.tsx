@@ -97,54 +97,6 @@ export function MediaPlayer() {
     })
   }, [settings.aspectRatio])
 
-  // Получаем дополнительные функции из контекста плеера
-  const { setPreferredSource } = usePlayerContext()
-
-  // Добавляем обработчик сообщений от VideoPreview и других компонентов
-  useEffect(() => {
-    // Функция-обработчик сообщений
-    const handleMessage = (event: MessageEvent) => {
-      // Обрабатываем сообщение SOURCE_CHANGED
-      if (event.data && event.data.type === "SOURCE_CHANGED") {
-        console.log("[MediaPlayer] Получено сообщение SOURCE_CHANGED:", event.data)
-
-        const { source, videos } = event.data.data
-
-        // Устанавливаем предпочтительный источник
-        if (source === "media") {
-          console.log(
-            "[MediaPlayer] Устанавливаем preferredSource: media из сообщения SOURCE_CHANGED",
-          )
-          setPreferredSource("media")
-
-          // Если есть видео, устанавливаем их как параллельные
-          if (videos && videos.length > 0) {
-            console.log(
-              `[MediaPlayer] Устанавливаем ${videos.length} параллельных видео из сообщения SOURCE_CHANGED`,
-            )
-            setParallelVideos(videos)
-
-            // Устанавливаем первое видео как активное, если нет активного
-            if (!video || !video.id) {
-              console.log(`[MediaPlayer] Устанавливаем первое видео как активное: ${videos[0].id}`)
-              setActiveVideoId(videos[0].id)
-              setVideo(videos[0])
-            }
-          }
-        }
-      }
-      // Удаляем обработку сообщений VIDEO_PREVIEW_CLICK, так как теперь используем только контекст плеера
-    }
-
-    // Добавляем обработчик сообщений
-    window.addEventListener("message", handleMessage)
-
-    // Удаляем обработчик при размонтировании компонента
-    return () => {
-      window.removeEventListener("message", handleMessage)
-    }
-  }, [setPreferredSource])
-
   // Используем ref для отслеживания последнего значения громкости
   const lastVolumeRef = useRef(volume)
   // Используем ref для отслеживания времени последнего обновления громкости
@@ -231,93 +183,9 @@ export function MediaPlayer() {
   // Используем ref для отслеживания предыдущего значения isChangingCamera
   const prevIsChangingCameraRef = useRef(false)
 
-  // Используем ref для предотвращения множественных вызовов
-  const isHandlingPlayPauseRef = useRef(false)
-  const lastPlayPauseTimeRef = useRef(0)
-
   // Рефы для эффекта обработки изменения состояния воспроизведения
   const isHandlingPlayPauseEffectRef = useRef(false)
   const lastPlayPauseEffectTimeRef = useRef(0)
-
-  const handlePlayPause = (e: React.MouseEvent) => {
-    e.stopPropagation()
-
-    // Предотвращаем множественные вызовы в течение короткого промежутка времени
-    const now = Date.now()
-    if (isHandlingPlayPauseRef.current || now - lastPlayPauseTimeRef.current < 300) {
-      console.log("[MediaPlayer] Игнорируем повторный вызов handlePlayPause")
-      return
-    }
-
-    // Устанавливаем флаг, что обрабатываем событие
-    isHandlingPlayPauseRef.current = true
-    lastPlayPauseTimeRef.current = now
-
-    // Если идет процесс переключения камеры, игнорируем нажатие
-    if (isChangingCamera) {
-      console.log("[MediaPlayer] Игнорируем переключение воспроизведения во время смены камеры")
-      isHandlingPlayPauseRef.current = false
-      return
-    }
-
-    // Если используется шаблон с несколькими видео, сохраняем время для всех видео
-    if (appliedTemplate?.template && parallelVideos.length > 0) {
-      if (isPlaying) {
-        // Сохраняем текущее время для всех видео перед паузой
-        parallelVideos.forEach((parallelVideo) => {
-          if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-            const videoElement = videoRefs[parallelVideo.id]
-            const currentVideoTime = videoElement.currentTime
-            videoTimesRef.current[parallelVideo.id] = currentVideoTime
-            console.log(
-              `[MediaPlayer] Сохраняем время для видео ${parallelVideo.id} перед паузой: ${currentVideoTime.toFixed(3)}`,
-            )
-          }
-        })
-      }
-    }
-    // Если нет шаблона, сохраняем время только для активного видео
-    else if (isPlaying && video?.id && videoRefs[video.id]) {
-      const videoElement = videoRefs[video.id]
-      // Сохраняем текущее время в lastSentTimeRef и videoTimesRef
-      const currentVideoTime = videoElement.currentTime
-      lastSentTimeRef.current = currentVideoTime
-      videoTimesRef.current[video.id] = currentVideoTime
-      console.log(`[MediaPlayer] Сохраняем время перед паузой: ${currentVideoTime.toFixed(3)}`)
-    }
-
-    // Переключаем состояние воспроизведения для всех видео
-    const newPlayingState = !isPlaying
-
-    // Если переходим в состояние паузы, останавливаем все видео
-    if (isPlaying) {
-      console.log("[MediaPlayer] Переходим в состояние паузы, останавливаем все видео")
-      // Останавливаем все видео элементы, включая те, которые могут воспроизводиться в фоне
-      pauseAllVideos()
-
-      // Удаляем отправку сообщений, так как теперь используем только контекст плеера
-
-      // Повторно проверяем через небольшую задержку, что все видео остановлены
-      setTimeout(() => {
-        console.log("[MediaPlayer] Повторная проверка остановки всех видео после паузы")
-        pauseAllVideos()
-      }, 100)
-    }
-
-    setIsPlaying(newPlayingState)
-
-    // Удаляем отправку сообщений, так как теперь используем только контекст плеера
-
-    // Сбрасываем флаг обработки через небольшую задержку
-    setTimeout(() => {
-      isHandlingPlayPauseRef.current = false
-
-      // Если перешли в состояние паузы, еще раз проверяем, что все видео остановлены
-      if (!newPlayingState) {
-        pauseAllVideos()
-      }
-    }, 300)
-  }
 
   // Используем ref для отслеживания последнего обработанного видео и его пути
   const lastProcessedVideoRef = useRef<{ id: string | null; path: string | null }>({
@@ -509,19 +377,48 @@ export function MediaPlayer() {
   const allVideoElementsRef = useRef<Set<HTMLVideoElement>>(new Set())
 
   // Функция для остановки всех видео элементов
+  // Используем ref для отслеживания времени последней остановки
+  const lastPauseTimeRef = useRef(0)
+
+  // Оптимизированная функция для остановки всех видео с дебаунсингом
   const pauseAllVideos = useCallback(() => {
+    // Используем дебаунсинг для предотвращения слишком частых вызовов
+    const now = Date.now()
+    const timeSinceLastPause = now - lastPauseTimeRef.current
+
+    // Если прошло менее 200мс с последней остановки, пропускаем
+    if (timeSinceLastPause < 200) {
+      console.log(`[MediaPlayer] Пропускаем остановку всех видео (слишком частый вызов)`)
+      return
+    }
+
+    // Обновляем время последней остановки
+    lastPauseTimeRef.current = now
+
     console.log(
       `[MediaPlayer] Останавливаем все видео элементы (${allVideoElementsRef.current.size})`,
     )
 
+    // Создаем Set для отслеживания уже остановленных видео
+    const pausedVideos = new Set<string>()
+
     // Перебираем все видео элементы в реестре
     allVideoElementsRef.current.forEach((videoElement) => {
       try {
-        // Проверяем, что элемент существует и воспроизводится
-        if (videoElement && !videoElement.paused) {
+        // Проверяем, что элемент существует, находится в DOM и воспроизводится
+        if (videoElement && document.body.contains(videoElement) && !videoElement.paused) {
           // Сохраняем текущее время видео перед паузой
           if (videoElement.id) {
             const videoId = videoElement.id.replace("video-", "")
+
+            // Проверяем, не останавливали ли мы уже это видео
+            if (pausedVideos.has(videoId)) {
+              return
+            }
+
+            // Добавляем ID в Set остановленных видео
+            pausedVideos.add(videoId)
+
             const currentVideoTime = videoElement.currentTime
             videoTimesRef.current[videoId] = currentVideoTime
             console.log(
@@ -537,18 +434,41 @@ export function MediaPlayer() {
       }
     })
 
-    // Дополнительно останавливаем все видео элементы на странице
+    // Дополнительно останавливаем все видео элементы на странице, но только если это необходимо
     // Это гарантирует, что даже если видео не было добавлено в реестр, оно будет остановлено
     try {
       const allVideoElements = document.querySelectorAll("video")
+
+      // Проверяем, есть ли воспроизводящиеся видео
+      let hasPlayingVideos = false
+      allVideoElements.forEach((videoElement) => {
+        if (videoElement && !videoElement.paused) {
+          hasPlayingVideos = true
+        }
+      })
+
+      // Если нет воспроизводящихся видео, пропускаем
+      if (!hasPlayingVideos) {
+        return
+      }
+
       console.log(
         `[MediaPlayer] Дополнительно останавливаем все видео элементы на странице (${allVideoElements.length})`,
       )
 
       allVideoElements.forEach((videoElement) => {
-        if (videoElement && !videoElement.paused) {
-          // Сохраняем ID для логирования
-          const videoId = videoElement.id || "unknown"
+        if (videoElement && document.body.contains(videoElement) && !videoElement.paused) {
+          // Получаем ID видео
+          const videoId = videoElement.id ? videoElement.id.replace("video-", "") : "unknown"
+
+          // Проверяем, не останавливали ли мы уже это видео
+          if (pausedVideos.has(videoId)) {
+            return
+          }
+
+          // Добавляем ID в Set остановленных видео
+          pausedVideos.add(videoId)
+
           console.log(`[MediaPlayer] Останавливаем видео элемент: ${videoId}`)
 
           // Останавливаем видео
@@ -1877,8 +1797,25 @@ export function MediaPlayer() {
         if (isPlaying) {
           console.log(`[PlayPause] Запускаем синхронное воспроизведение всех видео`)
 
+          // Используем дебаунсинг для предотвращения слишком частых вызовов
+          const now = Date.now()
+
+          // Проверяем, прошло ли достаточно времени с последнего запуска
+          // Используем простую переменную вместо useRef, так как мы внутри эффекта
+          const lastPlayAllTimeRef = { current: 0 }
+          const timeSinceLastPlayAll = now - lastPlayAllTimeRef.current
+
+          // Если прошло менее 300мс с последнего запуска, пропускаем
+          if (timeSinceLastPlayAll < 300) {
+            console.log(`[PlayPause] Пропускаем запуск всех видео (слишком частый вызов)`)
+            return
+          }
+
+          // Обновляем время последнего запуска
+          lastPlayAllTimeRef.current = now
+
           // Используем requestAnimationFrame для запуска всех видео в одном кадре отрисовки
-          requestAnimationFrame(async () => {
+          requestAnimationFrame(() => {
             try {
               // Создаем массив уникальных видео для воспроизведения
               const uniqueVideos = parallelVideos.filter(
@@ -1889,90 +1826,60 @@ export function MediaPlayer() {
                 `[PlayPause] Запускаем воспроизведение ${uniqueVideos.length} уникальных видео`,
               )
 
-              // Запускаем воспроизведение всех видео одновременно с использованием requestAnimationFrame
-              // Это позволит браузеру оптимизировать запуск всех видео в одном кадре отрисовки
+              // Создаем Set для отслеживания уже запущенных видео
+              const playedVideos = new Set<string>()
 
-              // Подготавливаем все видео к воспроизведению
-              console.log(
-                `[PlayPause] Подготовка ${uniqueVideos.length} видео к синхронному запуску`,
-              )
-
-              // Предварительно загружаем все видео из кэша, если они там есть
+              // Запускаем воспроизведение всех видео одновременно
               uniqueVideos.forEach((parallelVideo) => {
                 if (parallelVideo.id && videoRefs[parallelVideo.id]) {
                   const videoElement = videoRefs[parallelVideo.id]
 
                   // Проверяем, что элемент существует и находится в DOM
                   if (!videoElement || !document.body.contains(videoElement)) {
-                    console.warn(
-                      `[PlayPause] Видео элемент ${parallelVideo.id} не найден или удален из DOM`,
-                    )
                     return
                   }
 
-                  // Устанавливаем высокий приоритет загрузки для всех видео
+                  // Проверяем, не запускали ли мы уже это видео
+                  if (playedVideos.has(parallelVideo.id)) {
+                    return
+                  }
+
+                  // Добавляем ID в Set запущенных видео
+                  playedVideos.add(parallelVideo.id)
+
+                  // Устанавливаем высокий приоритет загрузки
                   videoElement.preload = "auto"
 
-                  // Проверяем, есть ли видео в кэше
-                  if (window.videoElementCache && window.videoElementCache.has(parallelVideo.id)) {
-                    const cachedVideo = window.videoElementCache.get(parallelVideo.id)
-                    if (cachedVideo && cachedVideo.readyState >= 2 && videoElement.readyState < 2) {
-                      // Копируем свойства из кэшированного видео
-                      videoElement.src = cachedVideo.src
-                      console.log(`[PlayPause] Подготовлено видео ${parallelVideo.id} из кэша`)
-                    }
+                  // Запускаем воспроизведение, если видео на паузе
+                  if (videoElement.paused) {
+                    // Запускаем воспроизведение с небольшой задержкой
+                    setTimeout(() => {
+                      // Повторно проверяем, что видео на паузе и элемент существует
+                      if (
+                        videoElement &&
+                        document.body.contains(videoElement) &&
+                        videoElement.paused &&
+                        isPlaying
+                      ) {
+                        videoElement.play().catch((err) => {
+                          // Игнорируем ошибки AbortError, так как они возникают при нормальной работе
+                          if (err.name !== "AbortError") {
+                            console.error(
+                              `[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`,
+                              err,
+                            )
+                          }
+                        })
+                      }
+                    }, 50)
                   }
                 }
               })
 
-              // Используем requestAnimationFrame для запуска всех видео в одном кадре отрисовки
-              // Это более эффективно, чем использование Promise.all с асинхронными функциями
-              requestAnimationFrame(() => {
-                // Создаем массив для хранения промисов воспроизведения
-                const playPromises: Promise<void>[] = []
-
-                // Запускаем все видео одновременно
-                uniqueVideos.forEach((parallelVideo) => {
-                  if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-                    const videoElement = videoRefs[parallelVideo.id]
-
-                    // Проверяем, что элемент существует и находится в DOM
-                    if (!videoElement || !document.body.contains(videoElement)) {
-                      return
-                    }
-
-                    // Запускаем воспроизведение, если видео на паузе
-                    if (videoElement.paused) {
-                      // Добавляем промис воспроизведения в массив
-                      const playPromise = videoElement.play().catch((err) => {
-                        if (err.name !== "AbortError") {
-                          console.error(
-                            `[PlayPause] Ошибка при воспроизведении видео ${parallelVideo.id}:`,
-                            err,
-                          )
-                        }
-                      })
-
-                      playPromises.push(playPromise)
-                    }
-                  }
-                })
-
-                // Логируем результат после запуска всех видео
-                Promise.all(playPromises).then(() => {
-                  console.log(
-                    `[PlayPause] Все ${playPromises.length} видео запущены синхронно в одном кадре отрисовки`,
-                  )
-                })
-              })
-
-              // Пустой массив промисов, так как мы используем requestAnimationFrame
-              const playPromises: Promise<void>[] = []
-
-              // Не ждем завершения всех промисов, чтобы не блокировать интерфейс
-              // Просто логируем результат
-              await Promise.all(playPromises)
-              console.log(`[PlayPause] Все видео успешно запущены синхронно`)
+              // Логируем результат
+              console.log(
+                `[PlayPause] Запущено воспроизведение ${playedVideos.size} уникальных видео`,
+              )
             } catch (err) {
               console.error(`[PlayPause] Ошибка при синхронном запуске видео:`, err)
             }
@@ -1984,33 +1891,8 @@ export function MediaPlayer() {
           // Используем pauseAllVideos для гарантированной остановки всех видео
           pauseAllVideos()
 
-          // Дополнительно используем requestAnimationFrame для остановки всех видео в одном кадре отрисовки
-          requestAnimationFrame(() => {
-            // Создаем массив уникальных видео для остановки
-            const uniqueVideos = parallelVideos.filter(
-              (v, i, arr) => arr.findIndex((item) => item.id === v.id) === i,
-            )
-
-            console.log(`[PlayPause] Останавливаем ${uniqueVideos.length} уникальных видео`)
-
-            uniqueVideos.forEach((parallelVideo) => {
-              if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-                const parallelVideoElement = videoRefs[parallelVideo.id]
-
-                // Если видео воспроизводится, ставим на паузу
-                if (!parallelVideoElement.paused) {
-                  console.log(`[PlayPause] Ставим на паузу видео ${parallelVideo.id} в шаблоне`)
-                  parallelVideoElement.pause()
-                }
-              }
-            })
-
-            // Повторно проверяем через небольшую задержку, что все видео остановлены
-            setTimeout(() => {
-              console.log(`[PlayPause] Повторная проверка остановки всех видео в шаблоне`)
-              pauseAllVideos()
-            }, 100)
-          })
+          // Не используем дополнительные вызовы для остановки видео,
+          // так как pauseAllVideos уже оптимизирован и содержит все необходимые проверки
         }
       }
       // Если нет шаблона, управляем только активным видео
@@ -3031,7 +2913,6 @@ export function MediaPlayer() {
                                   : "none",
                             }}
                             data-video-id={videoItem.id} // Добавляем атрибут для отладки
-                            onClick={handlePlayPause}
                             playsInline
                             preload="auto"
                             controls={false}

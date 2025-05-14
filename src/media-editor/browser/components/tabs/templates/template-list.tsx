@@ -150,7 +150,16 @@ export function TemplateList() {
   }, [])
 
   // Получаем доступ к контексту плеера для работы с параллельными видео и шаблонами
-  const { parallelVideos, setAppliedTemplate, isPlaying, setIsPlaying } = usePlayerContext()
+  const {
+    parallelVideos,
+    setParallelVideos, // Добавляем setParallelVideos для обновления параллельных видео
+    setAppliedTemplate,
+    isPlaying,
+    setIsPlaying,
+    preferredSource, // Добавляем preferredSource для определения текущего источника
+    setActiveVideoId, // Добавляем setActiveVideoId для установки активного видео
+    setVideo, // Добавляем setVideo для установки активного видео
+  } = usePlayerContext()
 
   // Получаем доступ к контексту медиа для работы с медиафайлами
   const media = useMedia()
@@ -261,136 +270,176 @@ export function TemplateList() {
     const templateName = getTemplateLabels(template.id) || template.id
 
     console.log("Applying template:", template.id, templateName)
+    console.log(`Текущий источник видео: ${preferredSource}`)
 
-    // Собираем все видео со всех треков таймлайна
-    const allTimelineVideos: MediaFile[] = []
-    tracks.forEach((track: Track) => {
-      if (track.videos && track.videos.length > 0) {
-        allTimelineVideos.push(...track.videos)
-      }
-    })
+    // Определяем, какие видео использовать в зависимости от выбранного источника
+    let availableVideos: MediaFile[] = []
+    const sourceType: "timeline" | "media" = preferredSource
 
-    // Проверяем, что у всех видео есть путь
-    const validVideos = allTimelineVideos.filter((video) => {
-      if (!video.path) {
-        console.error(`Видео ${video.id} не имеет пути:`, video)
-        return false
-      }
-      return true
-    })
+    // Если выбран источник "timeline" (таймлайн)
+    if (preferredSource === "timeline") {
+      console.log("Используем видео из таймлайна, так как выбран источник 'timeline'")
 
-    // Сортируем видео по времени начала (startTime)
-    const sortedVideos = [...validVideos].sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
-
-    if (sortedVideos.length > 0) {
-      console.log(
-        `Применяем шаблон "${templateName}" (${template.id}) к ${sortedVideos.length} видео с таймлайна`,
-      )
-
-      // Проверяем, сколько экранов в шаблоне и сколько у нас видео
-      const screensCount = template.screens || 1
-      const availableVideos = sortedVideos.slice(0, screensCount)
-
-      console.log(
-        `Шаблон содержит ${screensCount} экранов, доступно ${availableVideos.length} видео`,
-      )
-
-      // Подробное логирование видео для отладки
-      console.log("Детали видео для шаблона:")
-      availableVideos.forEach((v, i) => {
-        console.log(
-          `Видео ${i + 1}/${availableVideos.length}: id=${v.id}, path=${v.path}, name=${v.name}`,
-        )
+      // Собираем все видео со всех треков таймлайна
+      const allTimelineVideos: MediaFile[] = []
+      tracks.forEach((track: Track) => {
+        if (track.videos && track.videos.length > 0) {
+          allTimelineVideos.push(...track.videos)
+        }
       })
 
-      // Создаем объект AppliedTemplate
-      const appliedTemplate: AppliedTemplate = {
-        template,
-        videos: availableVideos,
-      }
+      // Проверяем, что у всех видео есть путь
+      const validVideos = allTimelineVideos.filter((video) => {
+        if (!video.path) {
+          console.error(`Видео ${video.id} не имеет пути:`, video)
+          return false
+        }
+        return true
+      })
 
-      // Применяем шаблон через контекст плеера
-      setAppliedTemplate(appliedTemplate)
+      // Сортируем видео по времени начала (startTime)
+      const sortedVideos = [...validVideos].sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
 
-      // Запускаем воспроизведение, если оно было активно
-      if (isPlaying) {
-        console.log(`Запускаем воспроизведение видео в шаблоне`)
-        // Небольшая задержка для инициализации шаблона
-        setTimeout(() => {
-          setIsPlaying(true)
-        }, 100)
-      }
-    } else if (parallelVideos.length > 0) {
-      // Если на таймлайне нет видео, но есть параллельные видео, используем их (для обратной совместимости)
-      console.log(`На таймлайне нет видео, используем ${parallelVideos.length} параллельных видео`)
+      if (sortedVideos.length > 0) {
+        console.log(`Найдено ${sortedVideos.length} видео из таймлайна`)
 
-      const screensCount = template.screens || 1
-      const availableVideos = parallelVideos.slice(0, screensCount)
-
-      const appliedTemplate: AppliedTemplate = {
-        template,
-        videos: availableVideos,
-      }
-
-      setAppliedTemplate(appliedTemplate)
-
-      // Запускаем воспроизведение, если оно было активно
-      if (isPlaying) {
-        console.log(`Запускаем воспроизведение видео в шаблоне`)
-        // Небольшая задержка для инициализации шаблона
-        setTimeout(() => {
-          setIsPlaying(true)
-        }, 100)
-      }
-    } else if (media.allMediaFiles.length > 0) {
-      // Если на таймлайне нет видео и нет параллельных видео, но есть медиафайлы, используем их
-      console.log(
-        `На таймлайне нет видео, используем ${media.allMediaFiles.length} медиафайлов из библиотеки`,
-      )
-
-      // Фильтруем только видеофайлы с путями
-      const validMediaFiles = media.allMediaFiles.filter(
-        (file: MediaFile) => file.isVideo && file.path,
-      )
-
-      if (validMediaFiles.length > 0) {
+        // Проверяем, сколько экранов в шаблоне и сколько у нас видео
         const screensCount = template.screens || 1
-        const availableVideos = validMediaFiles.slice(0, screensCount)
+        availableVideos = sortedVideos.slice(0, screensCount).map((video) => ({
+          ...video,
+          source: "timeline", // Явно устанавливаем источник как timeline
+        }))
+      } else {
+        console.log("На таймлайне нет видео, но источник установлен как 'timeline'")
 
-        console.log(
-          `Шаблон содержит ${screensCount} экранов, доступно ${availableVideos.length} видео из библиотеки`,
+        // Если на таймлайне нет видео, но источник установлен как timeline,
+        // создаем пустые видео для шаблона
+        const screensCount = template.screens || 1
+        availableVideos = Array(screensCount)
+          .fill(null)
+          .map((_, i) => ({
+            id: `empty-${i}`,
+            name: `Empty Video ${i + 1}`,
+            path: "",
+            duration: 0,
+            isVideo: true,
+            isAudio: false,
+            isImage: false,
+            source: "timeline", // Явно устанавливаем источник как timeline
+          }))
+      }
+    }
+    // Если выбран источник "media" (браузер)
+    else {
+      console.log("Используем видео из браузера, так как выбран источник 'media'")
+
+      // Получаем все медиафайлы из библиотеки
+      if (media.allMediaFiles && media.allMediaFiles.length > 0) {
+        console.log(`Найдено ${media.allMediaFiles.length} медиафайлов из библиотеки`)
+
+        // Фильтруем только видеофайлы с путями
+        const validMediaFiles = media.allMediaFiles.filter(
+          (file: MediaFile) => file.isVideo && file.path,
         )
 
-        // Подробное логирование видео для отладки
-        console.log("Детали видео из библиотеки для шаблона:")
-        availableVideos.forEach((v: MediaFile, i: number) => {
+        if (validMediaFiles.length > 0) {
+          // Сортируем по имени
+          const sortedMediaFiles = [...validMediaFiles].sort((a, b) => {
+            return (a.name || "").localeCompare(b.name || "")
+          })
+
+          // Берем несколько видео для параллельного отображения (до 4 или сколько нужно для шаблона)
+          const screensCount = template.screens || 1
+          const selectedVideos = sortedMediaFiles.slice(0, Math.max(4, screensCount))
+
+          console.log(`[TemplateClick] Выбрано ${selectedVideos.length} видео из библиотеки`)
+
+          // Обновляем параллельные видео
+          setParallelVideos(selectedVideos)
+
           console.log(
-            `Видео ${i + 1}/${availableVideos.length}: id=${v.id}, path=${v.path}, name=${v.name}`,
+            `[TemplateClick] Установлены параллельные видео: ${selectedVideos.map((v) => v.id).join(", ")}`,
           )
-        })
 
-        const appliedTemplate: AppliedTemplate = {
-          template,
-          videos: availableVideos,
+          // Используем выбранные видео для шаблона
+          availableVideos = selectedVideos.slice(0, screensCount).map((video) => ({
+            ...video,
+            source: "media", // Явно устанавливаем источник как media
+          }))
+        } else {
+          console.log("В библиотеке нет подходящих видеофайлов")
+
+          // Если нет подходящих видеофайлов, создаем пустые видео для шаблона
+          const screensCount = template.screens || 1
+          availableVideos = Array(screensCount)
+            .fill(null)
+            .map((_, i) => ({
+              id: `empty-${i}`,
+              name: `Empty Video ${i + 1}`,
+              path: "",
+              duration: 0,
+              isVideo: true,
+              isAudio: false,
+              isImage: false,
+              source: "media", // Явно устанавливаем источник как media
+            }))
         }
-
-        setAppliedTemplate(appliedTemplate)
-
-        // Запускаем воспроизведение, если оно было активно
-        if (isPlaying) {
-          console.log(`Запускаем воспроизведение видео в шаблоне`)
-          // Небольшая задержка для инициализации шаблона
-          setTimeout(() => {
-            setIsPlaying(true)
-          }, 100)
-        }
-      } else {
-        console.log("В библиотеке нет подходящих видеофайлов для применения шаблона")
       }
-    } else {
+      // Если нет ни параллельных видео, ни медиафайлов, создаем пустые видео
+      else {
+        console.log("Нет доступных видео из браузера")
+
+        // Создаем пустые видео для шаблона
+        const screensCount = template.screens || 1
+        availableVideos = Array(screensCount)
+          .fill(null)
+          .map((_, i) => ({
+            id: `empty-${i}`,
+            name: `Empty Video ${i + 1}`,
+            path: "",
+            duration: 0,
+            isVideo: true,
+            isAudio: false,
+            isImage: false,
+            source: "media", // Явно устанавливаем источник как media
+          }))
+      }
+    }
+
+    // Подробное логирование видео для отладки
+    console.log(
+      `Шаблон содержит ${template.screens || 1} экранов, доступно ${availableVideos.length} видео из источника ${sourceType}`,
+    )
+    console.log("Детали видео для шаблона:")
+    availableVideos.forEach((v, i) => {
       console.log(
-        "Нет видео на таймлайне, нет параллельных видео и нет медиафайлов в библиотеке для применения шаблона",
+        `Видео ${i + 1}/${availableVideos.length}: id=${v.id}, path=${v.path}, name=${v.name}, source=${sourceType}`,
       )
+    })
+
+    // Создаем объект AppliedTemplate
+    const appliedTemplate: AppliedTemplate = {
+      template,
+      videos: availableVideos,
+    }
+
+    // Применяем шаблон через контекст плеера
+    setAppliedTemplate(appliedTemplate)
+
+    // Если есть видео в шаблоне, устанавливаем первое как активное
+    if (availableVideos.length > 0 && availableVideos[0].id) {
+      setActiveVideoId(availableVideos[0].id)
+      setVideo(availableVideos[0])
+      console.log(`Установлено активное видео: ${availableVideos[0].id}`)
+    }
+
+    // Запускаем воспроизведение, если оно было активно
+    if (isPlaying) {
+      console.log(`Запускаем воспроизведение видео в шаблоне`)
+      // Небольшая задержка для инициализации шаблона
+      setTimeout(() => {
+        setIsPlaying(true)
+      }, 100)
     }
   }
 

@@ -55,31 +55,44 @@ export function updateTemplateWithTimelineVideos(
 ): AppliedTemplate | null {
   if (!appliedTemplate) return null
 
-  // Создаем копию шаблона
-  const templateCopy = { ...appliedTemplate }
+  // Создаем глубокую копию шаблона
+  const templateCopy = JSON.parse(JSON.stringify(appliedTemplate))
 
   // Заполняем шаблон видео из таймлайна
   const requiredVideos = appliedTemplate.template?.screens || 1
 
+  // Фильтруем видео из таймлайна, чтобы убедиться, что у них есть ID и путь
+  const validTimelineVideos = timelineVideos.filter((video) => video.id && video.path)
+
+  console.log(`[SourceControl] Найдено ${validTimelineVideos.length} валидных видео из таймлайна`)
+
   // Если видео из таймлайна достаточно для шаблона
-  if (timelineVideos.length >= requiredVideos) {
-    templateCopy.videos = timelineVideos.slice(0, requiredVideos)
+  if (validTimelineVideos.length >= requiredVideos) {
+    // Создаем копии видео и устанавливаем source = "timeline"
+    templateCopy.videos = validTimelineVideos.slice(0, requiredVideos).map((video) => ({
+      ...video,
+      source: "timeline", // Явно устанавливаем источник как timeline
+    }))
+
     console.log(
       `[SourceControl] Добавлено ${templateCopy.videos.length} видео из таймлайна в шаблон`,
     )
   }
   // Если видео из таймлайна недостаточно для шаблона
   else {
-    // Добавляем все доступные видео
-    templateCopy.videos = [...timelineVideos]
+    // Добавляем все доступные видео с установленным source = "timeline"
+    templateCopy.videos = validTimelineVideos.map((video) => ({
+      ...video,
+      source: "timeline", // Явно устанавливаем источник как timeline
+    }))
 
     // Добавляем пустые видео для оставшихся слотов
-    for (let i = timelineVideos.length; i < requiredVideos; i++) {
+    for (let i = validTimelineVideos.length; i < requiredVideos; i++) {
       templateCopy.videos.push(createEmptyVideo(i))
     }
 
     console.log(
-      `[SourceControl] Добавлено ${timelineVideos.length} видео из таймлайна и ${requiredVideos - timelineVideos.length} пустых видео в шаблон`,
+      `[SourceControl] Добавлено ${validTimelineVideos.length} видео из таймлайна и ${requiredVideos - validTimelineVideos.length} пустых видео в шаблон`,
     )
   }
 

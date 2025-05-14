@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
 import { getFrameTime } from "@/lib/video-utils"
+import { useMedia } from "@/media-editor/browser"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
 import { VolumeSlider } from "@/media-editor/media-player/components/volume-slider"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
@@ -47,6 +48,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   const { tracks, activeTrackId } = useTimeline()
   const { screenshotsPath } = useUserSettings()
   const { displayTime, setDisplayTime } = useDisplayTime()
+  const media = useMedia()
 
   // Состояние для отслеживания источника видео больше не нужно, так как используем машину состояний
 
@@ -64,6 +66,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     isChangingCamera,
     setIsChangingCamera,
     parallelVideos,
+    setParallelVideos,
     videoRefs,
     appliedTemplate,
     setAppliedTemplate,
@@ -258,6 +261,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     console.log("[handleResetTemplate] Вызвана функция сброса шаблона")
     console.log("[handleResetTemplate] Текущий шаблон:", appliedTemplate)
 
+    // Устанавливаем флаг, что идет переключение камеры
+    setIsChangingCamera(true)
+
     if (appliedTemplate) {
       console.log("[handleResetTemplate] Сбрасываем шаблон:", appliedTemplate.template?.id)
 
@@ -271,17 +277,90 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
         templateToSave.template?.id,
       )
 
+      // Сохраняем текущее время воспроизведения
+      let currentVideoTime = 0
+      if (video?.id && videoRefs[video.id]) {
+        currentVideoTime = videoRefs[video.id].currentTime
+        console.log(`[handleResetTemplate] Текущее время видео: ${currentVideoTime.toFixed(3)}`)
+      }
+
+      // Определяем, какое видео будет активным после сброса шаблона
+      let newActiveVideo: MediaFile | undefined
+
+      // Если в шаблоне есть видео, используем первое из них
+      if (templateToSave.videos && templateToSave.videos.length > 0) {
+        newActiveVideo = templateToSave.videos[0]
+        if (newActiveVideo && newActiveVideo.id) {
+          console.log(
+            `[handleResetTemplate] Используем первое видео из шаблона: ${newActiveVideo.id}`,
+          )
+        }
+      }
+      // Если нет видео в шаблоне, но есть параллельные видео, используем первое из них
+      else if (parallelVideos.length > 0) {
+        newActiveVideo = parallelVideos[0]
+        if (newActiveVideo && newActiveVideo.id) {
+          console.log(
+            `[handleResetTemplate] Используем первое параллельное видео: ${newActiveVideo.id}`,
+          )
+        }
+      }
+
       // Принудительно устанавливаем null для сброса шаблона
       setAppliedTemplate(null)
 
-      // Добавляем проверку через setTimeout
+      // Если нашли видео для активации, устанавливаем его
+      if (newActiveVideo && newActiveVideo.id) {
+        // Устанавливаем новое активное видео
+        setActiveVideoId(newActiveVideo.id)
+        setVideo(newActiveVideo)
+        console.log(`[handleResetTemplate] Установлено новое активное видео: ${newActiveVideo.id}`)
+
+        // Устанавливаем время воспроизведения для нового видео
+        setTimeout(() => {
+          if (newActiveVideo.id && videoRefs[newActiveVideo.id]) {
+            videoRefs[newActiveVideo.id].currentTime = currentVideoTime
+            console.log(
+              `[handleResetTemplate] Установлено время ${currentVideoTime.toFixed(3)} для видео ${newActiveVideo.id}`,
+            )
+
+            // Если видео должно воспроизводиться, запускаем его
+            if (isPlaying) {
+              console.log(
+                `[handleResetTemplate] Запускаем воспроизведение видео ${newActiveVideo.id}`,
+              )
+              videoRefs[newActiveVideo.id].play().catch((error) => {
+                console.error(
+                  `[handleResetTemplate] Ошибка воспроизведения видео ${newActiveVideo.id}:`,
+                  error,
+                )
+              })
+            }
+          }
+        }, 100)
+      }
+
+      // Сбрасываем флаг переключения камеры через небольшую задержку
       setTimeout(() => {
-        console.log("[handleResetTemplate] Проверка после сброса:", appliedTemplate)
-      }, 100)
+        setIsChangingCamera(false)
+        console.log("[handleResetTemplate] Сброс шаблона завершен")
+      }, 300)
     } else {
       console.log("[handleResetTemplate] Нет активного шаблона для сброса")
+      setIsChangingCamera(false)
     }
-  }, [appliedTemplate, setAppliedTemplate, setLastAppliedTemplate])
+  }, [
+    appliedTemplate,
+    setAppliedTemplate,
+    setLastAppliedTemplate,
+    video,
+    videoRefs,
+    parallelVideos,
+    setActiveVideoId,
+    setVideo,
+    setIsChangingCamera,
+    isPlaying,
+  ])
 
   // Улучшенная функция для переключения между камерами
   const handleSwitchCamera = useCallback(() => {
@@ -428,14 +507,56 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     const newSource = preferredSource === "media" ? "timeline" : "media"
     console.log(`[handleToggleSource] Переключаем источник: ${preferredSource} -> ${newSource}`)
 
+    // Устанавливаем флаг, что идет переключение камеры
+    setIsChangingCamera(true)
+
     // Устанавливаем новый предпочтительный источник в контексте плеера
     setPreferredSource(newSource)
 
-    // Вызываем метод switchVideoSource для обновления видео в шаблоне
-    switchVideoSource(tracks, activeTrackId, parallelVideos)
+    // Если переключаемся на таймлайн
+    if (newSource === "timeline") {
+      console.log(`[handleToggleSource] Переключаемся на таймлайн, проверяем наличие шаблона`)
+
+      // Если есть примененный шаблон, сохраняем его перед переключением
+      if (appliedTemplate) {
+        console.log(
+          `[handleToggleSource] Есть примененный шаблон, сохраняем его перед переключением`,
+        )
+
+        // Сохраняем текущий шаблон как последний примененный
+        setLastAppliedTemplate(appliedTemplate)
+      }
+
+      // Вызываем метод switchVideoSource для обновления видео в шаблоне
+      // Передаем треки, активный трек и параллельные видео
+      switchVideoSource(tracks, activeTrackId, parallelVideos)
+    }
+    // Если переключаемся на браузер
+    else {
+      console.log(`[handleToggleSource] Переключаемся на браузер, проверяем наличие шаблона`)
+
+      // Если есть примененный шаблон, сохраняем его перед переключением
+      if (appliedTemplate) {
+        console.log(
+          `[handleToggleSource] Есть примененный шаблон, сохраняем его перед переключением`,
+        )
+
+        // Сохраняем текущий шаблон как последний примененный
+        setLastAppliedTemplate(appliedTemplate)
+      }
+
+      // Вызываем метод switchVideoSource для обновления видео в шаблоне
+      // Передаем треки, активный трек и параллельные видео
+      switchVideoSource(tracks, activeTrackId, parallelVideos)
+    }
 
     // Сбрасываем флаг autoSelectVideoExecuted, чтобы разрешить автоматический выбор видео
     autoSelectVideoExecutedRef.current = false
+
+    // Сбрасываем флаг переключения камеры через небольшую задержку
+    setTimeout(() => {
+      setIsChangingCamera(false)
+    }, 300)
   }, [
     preferredSource,
     setPreferredSource,
@@ -444,6 +565,9 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     activeTrackId,
     parallelVideos,
     isChangingCamera,
+    setIsChangingCamera,
+    appliedTemplate,
+    setLastAppliedTemplate,
   ])
 
   // Улучшенный handleRecordToggle для корректной работы с параллельными видео
@@ -627,6 +751,87 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   // Эффект для автоматического выбора активного видео, если текущее активное видео не определено
   // Используем ref для отслеживания, был ли уже выполнен эффект
   const autoSelectVideoExecutedRef = useRef(false)
+
+  // Эффект для инициализации источника видео при загрузке страницы
+  useEffect(() => {
+    // Если эффект уже был выполнен, ничего не делаем
+    if (autoSelectVideoExecutedRef.current) return
+
+    // Проверяем, есть ли видео на таймлайне
+    const hasTimelineVideos = tracks.some((track) => track.videos && track.videos.length > 0)
+
+    // Если на таймлайне нет видео, устанавливаем источник в режим "браузер"
+    if (!hasTimelineVideos) {
+      console.log(`[InitSource] На таймлайне нет видео, устанавливаем источник в режим "браузер"`)
+
+      // Устанавливаем источник в режим "браузер"
+      setPreferredSource("media")
+
+      // Получаем все медиафайлы из библиотеки
+      if (media.allMediaFiles && media.allMediaFiles.length > 0) {
+        // Фильтруем только видеофайлы с путями
+        const validMediaFiles = media.allMediaFiles.filter((file) => file.isVideo && file.path)
+
+        if (validMediaFiles.length > 0) {
+          // Сортируем по имени (в будущем можно добавить сортировку по дате добавления)
+          const sortedMediaFiles = [...validMediaFiles].sort((a, b) => {
+            // Сортируем по имени
+            return (a.name || "").localeCompare(b.name || "")
+          })
+
+          // Берем несколько видео для параллельного отображения (до 4)
+          const selectedVideos = sortedMediaFiles.slice(0, 4)
+
+          console.log(`[InitSource] Выбрано ${selectedVideos.length} видео из браузера`)
+
+          // Устанавливаем первое видео как активное
+          setVideo(selectedVideos[0])
+          setActiveVideoId(selectedVideos[0].id)
+
+          // Обновляем параллельные видео
+          setParallelVideos(selectedVideos)
+
+          console.log(
+            `[InitSource] Установлены параллельные видео: ${selectedVideos.map((v) => v.id).join(", ")}`,
+          )
+
+          // Если есть примененный шаблон, обновляем его с новыми видео
+          if (appliedTemplate) {
+            console.log(`[InitSource] Обновляем примененный шаблон с новыми видео`)
+
+            // Создаем копию шаблона
+            const templateCopy = JSON.parse(JSON.stringify(appliedTemplate))
+
+            // Заполняем шаблон видео из браузера
+            const screensCount = templateCopy.template?.screens || 1
+            templateCopy.videos = selectedVideos.slice(0, screensCount).map((video) => ({
+              ...video,
+              source: "media", // Явно устанавливаем источник как media
+            }))
+
+            // Применяем обновленный шаблон
+            setAppliedTemplate(templateCopy)
+
+            console.log(
+              `[InitSource] Шаблон обновлен с ${templateCopy.videos.length} видео из браузера`,
+            )
+          }
+        }
+      }
+    }
+
+    // Помечаем, что эффект был выполнен
+    autoSelectVideoExecutedRef.current = true
+  }, [
+    tracks,
+    setPreferredSource,
+    media.allMediaFiles,
+    setVideo,
+    setActiveVideoId,
+    setParallelVideos,
+    appliedTemplate,
+    setAppliedTemplate,
+  ])
 
   useEffect(() => {
     // Если уже есть активное видео или эффект уже был выполнен, ничего не делаем

@@ -17,7 +17,7 @@ interface UseVideoSelectionProps {
  */
 export function useVideoSelection({ video, isActive, index }: UseVideoSelectionProps) {
   // Получаем необходимые функции из контекста плеера
-  const { setVideo, setActiveVideoId, videoRefs, setIsSeeking } = usePlayerContext()
+  const { setVideo, setActiveVideoId, videoRefs } = usePlayerContext()
 
   // Пытаемся получить setLocalDisplayTime из контекста плеера
   // Это может быть undefined, поэтому обрабатываем этот случай позже
@@ -38,13 +38,14 @@ export function useVideoSelection({ video, isActive, index }: UseVideoSelectionP
       return
     }
 
-    // Устанавливаем флаг seeking перед изменением активного видео
-    setIsSeeking(true)
+    // Устанавливаем новое активное видео без установки флага seeking
+    // Это предотвратит лишние перерисовки
+    console.log(`[VideoSelection] Устанавливаем новое активное видео: ${video.id}`)
 
-    // Устанавливаем новое активное видео
+    // Используем batch-обновление для минимизации перерисовок
+    // Сначала устанавливаем ID, затем видео
     setActiveVideoId(video.id)
     setVideo(video)
-    console.log(`[VideoSelection] Установлено новое активное видео: ${video.id}`)
 
     try {
       // При переключении видео в шаблоне не меняем время воспроизведения
@@ -70,22 +71,8 @@ export function useVideoSelection({ video, isActive, index }: UseVideoSelectionP
       }
     } catch (error) {
       console.error("[VideoSelection] Ошибка при переключении видео:", error)
-    } finally {
-      // Сбрасываем флаг seeking после небольшой задержки
-      setTimeout(() => {
-        setIsSeeking(false)
-      }, 50)
     }
-  }, [
-    video,
-    isActive,
-    index,
-    setActiveVideoId,
-    setVideo,
-    videoRefs,
-    setIsSeeking,
-    setLocalDisplayTime,
-  ])
+  }, [video, isActive, index, setActiveVideoId, setVideo, videoRefs, setLocalDisplayTime])
 
   return {
     handleVideoClick,
