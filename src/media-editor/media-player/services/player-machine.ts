@@ -30,6 +30,9 @@ export interface PlayerContextType {
   videoRefs: Record<string, HTMLVideoElement>
   videos: Record<string, TimelineVideo>
 
+  // Состояние готовности видео (0-4, где 4 - полностью готово)
+  videoReadyState: Record<string, number>
+
   // Поля для поддержки параллельных видео
   parallelVideos: MediaFile[] // Список всех параллельных видео, которые должны воспроизводиться одновременно
   activeVideoId: string | null // ID активного видео, которое отображается
@@ -76,6 +79,7 @@ const initialContext: PlayerContextType = {
   isResizableMode: true, // По умолчанию включен режим resizable
   videoRefs: {},
   videos: {},
+  videoReadyState: {}, // Состояние готовности видео
   duration: 0,
   volume: getSavedVolume(),
   parallelVideos: [],
@@ -188,6 +192,11 @@ type SetPreviewClickBehaviorEvent = {
   previewClickBehavior: "preview" | "player"
 }
 
+type SetVideoReadyStateEvent = {
+  type: "setVideoReadyState"
+  videoReadyState: Record<string, number>
+}
+
 export type PlayerEvent =
   | SetCurrentTimeEvent
   | SetIsPlayingEvent
@@ -208,6 +217,7 @@ export type PlayerEvent =
   | SetPreferredSourceEvent
   | SetLastAppliedTemplateEvent
   | SetPreviewClickBehaviorEvent
+  | SetVideoReadyStateEvent
   | SwitchVideoSourceEvent
 
 // Функция для сохранения состояния плеера в IndexedDB - временно отключена
@@ -330,6 +340,14 @@ export const playerMachine = createMachine({
         },
         setPreferredSource: {
           actions: assign({ preferredSource: ({ event }) => event.preferredSource }),
+        },
+        setVideoReadyState: {
+          actions: assign({
+            videoReadyState: ({ event, context }) => {
+              // Объединяем существующее состояние с новым
+              return { ...context.videoReadyState, ...event.videoReadyState }
+            },
+          }),
         },
         switchVideoSource: {
           actions: [

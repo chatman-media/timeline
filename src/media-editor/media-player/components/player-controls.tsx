@@ -887,8 +887,6 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     return Math.abs(currentTime - endTimeForLastFrame) < frameTime
   }, [currentTime, endTimeForLastFrame, frameTime])
 
-  // Функция handlePlayPause перенесена в хук usePlaybackControl
-
   return (
     <div className="flex w-full flex-col">
       {/* Прогресс-бар и время */}
