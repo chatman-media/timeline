@@ -61,6 +61,13 @@ interface PlayerContextType {
   // Методы для управления предпочтительным источником видео
   setPreferredSource: (source: "media" | "timeline") => void
 
+  // Метод для переключения источника видео с обновлением шаблона
+  switchVideoSource: (
+    tracks: any[],
+    activeTrackId: string | null,
+    parallelVideos: MediaFile[],
+  ) => void
+
   // Методы для управления последним примененным шаблоном
   setLastAppliedTemplate: (template: AppliedTemplate | null) => void
 }
@@ -136,6 +143,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       send({ type: "setIsResizableMode", isResizableMode }),
     setPreferredSource: (preferredSource: "media" | "timeline") =>
       send({ type: "setPreferredSource", preferredSource }),
+    switchVideoSource: (tracks: any[], activeTrackId: string | null, parallelVideos: MediaFile[]) =>
+      send({ type: "switchVideoSource", tracks, activeTrackId, parallelVideos }),
     setLastAppliedTemplate: (lastAppliedTemplate: AppliedTemplate | null) =>
       send({ type: "setLastAppliedTemplate", lastAppliedTemplate }),
   }

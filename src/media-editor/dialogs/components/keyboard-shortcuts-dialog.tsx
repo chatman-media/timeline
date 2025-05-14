@@ -259,7 +259,7 @@ export function KeyboardShortcutsDialog({ open, onOpenChange }: KeyboardShortcut
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background z-[400] h-[max(600px,min(50vh,800px))] max-w-4xl gap-0 overflow-hidden p-0 dark:bg-[#1b1a1f]">
+      <DialogContent className="bg-background h-[max(600px,min(50vh,800px))] max-w-4xl gap-0 overflow-hidden p-0 dark:bg-[#1b1a1f]">
         <DialogHeader className="border-b p-4">
           <DialogTitle className="text-center text-xl">
             {t("dialogs.keyboardShortcuts.title", "Быстрые клавиши")}

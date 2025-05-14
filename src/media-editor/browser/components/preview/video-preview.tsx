@@ -4,6 +4,10 @@ import { memo, useCallback, useEffect, useRef, useState } from "react"
 import { cn, formatDuration, formatResolution } from "@/lib/utils"
 import { calculateAdaptiveWidth, calculateWidth, parseRotation } from "@/lib/video-utils"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
+import {
+  stopAllVideos,
+  stopAllVideosExceptActive,
+} from "@/media-editor/browser/services/video-control"
 import { usePlayerContext } from "@/media-editor/media-player"
 import { FfprobeStream } from "@/types/ffprobe"
 import { MediaFile } from "@/types/media"
@@ -99,10 +103,9 @@ export const VideoPreview = memo(function VideoPreview({
 
   const handleMouseLeave = useCallback(() => {
     setHoverTime(null)
-    // При уходе мыши останавливаем воспроизведение
-    const firstStreamKey = Object.keys(videoRefs.current)[0]
-    if (videoRefs.current[firstStreamKey] && isPlaying) {
-      videoRefs.current[firstStreamKey]?.pause()
+    // При уходе мыши останавливаем воспроизведение всех видео, кроме видео в шаблоне
+    if (isPlaying) {
+      stopAllVideos(true)
       setIsPlaying(false)
     }
   }, [isPlaying])
@@ -234,10 +237,12 @@ export const VideoPreview = memo(function VideoPreview({
           `[VideoPreview] Мгновенно запускаем воспроизведение в превью для видео ${file.id}`,
         )
       } else {
-        // Если нужно остановить, останавливаем видео в превью
-        videoRef.pause()
+        // Если нужно остановить, останавливаем все видео, кроме видео в шаблоне
+        stopAllVideos(true)
         setIsPlaying(false)
-        console.log(`[VideoPreview] Останавливаем воспроизведение в превью для видео ${file.id}`)
+        console.log(
+          `[VideoPreview] Останавливаем воспроизведение всех видео, кроме видео в шаблоне`,
+        )
       }
 
       // Проверяем, что контекст плеера доступен
@@ -282,6 +287,9 @@ export const VideoPreview = memo(function VideoPreview({
           "[VideoPreview] Применяем пакетные обновления:",
           Object.keys(updates).join(", "),
         )
+
+        // Останавливаем все видео, кроме активного
+        stopAllVideosExceptActive(file.id)
 
         // Устанавливаем предпочтительный источник в "media" (браузер)
         playerContext.setPreferredSource("media")
@@ -421,6 +429,7 @@ export const VideoPreview = memo(function VideoPreview({
                   tabIndex={0}
                   playsInline
                   muted={false} // Включаем звук в превью по запросу пользователя
+                  data-video-id={file.id} // Добавляем атрибут с ID видео для возможности остановки всех видео, кроме активного
                   className={cn(
                     "absolute inset-0 h-full w-full focus:outline-none",
                     isAdded ? "opacity-50" : "",

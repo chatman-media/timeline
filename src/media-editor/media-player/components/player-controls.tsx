@@ -9,7 +9,6 @@ import {
   Minimize2,
   Pause,
   Play,
-  Settings,
   StepBack,
   StepForward,
   TvMinimalPlay,
@@ -23,13 +22,15 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
 import { cn } from "@/lib/utils"
+import { getFrameTime } from "@/lib/video-utils"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
-import {
-  findTemplateContainer,
-  takeScreenshot,
-} from "@/media-editor/media-player/components/take-screenshot"
 import { VolumeSlider } from "@/media-editor/media-player/components/volume-slider"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
+import { useFullscreenChange } from "@/media-editor/media-player/hooks/use-fullscreen-change"
+import { usePlaybackControl } from "@/media-editor/media-player/hooks/use-playback-control"
+import { useScreenshot } from "@/media-editor/media-player/hooks/use-screenshot"
+import { useTimeControl } from "@/media-editor/media-player/hooks/use-time-control"
+import { useVolumeControl } from "@/media-editor/media-player/hooks/use-volume-control"
 import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile } from "@/types/media"
@@ -47,10 +48,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
   const { screenshotsPath } = useUserSettings()
   const { displayTime, setDisplayTime } = useDisplayTime()
 
-  // Состояние для отслеживания источника видео (медиа машина или таймлайн)
-  const [localVideoSources, setLocalVideoSources] = useState<Record<string, "media" | "timeline">>(
-    {},
-  )
+  // Состояние для отслеживания источника видео больше не нужно, так как используем машину состояний
 
   const {
     isPlaying,
@@ -69,6 +67,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     videoRefs,
     appliedTemplate,
     setAppliedTemplate,
+    activeVideoId,
     setActiveVideoId,
     isResizableMode,
     setIsResizableMode,
@@ -76,14 +75,16 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     setPreferredSource,
     lastAppliedTemplate,
     setLastAppliedTemplate,
+    switchVideoSource,
   } = usePlayerContext()
 
   // Используем состояние для хранения текущего времени воспроизведения
   const [localDisplayTime, setLocalDisplayTime] = useState(0)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const lastSaveTime = useRef(0)
-  const SAVE_INTERVAL = 5000 // Сохраняем каждые 5 секунд
+  const SAVE_INTERVAL = 25000 // Сохраняем каждые 25 секунд
+
+  // Используем хук для отслеживания полноэкранного режима
+  const { isFullscreen } = useFullscreenChange()
 
   // Удаляем неиспользуемый ref
 
@@ -99,377 +100,14 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     return () => clearInterval(interval)
   }, [video])
 
-  // Добавляем слушатель события изменения полноэкранного режима
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isCurrentlyFullscreen =
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement
-
-      setIsFullscreen(!!isCurrentlyFullscreen)
-      console.log(
-        `[FullscreenChange] Полноэкранный режим ${isCurrentlyFullscreen ? "включен" : "выключен"}`,
-      )
-    }
-
-    // Добавляем слушатели для разных браузеров
-    document.addEventListener("fullscreenchange", handleFullscreenChange)
-    document.addEventListener("webkitfullscreenchange", handleFullscreenChange)
-    document.addEventListener("mozfullscreenchange", handleFullscreenChange)
-    document.addEventListener("MSFullscreenChange", handleFullscreenChange)
-
-    return () => {
-      // Удаляем слушатели при размонтировании
-      document.removeEventListener("fullscreenchange", handleFullscreenChange)
-      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange)
-      document.removeEventListener("mozfullscreenchange", handleFullscreenChange)
-      document.removeEventListener("MSFullscreenChange", handleFullscreenChange)
-    }
-  }, [])
-
-  // Переписываем handleSkipBackward: используем currentTime, вызываем setCurrentTime
-  const handleSkipBackward = useCallback(() => {
-    if (!video) return
-
-    // Определяем размер шага (один кадр)
-    let frameTime = 1 / 25 // По умолчанию 25 кадров в секунду
-
-    // Определяем минимальное время (начало видео или трека)
-    let minTime = video.startTime || 0
-    let currentVideoOrTrack = video
-
-    // Пытаемся получить точное значение FPS из метаданных видео
-    if (video?.probeData?.streams?.[0]?.r_frame_rate) {
-      const fpsStr = video.probeData.streams[0].r_frame_rate
-      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
-      try {
-        const fps = fpsMatch
-          ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
-          : parseFloat(fpsStr)
-
-        if (!isNaN(fps) && fps > 0) {
-          frameTime = 1 / fps
-          console.log(
-            `[handleSkipBackward] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`,
-          )
-        }
-      } catch (e) {
-        console.error("[handleSkipBackward] Ошибка при вычислении fps:", e)
-      }
-    }
-
-    // Если есть активный трек, используем его для определения минимального времени
-    if (activeTrackId) {
-      const activeTrack = tracks.find((track) => track.id === activeTrackId)
-      if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
-        // Находим видео в треке, которое содержит текущее время
-        const currentTrackVideo = activeTrack.videos.find((v) => {
-          const videoStart = v.startTime || 0
-          const videoEnd = videoStart + (v.duration || 0)
-          return currentTime >= videoStart && currentTime <= videoEnd
-        })
-
-        if (currentTrackVideo) {
-          currentVideoOrTrack = currentTrackVideo
-          const videoStart = currentTrackVideo.startTime || 0
-
-          // Проверяем, есть ли предыдущее видео в треке
-          const currentIndex = activeTrack.videos.indexOf(currentTrackVideo)
-          if (currentIndex > 0 && Math.abs(currentTime - videoStart) < 0.01) {
-            // Если мы в начале текущего видео и есть предыдущее, используем конец предыдущего
-            const prevVideo = activeTrack.videos[currentIndex - 1]
-            const prevVideoEnd = (prevVideo.startTime || 0) + (prevVideo.duration || 0)
-            minTime = prevVideoEnd - frameTime // Устанавливаем на последний кадр предыдущего видео
-            console.log(
-              `[handleSkipBackward] Переход к предыдущему видео в треке: ${prevVideo.id}, endTime: ${minTime}`,
-            )
-          } else {
-            // Иначе используем начало текущего видео
-            minTime = videoStart
-            console.log(
-              `[handleSkipBackward] Используем видео из трека: ${currentTrackVideo.id}, minTime: ${minTime}`,
-            )
-          }
-        } else {
-          // Если не нашли видео, содержащее текущее время, используем первое видео в треке
-          const firstVideo = activeTrack.videos[0]
-          minTime = firstVideo.startTime || 0
-          console.log(
-            `[handleSkipBackward] Используем первое видео из трека: ${firstVideo.id}, minTime: ${minTime}`,
-          )
-        }
-      }
-    }
-
-    // Проверяем, не находимся ли мы уже в начале видео или трека
-    if (Math.abs(currentTime - minTime) < 0.01) {
-      console.log(`[handleSkipBackward] Уже в начале видео/трека: ${currentTime} ≈ ${minTime}`)
-      return
-    }
-
-    // Обновляем frameTime для текущего видео, если оно изменилось
-    if (
-      currentVideoOrTrack !== video &&
-      currentVideoOrTrack?.probeData?.streams?.[0]?.r_frame_rate
-    ) {
-      const fpsStr = currentVideoOrTrack.probeData.streams[0].r_frame_rate
-      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
-      try {
-        const fps = fpsMatch
-          ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
-          : parseFloat(fpsStr)
-
-        if (!isNaN(fps) && fps > 0) {
-          frameTime = 1 / fps
-          console.log(
-            `[handleSkipBackward] Обновлен FPS для текущего видео: ${fps}, frameTime: ${frameTime}`,
-          )
-        }
-      } catch (e) {
-        console.error("[handleSkipBackward] Ошибка при вычислении fps:", e)
-      }
-    }
-
-    // Вычисляем новое время
-    const newTime = Math.max(minTime, currentTime - frameTime)
-    console.log(`[handleSkipBackward] Перемещение на один кадр назад: ${currentTime} -> ${newTime}`)
-
-    // Устанавливаем новое время и останавливаем воспроизведение
-    setCurrentTime(newTime)
-    setIsPlaying(false)
-  }, [video, currentTime, setCurrentTime, setIsPlaying, activeTrackId, tracks])
-
-  // Переписываем handleSkipForward: используем currentTime, вызываем setCurrentTime
-  const handleSkipForward = useCallback(() => {
-    if (!video) return
-
-    // Определяем размер шага (один кадр)
-    let frameTime = 1 / 25 // По умолчанию 25 кадров в секунду
-
-    // Определяем максимальное время (конец видео или трека)
-    let maxTime = (video.startTime || 0) + (video.duration || 0)
-    let currentVideoOrTrack = video
-
-    // Пытаемся получить точное значение FPS из метаданных видео
-    if (video?.probeData?.streams?.[0]?.r_frame_rate) {
-      const fpsStr = video.probeData.streams[0].r_frame_rate
-      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
-      try {
-        const fps = fpsMatch
-          ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
-          : parseFloat(fpsStr)
-
-        if (!isNaN(fps) && fps > 0) {
-          frameTime = 1 / fps
-          console.log(
-            `[handleSkipForward] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`,
-          )
-        }
-      } catch (e) {
-        console.error("[handleSkipForward] Ошибка при вычислении fps:", e)
-      }
-    }
-
-    // Если есть активный трек, используем его для определения максимального времени
-    if (activeTrackId) {
-      const activeTrack = tracks.find((track) => track.id === activeTrackId)
-      if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
-        // Находим видео в треке, которое содержит текущее время
-        const currentTrackVideo = activeTrack.videos.find((v) => {
-          const videoStart = v.startTime || 0
-          const videoEnd = videoStart + (v.duration || 0)
-          return currentTime >= videoStart && currentTime <= videoEnd
-        })
-
-        if (currentTrackVideo) {
-          currentVideoOrTrack = currentTrackVideo
-          const videoEnd = (currentTrackVideo.startTime || 0) + (currentTrackVideo.duration || 0)
-
-          // Проверяем, есть ли следующее видео в треке
-          const currentIndex = activeTrack.videos.indexOf(currentTrackVideo)
-          if (
-            currentIndex < activeTrack.videos.length - 1 &&
-            Math.abs(currentTime - videoEnd) < 0.01
-          ) {
-            // Если мы в конце текущего видео и есть следующее, используем начало следующего
-            const nextVideo = activeTrack.videos[currentIndex + 1]
-            maxTime = nextVideo.startTime || 0
-            console.log(
-              `[handleSkipForward] Переход к следующему видео в треке: ${nextVideo.id}, startTime: ${maxTime}`,
-            )
-          } else {
-            // Иначе используем конец текущего видео
-            maxTime = videoEnd
-            console.log(
-              `[handleSkipForward] Используем видео из трека: ${currentTrackVideo.id}, maxTime: ${maxTime}`,
-            )
-          }
-        } else {
-          // Если не нашли видео, содержащее текущее время, используем последнее видео в треке
-          const lastVideo = activeTrack.videos[activeTrack.videos.length - 1]
-          maxTime = (lastVideo.startTime || 0) + (lastVideo.duration || 0)
-          console.log(
-            `[handleSkipForward] Используем последнее видео из трека: ${lastVideo.id}, maxTime: ${maxTime}`,
-          )
-        }
-      }
-    }
-
-    // Проверяем, не находимся ли мы уже в конце видео или трека
-    if (Math.abs(currentTime - maxTime) < 0.01) {
-      console.log(`[handleSkipForward] Уже в конце видео/трека: ${currentTime} ≈ ${maxTime}`)
-      return
-    }
-
-    // Обновляем frameTime для текущего видео, если оно изменилось
-    if (
-      currentVideoOrTrack !== video &&
-      currentVideoOrTrack?.probeData?.streams?.[0]?.r_frame_rate
-    ) {
-      const fpsStr = currentVideoOrTrack.probeData.streams[0].r_frame_rate
-      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
-      try {
-        const fps = fpsMatch
-          ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
-          : parseFloat(fpsStr)
-
-        if (!isNaN(fps) && fps > 0) {
-          frameTime = 1 / fps
-          console.log(
-            `[handleSkipForward] Обновлен FPS для текущего видео: ${fps}, frameTime: ${frameTime}`,
-          )
-        }
-      } catch (e) {
-        console.error("[handleSkipForward] Ошибка при вычислении fps:", e)
-      }
-    }
-
-    // Вычисляем новое время
-    const newTime = Math.min(maxTime, currentTime + frameTime)
-    console.log(`[handleSkipForward] Перемещение на один кадр вперед: ${currentTime} -> ${newTime}`)
-
-    // Устанавливаем новое время и останавливаем воспроизведение
-    setCurrentTime(newTime)
-    setIsPlaying(false)
-  }, [video, currentTime, setCurrentTime, setIsPlaying, activeTrackId, tracks])
-
-  // Используем useRef для хранения последнего значения громкости и предотвращения лишних рендеров
-  const volumeRef = useRef(volume)
-  const volumeChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const isVolumeChangingRef = useRef(false)
-  const lastVolumeUpdateTimeRef = useRef(0)
-
-  // Функция для применения громкости к видео элементам без обновления состояния
-  const applyVolumeToVideoElements = useCallback(
-    (newVolume: number) => {
-      // Применяем громкость напрямую к активному видео
-      if (video?.id && videoRefs[video.id]) {
-        videoRefs[video.id].volume = newVolume
-      }
-
-      // Если используется шаблон с несколькими видео, применяем громкость ко всем видео
-      if (appliedTemplate?.template && parallelVideos.length > 0) {
-        // Создаем массив уникальных видео для обновления громкости
-        const uniqueVideos = parallelVideos.filter(
-          (v, i, arr) => arr.findIndex((item) => item.id === v.id) === i,
-        )
-
-        uniqueVideos.forEach((parallelVideo) => {
-          if (parallelVideo.id && videoRefs[parallelVideo.id]) {
-            // Устанавливаем громкость для всех видео в шаблоне
-            videoRefs[parallelVideo.id].volume = newVolume
-            videoRefs[parallelVideo.id].muted = false
-          }
-        })
-      }
-    },
-    [video, videoRefs, appliedTemplate, parallelVideos],
-  )
-
-  // Оптимизированная функция изменения громкости с дебаунсингом
-  const handleVolumeChange = useCallback(
-    (value: number[]) => {
-      const newVolume = value[0]
-      const now = performance.now()
-
-      // Устанавливаем флаг, что громкость меняется
-      isVolumeChangingRef.current = true
-
-      // Обновляем значение в ref без вызова setVolume на каждое изменение
-      volumeRef.current = newVolume
-
-      // Применяем громкость напрямую к видео элементам для мгновенной обратной связи
-      applyVolumeToVideoElements(newVolume)
-
-      // Используем дебаунсинг и троттлинг для обновления состояния
-      // Обновляем состояние только если прошло достаточно времени с последнего обновления
-      if (now - lastVolumeUpdateTimeRef.current > 200) {
-        lastVolumeUpdateTimeRef.current = now
-
-        // Очищаем предыдущий таймаут, если он был
-        if (volumeChangeTimeoutRef.current) {
-          clearTimeout(volumeChangeTimeoutRef.current)
-        }
-
-        // Устанавливаем новый таймаут для обновления состояния
-        volumeChangeTimeoutRef.current = setTimeout(() => {
-          // Обновляем состояние только если все еще меняется громкость
-          if (isVolumeChangingRef.current) {
-            setVolume(newVolume)
-          }
-          volumeChangeTimeoutRef.current = null
-        }, 100) // Обновляем состояние не чаще чем раз в 100мс
-      }
-    },
-    [applyVolumeToVideoElements, setVolume],
-  )
-
-  // Функция, которая вызывается при завершении изменения громкости (отпускании слайдера)
-  const handleVolumeChangeEnd = useCallback(() => {
-    // Сбрасываем флаг изменения громкости
-    isVolumeChangingRef.current = false
-
-    // Очищаем таймаут, если он был установлен
-    if (volumeChangeTimeoutRef.current) {
-      clearTimeout(volumeChangeTimeoutRef.current)
-      volumeChangeTimeoutRef.current = null
-    }
-
-    // Обновляем состояние сразу при отпускании слайдера
-    // Используем setTimeout с нулевой задержкой, чтобы отделить обновление от события UI
-    setTimeout(() => {
-      setVolume(volumeRef.current)
-
-      // Сохраняем значение громкости в localStorage только при отпускании слайдера
-      if (typeof window !== "undefined") {
-        localStorage.setItem("player-volume", volumeRef.current.toString())
-        console.log(`[PlayerControls] Сохранен уровень звука: ${volumeRef.current}`)
-      }
-    }, 0)
-  }, [setVolume])
-
-  const handleToggleMute = useCallback(() => {
-    const newVolume = volume === 0 ? 1 : 0
-
-    // Сохраняем текущее значение громкости в ref
-    volumeRef.current = newVolume
-
-    // Применяем громкость напрямую к видео элементам для мгновенной обратной связи
-    applyVolumeToVideoElements(newVolume)
-
-    // Обновляем состояние с небольшой задержкой, чтобы избежать лагов
-    setTimeout(() => {
-      setVolume(newVolume)
-
-      // При переключении mute сразу сохраняем значение в localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("player-volume", newVolume.toString())
-        console.log(`[PlayerControls] Сохранен уровень звука при переключении: ${newVolume}`)
-      }
-    }, 0)
-  }, [volume, setVolume, applyVolumeToVideoElements])
+  // Используем хук для управления громкостью
+  const { volumeRef, handleVolumeChange, handleVolumeChangeEnd, handleToggleMute } =
+    useVolumeControl({
+      video,
+      videoRefs,
+      volume,
+      setVolume,
+    })
 
   // Функция для переключения полноэкранного режима
   const handleFullscreen = useCallback(() => {
@@ -487,80 +125,20 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       return
     }
 
-    // Проверяем, находимся ли мы в полноэкранном режиме
-    const isCurrentlyFullscreen =
-      document.fullscreenElement ||
-      (document as any).webkitFullscreenElement ||
-      (document as any).mozFullScreenElement ||
-      (document as any).msFullscreenElement
+    // Используем функцию toggleFullscreen из хука useFullscreenChange
+    const { toggleFullscreen } = useFullscreenChange()
+    toggleFullscreen(playerContainer)
 
-    if (isCurrentlyFullscreen) {
-      // Выходим из полноэкранного режима
-      if (document.exitFullscreen) {
-        document.exitFullscreen()
-      } else if ((document as any).webkitExitFullscreen) {
-        ;(document as any).webkitExitFullscreen()
-      } else if ((document as any).mozCancelFullScreen) {
-        ;(document as any).mozCancelFullScreen()
-      } else if ((document as any).msExitFullscreen) {
-        ;(document as any).msExitFullscreen()
-      }
-      setIsFullscreen(false)
-      console.log("[handleFullscreen] Выход из полноэкранного режима")
-    } else {
-      // Входим в полноэкранный режим
-      if (playerContainer.requestFullscreen) {
-        playerContainer.requestFullscreen()
-      } else if ((playerContainer as any).webkitRequestFullscreen) {
-        ;(playerContainer as any).webkitRequestFullscreen()
-      } else if ((playerContainer as any).mozRequestFullScreen) {
-        ;(playerContainer as any).mozRequestFullScreen()
-      } else if ((playerContainer as any).msRequestFullscreen) {
-        ;(playerContainer as any).msRequestFullscreen()
-      }
-      setIsFullscreen(true)
-      console.log("[handleFullscreen] Вход в полноэкранный режим")
-    }
-  }, [video, parallelVideos.length])
+    console.log(`[handleFullscreen] ${isFullscreen ? "Выход из" : "Вход в"} полноэкранный режим`)
+  }, [video, parallelVideos.length, isFullscreen])
 
-  // Функция для создания и сохранения скриншота
-  const handleTakeSnapshot = useCallback(async () => {
-    try {
-      console.log("[handleTakeSnapshot] Создаем скриншот")
-
-      // Проверяем, используется ли шаблон
-      if (appliedTemplate) {
-        console.log("[handleTakeSnapshot] Создаем скриншот для шаблона")
-
-        // Находим контейнер с шаблоном
-        const templateContainer = findTemplateContainer()
-        if (!templateContainer) return
-
-        // Создаем и сохраняем скриншот шаблона
-        await takeScreenshot({
-          isTemplate: true,
-          templateContainer,
-          screenshotsPath,
-        })
-      } else if (video && videoRefs[video.id]) {
-        console.log("[handleTakeSnapshot] Создаем скриншот для видео:", video.id)
-
-        // Получаем видеоэлемент
-        const videoElement = videoRefs[video.id]
-
-        // Создаем и сохраняем скриншот видео
-        await takeScreenshot({
-          isTemplate: false,
-          videoElement,
-          screenshotsPath,
-        })
-      } else {
-        console.log("[handleTakeSnapshot] Нет активного видео или шаблона для скриншота")
-      }
-    } catch (error) {
-      console.error("[handleTakeSnapshot] Ошибка при создании скриншота:", error)
-    }
-  }, [video, videoRefs, screenshotsPath, appliedTemplate])
+  // Используем хук для создания и сохранения скриншота
+  const { takeSnapshot } = useScreenshot({
+    video,
+    videoRefs,
+    screenshotsPath,
+    appliedTemplate,
+  })
 
   // Функция для применения последнего шаблона
   const handleApplyLastTemplate = useCallback(() => {
@@ -583,10 +161,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
         // Если текущий источник - браузер, ищем видео из браузера
         if (preferredSource === "media") {
           const browserVideos = parallelVideos.filter(
-            (v) =>
-              v.id &&
-              ((videoSources && videoSources[v.id] === "media") ||
-                (localVideoSources && localVideoSources[v.id] === "media")),
+            (v) => v.id && videoSources && videoSources[v.id] === "media",
           )
 
           if (browserVideos.length > 0) {
@@ -605,10 +180,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
         // Если текущий источник - таймлайн, ищем видео из таймлайна
         else if (preferredSource === "timeline") {
           const timelineVideos = parallelVideos.filter(
-            (v) =>
-              v.id &&
-              ((videoSources && videoSources[v.id] === "timeline") ||
-                (localVideoSources && localVideoSources[v.id] === "timeline")),
+            (v) => v.id && videoSources && videoSources[v.id] === "timeline",
           )
 
           if (timelineVideos.length > 0) {
@@ -634,17 +206,12 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
         setActiveVideoId(templateCopy.videos[0].id)
         setVideo(templateCopy.videos[0])
         console.log(
-          `[handleApplyLastTemplate] Установлено активное видео: ${templateCopy.videos[0].id}`,
+          `[handleApplyLastTemplate] Установлено активное видео из шаблона: ${templateCopy.videos[0].id}`,
         )
-      }
-      // Если в шаблоне нет видео, но выбран источник "media", пытаемся показать любое видео из браузера
-      else if (preferredSource === "media") {
+      } else if (preferredSource === "media") {
         // Находим любое видео из браузера
         const anyBrowserVideo = parallelVideos.find(
-          (v) =>
-            v.id &&
-            ((videoSources && videoSources[v.id] === "media") ||
-              (localVideoSources && localVideoSources[v.id] === "media")),
+          (v) => v.id && videoSources && videoSources[v.id] === "media",
         )
 
         if (anyBrowserVideo) {
@@ -664,10 +231,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       if (preferredSource === "media") {
         // Находим любое видео из браузера
         const anyBrowserVideo = parallelVideos.find(
-          (v) =>
-            v.id &&
-            ((videoSources && videoSources[v.id] === "media") ||
-              (localVideoSources && localVideoSources[v.id] === "media")),
+          (v) => v.id && videoSources && videoSources[v.id] === "media",
         )
 
         if (anyBrowserVideo) {
@@ -684,7 +248,6 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     preferredSource,
     parallelVideos,
     videoSources,
-    localVideoSources,
     setAppliedTemplate,
     setActiveVideoId,
     setVideo,
@@ -855,6 +418,12 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
 
   // Функция для переключения между источниками видео (браузер/таймлайн)
   const handleToggleSource = useCallback(() => {
+    // Проверяем, не выполняется ли уже переключение источника
+    if (isChangingCamera) {
+      console.log("[handleToggleSource] Игнорируем переключение источника во время смены камеры")
+      return
+    }
+
     // Переключаем предпочтительный источник
     const newSource = preferredSource === "media" ? "timeline" : "media"
     console.log(`[handleToggleSource] Переключаем источник: ${preferredSource} -> ${newSource}`)
@@ -862,180 +431,19 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     // Устанавливаем новый предпочтительный источник в контексте плеера
     setPreferredSource(newSource)
 
-    // Если переключаемся на источник "timeline"
-    if (newSource === "timeline") {
-      // Проверяем, есть ли активное видео из таймлайна
-      const hasTimelineVideo =
-        video?.id &&
-        ((videoSources && videoSources[video.id] === "timeline") ||
-          (localVideoSources && localVideoSources[video.id] === "timeline"))
+    // Вызываем метод switchVideoSource для обновления видео в шаблоне
+    switchVideoSource(tracks, activeTrackId, parallelVideos)
 
-      if (!hasTimelineVideo) {
-        console.log(
-          `[handleToggleSource] Нет активного видео из таймлайна, показываем черный экран`,
-        )
-
-        // Если есть примененный шаблон, сохраняем его, но очищаем видео
-        if (appliedTemplate) {
-          console.log(
-            `[handleToggleSource] Есть примененный шаблон, сохраняем его, но очищаем видео`,
-          )
-          // Создаем копию шаблона
-          const templateCopy = { ...appliedTemplate }
-          // Очищаем список видео в шаблоне
-          templateCopy.videos = []
-          // Применяем обновленный шаблон
-          setAppliedTemplate(templateCopy)
-        }
-
-        // Сбрасываем активное видео, чтобы показать черный экран
-        setActiveVideoId(null)
-        // Используем undefined вместо null для совместимости с типом
-        setVideo(undefined as any)
-      }
-    }
-    // Если переключаемся на источник "media" (браузер)
-    else {
-      console.log(`[handleToggleSource] Переключаемся на источник "media" (браузер)`)
-
-      // Сначала помечаем все параллельные видео как видео из браузера
-      if (parallelVideos.length > 0) {
-        console.log(
-          `[handleToggleSource] Помечаем все параллельные видео (${parallelVideos.length}) как видео из браузера`,
-        )
-
-        // Создаем объект с источниками видео
-        const newVideoSources: Record<string, "media" | "timeline"> = {}
-
-        // Помечаем все параллельные видео как видео из браузера
-        parallelVideos.forEach((v) => {
-          if (v.id) {
-            newVideoSources[v.id] = "media"
-            console.log(`[handleToggleSource] Видео ${v.id} помечено как видео из браузера`)
-          }
-        })
-
-        // Обновляем состояние videoSources
-        setLocalVideoSources(newVideoSources)
-
-        // Удаляем отправку сообщений, так как теперь используем только контекст плеера
-        console.log(`[handleToggleSource] Обновлен контекст плеера с источником "media"`)
-      }
-
-      // Теперь все параллельные видео считаются видео из браузера
-      const browserVideos = parallelVideos
-
-      console.log(`[handleToggleSource] Найдено ${browserVideos.length} видео из браузера`)
-
-      // Если есть видео из браузера
-      if (browserVideos.length > 0) {
-        // Если есть примененный шаблон
-        if (appliedTemplate) {
-          console.log(
-            `[handleToggleSource] Есть примененный шаблон, заполняем его видео из браузера`,
-          )
-
-          // Создаем копию шаблона
-          const templateCopy = { ...appliedTemplate }
-
-          // Заполняем шаблон видео из браузера
-          templateCopy.videos = browserVideos.slice(0, appliedTemplate.template?.screens || 1)
-
-          console.log(
-            `[handleToggleSource] Добавлено ${templateCopy.videos.length} видео из браузера в шаблон`,
-          )
-
-          // Применяем обновленный шаблон
-          setAppliedTemplate(templateCopy)
-
-          // Устанавливаем первое видео из браузера как активное
-          setActiveVideoId(browserVideos[0].id)
-          setVideo(browserVideos[0])
-          console.log(
-            `[handleToggleSource] Установлено активное видео из браузера: ${browserVideos[0].id}`,
-          )
-        }
-        // Если нет примененного шаблона, но есть последний примененный шаблон
-        else if (lastAppliedTemplate) {
-          console.log(
-            `[handleToggleSource] Нет активного шаблона, но есть последний примененный шаблон: ${lastAppliedTemplate.template?.id}`,
-          )
-
-          // Создаем копию последнего шаблона
-          const templateCopy = JSON.parse(JSON.stringify(lastAppliedTemplate))
-
-          // Заполняем шаблон видео из браузера
-          templateCopy.videos = browserVideos.slice(0, templateCopy.template?.screens || 1)
-
-          console.log(
-            `[handleToggleSource] Добавлено ${templateCopy.videos.length} видео из браузера в последний шаблон`,
-          )
-
-          // Применяем обновленный шаблон
-          setAppliedTemplate(templateCopy)
-
-          // Устанавливаем первое видео из браузера как активное
-          setActiveVideoId(browserVideos[0].id)
-          setVideo(browserVideos[0])
-          console.log(
-            `[handleToggleSource] Установлено активное видео из браузера: ${browserVideos[0].id}`,
-          )
-        }
-        // Если нет ни активного, ни последнего шаблона
-        else {
-          console.log(`[handleToggleSource] Нет шаблонов, просто показываем видео из браузера`)
-
-          // Устанавливаем первое видео из браузера как активное
-          setActiveVideoId(browserVideos[0].id)
-          setVideo(browserVideos[0])
-          console.log(
-            `[handleToggleSource] Установлено активное видео из браузера: ${browserVideos[0].id}`,
-          )
-        }
-      }
-      // Если нет видео из браузера
-      else {
-        console.log(`[handleToggleSource] Нет доступных видео из браузера`)
-
-        // Если есть примененный шаблон, очищаем его
-        if (appliedTemplate) {
-          console.log(`[handleToggleSource] Есть примененный шаблон, очищаем его`)
-
-          // Создаем копию шаблона
-          const templateCopy = { ...appliedTemplate }
-          // Очищаем список видео в шаблоне
-          templateCopy.videos = []
-          // Применяем обновленный шаблон
-          setAppliedTemplate(templateCopy)
-        }
-        // Если есть последний примененный шаблон, применяем его с пустыми видео
-        else if (lastAppliedTemplate) {
-          console.log(`[handleToggleSource] Применяем последний шаблон без видео`)
-
-          // Создаем копию последнего шаблона
-          const templateCopy = JSON.parse(JSON.stringify(lastAppliedTemplate))
-          // Очищаем список видео в шаблоне
-          templateCopy.videos = []
-          // Применяем обновленный шаблон
-          setAppliedTemplate(templateCopy)
-        }
-
-        // Сбрасываем активное видео
-        setActiveVideoId(null)
-        setVideo(undefined as any)
-      }
-    }
+    // Сбрасываем флаг autoSelectVideoExecuted, чтобы разрешить автоматический выбор видео
+    autoSelectVideoExecutedRef.current = false
   }, [
     preferredSource,
-    video,
-    videoSources,
-    setVideo,
-    setActiveVideoId,
-    appliedTemplate,
-    lastAppliedTemplate,
-    setAppliedTemplate,
+    setPreferredSource,
+    switchVideoSource,
+    tracks,
+    activeTrackId,
     parallelVideos,
-    setLocalVideoSources,
+    isChangingCamera,
   ])
 
   // Улучшенный handleRecordToggle для корректной работы с параллельными видео
@@ -1076,281 +484,93 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     setIsPlaying,
   ])
 
-  // Функция для получения видео для отображения (первое видео в шаблоне или текущее видео)
-  const getDisplayVideo = useCallback(() => {
-    return appliedTemplate?.videos && appliedTemplate.videos.length > 0
-      ? appliedTemplate.videos[0]
-      : video
-  }, [appliedTemplate, video])
+  // Функция для получения активного видео в различных контекстах (шаблон, трек)
+  const getActiveVideo = useCallback((): MediaFile | undefined => {
+    // Если есть активное видео, возвращаем его
+    if (video) {
+      return video
+    }
 
-  // Улучшенный handleTimeChange для корректной работы с параллельными видео и шаблонами
-  const handleTimeChange = useCallback(
-    (value: number[]) => {
-      // Определяем, какое видео использовать для изменения времени
-      const videoToUse = getDisplayVideo()
+    // Если есть шаблон с видео, возвращаем первое видео из шаблона
+    if (appliedTemplate?.videos && appliedTemplate.videos.length > 0) {
+      return appliedTemplate.videos[0]
+    }
 
-      if (!videoToUse) return
-
-      // Если идет процесс переключения камеры, игнорируем изменение времени
-      if (isChangingCamera) {
-        console.log("[handleTimeChange] Игнорируем изменение времени во время переключения камеры")
-        return
+    // Если есть активный трек, возвращаем первое видео из трека
+    if (activeTrackId) {
+      const activeTrack = tracks.find((track) => track.id === activeTrackId)
+      if (activeTrack?.videos && activeTrack.videos.length > 0) {
+        return activeTrack.videos[0]
       }
+    }
 
-      const videoDuration = videoToUse.duration || 0
-      const sliderValue = value[0]
+    // Если есть параллельные видео, возвращаем первое из них
+    if (parallelVideos && parallelVideos.length > 0) {
+      return parallelVideos[0]
+    }
 
-      // Проверка валидности значения
-      if (!isFinite(sliderValue) || sliderValue < 0) return
+    // Если ничего не найдено, возвращаем undefined
+    return undefined
+  }, [video, appliedTemplate, activeTrackId, tracks, parallelVideos])
 
-      // Ограничиваем время в пределах длительности видео
-      const clampedTime = Math.min(videoDuration, Math.max(0, sliderValue))
+  // Нормализуем currentTime для отображения, если это Unix timestamp
+  const calculatedDisplayTime = useMemo(() => {
+    if (currentTime > 365 * 24 * 60 * 60) {
+      // Если время больше года в секундах, это, вероятно, Unix timestamp
+      // Используем локальное время для отображения
+      return localDisplayTime
+    }
+    return currentTime
+  }, [currentTime, localDisplayTime])
 
-      // Определяем, короткое ли у нас видео (меньше 10 секунд)
-      const isShortVideo = videoDuration < 10
+  // Ref для отслеживания предыдущего значения calculatedDisplayTime
+  const prevTimeRef = useRef(calculatedDisplayTime)
 
-      // Для коротких видео используем меньший порог изменения
-      const timeChangeThreshold = isShortVideo ? 0.001 : 0.01
-
-      // Вычисляем локальное время для сравнения
-      const localTime =
-        currentTime > 365 * 24 * 60 * 60 && videoToUse.startTime
-          ? Math.max(0, currentTime - (videoToUse.startTime || 0))
-          : currentTime
-
-      // Проверяем, существенно ли изменилось время
-      if (Math.abs(clampedTime - localTime) < timeChangeThreshold) return
-
-      // Логируем только при значительных изменениях времени
-      if (Math.abs(clampedTime - localTime) > 0.5) {
-        console.log("[handleTimeChange] Значительное изменение времени:", {
-          currentTime: localTime.toFixed(3),
-          clampedTime: clampedTime.toFixed(3),
-          delta: (clampedTime - localTime).toFixed(3),
-        })
-      }
-
-      // Устанавливаем seeking перед изменением времени, чтобы избежать
-      // конфликтов с обновлениями от timeupdate
-      setIsSeeking(true)
-
-      try {
-        // Если текущее время - Unix timestamp, обрабатываем особым образом
-        if (currentTime > 365 * 24 * 60 * 60) {
-          // Устанавливаем относительный прогресс для текущего видео
-          console.log(
-            `[handleTimeChange] Установка относительного прогресса: ${clampedTime.toFixed(3)}`,
-          )
-
-          // Определяем, какие видео нужно обновить
-          let videosToUpdate: MediaFile[] = []
-
-          // Если применен шаблон, обновляем все видео в шаблоне
-          if (appliedTemplate?.videos && appliedTemplate.videos.length > 0) {
-            videosToUpdate = appliedTemplate.videos
-            console.log(`[handleTimeChange] Обновляем ${videosToUpdate.length} видео в шаблоне`)
-          }
-          // Если есть параллельные видео, обновляем их
-          else if (parallelVideos && parallelVideos.length > 0) {
-            videosToUpdate = parallelVideos
-            console.log(`[handleTimeChange] Обновляем ${videosToUpdate.length} параллельных видео`)
-          }
-          // Иначе обновляем только текущее видео
-          else if (videoToUse) {
-            videosToUpdate = [videoToUse]
-            console.log(`[handleTimeChange] Обновляем только текущее видео: ${videoToUse.id}`)
-          }
-
-          // Вычисляем относительную позицию для текущего видео
-          const relativePosition = clampedTime / (videoToUse.duration || 1)
-          console.log(`[handleTimeChange] Относительная позиция: ${relativePosition.toFixed(3)}`)
-
-          // Обновляем время для всех видео
-          videosToUpdate.forEach((updateVideo) => {
-            if (updateVideo?.id && videoRefs[updateVideo.id]) {
-              // Если это первое видео (или единственное), устанавливаем точное время
-              if (updateVideo.id === videoToUse.id) {
-                videoRefs[updateVideo.id].currentTime = clampedTime
-                console.log(
-                  `[handleTimeChange] Установлено точное время ${clampedTime.toFixed(3)} для видео ${updateVideo.id}`,
-                )
-
-                // Обновляем локальное отображаемое время по первому видео
-                setLocalDisplayTime(clampedTime)
-              }
-              // Для остальных видео вычисляем пропорциональное время
-              else {
-                const updateVideoDuration = updateVideo.duration || 1
-                const newTime = relativePosition * updateVideoDuration
-                videoRefs[updateVideo.id].currentTime = newTime
-                console.log(
-                  `[handleTimeChange] Синхронизировано время ${newTime.toFixed(3)} для видео ${updateVideo.id}`,
-                )
-              }
-            }
-          })
-
-          // Сбрасываем флаг seeking после небольшой задержки
-          setTimeout(() => {
-            setIsSeeking(false)
-          }, 50)
-
-          return
-        }
-
-        // Для обычного времени преобразуем относительное время в абсолютное
-        let newTime = clampedTime
-        if (videoToUse.startTime) {
-          newTime = videoToUse.startTime + clampedTime
-          console.log(`[handleTimeChange] Преобразование времени: ${clampedTime} -> ${newTime}`)
-        }
-
-        // Устанавливаем новое время с пометкой, что источник - пользователь
-        setCurrentTime(newTime)
-      } catch (error) {
-        console.error("[handleTimeChange] Ошибка при изменении времени:", error)
-        setIsSeeking(false)
-      }
-    },
-    [
+  // Используем хук для управления временем
+  const { handleTimeChange, formatRelativeTime, formatSectorTime, getDisplayVideo } =
+    useTimeControl({
       video,
       videoRefs,
+      currentTime,
       setCurrentTime,
       setIsSeeking,
-      currentTime,
       isChangingCamera,
       parallelVideos,
       appliedTemplate,
       setLocalDisplayTime,
-    ],
-  )
+      activeVideoId, // Передаем ID активного видео
+    })
 
-  // Переписываем handleChevronFirst: используем currentTime, вызываем setCurrentTime
-  const handleChevronFirst = useCallback(() => {
-    if (!video) return
-
-    // Если есть активный трек, используем его
-    if (activeTrackId) {
-      // Находим активный трек
-      const activeTrack = tracks.find((track) => track.id === activeTrackId)
-      if (activeTrack) {
-        // Находим первое видео в треке
-        const firstVideo = activeTrack.videos?.[0]
-        if (firstVideo) {
-          const startTime = firstVideo.startTime || 0
-          if (Math.abs(currentTime - startTime) < 0.01) return
-
-          console.log(`[handleChevronFirst] Перемещение в начало трека: ${startTime}`)
-          setCurrentTime(startTime)
-          setIsPlaying(false)
-          return
-        }
-      }
-    }
-
-    // Если нет активного трека или в треке нет видео, используем текущее видео
-    const videoStartTime = video.startTime || 0
-    if (Math.abs(currentTime - videoStartTime) < 0.01) return
-
-    console.log(`[handleChevronFirst] Перемещение в начало видео: ${videoStartTime}`)
-    setCurrentTime(videoStartTime)
-    setIsPlaying(false)
-  }, [video, activeTrackId, tracks, currentTime, setCurrentTime, setIsPlaying])
-
-  // Переписываем handleChevronLast: используем currentTime, вызываем setCurrentTime
-  const handleChevronLast = useCallback(() => {
-    if (!video) return
-
-    // Если есть активный трек, используем его
-    if (activeTrackId) {
-      // Находим активный трек
-      const activeTrack = tracks.find((track) => track.id === activeTrackId)
-      if (activeTrack && activeTrack.videos && activeTrack.videos.length > 0) {
-        // Находим последнее видео в треке
-        const lastVideo = activeTrack.videos[activeTrack.videos.length - 1]
-        if (lastVideo) {
-          const startTime = lastVideo.startTime || 0
-          const duration = lastVideo.duration || 0
-          const endTime = startTime + duration
-
-          if (Math.abs(currentTime - endTime) < 0.01) return
-
-          console.log(`[handleChevronLast] Перемещение в конец трека: ${endTime}`)
-          setCurrentTime(endTime)
-          setIsPlaying(false)
-          return
-        }
-      }
-    }
-
-    // Если нет активного трека или в треке нет видео, используем текущее видео
-    const videoStartTime = video.startTime || 0
-    const videoDuration = video.duration || 0
-    const videoEndTime = videoStartTime + videoDuration
-
-    if (Math.abs(currentTime - videoEndTime) < 0.01) return
-
-    console.log(`[handleChevronLast] Перемещение в конец видео: ${videoEndTime}`)
-    setCurrentTime(videoEndTime)
-    setIsPlaying(false)
-  }, [video, activeTrackId, tracks, currentTime, setCurrentTime, setIsPlaying])
+  // Используем хук для управления воспроизведением
+  const {
+    handleSkipBackward,
+    handleSkipForward,
+    handleChevronFirst,
+    handleChevronLast,
+    handlePlayPause,
+  } = usePlaybackControl({
+    video,
+    videoRefs,
+    currentTime,
+    setCurrentTime,
+    isPlaying,
+    setIsPlaying,
+    isChangingCamera,
+    activeTrackId,
+    tracks,
+    parallelVideos,
+    appliedTemplate,
+    calculatedDisplayTime,
+  })
 
   // Используем currentTime для isFirstFrame / isLastFrame
-  // Безопасно вычисляем fps из строки формата "num/den"
-  const fpsStr = video?.probeData?.streams?.[0]?.r_frame_rate || ""
-  let frameTime = 1 / 25 // По умолчанию 25 кадров в секунду
-  try {
-    if (fpsStr) {
-      const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
-      const fps = fpsMatch
-        ? parseInt(fpsMatch[1], 10) / parseInt(fpsMatch[2], 10)
-        : parseFloat(fpsStr)
+  // Получаем frameTime с помощью функции getFrameTime
+  const frameTime = getFrameTime(video || undefined)
+  console.log(
+    `[PlayerControls] Используем frameTime: ${frameTime} (${1 / frameTime} fps) для видео ${video?.id || "unknown"}`,
+  )
 
-      if (!isNaN(fps) && fps > 0) {
-        frameTime = 1 / fps
-        console.log(
-          `[PlayerControls] Используем FPS из метаданных: ${fps}, frameTime: ${frameTime}`,
-        )
-      }
-    }
-  } catch (e) {
-    console.error("[PlayerControls] Ошибка при вычислении fps:", e)
-  }
-
-  // Функция форматирования относительного времени
-  const formatRelativeTime = (time: number): string => {
-    // Добавим проверку на конечность числа
-    if (!isFinite(time)) {
-      console.warn("[formatRelativeTime] Received non-finite time:", time)
-      return "00:00:00.000"
-    }
-    // Используем Math.max для гарантии неотрицательного значения
-    const absTime = Math.max(0, time)
-    const hours = Math.floor(absTime / 3600)
-    const minutes = Math.floor((absTime % 3600) / 60)
-    const seconds = Math.floor(absTime % 60)
-    const milliseconds = Math.floor((absTime % 1) * 1000)
-    return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(3, "0")}`
-  }
-
-  // Функция форматирования абсолютного времени сектора
-  const formatSectorTime = (time: number, startTime?: number): string => {
-    // Если нет startTime или это не Unix timestamp, используем относительное время
-    if (!startTime || startTime < 365 * 24 * 60 * 60) {
-      return formatRelativeTime(time)
-    }
-
-    // Преобразуем Unix timestamp в объект Date
-    const date = new Date((startTime + time) * 1000)
-
-    // Форматируем время в формате HH:MM:SS.mmm
-    const hours = date.getHours().toString().padStart(2, "0")
-    const minutes = date.getMinutes().toString().padStart(2, "0")
-    const seconds = date.getSeconds().toString().padStart(2, "0")
-    const milliseconds = date.getMilliseconds().toString().padStart(3, "0")
-
-    return `${hours}:${minutes}:${seconds}.${milliseconds}`
-  }
+  // Функции форматирования времени перенесены в хук useTimeControl
 
   // videoRefs уже получен выше
 
@@ -1383,19 +603,6 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     }
   }, [video?.id, videoRefs, isPlaying, setDisplayTime])
 
-  // Нормализуем currentTime для отображения, если это Unix timestamp
-  const calculatedDisplayTime = useMemo(() => {
-    if (currentTime > 365 * 24 * 60 * 60) {
-      // Если время больше года в секундах, это, вероятно, Unix timestamp
-      // Используем локальное время для отображения
-      return localDisplayTime
-    }
-    return currentTime
-  }, [currentTime, localDisplayTime])
-
-  // Ref для отслеживания предыдущего значения calculatedDisplayTime
-  const prevTimeRef = useRef(calculatedDisplayTime)
-
   // Обновляем контекст при изменении calculatedDisplayTime
   // Но только если не воспроизводится видео, чтобы избежать конфликта с updateTime
   useEffect(() => {
@@ -1417,7 +624,27 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     setIsHydrated(true)
   }, [])
 
-  // Убираем эффект для логирования изменений preferredSource для улучшения производительности
+  // Эффект для автоматического выбора активного видео, если текущее активное видео не определено
+  // Используем ref для отслеживания, был ли уже выполнен эффект
+  const autoSelectVideoExecutedRef = useRef(false)
+
+  useEffect(() => {
+    // Если уже есть активное видео или эффект уже был выполнен, ничего не делаем
+    if (video || autoSelectVideoExecutedRef.current) return
+
+    // Помечаем, что эффект был выполнен
+    autoSelectVideoExecutedRef.current = true
+
+    // Получаем активное видео
+    const activeVideo = getActiveVideo()
+
+    // Если нашли активное видео и оно отличается от текущего, устанавливаем его
+    if (activeVideo && activeVideo !== video) {
+      console.log(`[AutoSelectActiveVideo] Автоматически выбрано активное видео: ${activeVideo.id}`)
+      setVideo(activeVideo)
+      setActiveVideoId(activeVideo.id)
+    }
+  }, [video, getActiveVideo, setVideo, setActiveVideoId])
 
   // Создаем мемоизированные значения для начального и конечного времени
   const startTimeForFirstFrame = useMemo(() => {
@@ -1455,60 +682,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     return Math.abs(currentTime - endTimeForLastFrame) < frameTime
   }, [currentTime, endTimeForLastFrame, frameTime])
 
-  // Полностью отключаем логирование рендеринга для улучшения производительности
-
-  // Улучшаем handlePlayPause: НЕ устанавливаем флаг isChangingCamera при переключении
-  const handlePlayPause = useCallback(() => {
-    // Проверяем, есть ли активное видео или видео в шаблоне или параллельные видео
-    const hasActiveVideo = !!video
-    const hasTemplateVideos = appliedTemplate?.videos && appliedTemplate.videos.length > 0
-    const hasParallelVideos = parallelVideos && parallelVideos.length > 0
-
-    // Если нет ни активного видео, ни видео в шаблоне, ни параллельных видео, выходим
-    if (!hasActiveVideo && !hasTemplateVideos && !hasParallelVideos) {
-      console.log("[handlePlayPause] Нет видео для воспроизведения")
-      return
-    }
-
-    // Не устанавливаем флаг isChangingCamera при переключении между паузой и воспроизведением,
-    // так как это приводит к сбросу времени
-    // Убираем лишнее логирование для улучшения производительности
-
-    // Если начинаем воспроизведение и есть активное видео, устанавливаем текущее время видео в displayTime
-    if (!isPlaying && hasActiveVideo && video.id && videoRefs[video.id]) {
-      const videoElement = videoRefs[video.id]
-
-      // Если currentTime - это Unix timestamp, используем displayTime
-      if (currentTime > 365 * 24 * 60 * 60) {
-        // Убираем лишнее логирование для улучшения производительности
-        videoElement.currentTime = calculatedDisplayTime
-      }
-    }
-
-    // Проверяем готовность видео перед началом воспроизведения
-    if (!isPlaying && hasActiveVideo && video.id && videoRefs[video.id]) {
-      const videoElement = videoRefs[video.id]
-
-      // Проверяем готовность видео
-      if (videoElement.readyState < 3) {
-        // Убираем лишнее логирование для улучшения производительности
-        // Показываем индикатор загрузки
-        // Это можно реализовать через состояние в контексте плеера, если нужно
-      }
-    }
-
-    // В любом случае переключаем состояние воспроизведения
-    setIsPlaying(!isPlaying)
-  }, [
-    isPlaying,
-    setIsPlaying,
-    video,
-    videoRefs,
-    currentTime,
-    displayTime,
-    appliedTemplate,
-    parallelVideos,
-  ])
+  // Функция handlePlayPause перенесена в хук usePlaybackControl
 
   return (
     <div className="flex w-full flex-col">
@@ -1647,7 +821,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
                   ? t("timeline.controls.takeSnapshot")
                   : "Take snapshot"
               }
-              onClick={handleTakeSnapshot}
+              onClick={takeSnapshot}
             >
               <Camera className="h-8 w-8" />
             </Button>

@@ -150,7 +150,7 @@ export function TemplateList() {
   }, [])
 
   // Получаем доступ к контексту плеера для работы с параллельными видео и шаблонами
-  const { parallelVideos, setAppliedTemplate } = usePlayerContext()
+  const { parallelVideos, setAppliedTemplate, isPlaying, setIsPlaying } = usePlayerContext()
 
   // Получаем доступ к контексту медиа для работы с медиафайлами
   const media = useMedia()
@@ -311,6 +311,15 @@ export function TemplateList() {
 
       // Применяем шаблон через контекст плеера
       setAppliedTemplate(appliedTemplate)
+
+      // Запускаем воспроизведение, если оно было активно
+      if (isPlaying) {
+        console.log(`Запускаем воспроизведение видео в шаблоне`)
+        // Небольшая задержка для инициализации шаблона
+        setTimeout(() => {
+          setIsPlaying(true)
+        }, 100)
+      }
     } else if (parallelVideos.length > 0) {
       // Если на таймлайне нет видео, но есть параллельные видео, используем их (для обратной совместимости)
       console.log(`На таймлайне нет видео, используем ${parallelVideos.length} параллельных видео`)
@@ -324,6 +333,15 @@ export function TemplateList() {
       }
 
       setAppliedTemplate(appliedTemplate)
+
+      // Запускаем воспроизведение, если оно было активно
+      if (isPlaying) {
+        console.log(`Запускаем воспроизведение видео в шаблоне`)
+        // Небольшая задержка для инициализации шаблона
+        setTimeout(() => {
+          setIsPlaying(true)
+        }, 100)
+      }
     } else if (media.allMediaFiles.length > 0) {
       // Если на таймлайне нет видео и нет параллельных видео, но есть медиафайлы, используем их
       console.log(
@@ -357,6 +375,15 @@ export function TemplateList() {
         }
 
         setAppliedTemplate(appliedTemplate)
+
+        // Запускаем воспроизведение, если оно было активно
+        if (isPlaying) {
+          console.log(`Запускаем воспроизведение видео в шаблоне`)
+          // Небольшая задержка для инициализации шаблона
+          setTimeout(() => {
+            setIsPlaying(true)
+          }, 100)
+        }
       } else {
         console.log("В библиотеке нет подходящих видеофайлов для применения шаблона")
       }

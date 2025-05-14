@@ -44,7 +44,7 @@ export function SectionHeader({
   const { t } = useTranslation()
 
   return (
-    <div className="sticky top-0 z-[400] flex h-[30px] items-center justify-between border-b border-gray-200 bg-gray-50 px-2 dark:border-gray-700 dark:bg-gray-800">
+    <div className="sticky top-0 flex h-[30px] items-center justify-between border-b border-gray-200 bg-gray-50 px-2 dark:border-gray-700 dark:bg-gray-800">
       <h3 className="text-sm font-medium text-gray-900 dark:text-white">{formattedDate}</h3>
 
       {/* Элементы управления масштабом для сектора */}

@@ -100,16 +100,24 @@ export const projectMachine = createMachine({
         UPDATE_SETTINGS: {
           actions: [
             assign(({ context, event }) => {
-              const newSettings = {
-                ...context.settings,
-                ...(event as any).settings,
+              // Проверяем, есть ли свойство settings в событии
+              if ((event as any)?.settings) {
+                const newSettings = {
+                  ...context.settings,
+                  ...(event as any).settings,
+                }
+
+                // Save settings to localStorage
+                saveSettings(newSettings)
+
+                return {
+                  settings: newSettings,
+                }
               }
 
-              // Save settings to localStorage
-              saveSettings(newSettings)
-
+              // Если свойства нет, возвращаем текущие настройки
               return {
-                settings: newSettings,
+                settings: context.settings,
               }
             }),
           ],
@@ -131,14 +139,22 @@ export const projectMachine = createMachine({
         },
         SET_NAME: {
           actions: assign({
-            name: (_, event) => (event as any).name,
+            name: ({ context, event }) => {
+              // Проверяем, есть ли свойство name в событии
+              if (typeof (event as any)?.name === "string") {
+                return (event as any).name
+              }
+              // Если свойства нет, возвращаем текущее имя
+              return context.name
+            },
           }),
         },
         SET_DIRTY: {
           actions: assign({
-            isDirty: (_, event) => {
+            isDirty: ({ context, event }) => {
               // Проверяем, есть ли свойство isDirty в событии
-              if (typeof (event as any).isDirty === "boolean") {
+              // Используем безопасный доступ к свойству через оператор ?.
+              if (typeof (event as any)?.isDirty === "boolean") {
                 return (event as any).isDirty
               }
               // Если свойства нет, возвращаем true по умолчанию

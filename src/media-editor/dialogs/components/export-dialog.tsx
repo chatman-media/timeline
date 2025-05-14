@@ -28,7 +28,7 @@ export function ExportDialog({ open, onOpenChange }: ExportDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="bg-background z-[400] flex h-[66%] w-[50%] max-w-[1200px] flex-col gap-0 overflow-hidden p-0 dark:bg-[#1b1a1f] [&>button]:hidden">
+      <DialogContent className="bg-background flex h-[66%] w-[50%] max-w-[1200px] flex-col gap-0 overflow-hidden p-0 dark:bg-[#1b1a1f] [&>button]:hidden">
         <div className="flex items-center justify-center border-b py-2">
           <h2 className="text-base font-semibold">{t("dialogs.export.title")}</h2>
         </div>

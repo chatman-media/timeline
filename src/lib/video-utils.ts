@@ -111,10 +111,53 @@ export const getFps = (stream?: { r_frame_rate?: string }): number | null => {
   if (!stream?.r_frame_rate) return null
 
   try {
-    return Math.round(eval(stream.r_frame_rate))
+    // Безопасный парсинг строки формата "num/den"
+    const fpsStr = stream.r_frame_rate
+    const fpsMatch = fpsStr.match(/(\d+)\/(\d+)/)
+
+    if (fpsMatch) {
+      // Если строка в формате "num/den", вычисляем деление
+      const numerator = parseInt(fpsMatch[1], 10)
+      const denominator = parseInt(fpsMatch[2], 10)
+
+      if (denominator === 0) return null
+
+      return numerator / denominator
+    } else {
+      // Если строка просто число, парсим его
+      const fps = parseFloat(fpsStr)
+      return isNaN(fps) ? null : fps
+    }
   } catch {
     return null
   }
+}
+
+/**
+ * Получает время кадра (в секундах) из объекта потока или MediaFile
+ * @param videoOrStream - Объект MediaFile или FfprobeStream с параметром r_frame_rate
+ * @param defaultFps - Значение FPS по умолчанию, если не удалось получить из метаданных
+ * @returns Время одного кадра в секундах
+ * @example
+ * const frameTime = getFrameTime(video); // 0.033333... (для 30 fps)
+ */
+export const getFrameTime = (
+  videoOrStream?: MediaFile | { r_frame_rate?: string },
+  defaultFps: number = 25,
+): number => {
+  if (!videoOrStream) return 1 / defaultFps
+
+  // Если передан MediaFile, извлекаем поток
+  const stream =
+    "probeData" in videoOrStream ? videoOrStream.probeData?.streams?.[0] : videoOrStream
+
+  // Получаем FPS
+  const fps = getFps(stream)
+
+  // Если не удалось получить FPS, используем значение по умолчанию
+  if (!fps || fps <= 0) return 1 / defaultFps
+
+  return 1 / fps
 }
 
 /**
