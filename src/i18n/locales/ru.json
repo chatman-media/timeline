@@ -811,6 +811,36 @@
       "unmuteAudio": "Включить звук",
       "fullscreen": "Полноэкранный режим",
       "exitFullscreen": "Выйти из полноэкранного режима"
+    },
+    "title": "Таймлайн",
+    "noTracks": "Нет дорожек",
+    "addTrack": "Добавить дорожку",
+    "deleteTrack": "Удалить дорожку",
+    "cutTrack": "Вырезать дорожку",
+    "fitToScreen": "По размеру экрана",
+    "zoomIn": "Увеличить",
+    "zoomOut": "Уменьшить",
+    "scale": "Масштаб",
+    "resources": {
+      "title": "Ресурсы",
+      "all": "Все",
+      "effects": "Эффекты",
+      "filters": "Фильтры",
+      "transitions": "Переходы",
+      "templates": "Шаблоны",
+      "music": "Музыка",
+      "noResources": "Нет добавленных ресурсов"
+    },
+    "chat": {
+      "title": "Чат",
+      "selectAgent": "Модель",
+      "messagePlaceholder": "Введите ваше сообщение здесь...",
+      "noMessages": "Нет сообщений. Начните диалог.",
+      "savingProgress": "Прогресс сохранения",
+      "saveSuccess": "Видео успешно сохранено!",
+      "send": "Отправить",
+      "stop": "Остановить",
+      "processing": "Обработка..."
     }
   },
   "titles": {
@@ -983,61 +1013,5 @@
     "deleteProject": "Удалить проект",
     "exportProject": "Экспортировать проект",
     "importProject": "Импортировать проект"
-  },
-  "timeline": {
-    "title": "Таймлайн",
-    "noTracks": "Нет дорожек",
-    "addTrack": "Добавить дорожку",
-    "deleteTrack": "Удалить дорожку",
-    "cutTrack": "Вырезать дорожку",
-    "fitToScreen": "По размеру экрана",
-    "zoomIn": "Увеличить",
-    "zoomOut": "Уменьшить",
-    "scale": "Масштаб",
-    "toolbar": {
-      "layout": "Макет",
-      "pointer": "Указатель",
-      "undo": "Отменить",
-      "redo": "Повторить",
-      "delete": "Удалить",
-      "cut": "Вырезать",
-      "fitToScreen": "По размеру экрана",
-      "zoomOut": "Уменьшить",
-      "zoomIn": "Увеличить"
-    },
-    "zoom": {
-      "fitToScreen": "По размеру экрана",
-      "zoomOut": "Уменьшить",
-      "zoomIn": "Увеличить"
-    },
-    "player": {
-      "videoUnavailable": "Видео недоступно",
-      "noVideoSelected": "Видео не выбрано"
-    },
-    "section": {
-      "delete": "Удалить секцию",
-      "deleteConfirmation": "Вы уверены, что хотите удалить секцию {{section}}? Это действие нельзя отменить."
-    },
-    "chat": {
-      "title": "Чат",
-      "selectAgent": "Модель",
-      "messagePlaceholder": "Type your message here...",
-      "noMessages": "Нет сообщений. Начните диалог.",
-      "savingProgress": "Прогресс сохранения",
-      "saveSuccess": "Видео успешно сохранено!",
-      "send": "Отправить",
-      "stop": "Остановить",
-      "processing": "Обработка..."
-    },
-    "resources": {
-      "title": "Ресурсы",
-      "all": "Все",
-      "effects": "Эффекты",
-      "filters": "Фильтры",
-      "transitions": "Переходы",
-      "templates": "Шаблоны",
-      "music": "Музыка",
-      "noResources": "Нет добавленных ресурсов"
-    }
   }
 }

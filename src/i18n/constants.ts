@@ -58,14 +58,17 @@ export function formatDateByLanguage(
 
   // Добавляем год, если нужно
   if (includeYear) {
-    formatOptions.year = language === "es" ? "numeric" : "2-digit"
+    // Для русского языка используем "numeric", чтобы избежать проблем с форматом "г."
+    formatOptions.year = language === "ru" || language === "es" ? "numeric" : "2-digit"
   }
 
   // Форматируем дату
-  const formattedDate = date.toLocaleDateString(locale, formatOptions)
+  let formattedDate = date.toLocaleDateString(locale, formatOptions)
 
-  // Для русского языка суффикс "г." уже добавляется автоматически в toLocaleDateString,
-  // поэтому не нужно добавлять его вручную
+  // Для русского языка заменяем "г." на пустую строку, если не нужен суффикс года
+  if (language === "ru" && !addYearSuffix) {
+    formattedDate = formattedDate.replace(/ г\.$/, "")
+  }
 
   return formattedDate
 }

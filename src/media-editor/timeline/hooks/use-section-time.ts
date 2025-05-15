@@ -337,6 +337,28 @@ export function useSectionTime({
             `[useSectionTime] Обновляем позицию для сектора ${sectorId} со временем ${time.toFixed(2)}`,
           )
 
+          // Сохраняем время для сектора в контексте таймлайна и глобальной переменной
+          if (timelineContext && timelineContext.sectorTimes) {
+            timelineContext.sectorTimes[sectorId] = time
+            console.log(
+              `[useSectionTime] Сохранено время ${time.toFixed(2)} для сектора ${sectorId} в контексте таймлайна`,
+            )
+          }
+
+          // Для обратной совместимости сохраняем также в глобальной переменной
+          sectorTimes[sectorId] = time
+          console.log(
+            `[useSectionTime] Сохранено время ${time.toFixed(2)} для сектора ${sectorId} в глобальной переменной`,
+          )
+
+          // Если это наш сектор, обновляем локальное displayTime через контекст
+          if (sectorDate === sectorId && displayTimeContext && displayTimeContext.setDisplayTime) {
+            displayTimeContext.setDisplayTime(time)
+            console.log(
+              `[useSectionTime] Обновлено displayTime на ${time.toFixed(2)} для сектора ${sectorId}`,
+            )
+          }
+
           // Принудительно вызываем calculatePosition для обновления позиции
           setTimeout(() => {
             calculatePosition()

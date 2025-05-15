@@ -260,6 +260,37 @@ export const VideoItem = memo(function VideoItem({
           }
         }
 
+        // Обновляем позицию бара для текущего сектора
+        // Получаем дату сектора из startTime видео
+        const sectorDate = video.startTime
+          ? new Date(video.startTime * 1000).toISOString().split("T")[0]
+          : null
+
+        // Если есть дата сектора, отправляем событие для обновления позиции бара
+        if (sectorDate) {
+          // Вычисляем относительное время для бара
+          let barTime = 0
+          if (isTimeInVideoRange) {
+            // Если время в пределах видео, используем относительное время
+            barTime = currentTime > 365 * 24 * 60 * 60 ? displayTime : currentTime - videoStartTime
+          }
+
+          // Отправляем событие sector-time-change для обновления позиции бара
+          window.dispatchEvent(
+            new CustomEvent("sector-time-change", {
+              detail: {
+                sectorId: sectorDate,
+                time: barTime,
+                isActiveOnly: false, // Обновляем все секторы
+              },
+            }),
+          )
+
+          console.log(
+            `[VideoItem] Отправлено событие sector-time-change для сектора ${sectorDate} со временем ${barTime.toFixed(2)}`,
+          )
+        }
+
         // Не устанавливаем displayTime в 0, так как это делает компонент TimelineBarPosition
         // Это позволяет избежать конфликтов и дублирования кода
 

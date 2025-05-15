@@ -276,6 +276,7 @@
       "defaultPathHint": "Ruta predeterminada para guardar capturas",
       "customPathHint": "Las capturas se guardarán en: {{path}}",
       "previewClickBehavior": "No duplicar video de vista previa en el reproductor",
+      "aiApiKey": "Clave API para IA",
       "cancel": "Cancelar",
       "save": "Guardar"
     },
@@ -593,28 +594,30 @@
       "noVideoSelected": "Seleccione un video para reproducir",
       "videoLoadError": "Error al cargar el video"
     },
-    "controlsMain": {
-      "resizableMode": "Modo redimensionable",
-      "fixedSizeMode": "Modo de tamaño fijo",
-      "resetTemplate": "Restablecer plantilla",
-      "applyTemplate": "Aplicar plantilla",
-      "switchCamera": "Cambiar cámara",
-      "takeSnapshot": "Tomar captura",
-      "settings": "Configuración",
-      "entryPoint": "Punto de entrada",
-      "exitPoint": "Punto de salida",
-      "muteAudio": "Silenciar audio",
-      "unmuteAudio": "Activar audio",
-      "fullscreen": "Pantalla completa",
-      "exitFullscreen": "Salir de pantalla completa",
-      "record": "Grabar",
-      "stopRecord": "Detener grabación",
-      "play": "Reproducir",
-      "pause": "Pausar",
-      "previousFrame": "Fotograma anterior",
-      "nextFrame": "Siguiente fotograma",
-      "firstFrame": "Primer fotograma",
-      "lastFrame": "Último fotograma"
+    "resources": {
+      "title": "Recursos",
+      "all": "Todos",
+      "effects": "Efectos",
+      "filters": "Filtros",
+      "transitions": "Transiciones",
+      "templates": "Plantillas",
+      "music": "Música",
+      "noResources": "No hay recursos añadidos"
+    },
+    "chat": {
+      "title": "Chat",
+      "selectAgent": "Modelo",
+      "messagePlaceholder": "Escribe tu mensaje aquí...",
+      "noMessages": "No hay mensajes. Inicia una conversación.",
+      "savingProgress": "Progreso de guardado",
+      "saveSuccess": "¡Video guardado con éxito!",
+      "send": "Enviar",
+      "stop": "Detener",
+      "processing": "Procesando..."
+    },
+    "source": {
+      "timeline": "Línea de tiempo",
+      "browser": "Navegador"
     },
     "tracks": {
       "camera": "Cámara",
@@ -673,6 +676,29 @@
       "unmuteAudio": "Activar audio",
       "fullscreen": "Modo pantalla completa",
       "exitFullscreen": "Salir de pantalla completa"
+    },
+    "controlsMain": {
+      "resizableMode": "Modo redimensionable",
+      "fixedSizeMode": "Modo de tamaño fijo",
+      "resetTemplate": "Restablecer plantilla",
+      "applyTemplate": "Aplicar plantilla",
+      "switchCamera": "Cambiar cámara",
+      "takeSnapshot": "Tomar captura",
+      "settings": "Configuración",
+      "entryPoint": "Punto de entrada",
+      "exitPoint": "Punto de salida",
+      "muteAudio": "Silenciar audio",
+      "unmuteAudio": "Activar audio",
+      "fullscreen": "Pantalla completa",
+      "exitFullscreen": "Salir de pantalla completa",
+      "record": "Grabar",
+      "stopRecord": "Detener grabación",
+      "play": "Reproducir",
+      "pause": "Pausar",
+      "previousFrame": "Fotograma anterior",
+      "nextFrame": "Siguiente fotograma",
+      "firstFrame": "Primer fotograma",
+      "lastFrame": "Último fotograma"
     }
   },
   "templates": {
@@ -989,15 +1015,5 @@
     "deleteProject": "Eliminar proyecto",
     "exportProject": "Exportar proyecto",
     "importProject": "Importar proyecto"
-  },
-    "resources": {
-      "title": "Recursos",
-      "all": "Todos",
-      "effects": "Efectos",
-      "filters": "Filtros",
-      "transitions": "Transiciones",
-      "templates": "Plantillas",
-      "music": "Música",
-      "noResources": "No hay recursos añadidos"
-    }
+  }
 }

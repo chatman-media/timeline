@@ -956,6 +956,7 @@
     "exportProject": "Exporter le projet",
     "importProject": "Importer un projet"
   },
+  "timeline": {
     "resources": {
       "title": "Ressources",
       "all": "Tous",
@@ -965,5 +966,21 @@
       "templates": "Modèles",
       "music": "Musique",
       "noResources": "Aucune ressource ajoutée"
+    },
+    "chat": {
+      "title": "Chat",
+      "selectAgent": "Modèle",
+      "messagePlaceholder": "Tapez votre message ici...",
+      "noMessages": "Pas de messages. Commencez une conversation.",
+      "savingProgress": "Progression de l'enregistrement",
+      "saveSuccess": "Vidéo enregistrée avec succès !",
+      "send": "Envoyer",
+      "stop": "Arrêter",
+      "processing": "Traitement..."
+    },
+    "source": {
+      "timeline": "Timeline",
+      "browser": "Navigateur"
     }
+  }
 }

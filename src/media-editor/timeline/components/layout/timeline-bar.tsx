@@ -152,6 +152,27 @@ export function TimelineBar({
     }
   }, [video?.id, displayTime, currentTime])
 
+  // Добавляем эффект для обновления позиции бара при изменении видео
+  useEffect(() => {
+    // Если видео изменилось, обновляем позицию бара
+    if (video && video.id && sectorDate) {
+      // Отправляем событие sector-time-change для обновления позиции бара
+      window.dispatchEvent(
+        new CustomEvent("sector-time-change", {
+          detail: {
+            sectorId: sectorDate,
+            time: displayTime,
+            isActiveOnly: false, // Обновляем все секторы
+          },
+        }),
+      )
+
+      console.log(
+        `[TimelineBar] Отправлено событие sector-time-change для сектора ${sectorDate} с displayTime=${displayTime.toFixed(2)}`,
+      )
+    }
+  }, [video?.id, sectorDate])
+
   // Если позиция отрицательная, устанавливаем ее в 0
   const displayPosition = position < 0 ? 0 : position
   // Определяем цвет бара в зависимости от активности сектора

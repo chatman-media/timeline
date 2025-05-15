@@ -546,6 +546,10 @@
       "noVideoSelected": "Wählen Sie ein Video zur Wiedergabe aus",
       "videoLoadError": "Fehler beim Laden des Videos"
     },
+    "source": {
+      "timeline": "Timeline",
+      "browser": "Browser"
+    },
     "zoom": {
       "zoomIn": "Vergrößern",
       "zoomOut": "Verkleinern",
@@ -807,6 +811,7 @@
     "exportProject": "Projekt exportieren",
     "importProject": "Projekt importieren"
   },
+  "timeline": {
     "resources": {
       "title": "Ressourcen",
       "all": "Alle",
@@ -817,6 +822,22 @@
       "music": "Musik",
       "noResources": "Keine Ressourcen hinzugefügt"
     },
+    "chat": {
+      "title": "Chat",
+      "selectAgent": "Modell",
+      "messagePlaceholder": "Geben Sie Ihre Nachricht hier ein...",
+      "noMessages": "Keine Nachrichten. Starten Sie eine Konversation.",
+      "savingProgress": "Speicherfortschritt",
+      "saveSuccess": "Video erfolgreich gespeichert!",
+      "send": "Senden",
+      "stop": "Stoppen",
+      "processing": "Verarbeitung..."
+    },
+    "source": {
+      "timeline": "Timeline",
+      "browser": "Browser"
+    }
+  },
   "templates": {
     "verticalSplit": "Vertikale Teilung",
     "horizontalSplit": "Horizontale Teilung",

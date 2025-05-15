@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import i18n from "@/i18n"
+import { formatDateByLanguage } from "@/i18n/constants"
 import { cn } from "@/lib/utils"
 import {
   FileMetadata,
@@ -636,7 +637,6 @@ export const MediaFileList = memo(function MediaFileList({
       const groups: Record<string, MediaFile[]> = {}
       // Получаем текущий язык из i18n
       const currentLanguage = i18n.language || "ru"
-      const locale = currentLanguage === "en" ? "en-US" : "ru-RU"
       const noDateText = i18n.t("dates.noDate", { defaultValue: "No date" })
 
       filteredAndSortedMedia.forEach((file) => {
@@ -650,10 +650,9 @@ export const MediaFileList = memo(function MediaFileList({
         }
 
         const date = timestamp
-          ? new Date(timestamp * 1000).toLocaleDateString(locale, {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
+          ? formatDateByLanguage(new Date(timestamp * 1000), currentLanguage, {
+            includeYear: true,
+            longFormat: true,
           })
           : noDateText
 

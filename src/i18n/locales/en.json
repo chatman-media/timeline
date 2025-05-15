@@ -1004,5 +1004,20 @@
       "templates": "Templates",
       "music": "Music",
       "noResources": "No resources added"
+    },
+    "chat": {
+      "title": "Chat",
+      "selectAgent": "Model",
+      "messagePlaceholder": "Type your message here...",
+      "noMessages": "No messages. Start a conversation.",
+      "savingProgress": "Saving progress",
+      "saveSuccess": "Video saved successfully!",
+      "send": "Send",
+      "stop": "Stop",
+      "processing": "Processing..."
+    },
+    "source": {
+      "timeline": "Timeline",
+      "browser": "Browser"
     }
 }

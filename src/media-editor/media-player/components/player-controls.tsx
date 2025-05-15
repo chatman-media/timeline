@@ -988,7 +988,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
                   ? isResizableMode
                     ? t("timeline.controlsMain.fixedSizeMode")
                     : t("timeline.controlsMain.resizableMode")
-                  : "Fixed Size Mode"
+                  : ""
               }
               onClick={() => setIsResizableMode(!isResizableMode)}
               disabled={!appliedTemplate}
