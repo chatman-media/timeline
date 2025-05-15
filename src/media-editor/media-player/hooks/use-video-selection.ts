@@ -1,5 +1,6 @@
 import { useCallback } from "react"
 
+import { useTimeline } from "@/media-editor/timeline/services/timeline-provider"
 import { MediaFile } from "@/types/media"
 
 import { usePlayerContext } from "../services/player-provider"
@@ -23,6 +24,9 @@ export function useVideoSelection({ video, isActive, index }: UseVideoSelectionP
   // Это может быть undefined, поэтому обрабатываем этот случай позже
   const playerContext = usePlayerContext() as any
   const setLocalDisplayTime = playerContext.setLocalDisplayTime
+
+  // Получаем контекст таймлайна
+  const timelineContext = useTimeline()
 
   /**
    * Функция для обработки клика по видео
@@ -69,10 +73,64 @@ export function useVideoSelection({ video, isActive, index }: UseVideoSelectionP
           )
         }
       }
+
+      // Если видео из таймлайна (имеет startTime), делаем его активным на дорожке
+      if (video.startTime !== undefined) {
+        try {
+          // Получаем дату сектора из startTime видео
+          const sectorDate = new Date(video.startTime * 1000).toISOString().split("T")[0]
+
+          // Находим все треки в активном секторе
+          const tracks = timelineContext.tracks.filter((track) => {
+            // Проверяем, что трек содержит видео с нужным ID
+            return track.videos?.some((v) => v.id === video.id)
+          })
+
+          if (tracks.length > 0) {
+            // Устанавливаем активную дорожку с небольшой задержкой
+            // Это позволяет избежать проблем с черным экраном
+            setTimeout(() => {
+              try {
+                // Устанавливаем активную дорожку
+                const trackWithVideo = tracks[0]
+                console.log(`[VideoSelection] Устанавливаем активную дорожку: ${trackWithVideo.id}`)
+                timelineContext.setActiveTrack(trackWithVideo.id)
+
+                // Устанавливаем время для сектора
+                if (videoRefs[video.id]) {
+                  const currentVideoTime = videoRefs[video.id].currentTime
+                  console.log(
+                    `[VideoSelection] Устанавливаем время ${currentVideoTime.toFixed(3)} для сектора ${sectorDate}`,
+                  )
+                  timelineContext.setSectorTime(sectorDate, currentVideoTime, false)
+                }
+              } catch (delayedError) {
+                console.error(
+                  "[VideoSelection] Ошибка при отложенной активации видео на дорожке:",
+                  delayedError,
+                )
+              }
+            }, 100)
+          } else {
+            console.log(`[VideoSelection] Не найдены треки с видео ${video.id} в активном секторе`)
+          }
+        } catch (error) {
+          console.error("[VideoSelection] Ошибка при активации видео на дорожке:", error)
+        }
+      }
     } catch (error) {
       console.error("[VideoSelection] Ошибка при переключении видео:", error)
     }
-  }, [video, isActive, index, setActiveVideoId, setVideo, videoRefs, setLocalDisplayTime])
+  }, [
+    video,
+    isActive,
+    index,
+    setActiveVideoId,
+    setVideo,
+    videoRefs,
+    setLocalDisplayTime,
+    timelineContext,
+  ])
 
   return {
     handleVideoClick,

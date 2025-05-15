@@ -67,7 +67,7 @@ export function SectionHeader({
   }
 
   return (
-    <div className="flex h-[30px] items-center justify-between border-b border-gray-200 bg-gray-50 px-2 dark:border-gray-700 dark:bg-gray-800">
+    <div className="bg-secondary flex h-[30px] items-center justify-between border-b border-gray-200 px-2 dark:border-gray-700">
       <h3
         className="cursor-pointer text-sm font-medium text-gray-900 hover:underline dark:text-white"
         onClick={handleHeaderClick}

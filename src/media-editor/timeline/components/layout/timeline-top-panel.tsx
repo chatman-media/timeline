@@ -55,8 +55,8 @@ export function TimelineTopPanel({
   const { t } = useTranslation()
   const { activeSector } = useTimeline()
   return (
-    <div className="flex-shrink-0">
-      <div className="border-border flex items-center justify-between border-b px-2 py-1">
+    <div className="bg-background sticky top-0 z-10 flex-shrink-0">
+      <div className="border-border flex items-center justify-between border-b px-2">
         <div className="flex items-center gap-1">
           {/* <Popover>
             <PopoverTrigger asChild>

@@ -30,21 +30,44 @@ export function TimelineBar({
     ? new Date(video.startTime * 1000).toISOString().split("T")[0]
     : null
 
-  // Добавляем логирование для отладки
+  // Создаем ref для хранения последнего логированного состояния
+  const lastLoggedState = useRef({
+    videoId: "",
+    displayTime: -1,
+    isActive: false,
+  })
+
+  // Добавляем логирование для отладки с ограничением частоты
   useEffect(() => {
     if (video) {
-      console.log(
-        `[TimelineBar] Видео: ${video.id}, startTime=${video.startTime}, displayTime=${displayTime}, isActive=${isActive}`,
-      )
+      // Логируем только если состояние существенно изменилось
+      if (
+        lastLoggedState.current.videoId !== video.id ||
+        Math.abs(lastLoggedState.current.displayTime - displayTime) > 0.5 ||
+        lastLoggedState.current.isActive !== isActive
+      ) {
+        // Обновляем последнее логированное состояние
+        lastLoggedState.current = {
+          videoId: video.id,
+          displayTime: displayTime,
+          isActive: isActive,
+        }
+
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(
+        //   `[TimelineBar] Видео: ${video.id}, startTime=${video.startTime}, displayTime=${displayTime}, isActive=${isActive}`,
+        // )
+      }
 
       // Если есть дата сектора, сохраняем текущее displayTime для этого сектора
       // Сохраняем время для всех секторов, не только для активного
       if (sectorDate && displayTime > 0 && timelineContext) {
         // Отправляем событие SEEK в машину состояний таймлайна
         timelineContext.seek(displayTime)
-        console.log(
-          `[TimelineBar] Отправлено событие SEEK со временем ${displayTime.toFixed(2)} для сектора ${sectorDate}, isActive=${isActive}`,
-        )
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(
+        //   `[TimelineBar] Отправлено событие SEEK со временем ${displayTime.toFixed(2)} для сектора ${sectorDate}, isActive=${isActive}`,
+        // )
       }
     }
   }, [video, displayTime, sectorDate, isActive])
@@ -98,8 +121,8 @@ export function TimelineBar({
         }),
       )
 
-      // Логируем активацию сектора
-      console.log(`[TimelineBar] Активируем сектор ${sectorDate} через машину состояний`)
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(`[TimelineBar] Активируем сектор ${sectorDate} через машину состояний`)
 
       // Затем продолжаем с перемещением бара
       setTimeout(() => {
@@ -146,9 +169,10 @@ export function TimelineBar({
       // Отправляем событие SAVE_ALL_SECTORS_TIME в машину состояний таймлайна
       timelineContext.saveAllSectorsTime(video.id, displayTime, currentTime)
 
-      console.log(
-        `[TimelineBar] Отправлено событие SAVE_ALL_SECTORS_TIME для видео ${video.id} с displayTime=${displayTime.toFixed(2)}`,
-      )
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(
+      //   `[TimelineBar] Отправлено событие SAVE_ALL_SECTORS_TIME для видео ${video.id} с displayTime=${displayTime.toFixed(2)}`,
+      // )
     }
   }, [video?.id, displayTime, currentTime, timelineContext])
 
@@ -180,9 +204,10 @@ export function TimelineBar({
       // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
       timelineContext.setSectorTime(sectorDate, displayTime, false)
 
-      console.log(
-        `[TimelineBar] Отправлено событие SET_SECTOR_TIME для сектора ${sectorDate} с displayTime=${displayTime.toFixed(2)}`,
-      )
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(
+      //   `[TimelineBar] Отправлено событие SET_SECTOR_TIME для сектора ${sectorDate} с displayTime=${displayTime.toFixed(2)}`,
+      // )
     }
   }, [video?.id, sectorDate, displayTime, timelineContext])
 

@@ -16,6 +16,7 @@ export interface MediaFile {
   createdAt?: string
   updatedAt?: string
   isAddedToTimeline?: boolean
+  source?: "media" | "timeline" | string
   proxy?: {
     path: string
     width: number

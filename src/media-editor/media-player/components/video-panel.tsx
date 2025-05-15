@@ -70,26 +70,33 @@ function VideoPanelComponent({
         const currentTime = videoRef.current.currentTime
         const wasPlaying = !videoRef.current.paused
 
-        // Обновляем src
-        videoRef.current.src = video.path
-        videoRef.current.load()
+        // Обновляем src с небольшой задержкой для предотвращения черного экрана
+        setTimeout(() => {
+          if (videoRef.current) {
+            // Обновляем src
+            videoRef.current.src = video.path
+            videoRef.current.load()
 
-        // Восстанавливаем время и состояние воспроизведения
-        if (currentTime > 0) {
-          videoRef.current.currentTime = currentTime
-        }
+            // Восстанавливаем время и состояние воспроизведения
+            if (currentTime > 0) {
+              videoRef.current.currentTime = currentTime
+            }
 
-        if (wasPlaying) {
-          videoRef.current
-            .play()
-            .catch((e) =>
-              console.error(`[VideoPanel] Ошибка воспроизведения видео ${video.id}:`, e),
-            )
-        }
+            if (wasPlaying) {
+              videoRef.current
+                .play()
+                .catch((e) =>
+                  console.error(`[VideoPanel] Ошибка воспроизведения видео ${video.id}:`, e),
+                )
+            }
+          }
+        }, 100)
       }
 
       return () => {
-        delete videoRefs[video.id]
+        // Не удаляем ссылку на видео элемент при размонтировании компонента
+        // Это позволяет избежать черного экрана при переключении между видео
+        // delete videoRefs[video.id]
       }
     }
   }, [video.id, video.path, videoRefs, preferredSource])
@@ -335,7 +342,8 @@ function VideoPanelComponent({
   }
 
   // Используем ключ, который включает preferredSource для принудительного обновления компонента
-  const videoKey = `${video.id}-${preferredSource}-${video.source || "unknown"}-${Date.now()}`
+  // Убираем Date.now() из ключа, чтобы избежать постоянного пересоздания видео элемента
+  const videoKey = `${video.id}-${preferredSource}-${video.source || "unknown"}`
 
   console.log(`[VideoPanel] Рендеринг видео с ключом: ${videoKey}`)
 

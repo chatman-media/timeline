@@ -459,24 +459,54 @@ export function TemplateList() {
       videos: availableVideos,
     }
 
-    // Применяем шаблон через контекст плеера
-    setAppliedTemplate(appliedTemplate)
+    // Добавляем задержку перед применением шаблона, чтобы DOM успел обновиться
+    setTimeout(() => {
+      // Применяем шаблон через контекст плеера
+      setAppliedTemplate(appliedTemplate)
 
-    // Если есть видео в шаблоне, устанавливаем первое как активное
-    if (availableVideos.length > 0 && availableVideos[0].id) {
-      setActiveVideoId(availableVideos[0].id)
-      setVideo(availableVideos[0])
-      console.log(`Установлено активное видео: ${availableVideos[0].id}`)
-    }
+      // Если есть видео в шаблоне, устанавливаем первое как активное
+      if (availableVideos.length > 0 && availableVideos[0].id) {
+        setActiveVideoId(availableVideos[0].id)
+        setVideo(availableVideos[0])
+        console.log(`Установлено активное видео: ${availableVideos[0].id}`)
+      }
 
-    // Запускаем воспроизведение, если оно было активно
-    if (isPlaying) {
-      console.log(`Запускаем воспроизведение видео в шаблоне`)
-      // Небольшая задержка для инициализации шаблона
-      setTimeout(() => {
-        setIsPlaying(true)
-      }, 100)
-    }
+      // Запускаем воспроизведение с увеличенной задержкой, если оно было активно
+      if (isPlaying) {
+        console.log(`Запускаем воспроизведение видео в шаблоне с задержкой`)
+        // Увеличиваем задержку для инициализации шаблона и монтирования видео элементов
+        setTimeout(() => {
+          console.log(`Проверка готовности видео элементов перед воспроизведением`)
+
+          // Проверяем, что видео элементы созданы и готовы к воспроизведению
+          const videoElementsReady = availableVideos.every((video) => {
+            if (!video.id) return false
+
+            // Проверяем наличие элемента в DOM
+            const videoElement = document.getElementById(`video-${video.id}`)
+            const isReady = !!videoElement && document.body.contains(videoElement)
+
+            if (!isReady) {
+              console.log(`Видео элемент ${video.id} не найден или не готов к воспроизведению`)
+            }
+
+            return isReady
+          })
+
+          if (videoElementsReady) {
+            console.log(`Все видео элементы готовы, запускаем воспроизведение`)
+            setIsPlaying(true)
+          } else {
+            console.log(`Не все видео элементы готовы, повторная попытка через 500мс`)
+            // Если не все элементы готовы, пробуем еще раз с дополнительной задержкой
+            setTimeout(() => {
+              console.log(`Повторная попытка воспроизведения`)
+              setIsPlaying(true)
+            }, 500)
+          }
+        }, 1000) // Увеличенная задержка для надежности
+      }
+    }, 500) // Увеличенная задержка для обновления DOM
   }
 
   return (

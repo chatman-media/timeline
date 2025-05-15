@@ -452,7 +452,11 @@ export function MediaPlayer() {
   // Используем ref для отслеживания последнего синхронизированного времени
   const lastSyncedTimesRef = useRef<Record<string, number>>({})
 
+  // Ref для отслеживания предыдущего активного сектора
+  const prevActiveSectorRef = useRef<string | null>(null)
+
   // Эффект для синхронизации времени сектора из контекста таймлайна
+  // и обновления шаблона при изменении сектора
   useEffect(() => {
     // Получаем текущий сектор
     const currentSector = timelineContext?.activeSector
@@ -461,6 +465,102 @@ export function MediaPlayer() {
     // Получаем сохраненное время для текущего сектора
     const sectorId = currentSector.id
     const sectorTime = timelineContext?.sectorTimes?.[sectorId]
+
+    // Проверяем, изменился ли сектор
+    const isSectorChanged = prevActiveSectorRef.current !== sectorId
+
+    // Обновляем ref с текущим сектором
+    prevActiveSectorRef.current = sectorId
+
+    // Если сектор изменился и есть примененный шаблон, обновляем видео в шаблоне
+    if (isSectorChanged && appliedTemplate?.template && preferredSource === "timeline") {
+      console.log(`[MediaPlayer] Сектор изменился, обновляем видео в шаблоне`)
+
+      // Получаем все видео из текущего сектора
+      const sectorVideos: MediaFile[] = []
+
+      if (currentSector.tracks) {
+        currentSector.tracks.forEach((track) => {
+          if (track.videos && track.videos.length > 0) {
+            console.log(`[MediaPlayer] Добавляем ${track.videos.length} видео из трека ${track.id}`)
+            sectorVideos.push(...track.videos)
+          }
+        })
+      }
+
+      if (sectorVideos.length > 0) {
+        console.log(`[MediaPlayer] Найдено ${sectorVideos.length} видео в секторе ${sectorId}`)
+
+        // Проверяем, нужно ли обновлять шаблон
+        // Если видео в шаблоне уже из этого сектора, не обновляем
+        const currentTemplateVideoIds = appliedTemplate.videos?.map((v) => v.id) || []
+        const screensCount = appliedTemplate.template?.screens || 1
+
+        // Берем только первые N видео из сектора, где N - количество экранов в шаблоне
+        const relevantSectorVideos = sectorVideos.slice(0, screensCount)
+        const sectorVideoIds = relevantSectorVideos.map((v) => v.id)
+
+        // Проверяем, совпадают ли видео в шаблоне с видео из сектора
+        // Шаблон нужно обновить, если:
+        // 1. Количество видео в шаблоне не соответствует количеству экранов или доступных видео
+        // 2. Видео в шаблоне не соответствуют видео из сектора
+        const countMismatch =
+          currentTemplateVideoIds.length !== Math.min(screensCount, relevantSectorVideos.length)
+        const contentMismatch = !sectorVideoIds.every(
+          (id, index) => currentTemplateVideoIds[index] === id,
+        )
+        const needsUpdate = countMismatch || contentMismatch
+
+        console.log(`[MediaPlayer] Текущие видео в шаблоне: ${currentTemplateVideoIds.join(", ")}`)
+        console.log(`[MediaPlayer] Видео из сектора: ${sectorVideoIds.join(", ")}`)
+        console.log(`[MediaPlayer] Количество экранов в шаблоне: ${screensCount}`)
+
+        if (countMismatch) {
+          console.log(
+            `[MediaPlayer] Несоответствие количества видео: ${currentTemplateVideoIds.length} в шаблоне, требуется ${Math.min(screensCount, relevantSectorVideos.length)}`,
+          )
+        }
+
+        if (contentMismatch) {
+          console.log(`[MediaPlayer] Несоответствие содержимого видео в шаблоне и секторе`)
+        }
+
+        if (needsUpdate) {
+          console.log(
+            `[MediaPlayer] Требуется обновление шаблона, видео в шаблоне не соответствуют текущему сектору`,
+          )
+
+          // Создаем копию шаблона
+          const templateCopy = { ...appliedTemplate }
+
+          // Заполняем шаблон видео из сектора
+          templateCopy.videos = relevantSectorVideos.map((video) => ({
+            ...video,
+            source: "timeline", // Явно устанавливаем источник как timeline
+          }))
+
+          console.log(
+            `[MediaPlayer] Обновляем шаблон с ${templateCopy.videos.length} видео из сектора ${sectorId}`,
+          )
+
+          // Применяем обновленный шаблон с небольшой задержкой
+          setTimeout(() => {
+            setAppliedTemplate(templateCopy)
+
+            // Если есть видео в шаблоне, устанавливаем первое как активное
+            if (templateCopy.videos.length > 0 && templateCopy.videos[0].id) {
+              setActiveVideoId(templateCopy.videos[0].id)
+              setVideo(templateCopy.videos[0])
+              console.log(`[MediaPlayer] Установлено активное видео: ${templateCopy.videos[0].id}`)
+            }
+          }, 300)
+        } else {
+          console.log(
+            `[MediaPlayer] Шаблон уже содержит актуальные видео из текущего сектора, обновление не требуется`,
+          )
+        }
+      }
+    }
 
     if (sectorId && sectorTime !== undefined) {
       // Проверяем, не синхронизировали ли мы уже это время
@@ -501,6 +601,8 @@ export function MediaPlayer() {
     setDisplayTime,
     timelineContext?.activeSector,
     timelineContext?.sectorTimes,
+    appliedTemplate,
+    preferredSource,
   ])
 
   // Эффект для логирования всех времен секторов из контекста таймлайна
@@ -1019,7 +1121,20 @@ export function MediaPlayer() {
               return
             }
 
-            const refreshedElement = videoRefs[video.id]
+            // Проверяем наличие элемента в DOM двумя способами
+            let refreshedElement = videoRefs[video.id]
+
+            // Если элемент не найден в videoRefs, пробуем найти его по ID в DOM
+            if (!refreshedElement || !document.body.contains(refreshedElement)) {
+              const domElement = document.getElementById(`video-${video.id}`)
+              if (domElement && domElement instanceof HTMLVideoElement) {
+                console.log(`[PlayVideo] Найден видео элемент ${video.id} в DOM, но не в videoRefs`)
+                refreshedElement = domElement
+                // Обновляем ссылку в videoRefs
+                videoRefs[video.id] = domElement
+              }
+            }
+
             if (refreshedElement && document.body.contains(refreshedElement)) {
               console.log("[PlayVideo] Повторная попытка воспроизведения после задержки")
 
@@ -1060,7 +1175,7 @@ export function MediaPlayer() {
                       }
                     })
                   }
-                }, 2000)
+                }, 3000) // Увеличиваем таймаут для более надежной работы
               } else if (isPlaying && !isChangingCamera) {
                 refreshedElement.play().catch((err) => {
                   if (err.name !== "AbortError") {
@@ -1074,7 +1189,7 @@ export function MediaPlayer() {
               )
 
               // Если элемент все еще не найден, пробуем создать его
-              if (video?.id && video?.path && !videoRefs[video.id]) {
+              if (video?.id && video?.path) {
                 console.log(
                   `[PlayVideo] Создаем новый видео элемент для ${video.id} после неудачной повторной попытки`,
                 )
@@ -1105,11 +1220,46 @@ export function MediaPlayer() {
                 // Добавляем в глобальный реестр
                 allVideoElementsRef.current.add(newVideoElement)
 
+                // Добавляем обработчик для запуска воспроизведения после загрузки
+                const handleCanPlay = () => {
+                  if (isPlaying && !isChangingCamera) {
+                    console.log(
+                      `[PlayVideo] Запускаем воспроизведение нового элемента после загрузки`,
+                    )
+                    newVideoElement.play().catch((err) => {
+                      if (err.name !== "AbortError") {
+                        console.error(
+                          "[PlayVideo] Ошибка при воспроизведении нового элемента:",
+                          err,
+                        )
+                      }
+                    })
+                  }
+                  newVideoElement.removeEventListener("canplay", handleCanPlay)
+                }
+
+                newVideoElement.addEventListener("canplay", handleCanPlay, { once: true })
+
                 // Загружаем видео
                 newVideoElement.load()
+
+                // Запускаем еще одну попытку через дополнительную задержку
+                setTimeout(() => {
+                  // Проверяем, что видео ID не изменился
+                  if (video?.id !== currentVideoIdRef.current) return
+
+                  if (isPlaying && !isChangingCamera && newVideoElement.paused) {
+                    console.log(`[PlayVideo] Финальная попытка воспроизведения для ${video.id}`)
+                    newVideoElement.play().catch((err) => {
+                      if (err.name !== "AbortError") {
+                        console.error("[PlayVideo] Ошибка при финальной попытке:", err)
+                      }
+                    })
+                  }
+                }, 2000)
               }
             }
-          }, 500) // Увеличиваем задержку для более надежной повторной попытки
+          }, 1000) // Увеличиваем задержку для более надежной повторной попытки
 
           return
         }
@@ -2605,6 +2755,47 @@ export function MediaPlayer() {
       `[MediaPlayer] Используем видео из ${useTimelineVideos ? "таймлайна" : "браузера"} для шаблона`,
     )
 
+    // Проверяем, что все видео из шаблона имеют соответствующие элементы в DOM
+    // Если нет, создаем их программно
+    if (appliedTemplate.videos && appliedTemplate.videos.length > 0) {
+      appliedTemplate.videos.forEach((video) => {
+        if (video?.id && video?.path && !videoRefs[video.id]) {
+          console.log(
+            `[MediaPlayer] Предварительно создаем видео элемент для ${video.id} при применении шаблона`,
+          )
+
+          // Создаем видео элемент программно
+          const newVideoElement = document.createElement("video")
+          newVideoElement.id = `video-${video.id}`
+          newVideoElement.preload = "auto"
+          newVideoElement.playsInline = true
+          newVideoElement.controls = false
+          newVideoElement.autoplay = false
+          newVideoElement.loop = false
+          newVideoElement.muted = false
+          newVideoElement.volume = volume
+          newVideoElement.src = video.path
+
+          // Добавляем элемент в DOM (скрытый)
+          newVideoElement.style.position = "absolute"
+          newVideoElement.style.width = "1px"
+          newVideoElement.style.height = "1px"
+          newVideoElement.style.opacity = "0"
+          newVideoElement.style.pointerEvents = "none"
+          document.body.appendChild(newVideoElement)
+
+          // Сохраняем ссылку на элемент
+          videoRefs[video.id] = newVideoElement
+
+          // Добавляем видео элемент в глобальный реестр для отслеживания
+          allVideoElementsRef.current.add(newVideoElement)
+
+          // Загружаем видео
+          newVideoElement.load()
+        }
+      })
+    }
+
     // Создаем копию видео из шаблона
     let templateVideos = [...(appliedTemplate.videos || [])]
 
@@ -2880,12 +3071,12 @@ export function MediaPlayer() {
                 {videosToDisplay && videosToDisplay.length > 0 ? (
                   // Если есть видео для отображения
                   <div className="h-full w-full">
-                    {/* Логируем информацию о видео для отображения */}
-                    <>
+                    {/* Отключаем логирование для уменьшения количества сообщений */}
+                    {/* <>
                       {console.log(
                         `[MediaPlayer] Отображаем видео: ${videosToDisplay.map((v) => v.id).join(", ")}, activeId=${activeId}, isVideoReady=${isVideoReady}`,
                       )}
-                    </>
+                    </> */}
 
                     {/* Если есть примененный шаблон и он настраиваемый, используем ResizableTemplate */}
                     {appliedTemplate?.template && appliedTemplate.template.resizable ? (
@@ -2983,6 +3174,18 @@ export function MediaPlayer() {
                             `[MediaPlayer] Пропускаем дублирующееся видео ${videoItem.id} в индексе ${index}`,
                           )
                           return null
+                        }
+
+                        // Проверяем, есть ли уже видео элемент в DOM с таким же ID
+                        // Если есть, используем его вместо создания нового
+                        const existingVideoElement = document.querySelector(
+                          `video[data-video-id="${videoItem.id}"]`,
+                        ) as HTMLVideoElement
+                        if (existingVideoElement && !videoRefs[videoItem.id]) {
+                          console.log(
+                            `[MediaPlayer] Найден существующий видео элемент для ${videoItem.id}, используем его`,
+                          )
+                          videoRefs[videoItem.id] = existingVideoElement
                         }
 
                         return (
