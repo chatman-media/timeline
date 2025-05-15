@@ -25,26 +25,15 @@ export function MediaPlayer() {
   // Состояние для отслеживания готовности видео
   const [videoReadyState, setVideoReadyState] = useState<Record<string, number>>({})
 
-  // Состояние для отслеживания источника видео (медиа машина или таймлайн)
-  const [videoSources, setVideoSources] = useState<Record<string, "media" | "timeline">>({})
-
   // Функция для проверки готовности видео
   const isVideoReady = (videoId: string): boolean => {
     return videoReadyState[videoId] >= 3 // HAVE_FUTURE_DATA или HAVE_ENOUGH_DATA
   }
 
-  // Функция для определения источника видео
+  // Функция для определения источника видео из машины состояний
   const getVideoSource = (videoId: string): "media" | "timeline" | null => {
+    // Используем videoSources из машины состояний
     return videoSources[videoId] || null
-  }
-
-  // Функция для установки источника видео
-  const setVideoSource = (videoId: string, source: "media" | "timeline"): void => {
-    setVideoSources((prev) => ({
-      ...prev,
-      [videoId]: source,
-    }))
-    console.log(`[MediaPlayer] Установлен источник для видео ${videoId}: ${source}`)
   }
 
   // Обновляем текст при изменении языка
@@ -76,6 +65,8 @@ export function MediaPlayer() {
     preferredSource,
     setVideoReady, // Добавляем функцию setVideoReady
     setVideoLoading, // Добавляем функцию setVideoLoading
+    videoSources, // Получаем videoSources из машины состояний
+    updateVideoSources, // Получаем функцию для обновления источников видео
   } = usePlayerContext()
 
   // Получаем displayTime из контекста
@@ -285,16 +276,73 @@ export function MediaPlayer() {
 
       // Определяем источник видео
       const source = video.startTime !== undefined ? "timeline" : "media"
-      setVideoSource(video.id, source)
+
+      // Обновляем источники видео в машине состояний
+      const newVideoSources: Record<string, "media" | "timeline"> = { ...videoSources }
+      newVideoSources[video.id] = source
+      updateVideoSources(newVideoSources)
+
+      console.log(
+        `[MediaPlayer] Установлен источник для нового видео ${video.id}: ${source}, startTime=${video.startTime}`,
+      )
     } else {
       console.log(`[MediaPlayer] Используем существующий видео элемент для ${video.id}`)
+
+      // Обновляем источник для существующего видео
+      const source = video.startTime !== undefined ? "timeline" : "media"
+      const currentSource = getVideoSource(video.id)
+
+      // Если источник изменился, обновляем его
+      if (currentSource !== source) {
+        console.log(
+          `[MediaPlayer] Обновляем источник для видео ${video.id}: ${currentSource} -> ${source}`,
+        )
+
+        // Обновляем источники видео в машине состояний
+        const newVideoSources: Record<string, "media" | "timeline"> = { ...videoSources }
+        newVideoSources[video.id] = source
+        updateVideoSources(newVideoSources)
+      }
     }
 
     // Проверяем, что src установлен правильно
-    if (videoElement && (!videoElement.src || !videoElement.src.includes(video.id)) && video.path) {
-      console.log(`[MediaPlayer] Обновляем src для видео ${video.id}: ${video.path}`)
-      videoElement.src = video.path
-      videoElement.load()
+    if (videoElement && video.path) {
+      const currentSource = getVideoSource(video.id)
+      const isTimelineVideo = currentSource === "timeline" || video.startTime !== undefined
+
+      // Принудительно обновляем src для видео из таймлайна или если src не установлен
+      if (isTimelineVideo || !videoElement.src || !videoElement.src.includes(video.id)) {
+        console.log(`[MediaPlayer] Обновляем src для видео ${video.id}: ${video.path}`)
+        console.log(
+          `[MediaPlayer] Источник видео: ${currentSource || "не определен"}, startTime=${video.startTime}`,
+        )
+
+        // Сохраняем текущее время и состояние воспроизведения
+        const currentTime = videoElement.currentTime
+        const wasPlaying = !videoElement.paused
+
+        // Обновляем src
+        videoElement.src = video.path
+        videoElement.load()
+
+        // Восстанавливаем время и состояние воспроизведения
+        if (currentTime > 0) {
+          videoElement.currentTime = currentTime
+        }
+
+        if (wasPlaying) {
+          videoElement
+            .play()
+            .catch((e) =>
+              console.error(`[MediaPlayer] Ошибка воспроизведения видео ${video.id}:`, e),
+            )
+        }
+      } else {
+        console.log(`[MediaPlayer] Видео ${video.id} уже имеет правильный src: ${videoElement.src}`)
+        console.log(
+          `[MediaPlayer] Источник видео: ${currentSource || "не определен"}, startTime=${video.startTime}`,
+        )
+      }
     }
 
     // Добавляем обработчик события loadedmetadata
@@ -2167,7 +2215,10 @@ export function MediaPlayer() {
         // Помечаем все параллельные видео как видео из браузера
         parallelVideos.forEach((v) => {
           if (v.id) {
-            setVideoSource(v.id, "media")
+            // Обновляем источники видео в машине состояний
+            const newVideoSources: Record<string, "media" | "timeline"> = { ...videoSources }
+            newVideoSources[v.id] = "media"
+            updateVideoSources(newVideoSources)
             console.log(`[MediaPlayer] Видео ${v.id} помечено как видео из браузера`)
           }
         })
@@ -2395,7 +2446,10 @@ export function MediaPlayer() {
 
             // Устанавливаем источник этого видео как "media"
             if (parallelVideos[0].id) {
-              setVideoSource(parallelVideos[0].id, "media")
+              // Обновляем источники видео в машине состояний
+              const newVideoSources: Record<string, "media" | "timeline"> = { ...videoSources }
+              newVideoSources[parallelVideos[0].id] = "media"
+              updateVideoSources(newVideoSources)
             }
           }
         }
@@ -2443,6 +2497,65 @@ export function MediaPlayer() {
     preferredSource,
     videosToDisplay,
   ])
+
+  // Эффект для обновления видео при изменении preferredSource
+  useEffect(() => {
+    console.log(`[MediaPlayer] Обнаружено изменение preferredSource: ${preferredSource}`)
+
+    // Если источник - таймлайн, принудительно обновляем видео
+    if (preferredSource === "timeline") {
+      console.log(`[MediaPlayer] Принудительно обновляем видео в шаблоне для таймлайна`)
+
+      // Сначала сбрасываем шаблон, если он есть
+      if (appliedTemplate) {
+        console.log(`[MediaPlayer] Временно сбрасываем шаблон для гарантии обновления`)
+
+        // Сохраняем ссылку на текущий шаблон
+        const currentTemplate = appliedTemplate
+
+        // Сбрасываем шаблон
+        setAppliedTemplate(null)
+
+        // Через небольшую задержку восстанавливаем шаблон
+        setTimeout(() => {
+          console.log(`[MediaPlayer] Восстанавливаем шаблон после сброса`)
+          setAppliedTemplate(currentTemplate)
+
+          // Проходим по всем видео в шаблоне
+          currentTemplate.videos.forEach((video) => {
+            if (video.id && videoRefs[video.id] && video.path) {
+              const videoElement = videoRefs[video.id]
+
+              console.log(
+                `[MediaPlayer] Обновляем видео ${video.id} в шаблоне, source=${preferredSource}, startTime=${video.startTime}`,
+              )
+
+              // Сохраняем текущее время и состояние воспроизведения
+              const currentTime = videoElement.currentTime
+              const wasPlaying = !videoElement.paused
+
+              // Обновляем src
+              videoElement.src = video.path
+              videoElement.load()
+
+              // Восстанавливаем время и состояние воспроизведения
+              if (currentTime > 0) {
+                videoElement.currentTime = currentTime
+              }
+
+              if (wasPlaying) {
+                videoElement
+                  .play()
+                  .catch((e) =>
+                    console.error(`[MediaPlayer] Ошибка воспроизведения видео ${video.id}:`, e),
+                  )
+              }
+            }
+          })
+        }, 100)
+      }
+    }
+  }, [preferredSource])
 
   // Эффект для применения шаблона с учетом источника видео
   useEffect(() => {
@@ -2617,7 +2730,10 @@ export function MediaPlayer() {
 
           // Определяем источник видео
           const source = videoItem.startTime !== undefined ? "timeline" : "media"
-          setVideoSource(videoItem.id, source)
+          // Обновляем источники видео в машине состояний
+          const newVideoSources: Record<string, "media" | "timeline"> = { ...videoSources }
+          newVideoSources[videoItem.id] = source
+          updateVideoSources(newVideoSources)
 
           // Добавляем элемент в массив для последующей обработки
           videoElements.push(videoElement)
@@ -2855,7 +2971,12 @@ export function MediaPlayer() {
                                 // Если видео имеет startTime, то это видео из таймлайна
                                 const source =
                                   videoItem.startTime !== undefined ? "timeline" : "media"
-                                setVideoSource(videoItem.id, source)
+                                // Обновляем источники видео в машине состояний
+                                const newVideoSources: Record<string, "media" | "timeline"> = {
+                                  ...videoSources,
+                                }
+                                newVideoSources[videoItem.id] = source
+                                updateVideoSources(newVideoSources)
                                 console.log(
                                   `[MediaPlayer] Видео ${videoItem.id} определено как ${source}`,
                                 )
@@ -3010,7 +3131,7 @@ export function MediaPlayer() {
           </div>
         </div>
       </div>
-      <PlayerControls currentTime={currentTime} videoSources={videoSources} />
+      <PlayerControls currentTime={currentTime} />
     </div>
   )
 }

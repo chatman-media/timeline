@@ -52,15 +52,47 @@ function VideoPanelComponent({
     index,
   })
 
-  // Эффект для регистрации видео в videoRefs
+  // Эффект для регистрации видео в videoRefs и обновления src при изменении источника
   useEffect(() => {
     if (videoRef.current && video.id && videoRefs) {
+      console.log(
+        `[VideoPanel] Регистрация видео ${video.id} в videoRefs, source=${preferredSource}, startTime=${video.startTime}`,
+      )
+
+      // Сохраняем ссылку на видео элемент
       videoRefs[video.id] = videoRef.current
+
+      // Проверяем, что src установлен правильно
+      if (video.path && (!videoRef.current.src || !videoRef.current.src.includes(video.id))) {
+        console.log(`[VideoPanel] Принудительно обновляем src для видео ${video.id}: ${video.path}`)
+
+        // Сохраняем текущее время и состояние воспроизведения
+        const currentTime = videoRef.current.currentTime
+        const wasPlaying = !videoRef.current.paused
+
+        // Обновляем src
+        videoRef.current.src = video.path
+        videoRef.current.load()
+
+        // Восстанавливаем время и состояние воспроизведения
+        if (currentTime > 0) {
+          videoRef.current.currentTime = currentTime
+        }
+
+        if (wasPlaying) {
+          videoRef.current
+            .play()
+            .catch((e) =>
+              console.error(`[VideoPanel] Ошибка воспроизведения видео ${video.id}:`, e),
+            )
+        }
+      }
+
       return () => {
         delete videoRefs[video.id]
       }
     }
-  }, [video.id, videoRefs])
+  }, [video.id, video.path, videoRefs, preferredSource])
 
   // Используем ref для отслеживания предыдущего состояния воспроизведения
   const prevPlayingStateRef = useRef(isPlaying)
@@ -167,6 +199,78 @@ function VideoPanelComponent({
     }
   }, [isPlaying, video.id, video.path])
 
+  // Эффект для принудительного обновления видео при изменении preferredSource
+  useEffect(() => {
+    // Проверяем наличие видео элемента, ID видео и пути к видео
+    if (!videoRef.current || !video.id || !video.path) return
+
+    console.log(
+      `[VideoPanel] Обнаружено изменение preferredSource: ${preferredSource}, видео: ${video.id}, startTime=${video.startTime}`,
+    )
+
+    // Принудительно обновляем видео при изменении preferredSource
+    if (preferredSource === "timeline" && video.startTime !== undefined) {
+      console.log(`[VideoPanel] Принудительно обновляем видео из таймлайна: ${video.id}`)
+
+      // Сохраняем текущее время и состояние воспроизведения
+      const currentTime = videoRef.current.currentTime
+      const wasPlaying = !videoRef.current.paused
+
+      // Обновляем src
+      videoRef.current.src = video.path
+      videoRef.current.load()
+
+      // Восстанавливаем время и состояние воспроизведения
+      if (currentTime > 0) {
+        videoRef.current.currentTime = currentTime
+      }
+
+      if (wasPlaying) {
+        videoRef.current
+          .play()
+          .catch((e) => console.error(`[VideoPanel] Ошибка воспроизведения видео ${video.id}:`, e))
+      }
+
+      // Устанавливаем флаг готовности
+      setIsReady(true)
+    }
+  }, [preferredSource, video.id, video.path, video.startTime])
+
+  // Эффект для принудительного обновления видео при изменении самого видео
+  useEffect(() => {
+    // Проверяем наличие видео элемента, ID видео и пути к видео
+    if (!videoRef.current || !video.id || !video.path) return
+
+    console.log(
+      `[VideoPanel] Обнаружено изменение видео: ${video.id}, source=${video.source || "не определен"}, startTime=${video.startTime}`,
+    )
+
+    // Принудительно обновляем видео
+    console.log(`[VideoPanel] Принудительно обновляем видео: ${video.id}`)
+
+    // Сохраняем текущее время и состояние воспроизведения
+    const currentTime = videoRef.current.currentTime
+    const wasPlaying = !videoRef.current.paused
+
+    // Обновляем src
+    videoRef.current.src = video.path
+    videoRef.current.load()
+
+    // Восстанавливаем время и состояние воспроизведения
+    if (currentTime > 0) {
+      videoRef.current.currentTime = currentTime
+    }
+
+    if (wasPlaying) {
+      videoRef.current
+        .play()
+        .catch((e) => console.error(`[VideoPanel] Ошибка воспроизведения видео ${video.id}:`, e))
+    }
+
+    // Устанавливаем флаг готовности
+    setIsReady(true)
+  }, [video])
+
   // Используем ref для отслеживания времени последней загрузки
   const lastLoadTimeRef = useRef(0)
 
@@ -230,11 +334,17 @@ function VideoPanelComponent({
     }
   }
 
+  // Используем ключ, который включает preferredSource для принудительного обновления компонента
+  const videoKey = `${video.id}-${preferredSource}-${video.source || "unknown"}-${Date.now()}`
+
+  console.log(`[VideoPanel] Рендеринг видео с ключом: ${videoKey}`)
+
   return (
     <div
       className="video-panel-template relative h-full w-full cursor-pointer"
       style={{ overflow: "visible" }}
       onClick={handleVideoClick}
+      key={`panel-${videoKey}`}
     >
       <div
         className={`absolute inset-0 ${isActive ? "border-2 border-white" : ""}`}
@@ -248,6 +358,7 @@ function VideoPanelComponent({
         {video.path ? (
           // Если есть путь к видео, отображаем видео
           <video
+            key={videoKey}
             ref={videoRef}
             src={video.path}
             className="absolute"
@@ -265,6 +376,8 @@ function VideoPanelComponent({
             disablePictureInPicture
             muted={!isActive} // Звук только из активного видео
             data-video-id={video.id}
+            data-source={video.source || preferredSource}
+            data-start-time={video.startTime}
             onLoadedData={handleLoadedData}
           />
         ) : (

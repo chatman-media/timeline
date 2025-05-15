@@ -88,9 +88,9 @@ export function useSectionTime({
 
       // Логируем только при изменении времени, чтобы избежать спама в консоли
       if (Math.abs(lastTimeRef.current - currentTime) > 0.01) {
-        console.log(
-          `[useSectionTime] Обнаружен Unix timestamp (${currentTime}), используем относительное время из контекста: ${effectiveCurrentTime}`,
-        )
+        // console.log(
+        //   `[useSectionTime] Обнаружен Unix timestamp (${currentTime}), используем относительное время из контекста: ${effectiveCurrentTime}`,
+        // )
       }
     }
 
@@ -110,9 +110,9 @@ export function useSectionTime({
         timelineContext.sectorTimes[sectorDate] !== undefined
       ) {
         effectiveCurrentTime = timelineContext.sectorTimes[sectorDate]
-        console.log(
-          `[useSectionTime] Используем сохраненное время ${effectiveCurrentTime.toFixed(2)} для сектора ${sectorDate} из контекста таймлайна`,
-        )
+        // console.log(
+        //   `[useSectionTime] Используем сохраненное время ${effectiveCurrentTime.toFixed(2)} для сектора ${sectorDate} из контекста таймлайна`,
+        // )
       }
       // Для обратной совместимости проверяем также глобальную переменную
       else if (sectorDate && sectorTimes[sectorDate] !== undefined) {

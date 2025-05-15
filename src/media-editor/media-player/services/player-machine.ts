@@ -50,6 +50,13 @@ export interface PlayerContextType {
   // "preview" - проигрывать в превью (старое поведение)
   // "player" - проигрывать в медиа плеере (новое поведение)
   previewClickBehavior: "preview" | "player"
+
+  // Новые поля для хранения видео по источникам
+  timelineVideos: MediaFile[] // Видео из таймлайна
+  browserVideos: MediaFile[] // Видео из браузера
+
+  // Информация о источнике каждого видео
+  videoSources: Record<string, "media" | "timeline">
 }
 
 // Загружаем сохраненный уровень звука из localStorage
@@ -88,6 +95,11 @@ const initialContext: PlayerContextType = {
   preferredSource: "timeline", // По умолчанию используем таймлайн как источник
   lastAppliedTemplate: null,
   previewClickBehavior: "player", // По умолчанию проигрываем в медиа плеере (новое поведение)
+
+  // Инициализируем новые поля
+  timelineVideos: [],
+  browserVideos: [],
+  videoSources: {},
 }
 
 type SetCurrentTimeEvent = {
@@ -197,6 +209,22 @@ type SetVideoReadyStateEvent = {
   videoReadyState: Record<string, number>
 }
 
+// Новые события для обновления видео из разных источников
+type UpdateTimelineVideosEvent = {
+  type: "updateTimelineVideos"
+  videos: MediaFile[]
+}
+
+type UpdateBrowserVideosEvent = {
+  type: "updateBrowserVideos"
+  videos: MediaFile[]
+}
+
+type UpdateVideoSourcesEvent = {
+  type: "updateVideoSources"
+  videoSources: Record<string, "media" | "timeline">
+}
+
 export type PlayerEvent =
   | SetCurrentTimeEvent
   | SetIsPlayingEvent
@@ -219,6 +247,9 @@ export type PlayerEvent =
   | SetPreviewClickBehaviorEvent
   | SetVideoReadyStateEvent
   | SwitchVideoSourceEvent
+  | UpdateTimelineVideosEvent
+  | UpdateBrowserVideosEvent
+  | UpdateVideoSourcesEvent
 
 // Функция для сохранения состояния плеера в IndexedDB - временно отключена
 const persistPlayerState = async (_: { context: PlayerContextType }): Promise<void> => {
@@ -339,7 +370,12 @@ export const playerMachine = createMachine({
           actions: assign({ isResizableMode: ({ event }) => event.isResizableMode }),
         },
         setPreferredSource: {
-          actions: assign({ preferredSource: ({ event }) => event.preferredSource }),
+          actions: [
+            assign({ preferredSource: ({ event }) => event.preferredSource }),
+            ({ event }) => {
+              console.log(`[PlayerMachine] setPreferredSource: ${event.preferredSource}`)
+            },
+          ],
         },
         setVideoReadyState: {
           actions: assign({
@@ -348,6 +384,70 @@ export const playerMachine = createMachine({
               return { ...context.videoReadyState, ...event.videoReadyState }
             },
           }),
+        },
+
+        // Обработчики для новых событий
+        updateTimelineVideos: {
+          actions: [
+            assign({
+              timelineVideos: ({ event }) => event.videos,
+            }),
+            ({ event, context }) => {
+              console.log(`[PlayerMachine] Обновлены видео из таймлайна: ${event.videos.length}`)
+
+              // Обновляем источники видео
+              const newVideoSources = { ...context.videoSources }
+
+              // Помечаем все видео из таймлайна
+              event.videos.forEach((video) => {
+                if (video.id) {
+                  newVideoSources[video.id] = "timeline"
+                  console.log(`[PlayerMachine] Видео ${video.id} помечено как видео из таймлайна`)
+                }
+              })
+
+              // Обновляем источники видео в контексте
+              context.videoSources = newVideoSources
+            },
+          ],
+        },
+
+        updateBrowserVideos: {
+          actions: [
+            assign({
+              browserVideos: ({ event }) => event.videos,
+            }),
+            ({ event, context }) => {
+              console.log(`[PlayerMachine] Обновлены видео из браузера: ${event.videos.length}`)
+
+              // Обновляем источники видео
+              const newVideoSources = { ...context.videoSources }
+
+              // Помечаем все видео из браузера
+              event.videos.forEach((video) => {
+                if (video.id) {
+                  newVideoSources[video.id] = "media"
+                  console.log(`[PlayerMachine] Видео ${video.id} помечено как видео из браузера`)
+                }
+              })
+
+              // Обновляем источники видео в контексте
+              context.videoSources = newVideoSources
+            },
+          ],
+        },
+
+        updateVideoSources: {
+          actions: [
+            assign({
+              videoSources: ({ event }) => event.videoSources,
+            }),
+            ({ event }) => {
+              console.log(
+                `[PlayerMachine] Обновлены источники видео: ${Object.keys(event.videoSources).length}`,
+              )
+            },
+          ],
         },
         switchVideoSource: {
           actions: [
@@ -359,31 +459,79 @@ export const playerMachine = createMachine({
               console.log(
                 `[PlayerMachine] Переключение источника видео: ${context.preferredSource}`,
               )
+              console.log(
+                `[PlayerMachine] Детали события: tracks=${event.tracks.length}, activeTrackId=${event.activeTrackId}, parallelVideos=${event.parallelVideos.length}`,
+              )
+
+              // Выводим информацию о текущем состоянии
+              console.log(
+                `[PlayerMachine] Текущее состояние: video=${context.video?.id}, activeVideoId=${context.activeVideoId}, appliedTemplate=${!!context.appliedTemplate}`,
+              )
 
               // Если текущий источник - таймлайн
               if (context.preferredSource === "timeline") {
+                console.log(`[PlayerMachine] Получаем видео из таймлайна...`)
                 // Получаем видео из таймлайна
                 const timelineVideos = getVideosFromTimeline(event.tracks, event.activeTrackId)
 
                 // Если есть видео из таймлайна
                 if (timelineVideos.length > 0) {
                   console.log(`[PlayerMachine] Найдено ${timelineVideos.length} видео из таймлайна`)
-
-                  // Обновляем источники видео
-                  const videoSources = updateVideoSources(timelineVideos)
-
-                  // Если есть примененный шаблон, обновляем его видео
-                  if (context.appliedTemplate) {
-                    // Обновляем шаблон с видео из таймлайна
-                    const updatedTemplate = updateTemplateWithTimelineVideos(
-                      context.appliedTemplate,
-                      timelineVideos,
+                  // Выводим детали каждого видео
+                  timelineVideos.forEach((video, index) => {
+                    console.log(
+                      `[PlayerMachine] Видео ${index + 1}/${timelineVideos.length}: id=${video.id}, path=${video.path}, startTime=${video.startTime}`,
                     )
+                  })
 
-                    // Применяем обновленный шаблон
-                    if (updatedTemplate) {
-                      console.log(`[PlayerMachine] Обновлен шаблон с видео из таймлайна`)
-                      context.appliedTemplate = updatedTemplate
+                  // Обновляем видео из таймлайна в контексте
+                  context.timelineVideos = timelineVideos
+
+                  // Обновляем источники видео в контексте
+                  const newVideoSources = { ...context.videoSources }
+
+                  // Помечаем все видео из таймлайна
+                  timelineVideos.forEach((video) => {
+                    if (video.id) {
+                      newVideoSources[video.id] = "timeline"
+                      console.log(
+                        `[PlayerMachine] Видео ${video.id} помечено как видео из таймлайна`,
+                      )
+                    }
+                  })
+
+                  // Обновляем источники видео в контексте
+                  context.videoSources = newVideoSources
+
+                  // Если есть примененный шаблон, полностью пересоздаем его
+                  if (context.appliedTemplate) {
+                    console.log(`[PlayerMachine] Полностью пересоздаем шаблон для таймлайна`)
+
+                    // Сохраняем ссылку на текущий шаблон
+                    const currentTemplate = context.appliedTemplate.template
+
+                    // Сначала сбрасываем шаблон
+                    context.appliedTemplate = null
+
+                    // Создаем новый шаблон с видео из таймлайна
+                    setTimeout(() => {
+                      // Создаем новый шаблон
+                      const newTemplate = {
+                        template: currentTemplate,
+                        videos: timelineVideos
+                          .slice(0, currentTemplate?.screens || 1)
+                          .map((video) => ({
+                            ...video,
+                            source: "timeline", // Явно устанавливаем источник как timeline
+                          })),
+                      }
+
+                      console.log(
+                        `[PlayerMachine] Создан новый шаблон с ${newTemplate.videos.length} видео из таймлайна`,
+                      )
+
+                      // Применяем новый шаблон
+                      context.appliedTemplate = newTemplate
 
                       // Устанавливаем первое видео из таймлайна как активное
                       if (timelineVideos.length > 0) {
@@ -393,29 +541,40 @@ export const playerMachine = createMachine({
                           `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
                         )
                       }
-                    }
+                    }, 50)
                   }
                   // Если нет примененного шаблона, но есть последний примененный шаблон
                   else if (context.lastAppliedTemplate) {
-                    // Обновляем последний шаблон с видео из таймлайна
-                    const updatedTemplate = updateTemplateWithTimelineVideos(
-                      context.lastAppliedTemplate,
-                      timelineVideos,
+                    console.log(
+                      `[PlayerMachine] Создаем новый шаблон из последнего примененного шаблона для таймлайна`,
                     )
 
-                    // Применяем обновленный шаблон
-                    if (updatedTemplate) {
-                      console.log(`[PlayerMachine] Применен последний шаблон с видео из таймлайна`)
-                      context.appliedTemplate = updatedTemplate
+                    // Сохраняем ссылку на последний шаблон
+                    const lastTemplate = context.lastAppliedTemplate.template
 
-                      // Устанавливаем первое видео из таймлайна как активное
-                      if (timelineVideos.length > 0) {
-                        context.activeVideoId = timelineVideos[0].id
-                        context.video = timelineVideos[0]
-                        console.log(
-                          `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
-                        )
-                      }
+                    // Создаем новый шаблон с видео из таймлайна
+                    const newTemplate = {
+                      template: lastTemplate,
+                      videos: timelineVideos.slice(0, lastTemplate?.screens || 1).map((video) => ({
+                        ...video,
+                        source: "timeline", // Явно устанавливаем источник как timeline
+                      })),
+                    }
+
+                    console.log(
+                      `[PlayerMachine] Создан новый шаблон из последнего примененного с ${newTemplate.videos.length} видео из таймлайна`,
+                    )
+
+                    // Применяем новый шаблон
+                    context.appliedTemplate = newTemplate
+
+                    // Устанавливаем первое видео из таймлайна как активное
+                    if (timelineVideos.length > 0) {
+                      context.activeVideoId = timelineVideos[0].id
+                      context.video = timelineVideos[0]
+                      console.log(
+                        `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
+                      )
                     }
                   }
                   // Если нет ни активного, ни последнего шаблона
@@ -474,6 +633,23 @@ export const playerMachine = createMachine({
                 const browserVideos = event.parallelVideos
 
                 console.log(`[PlayerMachine] Найдено ${browserVideos.length} видео из браузера`)
+
+                // Обновляем видео из браузера в контексте
+                context.browserVideos = browserVideos
+
+                // Обновляем источники видео в контексте
+                const newVideoSources = { ...context.videoSources }
+
+                // Помечаем все видео из браузера
+                browserVideos.forEach((video) => {
+                  if (video.id) {
+                    newVideoSources[video.id] = "media"
+                    console.log(`[PlayerMachine] Видео ${video.id} помечено как видео из браузера`)
+                  }
+                })
+
+                // Обновляем источники видео в контексте
+                context.videoSources = newVideoSources
 
                 // Если есть видео из браузера
                 if (browserVideos.length > 0) {
@@ -583,9 +759,37 @@ export const playerMachine = createMachine({
 
             // Сбрасываем флаг переключения камеры через небольшую задержку
             ({ context }) => {
+              // Увеличиваем задержку для обеспечения корректного обновления видео
               setTimeout(() => {
+                console.log(`[PlayerMachine] Сбрасываем флаг isChangingCamera`)
                 context.isChangingCamera = false
-              }, 300)
+
+                // Принудительно обновляем видео в шаблоне, если источник - таймлайн
+                if (context.preferredSource === "timeline" && context.appliedTemplate) {
+                  console.log(
+                    `[PlayerMachine] Принудительно обновляем видео в шаблоне для таймлайна`,
+                  )
+
+                  // Если есть активное видео из таймлайна, устанавливаем его снова
+                  if (context.video && context.video.startTime) {
+                    console.log(
+                      `[PlayerMachine] Переустанавливаем активное видео из таймлайна: ${context.video.id}`,
+                    )
+
+                    // Создаем копию видео для принудительного обновления
+                    const videoCopy = { ...context.video }
+
+                    // Переустанавливаем видео
+                    context.video = null
+                    setTimeout(() => {
+                      context.video = videoCopy
+                      console.log(
+                        `[PlayerMachine] Видео из таймлайна переустановлено: ${videoCopy.id}`,
+                      )
+                    }, 50)
+                  }
+                }
+              }, 500) // Увеличиваем задержку с 300 до 500 мс
             },
           ],
         },

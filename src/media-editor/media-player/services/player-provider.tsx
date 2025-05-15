@@ -37,6 +37,13 @@ interface PlayerContextType {
   preferredSource: "media" | "timeline" // Предпочтительный источник видео (браузер или таймлайн)
   lastAppliedTemplate: AppliedTemplate | null // Последний примененный шаблон
 
+  // Новые поля для хранения видео по источникам
+  timelineVideos: MediaFile[] // Видео из таймлайна
+  browserVideos: MediaFile[] // Видео из браузера
+
+  // Информация о источнике каждого видео
+  videoSources: Record<string, "media" | "timeline">
+
   setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) => void
   setVideo: (video: MediaFile) => void
   setVideos: (videos: Record<string, TimelineVideo>) => void
@@ -70,6 +77,11 @@ interface PlayerContextType {
 
   // Методы для управления последним примененным шаблоном
   setLastAppliedTemplate: (template: AppliedTemplate | null) => void
+
+  // Методы для работы с источниками видео
+  updateTimelineVideos: (videos: MediaFile[]) => void
+  updateBrowserVideos: (videos: MediaFile[]) => void
+  updateVideoSources: (videoSources: Record<string, "media" | "timeline">) => void
 }
 
 const PlayerContext = createContext<PlayerContextType | undefined>(undefined)
@@ -121,8 +133,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     setCurrentTime: (currentTime: number) => send({ type: "setCurrentTime", currentTime }),
     setIsPlaying: (isPlaying: boolean) => send({ type: "setIsPlaying", isPlaying }),
     setIsSeeking: (isSeeking: boolean) => send({ type: "setIsSeeking", isSeeking }),
-    setIsChangingCamera: (isChangingCamera: boolean) =>
-      send({ type: "setIsChangingCamera", isChangingCamera }),
+    setIsChangingCamera: (isChangingCamera: boolean) => {
+      console.log(`[PlayerProvider] setIsChangingCamera: ${isChangingCamera}`)
+      send({ type: "setIsChangingCamera", isChangingCamera })
+    },
     setIsRecording: (isRecording: boolean) => send({ type: "setIsRecording", isRecording }),
     setVideoRefs: (videoRefs: Record<string, HTMLVideoElement>) =>
       send({ type: "setVideoRefs", videoRefs }),
@@ -141,12 +155,49 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       send({ type: "setAppliedTemplate", appliedTemplate }),
     setIsResizableMode: (isResizableMode: boolean) =>
       send({ type: "setIsResizableMode", isResizableMode }),
-    setPreferredSource: (preferredSource: "media" | "timeline") =>
-      send({ type: "setPreferredSource", preferredSource }),
-    switchVideoSource: (tracks: any[], activeTrackId: string | null, parallelVideos: MediaFile[]) =>
-      send({ type: "switchVideoSource", tracks, activeTrackId, parallelVideos }),
+    setPreferredSource: (preferredSource: "media" | "timeline") => {
+      console.log(`[PlayerProvider] setPreferredSource: ${preferredSource}`)
+      send({ type: "setPreferredSource", preferredSource })
+    },
+    switchVideoSource: (
+      tracks: any[],
+      activeTrackId: string | null,
+      parallelVideos: MediaFile[],
+    ) => {
+      console.log(
+        `[PlayerProvider] switchVideoSource: tracks=${tracks.length}, activeTrackId=${activeTrackId}, parallelVideos=${parallelVideos.length}`,
+      )
+
+      // Если есть активный трек, выводим информацию о нем
+      if (activeTrackId) {
+        const activeTrack = tracks.find((track) => track.id === activeTrackId)
+        console.log(
+          `[PlayerProvider] Активный трек: ${activeTrackId}, видео: ${activeTrack?.videos?.length || 0}`,
+        )
+      }
+
+      send({ type: "switchVideoSource", tracks, activeTrackId, parallelVideos })
+    },
     setLastAppliedTemplate: (lastAppliedTemplate: AppliedTemplate | null) =>
       send({ type: "setLastAppliedTemplate", lastAppliedTemplate }),
+
+    // Новые методы для работы с источниками видео
+    updateTimelineVideos: (videos: MediaFile[]) => {
+      console.log(`[PlayerProvider] updateTimelineVideos: ${videos.length} видео`)
+      send({ type: "updateTimelineVideos", videos })
+    },
+
+    updateBrowserVideos: (videos: MediaFile[]) => {
+      console.log(`[PlayerProvider] updateBrowserVideos: ${videos.length} видео`)
+      send({ type: "updateBrowserVideos", videos })
+    },
+
+    updateVideoSources: (videoSources: Record<string, "media" | "timeline">) => {
+      console.log(
+        `[PlayerProvider] updateVideoSources: ${Object.keys(videoSources).length} источников`,
+      )
+      send({ type: "updateVideoSources", videoSources })
+    },
   }
 
   return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>

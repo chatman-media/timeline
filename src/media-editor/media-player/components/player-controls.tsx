@@ -4,11 +4,13 @@ import {
   ChevronLast,
   CircleDot,
   GalleryThumbnails,
+  Grid2x2,
   LayoutPanelTop,
   Maximize2,
   Minimize2,
   Pause,
   Play,
+  SquarePlay,
   StepBack,
   StepForward,
   TvMinimalPlay,
@@ -40,10 +42,9 @@ import { usePlayerContext } from ".."
 
 interface PlayerControlsProps {
   currentTime: number
-  videoSources?: Record<string, "media" | "timeline">
 }
 
-export function PlayerControls({ currentTime, videoSources }: PlayerControlsProps) {
+export function PlayerControls({ currentTime }: PlayerControlsProps) {
   const { t } = useTranslation()
   const { tracks, activeTrackId } = useTimeline()
   const { screenshotsPath } = useUserSettings()
@@ -76,7 +77,6 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     setIsResizableMode,
     preferredSource,
     setPreferredSource,
-    lastAppliedTemplate,
     setLastAppliedTemplate,
     switchVideoSource,
   } = usePlayerContext()
@@ -142,119 +142,6 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
     screenshotsPath,
     appliedTemplate,
   })
-
-  // Функция для применения последнего шаблона
-  const handleApplyLastTemplate = useCallback(() => {
-    console.log("[handleApplyLastTemplate] Вызвана функция применения последнего шаблона")
-
-    // Проверяем, есть ли сохраненный шаблон в контексте плеера
-    if (lastAppliedTemplate) {
-      console.log(
-        "[handleApplyLastTemplate] Применяем шаблон из контекста плеера:",
-        lastAppliedTemplate.template?.id,
-      )
-
-      // Создаем копию шаблона для безопасного применения
-      const templateCopy = JSON.parse(JSON.stringify(lastAppliedTemplate))
-
-      // Проверяем, нужно ли заполнить шаблон видео в зависимости от предпочтительного источника
-      if (templateCopy.videos.length === 0) {
-        console.log("[handleApplyLastTemplate] Шаблон не содержит видео, пытаемся заполнить его")
-
-        // Если текущий источник - браузер, ищем видео из браузера
-        if (preferredSource === "media") {
-          const browserVideos = parallelVideos.filter(
-            (v) => v.id && videoSources && videoSources[v.id] === "media",
-          )
-
-          if (browserVideos.length > 0) {
-            console.log(
-              `[handleApplyLastTemplate] Найдено ${browserVideos.length} видео из браузера`,
-            )
-
-            // Заполняем шаблон видео из браузера
-            templateCopy.videos = browserVideos.slice(0, templateCopy.template?.screens || 1)
-
-            console.log(
-              `[handleApplyLastTemplate] Добавлено ${templateCopy.videos.length} видео из браузера в шаблон`,
-            )
-          }
-        }
-        // Если текущий источник - таймлайн, ищем видео из таймлайна
-        else if (preferredSource === "timeline") {
-          const timelineVideos = parallelVideos.filter(
-            (v) => v.id && videoSources && videoSources[v.id] === "timeline",
-          )
-
-          if (timelineVideos.length > 0) {
-            console.log(
-              `[handleApplyLastTemplate] Найдено ${timelineVideos.length} видео из таймлайна`,
-            )
-
-            // Заполняем шаблон видео из таймлайна
-            templateCopy.videos = timelineVideos.slice(0, templateCopy.template?.screens || 1)
-
-            console.log(
-              `[handleApplyLastTemplate] Добавлено ${templateCopy.videos.length} видео из таймлайна в шаблон`,
-            )
-          }
-        }
-      }
-
-      // Применяем шаблон
-      setAppliedTemplate(templateCopy)
-
-      // Если в шаблоне есть видео, устанавливаем первое как активное
-      if (templateCopy.videos && templateCopy.videos.length > 0) {
-        setActiveVideoId(templateCopy.videos[0].id)
-        setVideo(templateCopy.videos[0])
-        console.log(
-          `[handleApplyLastTemplate] Установлено активное видео из шаблона: ${templateCopy.videos[0].id}`,
-        )
-      } else if (preferredSource === "media") {
-        // Находим любое видео из браузера
-        const anyBrowserVideo = parallelVideos.find(
-          (v) => v.id && videoSources && videoSources[v.id] === "media",
-        )
-
-        if (anyBrowserVideo) {
-          console.log(
-            `[handleApplyLastTemplate] Нет видео в шаблоне, но найдено видео из браузера: ${anyBrowserVideo.id}`,
-          )
-          setActiveVideoId(anyBrowserVideo.id)
-          setVideo(anyBrowserVideo)
-        }
-      }
-    }
-    // Если нет сохраненного шаблона в контексте плеера
-    else {
-      console.log("[handleApplyLastTemplate] Нет сохраненного шаблона в контексте плеера")
-
-      // Если выбран источник "media", пытаемся показать любое видео из браузера
-      if (preferredSource === "media") {
-        // Находим любое видео из браузера
-        const anyBrowserVideo = parallelVideos.find(
-          (v) => v.id && videoSources && videoSources[v.id] === "media",
-        )
-
-        if (anyBrowserVideo) {
-          console.log(
-            `[handleApplyLastTemplate] Нет шаблона, но найдено видео из браузера: ${anyBrowserVideo.id}`,
-          )
-          setActiveVideoId(anyBrowserVideo.id)
-          setVideo(anyBrowserVideo)
-        }
-      }
-    }
-  }, [
-    lastAppliedTemplate,
-    preferredSource,
-    parallelVideos,
-    videoSources,
-    setAppliedTemplate,
-    setActiveVideoId,
-    setVideo,
-  ])
 
   // Функция для сброса шаблона
   const handleResetTemplate = useCallback(() => {
@@ -503,12 +390,31 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
       return
     }
 
+    // Выводим информацию о текущем состоянии
+    console.log(
+      `[handleToggleSource] Текущее состояние: preferredSource=${preferredSource}, activeTrackId=${activeTrackId}, tracks=${tracks.length}, parallelVideos=${parallelVideos.length}`,
+    )
+
+    // Если есть активный трек, выводим информацию о нем
+    if (activeTrackId) {
+      const activeTrack = tracks.find((track) => track.id === activeTrackId)
+      console.log(
+        `[handleToggleSource] Активный трек: ${activeTrackId}, видео: ${activeTrack?.videos?.length || 0}`,
+      )
+    }
+
     // Переключаем предпочтительный источник
     const newSource = preferredSource === "media" ? "timeline" : "media"
     console.log(`[handleToggleSource] Переключаем источник: ${preferredSource} -> ${newSource}`)
 
     // Устанавливаем флаг, что идет переключение камеры
     setIsChangingCamera(true)
+
+    // Если переключаемся на таймлайн, сначала сбрасываем шаблон
+    if (newSource === "timeline" && appliedTemplate) {
+      console.log(`[handleToggleSource] Сначала сбрасываем шаблон для гарантии обновления`)
+      setAppliedTemplate(null)
+    }
 
     // Устанавливаем новый предпочтительный источник в контексте плеера
     setPreferredSource(newSource)
@@ -527,9 +433,81 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
         setLastAppliedTemplate(appliedTemplate)
       }
 
+      // Проверяем, есть ли видео в активном треке
+      let hasVideosInActiveTrack = false
+      if (activeTrackId) {
+        const activeTrack = tracks.find((track) => track.id === activeTrackId)
+        hasVideosInActiveTrack = !!(activeTrack?.videos && activeTrack.videos.length > 0)
+        console.log(
+          `[handleToggleSource] Активный трек ${activeTrackId} ${hasVideosInActiveTrack ? "содержит" : "не содержит"} видео`,
+        )
+      }
+
+      // Если в активном треке нет видео, выводим предупреждение
+      if (!hasVideosInActiveTrack) {
+        console.log(
+          `[handleToggleSource] В активном треке нет видео, переключение может не сработать корректно`,
+        )
+      }
+
       // Вызываем метод switchVideoSource для обновления видео в шаблоне
       // Передаем треки, активный трек и параллельные видео
       switchVideoSource(tracks, activeTrackId, parallelVideos)
+
+      // Добавляем дополнительную проверку через небольшую задержку
+      setTimeout(() => {
+        console.log(
+          `[handleToggleSource] Проверяем, что переключение на таймлайн выполнено корректно`,
+        )
+
+        // Повторно вызываем switchVideoSource для гарантии обновления
+        if (hasVideosInActiveTrack) {
+          console.log(
+            `[handleToggleSource] Повторно вызываем switchVideoSource для гарантии обновления`,
+          )
+          switchVideoSource(tracks, activeTrackId, parallelVideos)
+
+          // Если есть примененный шаблон, принудительно обновляем его
+          if (appliedTemplate) {
+            console.log(`[handleToggleSource] Принудительно обновляем шаблон для таймлайна`)
+
+            // Получаем видео из активного трека
+            const activeTrack = tracks.find((track) => track.id === activeTrackId)
+            if (activeTrack?.videos && activeTrack.videos.length > 0) {
+              // Создаем копию шаблона
+              const templateCopy = JSON.parse(JSON.stringify(appliedTemplate))
+
+              // Заполняем шаблон видео из таймлайна
+              const requiredVideos = templateCopy.template?.screens || 1
+              templateCopy.videos = activeTrack.videos.slice(0, requiredVideos).map((video) => ({
+                ...video,
+                source: "timeline", // Явно устанавливаем источник как timeline
+              }))
+
+              console.log(
+                `[handleToggleSource] Обновляем шаблон с ${templateCopy.videos.length} видео из таймлайна`,
+              )
+
+              // Сначала сбрасываем шаблон, чтобы гарантировать обновление
+              setAppliedTemplate(null)
+
+              // Через небольшую задержку устанавливаем обновленный шаблон
+              setTimeout(() => {
+                setAppliedTemplate(templateCopy)
+
+                // Устанавливаем первое видео из таймлайна как активное
+                if (templateCopy.videos.length > 0) {
+                  setActiveVideoId(templateCopy.videos[0].id)
+                  setVideo(templateCopy.videos[0])
+                  console.log(
+                    `[handleToggleSource] Установлено активное видео из таймлайна: ${templateCopy.videos[0].id}`,
+                  )
+                }
+              }, 50)
+            }
+          }
+        }
+      }, 300)
     }
     // Если переключаемся на браузер
     else {
@@ -978,6 +956,26 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
                 <GalleryThumbnails className="h-8 w-8" />
               )}
             </Button>
+
+            {/* Кнопка шаблона - всегда активна, переключает режим шаблона */}
+            <Button
+              className="h-8 w-8 cursor-pointer"
+              variant="ghost"
+              size="icon"
+              title={
+                typeof window !== "undefined"
+                  ? t("timeline.controlsMain.resetTemplate") || "Сбросить шаблон"
+                  : "Reset Template"
+              }
+              onClick={handleResetTemplate}
+            >
+              {appliedTemplate ? (
+                <Grid2x2 className="h-8 w-8" />
+              ) : (
+                <SquarePlay className="h-8 w-8" />
+              )}
+            </Button>
+
             {/* Кнопка переключения режима resizable - показываем только если применен шаблон */}
             <Button
               className={`h-8 w-8 cursor-pointer ${isResizableMode ? "bg-[#45444b] hover:bg-[#45444b]/80" : "hover:bg-[#45444b]/80"}`}
@@ -996,40 +994,7 @@ export function PlayerControls({ currentTime, videoSources }: PlayerControlsProp
               {<UnfoldHorizontal className="h-8 w-8" />}
             </Button>
 
-            {/* Кнопка шаблона - всегда активна, переключает режим шаблона */}
-            <Button
-              className="h-8 w-8 cursor-pointer"
-              variant="ghost"
-              size="icon"
-              title={
-                typeof window !== "undefined"
-                  ? appliedTemplate
-                    ? t("timeline.controlsMain.resetTemplate")
-                    : t("timeline.controlsMain.applyTemplate") || "Применить шаблон"
-                  : "Apply Template"
-              }
-              onClick={appliedTemplate ? handleResetTemplate : handleApplyLastTemplate}
-            >
-              {appliedTemplate ? (
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <rect x="4" y="4" width="16" height="16" rx="2" />
-                  <line x1="4" y1="4" x2="20" y2="20" />
-                </svg>
-              ) : (
-                <LayoutPanelTop className="h-8 w-8" />
-              )}
-            </Button>
-
+            {/* Кнопка снимка экрана */}
             <Button
               className="h-8 w-8 cursor-pointer"
               variant="ghost"
