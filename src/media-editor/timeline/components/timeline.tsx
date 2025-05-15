@@ -912,59 +912,6 @@ export function Timeline() {
                       </div>
                     )
                   })}
-
-                  {/* Фиксированная нижняя панель высотой 150px */}
-                  <div className="border-border bg-background mt-4 h-[150px] flex-shrink-0 border-t">
-                    <div className="h-full p-4">
-                      {/* Содержимое нижней панели */}
-                      <div className="text-base font-medium">Скомбинированная дорожка</div>
-                      <div className="text-muted-foreground mb-3 text-sm">
-                        Отображение нескольких источников на одной дорожке
-                      </div>
-
-                      {/* Скомбинированная дорожка */}
-                      <div className="bg-muted/30 border-border relative h-[80px] w-full rounded-md border">
-                        {/* Вертикальный индикатор текущей позиции */}
-                        <div className="absolute top-0 bottom-0 left-[35%] z-10 w-[2px] bg-red-500"></div>
-
-                        {/* Примеры источников на дорожке */}
-                        <div className="absolute top-2 left-[5%] flex h-[30px] w-[15%] cursor-pointer items-center justify-center rounded-sm border border-blue-600 bg-blue-500/50 text-xs text-white transition-colors hover:bg-blue-500/70">
-                          Камера 1
-                        </div>
-                        <div className="absolute top-2 left-[25%] flex h-[30px] w-[20%] cursor-pointer items-center justify-center rounded-sm border border-green-600 bg-green-500/50 text-xs text-white transition-colors hover:bg-green-500/70">
-                          Камера 2
-                        </div>
-                        <div className="absolute top-2 left-[50%] flex h-[30px] w-[25%] cursor-pointer items-center justify-center rounded-sm border border-purple-600 bg-purple-500/50 text-xs text-white transition-colors hover:bg-purple-500/70">
-                          Камера 3
-                        </div>
-
-                        {/* Вторая строка источников */}
-                        <div className="absolute bottom-2 left-[10%] flex h-[30px] w-[30%] cursor-pointer items-center justify-center rounded-sm border border-amber-600 bg-amber-500/50 text-xs text-white transition-colors hover:bg-amber-500/70">
-                          Микрофон 1
-                        </div>
-                        <div className="absolute bottom-2 left-[45%] flex h-[30px] w-[40%] cursor-pointer items-center justify-center rounded-sm border border-red-600 bg-red-500/50 text-xs text-white transition-colors hover:bg-red-500/70">
-                          Микрофон 2
-                        </div>
-
-                        {/* Временные метки */}
-                        <div className="text-muted-foreground absolute -bottom-5 left-0 text-[10px]">
-                          00:00
-                        </div>
-                        <div className="text-muted-foreground absolute -bottom-5 left-1/4 text-[10px]">
-                          00:15
-                        </div>
-                        <div className="text-muted-foreground absolute -bottom-5 left-1/2 text-[10px]">
-                          00:30
-                        </div>
-                        <div className="text-muted-foreground absolute -bottom-5 left-3/4 text-[10px]">
-                          00:45
-                        </div>
-                        <div className="text-muted-foreground absolute right-0 -bottom-5 text-[10px]">
-                          01:00
-                        </div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
