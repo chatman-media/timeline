@@ -822,6 +822,15 @@
       "unmute": "Unmute",
       "videoTrack": "Video {{index}}",
       "audioTrack": "Audio {{index}}"
+    },
+    "compositeTrack": {
+      "noActiveSector": "No active sector found. Please select a video from the timeline first.",
+      "createCompositeTrack": "Create composite track",
+      "options": "Composite track options",
+      "videoOnly": "Video only (3 sec)",
+      "videoLonger": "Video (5 sec)",
+      "audioOnly": "Audio only",
+      "runDemo": "Run demo"
     }
   },
   "titles": {

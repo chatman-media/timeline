@@ -628,6 +628,15 @@
       "videoWithNumber": "Video {{number}}",
       "audioWithNumber": "Audio {{number}}"
     },
+    "compositeTrack": {
+      "noActiveSector": "No se encontró un sector activo. Por favor, seleccione primero un video de la línea de tiempo.",
+      "createCompositeTrack": "Crear pista compuesta",
+      "options": "Opciones de pista compuesta",
+      "videoOnly": "Solo video (3 seg)",
+      "videoLonger": "Video (5 seg)",
+      "audioOnly": "Solo audio",
+      "runDemo": "Ejecutar demo"
+    },
     "zoom": {
       "zoomIn": "Acercar",
       "zoomOut": "Alejar",

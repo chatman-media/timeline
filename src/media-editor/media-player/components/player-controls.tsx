@@ -3,9 +3,7 @@ import {
   ChevronFirst,
   ChevronLast,
   CircleDot,
-  GalleryThumbnails,
   Grid2x2,
-  LayoutPanelTop,
   Maximize2,
   Minimize2,
   Pause,
@@ -13,7 +11,6 @@ import {
   SquarePlay,
   StepBack,
   StepForward,
-  TvMinimalPlay,
   UnfoldHorizontal,
   Volume2,
   VolumeX,
@@ -34,7 +31,6 @@ import { usePlaybackControl } from "@/media-editor/media-player/hooks/use-playba
 import { useScreenshot } from "@/media-editor/media-player/hooks/use-screenshot"
 import { useTimeControl } from "@/media-editor/media-player/hooks/use-time-control"
 import { useVolumeControl } from "@/media-editor/media-player/hooks/use-volume-control"
-import { AppliedTemplate } from "@/media-editor/media-player/services/template-service"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile } from "@/types/media"
 
@@ -46,9 +42,9 @@ interface PlayerControlsProps {
 
 export function PlayerControls({ currentTime }: PlayerControlsProps) {
   const { t } = useTranslation()
-  const { tracks, activeTrackId } = useTimeline()
+  const { tracks, activeTrackId, activeSector } = useTimeline()
   const { screenshotsPath } = useUserSettings()
-  const { displayTime, setDisplayTime } = useDisplayTime()
+  const { setDisplayTime } = useDisplayTime()
   const media = useMedia()
 
   // Состояние для отслеживания источника видео больше не нужно, так как используем машину состояний
@@ -75,10 +71,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setActiveVideoId,
     isResizableMode,
     setIsResizableMode,
-    preferredSource,
-    setPreferredSource,
     setLastAppliedTemplate,
-    switchVideoSource,
   } = usePlayerContext()
 
   // Используем состояние для хранения текущего времени воспроизведения
@@ -174,8 +167,59 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
       // Определяем, какое видео будет активным после сброса шаблона
       let newActiveVideo: MediaFile | undefined
 
+      // Проверяем, есть ли видео на таймлайне из активного сектора
+      let timelineVideos: MediaFile[] = []
+
+      // Проверяем, есть ли активный сектор
+      if (activeSector) {
+        console.log(
+          `[handleResetTemplate] Используем видео из активного сектора: ${activeSector.name}`,
+        )
+
+        // Фильтруем треки, которые принадлежат активному сектору
+        // Так как в типе Track нет прямой связи с сектором, используем треки из активного сектора
+        const activeSectorTracks = activeSector.tracks
+
+        console.log(
+          `[handleResetTemplate] Найдено ${activeSectorTracks.length} треков в активном секторе`,
+        )
+
+        // Собираем видео из треков активного сектора
+        activeSectorTracks.forEach((track) => {
+          if (track.videos && track.videos.length > 0) {
+            console.log(
+              `[handleResetTemplate] Добавляем ${track.videos.length} видео из трека ${track.id}`,
+            )
+            timelineVideos.push(...track.videos)
+          }
+        })
+      } else {
+        console.log(
+          `[handleResetTemplate] Активный сектор не найден, используем видео из всех треков`,
+        )
+
+        // Если активного сектора нет, используем видео из всех треков
+        tracks.forEach((track) => {
+          if (track.videos && track.videos.length > 0) {
+            timelineVideos.push(...track.videos)
+          }
+        })
+      }
+
+      // Сортируем видео по времени начала
+      timelineVideos = timelineVideos.sort((a, b) => (a.startTime || 0) - (b.startTime || 0))
+
+      // Если есть видео на таймлайне, используем первое из них
+      if (timelineVideos.length > 0) {
+        newActiveVideo = timelineVideos[0]
+        if (newActiveVideo && newActiveVideo.id) {
+          console.log(
+            `[handleResetTemplate] Используем первое видео из таймлайна: ${newActiveVideo.id}`,
+          )
+        }
+      }
       // Если в шаблоне есть видео, используем первое из них
-      if (templateToSave.videos && templateToSave.videos.length > 0) {
+      else if (templateToSave.videos && templateToSave.videos.length > 0) {
         newActiveVideo = templateToSave.videos[0]
         if (newActiveVideo && newActiveVideo.id) {
           console.log(
@@ -183,7 +227,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
           )
         }
       }
-      // Если нет видео в шаблоне, но есть параллельные видео, используем первое из них
+      // Если нет видео в шаблоне и на таймлайне, но есть параллельные видео, используем первое из них
       else if (parallelVideos.length > 0) {
         newActiveVideo = parallelVideos[0]
         if (newActiveVideo && newActiveVideo.id) {
@@ -247,6 +291,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     setVideo,
     setIsChangingCamera,
     isPlaying,
+    tracks,
   ])
 
   // Улучшенная функция для переключения между камерами
@@ -380,172 +425,6 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     isPlaying,
     setIsPlaying,
     setActiveVideoId,
-  ])
-
-  // Функция для переключения между источниками видео (браузер/таймлайн)
-  const handleToggleSource = useCallback(() => {
-    // Проверяем, не выполняется ли уже переключение источника
-    if (isChangingCamera) {
-      console.log("[handleToggleSource] Игнорируем переключение источника во время смены камеры")
-      return
-    }
-
-    // Выводим информацию о текущем состоянии
-    console.log(
-      `[handleToggleSource] Текущее состояние: preferredSource=${preferredSource}, activeTrackId=${activeTrackId}, tracks=${tracks.length}, parallelVideos=${parallelVideos.length}`,
-    )
-
-    // Если есть активный трек, выводим информацию о нем
-    if (activeTrackId) {
-      const activeTrack = tracks.find((track) => track.id === activeTrackId)
-      console.log(
-        `[handleToggleSource] Активный трек: ${activeTrackId}, видео: ${activeTrack?.videos?.length || 0}`,
-      )
-    }
-
-    // Переключаем предпочтительный источник
-    const newSource = preferredSource === "media" ? "timeline" : "media"
-    console.log(`[handleToggleSource] Переключаем источник: ${preferredSource} -> ${newSource}`)
-
-    // Устанавливаем флаг, что идет переключение камеры
-    setIsChangingCamera(true)
-
-    // Если переключаемся на таймлайн, сначала сбрасываем шаблон
-    if (newSource === "timeline" && appliedTemplate) {
-      console.log(`[handleToggleSource] Сначала сбрасываем шаблон для гарантии обновления`)
-      setAppliedTemplate(null)
-    }
-
-    // Устанавливаем новый предпочтительный источник в контексте плеера
-    setPreferredSource(newSource)
-
-    // Если переключаемся на таймлайн
-    if (newSource === "timeline") {
-      console.log(`[handleToggleSource] Переключаемся на таймлайн, проверяем наличие шаблона`)
-
-      // Если есть примененный шаблон, сохраняем его перед переключением
-      if (appliedTemplate) {
-        console.log(
-          `[handleToggleSource] Есть примененный шаблон, сохраняем его перед переключением`,
-        )
-
-        // Сохраняем текущий шаблон как последний примененный
-        setLastAppliedTemplate(appliedTemplate)
-      }
-
-      // Проверяем, есть ли видео в активном треке
-      let hasVideosInActiveTrack = false
-      if (activeTrackId) {
-        const activeTrack = tracks.find((track) => track.id === activeTrackId)
-        hasVideosInActiveTrack = !!(activeTrack?.videos && activeTrack.videos.length > 0)
-        console.log(
-          `[handleToggleSource] Активный трек ${activeTrackId} ${hasVideosInActiveTrack ? "содержит" : "не содержит"} видео`,
-        )
-      }
-
-      // Если в активном треке нет видео, выводим предупреждение
-      if (!hasVideosInActiveTrack) {
-        console.log(
-          `[handleToggleSource] В активном треке нет видео, переключение может не сработать корректно`,
-        )
-      }
-
-      // Вызываем метод switchVideoSource для обновления видео в шаблоне
-      // Передаем треки, активный трек и параллельные видео
-      switchVideoSource(tracks, activeTrackId, parallelVideos)
-
-      // Добавляем дополнительную проверку через небольшую задержку
-      setTimeout(() => {
-        console.log(
-          `[handleToggleSource] Проверяем, что переключение на таймлайн выполнено корректно`,
-        )
-
-        // Повторно вызываем switchVideoSource для гарантии обновления
-        if (hasVideosInActiveTrack) {
-          console.log(
-            `[handleToggleSource] Повторно вызываем switchVideoSource для гарантии обновления`,
-          )
-          switchVideoSource(tracks, activeTrackId, parallelVideos)
-
-          // Если есть примененный шаблон, принудительно обновляем его
-          if (appliedTemplate) {
-            console.log(`[handleToggleSource] Принудительно обновляем шаблон для таймлайна`)
-
-            // Получаем видео из активного трека
-            const activeTrack = tracks.find((track) => track.id === activeTrackId)
-            if (activeTrack?.videos && activeTrack.videos.length > 0) {
-              // Создаем копию шаблона
-              const templateCopy = JSON.parse(JSON.stringify(appliedTemplate))
-
-              // Заполняем шаблон видео из таймлайна
-              const requiredVideos = templateCopy.template?.screens || 1
-              templateCopy.videos = activeTrack.videos.slice(0, requiredVideos).map((video) => ({
-                ...video,
-                source: "timeline", // Явно устанавливаем источник как timeline
-              }))
-
-              console.log(
-                `[handleToggleSource] Обновляем шаблон с ${templateCopy.videos.length} видео из таймлайна`,
-              )
-
-              // Сначала сбрасываем шаблон, чтобы гарантировать обновление
-              setAppliedTemplate(null)
-
-              // Через небольшую задержку устанавливаем обновленный шаблон
-              setTimeout(() => {
-                setAppliedTemplate(templateCopy)
-
-                // Устанавливаем первое видео из таймлайна как активное
-                if (templateCopy.videos.length > 0) {
-                  setActiveVideoId(templateCopy.videos[0].id)
-                  setVideo(templateCopy.videos[0])
-                  console.log(
-                    `[handleToggleSource] Установлено активное видео из таймлайна: ${templateCopy.videos[0].id}`,
-                  )
-                }
-              }, 50)
-            }
-          }
-        }
-      }, 300)
-    }
-    // Если переключаемся на браузер
-    else {
-      console.log(`[handleToggleSource] Переключаемся на браузер, проверяем наличие шаблона`)
-
-      // Если есть примененный шаблон, сохраняем его перед переключением
-      if (appliedTemplate) {
-        console.log(
-          `[handleToggleSource] Есть примененный шаблон, сохраняем его перед переключением`,
-        )
-
-        // Сохраняем текущий шаблон как последний примененный
-        setLastAppliedTemplate(appliedTemplate)
-      }
-
-      // Вызываем метод switchVideoSource для обновления видео в шаблоне
-      // Передаем треки, активный трек и параллельные видео
-      switchVideoSource(tracks, activeTrackId, parallelVideos)
-    }
-
-    // Сбрасываем флаг autoSelectVideoExecuted, чтобы разрешить автоматический выбор видео
-    autoSelectVideoExecutedRef.current = false
-
-    // Сбрасываем флаг переключения камеры через небольшую задержку
-    setTimeout(() => {
-      setIsChangingCamera(false)
-    }, 300)
-  }, [
-    preferredSource,
-    setPreferredSource,
-    switchVideoSource,
-    tracks,
-    activeTrackId,
-    parallelVideos,
-    isChangingCamera,
-    setIsChangingCamera,
-    appliedTemplate,
-    setLastAppliedTemplate,
   ])
 
   // Улучшенный handleRecordToggle для корректной работы с параллельными видео
@@ -683,9 +562,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
   // Используем currentTime для isFirstFrame / isLastFrame
   // Получаем frameTime с помощью функции getFrameTime
   const frameTime = getFrameTime(video || undefined)
-  console.log(
-    `[PlayerControls] Используем frameTime: ${frameTime} (${1 / frameTime} fps) для видео ${video?.id || "unknown"}`,
-  )
+  // Полностью отключаем логирование
 
   // Функции форматирования времени перенесены в хук useTimeControl
 
@@ -734,13 +611,6 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     }
   }, [calculatedDisplayTime, setDisplayTime, isPlaying])
 
-  // Эффект для обновления иконки источника после гидратации
-  const [isHydrated, setIsHydrated] = useState(false)
-  useEffect(() => {
-    // Устанавливаем флаг гидратации после монтирования компонента
-    setIsHydrated(true)
-  }, [])
-
   // Эффект для автоматического выбора активного видео, если текущее активное видео не определено
   // Используем ref для отслеживания, был ли уже выполнен эффект
   const autoSelectVideoExecutedRef = useRef(false)
@@ -755,10 +625,10 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
     // Если на таймлайне нет видео, устанавливаем источник в режим "браузер"
     if (!hasTimelineVideos) {
-      console.log(`[InitSource] На таймлайне нет видео, устанавливаем источник в режим "браузер"`)
+      // Полностью отключаем логирование
 
-      // Устанавливаем источник в режим "браузер"
-      setPreferredSource("media")
+      // Всегда используем таймлайн как источник для шаблонов
+      // setPreferredSource("media") - удалено, так как мы всегда используем таймлайн
 
       // Получаем все медиафайлы из библиотеки
       if (media.allMediaFiles && media.allMediaFiles.length > 0) {
@@ -775,7 +645,7 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
           // Берем несколько видео для параллельного отображения (до 4)
           const selectedVideos = sortedMediaFiles.slice(0, 4)
 
-          console.log(`[InitSource] Выбрано ${selectedVideos.length} видео из браузера`)
+          // Полностью отключаем логирование
 
           // Устанавливаем первое видео как активное
           setVideo(selectedVideos[0])
@@ -784,13 +654,15 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
           // Обновляем параллельные видео
           setParallelVideos(selectedVideos)
 
-          console.log(
-            `[InitSource] Установлены параллельные видео: ${selectedVideos.map((v) => v.id).join(", ")}`,
-          )
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(
+          //   `[InitSource] Установлены параллельные видео: ${selectedVideos.map((v) => v.id).join(", ")}`,
+          // )
 
           // Если есть примененный шаблон, обновляем его с новыми видео
           if (appliedTemplate) {
-            console.log(`[InitSource] Обновляем примененный шаблон с новыми видео`)
+            // Отключаем логирование для уменьшения количества сообщений
+            // console.log(`[InitSource] Обновляем примененный шаблон с новыми видео`)
 
             // Создаем копию шаблона
             const templateCopy = JSON.parse(JSON.stringify(appliedTemplate))
@@ -805,9 +677,10 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
             // Применяем обновленный шаблон
             setAppliedTemplate(templateCopy)
 
-            console.log(
-              `[InitSource] Шаблон обновлен с ${templateCopy.videos.length} видео из браузера`,
-            )
+            // Отключаем логирование для уменьшения количества сообщений
+            // console.log(
+            //   `[InitSource] Шаблон обновлен с ${templateCopy.videos.length} видео из браузера`,
+            // )
           }
         }
       }
@@ -817,7 +690,6 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     autoSelectVideoExecutedRef.current = true
   }, [
     tracks,
-    setPreferredSource,
     media.allMediaFiles,
     setVideo,
     setActiveVideoId,
@@ -838,7 +710,8 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
     // Если нашли активное видео и оно отличается от текущего, устанавливаем его
     if (activeVideo && activeVideo !== video) {
-      console.log(`[AutoSelectActiveVideo] Автоматически выбрано активное видео: ${activeVideo.id}`)
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(`[AutoSelectActiveVideo] Автоматически выбрано активное видео: ${activeVideo.id}`)
       setVideo(activeVideo)
       setActiveVideoId(activeVideo.id)
     }
@@ -935,28 +808,6 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
         <div className="flex items-center justify-between px-1 py-0">
           {/* Левая часть: индикатор источника, кнопки для камер и шаблонов */}
           <div className="flex items-center gap-2">
-            {/* Индикатор источника видео - всегда отображается и работает как переключатель */}
-            <Button
-              className={`h-8 w-8 cursor-pointer ${!isHydrated || preferredSource === "timeline" ? "bg-[#45444b] hover:bg-[#45444b]/80" : "hover:bg-[#45444b]/80"}`}
-              variant="ghost"
-              size="icon"
-              title={
-                !isHydrated
-                  ? "Timeline"
-                  : preferredSource === "timeline"
-                    ? t("timeline.source.timeline", "Таймлайн")
-                    : t("timeline.source.browser", "Браузер")
-              }
-              onClick={handleToggleSource}
-            >
-              {/* Используем isHydrated для условного рендеринга иконки */}
-              {!isHydrated || preferredSource === "timeline" ? (
-                <TvMinimalPlay className="h-8 w-8" />
-              ) : (
-                <GalleryThumbnails className="h-8 w-8" />
-              )}
-            </Button>
-
             {/* Кнопка шаблона - всегда активна, переключает режим шаблона */}
             <Button
               className="h-8 w-8 cursor-pointer"

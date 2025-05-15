@@ -90,6 +90,8 @@ export type TimelineEvent =
   | { type: "SET_VIDEO_REF"; fileId: string; video: HTMLVideoElement | null }
   | { type: "SET_LOADED_VIDEO"; fileId: string; loaded: boolean }
   | { type: "PRELOAD_ALL_VIDEOS" }
+  | { type: "SAVE_ALL_SECTORS_TIME"; videoId: string; displayTime: number; currentTime: number }
+  | { type: "SET_SECTOR_TIME"; sectorId: string; time: number; isActiveOnly?: boolean }
   // События для чата
   | { type: "SEND_CHAT_MESSAGE"; message: string }
   | { type: "RECEIVE_CHAT_MESSAGE"; message: ChatMessage }
@@ -467,7 +469,7 @@ export const timelineMachine = createMachine({
           return { activeSector: sector }
         }),
         // Отдельное действие для установки времени из сохраненного времени сектора
-        ({ context, event }) => {
+        ({ context, event, self }) => {
           if (event.type !== "SET_ACTIVE_SECTOR" || event.sectorId === null) return
 
           // Находим сохраненное время для сектора
@@ -479,34 +481,13 @@ export const timelineMachine = createMachine({
               `[TimelineMachine] Восстанавливаем время ${savedTime.toFixed(2)} для сектора ${sectorId}`,
             )
 
-            // Отправляем событие для установки времени в плеере
-            // Это событие будет перехвачено компонентом плеера
-            window.dispatchEvent(
-              new CustomEvent("sector-time-change", {
-                detail: {
-                  sectorId,
-                  time: savedTime,
-                },
-              }),
+            // Отправляем событие SET_SECTOR_TIME для установки времени
+            self.send({ type: "SET_SECTOR_TIME", sectorId, time: savedTime, isActiveOnly: true })
+
+            console.log(
+              `[TimelineMachine] Отправлено событие SET_SECTOR_TIME для сектора ${sectorId} со временем ${savedTime.toFixed(2)}`,
             )
           }
-
-          // Отправляем событие для обновления позиции бара только для активного сектора
-          // Это предотвратит обновление позиции бара для неактивных секторов
-          console.log(
-            `[TimelineMachine] Отправляем событие sector-time-change только для активного сектора ${sectorId}`,
-          )
-
-          // Отправляем событие для обновления позиции бара только для активного сектора
-          window.dispatchEvent(
-            new CustomEvent("sector-time-change", {
-              detail: {
-                sectorId,
-                time: savedTime,
-                isActiveOnly: true, // Флаг, указывающий, что это событие только для активного сектора
-              },
-            }),
-          )
         },
       ],
     },
@@ -547,17 +528,6 @@ export const timelineMachine = createMachine({
             console.log(
               `[TimelineMachine] Сохраняем время ${event.time.toFixed(2)} для сектора ${sectorId}`,
             )
-
-            // Отправляем событие для обновления позиции бара только для активного сектора
-            window.dispatchEvent(
-              new CustomEvent("sector-time-change", {
-                detail: {
-                  sectorId,
-                  time: event.time,
-                  isActiveOnly: true, // Флаг, указывающий, что это событие только для активного сектора
-                },
-              }),
-            )
           }
 
           return newContext
@@ -574,24 +544,27 @@ export const timelineMachine = createMachine({
         assign(({ context, event }) => {
           if (event.type !== "ADD_MEDIA_FILES") return context
 
-          console.log(
-            "ADD_MEDIA_FILES event received with files:",
-            event.files.map((f) => f.name),
-          )
-          console.log(
-            "Current context.tracks:",
-            context.tracks.map((t) => t.name),
-          )
-          console.log(
-            "Current context.sectors:",
-            context.sectors.map((s) => s.name),
-          )
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(
+          //   "ADD_MEDIA_FILES event received with files:",
+          //   event.files.map((f) => f.name),
+          // )
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(
+          //   "Current context.tracks:",
+          //   context.tracks.map((t) => t.name),
+          // )
+          // console.log(
+          //   "Current context.sectors:",
+          //   context.sectors.map((s) => s.name),
+          // )
 
           const newSectors = createTracksFromFiles(event.files, context.tracks)
-          console.log(
-            "New sectors created:",
-            newSectors.map((s) => s.name),
-          )
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(
+          //   "New sectors created:",
+          //   newSectors.map((s) => s.name),
+          // )
 
           // Объединяем секторы с одинаковыми датами
           const sectorsByDate = new Map<string, Sector>()
@@ -682,31 +655,34 @@ export const timelineMachine = createMachine({
             })),
           }))
 
-          console.log(
-            "Final updated sectors:",
-            updatedSectors.map((s) => ({
-              name: s.name,
-              tracksCount: s.tracks.length,
-            })),
-          )
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(
+          //   "Final updated sectors:",
+          //   updatedSectors.map((s) => ({
+          //     name: s.name,
+          //     tracksCount: s.tracks.length,
+          //   })),
+          // )
 
-          console.log(
-            "Updated sectors:",
-            updatedSectors.map((s) => ({
-              name: s.name,
-              tracksCount: s.tracks.length,
-            })),
-          )
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(
+          //   "Updated sectors:",
+          //   updatedSectors.map((s) => ({
+          //     name: s.name,
+          //     tracksCount: s.tracks.length,
+          //   })),
+          // )
 
           // Обновляем также tracks для совместимости
           const allTracks = updatedSectors.flatMap((sector) => sector.tracks)
-          console.log(
-            "Updating tracks in context:",
-            allTracks.map((t) => ({
-              name: t.name,
-              videosCount: t.videos?.length || 0,
-            })),
-          )
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(
+          //   "Updating tracks in context:",
+          //   allTracks.map((t) => ({
+          //     name: t.name,
+          //     videosCount: t.videos?.length || 0,
+          //   })),
+          // )
 
           return addToHistory({
             context,
@@ -1413,6 +1389,55 @@ export const timelineMachine = createMachine({
             selectedAgentId: event.agentId,
             isDirty: true,
           }
+        }),
+      ],
+    },
+
+    // Обработчик события SAVE_ALL_SECTORS_TIME
+    SAVE_ALL_SECTORS_TIME: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SAVE_ALL_SECTORS_TIME") return context
+
+          // Если есть активный сектор, сохраняем время для него
+          if (context.activeSector) {
+            const sectorId = context.activeSector.id
+
+            // Сохраняем время для активного сектора
+            const newSectorTimes = {
+              ...context.sectorTimes,
+              [sectorId]: event.displayTime,
+            }
+
+            console.log(
+              `[TimelineMachine] Сохранено время ${event.displayTime.toFixed(2)} для сектора ${sectorId} при переключении видео ${event.videoId}`,
+            )
+
+            return { sectorTimes: newSectorTimes }
+          }
+
+          return context
+        }),
+      ],
+    },
+
+    // Обработчик события SET_SECTOR_TIME
+    SET_SECTOR_TIME: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SET_SECTOR_TIME") return context
+
+          // Сохраняем время для указанного сектора
+          const newSectorTimes = {
+            ...context.sectorTimes,
+            [event.sectorId]: event.time,
+          }
+
+          console.log(
+            `[TimelineMachine] Установлено время ${event.time.toFixed(2)} для сектора ${event.sectorId}`,
+          )
+
+          return { sectorTimes: newSectorTimes }
         }),
       ],
     },

@@ -24,7 +24,7 @@ export const VideoItem = memo(function VideoItem({
   // Подавляем предупреждение о неиспользуемом параметре
   void zoomLevel
   const { t } = useTranslation()
-  const { activeTrackId, setActiveTrack, setVideoRef, seek, tracks } = useTimeline()
+  const { activeTrackId, setActiveTrack, setVideoRef, seek, tracks, setSectorTime } = useTimeline()
   const {
     video: activeVideo,
     setVideo: setActiveVideo,
@@ -179,6 +179,15 @@ export const VideoItem = memo(function VideoItem({
         console.log(`[VideoItem] Устанавливаем предпочтительный источник: timeline`)
         setPreferredSource("timeline")
 
+        // Дополнительно устанавливаем preferredSource через глобальный объект
+        // для гарантии обновления
+        if (typeof window !== "undefined" && window.playerContext) {
+          console.log(
+            `[VideoItem] Дополнительно устанавливаем preferredSource через глобальный объект`,
+          )
+          window.playerContext.setPreferredSource("timeline")
+        }
+
         // Проверяем, есть ли примененный шаблон или последний примененный шаблон
         if (lastAppliedTemplate) {
           console.log(
@@ -266,7 +275,7 @@ export const VideoItem = memo(function VideoItem({
           ? new Date(video.startTime * 1000).toISOString().split("T")[0]
           : null
 
-        // Если есть дата сектора, отправляем событие для обновления позиции бара
+        // Если есть дата сектора, обновляем время сектора через машину состояний
         if (sectorDate) {
           // Вычисляем относительное время для бара
           let barTime = 0
@@ -275,19 +284,11 @@ export const VideoItem = memo(function VideoItem({
             barTime = currentTime > 365 * 24 * 60 * 60 ? displayTime : currentTime - videoStartTime
           }
 
-          // Отправляем событие sector-time-change для обновления позиции бара
-          window.dispatchEvent(
-            new CustomEvent("sector-time-change", {
-              detail: {
-                sectorId: sectorDate,
-                time: barTime,
-                isActiveOnly: false, // Обновляем все секторы
-              },
-            }),
-          )
+          // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
+          setSectorTime(sectorDate, barTime, false)
 
           console.log(
-            `[VideoItem] Отправлено событие sector-time-change для сектора ${sectorDate} со временем ${barTime.toFixed(2)}`,
+            `[VideoItem] Отправлено событие SET_SECTOR_TIME для сектора ${sectorDate} со временем ${barTime.toFixed(2)}`,
           )
         }
 
@@ -468,52 +469,26 @@ export const VideoItem = memo(function VideoItem({
   //   `[VideoItem] Параметры расчета: referenceStart=${referenceStart}, sectionDuration=${sectionDuration}`,
   // )
 
-  // Добавляем эффект для обработки события save-all-sectors-time
+  // Добавляем эффект для обработки изменения времени при переключении видео
   useEffect(() => {
-    // Обработчик события save-all-sectors-time
-    const handleSaveAllSectorsTime = (event: CustomEvent) => {
-      const { videoId, displayTime } = event.detail || {}
+    // Если видео активно и есть displayTime, сохраняем его
+    if (isActive && displayTime !== undefined && displayTime > 0) {
+      // Получаем дату сектора из startTime видео
+      const sectorDate = video.startTime
+        ? new Date(video.startTime * 1000).toISOString().split("T")[0]
+        : null
 
-      // Если это наше видео, не обрабатываем событие
-      if (videoId === video.id) {
-        return
-      }
+      // Если есть дата сектора, сохраняем время для этого сектора
+      if (sectorDate) {
+        // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
+        setSectorTime(sectorDate, displayTime, false)
 
-      // Если видео активно и есть displayTime, сохраняем его
-      if (isActive && displayTime !== undefined && displayTime > 0) {
-        // Получаем дату сектора из startTime видео
-        const sectorDate = video.startTime
-          ? new Date(video.startTime * 1000).toISOString().split("T")[0]
-          : null
-
-        // Если есть дата сектора, сохраняем время для этого сектора
-        if (sectorDate) {
-          // Отправляем событие sector-time-change для обновления позиции бара
-          window.dispatchEvent(
-            new CustomEvent("sector-time-change", {
-              detail: {
-                sectorId: sectorDate,
-                time: displayTime,
-                isActiveOnly: false, // Обновляем все секторы
-              },
-            }),
-          )
-
-          console.log(
-            `[VideoItem] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate} при переключении видео`,
-          )
-        }
+        console.log(
+          `[VideoItem] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate} при изменении displayTime`,
+        )
       }
     }
-
-    // Добавляем обработчик события
-    window.addEventListener("save-all-sectors-time", handleSaveAllSectorsTime as EventListener)
-
-    // Удаляем обработчик при размонтировании
-    return () => {
-      window.removeEventListener("save-all-sectors-time", handleSaveAllSectorsTime as EventListener)
-    }
-  }, [video.id, video.startTime, isActive])
+  }, [video.id, video.startTime, isActive, displayTime, setSectorTime])
 
   return (
     <div

@@ -39,6 +39,16 @@ export function TimelineSection({
     setScale(zoomLevel || 1)
   }, [zoomLevel])
 
+  // Устанавливаем preferredSource в "timeline" при активации сектора
+  useEffect(() => {
+    if (isActive && typeof window !== "undefined" && window.playerContext) {
+      console.log(
+        `[TimelineSection] Устанавливаем preferredSource в "timeline" для активного сектора ${date}`,
+      )
+      window.playerContext.setPreferredSource("timeline")
+    }
+  }, [isActive, date])
+
   // Сохраняем предыдущий масштаб для расчета смещения
   const prevScaleRef = useRef(scale)
 

@@ -47,8 +47,18 @@ export function useSectionTime({
   const lastTimeRef = useRef<number>(currentTime)
   const positionRef = useRef<number>(0)
 
-  // Функция для расчета позиции
+  // Используем ref для отслеживания последнего времени расчета позиции
+  const lastCalculationTimeRef = useRef(0)
+
+  // Функция для расчета позиции с дебаунсингом
   const calculatePosition = useCallback(() => {
+    // Проверяем, не слишком ли часто вызывается функция
+    const now = Date.now()
+    if (now - lastCalculationTimeRef.current < 50) {
+      // Ограничиваем до 20 вызовов в секунду
+      return
+    }
+    lastCalculationTimeRef.current = now
     if (startTime === undefined || endTime === undefined) return
 
     const duration = endTime - startTime
@@ -68,9 +78,12 @@ export function useSectionTime({
     // Это обеспечит плавное движение бара при воспроизведении
     if (displayTime !== undefined && displayTime > 0) {
       const newPosition = (displayTime / duration) * 100
-      console.log(
-        `[calculatePosition] displayTime=${displayTime.toFixed(2)}, duration=${duration.toFixed(2)}, newPosition=${newPosition.toFixed(2)}%, currentPosition=${positionRef.current.toFixed(2)}%`,
-      )
+      // Логируем только при существенных изменениях
+      if (Math.abs(newPosition - positionRef.current) > 1) {
+        console.log(
+          `[calculatePosition] displayTime=${displayTime.toFixed(2)}, duration=${duration.toFixed(2)}, newPosition=${newPosition.toFixed(2)}%, currentPosition=${positionRef.current.toFixed(2)}%`,
+        )
+      }
 
       // Всегда обновляем позицию при изменении displayTime
       positionRef.current = newPosition
@@ -199,14 +212,20 @@ export function useSectionTime({
             ),
           )
 
-          console.log(
-            `[useSectionTime] Расчет позиции для видео из таймлайна: videoStartTime=${videoStartTime.toFixed(2)}, startTime=${startTime.toFixed(2)}, relativeDisplayTime=${relativeDisplayTime.toFixed(2)}, sectionDuration=${sectionDuration.toFixed(2)}, positionPercent=${positionPercent.toFixed(2)}%`,
-          )
+          // Логируем только при существенных изменениях
+          if (Math.abs(positionPercent - positionRef.current) > 1) {
+            console.log(
+              `[useSectionTime] Расчет позиции для видео из таймлайна: videoStartTime=${videoStartTime.toFixed(2)}, startTime=${startTime.toFixed(2)}, relativeDisplayTime=${relativeDisplayTime.toFixed(2)}, sectionDuration=${sectionDuration.toFixed(2)}, positionPercent=${positionPercent.toFixed(2)}%`,
+            )
+          }
 
           // Принудительно обновляем позицию, если displayTime равен 0
           // Это нужно для корректного позиционирования бара при клике на видео
           if (relativeDisplayTime === 0) {
-            console.log(`[useSectionTime] Принудительное обновление позиции для displayTime=0`)
+            // Логируем только при существенных изменениях
+            if (Math.abs(positionPercent - positionRef.current) > 1) {
+              console.log(`[useSectionTime] Принудительное обновление позиции для displayTime=0`)
+            }
             positionPercent = Math.max(
               0,
               Math.min(100, ((videoStartTime - startTime) / sectionDuration) * 100),
@@ -221,9 +240,12 @@ export function useSectionTime({
         // Ограничиваем позицию в пределах 0-100%
         positionPercent = Math.max(0, Math.min(100, positionPercent))
 
-        console.log(
-          `[useSectionTime] Расчет позиции для Unix timestamp: displayTime=${displayTime.toFixed(2)}, sectionDuration=${sectionDuration.toFixed(2)}, positionPercent=${positionPercent.toFixed(2)}%, startTime=${startTime}, endTime=${endTime}`,
-        )
+        // Логируем только при существенных изменениях
+        if (Math.abs(positionPercent - positionRef.current) > 1) {
+          console.log(
+            `[useSectionTime] Расчет позиции для Unix timestamp: displayTime=${displayTime.toFixed(2)}, sectionDuration=${sectionDuration.toFixed(2)}, positionPercent=${positionPercent.toFixed(2)}%, startTime=${startTime}, endTime=${endTime}`,
+          )
+        }
       }
     } else {
       // Для обычного времени используем displayTime вместо currentTime
@@ -234,17 +256,23 @@ export function useSectionTime({
         // Используем displayTime как относительное время от начала секции
         positionPercent = (displayTime / duration) * 100
 
-        console.log(
-          `[useSectionTime] Расчет позиции с displayTime: displayTime=${displayTime.toFixed(2)}, startTime=${startTime}, duration=${duration}, positionPercent=${positionPercent.toFixed(2)}%`,
-        )
+        // Логируем только при существенных изменениях
+        if (Math.abs(positionPercent - positionRef.current) > 1) {
+          console.log(
+            `[useSectionTime] Расчет позиции с displayTime: displayTime=${displayTime.toFixed(2)}, startTime=${startTime}, duration=${duration}, positionPercent=${positionPercent.toFixed(2)}%`,
+          )
+        }
       } else {
         // Если displayTime не определено, используем стандартный расчет
         relativeTime = effectiveCurrentTime - startTime
         positionPercent = (relativeTime / duration) * 100
 
-        console.log(
-          `[useSectionTime] Расчет позиции для обычного времени: currentTime=${effectiveCurrentTime}, startTime=${startTime}, duration=${duration}, positionPercent=${positionPercent.toFixed(2)}%`,
-        )
+        // Логируем только при существенных изменениях
+        if (Math.abs(positionPercent - positionRef.current) > 1) {
+          console.log(
+            `[useSectionTime] Расчет позиции для обычного времени: currentTime=${effectiveCurrentTime}, startTime=${startTime}, duration=${duration}, positionPercent=${positionPercent.toFixed(2)}%`,
+          )
+        }
       }
     }
 
@@ -254,10 +282,12 @@ export function useSectionTime({
     // Проверяем, изменилась ли позиция существенно
     if (Math.abs(clampedPosition - positionRef.current) < 0.1) return
 
-    // Логируем для отладки
-    console.log(
-      `TimelineBar: effectiveCurrentTime=${effectiveCurrentTime.toFixed(2)}, position=${clampedPosition.toFixed(2)}%`,
-    )
+    // Логируем для отладки только при существенных изменениях
+    if (Math.abs(clampedPosition - positionRef.current) > 1) {
+      console.log(
+        `TimelineBar: effectiveCurrentTime=${effectiveCurrentTime.toFixed(2)}, position=${clampedPosition.toFixed(2)}%`,
+      )
+    }
 
     // Сохраняем позицию в ref для сравнения
     positionRef.current = clampedPosition
@@ -285,9 +315,13 @@ export function useSectionTime({
 
     // Используем requestAnimationFrame только при воспроизведении
     if (isPlaying) {
-      console.log(
-        `[TimelineBar] Запускаем анимацию для обновления позиции (isPlaying=${isPlaying})`,
-      )
+      // Логируем только при первом запуске анимации
+      if (!window.animationStarted) {
+        console.log(
+          `[TimelineBar] Запускаем анимацию для обновления позиции (isPlaying=${isPlaying})`,
+        )
+        window.animationStarted = true
+      }
 
       // Используем requestAnimationFrame для более плавного обновления, но с ограничением частоты
       let animationFrameId: number
@@ -314,6 +348,15 @@ export function useSectionTime({
     }
   }, [currentTime, displayTime, calculatePosition, isPlaying, seek, setCurrentTime])
 
+  // Используем ref для хранения последних обработанных событий, чтобы избежать бесконечного цикла
+  const lastProcessedEventRef = useRef<{
+    sectorTimeChange: { sectorId?: string; time?: number; timestamp: number } | null
+    saveAllSectorsTime: { videoId?: string; displayTime?: number; timestamp: number } | null
+  }>({
+    sectorTimeChange: null,
+    saveAllSectorsTime: null,
+  })
+
   // Добавляем обработчик события sector-time-change для обновления позиции бара
   useEffect(() => {
     // Обработчик события sector-time-change
@@ -321,6 +364,27 @@ export function useSectionTime({
       const { sectorId, time, isActiveOnly } = event.detail || {}
 
       if (sectorId && time !== undefined) {
+        // Проверяем, не обрабатывали ли мы уже это событие недавно
+        const lastEvent = lastProcessedEventRef.current.sectorTimeChange
+        const now = Date.now()
+
+        if (
+          lastEvent &&
+          lastEvent.sectorId === sectorId &&
+          lastEvent.time === time &&
+          now - lastEvent.timestamp < 100
+        ) {
+          // Пропускаем событие, если оно уже было обработано недавно
+          return
+        }
+
+        // Сохраняем информацию о текущем событии
+        lastProcessedEventRef.current.sectorTimeChange = {
+          sectorId,
+          time,
+          timestamp: now,
+        }
+
         console.log(
           `[useSectionTime] Получено событие sector-time-change: sectorId=${sectorId}, time=${time.toFixed(2)}, isActiveOnly=${isActiveOnly}`,
         )
@@ -372,6 +436,27 @@ export function useSectionTime({
       const { videoId, displayTime } = event.detail || {}
 
       if (videoId && displayTime !== undefined) {
+        // Проверяем, не обрабатывали ли мы уже это событие недавно
+        const lastEvent = lastProcessedEventRef.current.saveAllSectorsTime
+        const now = Date.now()
+
+        if (
+          lastEvent &&
+          lastEvent.videoId === videoId &&
+          lastEvent.displayTime === displayTime &&
+          now - lastEvent.timestamp < 100
+        ) {
+          // Пропускаем событие, если оно уже было обработано недавно
+          return
+        }
+
+        // Сохраняем информацию о текущем событии
+        lastProcessedEventRef.current.saveAllSectorsTime = {
+          videoId,
+          displayTime,
+          timestamp: now,
+        }
+
         console.log(
           `[useSectionTime] Получено событие save-all-sectors-time: videoId=${videoId}, displayTime=${displayTime.toFixed(2)}`,
         )

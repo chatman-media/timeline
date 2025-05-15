@@ -674,6 +674,15 @@
       "unmute": "Activer le son",
       "videoTrack": "Vidéo {{index}}",
       "audioTrack": "Audio {{index}}"
+    },
+    "compositeTrack": {
+      "noActiveSector": "Aucun secteur actif trouvé. Veuillez d'abord sélectionner une vidéo dans la timeline.",
+      "createCompositeTrack": "Créer une piste composite",
+      "options": "Options de piste composite",
+      "videoOnly": "Vidéo uniquement (3 sec)",
+      "videoLonger": "Vidéo (5 sec)",
+      "audioOnly": "Audio uniquement",
+      "runDemo": "Lancer la démo"
     }
   },
   "language": {

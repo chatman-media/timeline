@@ -608,6 +608,15 @@
       "unmute": "Stummschaltung aufheben",
       "videoTrack": "Video {{index}}",
       "audioTrack": "Audio {{index}}"
+    },
+    "compositeTrack": {
+      "noActiveSector": "Kein aktiver Sektor gefunden. Bitte wählen Sie zuerst ein Video aus der Timeline aus.",
+      "createCompositeTrack": "Composite-Spur erstellen",
+      "options": "Optionen für Composite-Spur",
+      "videoOnly": "Nur Video (3 Sek.)",
+      "videoLonger": "Video (5 Sek.)",
+      "audioOnly": "Nur Audio",
+      "runDemo": "Demo starten"
     }
   },
   "language": {

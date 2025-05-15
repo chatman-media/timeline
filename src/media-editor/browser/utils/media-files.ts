@@ -241,9 +241,10 @@ const doTimeRangesOverlap = (
   // если конец одного видео совпадает с началом другого
   const overlapWithGap = start1 < end2 - 1 && start2 < end1 - 1
 
-  console.log(
-    `Time ranges overlap check: [${start1}-${end1}] and [${start2}-${end2}]: ${overlap}, with gap: ${overlapWithGap}`,
-  )
+  // Отключаем логирование для уменьшения количества сообщений
+  // console.log(
+  //   `Time ranges overlap check: [${start1}-${end1}] and [${start2}-${end2}]: ${overlap}, with gap: ${overlapWithGap}`,
+  // )
 
   // Проверяем, пересекаются ли временные интервалы
   // Если видео записаны в одно и то же время (с перекрытием), они должны быть на разных дорожках
@@ -300,7 +301,8 @@ export const createTracksFromFiles = (
   const videoFilesByDay = sortedVideoFiles.reduce<Record<string, MediaFile[]>>((acc, file) => {
     const startTime = file.startTime || Date.now() / 1000
     const date = new Date(startTime * 1000).toISOString().split("T")[0]
-    console.log(`File ${file.name} has date ${date} from startTime ${startTime}`)
+    // Отключаем логирование для уменьшения количества сообщений
+    // console.log(`File ${file.name} has date ${date} from startTime ${startTime}`)
 
     if (!acc[date]) {
       acc[date] = []
@@ -390,21 +392,24 @@ export const createTracksFromFiles = (
       // Пытаемся получить название модели камеры из метаданных
       if (file.probeData) {
         cameraName = getCameraModel(file.probeData)
-        console.log(`Extracted camera model for ${file.name}: ${cameraName || "unknown"}`)
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(`Extracted camera model for ${file.name}: ${cameraName || "unknown"}`)
       }
 
       // Используем разрешение как идентификатор камеры, если доступно
       if (videoStream && videoStream.width && videoStream.height) {
         // Используем только разрешение для определения камеры
         cameraId = `${videoStream.width}x${videoStream.height}`
-        console.log(`Using resolution as camera ID for ${file.name}: ${cameraId}`)
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(`Using resolution as camera ID for ${file.name}: ${cameraId}`)
       } else {
         // Если разрешение не определено, используем уникальный идентификатор
         cameraId = `camera-${nanoid(6)}`
         console.log(`Using generated camera ID for ${file.name}: ${cameraId}`)
       }
 
-      console.log(`Extracted camera ID for file ${file.name}: ${cameraId || "unknown"}`)
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(`Extracted camera ID for file ${file.name}: ${cameraId || "unknown"}`)
 
       // Сначала проверяем существующие дорожки в порядке их индекса (сверху вниз)
       const sortedTracks = [...existingDayTracks, ...sector.tracks]
@@ -412,7 +417,8 @@ export const createTracksFromFiles = (
         .sort((a, b) => (Number(a.index) || 0) - (Number(b.index) || 0))
 
       // Логируем все дорожки с их ID камер для отладки
-      console.log("Available tracks with camera IDs:")
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log("Available tracks with camera IDs:")
       for (const track of sortedTracks) {
         if (track.videos && track.videos.length > 0) {
           let trackCameraId = null
@@ -423,9 +429,10 @@ export const createTracksFromFiles = (
             trackCameraId = trackNameMatch[1]
           }
 
-          console.log(
-            `Track ${track.name}: Camera ID = ${trackCameraId || "unknown"}, Videos = ${track.videos.length}`,
-          )
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(
+          //   `Track ${track.name}: Camera ID = ${trackCameraId || "unknown"}, Videos = ${track.videos.length}`,
+          // )
         }
       }
 
@@ -444,9 +451,10 @@ export const createTracksFromFiles = (
           if (trackNameMatch) {
             // Используем номер камеры из имени дорожки
             trackCameraId = trackNameMatch[1]
-            console.log(
-              `Using track name to determine camera ID for ${track.name}: ${trackCameraId}`,
-            )
+            // Отключаем логирование для уменьшения количества сообщений
+            // console.log(
+            //   `Using track name to determine camera ID for ${track.name}: ${trackCameraId}`,
+            // )
           }
 
           // Если trackCameraId не был определен по имени дорожки,
@@ -461,9 +469,10 @@ export const createTracksFromFiles = (
             if (trackVideoStream && trackVideoStream.width && trackVideoStream.height) {
               // Используем только разрешение для определения камеры
               trackCameraId = `${trackVideoStream.width}x${trackVideoStream.height}`
-              console.log(
-                `Using resolution as track camera ID for ${trackVideo.name}: ${trackCameraId}`,
-              )
+              // Отключаем логирование для уменьшения количества сообщений
+              // console.log(
+              //   `Using resolution as track camera ID for ${trackVideo.name}: ${trackCameraId}`,
+              // )
             } else {
               // Если разрешение не определено, используем уникальный идентификатор
               trackCameraId = `camera-${nanoid(6)}`
@@ -488,9 +497,10 @@ export const createTracksFromFiles = (
               videoStartTime,
               videoEndTime,
             )
-            console.log(
-              `Checking overlap between file ${file.name} (${fileStartTime}-${fileEndTime}) and video ${video.name} (${videoStartTime}-${videoEndTime}): ${overlap}`,
-            )
+            // Отключаем логирование для уменьшения количества сообщений
+            // console.log(
+            //   `Checking overlap between file ${file.name} (${fileStartTime}-${fileEndTime}) and video ${video.name} (${videoStartTime}-${videoEndTime}): ${overlap}`,
+            // )
 
             if (overlap) {
               hasTimeOverlap = true
@@ -501,18 +511,20 @@ export const createTracksFromFiles = (
           // Если нет временного перекрытия, можно использовать эту дорожку
           if (!hasTimeOverlap) {
             hasOverlap = false
-            console.log(
-              `No time overlap for file ${file.name} on track ${track.name}, can use this track`,
-            )
+            // Отключаем логирование для уменьшения количества сообщений
+            // console.log(
+            //   `No time overlap for file ${file.name} on track ${track.name}, can use this track`,
+            // )
             break
           }
 
           // Если есть временное перекрытие, но это та же камера, все равно используем эту дорожку
           // Видео с одной камеры всегда должны быть на одной дорожке
           if (cameraId && trackCameraId && cameraId === trackCameraId) {
-            console.log(
-              `Same camera ID ${cameraId}, using track ${track.name} for file ${file.name} despite time overlap`,
-            )
+            // Отключаем логирование для уменьшения количества сообщений
+            // console.log(
+            //   `Same camera ID ${cameraId}, using track ${track.name} for file ${file.name} despite time overlap`,
+            // )
             hasOverlap = false // Нет перекрытия, используем ту же дорожку
             break
           }
@@ -557,9 +569,10 @@ export const createTracksFromFiles = (
 
       // Если не нашли подходящую дорожку, ищем самую раннюю дорожку без временного перекрытия
       if (!trackFound) {
-        console.log(
-          `Track not found for file ${file.name}, looking for the earliest track without time overlap`,
-        )
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(
+        //   `Track not found for file ${file.name}, looking for the earliest track without time overlap`,
+        // )
 
         // Сортируем дорожки по индексу (сверху вниз)
         const tracksWithoutOverlap = []
@@ -595,7 +608,8 @@ export const createTracksFromFiles = (
             (a, b) => (Number(a.index) || 0) - (Number(b.index) || 0),
           )[0]
 
-          console.log(`Found track without time overlap: ${track.name} for file ${file.name}`)
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(`Found track without time overlap: ${track.name} for file ${file.name}`)
 
           // Если это дорожка из существующего сектора, добавляем ее в текущий сектор
           if (!sector.tracks.includes(track)) {
@@ -629,9 +643,10 @@ export const createTracksFromFiles = (
 
       // Если все еще не нашли подходящую дорожку, создаем новую
       if (!trackFound) {
-        console.log(
-          `No suitable track found for file ${file.name} with camera ID ${cameraId || "unknown"}, creating a new track`,
-        )
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(
+        //   `No suitable track found for file ${file.name} with camera ID ${cameraId || "unknown"}, creating a new track`,
+        // )
 
         // Определяем максимальный номер видеодорожки для этого дня
         const maxVideoIndex = Math.max(
@@ -644,9 +659,10 @@ export const createTracksFromFiles = (
             .map((track) => Number(track.index) || 0),
         )
 
-        console.log(
-          `Creating new video track for file ${file.name} with index ${maxVideoIndex + 1}`,
-        )
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(
+        //   `Creating new video track for file ${file.name} with index ${maxVideoIndex + 1}`,
+        // )
 
         // Находим максимальный номер камеры в текущем секторе
         let maxCameraNumber = 0
@@ -671,8 +687,9 @@ export const createTracksFromFiles = (
         // Всегда устанавливаем cameraName в формате "Camera X"
         const trackCameraName = trackName
 
-        console.log(`Creating new track with name: ${trackName} for camera ID: ${cameraId}`)
-        console.log(`Using camera name: ${trackCameraName}`)
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(`Creating new track with name: ${trackName} for camera ID: ${cameraId}`)
+        // console.log(`Using camera name: ${trackCameraName}`)
 
         // Создаем новую дорожку
         sector.tracks.push({
@@ -694,7 +711,8 @@ export const createTracksFromFiles = (
           cameraName: trackCameraName || undefined,
         })
 
-        console.log(`Sector ${sector.name} now has ${sector.tracks.length} tracks`)
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(`Sector ${sector.name} now has ${sector.tracks.length} tracks`)
       }
     }
 
@@ -902,19 +920,20 @@ export const createTracksFromFiles = (
     }
   })
 
-  console.log(
-    "Created sectors:",
-    sectors.map((s) => ({
-      name: s.name,
-      tracksCount: s.tracks.length,
-      tracks: s.tracks.map((t) => ({
-        name: t.name,
-        type: t.type,
-        videosCount: t.videos?.length || 0,
-        videos: t.videos?.map((v) => v.name),
-      })),
-    })),
-  )
+  // Отключаем логирование для уменьшения количества сообщений
+  // console.log(
+  //   "Created sectors:",
+  //   sectors.map((s) => ({
+  //     name: s.name,
+  //     tracksCount: s.tracks.length,
+  //     tracks: s.tracks.map((t) => ({
+  //       name: t.name,
+  //       type: t.type,
+  //       videosCount: t.videos?.length || 0,
+  //       videos: t.videos?.map((v) => v.name),
+  //     })),
+  //   })),
+  // )
 
   return sectors
 }

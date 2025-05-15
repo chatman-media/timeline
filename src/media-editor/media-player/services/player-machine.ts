@@ -1,16 +1,10 @@
 import { assign, createMachine } from "xstate"
 
-import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
 import { stopAllVideos } from "@/media-editor/browser/services/video-control"
 import { MediaFile } from "@/types/media"
 import { TimelineVideo } from "@/types/timeline"
 
-import {
-  createEmptyVideo,
-  getVideosFromTimeline,
-  updateTemplateWithTimelineVideos,
-  updateVideoSources,
-} from "./source-control"
+import { createEmptyVideo, getVideosFromTimeline } from "./source-control"
 import { AppliedTemplate } from "./template-service"
 
 export interface PlayerContextType {
@@ -364,16 +358,89 @@ export const playerMachine = createMachine({
           actions: assign({ activeVideoId: ({ event }) => event.activeVideoId }),
         },
         setAppliedTemplate: {
-          actions: assign({ appliedTemplate: ({ event }) => event.appliedTemplate }),
+          actions: [
+            // Устанавливаем шаблон
+            assign({ appliedTemplate: ({ event }) => event.appliedTemplate }),
+            // Если устанавливается шаблон, принудительно устанавливаем источник в "timeline"
+            assign({
+              preferredSource: "timeline" as const,
+            }),
+            // Логируем применение шаблона
+            ({ event }) => {
+              if (event.appliedTemplate) {
+                console.log(
+                  `[PlayerMachine] Применен шаблон: ${event.appliedTemplate.template?.id}, видео: ${event.appliedTemplate.videos?.length || 0}`,
+                )
+
+                // Проверяем, что все видео в шаблоне имеют source = "timeline"
+                if (event.appliedTemplate.videos) {
+                  event.appliedTemplate.videos.forEach((video: any, index: number) => {
+                    if (video.source !== "timeline") {
+                      console.warn(
+                        `[PlayerMachine] Видео ${index} в шаблоне имеет неправильный источник: ${video.source}, исправляем на "timeline"`,
+                      )
+                      video.source = "timeline"
+                    }
+                  })
+                }
+              } else {
+                console.log(`[PlayerMachine] Шаблон сброшен`)
+              }
+            },
+          ],
         },
         setIsResizableMode: {
           actions: assign({ isResizableMode: ({ event }) => event.isResizableMode }),
         },
         setPreferredSource: {
           actions: [
-            assign({ preferredSource: ({ event }) => event.preferredSource }),
-            ({ event }) => {
-              console.log(`[PlayerMachine] setPreferredSource: ${event.preferredSource}`)
+            // Всегда устанавливаем preferredSource в "timeline" для шаблонов
+            assign({
+              preferredSource: ({ event, context }) => {
+                // Если есть шаблон, всегда используем таймлайн
+                if (context.appliedTemplate) {
+                  console.log(
+                    `[PlayerMachine] Есть шаблон, принудительно устанавливаем источник в "timeline"`,
+                  )
+                  return "timeline"
+                }
+                // Иначе используем запрошенный источник
+                return event.preferredSource
+              },
+            }),
+            // Если устанавливается источник "media", но есть шаблон, принудительно обновляем шаблон с видео из таймлайна
+            ({ event, context }) => {
+              console.log(
+                `[PlayerMachine] setPreferredSource: ${context.preferredSource} (запрошено: ${event.preferredSource})`,
+              )
+
+              // Если есть шаблон и запрошен источник "media", обновляем шаблон с видео из таймлайна
+              if (context.appliedTemplate && event.preferredSource === "media") {
+                console.log(
+                  `[PlayerMachine] Запрошен источник "media", но есть шаблон, обновляем шаблон с видео из таймлайна`,
+                )
+
+                // Обновляем шаблон с видео из таймлайна
+                if (context.timelineVideos.length > 0) {
+                  // Создаем копию шаблона
+                  const templateCopy = { ...context.appliedTemplate }
+
+                  // Заполняем шаблон видео из таймлайна
+                  templateCopy.videos = context.timelineVideos
+                    .slice(0, context.appliedTemplate.template?.screens || 1)
+                    .map((video: any) => ({
+                      ...video,
+                      source: "timeline", // Явно устанавливаем источник как timeline
+                    }))
+
+                  console.log(
+                    `[PlayerMachine] Обновлен шаблон с ${templateCopy.videos.length} видео из таймлайна`,
+                  )
+
+                  // Применяем обновленный шаблон
+                  context.appliedTemplate = templateCopy
+                }
+              }
             },
           ],
         },
@@ -399,7 +466,7 @@ export const playerMachine = createMachine({
               const newVideoSources = { ...context.videoSources }
 
               // Помечаем все видео из таймлайна
-              event.videos.forEach((video) => {
+              event.videos.forEach((video: MediaFile) => {
                 if (video.id) {
                   newVideoSources[video.id] = "timeline"
                   console.log(`[PlayerMachine] Видео ${video.id} помечено как видео из таймлайна`)
@@ -424,7 +491,7 @@ export const playerMachine = createMachine({
               const newVideoSources = { ...context.videoSources }
 
               // Помечаем все видео из браузера
-              event.videos.forEach((video) => {
+              event.videos.forEach((video: MediaFile) => {
                 if (video.id) {
                   newVideoSources[video.id] = "media"
                   console.log(`[PlayerMachine] Видео ${video.id} помечено как видео из браузера`)
@@ -513,35 +580,42 @@ export const playerMachine = createMachine({
                     // Сначала сбрасываем шаблон
                     context.appliedTemplate = null
 
-                    // Создаем новый шаблон с видео из таймлайна
+                    // Создаем новый шаблон с видео из таймлайна с большей задержкой
                     setTimeout(() => {
-                      // Создаем новый шаблон
-                      const newTemplate = {
-                        template: currentTemplate,
-                        videos: timelineVideos
-                          .slice(0, currentTemplate?.screens || 1)
-                          .map((video) => ({
-                            ...video,
-                            source: "timeline", // Явно устанавливаем источник как timeline
-                          })),
-                      }
+                      // Проверяем, что у нас все еще таймлайн как источник
+                      if (context.preferredSource === "timeline") {
+                        console.log(`[PlayerMachine] Создаем новый шаблон с видео из таймлайна`)
 
-                      console.log(
-                        `[PlayerMachine] Создан новый шаблон с ${newTemplate.videos.length} видео из таймлайна`,
-                      )
+                        // Создаем новый шаблон
+                        const newTemplate = {
+                          template: currentTemplate,
+                          videos: timelineVideos
+                            .slice(0, currentTemplate?.screens || 1)
+                            .map((video: MediaFile) => ({
+                              ...video,
+                              source: "timeline", // Явно устанавливаем источник как timeline
+                            })),
+                        }
 
-                      // Применяем новый шаблон
-                      context.appliedTemplate = newTemplate
-
-                      // Устанавливаем первое видео из таймлайна как активное
-                      if (timelineVideos.length > 0) {
-                        context.activeVideoId = timelineVideos[0].id
-                        context.video = timelineVideos[0]
                         console.log(
-                          `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
+                          `[PlayerMachine] Создан новый шаблон с ${newTemplate.videos.length} видео из таймлайна`,
                         )
+
+                        // Применяем новый шаблон
+                        context.appliedTemplate = newTemplate
+
+                        // Устанавливаем первое видео из таймлайна как активное
+                        if (timelineVideos.length > 0) {
+                          context.activeVideoId = timelineVideos[0].id
+                          context.video = timelineVideos[0]
+                          console.log(
+                            `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
+                          )
+                        }
+                      } else {
+                        console.log(`[PlayerMachine] Источник изменился, не обновляем шаблон`)
                       }
-                    }, 50)
+                    }, 150) // Увеличиваем задержку для гарантии обновления
                   }
                   // Если нет примененного шаблона, но есть последний примененный шаблон
                   else if (context.lastAppliedTemplate) {
@@ -552,30 +626,47 @@ export const playerMachine = createMachine({
                     // Сохраняем ссылку на последний шаблон
                     const lastTemplate = context.lastAppliedTemplate.template
 
-                    // Создаем новый шаблон с видео из таймлайна
-                    const newTemplate = {
-                      template: lastTemplate,
-                      videos: timelineVideos.slice(0, lastTemplate?.screens || 1).map((video) => ({
-                        ...video,
-                        source: "timeline", // Явно устанавливаем источник как timeline
-                      })),
-                    }
+                    // Сначала сбрасываем шаблон для гарантии обновления
+                    context.appliedTemplate = null
 
-                    console.log(
-                      `[PlayerMachine] Создан новый шаблон из последнего примененного с ${newTemplate.videos.length} видео из таймлайна`,
-                    )
+                    // Создаем новый шаблон с видео из таймлайна с задержкой
+                    setTimeout(() => {
+                      // Проверяем, что у нас все еще таймлайн как источник
+                      if (context.preferredSource === "timeline") {
+                        console.log(
+                          `[PlayerMachine] Создаем новый шаблон из последнего примененного для таймлайна`,
+                        )
 
-                    // Применяем новый шаблон
-                    context.appliedTemplate = newTemplate
+                        // Создаем новый шаблон с видео из таймлайна
+                        const newTemplate = {
+                          template: lastTemplate,
+                          videos: timelineVideos
+                            .slice(0, lastTemplate?.screens || 1)
+                            .map((video: MediaFile) => ({
+                              ...video,
+                              source: "timeline", // Явно устанавливаем источник как timeline
+                            })),
+                        }
 
-                    // Устанавливаем первое видео из таймлайна как активное
-                    if (timelineVideos.length > 0) {
-                      context.activeVideoId = timelineVideos[0].id
-                      context.video = timelineVideos[0]
-                      console.log(
-                        `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
-                      )
-                    }
+                        console.log(
+                          `[PlayerMachine] Создан новый шаблон из последнего примененного с ${newTemplate.videos.length} видео из таймлайна`,
+                        )
+
+                        // Применяем новый шаблон
+                        context.appliedTemplate = newTemplate
+
+                        // Устанавливаем первое видео из таймлайна как активное
+                        if (timelineVideos.length > 0) {
+                          context.activeVideoId = timelineVideos[0].id
+                          context.video = timelineVideos[0]
+                          console.log(
+                            `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
+                          )
+                        }
+                      } else {
+                        console.log(`[PlayerMachine] Источник изменился, не обновляем шаблон`)
+                      }
+                    }, 150) // Увеличиваем задержку для гарантии обновления
                   }
                   // Если нет ни активного, ни последнего шаблона
                   else {
@@ -625,11 +716,13 @@ export const playerMachine = createMachine({
                   context.video = null
                 }
               }
-              // Если текущий источник - браузер
+              // Если текущий источник - браузер, все равно используем видео из таймлайна для шаблона
               else {
-                console.log(`[PlayerMachine] Переключаемся на источник "media" (браузер)`)
+                console.log(
+                  `[PlayerMachine] Переключаемся на источник "media" (браузер), но для шаблона будем использовать видео из таймлайна`,
+                )
 
-                // Используем параллельные видео из браузера
+                // Используем параллельные видео из браузера только для отображения вне шаблона
                 const browserVideos = event.parallelVideos
 
                 console.log(`[PlayerMachine] Найдено ${browserVideos.length} видео из браузера`)
@@ -641,7 +734,7 @@ export const playerMachine = createMachine({
                 const newVideoSources = { ...context.videoSources }
 
                 // Помечаем все видео из браузера
-                browserVideos.forEach((video) => {
+                browserVideos.forEach((video: MediaFile) => {
                   if (video.id) {
                     newVideoSources[video.id] = "media"
                     console.log(`[PlayerMachine] Видео ${video.id} помечено как видео из браузера`)
@@ -651,108 +744,142 @@ export const playerMachine = createMachine({
                 // Обновляем источники видео в контексте
                 context.videoSources = newVideoSources
 
-                // Если есть видео из браузера
-                if (browserVideos.length > 0) {
-                  // Если есть примененный шаблон
-                  if (context.appliedTemplate) {
-                    console.log(
-                      `[PlayerMachine] Есть примененный шаблон, заполняем его видео из браузера`,
-                    )
+                // Если нет шаблона, просто показываем видео из браузера
+                if (!context.appliedTemplate && !context.lastAppliedTemplate) {
+                  console.log(`[PlayerMachine] Нет шаблонов, просто показываем видео из браузера`)
 
-                    // Создаем копию шаблона
-                    const templateCopy = { ...context.appliedTemplate }
-
-                    // Заполняем шаблон видео из браузера
-                    templateCopy.videos = browserVideos.slice(
-                      0,
-                      context.appliedTemplate.template?.screens || 1,
-                    )
-
-                    console.log(
-                      `[PlayerMachine] Добавлено ${templateCopy.videos.length} видео из браузера в шаблон`,
-                    )
-
-                    // Применяем обновленный шаблон
-                    context.appliedTemplate = templateCopy
-
+                  // Если есть видео из браузера
+                  if (browserVideos.length > 0) {
                     // Устанавливаем первое видео из браузера как активное
                     context.activeVideoId = browserVideos[0].id
                     context.video = browserVideos[0]
                     console.log(
                       `[PlayerMachine] Установлено активное видео из браузера: ${browserVideos[0].id}`,
                     )
-                  }
-                  // Если нет примененного шаблона, но есть последний примененный шаблон
-                  else if (context.lastAppliedTemplate) {
-                    console.log(
-                      `[PlayerMachine] Нет активного шаблона, но есть последний примененный шаблон`,
-                    )
-
-                    // Создаем копию последнего шаблона
-                    const templateCopy = JSON.parse(JSON.stringify(context.lastAppliedTemplate))
-
-                    // Заполняем шаблон видео из браузера
-                    templateCopy.videos = browserVideos.slice(
-                      0,
-                      templateCopy.template?.screens || 1,
-                    )
-
-                    console.log(
-                      `[PlayerMachine] Добавлено ${templateCopy.videos.length} видео из браузера в последний шаблон`,
-                    )
-
-                    // Применяем обновленный шаблон
-                    context.appliedTemplate = templateCopy
-
-                    // Устанавливаем первое видео из браузера как активное
-                    context.activeVideoId = browserVideos[0].id
-                    context.video = browserVideos[0]
-                    console.log(
-                      `[PlayerMachine] Установлено активное видео из браузера: ${browserVideos[0].id}`,
-                    )
-                  }
-                  // Если нет ни активного, ни последнего шаблона
-                  else {
-                    console.log(`[PlayerMachine] Нет шаблонов, просто показываем видео из браузера`)
-
-                    // Устанавливаем первое видео из браузера как активное
-                    context.activeVideoId = browserVideos[0].id
-                    context.video = browserVideos[0]
-                    console.log(
-                      `[PlayerMachine] Установлено активное видео из браузера: ${browserVideos[0].id}`,
-                    )
+                  } else {
+                    console.log(`[PlayerMachine] Нет доступных видео из браузера`)
+                    // Сбрасываем активное видео
+                    context.activeVideoId = null
+                    context.video = null
                   }
                 }
-                // Если нет видео из браузера
+                // Если есть шаблон, используем видео из таймлайна
                 else {
-                  console.log(`[PlayerMachine] Нет доступных видео из браузера`)
+                  console.log(`[PlayerMachine] Есть шаблон, используем видео из таймлайна для него`)
 
-                  // Если есть примененный шаблон, очищаем его
-                  if (context.appliedTemplate) {
-                    console.log(`[PlayerMachine] Есть примененный шаблон, очищаем его`)
+                  // Получаем видео из таймлайна
+                  const timelineVideos = getVideosFromTimeline(event.tracks, event.activeTrackId)
 
-                    // Создаем копию шаблона
-                    const templateCopy = { ...context.appliedTemplate }
-                    // Очищаем список видео в шаблоне
-                    templateCopy.videos = []
-                    // Применяем обновленный шаблон
-                    context.appliedTemplate = templateCopy
+                  if (timelineVideos.length > 0) {
+                    console.log(
+                      `[PlayerMachine] Найдено ${timelineVideos.length} видео из таймлайна для шаблона`,
+                    )
+
+                    // Если есть примененный шаблон
+                    if (context.appliedTemplate) {
+                      console.log(
+                        `[PlayerMachine] Обновляем примененный шаблон с видео из таймлайна`,
+                      )
+
+                      // Создаем копию шаблона
+                      const templateCopy = { ...context.appliedTemplate }
+
+                      // Заполняем шаблон видео из таймлайна
+                      templateCopy.videos = timelineVideos
+                        .slice(0, context.appliedTemplate.template?.screens || 1)
+                        .map((video: MediaFile) => ({
+                          ...video,
+                          source: "timeline", // Явно устанавливаем источник как timeline
+                        }))
+
+                      console.log(
+                        `[PlayerMachine] Добавлено ${templateCopy.videos.length} видео из таймлайна в шаблон`,
+                      )
+
+                      // Применяем обновленный шаблон
+                      context.appliedTemplate = templateCopy
+
+                      // Устанавливаем первое видео из таймлайна как активное
+                      if (timelineVideos.length > 0) {
+                        context.activeVideoId = timelineVideos[0].id
+                        context.video = timelineVideos[0]
+                        console.log(
+                          `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
+                        )
+                      }
+                    }
+                    // Если нет примененного шаблона, но есть последний примененный шаблон
+                    else if (context.lastAppliedTemplate) {
+                      console.log(`[PlayerMachine] Применяем последний шаблон с видео из таймлайна`)
+
+                      // Создаем копию последнего шаблона
+                      const templateCopy = JSON.parse(JSON.stringify(context.lastAppliedTemplate))
+
+                      // Заполняем шаблон видео из таймлайна
+                      templateCopy.videos = timelineVideos
+                        .slice(0, templateCopy.template?.screens || 1)
+                        .map((video: MediaFile) => ({
+                          ...video,
+                          source: "timeline", // Явно устанавливаем источник как timeline
+                        }))
+
+                      console.log(
+                        `[PlayerMachine] Добавлено ${templateCopy.videos.length} видео из таймлайна в последний шаблон`,
+                      )
+
+                      // Применяем обновленный шаблон
+                      context.appliedTemplate = templateCopy
+
+                      // Устанавливаем первое видео из таймлайна как активное
+                      if (timelineVideos.length > 0) {
+                        context.activeVideoId = timelineVideos[0].id
+                        context.video = timelineVideos[0]
+                        console.log(
+                          `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
+                        )
+                      }
+                    }
                   }
-                  // Если есть последний примененный шаблон, применяем его с пустыми видео
-                  else if (context.lastAppliedTemplate) {
-                    console.log(`[PlayerMachine] Применяем последний шаблон без видео`)
+                  // Если нет видео из таймлайна
+                  else {
+                    console.log(`[PlayerMachine] Нет доступных видео из таймлайна для шаблона`)
 
-                    // Создаем копию последнего шаблона
-                    const templateCopy = JSON.parse(JSON.stringify(context.lastAppliedTemplate))
-                    // Очищаем список видео в шаблоне
-                    templateCopy.videos = []
-                    // Применяем обновленный шаблон
-                    context.appliedTemplate = templateCopy
+                    // Если есть примененный шаблон, очищаем его
+                    if (context.appliedTemplate) {
+                      console.log(`[PlayerMachine] Есть примененный шаблон, очищаем его`)
+
+                      // Создаем копию шаблона
+                      const templateCopy = { ...context.appliedTemplate }
+                      // Очищаем список видео в шаблоне
+                      templateCopy.videos = []
+                      // Применяем обновленный шаблон
+                      context.appliedTemplate = templateCopy
+                    }
+                    // Если есть последний примененный шаблон, применяем его с пустыми видео
+                    else if (context.lastAppliedTemplate) {
+                      console.log(`[PlayerMachine] Применяем последний шаблон без видео`)
+
+                      // Создаем копию последнего шаблона
+                      const templateCopy = JSON.parse(JSON.stringify(context.lastAppliedTemplate))
+                      // Очищаем список видео в шаблоне
+                      templateCopy.videos = []
+                      // Применяем обновленный шаблон
+                      context.appliedTemplate = templateCopy
+                    }
+
+                    // Если есть видео из браузера, используем их вне шаблона
+                    if (browserVideos.length > 0) {
+                      context.activeVideoId = browserVideos[0].id
+                      context.video = browserVideos[0]
+                      console.log(
+                        `[PlayerMachine] Установлено активное видео из браузера: ${browserVideos[0].id}`,
+                      )
+                    } else {
+                      // Сбрасываем активное видео
+                      context.activeVideoId = null
+                      context.video = null
+                    }
                   }
-
-                  // Сбрасываем активное видео
-                  context.activeVideoId = null
-                  context.video = null
                 }
               }
             },
@@ -770,24 +897,56 @@ export const playerMachine = createMachine({
                     `[PlayerMachine] Принудительно обновляем видео в шаблоне для таймлайна`,
                   )
 
-                  // Если есть активное видео из таймлайна, устанавливаем его снова
-                  if (context.video && context.video.startTime) {
-                    console.log(
-                      `[PlayerMachine] Переустанавливаем активное видео из таймлайна: ${context.video.id}`,
-                    )
+                  // Сначала полностью сбрасываем шаблон для гарантии обновления
+                  const currentTemplate = context.appliedTemplate.template
+                  const timelineVideos = context.timelineVideos
 
-                    // Создаем копию видео для принудительного обновления
-                    const videoCopy = { ...context.video }
+                  // Сохраняем ссылку на текущий шаблон и видео
+                  console.log(`[PlayerMachine] Временно сбрасываем шаблон для полного обновления`)
+                  context.appliedTemplate = null
 
-                    // Переустанавливаем видео
-                    context.video = null
-                    setTimeout(() => {
-                      context.video = videoCopy
+                  // Через задержку создаем новый шаблон с видео из таймлайна
+                  setTimeout(() => {
+                    console.log(`[PlayerMachine] Создаем новый шаблон с видео из таймлайна`)
+
+                    // Проверяем, что у нас есть видео из таймлайна
+                    if (timelineVideos.length > 0) {
+                      // Создаем новый шаблон
+                      const newTemplate = {
+                        template: currentTemplate,
+                        videos: timelineVideos
+                          .slice(0, currentTemplate?.screens || 1)
+                          .map((video: MediaFile) => ({
+                            ...video,
+                            source: "timeline", // Явно устанавливаем источник как timeline
+                          })),
+                      }
+
                       console.log(
-                        `[PlayerMachine] Видео из таймлайна переустановлено: ${videoCopy.id}`,
+                        `[PlayerMachine] Создан новый шаблон с ${newTemplate.videos.length} видео из таймлайна`,
                       )
-                    }, 50)
-                  }
+
+                      // Применяем новый шаблон
+                      context.appliedTemplate = newTemplate
+
+                      // Устанавливаем первое видео из таймлайна как активное
+                      if (timelineVideos.length > 0) {
+                        context.activeVideoId = timelineVideos[0].id
+                        context.video = timelineVideos[0]
+                        console.log(
+                          `[PlayerMachine] Установлено активное видео из таймлайна: ${timelineVideos[0].id}`,
+                        )
+                      }
+                    } else {
+                      console.log(`[PlayerMachine] Нет видео из таймлайна для обновления шаблона`)
+
+                      // Если нет видео из таймлайна, восстанавливаем шаблон без видео
+                      context.appliedTemplate = {
+                        template: currentTemplate,
+                        videos: [],
+                      }
+                    }
+                  }, 100)
                 }
               }, 500) // Увеличиваем задержку с 300 до 500 мс
             },

@@ -107,17 +107,19 @@ export function Timeline() {
 
   const sections = useMemo(() => {
     if (!tracks || tracks.length === 0) {
-      console.log("No tracks available for sections")
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log("No tracks available for sections")
       return []
     }
 
-    console.log(
-      "Creating sections from tracks:",
-      tracks.map((t) => ({
-        name: t.name,
-        videosCount: t.videos?.length || 0,
-      })),
-    )
+    // Отключаем логирование для уменьшения количества сообщений
+    // console.log(
+    //   "Creating sections from tracks:",
+    //   tracks.map((t) => ({
+    //     name: t.name,
+    //     videosCount: t.videos?.length || 0,
+    //   })),
+    // )
 
     const videosByDay = new Map<
       string,
@@ -130,17 +132,20 @@ export function Timeline() {
     >()
 
     tracks.forEach((track) => {
-      console.log(`Processing track ${track.name} with ${track.videos?.length || 0} videos`)
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(`Processing track ${track.name} with ${track.videos?.length || 0} videos`)
 
       track.videos?.forEach((video) => {
         const videoStart = video.startTime || 0
         const videoEnd = videoStart + (video.duration || 0)
         const date = new Date(videoStart * 1000).toISOString().split("T")[0]
 
-        console.log(`Video ${video.name}: date=${date}, start=${videoStart}, end=${videoEnd}`)
+        // Отключаем логирование для уменьшения количества сообщений
+        // console.log(`Video ${video.name}: date=${date}, start=${videoStart}, end=${videoEnd}`)
 
         if (!videosByDay.has(date)) {
-          console.log(`Creating new day entry for date ${date}`)
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(`Creating new day entry for date ${date}`)
           videosByDay.set(date, {
             videos: [],
             tracks: [],
@@ -152,7 +157,8 @@ export function Timeline() {
         const dayData = videosByDay.get(date)!
         dayData.videos.push(video)
         if (!dayData.tracks.includes(track)) {
-          console.log(`Adding track ${track.name} to day ${date}`)
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(`Adding track ${track.name} to day ${date}`)
           dayData.tracks.push(track)
         }
         dayData.startTime = Math.min(dayData.startTime, videoStart)
@@ -168,14 +174,15 @@ export function Timeline() {
       tracks: data.tracks,
     }))
 
-    console.log(
-      "Created sections:",
-      result.map((s) => ({
-        date: s.date,
-        tracksCount: s.tracks.length,
-        tracks: s.tracks.map((t) => t.name),
-      })),
-    )
+    // Отключаем логирование для уменьшения количества сообщений
+    // console.log(
+    //   "Created sections:",
+    //   result.map((s) => ({
+    //     date: s.date,
+    //     tracksCount: s.tracks.length,
+    //     tracks: s.tracks.map((t) => t.name),
+    //   })),
+    // )
 
     return result
   }, [tracks])
@@ -620,6 +627,14 @@ export function Timeline() {
         console.log(
           `[Timeline] Активируем сектор ${sectorDate}, preserveOtherSectors=${preserveOtherSectors}`,
         )
+
+        // Устанавливаем preferredSource в "timeline" при активации сектора
+        if (typeof window !== "undefined" && window.playerContext) {
+          console.log(
+            `[Timeline] Устанавливаем preferredSource в "timeline" при активации сектора ${sectorDate}`,
+          )
+          window.playerContext.setPreferredSource("timeline")
+        }
 
         // Сохраняем текущее состояние активного сектора перед переключением
         if (activeDate) {

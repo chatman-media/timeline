@@ -80,6 +80,14 @@ export function TimelineBar({
       // Сохраняем текущее состояние всех секторов
       console.log(`[TimelineBar] Сохраняем состояние всех секторов перед активацией ${sectorDate}`)
 
+      // Устанавливаем preferredSource в "timeline" при активации сектора
+      if (typeof window !== "undefined" && window.playerContext) {
+        console.log(
+          `[TimelineBar] Устанавливаем preferredSource в "timeline" при активации сектора ${sectorDate}`,
+        )
+        window.playerContext.setPreferredSource("timeline")
+      }
+
       // Отправляем событие для активации сектора через машину состояний
       window.dispatchEvent(
         new CustomEvent("activate-sector", {
@@ -134,44 +142,49 @@ export function TimelineBar({
   // Добавляем эффект для сохранения позиции при переключении между параллельными видео
   useEffect(() => {
     // Если видео изменилось, сохраняем текущую позицию для всех секторов
-    if (video && video.id && displayTime > 0) {
-      // Отправляем событие для сохранения времени для всех секторов
-      window.dispatchEvent(
-        new CustomEvent("save-all-sectors-time", {
-          detail: {
-            videoId: video.id,
-            displayTime: displayTime,
-            currentTime: currentTime,
-          },
-        }),
-      )
+    if (video && video.id && displayTime > 0 && timelineContext) {
+      // Отправляем событие SAVE_ALL_SECTORS_TIME в машину состояний таймлайна
+      timelineContext.saveAllSectorsTime(video.id, displayTime, currentTime)
 
       console.log(
-        `[TimelineBar] Отправлено событие save-all-sectors-time для видео ${video.id} с displayTime=${displayTime.toFixed(2)}`,
+        `[TimelineBar] Отправлено событие SAVE_ALL_SECTORS_TIME для видео ${video.id} с displayTime=${displayTime.toFixed(2)}`,
       )
     }
-  }, [video?.id, displayTime, currentTime])
+  }, [video?.id, displayTime, currentTime, timelineContext])
+
+  // Используем ref для хранения последнего отправленного времени
+  const lastSentTimeRef = useRef<{ sectorId: string | null; time: number }>({
+    sectorId: null,
+    time: -1,
+  })
 
   // Добавляем эффект для обновления позиции бара при изменении видео
   useEffect(() => {
     // Если видео изменилось, обновляем позицию бара
-    if (video && video.id && sectorDate) {
-      // Отправляем событие sector-time-change для обновления позиции бара
-      window.dispatchEvent(
-        new CustomEvent("sector-time-change", {
-          detail: {
-            sectorId: sectorDate,
-            time: displayTime,
-            isActiveOnly: false, // Обновляем все секторы
-          },
-        }),
-      )
+    if (video && video.id && sectorDate && timelineContext) {
+      // Проверяем, не отправляли ли мы уже это время для этого сектора
+      if (
+        lastSentTimeRef.current.sectorId === sectorDate &&
+        Math.abs(lastSentTimeRef.current.time - displayTime) < 0.01
+      ) {
+        // Пропускаем отправку, если время почти не изменилось
+        return
+      }
+
+      // Сохраняем текущее время и сектор
+      lastSentTimeRef.current = {
+        sectorId: sectorDate,
+        time: displayTime,
+      }
+
+      // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
+      timelineContext.setSectorTime(sectorDate, displayTime, false)
 
       console.log(
-        `[TimelineBar] Отправлено событие sector-time-change для сектора ${sectorDate} с displayTime=${displayTime.toFixed(2)}`,
+        `[TimelineBar] Отправлено событие SET_SECTOR_TIME для сектора ${sectorDate} с displayTime=${displayTime.toFixed(2)}`,
       )
     }
-  }, [video?.id, sectorDate])
+  }, [video?.id, sectorDate, displayTime, timelineContext])
 
   // Если позиция отрицательная, устанавливаем ее в 0
   const displayPosition = position < 0 ? 0 : position

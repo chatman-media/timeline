@@ -114,6 +114,10 @@ interface TimelineContextType {
   ) => void
   generateFFmpegCommand: (outputPath: string) => void
 
+  // Новые методы для работы с временем секторов
+  saveAllSectorsTime: (videoId: string, displayTime: number, currentTime: number) => void
+  setSectorTime: (sectorId: string, time: number, isActiveOnly?: boolean) => void
+
   // Методы для проверки наличия ресурса в хранилище
   isEffectAdded: (effect: VideoEffect) => boolean
   isFilterAdded: (filter: VideoFilter) => boolean
@@ -165,7 +169,26 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
 
   const setActiveSector = React.useCallback(
     (sectorId: string | null) => {
+      // Отправляем событие в машину состояний таймлайна
       send({ type: "SET_ACTIVE_SECTOR", sectorId })
+
+      // Получаем контекст плеера и устанавливаем preferredSource в "timeline"
+      try {
+        // Импортируем usePlayerContext
+        const { usePlayerContext } = require("@/media-editor/media-player")
+
+        // Получаем контекст плеера
+        const playerContext = usePlayerContext()
+
+        if (playerContext && playerContext.setPreferredSource) {
+          console.log(
+            `[TimelineProvider] Устанавливаем preferredSource в "timeline" при активации сектора ${sectorId}`,
+          )
+          playerContext.setPreferredSource("timeline")
+        }
+      } catch (error) {
+        console.error(`[TimelineProvider] Ошибка при установке preferredSource:`, error)
+      }
     },
     [send],
   )
@@ -458,6 +481,21 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [send],
   )
 
+  // Новые методы для работы с временем секторов
+  const handleSaveAllSectorsTime = React.useCallback(
+    (videoId: string, displayTime: number, currentTime: number) => {
+      send({ type: "SAVE_ALL_SECTORS_TIME", videoId, displayTime, currentTime })
+    },
+    [send],
+  )
+
+  const handleSetSectorTime = React.useCallback(
+    (sectorId: string, time: number, isActiveOnly?: boolean) => {
+      send({ type: "SET_SECTOR_TIME", sectorId, time, isActiveOnly })
+    },
+    [send],
+  )
+
   // Методы для проверки наличия ресурса в хранилище
   // Создаем кэш для результатов проверки эффектов
   const effectAddedCache = React.useRef<Record<string, boolean>>({})
@@ -661,6 +699,10 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     removeEditResource: handleRemoveEditResource,
     applyTemplateToSegment: handleApplyTemplateToSegment,
     generateFFmpegCommand: handleGenerateFFmpegCommand,
+
+    // Новые методы для работы с временем секторов
+    saveAllSectorsTime: handleSaveAllSectorsTime,
+    setSectorTime: handleSetSectorTime,
 
     // Методы для проверки наличия ресурса в хранилище
     isEffectAdded,

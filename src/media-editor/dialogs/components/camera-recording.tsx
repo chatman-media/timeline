@@ -14,9 +14,6 @@ export function CameraRecording() {
   const { isRecordModalOpen, handleCloseModal } = useModalContext()
   const mediaContext = useContext(MediaContext)
   const { addMediaFiles } = useTimeline()
-
-  // Логируем значение isRecordModalOpen при каждом рендере
-  console.log("CameraRecording: isRecordModalOpen =", isRecordModalOpen)
   const [recordedBlob, setRecordedBlob] = useState<Blob | null>(null)
   const [recordedFileName, setRecordedFileName] = useState<string>("")
   const [showPreview, setShowPreview] = useState<boolean>(false)
@@ -26,17 +23,6 @@ export function CameraRecording() {
   const [isSaving, setIsSaving] = useState<boolean>(false)
   const [saveProgress, setSaveProgress] = useState<number>(0)
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
-
-  // Логируем состояние isSaving после его объявления
-  console.log(
-    "CameraRecording: isSaving =",
-    isSaving,
-    "saveProgress =",
-    saveProgress,
-    "saveSuccess =",
-    saveSuccess,
-  )
-
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Обработчик закрытия предпросмотра
@@ -190,9 +176,6 @@ export function CameraRecording() {
   ])
 
   const handleRecordedVideo = useCallback((blob: Blob, fileName: string) => {
-    console.log(`Получена запись видео: ${fileName}, размер: ${blob.size} байт`)
-    console.log("handleRecordedVideo: isRecordModalOpen =", isRecordModalOpen)
-
     try {
       // Сначала показываем предпросмотр, чтобы диалог не закрылся
       setShowPreview(true)
@@ -259,17 +242,8 @@ export function CameraRecording() {
     }
   }, [])
 
-  // Логируем состояния перед рендерингом
-  console.log(
-    "Перед рендерингом: isRecordModalOpen =",
-    isRecordModalOpen,
-    "showPreview =",
-    showPreview,
-  )
-
   return (
     <>
-      {console.log("Рендеринг CameraCaptureDialog с isOpen =", isRecordModalOpen && !showPreview)}
       <CameraCaptureDialog
         isOpen={isRecordModalOpen && !showPreview}
         onClose={handleCloseModal}
@@ -277,11 +251,9 @@ export function CameraRecording() {
       />
 
       {/* Диалог предпросмотра записанного видео */}
-      {console.log("Рендеринг диалога предпросмотра, showPreview =", showPreview)}
       <Dialog
         open={showPreview}
         onOpenChange={(open) => {
-          console.log("Dialog onOpenChange вызван с параметром open =", open)
           if (!open) handleClosePreview()
         }}
       >

@@ -64,7 +64,7 @@ export const VideoPreview = memo(function VideoPreview({
   // Функции для условного логирования
   const logDebug = (message: string, ...args: any[]) => {
     if (process.env.NODE_ENV !== "production") {
-      console.log(message, ...args)
+      // console.log(message, ...args)
     }
   }
 

@@ -10,9 +10,7 @@ import { TimelineResource } from "@/types/resources"
 export function TimelineResources() {
   const { t, i18n } = useTranslation()
 
-  // Проверяем текущий язык и доступные переводы
-  console.log("Current language:", i18n.language)
-  console.log("Templates translation:", t("timeline.resources.templates", "Шаблоны (fallback)"))
+  // Полностью отключаем логирование
   const {
     effectResources,
     filterResources,
@@ -21,14 +19,7 @@ export function TimelineResources() {
     musicResources,
   } = useTimeline()
 
-  // Выводим все ключи переводов для отладки
-  console.log("All translations:", {
-    effects: t("timeline.resources.effects"),
-    filters: t("timeline.resources.filters"),
-    transitions: t("timeline.resources.transitions"),
-    templates: t("timeline.resources.templates"),
-    music: t("timeline.resources.music"),
-  })
+  // Полностью отключаем логирование
 
   // Категории ресурсов с их данными
   const categories = [

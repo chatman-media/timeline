@@ -90,6 +90,14 @@ interface PlayerProviderProps {
   children: React.ReactNode
 }
 
+// Объявляем глобальный тип для window
+declare global {
+  interface Window {
+    playerContext?: PlayerContextType
+    videoElementCache?: Map<string, HTMLVideoElement>
+  }
+}
+
 export function PlayerProvider({ children }: PlayerProviderProps) {
   // Отключаем инспектор XState для предотвращения ошибок сериализации
   const [state, send] = useMachine(playerMachine)
@@ -198,6 +206,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       )
       send({ type: "updateVideoSources", videoSources })
     },
+  }
+
+  // Сохраняем контекст плеера в глобальном объекте window
+  // для доступа из других компонентов без использования React контекста
+  if (typeof window !== "undefined") {
+    window.playerContext = contextValue
   }
 
   return <PlayerContext.Provider value={contextValue}>{children}</PlayerContext.Provider>

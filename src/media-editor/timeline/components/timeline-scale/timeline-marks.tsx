@@ -1,4 +1,4 @@
-import { useId } from "react"
+import { useId, useMemo } from "react"
 
 import { TimelineMark } from "./timeline-mark"
 
@@ -26,75 +26,83 @@ export function TimelineMarks({
 }: TimelineMarksProps) {
   // Используем React useId для создания уникального идентификатора компонента
   const componentId = useId()
+
   // Если функция timeToPosition не передана, создаем ее локально
   const calculatePosition =
     timeToPosition ||
     ((time: number) => {
       return ((time - startTime) / duration) * 100
     })
-  const marks = []
 
-  // Определяем шаги для разных уровней меток
-  const level1Step = timeStep // Основные метки с подписями
-  const level2Step = subStep // Средние метки
-  const level3Step = subStep / 2 // Малые метки
-  const level4Step = subStep / 4 // Наименьшие метки
+  // Используем useMemo для кэширования расчетов меток
+  const marks = useMemo(() => {
+    const marksArray = []
 
-  // Определяем, нужно ли показывать метки определенного уровня в зависимости от шага
-  const showLevel3 = level1Step >= 5 // Показываем малые метки только при достаточном масштабе
-  const showLevel4 = level1Step >= 10 // Показываем наименьшие метки только при большом масштабе
+    // Определяем шаги для разных уровней меток
+    const level1Step = timeStep // Основные метки с подписями
+    const level2Step = subStep // Средние метки
+    const level3Step = subStep / 2 // Малые метки
+    const level4Step = subStep / 4 // Наименьшие метки
 
-  // Определяем шаг для цикла в зависимости от масштаба
-  const iterationStep = showLevel4 ? level4Step : showLevel3 ? level3Step : level2Step
+    // Определяем, нужно ли показывать метки определенного уровня в зависимости от шага
+    const showLevel3 = level1Step >= 5 // Показываем малые метки только при достаточном масштабе
+    const showLevel4 = level1Step >= 10 // Показываем наименьшие метки только при большом масштабе
 
-  // Находим первую метку, которая попадает в видимую область
-  const firstMark = Math.floor(startTime / iterationStep) * iterationStep
+    // Определяем шаг для цикла в зависимости от масштаба
+    const iterationStep = showLevel4 ? level4Step : showLevel3 ? level3Step : level2Step
 
-  console.log(
-    `[TimelineMarks] Шаги: L1=${level1Step}с, L2=${level2Step}с, L3=${level3Step}с, L4=${level4Step}с, Итерация=${iterationStep}с`,
-  )
+    // Находим первую метку, которая попадает в видимую область
+    const firstMark = Math.floor(startTime / iterationStep) * iterationStep
 
-  for (let timestamp = firstMark; timestamp <= endTime; timestamp += iterationStep) {
-    const position = calculatePosition(timestamp)
+    // Отключаем логирование для уменьшения количества сообщений
+    // console.log(
+    //   `[TimelineMarks] Шаги: L1=${level1Step}с, L2=${level2Step}с, L3=${level3Step}с, L4=${level4Step}с, Итерация=${iterationStep}с`,
+    // )
 
-    // Пропускаем метки, которые находятся за пределами видимой области
-    if (position < 0 || position > 100) continue
+    for (let timestamp = firstMark; timestamp <= endTime; timestamp += iterationStep) {
+      const position = calculatePosition(timestamp)
 
-    let markType: "large" | "medium" | "small" | "smallest"
-    let showValue = false
+      // Пропускаем метки, которые находятся за пределами видимой области
+      if (position < 0 || position > 100) continue
 
-    // Определяем тип метки и нужно ли показывать значение
-    if (timestamp % level1Step === 0) {
-      markType = "large"
-      showValue = true
-    } else if (timestamp % level2Step === 0) {
-      markType = "medium"
-    } else if (showLevel3 && timestamp % level3Step === 0) {
-      markType = "small"
-    } else if (showLevel4) {
-      markType = "smallest"
-    } else {
-      // Пропускаем метки, которые не нужно показывать при текущем масштабе
-      continue
+      let markType: "large" | "medium" | "small" | "smallest"
+      let showValue = false
+
+      // Определяем тип метки и нужно ли показывать значение
+      if (timestamp % level1Step === 0) {
+        markType = "large"
+        showValue = true
+      } else if (timestamp % level2Step === 0) {
+        markType = "medium"
+      } else if (showLevel3 && timestamp % level3Step === 0) {
+        markType = "small"
+      } else if (showLevel4) {
+        markType = "smallest"
+      } else {
+        // Пропускаем метки, которые не нужно показывать при текущем масштабе
+        continue
+      }
+
+      // Генерируем уникальный ключ, добавляя префикс к timestamp, startTime и componentId
+      // Это предотвращает конфликты ключей между разными секциями таймлайна
+      // Используем sectionId (если передан) или componentId для обеспечения уникальности
+      const sectionPrefix = sectionId || componentId.replace(/:/g, "-")
+      const markKey = `mark-${sectionPrefix}-${startTime.toFixed(0)}-${timestamp.toFixed(0)}-${markType}`
+
+      marksArray.push(
+        <TimelineMark
+          key={markKey}
+          timestamp={timestamp}
+          position={position}
+          markType={markType}
+          showValue={showValue}
+          isFirstMark={timestamp === Math.ceil(startTime / level1Step) * level1Step}
+        />,
+      )
     }
 
-    // Генерируем уникальный ключ, добавляя префикс к timestamp, startTime и componentId
-    // Это предотвращает конфликты ключей между разными секциями таймлайна
-    // Используем sectionId (если передан) или componentId для обеспечения уникальности
-    const sectionPrefix = sectionId || componentId.replace(/:/g, "-")
-    const markKey = `mark-${sectionPrefix}-${startTime.toFixed(0)}-${timestamp.toFixed(0)}-${markType}`
-
-    marks.push(
-      <TimelineMark
-        key={markKey}
-        timestamp={timestamp}
-        position={position}
-        markType={markType}
-        showValue={showValue}
-        isFirstMark={timestamp === Math.ceil(startTime / level1Step) * level1Step}
-      />,
-    )
-  }
+    return marksArray
+  }, [startTime, endTime, duration, timeStep, subStep, calculatePosition, componentId, sectionId]) // Пересчитываем только при изменении этих зависимостей
 
   return (
     <div className="flex">

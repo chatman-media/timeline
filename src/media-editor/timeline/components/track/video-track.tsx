@@ -1,4 +1,4 @@
-import { memo, useRef } from "react"
+import { memo, useMemo,useRef } from "react"
 
 import { useTimeline } from "@/media-editor/timeline/services"
 import { Track } from "@/types/media"
@@ -43,24 +43,27 @@ const TimelineTrack = memo(function TimelineTrack({
     return null
   }
 
-  // Находим минимальное время начала видео в треке
-  const trackMinStartTime = Math.min(...track.videos.map((v) => v.startTime || 0))
+  // Используем useMemo для кэширования расчетов границ трека
+  const { trackMinStartTime, trackMaxEndTime } = useMemo(() => {
+    // Находим минимальное время начала видео в треке
+    const minStartTime = Math.min(...track.videos.map((v) => v.startTime || 0))
 
-  // Находим максимальное время окончания видео в треке
-  const trackMaxEndTime = Math.max(
-    ...track.videos.map((v) => (v.startTime || 0) + (v.duration || 0)),
-  )
+    // Находим максимальное время окончания видео в треке
+    const maxEndTime = Math.max(...track.videos.map((v) => (v.startTime || 0) + (v.duration || 0)))
 
-  // Логируем информацию о треке для отладки
-  console.log(
-    `[VideoTrack] Рендеринг трека ${track.id} (${track.name}), zoomLevel=${zoomLevel}, videos=${track.videos?.length || 0}`,
-  )
-  console.log(
-    `[VideoTrack] Параметры трека: sectionStartTime=${sectionStartTime}, sectionDuration=${sectionDuration}`,
-  )
-  console.log(
-    `[VideoTrack] Границы трека: trackMinStartTime=${trackMinStartTime}, trackMaxEndTime=${trackMaxEndTime}`,
-  )
+    return { trackMinStartTime: minStartTime, trackMaxEndTime: maxEndTime }
+  }, [track.videos]) // Пересчитываем только при изменении списка видео
+
+  // Отключаем логирование для уменьшения количества сообщений
+  // console.log(
+  //   `[VideoTrack] Рендеринг трека ${track.id} (${track.name}), zoomLevel=${zoomLevel}, videos=${track.videos?.length || 0}`,
+  // )
+  // console.log(
+  //   `[VideoTrack] Параметры трека: sectionStartTime=${sectionStartTime}, sectionDuration=${sectionDuration}`,
+  // )
+  // console.log(
+  //   `[VideoTrack] Границы трека: trackMinStartTime=${trackMinStartTime}, trackMaxEndTime=${trackMaxEndTime}`,
+  // )
 
   // Если дорожка скрыта, не отображаем ее
   if (!isVisible) {

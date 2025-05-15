@@ -43,9 +43,37 @@ export function SectionHeader({
 }: SectionHeaderProps) {
   const { t } = useTranslation()
 
+  // Обработчик клика по заголовку секции
+  const handleHeaderClick = () => {
+    // Активируем сектор при клике на заголовок
+    window.dispatchEvent(
+      new CustomEvent("activate-sector", {
+        detail: {
+          sectorDate: date,
+          preserveOtherSectors: true,
+        },
+      }),
+    )
+
+    // Устанавливаем preferredSource в "timeline" при активации сектора
+    if (typeof window !== "undefined" && window.playerContext) {
+      console.log(
+        `[SectionHeader] Устанавливаем preferredSource в "timeline" при активации сектора ${date}`,
+      )
+      window.playerContext.setPreferredSource("timeline")
+    }
+
+    console.log(`[SectionHeader] Активирован сектор ${date}`)
+  }
+
   return (
     <div className="flex h-[30px] items-center justify-between border-b border-gray-200 bg-gray-50 px-2 dark:border-gray-700 dark:bg-gray-800">
-      <h3 className="text-sm font-medium text-gray-900 dark:text-white">{formattedDate}</h3>
+      <h3
+        className="cursor-pointer text-sm font-medium text-gray-900 hover:underline dark:text-white"
+        onClick={handleHeaderClick}
+      >
+        {formattedDate}
+      </h3>
 
       {/* Элементы управления масштабом для сектора */}
       <div className="flex items-center gap-2">

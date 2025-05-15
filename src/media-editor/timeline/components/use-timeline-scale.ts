@@ -56,9 +56,10 @@ export function useTimelineScale(
     // Получаем базовую шкалу на основе скорректированной длительности
     const baseScale = getTimeScale(scaledDuration)
 
-    console.log(
-      `[useTimelineScale] Масштаб: ${scale}, Длительность: ${duration}с, Скорректированная длительность: ${scaledDuration}с, Шаг: ${baseScale.main}с, Подшаг: ${baseScale.sub}с`,
-    )
+    // Отключаем логирование для уменьшения количества сообщений
+    // console.log(
+    //   `[useTimelineScale] Масштаб: ${scale}, Длительность: ${duration}с, Скорректированная длительность: ${scaledDuration}с, Шаг: ${baseScale.main}с, Подшаг: ${baseScale.sub}с`,
+    // )
 
     // Возвращаем шаги без дополнительного деления на scale,
     // так как масштаб уже учтен в scaledDuration

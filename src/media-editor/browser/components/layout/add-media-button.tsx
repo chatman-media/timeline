@@ -47,7 +47,8 @@ export const AddMediaButton = memo(function AddMediaButton({
   useEffect(() => {
     // Обновляем состояние при изменении isAdded
     if (isAdded !== prevIsAddedRef.current) {
-      console.log(`Файл ${file.name} ${isAdded ? "добавлен" : "удален"}, обновляем состояние`)
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(`Файл ${file.name} ${isAdded ? "добавлен" : "удален"}, обновляем состояние`)
 
       // Если файл добавлен, устанавливаем флаг isRecentlyAdded
       if (isAdded) {
@@ -91,7 +92,7 @@ export const AddMediaButton = memo(function AddMediaButton({
   useEffect(() => {
     // Если файл уже добавлен при монтировании компонента
     if (isAdded) {
-      console.log(`Файл ${file.name} уже добавлен при монтировании, устанавливаем состояние`)
+      // Полностью отключаем логирование
       setIsRecentlyAdded(true)
       prevIsAddedRef.current = true
 
@@ -132,15 +133,18 @@ export const AddMediaButton = memo(function AddMediaButton({
         e.preventDefault()
 
         if (isAdded && isHovering && canShowRemoveButton) {
-          console.log(`Удаляем файл ${file.name}`)
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(`Удаляем файл ${file.name}`)
           handleRemove(e, file)
         } else if (!isAdded) {
-          console.log(`Добавляем файл ${file.name}`)
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(`Добавляем файл ${file.name}`)
           onAddMedia(e, file)
           // Немедленно обновляем визуальное состояние
           setIsRecentlyAdded(true)
         } else {
-          console.log(`Файл ${file.name} уже добавлен, но не в режиме удаления`)
+          // Отключаем логирование для уменьшения количества сообщений
+          // console.log(`Файл ${file.name} уже добавлен, но не в режиме удаления`)
         }
       }}
       onMouseEnter={() => setIsHovering(true)}

@@ -81,7 +81,7 @@ export function CompositeTrackButton({ sector, className }: CompositeTrackButton
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p>{t("timeline.compositeTrack.noActiveSector", "Нет активного сектора")}</p>
+            <p>{t("timeline.compositeTrack.noActiveSector") || "Нет активного сектора"}</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

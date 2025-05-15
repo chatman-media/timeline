@@ -449,47 +449,73 @@ export function MediaPlayer() {
   // Это поможет остановить все экземпляры видео при паузе
   const allVideoElementsRef = useRef<Set<HTMLVideoElement>>(new Set())
 
-  // Эффект для обработки события sector-time-change
+  // Используем ref для отслеживания последнего синхронизированного времени
+  const lastSyncedTimesRef = useRef<Record<string, number>>({})
+
+  // Эффект для синхронизации времени сектора из контекста таймлайна
   useEffect(() => {
-    // Обработчик события sector-time-change
-    const handleSectorTimeChange = (event: CustomEvent) => {
-      const { sectorId, time } = event.detail || {}
+    // Получаем текущий сектор
+    const currentSector = timelineContext?.activeSector
+    if (!currentSector) return
 
-      if (sectorId && time !== undefined) {
-        console.log(
-          `[MediaPlayer] Получено событие sector-time-change: sectorId=${sectorId}, time=${time.toFixed(2)}`,
-        )
+    // Получаем сохраненное время для текущего сектора
+    const sectorId = currentSector.id
+    const sectorTime = timelineContext?.sectorTimes?.[sectorId]
 
-        // Если у нас есть активное видео, устанавливаем его время
-        if (video?.id && videoRefs[video.id]) {
-          const videoElement = videoRefs[video.id]
+    if (sectorId && sectorTime !== undefined) {
+      // Проверяем, не синхронизировали ли мы уже это время
+      if (lastSyncedTimesRef.current[sectorId] === sectorTime) {
+        return
+      }
 
-          // Сохраняем время для видео
-          videoTimesRef.current[video.id] = time
+      // Сохраняем время синхронизации
+      lastSyncedTimesRef.current[sectorId] = sectorTime
 
-          // Устанавливаем время для видео
-          videoElement.currentTime = time
+      console.log(
+        `[MediaPlayer] Получено время ${sectorTime.toFixed(2)} для сектора ${sectorId} из контекста таймлайна`,
+      )
 
-          // Обновляем displayTime для синхронизации с таймлайн баром
-          if (setDisplayTime) {
-            setDisplayTime(time)
-          }
+      // Если у нас есть активное видео, устанавливаем его время
+      if (video?.id && videoRefs[video.id]) {
+        const videoElement = videoRefs[video.id]
 
-          console.log(
-            `[MediaPlayer] Установлено время ${time.toFixed(2)} для видео ${video.id} из события sector-time-change`,
-          )
+        // Сохраняем время для видео
+        videoTimesRef.current[video.id] = sectorTime
+
+        // Устанавливаем время для видео
+        videoElement.currentTime = sectorTime
+
+        // Обновляем displayTime для синхронизации с таймлайн баром
+        if (setDisplayTime) {
+          setDisplayTime(sectorTime)
         }
+
+        console.log(
+          `[MediaPlayer] Установлено время ${sectorTime.toFixed(2)} для видео ${video.id} из контекста таймлайна`,
+        )
       }
     }
+  }, [
+    video,
+    videoRefs,
+    setDisplayTime,
+    timelineContext?.activeSector,
+    timelineContext?.sectorTimes,
+  ])
 
-    // Добавляем обработчик события
-    window.addEventListener("sector-time-change", handleSectorTimeChange as EventListener)
+  // Эффект для логирования всех времен секторов из контекста таймлайна
+  useEffect(() => {
+    if (!timelineContext?.sectorTimes) return
 
-    // Удаляем обработчик при размонтировании
-    return () => {
-      window.removeEventListener("sector-time-change", handleSectorTimeChange as EventListener)
-    }
-  }, [video, videoRefs, setDisplayTime])
+    // Логируем все времена секторов
+    const sectorTimesLog = Object.entries(timelineContext.sectorTimes)
+      .map(([sectorId, time]) => `${sectorId}: ${time.toFixed(2)}`)
+      .join(", ")
+
+    console.log(
+      `[MediaPlayer] Синхронизированы времена секторов из контекста таймлайна: ${sectorTimesLog}`,
+    )
+  }, [timelineContext?.sectorTimes])
 
   // Функция для остановки всех видео элементов
   // Используем ref для отслеживания времени последней остановки
@@ -2191,9 +2217,10 @@ export function MediaPlayer() {
       lastLogTime: currentTimestamp,
     }
     // Теперь логируем только при изменениях
-    console.log(
-      `[MediaPlayer] Параллельные видео: ${parallelVideos.length}, активное видео ID: ${activeId}`,
-    )
+    // Отключаем логирование для уменьшения количества сообщений
+    // console.log(
+    //   `[MediaPlayer] Параллельные видео: ${parallelVideos.length}, активное видео ID: ${activeId}`,
+    // )
   }
 
   // Определяем, какие видео нужно отображать в зависимости от шаблона
@@ -2206,7 +2233,8 @@ export function MediaPlayer() {
   useEffect(() => {
     // Выполняем только на клиенте
     if (typeof window !== "undefined") {
-      console.log(`[MediaPlayer] preferredSource изменен на: ${preferredSource}`)
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(`[MediaPlayer] preferredSource изменен на: ${preferredSource}`)
 
       // Если выбран источник "media" (браузер)
       if (preferredSource === "media") {
@@ -2312,17 +2340,18 @@ export function MediaPlayer() {
     }
 
     // Логируем только при существенных изменениях
-    console.log(
-      `[MediaPlayer] Обновление списка видео для отображения (причина: ${
-        isVideoChanged
-          ? "изменение видео"
-          : isParallelVideosChanged
-            ? "изменение параллельных видео"
-            : isTemplateChanged
-              ? "изменение шаблона"
-              : "изменение источника"
-      }), preferredSource: ${preferredSource}`,
-    )
+    // Отключаем логирование для уменьшения количества сообщений
+    // console.log(
+    //   `[MediaPlayer] Обновление списка видео для отображения (причина: ${
+    //     isVideoChanged
+    //       ? "изменение видео"
+    //       : isParallelVideosChanged
+    //         ? "изменение параллельных видео"
+    //         : isTemplateChanged
+    //           ? "изменение шаблона"
+    //           : "изменение источника"
+    //   }), preferredSource: ${preferredSource}`,
+    // )
 
     let newVideosToDisplay: MediaFile[] = []
 
@@ -2484,7 +2513,8 @@ export function MediaPlayer() {
     const newVideosIds = newVideosToDisplay.map((v) => v.id).join(",")
 
     if (currentVideosIds !== newVideosIds) {
-      console.log(`[MediaPlayer] Обновляем список видео для отображения: ${newVideosIds}`)
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(`[MediaPlayer] Обновляем список видео для отображения: ${newVideosIds}`)
       // Обновляем состояние только если список действительно изменился
       setVideosToDisplay(newVideosToDisplay)
     }
@@ -2500,11 +2530,13 @@ export function MediaPlayer() {
 
   // Эффект для обновления видео при изменении preferredSource
   useEffect(() => {
-    console.log(`[MediaPlayer] Обнаружено изменение preferredSource: ${preferredSource}`)
+    // Отключаем логирование для уменьшения количества сообщений
+    // console.log(`[MediaPlayer] Обнаружено изменение preferredSource: ${preferredSource}`)
 
     // Если источник - таймлайн, принудительно обновляем видео
     if (preferredSource === "timeline") {
-      console.log(`[MediaPlayer] Принудительно обновляем видео в шаблоне для таймлайна`)
+      // Отключаем логирование для уменьшения количества сообщений
+      // console.log(`[MediaPlayer] Принудительно обновляем видео в шаблоне для таймлайна`)
 
       // Сначала сбрасываем шаблон, если он есть
       if (appliedTemplate) {
