@@ -4,26 +4,47 @@ import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { AiMessage } from "@/media-editor/ai/services/ai-service"
+// Список доступных моделей ИИ
+import { AI_MODELS } from "@/media-editor/ai/services/ai-service"
+import { ClaudeEditSchemaService } from "@/media-editor/ai/services/claude-edit-schema-service"
+import { CLAUDE_MODELS } from "@/media-editor/ai/services/claude-service"
+import { ClaudeToolsHandler } from "@/media-editor/ai/services/claude-tools-handler"
+import { EditSchemaAiService } from "@/media-editor/ai/services/edit-schema-ai-service"
+import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
+import { useModalContext } from "@/media-editor/dialogs/services/modal-provider"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { ChatMessage } from "@/media-editor/timeline/services/timeline-machine"
 
-// Список доступных моделей ИИ (заглушка)
 const AVAILABLE_AGENTS = [
-  { id: "agent-1", name: "Claude 3.7 Sonnet" },
-  { id: "agent-2", name: "GPT-4" },
-  { id: "agent-3", name: "Claude 3 Opus" },
-  { id: "agent-4", name: "Gemini 1.5 Pro" },
-  { id: "agent-5", name: "Claude 3 Haiku" },
+  { id: CLAUDE_MODELS.CLAUDE_3_5_SONNET, name: "Claude 3.5 Sonnet", useTools: true },
+  { id: CLAUDE_MODELS.CLAUDE_3_SONNET, name: "Claude 3 Sonnet", useTools: true },
+  { id: CLAUDE_MODELS.CLAUDE_3_HAIKU, name: "Claude 3 Haiku", useTools: false },
+  { id: CLAUDE_MODELS.CLAUDE_3_OPUS, name: "Claude 3 Opus", useTools: true },
+  { id: AI_MODELS.GPT_4, name: "GPT-4", useTools: false },
+  { id: AI_MODELS.GPT_3_5, name: "GPT-3.5 Turbo", useTools: false },
 ]
 
 export function TimelineChat() {
   const { t } = useTranslation()
-  const { chatMessages, sendChatMessage, receiveChatMessage, selectedAgentId, selectAgent } =
-    useTimeline()
+  const {
+    chatMessages,
+    sendChatMessage,
+    receiveChatMessage,
+    selectedAgentId,
+    selectAgent,
+    editSegments,
+  } = useTimeline()
+  const { aiApiKey } = useUserSettings()
+  const { handleOpenModal } = useModalContext()
+
   const [message, setMessage] = useState("")
   const [isProcessing, setIsProcessing] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const aiServiceRef = useRef<EditSchemaAiService>(EditSchemaAiService.getInstance())
+  const claudeServiceRef = useRef<ClaudeEditSchemaService>(ClaudeEditSchemaService.getInstance())
+  const toolsHandlerRef = useRef<ClaudeToolsHandler>(ClaudeToolsHandler.getInstance())
 
   // Прокрутка к последнему сообщению
   const scrollToBottom = useCallback(() => {
@@ -52,12 +73,28 @@ export function TimelineChat() {
     autoResizeTextarea()
   }, [autoResizeTextarea])
 
+  // Обновляем API ключ при его изменении
+  useEffect(() => {
+    if (aiApiKey) {
+      aiServiceRef.current.setApiKey(aiApiKey)
+      claudeServiceRef.current.setApiKey(aiApiKey)
+    }
+  }, [aiApiKey])
+
   // Обработчик отправки сообщения
   const handleSendMessage = useCallback(() => {
     if (!message.trim() || isProcessing) return
 
+    // Проверяем, установлен ли API ключ
+    if (!aiApiKey) {
+      // Если API ключ не установлен, показываем диалог настроек
+      handleOpenModal("user-settings")
+      return
+    }
+
     // Отправляем сообщение пользователя
     sendChatMessage(message)
+    const userMessageText = message
     setMessage("")
     setIsProcessing(true)
 
@@ -67,48 +104,137 @@ export function TimelineChat() {
     // Фокус на поле ввода
     inputRef.current?.focus()
 
-    // Имитация ответа от агента (в реальном приложении здесь будет запрос к API)
-    const timeoutId = setTimeout(() => {
-      // Получаем название выбранного языка для логирования (если нужно)
-      // const agentName = AVAILABLE_AGENTS.find(a => a.id === selectedAgentId)?.name || "Русский"
+    // Получаем выбранную модель и проверяем, поддерживает ли она инструменты
+    const modelId = selectedAgentId || CLAUDE_MODELS.CLAUDE_3_5_SONNET
+    const selectedAgent = AVAILABLE_AGENTS.find((agent) => agent.id === modelId)
+    const useTools = selectedAgent?.useTools || false
 
-      // Генерируем ответ в зависимости от выбранного языка
-      let responseText = "Это ответ на ваше сообщение."
+    // Определяем, какой сервис использовать
+    const isClaudeModel = modelId.startsWith("claude")
 
-      switch (selectedAgentId) {
-      case "agent-1":
-        responseText = "Я Claude 3.7 Sonnet. Чем могу помочь вам сегодня?"
-        break
-      case "agent-2":
-        responseText = "Я GPT-4. Готов ответить на ваши вопросы и помочь с задачами."
-        break
-      case "agent-3":
-        responseText = "Я Claude 3 Opus, самая мощная модель от Anthropic. Как я могу вам помочь?"
-        break
-      case "agent-4":
-        responseText = "Я Gemini 1.5 Pro от Google. Чем могу быть полезен?"
-        break
-      case "agent-5":
-        responseText = "Я Claude 3 Haiku, быстрая и эффективная модель для простых задач."
-        break
-      default:
-        responseText = "Готов помочь вам с вашими задачами."
-      }
-
-      const agentMessage: ChatMessage = {
+    // Создаем обработчик ошибок
+    const handleError = (error: any) => {
+      // В случае ошибки показываем сообщение об ошибке
+      const errorMessage: ChatMessage = {
         id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        text: responseText,
+        text: `Ошибка: ${error.message}`,
         sender: "agent",
         agentId: selectedAgentId || undefined,
         timestamp: new Date().toISOString(),
       }
 
-      receiveChatMessage(agentMessage)
+      receiveChatMessage(errorMessage)
       setIsProcessing(false)
-    }, 2000)
+    }
 
-    // Возвращаем функцию для остановки обработки
-    return () => clearTimeout(timeoutId)
+    // Создаем обработчик завершения
+    const handleComplete = () => {
+      setIsProcessing(false)
+    }
+
+    if (isClaudeModel && useTools) {
+      // Используем Claude с инструментами
+      claudeServiceRef.current
+        .sendRequestWithTools(userMessageText, editSegments, modelId)
+        .then((response) => {
+          let responseText = response.text
+
+          // Если был использован инструмент, обрабатываем его
+          if (response.toolUse) {
+            // Добавляем информацию об использовании инструмента
+            responseText = `${responseText}\n\n[Использован инструмент: ${response.toolUse.name}]\nПараметры: ${JSON.stringify(response.toolUse.input, null, 2)}`
+
+            // Обрабатываем инструмент
+            toolsHandlerRef.current
+              .handleToolUse(response.toolUse, editSegments)
+              .then((result) => {
+                // Если есть обновленные сегменты, обновляем их в контексте
+                if (result.updatedSegments) {
+                  // Отправляем дополнительное сообщение с результатом
+                  const resultMessage: ChatMessage = {
+                    id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                    text: `[Результат выполнения инструмента]\n${JSON.stringify(result.result, null, 2)}`,
+                    sender: "agent",
+                    agentId: selectedAgentId || undefined,
+                    timestamp: new Date().toISOString(),
+                  }
+
+                  // Обновляем сегменты в контексте
+                  // TODO: Добавить метод для обновления сегментов в timeline-provider
+                  // updateEditSegments(result.updatedSegments)
+
+                  // Отправляем сообщение с результатом
+                  setTimeout(() => {
+                    receiveChatMessage(resultMessage)
+                  }, 500)
+                }
+              })
+              .catch((error) => {
+                // Отправляем сообщение с ошибкой
+                const errorMessage: ChatMessage = {
+                  id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+                  text: `[Ошибка при выполнении инструмента]\n${error.message}`,
+                  sender: "agent",
+                  agentId: selectedAgentId || undefined,
+                  timestamp: new Date().toISOString(),
+                }
+
+                setTimeout(() => {
+                  receiveChatMessage(errorMessage)
+                }, 500)
+              })
+          }
+
+          const agentMessage: ChatMessage = {
+            id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            text: responseText,
+            sender: "agent",
+            agentId: selectedAgentId || undefined,
+            timestamp: new Date().toISOString(),
+          }
+
+          receiveChatMessage(agentMessage)
+        })
+        .catch(handleError)
+        .finally(handleComplete)
+    } else if (isClaudeModel) {
+      // Используем Claude без инструментов
+      claudeServiceRef.current
+        .sendRequest(userMessageText, editSegments, modelId)
+        .then((responseText) => {
+          const agentMessage: ChatMessage = {
+            id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            text: responseText,
+            sender: "agent",
+            agentId: selectedAgentId || undefined,
+            timestamp: new Date().toISOString(),
+          }
+
+          receiveChatMessage(agentMessage)
+        })
+        .catch(handleError)
+        .finally(handleComplete)
+    } else {
+      // Используем обычный сервис для других моделей
+      aiServiceRef.current
+        .sendRequest(userMessageText, editSegments, modelId)
+        .then((responseText) => {
+          const agentMessage: ChatMessage = {
+            id: `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+            text: responseText,
+            sender: "agent",
+            agentId: selectedAgentId || undefined,
+            timestamp: new Date().toISOString(),
+          }
+
+          receiveChatMessage(agentMessage)
+        })
+        .catch(handleError)
+        .finally(handleComplete)
+    }
+
+    // Возвращаем пустую функцию для остановки обработки
+    return () => {}
   }, [
     message,
     sendChatMessage,
@@ -116,6 +242,9 @@ export function TimelineChat() {
     selectedAgentId,
     isProcessing,
     autoResizeTextarea,
+    aiApiKey,
+    handleOpenModal,
+    editSegments,
   ])
 
   // Обработчик остановки обработки
@@ -261,6 +390,12 @@ export function TimelineChat() {
                 <textarea
                   readOnly
                   onClick={() => {
+                    // Если API ключ не установлен, показываем диалог настроек
+                    if (!aiApiKey) {
+                      handleOpenModal("user-settings")
+                      return
+                    }
+
                     // Открываем выпадающий список при клике
                     const nextAgentIndex =
                       AVAILABLE_AGENTS.findIndex((a) => a.id === selectedAgentId) + 1
@@ -273,8 +408,12 @@ export function TimelineChat() {
                   className="h-10 w-full resize-none rounded-md border border-[#444] bg-[#2a2a2a] px-3 py-2 text-sm text-white hover:bg-[#333] focus:outline-none"
                   value={
                     selectedAgentId
-                      ? AVAILABLE_AGENTS.find((a) => a.id === selectedAgentId)?.name
-                      : AVAILABLE_AGENTS[0].name
+                      ? `${AVAILABLE_AGENTS.find((a) => a.id === selectedAgentId)?.name}${
+                        AVAILABLE_AGENTS.find((a) => a.id === selectedAgentId)?.useTools
+                          ? " (с инструментами)"
+                          : ""
+                      }`
+                      : `${AVAILABLE_AGENTS[0].name}${AVAILABLE_AGENTS[0].useTools ? " (с инструментами)" : ""}`
                   }
                 />
                 <div className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">

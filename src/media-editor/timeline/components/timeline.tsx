@@ -14,6 +14,7 @@ import {
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { formatDateByLanguage } from "@/i18n/constants"
 import { TimelineTopPanel } from "@/media-editor"
+import { Sector } from "@/media-editor/browser"
 import { usePlayerContext } from "@/media-editor/media-player"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile, Track } from "@/types/media"
@@ -72,6 +73,7 @@ export function Timeline() {
     activeTrackId,
     seek,
     setActiveTrack,
+    setActiveSector,
     setTracks,
     removeFiles,
     zoomLevel,
@@ -649,6 +651,10 @@ export function Timeline() {
         // Находим сектор по дате
         const sector = sections.find((s) => s.date === sectorDate)
         if (sector) {
+          // Устанавливаем активный сектор в контексте таймлайна
+          setActiveSector(sector.date) // Используем date как ID сектора
+          console.log(`[Timeline] Установлен активный сектор в контексте: ${sector.date}`)
+
           // Если есть видео в секторе, устанавливаем первое видео из первого трека
           if (sector.tracks && sector.tracks.length > 0) {
             const firstTrack = sector.tracks[0]
@@ -687,9 +693,9 @@ export function Timeline() {
   }, [sections, setActiveDate, setActiveTrack, setVideo, fitSectionToScreen, activeDate])
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden">
+    <div className="flex h-full w-full flex-col">
       <div className="timeline-container flex-1 overflow-hidden" ref={timelineContainerRef}>
-        <ResizablePanelGroup direction="horizontal" className="h-full overflow-hidden">
+        <ResizablePanelGroup direction="horizontal" className="h-full">
           {/* Левая панель (15% ширины) - Ресурсы */}
           <ResizablePanel defaultSize={15} minSize={10} maxSize={30}>
             <TimelineResources />
@@ -698,10 +704,20 @@ export function Timeline() {
           <ResizableHandle />
 
           {/* Средняя панель (основная часть) */}
-          <ResizablePanel defaultSize={65} minSize={40} className="overflow-hidden">
+          <ResizablePanel defaultSize={65} minSize={40}>
             <div className="flex h-full w-full">
               {/* Основная часть - каждый сектор имеет свой собственный скролл */}
               <div className="h-full w-full overflow-y-auto">
+                <TimelineTopPanel
+                  tracks={[]}
+                  deleteTrack={() => {}}
+                  cutTrack={() => {}}
+                  handleScaleDecrease={() => {}}
+                  handleScaleIncrease={() => {}}
+                  handleSliderChange={() => {}}
+                  sliderValue={50}
+                  maxScale={200}
+                />
                 {sections?.map((sector, index) => {
                   // Находим минимальное время начала видео в секторе
                   const minStartTime = Math.min(
@@ -725,13 +741,7 @@ export function Timeline() {
                   const TRACK_HEIGHT = 75 // высота одной дорожки в пикселях
 
                   return (
-                    <div
-                      key={index}
-                      className="relative mb-4 flex-shrink-0"
-                      style={{
-                        height: `${33 + sector.tracks.length * TRACK_HEIGHT + 15}px`,
-                      }}
-                    >
+                    <div key={index} className="relative mb-4 flex-shrink-0">
                       {/* Заголовок секции и элементы управления - фиксированные */}
                       <SectionHeader
                         date={sector.date}
@@ -743,7 +753,7 @@ export function Timeline() {
 
                       {/* Общий контейнер со скроллом для шкалы и треков */}
                       <div
-                        className="overflow-x-auto overflow-y-hidden"
+                        className=""
                         ref={(el) => {
                           // Сохраняем ссылку на контейнер скролла
                           if (sector.date === activeDate) {
@@ -756,11 +766,9 @@ export function Timeline() {
                         }}
                         style={{
                           position: "relative",
-                          zIndex: 200,
                         }}
                       >
-                        {/* Контейнер для содержимого - на всю ширину с отступом слева */}
-                        <div className="w-full pl-[20px]">
+                        <div className="w-full">
                           {/* Шкала времени - скроллится вместе с дорожками */}
                           <TimelineScale
                             startTime={sector.startTime}
@@ -778,10 +786,7 @@ export function Timeline() {
                             }}
                           >
                             {/* TimelineBar поверх всех дорожек */}
-                            <div
-                              className="pointer-events-none absolute top-0 right-0 bottom-0 left-0"
-                              style={{ zIndex: 1000 }}
-                            >
+                            <div className="pointer-events-none absolute top-0 right-0 bottom-0 left-0">
                               <TimelineBar
                                 startTime={minStartTime}
                                 endTime={maxEndTime}

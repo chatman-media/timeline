@@ -12,6 +12,8 @@ import {
 import { useTranslation } from "react-i18next"
 
 import { cn } from "@/lib/utils"
+import { CompositeTrackButton } from "@/media-editor/timeline/components/composite-track-button"
+import { useTimeline } from "@/media-editor/timeline/services"
 import { Track } from "@/types/media"
 
 interface TimelineTopPanelProps {
@@ -51,6 +53,7 @@ export function TimelineTopPanel({
   maxScale = 2000,
 }: TimelineTopPanelProps) {
   const { t } = useTranslation()
+  const { activeSector } = useTimeline()
   return (
     <div className="flex-shrink-0">
       <div className="border-border flex items-center justify-between border-b px-2 py-1">
@@ -133,6 +136,9 @@ export function TimelineTopPanel({
           >
             <Scissors size={16} className="rotate-270" />
           </button>
+
+          {/* Composite Track Button */}
+          <CompositeTrackButton sector={activeSector} className={ICON_STYLE} />
         </div>
         <div className="z-10 flex items-center gap-2 p-2">
           {/* Двунаправленная стрелка */}

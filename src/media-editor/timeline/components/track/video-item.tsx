@@ -35,8 +35,8 @@ export const VideoItem = memo(function VideoItem({
     // parallelVideos, // Не используется в этом компоненте
     setPreferredSource,
     currentTime,
-    appliedTemplate,
-    setAppliedTemplate,
+    // appliedTemplate, // Не используется в этом компоненте
+    // setAppliedTemplate, // Не используется в этом компоненте
     lastAppliedTemplate,
     switchVideoSource,
   } = usePlayerContext()
@@ -85,9 +85,21 @@ export const VideoItem = memo(function VideoItem({
     source: "timeline", // Всегда устанавливаем источник как timeline для видео из таймлайна
   }
 
+  // Получаем состояние блокировки дорожки из свойства трека
+  const isTrackLocked = track.isLocked === true // По умолчанию разблокированный
+
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
+
+      // Если дорожка заблокирована, не обрабатываем клик
+      if (isTrackLocked) {
+        console.log(
+          `[VideoItem] Дорожка ${track.id} заблокирована, клик по видео ${video.id} игнорируется`,
+        )
+        return
+      }
+
       console.log(`[VideoItem] Клик по видео ${video.id} (${video.name})`)
 
       try {
@@ -328,6 +340,7 @@ export const VideoItem = memo(function VideoItem({
       lastAppliedTemplate, // Добавляем lastAppliedTemplate в зависимости
       switchVideoSource, // Добавляем switchVideoSource в зависимости
       tracks, // Добавляем tracks в зависимости
+      isTrackLocked, // Добавляем isTrackLocked в зависимость
     ],
   )
 
@@ -424,12 +437,52 @@ export const VideoItem = memo(function VideoItem({
   //   `[VideoItem] Параметры расчета: referenceStart=${referenceStart}, sectionDuration=${sectionDuration}`,
   // )
 
-  // Отключаем эффект для логирования активного состояния для повышения производительности
-  // useEffect(() => {
-  //   if (isActive) {
-  //     console.log(`Video ${video.id} (${video.name}) is active`);
-  //   }
-  // }, [isActive, video.id, video.name]);
+  // Добавляем эффект для обработки события save-all-sectors-time
+  useEffect(() => {
+    // Обработчик события save-all-sectors-time
+    const handleSaveAllSectorsTime = (event: CustomEvent) => {
+      const { videoId, displayTime } = event.detail || {}
+
+      // Если это наше видео, не обрабатываем событие
+      if (videoId === video.id) {
+        return
+      }
+
+      // Если видео активно и есть displayTime, сохраняем его
+      if (isActive && displayTime !== undefined && displayTime > 0) {
+        // Получаем дату сектора из startTime видео
+        const sectorDate = video.startTime
+          ? new Date(video.startTime * 1000).toISOString().split("T")[0]
+          : null
+
+        // Если есть дата сектора, сохраняем время для этого сектора
+        if (sectorDate) {
+          // Отправляем событие sector-time-change для обновления позиции бара
+          window.dispatchEvent(
+            new CustomEvent("sector-time-change", {
+              detail: {
+                sectorId: sectorDate,
+                time: displayTime,
+                isActiveOnly: false, // Обновляем все секторы
+              },
+            }),
+          )
+
+          console.log(
+            `[VideoItem] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate} при переключении видео`,
+          )
+        }
+      }
+    }
+
+    // Добавляем обработчик события
+    window.addEventListener("save-all-sectors-time", handleSaveAllSectorsTime as EventListener)
+
+    // Удаляем обработчик при размонтировании
+    return () => {
+      window.removeEventListener("save-all-sectors-time", handleSaveAllSectorsTime as EventListener)
+    }
+  }, [video.id, video.startTime, isActive])
 
   return (
     <div

@@ -37,15 +37,18 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
     language,
     screenshotsPath,
     previewClickBehavior,
+    aiApiKey,
     handleLanguageChange,
     handleScreenshotsPathChange,
     handlePreviewClickBehaviorChange,
+    handleAiApiKeyChange,
   } = useUserSettings()
   const { t, i18n } = useTranslation()
   const [selectedLanguage, setSelectedLanguage] = useState<Language>(language)
   const [selectedScreenshotsPath, setSelectedScreenshotsPath] = useState<string>(screenshotsPath)
   const [selectedPreviewClickBehavior, setSelectedPreviewClickBehavior] =
     useState<PreviewClickBehavior>(previewClickBehavior)
+  const [selectedAiApiKey, setSelectedAiApiKey] = useState<string>(aiApiKey)
 
   // Обновляем выбранный язык при изменении языка в контексте
   useEffect(() => {
@@ -61,6 +64,11 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
   useEffect(() => {
     setSelectedPreviewClickBehavior(previewClickBehavior)
   }, [previewClickBehavior])
+
+  // Обновляем выбранный API ключ при изменении в контексте
+  useEffect(() => {
+    setSelectedAiApiKey(aiApiKey)
+  }, [aiApiKey])
 
   // Проверяем соответствие языка в i18n и localStorage при открытии диалога
   useEffect(() => {
@@ -114,6 +122,12 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
     setSelectedPreviewClickBehavior(newBehavior)
   }
 
+  // Обработчик изменения API ключа
+  const handleAiApiKeyInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newApiKey = e.target.value
+    setSelectedAiApiKey(newApiKey)
+  }
+
   // Обработчик сохранения настроек
   const handleSaveSettings = () => {
     // Применяем изменения пути скриншотов
@@ -126,6 +140,12 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
     if (selectedPreviewClickBehavior !== previewClickBehavior) {
       console.log("Applying preview click behavior change:", selectedPreviewClickBehavior)
       handlePreviewClickBehaviorChange(selectedPreviewClickBehavior)
+    }
+
+    // Применяем изменения API ключа
+    if (selectedAiApiKey !== aiApiKey) {
+      console.log("Applying AI API key change:", selectedAiApiKey ? "***" : "(empty)")
+      handleAiApiKeyChange(selectedAiApiKey)
     }
 
     // Закрываем диалог
@@ -222,6 +242,31 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
               >
                 <Folder className="h-4 w-4" />
               </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col space-y-2">
+            <Label className="text-xs font-medium">
+              {t("dialogs.userSettings.aiApiKey", "API ключ для ИИ")}
+            </Label>
+            <div className="relative flex-1">
+              <Input
+                type="password"
+                value={selectedAiApiKey}
+                onChange={handleAiApiKeyInput}
+                placeholder="Введите API ключ"
+                className="h-9 pr-8 font-mono text-sm"
+              />
+              {selectedAiApiKey && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedAiApiKey("")}
+                  className="absolute top-1/2 right-2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                  title={t("dialogs.userSettings.clearApiKey", "Очистить API ключ")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
             </div>
           </div>
         </div>

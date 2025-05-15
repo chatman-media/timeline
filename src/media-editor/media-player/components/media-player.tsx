@@ -12,7 +12,7 @@ import {
   VideoTemplateStyle,
 } from "@/media-editor/media-player/services/template-service"
 import { useProject } from "@/media-editor/project-settings/project-provider"
-import { sectorTimes } from "@/media-editor/timeline/hooks/use-section-time"
+import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile } from "@/types/media"
 
 export function MediaPlayer() {
@@ -83,6 +83,30 @@ export function MediaPlayer() {
 
   // Получаем настройки проекта
   const { settings } = useProject()
+
+  // Получаем контекст таймлайна
+  const timelineContext = useTimeline()
+
+  // Создаем совместимость с глобальной переменной sectorTimes
+  // Это временное решение, пока не обновим все места использования
+  const sectorTimes: Record<string, number> = {}
+
+  // Синхронизируем sectorTimes с timelineContext.sectorTimes
+  useEffect(() => {
+    if (timelineContext?.sectorTimes) {
+      // Копируем значения из контекста таймлайна в глобальную переменную
+      Object.keys(timelineContext.sectorTimes).forEach((key) => {
+        sectorTimes[key] = timelineContext.sectorTimes[key]
+      })
+
+      console.log(
+        `[MediaPlayer] Синхронизированы времена секторов из контекста таймлайна:`,
+        Object.keys(timelineContext.sectorTimes)
+          .map((key) => `${key}: ${timelineContext.sectorTimes[key].toFixed(2)}`)
+          .join(", "),
+      )
+    }
+  }, [timelineContext?.sectorTimes])
 
   // Вычисляем соотношение сторон из настроек проекта
   const [aspectRatio, setAspectRatio] = useState({
@@ -377,6 +401,48 @@ export function MediaPlayer() {
   // Это поможет остановить все экземпляры видео при паузе
   const allVideoElementsRef = useRef<Set<HTMLVideoElement>>(new Set())
 
+  // Эффект для обработки события sector-time-change
+  useEffect(() => {
+    // Обработчик события sector-time-change
+    const handleSectorTimeChange = (event: CustomEvent) => {
+      const { sectorId, time } = event.detail || {}
+
+      if (sectorId && time !== undefined) {
+        console.log(
+          `[MediaPlayer] Получено событие sector-time-change: sectorId=${sectorId}, time=${time.toFixed(2)}`,
+        )
+
+        // Если у нас есть активное видео, устанавливаем его время
+        if (video?.id && videoRefs[video.id]) {
+          const videoElement = videoRefs[video.id]
+
+          // Сохраняем время для видео
+          videoTimesRef.current[video.id] = time
+
+          // Устанавливаем время для видео
+          videoElement.currentTime = time
+
+          // Обновляем displayTime для синхронизации с таймлайн баром
+          if (setDisplayTime) {
+            setDisplayTime(time)
+          }
+
+          console.log(
+            `[MediaPlayer] Установлено время ${time.toFixed(2)} для видео ${video.id} из события sector-time-change`,
+          )
+        }
+      }
+    }
+
+    // Добавляем обработчик события
+    window.addEventListener("sector-time-change", handleSectorTimeChange as EventListener)
+
+    // Удаляем обработчик при размонтировании
+    return () => {
+      window.removeEventListener("sector-time-change", handleSectorTimeChange as EventListener)
+    }
+  }, [video, videoRefs, setDisplayTime])
+
   // Функция для остановки всех видео элементов
   // Используем ref для отслеживания времени последней остановки
   const lastPauseTimeRef = useRef(0)
@@ -506,6 +572,12 @@ export function MediaPlayer() {
           // Также сохраняем время для текущего сектора, если он есть
           if (currentSectorRef.current) {
             sectorTimes[currentSectorRef.current] = currentVideoTime
+
+            // Обновляем время в контексте таймлайна
+            if (timelineContext) {
+              timelineContext.seek(currentVideoTime)
+            }
+
             console.log(
               `[MediaPlayer] Сохраняем время для сектора ${currentSectorRef.current}: ${currentVideoTime.toFixed(3)}`,
             )

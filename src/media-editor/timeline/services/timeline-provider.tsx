@@ -10,7 +10,7 @@ import {
   type TimelineContext,
   timelineMachine,
 } from "@/media-editor/timeline/services/timeline-machine"
-import { EditResource,EditSegment, EditTrack } from "@/types/edit-schema"
+import { EditResource, EditSegment, EditTrack } from "@/types/edit-schema"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimelineResource } from "@/types/resources"
@@ -23,6 +23,9 @@ interface TimelineContextType {
   timeRanges: Record<string, TimeRange[]>
   sectors: Sector[]
   activeTrackId: string | null
+  activeSector: Sector | null // Активный сектор
+  sectorTimes: Record<string, number> // Время для каждого сектора
+  sectorZoomLevels: Record<string, number> // Масштаб для каждого сектора
   trackVolumes: Record<string, number>
   isSeeking: boolean
   isChangingCamera: boolean
@@ -59,6 +62,12 @@ interface TimelineContextType {
   redo: () => void
   setTracks: (tracks: Track[]) => void
   setActiveTrack: (id: string) => void
+  setActiveSector: (id: string | null) => void
+  setSectorZoom: (sectorId: string, zoomLevel: number) => void
+  setTrackVisibility: (trackId: string, visible: boolean) => void
+  setTrackLocked: (trackId: string, locked: boolean) => void
+  fitSectorToScreen: (sectorId: string, containerWidth: number) => void
+
   seek: (time: number) => void
   removeFiles: (fileIds: string[]) => void
   addMediaFiles: (files: MediaFile[]) => void
@@ -150,6 +159,41 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
   const setActiveTrack = React.useCallback(
     (trackId: string) => {
       send({ type: "SET_ACTIVE_TRACK", trackId })
+    },
+    [send],
+  )
+
+  const setActiveSector = React.useCallback(
+    (sectorId: string | null) => {
+      send({ type: "SET_ACTIVE_SECTOR", sectorId })
+    },
+    [send],
+  )
+
+  const setSectorZoom = React.useCallback(
+    (sectorId: string, zoomLevel: number) => {
+      send({ type: "SET_SECTOR_ZOOM", sectorId, zoomLevel })
+    },
+    [send],
+  )
+
+  const setTrackVisibility = React.useCallback(
+    (trackId: string, visible: boolean) => {
+      send({ type: "SET_TRACK_VISIBILITY", trackId, visible })
+    },
+    [send],
+  )
+
+  const setTrackLocked = React.useCallback(
+    (trackId: string, locked: boolean) => {
+      send({ type: "SET_TRACK_LOCKED", trackId, locked })
+    },
+    [send],
+  )
+
+  const fitSectorToScreen = React.useCallback(
+    (sectorId: string, containerWidth: number) => {
+      send({ type: "FIT_SECTOR_TO_SCREEN", sectorId, containerWidth })
     },
     [send],
   )
@@ -570,6 +614,12 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     redo: handleRedo,
     setTracks: handleSetTracks,
     setActiveTrack,
+    setActiveSector,
+    setSectorZoom,
+    setTrackVisibility,
+    setTrackLocked,
+    fitSectorToScreen,
+
     seek: handleSeek,
     removeFiles: handleRemoveFromAddedFiles,
     addMediaFiles: handleAddMediaFiles,

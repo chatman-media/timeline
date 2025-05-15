@@ -40,10 +40,15 @@ export interface TimelineContext {
   timeRanges: Record<string, TimeRange[]>
   activeTrackId: string | null
   trackVolumes: Record<string, number>
+  trackVisibility: Record<string, boolean> // Видимость дорожек
+  trackLocked: Record<string, boolean> // Блокировка дорожек
   isSeeking: boolean
   isChangingCamera: boolean
   tracks: Track[]
   sectors: Sector[]
+  activeSector: Sector | null // Активный сектор
+  sectorTimes: Record<string, number> // Время для каждого сектора
+  sectorZoomLevels: Record<string, number> // Масштаб для каждого сектора
   canUndo: boolean
   canRedo: boolean
   videoRefs: Record<string, HTMLVideoElement | null>
@@ -75,6 +80,7 @@ export type TimelineEvent =
   | { type: "FIT_TO_SCREEN"; containerWidth: number }
   | { type: "SET_TIME_RANGES"; ranges: Record<string, TimeRange[]> }
   | { type: "SET_ACTIVE_TRACK"; trackId: string | null }
+  | { type: "SET_ACTIVE_SECTOR"; sectorId: string | null }
   | { type: "SEEK"; time: number }
   | { type: "SET_TRACK_VOLUME"; trackId: string; volume: number }
   | { type: "SET_SEEKING"; isSeeking: boolean }
@@ -127,6 +133,10 @@ export type TimelineEvent =
     }
   | { type: "GENERATE_FFMPEG_COMMAND"; outputPath: string }
   | { type: "CONVERT_SECTORS_TO_EDIT_SEGMENTS" }
+  | { type: "SET_SECTOR_ZOOM"; sectorId: string; zoomLevel: number }
+  | { type: "SET_TRACK_VISIBILITY"; trackId: string; visible: boolean }
+  | { type: "SET_TRACK_LOCKED"; trackId: string; locked: boolean }
+  | { type: "FIT_SECTOR_TO_SCREEN"; sectorId: string; containerWidth: number }
 
 const initialContext: TimelineContext = {
   isDirty: false,
@@ -134,10 +144,15 @@ const initialContext: TimelineContext = {
   timeRanges: {},
   activeTrackId: null,
   trackVolumes: {},
+  trackVisibility: {}, // Видимость дорожек (по умолчанию все видимы)
+  trackLocked: {}, // Блокировка дорожек (по умолчанию все разблокированы)
   isSeeking: false,
   isChangingCamera: false,
   tracks: [],
   sectors: [],
+  activeSector: null, // Активный сектор
+  sectorTimes: {}, // Время для каждого сектора
+  sectorZoomLevels: {}, // Масштаб для каждого сектора
   canUndo: false,
   canRedo: false,
   videoRefs: {},
@@ -247,6 +262,122 @@ export const timelineMachine = createMachine({
         }),
       ],
     },
+    SET_SECTOR_ZOOM: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SET_SECTOR_ZOOM") return context
+
+          // Обновляем масштаб для конкретного сектора
+          const newSectorZoomLevels = {
+            ...context.sectorZoomLevels,
+            [event.sectorId]: event.zoomLevel,
+          }
+
+          console.log(
+            `[TimelineMachine] Установлен масштаб ${event.zoomLevel} для сектора ${event.sectorId}`,
+          )
+
+          return { sectorZoomLevels: newSectorZoomLevels }
+        }),
+      ],
+    },
+    SET_TRACK_VISIBILITY: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SET_TRACK_VISIBILITY") return context
+
+          // Обновляем видимость дорожки
+          const newTrackVisibility = {
+            ...context.trackVisibility,
+            [event.trackId]: event.visible,
+          }
+
+          console.log(
+            `[TimelineMachine] Установлена видимость ${event.visible} для дорожки ${event.trackId}`,
+          )
+
+          return { trackVisibility: newTrackVisibility }
+        }),
+      ],
+    },
+    SET_TRACK_LOCKED: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SET_TRACK_LOCKED") return context
+
+          // Обновляем блокировку дорожки
+          const newTrackLocked = {
+            ...context.trackLocked,
+            [event.trackId]: event.locked,
+          }
+
+          console.log(
+            `[TimelineMachine] Установлена блокировка ${event.locked} для дорожки ${event.trackId}`,
+          )
+
+          return { trackLocked: newTrackLocked }
+        }),
+      ],
+    },
+    FIT_SECTOR_TO_SCREEN: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "FIT_SECTOR_TO_SCREEN") return context
+
+          // Находим сектор по ID
+          const sector = context.sectors.find((s) => s.id === event.sectorId)
+
+          // Если сектор не найден, возвращаем текущий контекст
+          if (!sector) {
+            console.warn(`[TimelineMachine] Сектор с ID ${event.sectorId} не найден`)
+            return context
+          }
+
+          // Находим минимальное время начала видео в секторе
+          const minStartTime = Math.min(
+            ...sector.tracks.flatMap((t) => (t.videos || []).map((v) => v.startTime || 0)),
+            sector.startTime || 0, // Используем startTime сектора как запасной вариант
+          )
+
+          // Находим максимальное время окончания видео в секторе
+          const maxEndTime = Math.max(
+            ...sector.tracks.flatMap((t) =>
+              (t.videos || []).map((v) => (v.startTime || 0) + (v.duration || 0)),
+            ),
+            sector.endTime || 0, // Используем endTime сектора как запасной вариант
+          )
+
+          // Вычисляем длительность секции
+          const sectionDuration = maxEndTime - minStartTime
+
+          // Вычисляем ширину контейнера для скролла
+          const containerWidth = event.containerWidth
+
+          // Вычисляем новый масштаб, чтобы секция поместилась в контейнер
+          // Формула: containerWidth = sectionDuration * 2 * newZoomLevel
+          // Отсюда: newZoomLevel = containerWidth / (sectionDuration * 2)
+          // Добавляем небольшой отступ (90%), чтобы видео не занимало всю ширину контейнера
+          const newZoomLevel = (containerWidth * 0.9) / (sectionDuration * 2)
+
+          // Ограничиваем минимальный и максимальный уровень масштаба
+          // Минимальный уровень: 0.005 (24 часа на всю ширину)
+          // Максимальный уровень: 200 (2 секунды на всю ширину)
+          const clampedZoomLevel = Math.max(0.005, Math.min(200, newZoomLevel))
+
+          console.log(
+            `[TimelineMachine] Установлен масштаб ${clampedZoomLevel} для сектора ${event.sectorId} (подгонка под экран)`,
+          )
+
+          // Обновляем масштаб для конкретного сектора
+          const newSectorZoomLevels = {
+            ...context.sectorZoomLevels,
+            [event.sectorId]: clampedZoomLevel,
+          }
+
+          return { sectorZoomLevels: newSectorZoomLevels }
+        }),
+      ],
+    },
     FIT_TO_SCREEN: {
       actions: [
         assign(({ context, event }) => {
@@ -313,6 +444,72 @@ export const timelineMachine = createMachine({
         activeTrackId: ({ event }) => event.trackId,
       }),
     },
+    SET_ACTIVE_SECTOR: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SET_ACTIVE_SECTOR") return context
+
+          // Если sectorId равен null, устанавливаем activeSector в null
+          if (event.sectorId === null) {
+            return { activeSector: null }
+          }
+
+          // Находим сектор по ID
+          const sector = context.sectors.find((s) => s.id === event.sectorId)
+
+          // Если сектор не найден, возвращаем текущий контекст
+          if (!sector) {
+            console.warn(`Сектор с ID ${event.sectorId} не найден`)
+            return context
+          }
+
+          // Устанавливаем активный сектор
+          return { activeSector: sector }
+        }),
+        // Отдельное действие для установки времени из сохраненного времени сектора
+        ({ context, event }) => {
+          if (event.type !== "SET_ACTIVE_SECTOR" || event.sectorId === null) return
+
+          // Находим сохраненное время для сектора
+          const sectorId = event.sectorId
+          const savedTime = context.sectorTimes[sectorId]
+
+          if (savedTime !== undefined) {
+            console.log(
+              `[TimelineMachine] Восстанавливаем время ${savedTime.toFixed(2)} для сектора ${sectorId}`,
+            )
+
+            // Отправляем событие для установки времени в плеере
+            // Это событие будет перехвачено компонентом плеера
+            window.dispatchEvent(
+              new CustomEvent("sector-time-change", {
+                detail: {
+                  sectorId,
+                  time: savedTime,
+                },
+              }),
+            )
+          }
+
+          // Отправляем событие для обновления позиции бара только для активного сектора
+          // Это предотвратит обновление позиции бара для неактивных секторов
+          console.log(
+            `[TimelineMachine] Отправляем событие sector-time-change только для активного сектора ${sectorId}`,
+          )
+
+          // Отправляем событие для обновления позиции бара только для активного сектора
+          window.dispatchEvent(
+            new CustomEvent("sector-time-change", {
+              detail: {
+                sectorId,
+                time: savedTime,
+                isActiveOnly: true, // Флаг, указывающий, что это событие только для активного сектора
+              },
+            }),
+          )
+        },
+      ],
+    },
     SET_TRACK_VOLUME: {
       actions: [
         assign(({ context, event }) => ({
@@ -328,6 +525,44 @@ export const timelineMachine = createMachine({
       actions: assign({
         isSeeking: ({ event }) => event.isSeeking,
       }),
+    },
+    SEEK: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SEEK") return context
+
+          // Устанавливаем флаг isSeeking
+          const newContext = { ...context, isSeeking: true }
+
+          // Если есть активный сектор, сохраняем время только для него
+          if (context.activeSector) {
+            const sectorId = context.activeSector.id
+
+            // Сохраняем время для активного сектора
+            newContext.sectorTimes = {
+              ...context.sectorTimes,
+              [sectorId]: event.time,
+            }
+
+            console.log(
+              `[TimelineMachine] Сохраняем время ${event.time.toFixed(2)} для сектора ${sectorId}`,
+            )
+
+            // Отправляем событие для обновления позиции бара только для активного сектора
+            window.dispatchEvent(
+              new CustomEvent("sector-time-change", {
+                detail: {
+                  sectorId,
+                  time: event.time,
+                  isActiveOnly: true, // Флаг, указывающий, что это событие только для активного сектора
+                },
+              }),
+            )
+          }
+
+          return newContext
+        }),
+      ],
     },
     SET_CHANGING_CAMERA: {
       actions: assign({

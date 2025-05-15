@@ -30,10 +30,14 @@ const TimelineTrack = memo(function TimelineTrack({
   sectionDuration,
   sectorZoomLevel,
 }: TimelineTrackProps) {
-  const { zoomLevel: globalZoomLevel } = useTimeline()
+  const { zoomLevel: globalZoomLevel, trackVisibility, trackLocked } = useTimeline()
   // Используем масштаб сектора, если он задан, иначе используем общий масштаб
   const zoomLevel = sectorZoomLevel || globalZoomLevel
   const containerRef = useRef<HTMLDivElement>(null)
+
+  // Проверяем видимость и блокировку дорожки
+  const isVisible = trackVisibility[track.id] !== false // По умолчанию видимый
+  const isLocked = trackLocked[track.id] === true // По умолчанию разблокированный
 
   if (!track.videos || track.videos.length === 0) {
     return null
@@ -58,6 +62,11 @@ const TimelineTrack = memo(function TimelineTrack({
     `[VideoTrack] Границы трека: trackMinStartTime=${trackMinStartTime}, trackMaxEndTime=${trackMaxEndTime}`,
   )
 
+  // Если дорожка скрыта, не отображаем ее
+  if (!isVisible) {
+    return null
+  }
+
   return (
     <div className="flex w-full" ref={containerRef}>
       <div className="w-full">
@@ -65,9 +74,10 @@ const TimelineTrack = memo(function TimelineTrack({
           <div
             className="drag--parent w-full"
             style={{
-              cursor: "pointer",
+              cursor: isLocked ? "not-allowed" : "pointer",
               zIndex: 1,
               position: "relative",
+              opacity: isLocked ? 0.5 : 1, // Уменьшаем прозрачность для заблокированных дорожек
             }}
           >
             <div className="slice--parent" style={{ backgroundColor: "rgba(1, 74, 79, 0.25)" }}>

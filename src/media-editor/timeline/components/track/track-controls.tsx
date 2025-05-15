@@ -1,8 +1,9 @@
 import { Eye, EyeOff, Lock, LockOpen, Volume2, VolumeX } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Slider } from "@/components/ui/slider"
+import { useTimeline } from "@/media-editor/timeline/services"
 import { Track } from "@/types/media"
 
 interface TrackControlsProps {
@@ -19,32 +20,60 @@ export function TrackControls({
   onVolumeChange,
 }: TrackControlsProps) {
   const { t } = useTranslation()
-  const [isVisible, setIsVisible] = useState(true)
-  const [isLocked, setIsLocked] = useState(false)
+  const {
+    trackVisibility,
+    trackLocked,
+    trackVolumes,
+    setTrackVisibility,
+    setTrackLocked,
+    setTrackVolume,
+  } = useTimeline()
+
+  // Получаем состояние видимости и блокировки из контекста таймлайна
+  const isVisible = trackVisibility[track.id] !== false // По умолчанию видимый
+  const isLocked = trackLocked[track.id] === true // По умолчанию разблокированный
+
+  // Получаем громкость из контекста таймлайна или используем значение по умолчанию
   const [isMuted, setIsMuted] = useState(false)
-  const [volume, setVolume] = useState(100)
+  const [volume, setVolume] = useState(trackVolumes[track.id] || 100)
+
+  // Обновляем локальное состояние при изменении значений в контексте
+  useEffect(() => {
+    setVolume(trackVolumes[track.id] || 100)
+  }, [trackVolumes, track.id])
 
   const handleVisibilityToggle = (): void => {
     const newValue = !isVisible
-    setIsVisible(newValue)
+    // Обновляем состояние в контексте таймлайна
+    setTrackVisibility(track.id, newValue)
+    // Вызываем колбэк для обратной совместимости
     onVisibilityChange?.(newValue)
   }
 
   const handleLockToggle = (): void => {
     const newValue = !isLocked
-    setIsLocked(newValue)
+    // Обновляем состояние в контексте таймлайна
+    setTrackLocked(track.id, newValue)
+    // Вызываем колбэк для обратной совместимости
     onLockChange?.(newValue)
   }
 
   const handleVolumeToggle = (): void => {
     const newValue = !isMuted
     setIsMuted(newValue)
-    onVolumeChange?.(newValue ? 0 : volume)
+    const newVolume = newValue ? 0 : volume
+    // Обновляем громкость в контексте таймлайна
+    setTrackVolume(track.id, newVolume)
+    // Вызываем колбэк для обратной совместимости
+    onVolumeChange?.(newVolume)
   }
 
   const handleVolumeChange = (value: number[]): void => {
     const newVolume = value[0]
     setVolume(newVolume)
+    // Обновляем громкость в контексте таймлайна
+    setTrackVolume(track.id, newVolume)
+    // Вызываем колбэк для обратной совместимости
     onVolumeChange?.(newVolume)
   }
 

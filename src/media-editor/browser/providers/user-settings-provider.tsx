@@ -18,11 +18,13 @@ interface UserSettingsContextValue {
   layoutMode: LayoutMode
   screenshotsPath: string
   previewClickBehavior: PreviewClickBehavior
+  aiApiKey: string
   handleTabChange: (value: string) => void
   handleLanguageChange: (value: Language) => void
   handleLayoutChange: (value: LayoutMode) => void
   handleScreenshotsPathChange: (value: string) => void
   handlePreviewClickBehaviorChange: (value: PreviewClickBehavior) => void
+  handleAiApiKeyChange: (value: string) => void
 }
 
 export const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(undefined)
@@ -96,6 +98,7 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
     layoutMode: state.context.layoutMode,
     screenshotsPath: state.context.screenshotsPath,
     previewClickBehavior: state.context.previewClickBehavior,
+    aiApiKey: state.context.aiApiKey,
     handleTabChange: (value: string) => {
       console.log("Tab change requested:", value)
       // Проверяем, что значение является допустимым BrowserTab
@@ -136,6 +139,11 @@ export function UserSettingsProvider({ children }: { children: React.ReactNode }
       } else {
         console.error("Invalid preview click behavior value:", value)
       }
+    },
+    handleAiApiKeyChange: (value: string) => {
+      console.log("AI API key change requested:", value ? "***" : "(empty)")
+      send({ type: "UPDATE_AI_API_KEY", apiKey: value })
+      console.log("UPDATE_AI_API_KEY event sent")
     },
   }
 

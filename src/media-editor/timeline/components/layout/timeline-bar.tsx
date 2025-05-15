@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react"
 
 import { usePlayerContext } from "@/media-editor/media-player"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
-import { sectorTimes, useSectionTime } from "@/media-editor/timeline/hooks/use-section-time"
+import { useSectionTime } from "@/media-editor/timeline/hooks/use-section-time"
+import { useTimeline } from "@/media-editor/timeline/services"
 
 interface TimelineBarProps {
   startTime: number
@@ -22,6 +23,7 @@ export function TimelineBar({
   const containerRef = useRef<HTMLDivElement>(null)
   const { currentTime, video } = usePlayerContext()
   const { displayTime } = useDisplayTime()
+  const timelineContext = useTimeline()
 
   // Получаем дату сектора из видео, если оно есть
   const sectorDate = video?.startTime
@@ -37,10 +39,11 @@ export function TimelineBar({
 
       // Если есть дата сектора, сохраняем текущее displayTime для этого сектора
       // Сохраняем время для всех секторов, не только для активного
-      if (sectorDate && displayTime > 0) {
-        sectorTimes[sectorDate] = displayTime
+      if (sectorDate && displayTime > 0 && timelineContext) {
+        // Отправляем событие SEEK в машину состояний таймлайна
+        timelineContext.seek(displayTime)
         console.log(
-          `[TimelineBar] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate}, isActive=${isActive}`,
+          `[TimelineBar] Отправлено событие SEEK со временем ${displayTime.toFixed(2)} для сектора ${sectorDate}, isActive=${isActive}`,
         )
       }
     }
@@ -58,9 +61,17 @@ export function TimelineBar({
   const normalizedEndTime = effectiveSectionStartTime + effectiveSectionDuration
 
   // Используем useSectionTime с передачей displayTime для корректной работы с видео из сектора
-  // Для неактивных секторов используем сохраненное время
+  // Для неактивных секторов используем сохраненное время из контекста таймлайна
+  // Для активных секторов используем текущее displayTime
   const savedDisplayTime =
-    sectorDate && sectorTimes[sectorDate] !== undefined ? sectorTimes[sectorDate] : displayTime
+    !isActive &&
+    sectorDate &&
+    timelineContext?.sectorTimes &&
+    timelineContext.sectorTimes[sectorDate] !== undefined
+      ? timelineContext.sectorTimes[sectorDate]
+      : isActive
+        ? displayTime
+        : 0 // Для активного сектора используем displayTime, для неактивных без сохраненного времени - 0
 
   // Создаем собственный обработчик для перемещения бара
   const handleBarMouseDown = (e: React.MouseEvent) => {
@@ -111,12 +122,44 @@ export function TimelineBar({
     displayTime: isActive ? displayTime : savedDisplayTime, // Для неактивных секторов используем сохраненное время
   })
 
+  // Добавляем эффект для принудительного обновления позиции при изменении savedDisplayTime
+  useEffect(() => {
+    if (!isActive && savedDisplayTime > 0) {
+      console.log(
+        `[TimelineBar] Обновляем позицию для неактивного сектора ${sectorDate} со временем ${savedDisplayTime.toFixed(2)}`,
+      )
+    }
+  }, [isActive, savedDisplayTime, sectorDate])
+
+  // Добавляем эффект для сохранения позиции при переключении между параллельными видео
+  useEffect(() => {
+    // Если видео изменилось, сохраняем текущую позицию для всех секторов
+    if (video && video.id && displayTime > 0) {
+      // Отправляем событие для сохранения времени для всех секторов
+      window.dispatchEvent(
+        new CustomEvent("save-all-sectors-time", {
+          detail: {
+            videoId: video.id,
+            displayTime: displayTime,
+            currentTime: currentTime,
+          },
+        }),
+      )
+
+      console.log(
+        `[TimelineBar] Отправлено событие save-all-sectors-time для видео ${video.id} с displayTime=${displayTime.toFixed(2)}`,
+      )
+    }
+  }, [video?.id, displayTime, currentTime])
+
   // Если позиция отрицательная, устанавливаем ее в 0
   const displayPosition = position < 0 ? 0 : position
   // Определяем цвет бара в зависимости от активности сектора
   const barColor = isActive ? "bg-red-600" : "bg-gray-400"
   const borderColor = isActive ? "border-t-red-600" : "border-t-gray-400"
   const barWidth = isActive ? "w-[3px]" : "w-[2px]" // Увеличиваем ширину активного бара
+
+  // Рассчитываем позицию бара
   const barPosition = displayPosition
 
   return (
@@ -128,7 +171,7 @@ export function TimelineBar({
       <div
         className={`pointer-events-auto absolute flex cursor-ew-resize flex-col items-center hover:opacity-90 ${isActive ? "" : "opacity-50"}`}
         style={{
-          left: `${barPosition}%`,
+          left: `${barPosition}%`, // Позиция бара в процентах от ширины контейнера
           top: "-33px",
           transform: "translateX(-50%)",
           height: `${height}px`,

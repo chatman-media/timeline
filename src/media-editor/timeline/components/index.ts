@@ -1,4 +1,5 @@
 export * from "./chat"
+export * from "./composite-track-button"
 export * from "./layout"
 export * from "./resources"
 export * from "./timeline"

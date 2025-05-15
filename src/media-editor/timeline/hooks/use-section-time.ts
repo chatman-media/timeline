@@ -4,8 +4,9 @@ import { usePlayerContext } from "@/media-editor/media-player"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
 import { useTimeline } from "@/media-editor/timeline/services"
 
-// Объект для хранения времени для каждого сектора
-// Используем глобальную переменную, чтобы сохранять время между рендерами
+// Для обратной совместимости создаем пустой объект, который будет использоваться
+// в компонентах, которые еще не обновлены для использования контекста таймлайна
+// В дальнейшем этот объект можно будет удалить
 export const sectorTimes: Record<string, number> = {}
 
 // Интерфейс для параметров useSectionTime
@@ -94,18 +95,30 @@ export function useSectionTime({
     }
 
     // Если displayTime равно 0, но есть сохраненное время для этого сектора,
-    // используем сохраненное время
-    if (displayTime === 0 && sectorTimes && Object.keys(sectorTimes).length > 0) {
+    // используем сохраненное время из контекста таймлайна
+    if (displayTime === 0 && timelineContext) {
       // Получаем дату сектора из currentTime, если это Unix timestamp
       const sectorDate =
         currentTime > 365 * 24 * 60 * 60
           ? new Date(currentTime * 1000).toISOString().split("T")[0]
           : null
 
-      if (sectorDate && sectorTimes[sectorDate] !== undefined) {
+      // Проверяем, есть ли сохраненное время в контексте таймлайна
+      if (
+        sectorDate &&
+        timelineContext.sectorTimes &&
+        timelineContext.sectorTimes[sectorDate] !== undefined
+      ) {
+        effectiveCurrentTime = timelineContext.sectorTimes[sectorDate]
+        console.log(
+          `[useSectionTime] Используем сохраненное время ${effectiveCurrentTime.toFixed(2)} для сектора ${sectorDate} из контекста таймлайна`,
+        )
+      }
+      // Для обратной совместимости проверяем также глобальную переменную
+      else if (sectorDate && sectorTimes[sectorDate] !== undefined) {
         effectiveCurrentTime = sectorTimes[sectorDate]
         console.log(
-          `[useSectionTime] Используем сохраненное время ${effectiveCurrentTime.toFixed(2)} для сектора ${sectorDate}`,
+          `[useSectionTime] Используем сохраненное время ${effectiveCurrentTime.toFixed(2)} для сектора ${sectorDate} из глобальной переменной (устаревший метод)`,
         )
       }
     }
@@ -300,6 +313,87 @@ export function useSectionTime({
       }
     }
   }, [currentTime, displayTime, calculatePosition, isPlaying, seek, setCurrentTime])
+
+  // Добавляем обработчик события sector-time-change для обновления позиции бара
+  useEffect(() => {
+    // Обработчик события sector-time-change
+    const handleSectorTimeChange = (event: CustomEvent) => {
+      const { sectorId, time, isActiveOnly } = event.detail || {}
+
+      if (sectorId && time !== undefined) {
+        console.log(
+          `[useSectionTime] Получено событие sector-time-change: sectorId=${sectorId}, time=${time.toFixed(2)}, isActiveOnly=${isActiveOnly}`,
+        )
+
+        // Получаем дату сектора из currentTime, если это Unix timestamp
+        const sectorDate =
+          currentTime > 365 * 24 * 60 * 60
+            ? new Date(currentTime * 1000).toISOString().split("T")[0]
+            : null
+
+        // Если это наш сектор или событие не только для активного сектора, обновляем позицию
+        if (sectorDate === sectorId || !isActiveOnly) {
+          console.log(
+            `[useSectionTime] Обновляем позицию для сектора ${sectorId} со временем ${time.toFixed(2)}`,
+          )
+
+          // Принудительно вызываем calculatePosition для обновления позиции
+          setTimeout(() => {
+            calculatePosition()
+          }, 0)
+        }
+      }
+    }
+
+    // Обработчик события save-all-sectors-time для сохранения позиции при переключении между параллельными видео
+    const handleSaveAllSectorsTime = (event: CustomEvent) => {
+      const { videoId, displayTime } = event.detail || {}
+
+      if (videoId && displayTime !== undefined) {
+        console.log(
+          `[useSectionTime] Получено событие save-all-sectors-time: videoId=${videoId}, displayTime=${displayTime.toFixed(2)}`,
+        )
+
+        // Получаем дату сектора из currentTime, если это Unix timestamp
+        const sectorDate =
+          currentTime > 365 * 24 * 60 * 60
+            ? new Date(currentTime * 1000).toISOString().split("T")[0]
+            : null
+
+        // Если есть дата сектора, сохраняем время для этого сектора
+        if (sectorDate && timelineContext) {
+          // Сохраняем время для сектора в контексте таймлайна
+          if (timelineContext.sectorTimes) {
+            timelineContext.sectorTimes[sectorDate] = displayTime
+            console.log(
+              `[useSectionTime] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate} в контексте таймлайна`,
+            )
+          }
+
+          // Для обратной совместимости сохраняем также в глобальной переменной
+          sectorTimes[sectorDate] = displayTime
+          console.log(
+            `[useSectionTime] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate} в глобальной переменной`,
+          )
+
+          // Принудительно вызываем calculatePosition для обновления позиции
+          setTimeout(() => {
+            calculatePosition()
+          }, 0)
+        }
+      }
+    }
+
+    // Добавляем обработчики событий
+    window.addEventListener("sector-time-change", handleSectorTimeChange as EventListener)
+    window.addEventListener("save-all-sectors-time", handleSaveAllSectorsTime as EventListener)
+
+    // Удаляем обработчики при размонтировании
+    return () => {
+      window.removeEventListener("sector-time-change", handleSectorTimeChange as EventListener)
+      window.removeEventListener("save-all-sectors-time", handleSaveAllSectorsTime as EventListener)
+    }
+  }, [currentTime, calculatePosition, timelineContext])
 
   // Обработчик начала перетаскивания
   const handleMouseDown = (e: React.MouseEvent) => {

@@ -499,6 +499,15 @@
     }
   },
   "timeline": {
+    "title": "Timeline",
+    "noTracks": "Keine Spuren",
+    "addTrack": "Spur hinzufügen",
+    "deleteTrack": "Spur löschen",
+    "cutTrack": "Spur ausschneiden",
+    "fitToScreen": "An Bildschirm anpassen",
+    "zoomIn": "Vergrößern",
+    "zoomOut": "Verkleinern",
+    "scale": "Maßstab",
     "tracks": {
       "camera": "Kamera",
       "audio": "Audio",

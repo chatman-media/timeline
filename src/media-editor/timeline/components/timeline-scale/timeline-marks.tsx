@@ -102,7 +102,6 @@ export function TimelineMarks({
       <div
         className={`relative h-8 ${isActive ? "" : "bg-muted/50"}`}
         style={{
-          zIndex: 300,
           width: "100%",
         }}
       >

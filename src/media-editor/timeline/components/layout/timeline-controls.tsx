@@ -20,10 +20,15 @@ export function TimelineControls({
   // Получаем текущий масштаб для сектора или общий масштаб
   const currentZoomLevel = zoomLevel || 1
 
-  // Если указан sectorDate, отправляем событие для изменения масштаба сектора
+  // Если указан sectorDate, используем setSectorZoom из контекста таймлайна
+  const { setSectorZoom } = useTimeline()
+
   const handleSectorZoom = (newScale: number) => {
     if (sectorDate) {
-      // Отправляем событие для обновления масштаба сектора
+      // Используем setSectorZoom из контекста таймлайна
+      setSectorZoom(sectorDate, newScale)
+
+      // Отправляем событие для обновления масштаба сектора (для обратной совместимости)
       window.dispatchEvent(
         new CustomEvent("sector-zoom-change", {
           detail: { sectorDate, zoomLevel: newScale },

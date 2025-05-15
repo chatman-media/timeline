@@ -578,6 +578,15 @@
     }
   },
   "timeline": {
+    "title": "Línea de tiempo",
+    "noTracks": "No hay pistas",
+    "addTrack": "Añadir pista",
+    "deleteTrack": "Eliminar pista",
+    "cutTrack": "Cortar pista",
+    "fitToScreen": "Ajustar a pantalla",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar",
+    "scale": "Escala",
     "player": {
       "camera": "Cámara",
       "videoUnavailable": "No disponible",

@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
   VOLUME: "player-volume",
   SCREENSHOTS_PATH: "screenshots-save-path",
   PREVIEW_CLICK_BEHAVIOR: "preview-click-behavior",
+  AI_API_KEY: "ai-api-key",
 } as const
 
 // Допустимые значения для активного таба
@@ -59,6 +60,7 @@ export interface UserSettingsContext {
   layoutMode: LayoutMode
   screenshotsPath: string
   previewClickBehavior: PreviewClickBehavior
+  aiApiKey: string
   isLoaded: boolean
 }
 
@@ -73,6 +75,7 @@ const initialContext: UserSettingsContext = {
   layoutMode: DEFAULT_LAYOUT,
   screenshotsPath: "public/screenshots",
   previewClickBehavior: DEFAULT_PREVIEW_CLICK_BEHAVIOR,
+  aiApiKey: "",
   isLoaded: false,
 }
 
@@ -85,6 +88,7 @@ type UserSettingsLoadedEvent = {
   layoutMode: LayoutMode
   screenshotsPath: string
   previewClickBehavior: PreviewClickBehavior
+  aiApiKey: string
 }
 type UpdatePreviewSizeEvent = {
   type: "UPDATE_PREVIEW_SIZE"
@@ -99,6 +103,7 @@ type UpdatePreviewClickBehaviorEvent = {
   type: "UPDATE_PREVIEW_CLICK_BEHAVIOR"
   behavior: PreviewClickBehavior
 }
+type UpdateAiApiKeyEvent = { type: "UPDATE_AI_API_KEY"; apiKey: string }
 
 export type UserSettingsEvent =
   | LoadUserSettingsEvent
@@ -109,6 +114,7 @@ export type UserSettingsEvent =
   | UpdateLayoutEvent
   | UpdateScreenshotsPathEvent
   | UpdatePreviewClickBehaviorEvent
+  | UpdateAiApiKeyEvent
 
 export const userSettingsMachine = createMachine(
   {
@@ -147,6 +153,9 @@ export const userSettingsMachine = createMachine(
           },
           UPDATE_PREVIEW_CLICK_BEHAVIOR: {
             actions: ["updatePreviewClickBehavior", "savePreviewClickBehaviorToStorage"],
+          },
+          UPDATE_AI_API_KEY: {
+            actions: ["updateAiApiKey", "saveAiApiKeyToStorage"],
           },
         },
       },
@@ -380,6 +389,23 @@ export const userSettingsMachine = createMachine(
           }
         }
 
+        // Загружаем сохраненный API ключ
+        let aiApiKey = ""
+        try {
+          const storageService = StorageService.getInstance()
+          const savedApiKey = storageService.get(STORAGE_KEYS.AI_API_KEY, "")
+          console.log("Loaded AI API key from localStorage:", savedApiKey ? "***" : "(empty)")
+
+          if (savedApiKey) {
+            aiApiKey = savedApiKey
+            console.log("Using saved AI API key")
+          } else {
+            console.log("No saved AI API key found")
+          }
+        } catch (error) {
+          console.error("Error loading AI API key:", error)
+        }
+
         return {
           type: "SETTINGS_LOADED",
           previewSizes,
@@ -388,6 +414,7 @@ export const userSettingsMachine = createMachine(
           layoutMode,
           screenshotsPath,
           previewClickBehavior,
+          aiApiKey,
         }
       },
       updateSettings: assign({
@@ -414,6 +441,10 @@ export const userSettingsMachine = createMachine(
         previewClickBehavior: (_, event) => {
           const typedEvent = event as UserSettingsLoadedEvent
           return typedEvent.previewClickBehavior || DEFAULT_PREVIEW_CLICK_BEHAVIOR
+        },
+        aiApiKey: (_, event) => {
+          const typedEvent = event as UserSettingsLoadedEvent
+          return typedEvent.aiApiKey || ""
         },
         isLoaded: (_) => true,
       }),
@@ -655,6 +686,33 @@ export const userSettingsMachine = createMachine(
             console.log("Verified saved preview click behavior value:", savedValue)
           } catch (error) {
             console.error(`Error saving preview click behavior:`, error)
+          }
+        }
+      },
+      updateAiApiKey: assign({
+        aiApiKey: (_, event: any) => {
+          if (event.type === "UPDATE_AI_API_KEY") {
+            console.log("Updating AI API key in machine")
+            return event.apiKey
+          }
+          return ""
+        },
+      }),
+      saveAiApiKeyToStorage: (_, event: any) => {
+        if (event.type === "UPDATE_AI_API_KEY") {
+          try {
+            console.log("Saving AI API key to localStorage")
+
+            // Используем StorageService для сохранения API ключа
+            const storageService = StorageService.getInstance()
+            storageService.set(STORAGE_KEYS.AI_API_KEY, event.apiKey)
+            console.log("AI API key saved to localStorage successfully")
+
+            // Проверяем, что значение было сохранено правильно
+            const savedValue = storageService.get(STORAGE_KEYS.AI_API_KEY, "")
+            console.log("Verified saved AI API key value:", savedValue ? "***" : "(empty)")
+          } catch (error) {
+            console.error(`Error saving AI API key:`, error)
           }
         }
       },

@@ -994,6 +994,22 @@
     "zoomIn": "Увеличить",
     "zoomOut": "Уменьшить",
     "scale": "Масштаб",
+    "toolbar": {
+      "layout": "Макет",
+      "pointer": "Указатель",
+      "undo": "Отменить",
+      "redo": "Повторить",
+      "delete": "Удалить",
+      "cut": "Вырезать",
+      "fitToScreen": "По размеру экрана",
+      "zoomOut": "Уменьшить",
+      "zoomIn": "Увеличить"
+    },
+    "zoom": {
+      "fitToScreen": "По размеру экрана",
+      "zoomOut": "Уменьшить",
+      "zoomIn": "Увеличить"
+    },
     "player": {
       "videoUnavailable": "Видео недоступно",
       "noVideoSelected": "Видео не выбрано"

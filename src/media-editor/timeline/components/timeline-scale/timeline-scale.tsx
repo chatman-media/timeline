@@ -44,12 +44,15 @@ export function TimelineScale({
     duration: duration || 0,
   }
 
+  // Используем переданный масштаб сектора
+  const effectiveSectorZoomLevel = sectorZoomLevel
+
   // Используем хук для расчета шагов шкалы времени
   const { timeStep: calculatedTimeStep, subStep: calculatedSubStep } = useTimelineScale(
     adjustedRange.duration,
     adjustedRange.startTime,
     adjustedRange.endTime,
-    sectorZoomLevel,
+    effectiveSectorZoomLevel,
   )
 
   // Используем переданные значения или рассчитанные
@@ -64,16 +67,15 @@ export function TimelineScale({
     })
 
   return (
-    <div className="flex w-full flex-col" style={{ zIndex: 300 }}>
+    <div className="flex w-full flex-col">
       {/* Линия времени с метками */}
       <div className="flex w-full">
-        <div className="relative w-full" style={{ zIndex: 300 }}>
+        <div className="relative w-full">
           {/* Горизонтальная линия */}
           <div
             className="h-[1px] w-full"
             style={{
               background: "rgb(47, 61, 62)",
-              zIndex: 300,
             }}
           />
 
