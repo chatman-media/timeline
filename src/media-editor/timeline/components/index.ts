@@ -1,5 +1,6 @@
 export * from "./chat"
 export * from "./layout"
+export * from "./resources"
 export * from "./timeline"
 export * from "./timeline-container"
 export * from "./timeline-scale"

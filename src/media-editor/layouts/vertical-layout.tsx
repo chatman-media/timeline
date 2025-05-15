@@ -45,7 +45,7 @@ export function VerticalMediaEditor() {
           <ResizableHandle />
           <ResizablePanel defaultSize={50}>
             <div className="h-full flex-1">
-          <Timeline />
+              <Timeline />
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>

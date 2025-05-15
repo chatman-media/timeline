@@ -994,5 +994,15 @@
     "deleteProject": "Delete Project",
     "exportProject": "Export Project",
     "importProject": "Import Project"
-  }
+  },
+    "resources": {
+      "title": "Resources",
+      "all": "All",
+      "effects": "Effects",
+      "filters": "Filters",
+      "transitions": "Transitions",
+      "templates": "Templates",
+      "music": "Music",
+      "noResources": "No resources added"
+    }
 }

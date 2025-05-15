@@ -21,6 +21,7 @@ import { MediaFile, Track } from "@/types/media"
 import { TimelineChat } from "./chat"
 import { SectionHeader } from "./layout/section-header"
 import { TimelineBar } from "./layout/timeline-bar"
+import { TimelineResources } from "./resources"
 import { TimelineScale } from "./timeline-scale/timeline-scale"
 import { VideoTrack } from "./track"
 
@@ -689,8 +690,9 @@ export function Timeline() {
     <div className="flex h-full w-full flex-col overflow-hidden">
       <div className="timeline-container flex-1 overflow-hidden" ref={timelineContainerRef}>
         <ResizablePanelGroup direction="horizontal" className="h-full overflow-hidden">
+          {/* Левая панель (15% ширины) - Ресурсы */}
           <ResizablePanel defaultSize={15} minSize={10} maxSize={30}>
-            <div className="h-full w-full p-2">{/* Содержимое левой панели */}</div>
+            <TimelineResources />
           </ResizablePanel>
 
           <ResizableHandle />
@@ -699,7 +701,7 @@ export function Timeline() {
           <ResizablePanel defaultSize={65} minSize={40} className="overflow-hidden">
             <div className="flex h-full w-full">
               {/* Основная часть - каждый сектор имеет свой собственный скролл */}
-              <div className="w-full h-full overflow-y-auto">
+              <div className="h-full w-full overflow-y-auto">
                 {sections?.map((sector, index) => {
                   // Находим минимальное время начала видео в секторе
                   const minStartTime = Math.min(
@@ -883,7 +885,12 @@ export function Timeline() {
           <ResizableHandle />
 
           {/* Правая панель (20% ширины) - Чат */}
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={40} className="min-h-[200px] flex-shrink-0 z-50">
+          <ResizablePanel
+            defaultSize={20}
+            minSize={15}
+            maxSize={40}
+            className="z-50 min-h-[200px] flex-shrink-0"
+          >
             <TimelineChat />
           </ResizablePanel>
         </ResizablePanelGroup>

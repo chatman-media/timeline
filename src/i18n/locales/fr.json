@@ -946,5 +946,15 @@
     "deleteProject": "Supprimer le projet",
     "exportProject": "Exporter le projet",
     "importProject": "Importer un projet"
-  }
+  },
+    "resources": {
+      "title": "Ressources",
+      "all": "Tous",
+      "effects": "Effets",
+      "filters": "Filtres",
+      "transitions": "Transitions",
+      "templates": "Modèles",
+      "music": "Musique",
+      "noResources": "Aucune ressource ajoutée"
+    }
 }

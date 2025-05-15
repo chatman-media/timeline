@@ -11,11 +11,13 @@ Timeline Editor — это приложение для видеомонтажа,
 ## Содержание документации
 
 ### Архитектура системы
+
 - [Обзор архитектуры](architecture/overview.md) - общая архитектура приложения
 - [Компоненты системы](architecture/components.md) - описание основных компонентов
 - [Машины состояний](architecture/state-machines.md) - описание машин состояний XState
 
 ### Компоненты системы
+
 - [Browser (Браузер)](components/browser.md) - браузер медиафайлов
 - [Timeline (Таймлайн)](components/timeline.md) - временная шкала с дорожками
 - [Media Player (Плеер)](components/media-player.md) - плеер для просмотра видео
@@ -23,12 +25,14 @@ Timeline Editor — это приложение для видеомонтажа,
 - [Top Navigation Bar (Верхняя панель)](components/top-nav-bar.md) - верхняя панель навигации
 
 ### API
+
 - [Обзор API](api/overview.md) - общая информация об API
 - [Media API](api/media.md) - API для работы с медиафайлами
 - [Music API](api/music.md) - API для работы с музыкой
 - [Thumbnails API](api/thumbnails.md) - API для работы с миниатюрами
 
 ### Руководство пользователя
+
 - [Начало работы](user-guide/getting-started.md) - установка и первые шаги
 - [Работа с браузером](user-guide/browser.md) - управление медиафайлами
 - [Работа с таймлайном](user-guide/timeline.md) - монтаж видео
@@ -37,12 +41,14 @@ Timeline Editor — это приложение для видеомонтажа,
 - [Часто задаваемые вопросы](user-guide/faq.md) - FAQ
 
 ### Для разработчиков
+
 - [Настройка окружения](development/setup.md) - настройка среды разработки
 - [Руководство по участию](development/contributing.md) - как принять участие в проекте
 - [Стиль кода](development/code-style.md) - правила оформления кода
 - [Тестирование](development/testing.md) - написание и запуск тестов
 
 ### Планирование и развитие
+
 - [Дорожная карта](planning/roadmap.md) - план развития проекта
 - [Список задач](planning/todo.md) - текущие и планируемые задачи
 - [Сценарии использования](planning/scenarios.md) - основные сценарии использования

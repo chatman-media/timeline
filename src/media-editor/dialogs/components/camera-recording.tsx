@@ -28,7 +28,14 @@ export function CameraRecording() {
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false)
 
   // Логируем состояние isSaving после его объявления
-  console.log("CameraRecording: isSaving =", isSaving, "saveProgress =", saveProgress, "saveSuccess =", saveSuccess)
+  console.log(
+    "CameraRecording: isSaving =",
+    isSaving,
+    "saveProgress =",
+    saveProgress,
+    "saveSuccess =",
+    saveSuccess,
+  )
 
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -88,10 +95,10 @@ export function CameraRecording() {
       // Имитируем прогресс сохранения
       const progressInterval = setInterval(() => {
         setSaveProgress((prev) => {
-          const newProgress = prev + Math.random() * 15;
-          return newProgress > 90 ? 90 : newProgress;
-        });
-      }, 200);
+          const newProgress = prev + Math.random() * 15
+          return newProgress > 90 ? 90 : newProgress
+        })
+      }, 200)
 
       // Создаем объект File из Blob
       const file = new File([recordedBlob], uniqueFileName, { type: "video/webm" })
@@ -154,17 +161,17 @@ export function CameraRecording() {
 
       // Завершаем прогресс и показываем сообщение об успехе
       setTimeout(() => {
-        clearInterval(progressInterval);
-        setSaveProgress(100);
-        setSaveSuccess(true);
-        console.log("Сохранение завершено, показываем сообщение об успехе");
+        clearInterval(progressInterval)
+        setSaveProgress(100)
+        setSaveSuccess(true)
+        console.log("Сохранение завершено, показываем сообщение об успехе")
 
         // Через 2 секунды после успешного сохранения убираем индикатор сохранения
         setTimeout(() => {
-          setIsSaving(false);
-          console.log("Убираем индикатор сохранения");
-        }, 2000);
-      }, 500);
+          setIsSaving(false)
+          console.log("Убираем индикатор сохранения")
+        }, 2000)
+      }, 500)
     } catch (error) {
       console.error("Ошибка при сохранении видео:", error)
       setIsSaving(false)
@@ -253,7 +260,12 @@ export function CameraRecording() {
   }, [])
 
   // Логируем состояния перед рендерингом
-  console.log("Перед рендерингом: isRecordModalOpen =", isRecordModalOpen, "showPreview =", showPreview)
+  console.log(
+    "Перед рендерингом: isRecordModalOpen =",
+    isRecordModalOpen,
+    "showPreview =",
+    showPreview,
+  )
 
   return (
     <>
@@ -269,8 +281,8 @@ export function CameraRecording() {
       <Dialog
         open={showPreview}
         onOpenChange={(open) => {
-          console.log("Dialog onOpenChange вызван с параметром open =", open);
-          if (!open) handleClosePreview();
+          console.log("Dialog onOpenChange вызван с параметром open =", open)
+          if (!open) handleClosePreview()
         }}
       >
         <DialogContent
@@ -333,15 +345,15 @@ export function CameraRecording() {
             </div>
 
             {/* Индикатор прогресса сохранения */}
-            {(isSaving) && (
+            {isSaving && (
               <div className="mb-4">
                 <div className="mb-2 flex justify-between text-sm">
                   <span>{t("dialogs.cameraPreview.savingProgress", "Прогресс сохранения")}</span>
                   <span>{Math.round(saveProgress)}%</span>
                 </div>
-                <div className="h-4 w-full overflow-hidden rounded-full bg-gray-700 border border-gray-600">
+                <div className="h-4 w-full overflow-hidden rounded-full border border-gray-600 bg-gray-700">
                   <div
-                    className={`h-full ${saveSuccess ? 'bg-green-500' : 'bg-blue-500'} transition-all duration-300`}
+                    className={`h-full ${saveSuccess ? "bg-green-500" : "bg-blue-500"} transition-all duration-300`}
                     style={{ width: `${saveProgress}%` }}
                   ></div>
                 </div>
@@ -349,9 +361,20 @@ export function CameraRecording() {
                 {/* Сообщение об успешном сохранении */}
                 {saveSuccess && (
                   <div className="mt-2 rounded-md bg-green-900/50 p-3 text-center text-sm text-green-100">
-                    <div className="flex items-center justify-center mb-2">
-                      <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    <div className="mb-2 flex items-center justify-center">
+                      <svg
+                        className="mr-2 h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
                       </svg>
                       {t("dialogs.cameraPreview.saveSuccess", "Видео успешно сохранено!")}
                     </div>
@@ -376,22 +399,22 @@ export function CameraRecording() {
                   variant="outline"
                   className="border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white"
                   onClick={() => {
-                    console.log("Тестирование индикатора прогресса");
-                    setIsSaving(true);
-                    setSaveProgress(0);
+                    console.log("Тестирование индикатора прогресса")
+                    setIsSaving(true)
+                    setSaveProgress(0)
 
                     // Имитируем прогресс
                     const progressInterval = setInterval(() => {
                       setSaveProgress((prev) => {
-                        const newProgress = prev + 10;
+                        const newProgress = prev + 10
                         if (newProgress >= 100) {
-                          clearInterval(progressInterval);
-                          setSaveSuccess(true);
-                          return 100;
+                          clearInterval(progressInterval)
+                          setSaveSuccess(true)
+                          return 100
                         }
-                        return newProgress;
-                      });
-                    }, 500);
+                        return newProgress
+                      })
+                    }, 500)
                   }}
                 >
                   Тест индикатора прогресса

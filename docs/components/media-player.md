@@ -7,6 +7,7 @@
 ## Состояние
 
 Медиаплеер управляется через машину состояний `playerMachine`, которая контролирует:
+
 - Воспроизведение и паузу
 - Перемотку
 - Управление громкостью
@@ -128,6 +129,7 @@
 ### Инициализация видео
 
 1. При монтировании компонента `MediaPlayer` или изменении активного видео:
+
    - Создается видео-элемент и устанавливается источник (src)
    - Добавляются обработчики событий (loadedmetadata, timeupdate, error и т.д.)
    - Инициализируется начальное время воспроизведения
@@ -142,6 +144,7 @@
 ### Воспроизведение и пауза
 
 1. При нажатии на кнопку воспроизведения/паузы:
+
    - Если идет процесс переключения камеры, действие игнорируется
    - Иначе переключается состояние `isPlaying`
    - При паузе сохраняется текущее время воспроизведения
@@ -155,6 +158,7 @@
 ### Переключение между параллельными видео
 
 1. При нажатии на кнопку переключения камеры:
+
    - Проверяется, не идет ли уже процесс переключения
    - Сохраняется текущее время воспроизведения
    - Вычисляется относительная позиция (текущее время / длительность)
@@ -188,30 +192,30 @@
 
 ```typescript
 // В компоненте плеера
-const { setIsPlaying, isPlaying } = usePlayer();
+const { setIsPlaying, isPlaying } = usePlayer()
 
 const handlePlayPause = () => {
-  setIsPlaying(!isPlaying);
-};
+  setIsPlaying(!isPlaying)
+}
 ```
 
 ### Перемотка
 
 ```typescript
 // В компоненте плеера
-const { setCurrentTime, duration } = usePlayer();
+const { setCurrentTime, duration } = usePlayer()
 
 const handleSeek = (time: number) => {
-  setCurrentTime(time);
-};
+  setCurrentTime(time)
+}
 
 const handleSkipForward = () => {
-  setCurrentTime((prev) => Math.min(prev + 10, duration));
-};
+  setCurrentTime((prev) => Math.min(prev + 10, duration))
+}
 
 const handleSkipBackward = () => {
-  setCurrentTime((prev) => Math.max(prev - 10, 0));
-};
+  setCurrentTime((prev) => Math.max(prev - 10, 0))
+}
 ```
 
 ## Планы по развитию

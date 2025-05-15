@@ -7,6 +7,7 @@
 ## Состояние
 
 Браузер управляется через машину состояний `mediaMachine`, которая контролирует:
+
 - Загрузку и отображение файлов
 - Фильтрацию и сортировку
 - Выбор активного файла
@@ -152,25 +153,25 @@
 
 ```typescript
 // В компоненте браузера
-const { addToTimeline } = useTimeline();
-const { selectedMedia } = useMedia();
+const { addToTimeline } = useTimeline()
+const { selectedMedia } = useMedia()
 
 const handleAddToTimeline = () => {
   if (selectedMedia) {
-    addToTimeline(selectedMedia);
+    addToTimeline(selectedMedia)
   }
-};
+}
 ```
 
 ### Фильтрация файлов
 
 ```typescript
 // В компоненте браузера
-const { filterMedia } = useMedia();
+const { filterMedia } = useMedia()
 
 const handleFilterChange = (filter: string) => {
-  filterMedia(filter);
-};
+  filterMedia(filter)
+}
 ```
 
 ## Планы по развитию

@@ -798,6 +798,16 @@
     "exportProject": "Projekt exportieren",
     "importProject": "Projekt importieren"
   },
+    "resources": {
+      "title": "Ressourcen",
+      "all": "Alle",
+      "effects": "Effekte",
+      "filters": "Filter",
+      "transitions": "Übergänge",
+      "templates": "Vorlagen",
+      "music": "Musik",
+      "noResources": "Keine Ressourcen hinzugefügt"
+    },
   "templates": {
     "verticalSplit": "Vertikale Teilung",
     "horizontalSplit": "Horizontale Teilung",

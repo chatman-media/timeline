@@ -47,7 +47,7 @@ export function DualMediaEditor() {
           ) : null}
           <ResizablePanel defaultSize={isBrowserVisible ? 60 : 100} minSize={40} maxSize={100}>
             <div className="h-full flex-1">
-          <Timeline />
+              <Timeline />
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>

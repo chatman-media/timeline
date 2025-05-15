@@ -5,6 +5,7 @@
 Timeline Editor использует библиотеку XState для управления сложной логикой приложения. XState предоставляет формальный способ моделирования и управления состояниями на основе конечных автоматов (finite state machines).
 
 Основные преимущества использования XState:
+
 - Предсказуемое поведение приложения
 - Явное моделирование состояний и переходов
 - Упрощение обработки сложных пользовательских сценариев
@@ -25,21 +26,23 @@ Timeline Editor использует библиотеку XState для упра
 **Назначение**: Управление медиафайлами, их отображением, фильтрацией и добавлением на таймлайн.
 
 **Контекст**:
+
 ```typescript
 interface MediaContext {
-  media: MediaFile[];
-  filteredMedia: MediaFile[];
-  selectedMedia: MediaFile | null;
-  filter: string;
-  sortBy: 'name' | 'date' | 'size' | 'duration';
-  sortDirection: 'asc' | 'desc';
-  view: 'list' | 'grid' | 'thumbnails';
-  isLoading: boolean;
-  error: string | null;
+  media: MediaFile[]
+  filteredMedia: MediaFile[]
+  selectedMedia: MediaFile | null
+  filter: string
+  sortBy: "name" | "date" | "size" | "duration"
+  sortDirection: "asc" | "desc"
+  view: "list" | "grid" | "thumbnails"
+  isLoading: boolean
+  error: string | null
 }
 ```
 
 **Состояния**:
+
 - `idle` - начальное состояние
 - `loading` - загрузка медиафайлов
 - `loaded` - медиафайлы загружены
@@ -48,6 +51,7 @@ interface MediaContext {
 - `error` - ошибка загрузки
 
 **Основные события**:
+
 - `LOAD` - загрузка медиафайлов
 - `SELECT` - выбор медиафайла
 - `FILTER` - фильтрация медиафайлов
@@ -60,20 +64,22 @@ interface MediaContext {
 **Назначение**: Управление дорожками и клипами, монтаж видео.
 
 **Контекст**:
+
 ```typescript
 interface TimelineContext {
-  tracks: Track[];
-  activeTrackId: string | null;
-  activeVideo: MediaFile | null;
-  currentTime: number;
-  history: TimelineState[];
-  historyIndex: number;
-  sections: TimelineSection[];
-  isRecording: boolean;
+  tracks: Track[]
+  activeTrackId: string | null
+  activeVideo: MediaFile | null
+  currentTime: number
+  history: TimelineState[]
+  historyIndex: number
+  sections: TimelineSection[]
+  isRecording: boolean
 }
 ```
 
 **Состояния**:
+
 - `idle` - начальное состояние
 - `editing` - редактирование таймлайна
 - `recording` - запись
@@ -81,6 +87,7 @@ interface TimelineContext {
 - `seeking` - перемотка
 
 **Основные события**:
+
 - `ADD_TRACK` - добавление дорожки
 - `REMOVE_TRACK` - удаление дорожки
 - `SET_ACTIVE_TRACK` - установка активной дорожки
@@ -97,22 +104,24 @@ interface TimelineContext {
 **Назначение**: Воспроизведение видео и управление просмотром.
 
 **Контекст**:
+
 ```typescript
 interface PlayerContext {
-  video: MediaFile | null;
-  currentTime: number;
-  duration: number;
-  volume: number;
-  isPlaying: boolean;
-  isSeeking: boolean;
-  isChangingCamera: boolean;
-  isRecording: boolean;
-  videoRefs: Record<string, HTMLVideoElement>;
-  videos: Record<string, TimelineVideo>;
+  video: MediaFile | null
+  currentTime: number
+  duration: number
+  volume: number
+  isPlaying: boolean
+  isSeeking: boolean
+  isChangingCamera: boolean
+  isRecording: boolean
+  videoRefs: Record<string, HTMLVideoElement>
+  videos: Record<string, TimelineVideo>
 }
 ```
 
 **Состояния**:
+
 - `idle` - начальное состояние
 - `loading` - загрузка видео
 - `ready` - видео готово к воспроизведению
@@ -124,6 +133,7 @@ interface PlayerContext {
 - `error` - ошибка воспроизведения
 
 **Основные события**:
+
 - `LOAD` - загрузка видео
 - `PLAY` - воспроизведение
 - `PAUSE` - пауза
@@ -138,19 +148,21 @@ interface PlayerContext {
 **Назначение**: Управление настройками проекта и экспорта.
 
 **Контекст**:
+
 ```typescript
 interface ProjectContext {
-  name: string;
-  resolution: Resolution;
-  frameRate: number;
-  exportSettings: ExportSettings;
-  userSettings: UserSettings;
-  isDirty: boolean;
-  lastSaved: Date | null;
+  name: string
+  resolution: Resolution
+  frameRate: number
+  exportSettings: ExportSettings
+  userSettings: UserSettings
+  isDirty: boolean
+  lastSaved: Date | null
 }
 ```
 
 **Состояния**:
+
 - `idle` - начальное состояние
 - `editing` - редактирование настроек
 - `saving` - сохранение настроек
@@ -158,6 +170,7 @@ interface ProjectContext {
 - `error` - ошибка
 
 **Основные события**:
+
 - `UPDATE_SETTINGS` - обновление настроек
 - `SAVE` - сохранение настроек
 - `EXPORT` - экспорт проекта
@@ -168,23 +181,26 @@ interface ProjectContext {
 **Назначение**: Управление модальными окнами и навигацией.
 
 **Контекст**:
+
 ```typescript
 interface ModalContext {
-  isOpen: boolean;
-  content: ReactNode;
-  title: string;
-  size: 'sm' | 'md' | 'lg' | 'xl';
-  onClose: () => void;
+  isOpen: boolean
+  content: ReactNode
+  title: string
+  size: "sm" | "md" | "lg" | "xl"
+  onClose: () => void
 }
 ```
 
 **Состояния**:
+
 - `closed` - модальное окно закрыто
 - `opening` - открытие модального окна
 - `opened` - модальное окно открыто
 - `closing` - закрытие модального окна
 
 **Основные события**:
+
 - `OPEN` - открытие модального окна
 - `CLOSE` - закрытие модального окна
 - `CHANGE_CONTENT` - изменение содержимого
@@ -222,10 +238,12 @@ interface ModalContext {
 ### Примеры взаимодействия:
 
 1. **Добавление медиафайла на таймлайн**:
+
    - `mediaMachine` отправляет событие `ADD_TO_TIMELINE`
    - `timelineMachine` получает это событие и добавляет клип на активную дорожку
 
 2. **Воспроизведение с таймлайна**:
+
    - `timelineMachine` отправляет событие `PLAY`
    - `playerMachine` получает это событие и начинает воспроизведение
 

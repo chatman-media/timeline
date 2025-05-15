@@ -45,7 +45,7 @@ export function OptionsMediaEditor() {
           <ResizableHandle />
           <ResizablePanel defaultSize={50}>
             <div className="relative h-full flex-1">
-          <Timeline />
+              <Timeline />
             </div>
           </ResizablePanel>
         </ResizablePanelGroup>

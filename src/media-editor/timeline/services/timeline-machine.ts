@@ -4,6 +4,13 @@ import { VideoEffect } from "@/media-editor/browser/components/tabs/effects/effe
 import { VideoFilter } from "@/media-editor/browser/components/tabs/filters/filters"
 import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
 import { createTracksFromFiles, Sector } from "@/media-editor/browser/utils/media-files"
+import {
+  convertSectorsToEditSegments,
+  createTracksFromTemplate,
+  generateConcatCommand,
+  generateSegmentCommand,
+} from "@/media-editor/timeline/utils/edit-schema-utils"
+import { EditResource, EditSegment, EditTrack } from "@/types/edit-schema"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import {
@@ -52,6 +59,10 @@ export interface TimelineContext {
   templateResources: TimelineResource[] // Шаблоны
   musicResources: TimelineResource[] // Музыкальные файлы
 
+  // Схема монтажа
+  editSegments: EditSegment[] // Последовательность сегментов монтажа
+  activeEditSegmentId: string | null // Активный сегмент монтажа
+
   // Чат
   chatMessages: ChatMessage[] // Сообщения чата
   selectedAgentId: string | null // Выбранный агент
@@ -90,6 +101,32 @@ export type TimelineEvent =
   | { type: "ADD_MUSIC"; file: MediaFile }
   | { type: "REMOVE_RESOURCE"; resourceId: string }
   | { type: "UPDATE_RESOURCE"; resourceId: string; params: Record<string, any> }
+  // События для работы со схемой монтажа
+  | { type: "ADD_EDIT_SEGMENT"; segment: EditSegment }
+  | { type: "UPDATE_EDIT_SEGMENT"; segmentId: string; updates: Partial<EditSegment> }
+  | { type: "REMOVE_EDIT_SEGMENT"; segmentId: string }
+  | { type: "REORDER_EDIT_SEGMENTS"; segmentIds: string[] }
+  | { type: "SET_ACTIVE_EDIT_SEGMENT"; segmentId: string | null }
+  | { type: "ADD_EDIT_TRACK"; segmentId: string; track: EditTrack }
+  | { type: "UPDATE_EDIT_TRACK"; segmentId: string; trackId: string; updates: Partial<EditTrack> }
+  | { type: "REMOVE_EDIT_TRACK"; segmentId: string; trackId: string }
+  | { type: "ADD_EDIT_RESOURCE"; segmentId: string; trackId: string; resource: EditResource }
+  | {
+      type: "UPDATE_EDIT_RESOURCE"
+      segmentId: string
+      trackId: string
+      resourceId: string
+      updates: Partial<EditResource>
+    }
+  | { type: "REMOVE_EDIT_RESOURCE"; segmentId: string; trackId: string; resourceId: string }
+  | {
+      type: "APPLY_TEMPLATE_TO_SEGMENT"
+      segmentId: string
+      templateId: string
+      params?: Record<string, any>
+    }
+  | { type: "GENERATE_FFMPEG_COMMAND"; outputPath: string }
+  | { type: "CONVERT_SECTORS_TO_EDIT_SEGMENTS" }
 
 const initialContext: TimelineContext = {
   isDirty: false,
@@ -116,9 +153,13 @@ const initialContext: TimelineContext = {
   templateResources: [],
   musicResources: [],
 
+  // Схема монтажа
+  editSegments: [],
+  activeEditSegmentId: null,
+
   // Чат
   chatMessages: [],
-  selectedAgentId: null
+  selectedAgentId: null,
 }
 
 const addToHistory = ({
@@ -490,6 +531,375 @@ export const timelineMachine = createMachine({
         ),
       ],
     },
+    // Обработчики для схемы монтажа
+    CONVERT_SECTORS_TO_EDIT_SEGMENTS: {
+      actions: [
+        assign(({ context }) => {
+          const editSegments = convertSectorsToEditSegments(context.sectors)
+          return {
+            ...context,
+            editSegments,
+            isDirty: true,
+          }
+        }),
+      ],
+    },
+
+    ADD_EDIT_SEGMENT: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "ADD_EDIT_SEGMENT") return context
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: [...context.editSegments, event.segment],
+            },
+          })
+        }),
+      ],
+    },
+
+    UPDATE_EDIT_SEGMENT: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "UPDATE_EDIT_SEGMENT") return context
+
+          const updatedSegments = context.editSegments.map((segment) => {
+            if (segment.id === event.segmentId) {
+              return { ...segment, ...event.updates }
+            }
+            return segment
+          })
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: updatedSegments,
+            },
+          })
+        }),
+      ],
+    },
+
+    REMOVE_EDIT_SEGMENT: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "REMOVE_EDIT_SEGMENT") return context
+
+          const updatedSegments = context.editSegments.filter(
+            (segment) => segment.id !== event.segmentId,
+          )
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: updatedSegments,
+              activeEditSegmentId:
+                context.activeEditSegmentId === event.segmentId
+                  ? null
+                  : context.activeEditSegmentId,
+            },
+          })
+        }),
+      ],
+    },
+
+    REORDER_EDIT_SEGMENTS: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "REORDER_EDIT_SEGMENTS") return context
+
+          // Создаем новый массив сегментов в порядке, указанном в event.segmentIds
+          const segmentsMap = new Map(context.editSegments.map((segment) => [segment.id, segment]))
+
+          const reorderedSegments = event.segmentIds
+            .map((id) => segmentsMap.get(id))
+            .filter(Boolean) as EditSegment[]
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: reorderedSegments,
+            },
+          })
+        }),
+      ],
+    },
+
+    SET_ACTIVE_EDIT_SEGMENT: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "SET_ACTIVE_EDIT_SEGMENT") return context
+
+          return {
+            ...context,
+            activeEditSegmentId: event.segmentId,
+          }
+        }),
+      ],
+    },
+
+    ADD_EDIT_TRACK: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "ADD_EDIT_TRACK") return context
+
+          const updatedSegments = context.editSegments.map((segment) => {
+            if (segment.id === event.segmentId) {
+              return {
+                ...segment,
+                tracks: [...segment.tracks, event.track],
+              }
+            }
+            return segment
+          })
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: updatedSegments,
+            },
+          })
+        }),
+      ],
+    },
+
+    UPDATE_EDIT_TRACK: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "UPDATE_EDIT_TRACK") return context
+
+          const updatedSegments = context.editSegments.map((segment) => {
+            if (segment.id === event.segmentId) {
+              const updatedTracks = segment.tracks.map((track) => {
+                if (track.id === event.trackId) {
+                  return { ...track, ...event.updates }
+                }
+                return track
+              })
+
+              return {
+                ...segment,
+                tracks: updatedTracks,
+              }
+            }
+            return segment
+          })
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: updatedSegments,
+            },
+          })
+        }),
+      ],
+    },
+
+    REMOVE_EDIT_TRACK: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "REMOVE_EDIT_TRACK") return context
+
+          const updatedSegments = context.editSegments.map((segment) => {
+            if (segment.id === event.segmentId) {
+              return {
+                ...segment,
+                tracks: segment.tracks.filter((track) => track.id !== event.trackId),
+              }
+            }
+            return segment
+          })
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: updatedSegments,
+            },
+          })
+        }),
+      ],
+    },
+
+    ADD_EDIT_RESOURCE: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "ADD_EDIT_RESOURCE") return context
+
+          const updatedSegments = context.editSegments.map((segment) => {
+            if (segment.id === event.segmentId) {
+              const updatedTracks = segment.tracks.map((track) => {
+                if (track.id === event.trackId) {
+                  return {
+                    ...track,
+                    resources: [...track.resources, event.resource],
+                  }
+                }
+                return track
+              })
+
+              return {
+                ...segment,
+                tracks: updatedTracks,
+              }
+            }
+            return segment
+          })
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: updatedSegments,
+            },
+          })
+        }),
+      ],
+    },
+
+    UPDATE_EDIT_RESOURCE: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "UPDATE_EDIT_RESOURCE") return context
+
+          const updatedSegments = context.editSegments.map((segment) => {
+            if (segment.id === event.segmentId) {
+              const updatedTracks = segment.tracks.map((track) => {
+                if (track.id === event.trackId) {
+                  const updatedResources = track.resources.map((resource) => {
+                    if (resource.id === event.resourceId) {
+                      return { ...resource, ...event.updates }
+                    }
+                    return resource
+                  })
+
+                  return {
+                    ...track,
+                    resources: updatedResources,
+                  }
+                }
+                return track
+              })
+
+              return {
+                ...segment,
+                tracks: updatedTracks,
+              }
+            }
+            return segment
+          })
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: updatedSegments,
+            },
+          })
+        }),
+      ],
+    },
+
+    REMOVE_EDIT_RESOURCE: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "REMOVE_EDIT_RESOURCE") return context
+
+          const updatedSegments = context.editSegments.map((segment) => {
+            if (segment.id === event.segmentId) {
+              const updatedTracks = segment.tracks.map((track) => {
+                if (track.id === event.trackId) {
+                  return {
+                    ...track,
+                    resources: track.resources.filter(
+                      (resource) => resource.id !== event.resourceId,
+                    ),
+                  }
+                }
+                return track
+              })
+
+              return {
+                ...segment,
+                tracks: updatedTracks,
+              }
+            }
+            return segment
+          })
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: updatedSegments,
+            },
+          })
+        }),
+      ],
+    },
+
+    APPLY_TEMPLATE_TO_SEGMENT: {
+      actions: [
+        assign(({ context, event }) => {
+          if (event.type !== "APPLY_TEMPLATE_TO_SEGMENT") return context
+
+          const { segmentId, templateId, params } = event
+          const templateResource = context.templateResources.find(
+            (t) => t.resourceId === templateId,
+          ) as { template: MediaTemplate } | undefined
+
+          if (!templateResource?.template) return context
+
+          const template = templateResource.template
+
+          const updatedSegments = context.editSegments.map((segment) => {
+            if (segment.id === segmentId) {
+              // Создаем дорожки на основе шаблона
+              const tracksFromTemplate = createTracksFromTemplate(template, segment.tracks, params)
+
+              return {
+                ...segment,
+                template: templateId,
+                templateParams: params || {},
+                tracks: tracksFromTemplate,
+              }
+            }
+            return segment
+          })
+
+          return addToHistory({
+            context,
+            newState: {
+              editSegments: updatedSegments,
+            },
+          })
+        }),
+      ],
+    },
+
+    GENERATE_FFMPEG_COMMAND: {
+      actions: [
+        ({ context, event }) => {
+          if (event.type !== "GENERATE_FFMPEG_COMMAND") return
+
+          const { editSegments } = context
+          const { outputPath } = event
+
+          // Генерация временных файлов для каждого сегмента
+          const segmentCommands = editSegments.map((segment, index) => {
+            return generateSegmentCommand(segment, `temp_segment_${index}.mp4`)
+          })
+
+          // Команда для объединения всех сегментов
+          const concatCommand = generateConcatCommand(editSegments.length, outputPath)
+
+          // Полная команда FFmpeg
+          const fullCommand = [...segmentCommands, concatCommand].join(" && ")
+
+          console.log("FFmpeg command:", fullCommand)
+          // Здесь можно вызвать функцию для выполнения команды или сохранить её
+        },
+      ],
+    },
+
     // Обработчики для ресурсов
     ADD_EFFECT: {
       actions: [
@@ -732,13 +1142,13 @@ export const timelineMachine = createMachine({
             text: event.message,
             sender: "user",
             timestamp: new Date().toISOString(),
-            isProcessing: false
+            isProcessing: false,
           }
 
           return {
             ...context,
             chatMessages: [...context.chatMessages, newMessage],
-            isDirty: true
+            isDirty: true,
           }
         }),
       ],
@@ -752,7 +1162,7 @@ export const timelineMachine = createMachine({
           return {
             ...context,
             chatMessages: [...context.chatMessages, event.message],
-            isDirty: true
+            isDirty: true,
           }
         }),
       ],
@@ -766,7 +1176,7 @@ export const timelineMachine = createMachine({
           return {
             ...context,
             selectedAgentId: event.agentId,
-            isDirty: true
+            isDirty: true,
           }
         }),
       ],

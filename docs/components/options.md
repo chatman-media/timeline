@@ -7,6 +7,7 @@
 ## Состояние
 
 Настройки управляются через машину состояний `projectMachine`, которая контролирует:
+
 - Настройки проекта
 - Параметры экспорта
 - Пользовательские предпочтения
@@ -147,25 +148,25 @@
 
 ```typescript
 // В компоненте настроек
-const { setResolution } = useProject();
+const { setResolution } = useProject()
 
 const handleResolutionChange = (resolution: Resolution) => {
-  setResolution(resolution);
-};
+  setResolution(resolution)
+}
 ```
 
 ### Сохранение пользовательских настроек
 
 ```typescript
 // В компоненте настроек
-const { setUserSettings, userSettings } = useProject();
+const { setUserSettings, userSettings } = useProject()
 
-const handleThemeChange = (theme: 'light' | 'dark' | 'system') => {
+const handleThemeChange = (theme: "light" | "dark" | "system") => {
   setUserSettings({
     ...userSettings,
     theme,
-  });
-};
+  })
+}
 ```
 
 ## Планы по развитию

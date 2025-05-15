@@ -6,10 +6,11 @@ import { VideoEffect } from "@/media-editor/browser/components/tabs/effects/effe
 import { VideoFilter } from "@/media-editor/browser/components/tabs/filters/filters"
 import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
 import {
+  ChatMessage,
   type TimelineContext,
   timelineMachine,
-  ChatMessage
 } from "@/media-editor/timeline/services/timeline-machine"
+import { EditResource,EditSegment, EditTrack } from "@/types/edit-schema"
 import { Track } from "@/types/media"
 import { MediaFile } from "@/types/media"
 import { TimelineResource } from "@/types/resources"
@@ -40,6 +41,10 @@ interface TimelineContextType {
   transitionResources: TimelineResource[] // Переходы
   templateResources: TimelineResource[] // Шаблоны
   musicResources: TimelineResource[] // Музыкальные файлы
+
+  // Схема монтажа
+  editSegments: EditSegment[] // Последовательность сегментов монтажа
+  activeEditSegmentId: string | null // Активный сегмент монтажа
 
   // Чат
   chatMessages: ChatMessage[] // Сообщения чата
@@ -74,6 +79,31 @@ interface TimelineContextType {
   addMusic: (file: MediaFile) => void
   removeResource: (resourceId: string) => void
   updateResource: (resourceId: string, params: Record<string, any>) => void
+
+  // Методы для работы со схемой монтажа
+  convertSectorsToEditSegments: () => void
+  addEditSegment: (segment: EditSegment) => void
+  updateEditSegment: (segmentId: string, updates: Partial<EditSegment>) => void
+  removeEditSegment: (segmentId: string) => void
+  reorderEditSegments: (segmentIds: string[]) => void
+  setActiveEditSegment: (segmentId: string | null) => void
+  addEditTrack: (segmentId: string, track: EditTrack) => void
+  updateEditTrack: (segmentId: string, trackId: string, updates: Partial<EditTrack>) => void
+  removeEditTrack: (segmentId: string, trackId: string) => void
+  addEditResource: (segmentId: string, trackId: string, resource: EditResource) => void
+  updateEditResource: (
+    segmentId: string,
+    trackId: string,
+    resourceId: string,
+    updates: Partial<EditResource>,
+  ) => void
+  removeEditResource: (segmentId: string, trackId: string, resourceId: string) => void
+  applyTemplateToSegment: (
+    segmentId: string,
+    templateId: string,
+    params?: Record<string, any>,
+  ) => void
+  generateFFmpegCommand: (outputPath: string) => void
 
   // Методы для проверки наличия ресурса в хранилище
   isEffectAdded: (effect: VideoEffect) => boolean
@@ -288,6 +318,102 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [send],
   )
 
+  // Методы для работы со схемой монтажа
+  const handleConvertSectorsToEditSegments = React.useCallback(() => {
+    send({ type: "CONVERT_SECTORS_TO_EDIT_SEGMENTS" })
+  }, [send])
+
+  const handleAddEditSegment = React.useCallback(
+    (segment: EditSegment) => {
+      send({ type: "ADD_EDIT_SEGMENT", segment })
+    },
+    [send],
+  )
+
+  const handleUpdateEditSegment = React.useCallback(
+    (segmentId: string, updates: Partial<EditSegment>) => {
+      send({ type: "UPDATE_EDIT_SEGMENT", segmentId, updates })
+    },
+    [send],
+  )
+
+  const handleRemoveEditSegment = React.useCallback(
+    (segmentId: string) => {
+      send({ type: "REMOVE_EDIT_SEGMENT", segmentId })
+    },
+    [send],
+  )
+
+  const handleReorderEditSegments = React.useCallback(
+    (segmentIds: string[]) => {
+      send({ type: "REORDER_EDIT_SEGMENTS", segmentIds })
+    },
+    [send],
+  )
+
+  const handleSetActiveEditSegment = React.useCallback(
+    (segmentId: string | null) => {
+      send({ type: "SET_ACTIVE_EDIT_SEGMENT", segmentId })
+    },
+    [send],
+  )
+
+  const handleAddEditTrack = React.useCallback(
+    (segmentId: string, track: EditTrack) => {
+      send({ type: "ADD_EDIT_TRACK", segmentId, track })
+    },
+    [send],
+  )
+
+  const handleUpdateEditTrack = React.useCallback(
+    (segmentId: string, trackId: string, updates: Partial<EditTrack>) => {
+      send({ type: "UPDATE_EDIT_TRACK", segmentId, trackId, updates })
+    },
+    [send],
+  )
+
+  const handleRemoveEditTrack = React.useCallback(
+    (segmentId: string, trackId: string) => {
+      send({ type: "REMOVE_EDIT_TRACK", segmentId, trackId })
+    },
+    [send],
+  )
+
+  const handleAddEditResource = React.useCallback(
+    (segmentId: string, trackId: string, resource: EditResource) => {
+      send({ type: "ADD_EDIT_RESOURCE", segmentId, trackId, resource })
+    },
+    [send],
+  )
+
+  const handleUpdateEditResource = React.useCallback(
+    (segmentId: string, trackId: string, resourceId: string, updates: Partial<EditResource>) => {
+      send({ type: "UPDATE_EDIT_RESOURCE", segmentId, trackId, resourceId, updates })
+    },
+    [send],
+  )
+
+  const handleRemoveEditResource = React.useCallback(
+    (segmentId: string, trackId: string, resourceId: string) => {
+      send({ type: "REMOVE_EDIT_RESOURCE", segmentId, trackId, resourceId })
+    },
+    [send],
+  )
+
+  const handleApplyTemplateToSegment = React.useCallback(
+    (segmentId: string, templateId: string, params?: Record<string, any>) => {
+      send({ type: "APPLY_TEMPLATE_TO_SEGMENT", segmentId, templateId, params })
+    },
+    [send],
+  )
+
+  const handleGenerateFFmpegCommand = React.useCallback(
+    (outputPath: string) => {
+      send({ type: "GENERATE_FFMPEG_COMMAND", outputPath })
+    },
+    [send],
+  )
+
   // Методы для проверки наличия ресурса в хранилище
   // Создаем кэш для результатов проверки эффектов
   const effectAddedCache = React.useRef<Record<string, boolean>>({})
@@ -469,6 +595,22 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     sendChatMessage: handleSendChatMessage,
     receiveChatMessage: handleReceiveChatMessage,
     selectAgent: handleSelectAgent,
+
+    // Методы для работы со схемой монтажа
+    convertSectorsToEditSegments: handleConvertSectorsToEditSegments,
+    addEditSegment: handleAddEditSegment,
+    updateEditSegment: handleUpdateEditSegment,
+    removeEditSegment: handleRemoveEditSegment,
+    reorderEditSegments: handleReorderEditSegments,
+    setActiveEditSegment: handleSetActiveEditSegment,
+    addEditTrack: handleAddEditTrack,
+    updateEditTrack: handleUpdateEditTrack,
+    removeEditTrack: handleRemoveEditTrack,
+    addEditResource: handleAddEditResource,
+    updateEditResource: handleUpdateEditResource,
+    removeEditResource: handleRemoveEditResource,
+    applyTemplateToSegment: handleApplyTemplateToSegment,
+    generateFFmpegCommand: handleGenerateFFmpegCommand,
 
     // Методы для проверки наличия ресурса в хранилище
     isEffectAdded,

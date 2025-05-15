@@ -995,7 +995,8 @@
     "zoomOut": "Уменьшить",
     "scale": "Масштаб",
     "player": {
-      "videoUnavailable": "Видео недоступно"
+      "videoUnavailable": "Видео недоступно",
+      "noVideoSelected": "Видео не выбрано"
     },
     "section": {
       "delete": "Удалить секцию",
@@ -1011,6 +1012,16 @@
       "send": "Отправить",
       "stop": "Остановить",
       "processing": "Обработка..."
+    },
+    "resources": {
+      "title": "Ресурсы",
+      "all": "Все",
+      "effects": "Эффекты",
+      "filters": "Фильтры",
+      "transitions": "Переходы",
+      "templates": "Шаблоны",
+      "music": "Музыка",
+      "noResources": "Нет добавленных ресурсов"
     }
   }
 }

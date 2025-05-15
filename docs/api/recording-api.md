@@ -10,10 +10,10 @@
 
 #### Пропсы
 
-| Имя | Тип | Описание |
-|-----|-----|----------|
-| `isOpen` | `boolean` | Флаг, указывающий, открыт ли диалог |
-| `onClose` | `() => void` | Функция, вызываемая при закрытии диалога |
+| Имя               | Тип                                      | Описание                                                         |
+| ----------------- | ---------------------------------------- | ---------------------------------------------------------------- |
+| `isOpen`          | `boolean`                                | Флаг, указывающий, открыт ли диалог                              |
+| `onClose`         | `() => void`                             | Функция, вызываемая при закрытии диалога                         |
 | `onVideoRecorded` | `(blob: Blob, fileName: string) => void` | Функция обратного вызова, вызываемая при завершении записи видео |
 
 #### Пример использования
@@ -23,12 +23,12 @@ import { CameraCaptureDialog } from "@/media-editor/dialogs"
 
 function MyComponent() {
   const [isOpen, setIsOpen] = useState(false)
-  
+
   const handleVideoRecorded = (blob: Blob, fileName: string) => {
     console.log(`Получена запись видео: ${fileName}, размер: ${blob.size} байт`)
     // Обработка записанного видео
   }
-  
+
   return (
     <CameraCaptureDialog
       isOpen={isOpen}
@@ -49,10 +49,10 @@ function MyComponent() {
 
 Запрос должен быть отправлен как `multipart/form-data` с следующими полями:
 
-| Имя | Тип | Описание |
-|-----|-----|----------|
-| `file` | `File` | Файл видео в формате webm |
-| `fileName` | `string` | Имя файла для сохранения |
+| Имя        | Тип      | Описание                  |
+| ---------- | -------- | ------------------------- |
+| `file`     | `File`   | Файл видео в формате webm |
+| `fileName` | `string` | Имя файла для сохранения  |
 
 #### Ответ
 
@@ -72,23 +72,23 @@ function MyComponent() {
 ```javascript
 async function saveRecording(blob, fileName) {
   const formData = new FormData()
-  formData.append('file', blob, fileName)
-  formData.append('fileName', fileName)
-  
+  formData.append("file", blob, fileName)
+  formData.append("fileName", fileName)
+
   try {
-    const response = await fetch('/api/save-recording', {
-      method: 'POST',
+    const response = await fetch("/api/save-recording", {
+      method: "POST",
       body: formData,
     })
-    
+
     if (!response.ok) {
-      throw new Error('Failed to save recording')
+      throw new Error("Failed to save recording")
     }
-    
+
     const data = await response.json()
     return data
   } catch (error) {
-    console.error('Error saving recording:', error)
+    console.error("Error saving recording:", error)
     throw error
   }
 }
@@ -102,9 +102,9 @@ async function saveRecording(blob, fileName) {
 
 #### Пропсы
 
-| Имя | Тип | Описание |
-|-----|-----|----------|
-| `isOpen` | `boolean` | Флаг, указывающий, открыт ли диалог |
+| Имя       | Тип          | Описание                                 |
+| --------- | ------------ | ---------------------------------------- |
+| `isOpen`  | `boolean`    | Флаг, указывающий, открыт ли диалог      |
 | `onClose` | `() => void` | Функция, вызываемая при закрытии диалога |
 
 #### Пример использования
@@ -114,13 +114,8 @@ import { VoiceRecordDialog } from "@/media-editor/dialogs"
 
 function MyComponent() {
   const [isOpen, setIsOpen] = useState(false)
-  
-  return (
-    <VoiceRecordDialog
-      isOpen={isOpen}
-      onClose={() => setIsOpen(false)}
-    />
-  )
+
+  return <VoiceRecordDialog isOpen={isOpen} onClose={() => setIsOpen(false)} />
 }
 ```
 
@@ -134,10 +129,10 @@ function MyComponent() {
 
 Запрос должен быть отправлен как `multipart/form-data` с следующими полями:
 
-| Имя | Тип | Описание |
-|-----|-----|----------|
-| `file` | `File` | Файл аудио в формате webm |
-| `fileName` | `string` | Имя файла для сохранения |
+| Имя        | Тип      | Описание                  |
+| ---------- | -------- | ------------------------- |
+| `file`     | `File`   | Файл аудио в формате webm |
+| `fileName` | `string` | Имя файла для сохранения  |
 
 #### Ответ
 
