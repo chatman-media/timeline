@@ -520,12 +520,48 @@ export const timelineMachine = createMachine({
             return { activeSector: null }
           }
 
-          // Находим сектор по ID или по имени, содержащему дату
+          // Проверяем, является ли sectorId датой в формате YYYY-MM-DD
+          const isDateFormat = /^\d{4}-\d{2}-\d{2}$/.test(event.sectorId as string)
+
+          // Находим сектор по ID
           let sector = context.sectors.find((s) => s.id === event.sectorId)
 
-          // Если сектор не найден по ID, пробуем найти по имени, содержащему дату
-          if (!sector && event.sectorId !== null) {
-            sector = context.sectors.find((s) => s.name.includes(event.sectorId as string))
+          // Если сектор не найден по ID и это дата, пробуем найти по другим критериям
+          if (!sector && isDateFormat) {
+            const dateStr = event.sectorId as string
+
+            // Пробуем найти по ID, который совпадает с датой
+            sector = context.sectors.find((s) => s.id === dateStr)
+
+            // Если не нашли, пробуем найти по имени, содержащему дату
+            if (!sector) {
+              sector = context.sectors.find((s) => s.name.includes(dateStr))
+            }
+
+            // Если не нашли, пробуем найти по имени, содержащему "Сектор" + дата
+            if (!sector) {
+              sector = context.sectors.find((s) => s.name.includes(`Сектор ${dateStr}`))
+            }
+
+            // Если не нашли, пробуем найти по имени, содержащему дату в другом формате
+            if (!sector) {
+              // Преобразуем YYYY-MM-DD в объект Date
+              const dateParts = dateStr.split('-')
+              const year = parseInt(dateParts[0])
+              const month = parseInt(dateParts[1]) - 1 // Месяцы в JS начинаются с 0
+              const day = parseInt(dateParts[2])
+              const date = new Date(year, month, day)
+
+              // Проверяем секторы, содержащие эту дату в разных форматах
+              sector = context.sectors.find((s) => {
+                // Проверяем разные форматы даты в имени сектора
+                return (
+                  s.name.includes(date.toLocaleDateString('ru-RU')) || // DD.MM.YYYY
+                  s.name.includes(date.toLocaleDateString('en-US')) || // MM/DD/YYYY
+                  s.name.includes(date.toLocaleDateString('en-GB'))    // DD/MM/YYYY
+                )
+              })
+            }
           }
 
           // Если сектор не найден ни по ID, ни по имени, создаем временный сектор
@@ -534,18 +570,33 @@ export const timelineMachine = createMachine({
 
             // Создаем временный сектор с минимальными данными
             sector = {
-              id: event.sectorId,
+              id: event.sectorId as string,
               name: `Сектор ${event.sectorId}`,
               tracks: [],
               timeRanges: [],
               startTime: 0,
               endTime: 0,
             }
+
+            // Если это дата, добавляем сектор в список секторов
+            if (isDateFormat) {
+              context.sectors.push(sector)
+              console.log(`[TimelineMachine] Добавлен новый сектор с ID ${event.sectorId}`)
+            }
           }
 
           // Устанавливаем активный сектор
           console.log(`[TimelineMachine] Устанавливаем активный сектор: ${sector.id}`, sector)
-          return { activeSector: sector }
+
+          // Сохраняем состояние в IndexedDB
+          const updatedContext = {
+            ...context,
+            activeSector: sector,
+            isDirty: true
+          }
+          timelineIndexedDBService.saveTimelineState(updatedContext)
+
+          return { activeSector: sector, isDirty: true }
         }),
         // Отдельное действие для установки времени из сохраненного времени сектора
         ({ context, event, self }) => {

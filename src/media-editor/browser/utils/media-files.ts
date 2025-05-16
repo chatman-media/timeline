@@ -378,7 +378,8 @@ export const createTracksFromFiles = (
 
     // Создаем или используем существующий сектор для всех файлов дня
     const sector: Sector = existingSector || {
-      id: nanoid(),
+      // Используем дату в формате YYYY-MM-DD как ID сектора для лучшей совместимости
+      id: date,
       name: i18n.t("timeline.section.sectorName", {
         date: formattedDate,
         defaultValue: `Section ${formattedDate}`,
@@ -814,7 +815,8 @@ export const createTracksFromFiles = (
 
     // Создаем или используем существующий сектор для всех файлов дня
     const sector: Sector = existingSector || {
-      id: nanoid(),
+      // Используем дату в формате YYYY-MM-DD как ID сектора для лучшей совместимости
+      id: date,
       name: i18n.t("timeline.section.sectorName", {
         date: formattedDate,
         defaultValue: `Section ${formattedDate}`,
