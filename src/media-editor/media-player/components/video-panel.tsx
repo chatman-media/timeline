@@ -24,11 +24,14 @@ function arePropsEqual(prevProps: VideoPanelProps, nextProps: VideoPanelProps) {
   const videoRefsChanged = prevProps.videoRefs !== nextProps.videoRefs
 
   // Объединяем все проверки
-  const videoChanged = videoIdChanged || videoPathChanged || videoSourceChanged || videoStartTimeChanged
+  const videoChanged =
+    videoIdChanged || videoPathChanged || videoSourceChanged || videoStartTimeChanged
 
   // Для отладки
   if (videoChanged) {
-    console.log(`[VideoPanel] Пропсы изменились: id=${videoIdChanged}, path=${videoPathChanged}, source=${videoSourceChanged}, startTime=${videoStartTimeChanged}`)
+    console.log(
+      `[VideoPanel] Пропсы изменились: id=${videoIdChanged}, path=${videoPathChanged}, source=${videoSourceChanged}, startTime=${videoStartTimeChanged}`,
+    )
   }
 
   // Возвращаем true, если пропсы не изменились (предотвращаем перерисовку)
@@ -261,7 +264,7 @@ function VideoPanelComponent({
   }, [preferredSource, video.id, video.path, video.startTime])
 
   // Ref для отслеживания предыдущего видео
-  const prevVideoRef = useRef<string | null>(null);
+  const prevVideoRef = useRef<string | null>(null)
 
   // Эффект для принудительного обновления видео при изменении самого видео
   useEffect(() => {
@@ -274,12 +277,12 @@ function VideoPanelComponent({
       // Если ID не изменился, проверяем, изменился ли путь
       if (videoRef.current.src && videoRef.current.src.includes(video.id)) {
         // Если путь тот же, пропускаем обновление
-        return;
+        return
       }
     }
 
     // Обновляем ref с текущим ID видео
-    prevVideoRef.current = video.id;
+    prevVideoRef.current = video.id
 
     console.log(
       `[VideoPanel] Обнаружено изменение видео: ${video.id}, source=${video.source || "не определен"}, startTime=${video.startTime}`,
@@ -375,15 +378,15 @@ function VideoPanelComponent({
   }
 
   // Используем ref для хранения стабильного ключа
-  const videoKeyRef = useRef<string>(`${video.id}-${preferredSource}-${video.source || "unknown"}`);
+  const videoKeyRef = useRef<string>(`${video.id}-${preferredSource}-${video.source || "unknown"}`)
 
   // Обновляем ключ только при изменении важных параметров
   useEffect(() => {
-    videoKeyRef.current = `${video.id}-${preferredSource}-${video.source || "unknown"}`;
-  }, [video.id, preferredSource, video.source]);
+    videoKeyRef.current = `${video.id}-${preferredSource}-${video.source || "unknown"}`
+  }, [video.id, preferredSource, video.source])
 
   // Используем стабильный ключ из ref
-  const videoKey = videoKeyRef.current;
+  const videoKey = videoKeyRef.current
 
   console.log(`[VideoPanel] Рендеринг видео с ключом: ${videoKey}`)
 

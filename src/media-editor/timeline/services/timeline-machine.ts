@@ -456,16 +456,31 @@ export const timelineMachine = createMachine({
             return { activeSector: null }
           }
 
-          // Находим сектор по ID
-          const sector = context.sectors.find((s) => s.id === event.sectorId)
+          // Находим сектор по ID или по имени, содержащему дату
+          let sector = context.sectors.find((s) => s.id === event.sectorId)
 
-          // Если сектор не найден, возвращаем текущий контекст
+          // Если сектор не найден по ID, пробуем найти по имени, содержащему дату
+          if (!sector && event.sectorId !== null) {
+            sector = context.sectors.find((s) => s.name.includes(event.sectorId as string))
+          }
+
+          // Если сектор не найден ни по ID, ни по имени, создаем временный сектор
           if (!sector) {
-            console.warn(`Сектор с ID ${event.sectorId} не найден`)
-            return context
+            console.warn(`Сектор с ID ${event.sectorId} не найден, создаем временный сектор`)
+
+            // Создаем временный сектор с минимальными данными
+            sector = {
+              id: event.sectorId,
+              name: `Сектор ${event.sectorId}`,
+              tracks: [],
+              timeRanges: [],
+              startTime: 0,
+              endTime: 0,
+            }
           }
 
           // Устанавливаем активный сектор
+          console.log(`[TimelineMachine] Устанавливаем активный сектор: ${sector.id}`, sector)
           return { activeSector: sector }
         }),
         // Отдельное действие для установки времени из сохраненного времени сектора
@@ -525,9 +540,10 @@ export const timelineMachine = createMachine({
               [sectorId]: event.time,
             }
 
-            console.log(
-              `[TimelineMachine] Сохраняем время ${event.time.toFixed(2)} для сектора ${sectorId}`,
-            )
+            // Отключаем логирование для уменьшения количества сообщений в консоли
+            // console.log(
+            //   `[TimelineMachine] Сохраняем время ${event.time.toFixed(2)} для сектора ${sectorId}`,
+            // )
           }
 
           return newContext
@@ -1403,17 +1419,28 @@ export const timelineMachine = createMachine({
           if (context.activeSector) {
             const sectorId = context.activeSector.id
 
-            // Сохраняем время для активного сектора
-            const newSectorTimes = {
-              ...context.sectorTimes,
-              [sectorId]: event.displayTime,
+            // Проверяем, изменилось ли время для сектора
+            const currentTime = context.sectorTimes[sectorId]
+            const hasTimeChanged =
+              currentTime === undefined || Math.abs(currentTime - event.displayTime) > 0.1
+
+            // Сохраняем время только если оно изменилось
+            if (hasTimeChanged) {
+              // Сохраняем время для активного сектора
+              const newSectorTimes = {
+                ...context.sectorTimes,
+                [sectorId]: event.displayTime,
+              }
+
+              // Логируем только при значительном изменении времени
+              if (process.env.NODE_ENV === "development") {
+                console.log(
+                  `[TimelineMachine] Сохранено время ${event.displayTime.toFixed(2)} для сектора ${sectorId} при переключении видео ${event.videoId}`,
+                )
+              }
+
+              return { sectorTimes: newSectorTimes }
             }
-
-            console.log(
-              `[TimelineMachine] Сохранено время ${event.displayTime.toFixed(2)} для сектора ${sectorId} при переключении видео ${event.videoId}`,
-            )
-
-            return { sectorTimes: newSectorTimes }
           }
 
           return context
@@ -1427,17 +1454,30 @@ export const timelineMachine = createMachine({
         assign(({ context, event }) => {
           if (event.type !== "SET_SECTOR_TIME") return context
 
-          // Сохраняем время для указанного сектора
-          const newSectorTimes = {
-            ...context.sectorTimes,
-            [event.sectorId]: event.time,
+          // Проверяем, изменилось ли время для сектора
+          const currentTime = context.sectorTimes[event.sectorId]
+          const hasTimeChanged =
+            currentTime === undefined || Math.abs(currentTime - event.time) > 0.1
+
+          // Сохраняем время только если оно изменилось
+          if (hasTimeChanged) {
+            // Сохраняем время для указанного сектора
+            const newSectorTimes = {
+              ...context.sectorTimes,
+              [event.sectorId]: event.time,
+            }
+
+            // Логируем только при значительном изменении времени
+            if (process.env.NODE_ENV === "development") {
+              console.log(
+                `[TimelineMachine] Установлено время ${event.time.toFixed(2)} для сектора ${event.sectorId}`,
+              )
+            }
+
+            return { sectorTimes: newSectorTimes }
           }
 
-          console.log(
-            `[TimelineMachine] Установлено время ${event.time.toFixed(2)} для сектора ${event.sectorId}`,
-          )
-
-          return { sectorTimes: newSectorTimes }
+          return context
         }),
       ],
     },

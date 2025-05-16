@@ -3,8 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useTranslation } from "react-i18next"
 
 import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { AiMessage } from "@/media-editor/ai/services/ai-service"
+import { Tooltip, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 // Список доступных моделей ИИ
 import { AI_MODELS } from "@/media-editor/ai/services/ai-service"
 import { ClaudeEditSchemaService } from "@/media-editor/ai/services/claude-edit-schema-service"
@@ -348,34 +347,34 @@ export function TimelineChat() {
                 <div className="absolute top-1/2 right-2 -translate-y-1/2">
                   {isProcessing ? (
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          onClick={handleStopProcessing}
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 rounded-full p-0 text-gray-400 hover:bg-[#444] hover:text-white"
-                        >
-                          <StopCircle className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
+                      <Button
+                        onClick={handleStopProcessing}
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 rounded-full p-0 text-gray-400 hover:bg-[#444] hover:text-white"
+                        data-tooltip-trigger=""
+                        aria-describedby="stop-tooltip"
+                      >
+                        <StopCircle className="h-4 w-4" />
+                      </Button>
+                      <TooltipContent id="stop-tooltip" side="top">
                         <p className="text-xs">{t("timeline.chat.stop", "Остановить")}</p>
                       </TooltipContent>
                     </Tooltip>
                   ) : (
                     <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          onClick={handleSendMessage}
-                          disabled={!message.trim()}
-                          size="icon"
-                          variant="ghost"
-                          className="h-6 w-6 rounded-full p-0 text-gray-400 hover:bg-[#444] hover:text-white"
-                        >
-                          <Send className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={!message.trim()}
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 rounded-full p-0 text-gray-400 hover:bg-[#444] hover:text-white"
+                        data-tooltip-trigger=""
+                        aria-describedby="send-tooltip"
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                      <TooltipContent id="send-tooltip" side="top">
                         <p className="text-xs">{t("timeline.chat.send", "Отправить")}</p>
                       </TooltipContent>
                     </Tooltip>

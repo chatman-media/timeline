@@ -78,12 +78,7 @@ export function useSectionTime({
     // Это обеспечит плавное движение бара при воспроизведении
     if (displayTime !== undefined && displayTime > 0) {
       const newPosition = (displayTime / duration) * 100
-      // Логируем только при существенных изменениях
-      if (Math.abs(newPosition - positionRef.current) > 1) {
-        console.log(
-          `[calculatePosition] displayTime=${displayTime.toFixed(2)}, duration=${duration.toFixed(2)}, newPosition=${newPosition.toFixed(2)}%, currentPosition=${positionRef.current.toFixed(2)}%`,
-        )
-      }
+      // Отключаем логирование для уменьшения количества сообщений в консоли
 
       // Всегда обновляем позицию при изменении displayTime
       positionRef.current = newPosition
@@ -315,13 +310,8 @@ export function useSectionTime({
 
     // Используем requestAnimationFrame только при воспроизведении
     if (isPlaying) {
-      // Логируем только при первом запуске анимации
-      if (!window.animationStarted) {
-        console.log(
-          `[TimelineBar] Запускаем анимацию для обновления позиции (isPlaying=${isPlaying})`,
-        )
-        window.animationStarted = true
-      }
+      // Просто запускаем анимацию без лишнего логирования
+      // Это уменьшит количество сообщений в консоли
 
       // Используем requestAnimationFrame для более плавного обновления, но с ограничением частоты
       let animationFrameId: number
@@ -401,19 +391,21 @@ export function useSectionTime({
             `[useSectionTime] Обновляем позицию для сектора ${sectorId} со временем ${time.toFixed(2)}`,
           )
 
-          // Сохраняем время для сектора в контексте таймлайна и глобальной переменной
-          if (timelineContext && timelineContext.sectorTimes) {
+          // Проверяем, изменилось ли время для сектора
+          const hasTimeChanged =
+            !timelineContext?.sectorTimes?.[sectorId] ||
+            Math.abs(timelineContext.sectorTimes[sectorId] - time) > 0.01
+
+          // Сохраняем время для сектора в контексте таймлайна только если оно изменилось
+          if (timelineContext && timelineContext.sectorTimes && hasTimeChanged) {
             timelineContext.sectorTimes[sectorId] = time
             console.log(
               `[useSectionTime] Сохранено время ${time.toFixed(2)} для сектора ${sectorId} в контексте таймлайна`,
             )
-          }
 
-          // Для обратной совместимости сохраняем также в глобальной переменной
-          sectorTimes[sectorId] = time
-          console.log(
-            `[useSectionTime] Сохранено время ${time.toFixed(2)} для сектора ${sectorId} в глобальной переменной`,
-          )
+            // Для обратной совместимости сохраняем также в глобальной переменной
+            sectorTimes[sectorId] = time
+          }
 
           // Если это наш сектор, обновляем локальное displayTime через контекст
           if (sectorDate === sectorId && displayTimeContext && displayTimeContext.setDisplayTime) {
@@ -469,19 +461,21 @@ export function useSectionTime({
 
         // Если есть дата сектора, сохраняем время для этого сектора
         if (sectorDate && timelineContext) {
-          // Сохраняем время для сектора в контексте таймлайна
-          if (timelineContext.sectorTimes) {
+          // Проверяем, изменилось ли время для сектора
+          const hasTimeChanged =
+            !timelineContext.sectorTimes?.[sectorDate] ||
+            Math.abs(timelineContext.sectorTimes[sectorDate] - displayTime) > 0.01
+
+          // Сохраняем время для сектора в контексте таймлайна только если оно изменилось
+          if (timelineContext.sectorTimes && hasTimeChanged) {
             timelineContext.sectorTimes[sectorDate] = displayTime
             console.log(
               `[useSectionTime] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate} в контексте таймлайна`,
             )
-          }
 
-          // Для обратной совместимости сохраняем также в глобальной переменной
-          sectorTimes[sectorDate] = displayTime
-          console.log(
-            `[useSectionTime] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate} в глобальной переменной`,
-          )
+            // Для обратной совместимости сохраняем также в глобальной переменной
+            sectorTimes[sectorDate] = displayTime
+          }
 
           // Принудительно вызываем calculatePosition для обновления позиции
           setTimeout(() => {

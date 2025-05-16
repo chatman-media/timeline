@@ -6,10 +6,10 @@ import { MediaFile } from "@/types/media"
 
 type MediaContextType = {
   allMediaFiles: MediaFile[]
-  includedFiles: MediaFile[]
+  includedFiles: MediaFile[] // Вычисляемое поле на основе allMediaFiles с isIncluded=true
   error: string | null
   isLoading: boolean
-  unavailableFiles: MediaFile[]
+  unavailableFiles: MediaFile[] // Вычисляемое поле на основе allMediaFiles с isUnavailable=true
   favorites: FavoritesType
 
   includeFiles: (files: MediaFile[]) => void
@@ -31,16 +31,20 @@ export const MediaContext = createContext<MediaContextType | null>(null)
 export function MediaProvider({ children }: { children: React.ReactNode }) {
   const [mediaState, mediaSend] = useMachine(mediaMachine)
 
+  // Вычисляем includedFiles и unavailableFiles на основе allMediaFiles
+  const includedFiles = mediaState.context.allMediaFiles.filter((file) => file.isIncluded)
+  const unavailableFiles = mediaState.context.allMediaFiles.filter((file) => file.isUnavailable)
+
   // Добавляем логирование при изменении состояния
   useEffect(() => {
     console.log("Media state changed:", {
       allMediaFiles: mediaState.context.allMediaFiles,
-      includedFiles: mediaState.context.includedFiles,
+      includedFiles,
       isLoading: mediaState.context.isLoading,
       error: mediaState.context.error,
       favorites: mediaState.context.favorites,
     })
-  }, [mediaState.context])
+  }, [mediaState.context, includedFiles])
 
   // Загружаем файлы при монтировании
   useEffect(() => {
@@ -48,7 +52,7 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     mediaSend({ type: "FETCH_MEDIA" })
   }, [mediaSend])
 
-  const includedFilePaths = mediaState.context.includedFiles.map((file: MediaFile) => file.path)
+  const includedFilePaths = includedFiles.map((file: MediaFile) => file.path)
 
   const includeFiles = (files: MediaFile[]) => {
     console.log("Including files:", files)
@@ -70,10 +74,16 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     mediaSend({ type: "RELOAD" })
   }
 
-  const isFileAdded = (file: MediaFile) => includedFilePaths.includes(file.path)
+  const isFileAdded = (file: MediaFile) => {
+    // Сначала проверяем флаг isIncluded
+    if (file.isIncluded !== undefined) {
+      return file.isIncluded
+    }
+    // Если флаг не установлен, проверяем по пути
+    return includedFilePaths.includes(file.path)
+  }
 
-  const areAllFilesAdded = (files: MediaFile[]) =>
-    files.every((file) => includedFilePaths.includes(file.path))
+  const areAllFilesAdded = (files: MediaFile[]) => files.every((file) => isFileAdded(file))
 
   // Методы для работы с избранным
   const addToFavorites = (item: any, itemType: string) => {
@@ -97,10 +107,10 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
 
   const value = {
     allMediaFiles: mediaState.context.allMediaFiles,
-    includedFiles: mediaState.context.includedFiles,
+    includedFiles, // Используем вычисляемое поле
     error: mediaState.context.error,
     isLoading: mediaState.context.isLoading,
-    unavailableFiles: mediaState.context.unavailableFiles,
+    unavailableFiles, // Используем вычисляемое поле
     favorites: mediaState.context.favorites,
     includeFiles,
     removeFile,

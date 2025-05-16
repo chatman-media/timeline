@@ -14,10 +14,8 @@ export type FavoritesType = {
 
 export type MediaContextType = {
   allMediaFiles: MediaFile[]
-  includedFiles: MediaFile[]
   error: string | null
   isLoading: boolean
-  unavailableFiles: MediaFile[]
   favorites: FavoritesType
 }
 
@@ -69,10 +67,8 @@ export const mediaMachine = createMachine({
   initial: "idle",
   context: {
     allMediaFiles: [],
-    includedFiles: [],
     error: null,
     isLoading: false,
-    unavailableFiles: [],
     favorites: {
       media: [],
       audio: [],
@@ -112,18 +108,36 @@ export const mediaMachine = createMachine({
       on: {
         INCLUDE_FILES: {
           actions: assign({
-            includedFiles: ({ context, event }) => [...context.includedFiles, ...event.files],
+            allMediaFiles: ({ context, event }) => {
+              return context.allMediaFiles.map((file) => {
+                const isInEventFiles = event.files.some((f: MediaFile) => f.path === file.path)
+                if (isInEventFiles) {
+                  return { ...file, isIncluded: true }
+                }
+                return file
+              })
+            },
           }),
         },
         REMOVE_FILE: {
           actions: assign({
-            includedFiles: ({ context, event }) =>
-              context.includedFiles.filter((f) => f.path !== event.path),
+            allMediaFiles: ({ context, event }) => {
+              return context.allMediaFiles.map((file) => {
+                if (file.path === event.path) {
+                  return { ...file, isIncluded: false }
+                }
+                return file
+              })
+            },
           }),
         },
         CLEAR_FILES: {
           actions: assign({
-            includedFiles: [],
+            allMediaFiles: ({ context }) => {
+              return context.allMediaFiles.map((file) => {
+                return { ...file, isIncluded: false }
+              })
+            },
           }),
         },
         setAllMediaFiles: {
@@ -142,20 +156,29 @@ export const mediaMachine = createMachine({
               context.allMediaFiles.filter(
                 (f) => !event.files.some((e: MediaFile) => e.path === f.path),
               ),
-            includedFiles: ({ context, event }) =>
-              context.includedFiles.filter(
-                (f) => !event.files.some((e: MediaFile) => e.path === f.path),
-              ),
           }),
         },
         setIncludedFiles: {
           actions: assign({
-            includedFiles: ({ event }) => event.files,
+            allMediaFiles: ({ context, event }) => {
+              return context.allMediaFiles.map((file) => {
+                const isInEventFiles = event.files.some((f: MediaFile) => f.path === file.path)
+                return { ...file, isIncluded: isInEventFiles }
+              })
+            },
           }),
         },
         setUnavailableFiles: {
           actions: assign({
-            unavailableFiles: ({ event }) => event.files,
+            allMediaFiles: ({ context, event }) => {
+              return context.allMediaFiles.map((file) => {
+                const isInEventFiles = event.files.some((f: MediaFile) => f.path === file.path)
+                if (isInEventFiles) {
+                  return { ...file, isUnavailable: true }
+                }
+                return file
+              })
+            },
           }),
         },
         setLoading: {

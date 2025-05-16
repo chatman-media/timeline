@@ -830,8 +830,9 @@ export const MediaFileList = memo(function MediaFileList({
 
   // Мемоизируем функцию рендеринга файла
   const renderFile = useCallback(
-    (file: MediaFile) => {
-      const fileId = file.id || file.path || file.name
+    (file: MediaFile, index: number) => {
+      // Используем комбинацию id и индекса для создания уникального ключа
+      const fileId = `${file.id || file.path || file.name}-${index}`
       const isAdded = media.isFileAdded(file)
 
       switch (viewMode) {
@@ -941,7 +942,7 @@ export const MediaFileList = memo(function MediaFileList({
                   : "space-y-1"
             }
           >
-            {group.files.map((file) => renderFile(file))}
+            {group.files.map((file, index) => renderFile(file, index))}
           </div>
         )
       }
@@ -981,7 +982,7 @@ export const MediaFileList = memo(function MediaFileList({
                 : "space-y-1"
             }
           >
-            {group.files.map((file) => renderFile(file))}
+            {group.files.map((file, index) => renderFile(file, index))}
           </div>
         </div>
       )

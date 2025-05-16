@@ -87,7 +87,9 @@ export function TimelineMarks({
       // Это предотвращает конфликты ключей между разными секциями таймлайна
       // Используем sectionId (если передан) или componentId для обеспечения уникальности
       const sectionPrefix = sectionId || componentId.replace(/:/g, "-")
-      const markKey = `mark-${sectionPrefix}-${startTime.toFixed(0)}-${timestamp.toFixed(0)}-${markType}`
+      // Добавляем случайный суффикс к ключу для обеспечения уникальности
+      const randomSuffix = Math.random().toString(36).substring(2, 8)
+      const markKey = `mark-${sectionPrefix}-${startTime.toFixed(0)}-${timestamp.toFixed(0)}-${markType}-${randomSuffix}`
 
       marksArray.push(
         <TimelineMark

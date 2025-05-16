@@ -153,26 +153,46 @@ export function TimelineBar({
     displayTime: isActive ? displayTime : savedDisplayTime, // Для неактивных секторов используем сохраненное время
   })
 
-  // Добавляем эффект для принудительного обновления позиции при изменении savedDisplayTime
-  useEffect(() => {
-    if (!isActive && savedDisplayTime > 0) {
-      console.log(
-        `[TimelineBar] Обновляем позицию для неактивного сектора ${sectorDate} со временем ${savedDisplayTime.toFixed(2)}`,
-      )
-    }
-  }, [isActive, savedDisplayTime, sectorDate])
+  // Убираем эффект для принудительного обновления позиции при изменении savedDisplayTime
+  // Это уменьшит количество перерисовок и логов
 
   // Добавляем эффект для сохранения позиции при переключении между параллельными видео
+  // Используем ref для отслеживания последнего сохраненного времени
+  const lastSavedTimeRef = useRef<{
+    videoId: string | null
+    displayTime: number
+    timestamp: number
+  }>({
+    videoId: null,
+    displayTime: 0,
+    timestamp: 0,
+  })
+
   useEffect(() => {
     // Если видео изменилось, сохраняем текущую позицию для всех секторов
     if (video && video.id && displayTime > 0 && timelineContext) {
-      // Отправляем событие SAVE_ALL_SECTORS_TIME в машину состояний таймлайна
-      timelineContext.saveAllSectorsTime(video.id, displayTime, currentTime)
+      const now = Date.now()
 
-      // Отключаем логирование для уменьшения количества сообщений
-      // console.log(
-      //   `[TimelineBar] Отправлено событие SAVE_ALL_SECTORS_TIME для видео ${video.id} с displayTime=${displayTime.toFixed(2)}`,
-      // )
+      // Проверяем, не сохраняли ли мы уже это время недавно
+      const lastSaved = lastSavedTimeRef.current
+      const timeDiff = Math.abs(lastSaved.displayTime - displayTime)
+      const isVideoChanged = lastSaved.videoId !== video.id
+      const isTimeoutPassed = now - lastSaved.timestamp > 500 // Минимум 500 мс между сохранениями
+
+      // Сохраняем только если:
+      // 1. Изменилось видео, или
+      // 2. Прошло достаточно времени с последнего сохранения и время изменилось значительно
+      if (isVideoChanged || (isTimeoutPassed && timeDiff > 0.1)) {
+        // Отправляем событие SAVE_ALL_SECTORS_TIME в машину состояний таймлайна
+        timelineContext.saveAllSectorsTime(video.id, displayTime, currentTime)
+
+        // Обновляем информацию о последнем сохранении
+        lastSavedTimeRef.current = {
+          videoId: video.id,
+          displayTime,
+          timestamp: now,
+        }
+      }
     }
   }, [video?.id, displayTime, currentTime, timelineContext])
 

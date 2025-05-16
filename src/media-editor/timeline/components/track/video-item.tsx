@@ -24,7 +24,15 @@ export const VideoItem = memo(function VideoItem({
   // Подавляем предупреждение о неиспользуемом параметре
   void zoomLevel
   const { t } = useTranslation()
-  const { activeTrackId, setActiveTrack, setVideoRef, seek, tracks, setSectorTime } = useTimeline()
+  const {
+    activeTrackId,
+    setActiveTrack,
+    setVideoRef,
+    seek,
+    tracks,
+    setSectorTime,
+    setActiveSector,
+  } = useTimeline()
   const {
     video: activeVideo,
     setVideo: setActiveVideo,
@@ -284,6 +292,10 @@ export const VideoItem = memo(function VideoItem({
             barTime = currentTime > 365 * 24 * 60 * 60 ? displayTime : currentTime - videoStartTime
           }
 
+          // Устанавливаем активный сектор
+          console.log(`[VideoItem] Устанавливаем активный сектор: ${sectorDate}`)
+          setActiveSector(sectorDate)
+
           // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
           setSectorTime(sectorDate, barTime, false)
 
@@ -373,6 +385,8 @@ export const VideoItem = memo(function VideoItem({
       switchVideoSource, // Добавляем switchVideoSource в зависимости
       tracks, // Добавляем tracks в зависимости
       isTrackLocked, // Добавляем isTrackLocked в зависимость
+      setActiveSector, // Добавляем setActiveSector в зависимость
+      setSectorTime, // Добавляем setSectorTime в зависимость
     ],
   )
 
@@ -469,6 +483,51 @@ export const VideoItem = memo(function VideoItem({
   //   `[VideoItem] Параметры расчета: referenceStart=${referenceStart}, sectionDuration=${sectionDuration}`,
   // )
 
+  // Используем ref для отслеживания последнего сохраненного времени
+  const lastSavedTimeRef = useRef<number>(0)
+  const lastSavedSectorRef = useRef<string | null>(null)
+  const lastSaveAttemptTimeRef = useRef<number>(0)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isSavingRef = useRef<boolean>(false)
+
+  // Функция для сохранения времени сектора с дебаунсингом
+  const saveSectorTime = useCallback(
+    (sectorDate: string, time: number) => {
+      // Если уже идет сохранение, выходим
+      if (isSavingRef.current) return
+
+      // Устанавливаем флаг, что идет сохранение
+      isSavingRef.current = true
+
+      // Проверяем, изменилось ли время существенно (более 0.5 секунды)
+      // или изменился сектор с момента последнего сохранения
+      const timeDiff = Math.abs(time - lastSavedTimeRef.current)
+      const isSectorChanged = lastSavedSectorRef.current !== sectorDate
+
+      if (timeDiff > 0.5 || isSectorChanged) {
+        // Обновляем последнее сохраненное время и сектор
+        lastSavedTimeRef.current = time
+        lastSavedSectorRef.current = sectorDate
+
+        // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
+        setSectorTime(sectorDate, time, false)
+
+        // Логируем только в режиме разработки и только при значительных изменениях
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            `[VideoItem] Сохранено время ${time.toFixed(2)} для сектора ${sectorDate} при изменении displayTime (разница: ${timeDiff.toFixed(2)})`,
+          )
+        }
+      }
+
+      // Сбрасываем флаг сохранения после увеличенной задержки
+      setTimeout(() => {
+        isSavingRef.current = false
+      }, 500) // Увеличиваем задержку до 500 мс
+    },
+    [setSectorTime],
+  )
+
   // Добавляем эффект для обработки изменения времени при переключении видео
   useEffect(() => {
     // Если видео активно и есть displayTime, сохраняем его
@@ -478,17 +537,47 @@ export const VideoItem = memo(function VideoItem({
         ? new Date(video.startTime * 1000).toISOString().split("T")[0]
         : null
 
-      // Если есть дата сектора, сохраняем время для этого сектора
+      // Если есть дата сектора, планируем сохранение времени для этого сектора
       if (sectorDate) {
-        // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
-        setSectorTime(sectorDate, displayTime, false)
+        // Проверяем, прошло ли достаточно времени с последней попытки сохранения
+        const now = Date.now()
+        const timeSinceLastSaveAttempt = now - lastSaveAttemptTimeRef.current
 
-        console.log(
-          `[VideoItem] Сохранено время ${displayTime.toFixed(2)} для сектора ${sectorDate} при изменении displayTime`,
-        )
+        // Увеличиваем интервал между сохранениями до 500 мс
+        if (timeSinceLastSaveAttempt < 500) return
+
+        // Проверяем, изменилось ли время значительно
+        const lastSavedTime = lastSavedTimeRef.current || 0
+        const timeDiff = Math.abs(displayTime - lastSavedTime)
+
+        // Сохраняем только если время изменилось значительно (более 0.5 секунды)
+        if (timeDiff < 0.5) return
+
+        // Обновляем время последней попытки сохранения
+        lastSaveAttemptTimeRef.current = now
+
+        // Очищаем предыдущий таймаут, если он был
+        if (saveTimeoutRef.current) {
+          clearTimeout(saveTimeoutRef.current)
+          saveTimeoutRef.current = null
+        }
+
+        // Планируем сохранение с увеличенной задержкой
+        saveTimeoutRef.current = setTimeout(() => {
+          saveSectorTime(sectorDate, displayTime)
+          saveTimeoutRef.current = null
+        }, 300) // Увеличиваем задержку до 300 мс
       }
     }
-  }, [video.id, video.startTime, isActive, displayTime, setSectorTime])
+
+    // Очищаем таймаут при размонтировании компонента
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+        saveTimeoutRef.current = null
+      }
+    }
+  }, [video.id, video.startTime, isActive, displayTime, saveSectorTime])
 
   return (
     <div

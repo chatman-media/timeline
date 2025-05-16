@@ -568,7 +568,49 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
 
   // videoRefs уже получен выше
 
-  // Упрощенный механизм отслеживания времени видео
+  // Используем ref для отслеживания последнего обновленного времени
+  const lastUpdatedTimeRef = useRef<number>(0)
+  const lastUpdateAttemptTimeRef = useRef<number>(0)
+  const updateTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isUpdatingRef = useRef<boolean>(false)
+
+  // Функция для обновления времени с дебаунсингом
+  const updateTime = useCallback(
+    (newTime: number) => {
+      // Если уже идет обновление, выходим
+      if (isUpdatingRef.current) return
+
+      // Устанавливаем флаг, что идет обновление
+      isUpdatingRef.current = true
+
+      // Обновляем только если время изменилось существенно (более 0.2 секунды)
+      const timeDiff = Math.abs(newTime - lastUpdatedTimeRef.current)
+
+      if (timeDiff > 0.2) {
+        // Обновляем последнее обновленное время
+        lastUpdatedTimeRef.current = newTime
+
+        // Обновляем локальное время
+        setLocalDisplayTime(newTime)
+
+        // Обновляем глобальное время с задержкой
+        setTimeout(() => {
+          setDisplayTime(newTime)
+
+          // Сбрасываем флаг обновления после дополнительной задержки
+          setTimeout(() => {
+            isUpdatingRef.current = false
+          }, 100)
+        }, 100)
+      } else {
+        // Если время не изменилось существенно, просто сбрасываем флаг
+        isUpdatingRef.current = false
+      }
+    },
+    [setLocalDisplayTime, setDisplayTime],
+  )
+
+  // Упрощенный механизм отслеживания времени видео с дебаунсингом
   useEffect(() => {
     // Если нет видео или не воспроизводится, выходим
     if (!video?.id || !videoRefs || !isPlaying) return
@@ -581,11 +623,32 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     const videoElement = videoRefs[videoToTrack.id]
     if (!videoElement) return
 
-    // Простая функция обновления времени
+    // Функция обработки события timeupdate с дебаунсингом
     const handleTimeUpdate = () => {
+      // Получаем текущее время видео
       const newTime = videoElement.currentTime
-      setLocalDisplayTime(newTime)
-      setDisplayTime(newTime)
+
+      // Проверяем, прошло ли достаточно времени с последней попытки обновления
+      const now = Date.now()
+      const timeSinceLastUpdateAttempt = now - lastUpdateAttemptTimeRef.current
+
+      // Если прошло мало времени или уже идет обновление, пропускаем
+      if (timeSinceLastUpdateAttempt < 200 || isUpdatingRef.current) return
+
+      // Обновляем время последней попытки обновления
+      lastUpdateAttemptTimeRef.current = now
+
+      // Очищаем предыдущий таймаут, если он был
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+        updateTimeoutRef.current = null
+      }
+
+      // Планируем обновление с задержкой
+      updateTimeoutRef.current = setTimeout(() => {
+        updateTime(newTime)
+        updateTimeoutRef.current = null
+      }, 100)
     }
 
     // Добавляем обработчик события timeupdate
@@ -594,8 +657,14 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
     // Функция очистки
     return () => {
       videoElement.removeEventListener("timeupdate", handleTimeUpdate)
+
+      // Очищаем таймаут при размонтировании компонента
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+        updateTimeoutRef.current = null
+      }
     }
-  }, [video?.id, videoRefs, isPlaying, setDisplayTime])
+  }, [video?.id, videoRefs, isPlaying, updateTime, getDisplayVideo])
 
   // Обновляем контекст при изменении calculatedDisplayTime
   // Но только если не воспроизводится видео, чтобы избежать конфликта с updateTime

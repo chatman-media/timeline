@@ -167,24 +167,34 @@ export function TimelineProvider({ children }: TimelineProviderProps) {
     [send],
   )
 
+  // Получаем глобальный контекст плеера для использования в setActiveSector
+  const playerContextRef = React.useRef<any>(null)
+
+  // Инициализируем ссылку на контекст плеера при монтировании компонента
+  React.useEffect(() => {
+    if (typeof window !== "undefined" && window.playerContext) {
+      playerContextRef.current = window.playerContext
+    }
+  }, [])
+
   const setActiveSector = React.useCallback(
     (sectorId: string | null) => {
       // Отправляем событие в машину состояний таймлайна
       send({ type: "SET_ACTIVE_SECTOR", sectorId })
 
-      // Получаем контекст плеера и устанавливаем preferredSource в "timeline"
+      // Используем глобальный объект playerContext вместо хука usePlayerContext
       try {
-        // Импортируем usePlayerContext
-        const { usePlayerContext } = require("@/media-editor/media-player")
-
-        // Получаем контекст плеера
-        const playerContext = usePlayerContext()
-
-        if (playerContext && playerContext.setPreferredSource) {
+        // Проверяем наличие глобального объекта playerContext
+        if (typeof window !== "undefined" && window.playerContext) {
           console.log(
             `[TimelineProvider] Устанавливаем preferredSource в "timeline" при активации сектора ${sectorId}`,
           )
-          playerContext.setPreferredSource("timeline")
+          window.playerContext.setPreferredSource("timeline")
+        } else if (playerContextRef.current) {
+          console.log(
+            `[TimelineProvider] Устанавливаем preferredSource в "timeline" при активации сектора ${sectorId} через ref`,
+          )
+          playerContextRef.current.setPreferredSource("timeline")
         }
       } catch (error) {
         console.error(`[TimelineProvider] Ошибка при установке preferredSource:`, error)

@@ -342,7 +342,28 @@ export const createTracksFromFiles = (
     console.log(`Processing ${dayFiles.length} video files for date ${date}`)
 
     // Получаем существующие треки для этого дня или создаем новый сектор
-    const existingSector = existingSectorsByDay[date]?.sector
+    // Ищем существующий сектор по дате или по имени, содержащему дату
+    let existingSector = existingSectorsByDay[date]?.sector
+
+    // Если сектор не найден по дате, ищем по имени в существующих секторах
+    if (!existingSector) {
+      // Форматируем дату для поиска в имени сектора
+      const dateObj = new Date(date)
+      const formattedDate = formatDateByLanguage(dateObj, currentLanguage, {
+        includeYear: true,
+        longFormat: true,
+      })
+
+      // Ищем сектор по имени в списке всех существующих секторов
+      for (const sectorDate in existingSectorsByDay) {
+        const sectorInfo = existingSectorsByDay[sectorDate]
+        if (sectorInfo && sectorInfo.sector && sectorInfo.sector.name.includes(formattedDate)) {
+          existingSector = sectorInfo.sector
+          break
+        }
+      }
+    }
+
     const existingDayTracks = existingSectorsByDay[date]?.tracks || []
 
     console.log(`Existing sector for date ${date}: ${existingSector ? "yes" : "no"}`)
@@ -760,7 +781,28 @@ export const createTracksFromFiles = (
   // Обрабатываем аудио файлы по дням
   Object.entries(audioFilesByDay).forEach(([date, dayFiles]) => {
     // Получаем существующие треки для этого дня или создаем новый сектор
-    const existingSector = existingSectorsByDay[date]?.sector
+    // Ищем существующий сектор по дате или по имени, содержащему дату
+    let existingSector = existingSectorsByDay[date]?.sector
+
+    // Если сектор не найден по дате, ищем по имени в существующих секторах
+    if (!existingSector) {
+      // Форматируем дату для поиска в имени сектора
+      const dateObj = new Date(date)
+      const formattedDate = formatDateByLanguage(dateObj, currentLanguage, {
+        includeYear: true,
+        longFormat: true,
+      })
+
+      // Ищем сектор по имени в списке всех существующих секторов
+      for (const sectorDate in existingSectorsByDay) {
+        const sectorInfo = existingSectorsByDay[sectorDate]
+        if (sectorInfo && sectorInfo.sector && sectorInfo.sector.name.includes(formattedDate)) {
+          existingSector = sectorInfo.sector
+          break
+        }
+      }
+    }
+
     const existingDayTracks = existingSectorsByDay[date]?.tracks || []
 
     // Форматируем дату для отображения с помощью универсального метода

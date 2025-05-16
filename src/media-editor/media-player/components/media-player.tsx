@@ -449,8 +449,7 @@ export function MediaPlayer() {
   // Это поможет остановить все экземпляры видео при паузе
   const allVideoElementsRef = useRef<Set<HTMLVideoElement>>(new Set())
 
-  // Используем ref для отслеживания последнего синхронизированного времени
-  const lastSyncedTimesRef = useRef<Record<string, number>>({})
+  // Отключаем отслеживание последнего синхронизированного времени, так как каждый сектор должен иметь свое независимое время
 
   // Ref для отслеживания предыдущего активного сектора
   const prevActiveSectorRef = useRef<string | null>(null)
@@ -465,9 +464,8 @@ export function MediaPlayer() {
     const currentSector = timelineContext?.activeSector
     if (!currentSector) return
 
-    // Получаем сохраненное время для текущего сектора
+    // Получаем ID текущего сектора
     const sectorId = currentSector.id
-    const sectorTime = timelineContext?.sectorTimes?.[sectorId]
 
     // Проверяем, изменился ли сектор
     const isSectorChanged = prevActiveSectorRef.current !== sectorId
@@ -477,9 +475,14 @@ export function MediaPlayer() {
 
     // Если сектор изменился и есть примененный шаблон, обновляем видео в шаблоне
     // Также проверяем, что мы не находимся в процессе обновления шаблона
-    if (isSectorChanged && appliedTemplate?.template && preferredSource === "timeline" && !isUpdatingTemplateRef.current) {
+    if (
+      isSectorChanged &&
+      appliedTemplate?.template &&
+      preferredSource === "timeline" &&
+      !isUpdatingTemplateRef.current
+    ) {
       // Устанавливаем флаг, что мы обновляем шаблон
-      isUpdatingTemplateRef.current = true;
+      isUpdatingTemplateRef.current = true
       console.log(`[MediaPlayer] Сектор изменился, обновляем видео в шаблоне`)
 
       // Получаем все видео из текущего сектора
@@ -577,39 +580,8 @@ export function MediaPlayer() {
       }
     }
 
-    if (sectorId && sectorTime !== undefined) {
-      // Проверяем, не синхронизировали ли мы уже это время
-      if (lastSyncedTimesRef.current[sectorId] === sectorTime) {
-        return
-      }
-
-      // Сохраняем время синхронизации
-      lastSyncedTimesRef.current[sectorId] = sectorTime
-
-      console.log(
-        `[MediaPlayer] Получено время ${sectorTime.toFixed(2)} для сектора ${sectorId} из контекста таймлайна`,
-      )
-
-      // Если у нас есть активное видео, устанавливаем его время
-      if (video?.id && videoRefs[video.id]) {
-        const videoElement = videoRefs[video.id]
-
-        // Сохраняем время для видео
-        videoTimesRef.current[video.id] = sectorTime
-
-        // Устанавливаем время для видео
-        videoElement.currentTime = sectorTime
-
-        // Обновляем displayTime для синхронизации с таймлайн баром
-        if (setDisplayTime) {
-          setDisplayTime(sectorTime)
-        }
-
-        console.log(
-          `[MediaPlayer] Установлено время ${sectorTime.toFixed(2)} для видео ${video.id} из контекста таймлайна`,
-        )
-      }
-    }
+    // Синхронизация времени между секторами отключена
+    // Каждый сектор должен иметь свое независимое время
   }, [
     video,
     videoRefs,
@@ -620,19 +592,8 @@ export function MediaPlayer() {
     preferredSource,
   ])
 
-  // Эффект для логирования всех времен секторов из контекста таймлайна
-  useEffect(() => {
-    if (!timelineContext?.sectorTimes) return
-
-    // Логируем все времена секторов
-    const sectorTimesLog = Object.entries(timelineContext.sectorTimes)
-      .map(([sectorId, time]) => `${sectorId}: ${time.toFixed(2)}`)
-      .join(", ")
-
-    console.log(
-      `[MediaPlayer] Синхронизированы времена секторов из контекста таймлайна: ${sectorTimesLog}`,
-    )
-  }, [timelineContext?.sectorTimes])
+  // Эффект для синхронизации времен секторов отключен, так как каждый сектор должен иметь свое независимое время
+  // Это предотвращает избыточные обновления и логирование
 
   // Функция для остановки всех видео элементов
   // Используем ref для отслеживания времени последней остановки
@@ -2593,8 +2554,7 @@ export function MediaPlayer() {
           const templateCopy = JSON.parse(JSON.stringify(appliedTemplate))
           templateCopy.videos = newVideosToDisplay
           setAppliedTemplate(templateCopy)
-        }
-        else {
+        } else {
           console.log(`[MediaPlayer] Шаблон будет показан с пустыми ячейками (черный экран)`)
         }
       }

@@ -16,6 +16,8 @@ export interface MediaFile {
   createdAt?: string
   updatedAt?: string
   isAddedToTimeline?: boolean
+  isIncluded?: boolean // Флаг, указывающий, включен ли файл в проект
+  isUnavailable?: boolean // Флаг, указывающий, недоступен ли файл
   source?: "media" | "timeline" | string
   proxy?: {
     path: string
