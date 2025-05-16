@@ -461,15 +461,23 @@ export function TemplateList() {
 
     // Добавляем задержку перед применением шаблона, чтобы DOM успел обновиться
     setTimeout(() => {
-      // Применяем шаблон через контекст плеера
-      setAppliedTemplate(appliedTemplate)
+      // Устанавливаем предпочтительный источник видео перед применением шаблона
+      setPreferredSource("timeline")
 
-      // Если есть видео в шаблоне, устанавливаем первое как активное
-      if (availableVideos.length > 0 && availableVideos[0].id) {
-        setActiveVideoId(availableVideos[0].id)
-        setVideo(availableVideos[0])
-        console.log(`Установлено активное видео: ${availableVideos[0].id}`)
-      }
+      // Добавляем небольшую задержку перед применением шаблона
+      setTimeout(() => {
+        // Применяем шаблон через контекст плеера
+        setAppliedTemplate(appliedTemplate)
+
+        // Если есть видео в шаблоне, устанавливаем первое как активное
+        if (availableVideos.length > 0 && availableVideos[0].id) {
+          setActiveVideoId(availableVideos[0].id)
+          setVideo(availableVideos[0])
+          console.log(`Установлено активное видео: ${availableVideos[0].id}`)
+        } else {
+          console.log("Нет доступных видео для шаблона, возможен черный экран")
+        }
+      }, 100)
 
       // Запускаем воспроизведение с увеличенной задержкой, если оно было активно
       if (isPlaying) {

@@ -455,6 +455,9 @@ export function MediaPlayer() {
   // Ref для отслеживания предыдущего активного сектора
   const prevActiveSectorRef = useRef<string | null>(null)
 
+  // Ref для отслеживания обновления шаблона, чтобы избежать бесконечных циклов
+  const isUpdatingTemplateRef = useRef(false)
+
   // Эффект для синхронизации времени сектора из контекста таймлайна
   // и обновления шаблона при изменении сектора
   useEffect(() => {
@@ -473,7 +476,10 @@ export function MediaPlayer() {
     prevActiveSectorRef.current = sectorId
 
     // Если сектор изменился и есть примененный шаблон, обновляем видео в шаблоне
-    if (isSectorChanged && appliedTemplate?.template && preferredSource === "timeline") {
+    // Также проверяем, что мы не находимся в процессе обновления шаблона
+    if (isSectorChanged && appliedTemplate?.template && preferredSource === "timeline" && !isUpdatingTemplateRef.current) {
+      // Устанавливаем флаг, что мы обновляем шаблон
+      isUpdatingTemplateRef.current = true;
       console.log(`[MediaPlayer] Сектор изменился, обновляем видео в шаблоне`)
 
       // Получаем все видео из текущего сектора
@@ -553,12 +559,21 @@ export function MediaPlayer() {
               setVideo(templateCopy.videos[0])
               console.log(`[MediaPlayer] Установлено активное видео: ${templateCopy.videos[0].id}`)
             }
+
+            // Сбрасываем флаг обновления шаблона
+            isUpdatingTemplateRef.current = false
           }, 300)
         } else {
           console.log(
             `[MediaPlayer] Шаблон уже содержит актуальные видео из текущего сектора, обновление не требуется`,
           )
+
+          // Сбрасываем флаг обновления шаблона
+          isUpdatingTemplateRef.current = false
         }
+      } else {
+        // Сбрасываем флаг обновления шаблона, если нет видео в секторе
+        isUpdatingTemplateRef.current = false
       }
     }
 
@@ -2554,9 +2569,34 @@ export function MediaPlayer() {
         newVideosToDisplay = [video]
         console.log(`[MediaPlayer] Используем активное видео ${video.id} для шаблона`)
       }
-      // Иначе оставляем пустой список видео (шаблон будет показан с черными ячейками)
+      // Иначе пытаемся найти видео из параллельных видео или активного видео
       else {
-        console.log(`[MediaPlayer] Шаблон будет показан с пустыми ячейками (черный экран)`)
+        console.log(`[MediaPlayer] В шаблоне нет видео, пытаемся найти альтернативные источники`)
+
+        // Проверяем, есть ли параллельные видео
+        if (parallelVideos.length > 0) {
+          console.log(`[MediaPlayer] Найдено ${parallelVideos.length} параллельных видео`)
+          // Используем параллельные видео для шаблона
+          newVideosToDisplay = parallelVideos.slice(0, appliedTemplate.template.screens || 1)
+
+          // Обновляем шаблон с найденными видео
+          const templateCopy = JSON.parse(JSON.stringify(appliedTemplate))
+          templateCopy.videos = newVideosToDisplay
+          setAppliedTemplate(templateCopy)
+        }
+        // Если есть активное видео, используем его
+        else if (video && video.id) {
+          console.log(`[MediaPlayer] Используем активное видео ${video.id} для шаблона`)
+          newVideosToDisplay = [video]
+
+          // Обновляем шаблон с активным видео
+          const templateCopy = JSON.parse(JSON.stringify(appliedTemplate))
+          templateCopy.videos = newVideosToDisplay
+          setAppliedTemplate(templateCopy)
+        }
+        else {
+          console.log(`[MediaPlayer] Шаблон будет показан с пустыми ячейками (черный экран)`)
+        }
       }
     }
     // Если нет примененного шаблона, но есть активное видео

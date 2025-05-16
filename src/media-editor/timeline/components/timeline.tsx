@@ -106,21 +106,6 @@ export function Timeline() {
   const scrollContainerRef = React.useRef<HTMLDivElement>(null)
 
   const sections = useMemo(() => {
-    if (!tracks || tracks.length === 0) {
-      // Отключаем логирование для уменьшения количества сообщений
-      // console.log("No tracks available for sections")
-      return []
-    }
-
-    // Отключаем логирование для уменьшения количества сообщений
-    // console.log(
-    //   "Creating sections from tracks:",
-    //   tracks.map((t) => ({
-    //     name: t.name,
-    //     videosCount: t.videos?.length || 0,
-    //   })),
-    // )
-
     const videosByDay = new Map<
       string,
       {
@@ -132,7 +117,6 @@ export function Timeline() {
     >()
 
     tracks.forEach((track) => {
-      // Отключаем логирование для уменьшения количества сообщений
       // console.log(`Processing track ${track.name} with ${track.videos?.length || 0} videos`)
 
       track.videos?.forEach((video) => {
@@ -140,11 +124,9 @@ export function Timeline() {
         const videoEnd = videoStart + (video.duration || 0)
         const date = new Date(videoStart * 1000).toISOString().split("T")[0]
 
-        // Отключаем логирование для уменьшения количества сообщений
         // console.log(`Video ${video.name}: date=${date}, start=${videoStart}, end=${videoEnd}`)
 
         if (!videosByDay.has(date)) {
-          // Отключаем логирование для уменьшения количества сообщений
           // console.log(`Creating new day entry for date ${date}`)
           videosByDay.set(date, {
             videos: [],
@@ -735,14 +717,14 @@ export function Timeline() {
                   maxScale={200}
                 />
                 <div className="min-h-[50px] flex-shrink-0 border-b">
-                  <div className="h-full p-4">{/* Содержимое нижней панели */}</div>
+                  <div className="h-full p-4">{/* Скомбинированная дорожка */}</div>
                 </div>
               </div>
 
               {/* Основная часть - скроллируемая область с секторами и нижней панелью */}
               <div className="w-full flex-grow overflow-y-auto">
                 <div className="min-h-full">
-                  {sections?.map((sector, index) => {
+                  {sections?.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).map((sector, index) => {
                     // Находим минимальное время начала видео в секторе
                     const minStartTime = Math.min(
                       ...sector.tracks.flatMap((t) =>
@@ -924,7 +906,7 @@ export function Timeline() {
             defaultSize={20}
             minSize={15}
             maxSize={40}
-            className="z-50 min-h-[200px] flex-shrink-0"
+            className="flex-shrink-0"
           >
             <TimelineChat />
           </ResizablePanel>

@@ -55,7 +55,7 @@ export function TimelineTopPanel({
   const { t } = useTranslation()
   const { activeSector } = useTimeline()
   return (
-    <div className="bg-background sticky top-0 z-10 flex-shrink-0">
+    <div className="sticky top-0 flex-shrink-0 bg-secondary">
       <div className="border-border flex items-center justify-between border-b px-2">
         <div className="flex items-center gap-1">
           {/* <Popover>
@@ -140,7 +140,7 @@ export function TimelineTopPanel({
           {/* Composite Track Button */}
           <CompositeTrackButton sector={activeSector} className={ICON_STYLE} />
         </div>
-        <div className="z-10 flex items-center gap-2 p-2">
+        <div className="flex items-center gap-2 px-2 py-1">
           {/* Двунаправленная стрелка */}
           <button
             onClick={() => {

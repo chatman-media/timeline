@@ -11,12 +11,29 @@ function arePropsEqual(prevProps: VideoPanelProps, nextProps: VideoPanelProps) {
   const activeChanged = prevProps.isActive !== nextProps.isActive
 
   // Проверяем, изменилось ли видео (только по id и path)
-  const videoChanged =
-    prevProps.video.id !== nextProps.video.id || prevProps.video.path !== nextProps.video.path
+  const videoIdChanged = prevProps.video.id !== nextProps.video.id
+  const videoPathChanged = prevProps.video.path !== nextProps.video.path
+
+  // Проверяем, изменился ли источник видео
+  const videoSourceChanged = prevProps.video.source !== nextProps.video.source
+
+  // Проверяем, изменилось ли время начала видео
+  const videoStartTimeChanged = prevProps.video.startTime !== nextProps.video.startTime
+
+  // Проверяем, изменились ли ссылки на videoRefs
+  const videoRefsChanged = prevProps.videoRefs !== nextProps.videoRefs
+
+  // Объединяем все проверки
+  const videoChanged = videoIdChanged || videoPathChanged || videoSourceChanged || videoStartTimeChanged
+
+  // Для отладки
+  if (videoChanged) {
+    console.log(`[VideoPanel] Пропсы изменились: id=${videoIdChanged}, path=${videoPathChanged}, source=${videoSourceChanged}, startTime=${videoStartTimeChanged}`)
+  }
 
   // Возвращаем true, если пропсы не изменились (предотвращаем перерисовку)
   // Возвращаем false, если пропсы изменились (вызываем перерисовку)
-  return !activeChanged && !videoChanged
+  return !activeChanged && !videoChanged && !videoRefsChanged
 }
 
 interface VideoPanelProps {
@@ -243,10 +260,26 @@ function VideoPanelComponent({
     }
   }, [preferredSource, video.id, video.path, video.startTime])
 
+  // Ref для отслеживания предыдущего видео
+  const prevVideoRef = useRef<string | null>(null);
+
   // Эффект для принудительного обновления видео при изменении самого видео
   useEffect(() => {
     // Проверяем наличие видео элемента, ID видео и пути к видео
     if (!videoRef.current || !video.id || !video.path) return
+
+    // Проверяем, изменилось ли видео (по ID)
+    // Это предотвращает бесконечные циклы обновлений
+    if (prevVideoRef.current === video.id) {
+      // Если ID не изменился, проверяем, изменился ли путь
+      if (videoRef.current.src && videoRef.current.src.includes(video.id)) {
+        // Если путь тот же, пропускаем обновление
+        return;
+      }
+    }
+
+    // Обновляем ref с текущим ID видео
+    prevVideoRef.current = video.id;
 
     console.log(
       `[VideoPanel] Обнаружено изменение видео: ${video.id}, source=${video.source || "не определен"}, startTime=${video.startTime}`,
@@ -276,7 +309,7 @@ function VideoPanelComponent({
 
     // Устанавливаем флаг готовности
     setIsReady(true)
-  }, [video])
+  }, [video.id, video.path])
 
   // Используем ref для отслеживания времени последней загрузки
   const lastLoadTimeRef = useRef(0)
@@ -341,9 +374,16 @@ function VideoPanelComponent({
     }
   }
 
-  // Используем ключ, который включает preferredSource для принудительного обновления компонента
-  // Убираем Date.now() из ключа, чтобы избежать постоянного пересоздания видео элемента
-  const videoKey = `${video.id}-${preferredSource}-${video.source || "unknown"}`
+  // Используем ref для хранения стабильного ключа
+  const videoKeyRef = useRef<string>(`${video.id}-${preferredSource}-${video.source || "unknown"}`);
+
+  // Обновляем ключ только при изменении важных параметров
+  useEffect(() => {
+    videoKeyRef.current = `${video.id}-${preferredSource}-${video.source || "unknown"}`;
+  }, [video.id, preferredSource, video.source]);
+
+  // Используем стабильный ключ из ref
+  const videoKey = videoKeyRef.current;
 
   console.log(`[VideoPanel] Рендеринг видео с ключом: ${videoKey}`)
 
