@@ -46,10 +46,20 @@ export function MediaProvider({ children }: { children: React.ReactNode }) {
     })
   }, [mediaState.context, includedFiles])
 
-  // Загружаем файлы при монтировании
+  // Загружаем файлы и подключаемся к Socket.IO при монтировании
   useEffect(() => {
     console.log("Fetching media files...")
     mediaSend({ type: "FETCH_MEDIA" })
+
+    // Подключаемся к Socket.IO серверу
+    console.log("Connecting to Socket.IO server...")
+    mediaSend({ type: "CONNECT_SOCKET" })
+
+    // Отключаемся от Socket.IO сервера при размонтировании
+    return () => {
+      console.log("Disconnecting from Socket.IO server...")
+      mediaSend({ type: "DISCONNECT_SOCKET" })
+    }
   }, [mediaSend])
 
   const includedFilePaths = includedFiles.map((file: MediaFile) => file.path)

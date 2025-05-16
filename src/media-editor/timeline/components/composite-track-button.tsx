@@ -17,7 +17,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Sector } from "@/media-editor/browser/utils/media-files"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { CompositeTrackBuilder } from "@/media-editor/timeline/utils/composite-track-builder"
-import { runCompositeTrackDemo } from "@/media-editor/timeline/utils/composite-track-demo"
 import { EditSegment } from "@/types/edit-schema"
 
 interface CompositeTrackButtonProps {
@@ -55,16 +54,6 @@ export function CompositeTrackButton({ sector, className }: CompositeTrackButton
       console.log("Создана сборная дорожка:", result)
       console.log("Команда FFmpeg:", result.ffmpegCommand)
       console.log("Сегменты:", result.segments)
-
-      // Здесь можно добавить код для обновления схемы монтажа
-      // Например, добавить сборную дорожку в сегмент
-      // updateEditSegments([...editSegments])
-
-      // Показываем уведомление пользователю
-      alert(`Создана сборная дорожка "${result.track.name}". Результат выведен в консоль.`)
-
-      // Запускаем демонстрацию
-      runCompositeTrackDemo()
     } catch (error) {
       console.error("Ошибка при создании сборной дорожки:", error)
     }
@@ -172,7 +161,6 @@ export function CompositeTrackButton({ sector, className }: CompositeTrackButton
 
         <DropdownMenuItem
           onClick={() => {
-            runCompositeTrackDemo()
           }}
         >
           {t("timeline.compositeTrack.runDemo", "Запустить демо")}

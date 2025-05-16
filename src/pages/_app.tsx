@@ -10,9 +10,30 @@ import { isSupportedLanguage } from "@/i18n/constants"
 import { Providers } from "@/media-editor/providers"
 
 export default function App({ Component, pageProps }: AppProps) {
+  // Инициализируем Service Worker
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/coi-serviceworker.js")
+    }
+  }, [])
+
+  // Инициализируем Socket.IO
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Инициализируем Socket.IO сервер
+      fetch("/api/socket")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`Ошибка инициализации Socket.IO сервера: ${response.status}`)
+          }
+          return response.json()
+        })
+        .then(() => {
+          console.log("[App] Socket.IO сервер инициализирован")
+        })
+        .catch((error) => {
+          console.error("[App] Ошибка при инициализации Socket.IO сервера:", error)
+        })
     }
   }, [])
 

@@ -1,4 +1,5 @@
-import { assign, createMachine } from "xstate"
+import { assign, createMachine, fromPromise } from "xstate"
+import { timelineIndexedDBService } from "./timeline-indexed-db-service"
 
 import { VideoEffect } from "@/media-editor/browser/components/tabs/effects/effects"
 import { VideoFilter } from "@/media-editor/browser/components/tabs/filters/filters"
@@ -187,7 +188,7 @@ const addToHistory = ({
   newState: Partial<TimelineContext>
 }): TimelineContext => {
   const newStates = context.previousStates.slice(0, context.currentStateIndex + 1)
-  return {
+  const updatedContext = {
     ...context,
     ...newState,
     previousStates: [...newStates, { ...context, ...newState }],
@@ -196,17 +197,73 @@ const addToHistory = ({
     canRedo: false,
     isDirty: true,
   }
+
+  // Сохраняем состояние в IndexedDB
+  timelineIndexedDBService.saveTimelineState(updatedContext)
+
+  return updatedContext
 }
+
+// Функция для загрузки состояния таймлайна из IndexedDB
+const loadTimelineState = fromPromise(async () => {
+  try {
+    // Загружаем состояние из IndexedDB
+    const state = await timelineIndexedDBService.loadTimelineState()
+    if (state && Object.keys(state).length > 0) {
+      console.log(`[timelineMachine] Состояние таймлайна загружено из IndexedDB`)
+      return state
+    }
+    console.log("[timelineMachine] В IndexedDB нет сохраненного состояния таймлайна")
+    return null
+  } catch (error) {
+    console.error("[timelineMachine] Ошибка при загрузке состояния таймлайна:", error)
+    return null
+  }
+})
 
 export const timelineMachine = createMachine({
   id: "timeline",
-  initial: "idle",
+  initial: "initializing", // Начинаем с инициализации
   context: initialContext,
   types: {
     context: {} as TimelineContext,
     events: {} as TimelineEvent,
   },
   states: {
+    // Добавляем состояние initializing для загрузки данных из IndexedDB
+    initializing: {
+      invoke: {
+        src: loadTimelineState,
+        onDone: {
+          target: "idle",
+          actions: [
+            assign(({ event }) => {
+              const loadedState = event.output
+              if (loadedState) {
+                console.log("[timelineMachine] Восстанавливаем состояние из IndexedDB")
+                return {
+                  ...initialContext,
+                  ...loadedState,
+                }
+              }
+              return initialContext
+            }),
+          ],
+        },
+        onError: {
+          target: "idle",
+          actions: [
+            ({ event }) => {
+              if (event && event.error) {
+                console.error("[timelineMachine] Ошибка при загрузке состояния:", event.error)
+              } else {
+                console.error("[timelineMachine] Неизвестная ошибка при загрузке состояния")
+              }
+            },
+          ],
+        },
+      },
+    },
     idle: {
       on: {
         PLAY: "playing",
@@ -215,10 +272,17 @@ export const timelineMachine = createMachine({
             return event.type === "RESTORE_STATE" && Object.keys(event.state).length > 0
           },
           actions: [
-            assign(({ event }) => ({
-              ...initialContext,
-              ...(event.type === "RESTORE_STATE" ? event.state : {}),
-            })),
+            assign(({ event }) => {
+              const restoredState = {
+                ...initialContext,
+                ...(event.type === "RESTORE_STATE" ? event.state : {}),
+              }
+
+              // Сохраняем восстановленное состояние в IndexedDB
+              timelineIndexedDBService.saveTimelineState(restoredState)
+
+              return restoredState
+            }),
           ],
         },
       },
@@ -544,6 +608,9 @@ export const timelineMachine = createMachine({
             // console.log(
             //   `[TimelineMachine] Сохраняем время ${event.time.toFixed(2)} для сектора ${sectorId}`,
             // )
+
+            // Сохраняем состояние в IndexedDB
+            timelineIndexedDBService.saveTimelineState(newContext)
           }
 
           return newContext
@@ -1439,7 +1506,17 @@ export const timelineMachine = createMachine({
                 )
               }
 
-              return { sectorTimes: newSectorTimes }
+              // Создаем обновленный контекст
+              const updatedContext = {
+                ...context,
+                sectorTimes: newSectorTimes,
+                isDirty: true,
+              }
+
+              // Сохраняем состояние в IndexedDB
+              timelineIndexedDBService.saveTimelineState(updatedContext)
+
+              return { sectorTimes: newSectorTimes, isDirty: true }
             }
           }
 
@@ -1474,7 +1551,17 @@ export const timelineMachine = createMachine({
               )
             }
 
-            return { sectorTimes: newSectorTimes }
+            // Создаем обновленный контекст
+            const updatedContext = {
+              ...context,
+              sectorTimes: newSectorTimes,
+              isDirty: true,
+            }
+
+            // Сохраняем состояние в IndexedDB
+            timelineIndexedDBService.saveTimelineState(updatedContext)
+
+            return { sectorTimes: newSectorTimes, isDirty: true }
           }
 
           return context
