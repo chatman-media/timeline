@@ -1,6 +1,7 @@
 /**
  * Сервис для работы с данными YOLO
  */
+import { yoloIndexedDBService } from "./yolo-indexeddb-service";
 
 // Типы данных
 export interface YoloDetection {
@@ -42,6 +43,31 @@ export class YoloDataService {
 
   // Счетчик для отслеживания количества сообщений о ненайденных данных YOLO
   private missingDataCount: number = 0
+
+  constructor() {
+    // Загружаем список видео без данных YOLO из IndexedDB при инициализации
+    this.loadNonExistentFiles()
+  }
+
+  /**
+   * Загружает список видео без данных YOLO из IndexedDB
+   */
+  private async loadNonExistentFiles(): Promise<void> {
+    try {
+      const nonExistentFiles = await yoloIndexedDBService.loadNonExistentFiles()
+      if (nonExistentFiles && Object.keys(nonExistentFiles).length > 0) {
+        this.nonExistentFiles = nonExistentFiles
+        this.missingDataCount = Object.keys(nonExistentFiles).length
+
+        // Логируем только в режиме отладки
+        if (process.env.NODE_ENV === "development") {
+          console.debug(`[YoloDataService] Загружен список видео без данных YOLO из IndexedDB (${this.missingDataCount} видео)`)
+        }
+      }
+    } catch (error) {
+      console.error("[YoloDataService] Ошибка при загрузке списка видео без данных YOLO:", error)
+    }
+  }
 
   /**
    * Загрузить данные YOLO для видео
@@ -86,16 +112,30 @@ export class YoloDataService {
         )
       }
 
-      // Здесь должен быть код для загрузки данных из IndexedDB
-      // Но в текущей реализации его нет, поэтому просто отмечаем это
+      // Загружаем данные из IndexedDB
+      const data = await yoloIndexedDBService.loadYoloData(videoId)
 
-      // Увеличиваем счетчик ненайденных данных
+      // Если данные найдены, сохраняем их в кэш и возвращаем
+      if (data) {
+        this.yoloDataCache[videoId] = data
+
+        // Логируем только в режиме отладки и с низкой вероятностью
+        if (process.env.NODE_ENV === "development" && Math.random() < 0.1) {
+          console.debug(
+            `[YoloDataService] Данные YOLO для видео ${videoId} загружены из IndexedDB: ${data.frames?.length || 0} кадров`,
+          )
+        }
+
+        return data
+      }
+
+      // Если данные не найдены, увеличиваем счетчик ненайденных данных
       this.missingDataCount += 1
 
       // Логируем предупреждение только для первых 5 видео или с вероятностью 1%
       if (this.missingDataCount <= 5 || Math.random() < 0.01) {
         console.debug(
-          `[YoloDataService] Не реализована загрузка данных YOLO из IndexedDB для видео ${videoId} (${this.missingDataCount} видео без данных)`,
+          `[YoloDataService] Данные YOLO для видео ${videoId} не найдены (${this.missingDataCount} видео без данных)`,
         )
       }
 
@@ -103,7 +143,10 @@ export class YoloDataService {
       // Это предотвратит повторные запросы
       this.nonExistentFiles[videoId] = true
 
-      // Возвращаем null, так как мы не загружаем данные из JSON-файлов или IndexedDB
+      // Сохраняем список видео без данных в IndexedDB
+      yoloIndexedDBService.saveNonExistentFiles(this.nonExistentFiles)
+
+      // Возвращаем null, так как данные не найдены
       return null
     } catch (error) {
       console.error(
@@ -119,19 +162,26 @@ export class YoloDataService {
   }
 
   /**
-   * Сохранить данные YOLO в кэш
+   * Сохранить данные YOLO в кэш и IndexedDB
    * @param videoId ID видео
    * @param data Данные YOLO
    */
-  public saveYoloData(videoId: string, data: YoloVideoData): void {
+  public async saveYoloData(videoId: string, data: YoloVideoData): Promise<void> {
+    // Сохраняем данные в кэш
     this.yoloDataCache[videoId] = data
 
     // Удаляем видео из списка несуществующих
     if (this.nonExistentFiles[videoId]) {
       delete this.nonExistentFiles[videoId]
+
+      // Обновляем список видео без данных в IndexedDB
+      await yoloIndexedDBService.saveNonExistentFiles(this.nonExistentFiles)
     }
 
-    console.log(`[YoloDataService] Данные YOLO для видео ${videoId} сохранены в кэш`)
+    // Сохраняем данные в IndexedDB
+    await yoloIndexedDBService.saveYoloData(videoId, data)
+
+    console.log(`[YoloDataService] Данные YOLO для видео ${videoId} сохранены в кэш и IndexedDB`)
   }
 
   /**
