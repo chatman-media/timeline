@@ -1,5 +1,6 @@
-import chokidar from "chokidar"
 import path from "node:path"
+
+import chokidar from "chokidar"
 import { Server as SocketIOServer } from "socket.io"
 
 /**
@@ -19,8 +20,8 @@ export enum FileWatcherEvent {
  */
 export class FileWatcherService {
   private static instance: FileWatcherService
-  private mediaWatcher: chokidar.FSWatcher | null = null
-  private musicWatcher: chokidar.FSWatcher | null = null
+  private mediaWatcher: ReturnType<typeof chokidar.watch> | null = null
+  private musicWatcher: ReturnType<typeof chokidar.watch> | null = null
   private io: SocketIOServer | null = null
   private isInitialized = false
 
@@ -98,7 +99,7 @@ export class FileWatcherService {
     })
 
     // Обрабатываем события добавления файлов
-    this.mediaWatcher.on("add", (filePath) => {
+    this.mediaWatcher?.on("add", (filePath: string) => {
       const relativePath = path.relative(mediaDir, filePath)
       console.log(`[FileWatcherService] Медиафайл добавлен: ${relativePath}`)
       this.io?.emit(FileWatcherEvent.MEDIA_ADDED, {
@@ -109,7 +110,7 @@ export class FileWatcherService {
     })
 
     // Обрабатываем события изменения файлов
-    this.mediaWatcher.on("change", (filePath) => {
+    this.mediaWatcher?.on("change", (filePath: string) => {
       const relativePath = path.relative(mediaDir, filePath)
       console.log(`[FileWatcherService] Медиафайл изменен: ${relativePath}`)
       this.io?.emit(FileWatcherEvent.MEDIA_CHANGED, {
@@ -120,7 +121,7 @@ export class FileWatcherService {
     })
 
     // Обрабатываем события удаления файлов
-    this.mediaWatcher.on("unlink", (filePath) => {
+    this.mediaWatcher?.on("unlink", (filePath: string) => {
       const relativePath = path.relative(mediaDir, filePath)
       console.log(`[FileWatcherService] Медиафайл удален: ${relativePath}`)
       this.io?.emit(FileWatcherEvent.MEDIA_REMOVED, {
@@ -151,7 +152,7 @@ export class FileWatcherService {
     })
 
     // Обрабатываем события добавления файлов
-    this.musicWatcher.on("add", (filePath) => {
+    this.musicWatcher?.on("add", (filePath: string) => {
       const relativePath = path.relative(musicDir, filePath)
       console.log(`[FileWatcherService] Музыкальный файл добавлен: ${relativePath}`)
       this.io?.emit(FileWatcherEvent.MUSIC_ADDED, {
@@ -162,7 +163,7 @@ export class FileWatcherService {
     })
 
     // Обрабатываем события изменения файлов
-    this.musicWatcher.on("change", (filePath) => {
+    this.musicWatcher?.on("change", (filePath: string) => {
       const relativePath = path.relative(musicDir, filePath)
       console.log(`[FileWatcherService] Музыкальный файл изменен: ${relativePath}`)
       this.io?.emit(FileWatcherEvent.MUSIC_CHANGED, {
@@ -173,7 +174,7 @@ export class FileWatcherService {
     })
 
     // Обрабатываем события удаления файлов
-    this.musicWatcher.on("unlink", (filePath) => {
+    this.musicWatcher?.on("unlink", (filePath: string) => {
       const relativePath = path.relative(musicDir, filePath)
       console.log(`[FileWatcherService] Музыкальный файл удален: ${relativePath}`)
       this.io?.emit(FileWatcherEvent.MUSIC_REMOVED, {

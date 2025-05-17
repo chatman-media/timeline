@@ -1,10 +1,10 @@
 import { assign, createMachine, fromPromise } from "xstate"
-import { timelineIndexedDBService } from "./timeline-indexed-db-service"
 
 import { VideoEffect } from "@/media-editor/browser/components/tabs/effects/effects"
 import { VideoFilter } from "@/media-editor/browser/components/tabs/filters/filters"
 import { MediaTemplate } from "@/media-editor/browser/components/tabs/templates/templates"
 import { createTracksFromFiles, Sector } from "@/media-editor/browser/utils/media-files"
+import { screenshotService } from "@/media-editor/services/screenshot-service"
 import {
   convertSectorsToEditSegments,
   createTracksFromTemplate,
@@ -24,6 +24,8 @@ import {
 } from "@/types/resources"
 import { TimeRange } from "@/types/time-range"
 import { TransitionEffect } from "@/types/transitions"
+
+import { timelineIndexedDBService } from "./timeline-indexed-db-service"
 
 // Интерфейс для сообщений чата
 export interface ChatMessage {
@@ -546,7 +548,7 @@ export const timelineMachine = createMachine({
             // Если не нашли, пробуем найти по имени, содержащему дату в другом формате
             if (!sector) {
               // Преобразуем YYYY-MM-DD в объект Date
-              const dateParts = dateStr.split('-')
+              const dateParts = dateStr.split("-")
               const year = parseInt(dateParts[0])
               const month = parseInt(dateParts[1]) - 1 // Месяцы в JS начинаются с 0
               const day = parseInt(dateParts[2])
@@ -556,9 +558,9 @@ export const timelineMachine = createMachine({
               sector = context.sectors.find((s) => {
                 // Проверяем разные форматы даты в имени сектора
                 return (
-                  s.name.includes(date.toLocaleDateString('ru-RU')) || // DD.MM.YYYY
-                  s.name.includes(date.toLocaleDateString('en-US')) || // MM/DD/YYYY
-                  s.name.includes(date.toLocaleDateString('en-GB'))    // DD/MM/YYYY
+                  s.name.includes(date.toLocaleDateString("ru-RU")) || // DD.MM.YYYY
+                  s.name.includes(date.toLocaleDateString("en-US")) || // MM/DD/YYYY
+                  s.name.includes(date.toLocaleDateString("en-GB")) // DD/MM/YYYY
                 )
               })
             }
@@ -592,7 +594,7 @@ export const timelineMachine = createMachine({
           const updatedContext = {
             ...context,
             activeSector: sector,
-            isDirty: true
+            isDirty: true,
           }
           timelineIndexedDBService.saveTimelineState(updatedContext)
 
@@ -606,7 +608,7 @@ export const timelineMachine = createMachine({
           const sectorId = event.sectorId
           const savedTime = context.sectorTimes[sectorId]
 
-          if (savedTime !== undefined) {
+          if (savedTime !== undefined && savedTime > 0) {
             console.log(
               `[TimelineMachine] Восстанавливаем время ${savedTime.toFixed(2)} для сектора ${sectorId}`,
             )
@@ -616,6 +618,10 @@ export const timelineMachine = createMachine({
 
             console.log(
               `[TimelineMachine] Отправлено событие SET_SECTOR_TIME для сектора ${sectorId} со временем ${savedTime.toFixed(2)}`,
+            )
+          } else {
+            console.log(
+              `[TimelineMachine] Нет сохраненного времени для сектора ${sectorId} или время равно 0, не отправляем событие SET_SECTOR_TIME`,
             )
           }
         },
@@ -675,7 +681,7 @@ export const timelineMachine = createMachine({
     },
     ADD_MEDIA_FILES: {
       actions: [
-        assign(({ context, event }) => {
+        assign(({ context, event, self }) => {
           if (event.type !== "ADD_MEDIA_FILES") return context
 
           // Отключаем логирование для уменьшения количества сообщений
@@ -818,13 +824,278 @@ export const timelineMachine = createMachine({
           //   })),
           // )
 
-          return addToHistory({
+          // Находим самый свежий файл (с самым поздним startTime)
+          const latestFile = [...event.files].sort(
+            (a, b) => (b.startTime || 0) - (a.startTime || 0),
+          )[0]
+
+          // Находим сектор и дорожку для этого файла
+          let activeSectorId: string | null = null
+          let activeTrackId: string | null = null
+          let initialTime = 0
+
+          if (latestFile) {
+            // Определяем дату файла для поиска сектора
+            const fileDate = latestFile.startTime
+              ? new Date(latestFile.startTime * 1000).toISOString().split("T")[0]
+              : null
+
+            if (fileDate) {
+              // Ищем сектор по дате
+              const sector = updatedSectors.find((s) => s.id === fileDate)
+              if (sector) {
+                activeSectorId = sector.id
+
+                // Ищем дорожку, содержащую этот файл
+                for (const track of sector.tracks) {
+                  if (
+                    track.videos &&
+                    track.videos.some((v) => v.id === latestFile.id || v.path === latestFile.path)
+                  ) {
+                    activeTrackId = track.id
+                    // Устанавливаем время на начало видео
+                    initialTime = 0 // Начало видео
+                    break
+                  }
+                }
+              }
+            }
+          }
+
+          // Создаем обновленный контекст с активным сектором и дорожкой
+          const updatedContext = addToHistory({
             context,
             newState: {
               sectors: updatedSectors,
               tracks: allTracks,
+              activeSector: activeSectorId
+                ? updatedSectors.find((s) => s.id === activeSectorId) || null
+                : null,
+              activeTrackId: activeTrackId,
             },
           })
+
+          // Если нашли активный сектор, устанавливаем время
+          if (activeSectorId) {
+            // Проверяем, есть ли уже сохраненное время для этого сектора
+            const savedTime = context.sectorTimes[activeSectorId]
+
+            // Используем сохраненное время, если оно есть, иначе используем initialTime
+            const timeToSet = savedTime !== undefined && savedTime > 0 ? savedTime : initialTime
+
+            // Отправляем событие для установки времени сектора
+            self.send({
+              type: "SET_SECTOR_TIME",
+              sectorId: activeSectorId,
+              time: timeToSet,
+              isActiveOnly: true,
+            })
+
+            console.log(
+              `[TimelineMachine] Установлен активный сектор ${activeSectorId} и время ${timeToSet} (сохраненное время: ${savedTime !== undefined ? savedTime : "нет"})`,
+            )
+          }
+
+          // Генерируем скриншоты для видеофайлов
+          const videoFiles = event.files.filter((file) => file.isVideo)
+          if (videoFiles.length > 0) {
+            console.log(
+              `[TimelineMachine] Проверка необходимости генерации скриншотов для ${videoFiles.length} видеофайлов`,
+            )
+
+            // Проверяем, существуют ли уже скриншоты для каждого видео
+            const checkScreenshotsPromises = videoFiles.map((file) => {
+              const videoId = file.id
+              const screenshotsDir = `public/screenshots/${videoId}`
+
+              // Проверяем существование директории со скриншотами
+              return fetch(`/api/check-screenshots?videoId=${videoId}`)
+                .then((response) => response.json())
+                .then((data) => {
+                  return {
+                    videoFile: file,
+                    hasScreenshots: data.exists && data.count > 0,
+                    screenshotCount: data.count || 0,
+                    screenshotPaths: data.paths || [],
+                  }
+                })
+                .catch((error) => {
+                  console.error(
+                    `[TimelineMachine] Ошибка при проверке скриншотов для видео ${videoId}:`,
+                    error,
+                  )
+                  return {
+                    videoFile: file,
+                    hasScreenshots: false,
+                    screenshotCount: 0,
+                    screenshotPaths: [],
+                  }
+                })
+            })
+
+            // Обрабатываем результаты проверки
+            Promise.all(checkScreenshotsPromises).then((results) => {
+              // Фильтруем видео, для которых нужно сгенерировать скриншоты
+              const videosNeedingScreenshots = results
+                .filter((result) => !result.hasScreenshots)
+                .map((result) => result.videoFile)
+              const videosWithScreenshots = results.filter((result) => result.hasScreenshots)
+
+              // Запускаем распознавание объектов для видео, у которых уже есть скриншоты
+              videosWithScreenshots.forEach((result) => {
+                const { videoFile, screenshotPaths } = result
+                if (screenshotPaths.length > 0) {
+                  console.log(
+                    `[TimelineMachine] Скриншоты уже существуют для видео ${videoFile.id}, количество: ${screenshotPaths.length}`,
+                  )
+
+                  // Разбиваем скриншоты на партии по 5 штук
+                  const BATCH_SIZE = 5
+                  const screenshotBatches = []
+
+                  for (let i = 0; i < screenshotPaths.length; i += BATCH_SIZE) {
+                    screenshotBatches.push(screenshotPaths.slice(i, i + BATCH_SIZE))
+                  }
+
+                  console.log(
+                    `[TimelineMachine] Запуск распознавания объектов для видео ${videoFile.id}, количество скриншотов: ${screenshotPaths.length}, количество партий: ${screenshotBatches.length}`,
+                  )
+
+                  // Функция для последовательной обработки партий
+                  const processBatchesSequentially = async (batches, currentIndex = 0) => {
+                    if (currentIndex >= batches.length) {
+                      console.log(
+                        `[TimelineMachine] Все партии скриншотов обработаны для видео ${videoFile.id}`,
+                      )
+                      return
+                    }
+
+                    const batchPaths = batches[currentIndex]
+
+                    console.log(
+                      `[TimelineMachine] Обработка партии ${currentIndex + 1}/${batches.length} для видео ${videoFile.id}, количество скриншотов в партии: ${batchPaths.length}`,
+                    )
+
+                    try {
+                      const detectionResult = await screenshotService.detectObjects(
+                        videoFile.id,
+                        batchPaths,
+                      )
+                      console.log(
+                        `[TimelineMachine] Партия ${currentIndex + 1}/${batches.length} успешно обработана для видео ${videoFile.id}, количество обработанных изображений: ${detectionResult?.imageCount || 0}`,
+                      )
+
+                      // Небольшая пауза между партиями, чтобы не перегружать систему
+                      setTimeout(() => {
+                        processBatchesSequentially(batches, currentIndex + 1)
+                      }, 500)
+                    } catch (detectionError) {
+                      console.error(
+                        `[TimelineMachine] Ошибка при распознавании объектов для видео ${videoFile.id} (партия ${currentIndex + 1}/${batches.length}):`,
+                        detectionError,
+                      )
+
+                      // Продолжаем с следующей партией даже в случае ошибки
+                      setTimeout(() => {
+                        processBatchesSequentially(batches, currentIndex + 1)
+                      }, 500)
+                    }
+                  }
+
+                  // Запускаем последовательную обработку партий
+                  processBatchesSequentially(screenshotBatches)
+                }
+              })
+
+              // Генерируем скриншоты только для видео, у которых их еще нет
+              if (videosNeedingScreenshots.length > 0) {
+                console.log(
+                  `[TimelineMachine] Запуск генерации скриншотов для ${videosNeedingScreenshots.length} видеофайлов`,
+                )
+
+                // Запускаем генерацию скриншотов асинхронно
+                screenshotService
+                  .generateScreenshots(videosNeedingScreenshots)
+                  .then((results) => {
+                    console.log(
+                      `[TimelineMachine] Скриншоты успешно сгенерированы для ${results.length} видеофайлов`,
+                    )
+
+                    // Автоматически запускаем распознавание объектов для каждого видео
+                    results.forEach((result) => {
+                      const { videoId, screenshots } = result
+                      if (screenshots && screenshots.length > 0) {
+                        // Разбиваем скриншоты на партии по 5 штук
+                        const BATCH_SIZE = 5
+                        const screenshotBatches = []
+
+                        for (let i = 0; i < screenshots.length; i += BATCH_SIZE) {
+                          screenshotBatches.push(screenshots.slice(i, i + BATCH_SIZE))
+                        }
+
+                        console.log(
+                          `[TimelineMachine] Запуск распознавания объектов для видео ${videoId}, количество скриншотов: ${screenshots.length}, количество партий: ${screenshotBatches.length}`,
+                        )
+
+                        // Функция для последовательной обработки партий
+                        const processBatchesSequentially = async (batches, currentIndex = 0) => {
+                          if (currentIndex >= batches.length) {
+                            console.log(
+                              `[TimelineMachine] Все партии скриншотов обработаны для видео ${videoId}`,
+                            )
+                            return
+                          }
+
+                          const batch = batches[currentIndex]
+                          const batchPaths = batch.map((screenshot) => screenshot.path)
+
+                          console.log(
+                            `[TimelineMachine] Обработка партии ${currentIndex + 1}/${batches.length} для видео ${videoId}, количество скриншотов в партии: ${batchPaths.length}`,
+                          )
+
+                          try {
+                            const detectionResult = await screenshotService.detectObjects(
+                              videoId,
+                              batchPaths,
+                            )
+                            console.log(
+                              `[TimelineMachine] Партия ${currentIndex + 1}/${batches.length} успешно обработана для видео ${videoId}, количество обработанных изображений: ${detectionResult?.imageCount || 0}`,
+                            )
+
+                            // Небольшая пауза между партиями, чтобы не перегружать систему
+                            setTimeout(() => {
+                              processBatchesSequentially(batches, currentIndex + 1)
+                            }, 500)
+                          } catch (detectionError) {
+                            console.error(
+                              `[TimelineMachine] Ошибка при распознавании объектов для видео ${videoId} (партия ${currentIndex + 1}/${batches.length}):`,
+                              detectionError,
+                            )
+
+                            // Продолжаем с следующей партией даже в случае ошибки
+                            setTimeout(() => {
+                              processBatchesSequentially(batches, currentIndex + 1)
+                            }, 500)
+                          }
+                        }
+
+                        // Запускаем последовательную обработку партий
+                        processBatchesSequentially(screenshotBatches)
+                      }
+                    })
+                  })
+                  .catch((error) => {
+                    console.error(`[TimelineMachine] Ошибка при генерации скриншотов:`, error)
+                  })
+              } else {
+                console.log(
+                  `[TimelineMachine] Все видеофайлы уже имеют скриншоты, генерация не требуется`,
+                )
+              }
+            })
+          }
+
+          return updatedContext
         }),
       ],
     },
@@ -1587,6 +1858,17 @@ export const timelineMachine = createMachine({
           const hasTimeChanged =
             currentTime === undefined || Math.abs(currentTime - event.time) > 0.1
 
+          // Проверяем, нужно ли обновлять только активный сектор
+          const isActiveOnly = event.isActiveOnly === true
+
+          // Если нужно обновлять только активный сектор, проверяем, что это активный сектор
+          if (isActiveOnly && context.activeSector && context.activeSector.id !== event.sectorId) {
+            console.log(
+              `[TimelineMachine] Пропускаем обновление времени для неактивного сектора ${event.sectorId} (активный сектор: ${context.activeSector.id})`,
+            )
+            return context
+          }
+
           // Сохраняем время только если оно изменилось
           if (hasTimeChanged) {
             // Сохраняем время для указанного сектора
@@ -1595,12 +1877,10 @@ export const timelineMachine = createMachine({
               [event.sectorId]: event.time,
             }
 
-            // Логируем только при значительном изменении времени
-            if (process.env.NODE_ENV === "development") {
-              console.log(
-                `[TimelineMachine] Установлено время ${event.time.toFixed(2)} для сектора ${event.sectorId}`,
-              )
-            }
+            // Всегда логируем обновления времени для отладки проблемы с барами
+            console.log(
+              `[TimelineMachine] Установлено время ${event.time.toFixed(2)} для сектора ${event.sectorId} (isActiveOnly=${isActiveOnly}, stack=${new Error().stack?.split("\n").slice(2, 4).join(" <- ")})`,
+            )
 
             // Создаем обновленный контекст
             const updatedContext = {
@@ -1617,6 +1897,24 @@ export const timelineMachine = createMachine({
 
           return context
         }),
+        // Отправляем событие для обновления позиции бара только для указанного сектора
+        ({ event }) => {
+          if (event.type !== "SET_SECTOR_TIME") return
+
+          // Отправляем событие sector-time-change для обновления позиции бара
+          // Это событие будет обрабатываться только компонентами, относящимися к указанному сектору
+          if (typeof window !== "undefined" && window.dispatchEvent) {
+            window.dispatchEvent(
+              new CustomEvent("sector-time-change", {
+                detail: {
+                  sectorId: event.sectorId,
+                  time: event.time,
+                  isActiveOnly: event.isActiveOnly === true,
+                },
+              }),
+            )
+          }
+        },
       ],
     },
   },

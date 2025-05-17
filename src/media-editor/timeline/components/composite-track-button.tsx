@@ -159,10 +159,7 @@ export function CompositeTrackButton({ sector, className }: CompositeTrackButton
           {t("timeline.compositeTrack.audioOnly", "Только аудио")}
         </DropdownMenuItem>
 
-        <DropdownMenuItem
-          onClick={() => {
-          }}
-        >
+        <DropdownMenuItem onClick={() => {}}>
           {t("timeline.compositeTrack.runDemo", "Запустить демо")}
         </DropdownMenuItem>
       </DropdownMenuContent>

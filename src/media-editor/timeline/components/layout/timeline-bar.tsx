@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { usePlayerContext } from "@/media-editor/media-player"
 import { useDisplayTime } from "@/media-editor/media-player/contexts"
@@ -156,6 +156,57 @@ export function TimelineBar({
   // Убираем эффект для принудительного обновления позиции при изменении savedDisplayTime
   // Это уменьшит количество перерисовок и логов
 
+  // Добавляем состояние для сохранения позиции бара при переключении между дорожками
+  const [preservedPosition, setPreservedPosition] = useState<number | null>(null)
+  const preservedPositionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Эффект для обработки событий, связанных с позицией бара
+  useEffect(() => {
+    // Обработчик события preserve-bar-position
+    const handlePreserveBarPosition = (e: CustomEvent) => {
+      const { position, videoId, sectorId } = e.detail || {}
+
+      // Обрабатываем событие только для нашего сектора
+      if (position !== undefined && sectorId === sectorDate) {
+        console.log(
+          `[TimelineBar] Сохраняем позицию бара: ${position.toFixed(2)} для видео ${videoId} в секторе ${sectorId}`,
+        )
+
+        // Сохраняем позицию бара
+        setPreservedPosition(position)
+
+        // Очищаем предыдущий таймаут, если он был
+        if (preservedPositionTimeoutRef.current) {
+          clearTimeout(preservedPositionTimeoutRef.current)
+        }
+
+        // Устанавливаем таймаут для сброса сохраненной позиции
+        preservedPositionTimeoutRef.current = setTimeout(() => {
+          setPreservedPosition(null)
+          preservedPositionTimeoutRef.current = null
+        }, 500) // Сохраняем позицию на 500 мс
+      }
+    }
+
+    // Обработчик события update-bar-position удален, так как мы используем прямой вызов setSectorTime
+
+    // Добавляем обработчики событий
+    window.addEventListener("preserve-bar-position", handlePreserveBarPosition as EventListener)
+
+    // Удаляем обработчики при размонтировании
+    return () => {
+      window.removeEventListener(
+        "preserve-bar-position",
+        handlePreserveBarPosition as EventListener,
+      )
+
+      // Очищаем таймаут при размонтировании
+      if (preservedPositionTimeoutRef.current) {
+        clearTimeout(preservedPositionTimeoutRef.current)
+      }
+    }
+  }, [sectorDate, isActive, normalizedStartTime, normalizedEndTime])
+
   // Добавляем эффект для сохранения позиции при переключении между параллельными видео
   // Используем ref для отслеживания последнего сохраненного времени
   const lastSavedTimeRef = useRef<{
@@ -177,29 +228,37 @@ export function TimelineBar({
       const lastSaved = lastSavedTimeRef.current
       const timeDiff = Math.abs(lastSaved.displayTime - displayTime)
       const isVideoChanged = lastSaved.videoId !== video.id
-      const isTimeoutPassed = now - lastSaved.timestamp > 500 // Минимум 500 мс между сохранениями
+      // Увеличиваем минимальный интервал между сохранениями до 2000 мс
+      const isTimeoutPassed = now - lastSaved.timestamp > 2000
+
+      // Увеличиваем порог изменения времени для сохранения
+      const significantTimeDiff = timeDiff > 1.0
 
       // Сохраняем только если:
       // 1. Изменилось видео, или
       // 2. Прошло достаточно времени с последнего сохранения и время изменилось значительно
-      if (isVideoChanged || (isTimeoutPassed && timeDiff > 0.1)) {
-        // Отправляем событие SAVE_ALL_SECTORS_TIME в машину состояний таймлайна
-        timelineContext.saveAllSectorsTime(video.id, displayTime, currentTime)
+      if (isVideoChanged || (isTimeoutPassed && significantTimeDiff)) {
+        // Проверяем, активен ли сектор
+        if (isActive) {
+          // Отправляем событие SAVE_ALL_SECTORS_TIME в машину состояний таймлайна
+          timelineContext.saveAllSectorsTime(video.id, displayTime, currentTime)
 
-        // Обновляем информацию о последнем сохранении
-        lastSavedTimeRef.current = {
-          videoId: video.id,
-          displayTime,
-          timestamp: now,
+          // Обновляем информацию о последнем сохранении
+          lastSavedTimeRef.current = {
+            videoId: video.id,
+            displayTime,
+            timestamp: now,
+          }
         }
       }
     }
-  }, [video?.id, displayTime, currentTime, timelineContext])
+  }, [video?.id, displayTime, currentTime, timelineContext, isActive])
 
   // Используем ref для хранения последнего отправленного времени
-  const lastSentTimeRef = useRef<{ sectorId: string | null; time: number }>({
+  const lastSentTimeRef = useRef<{ sectorId: string | null; time: number; timestamp?: number }>({
     sectorId: null,
     time: -1,
+    timestamp: 0,
   })
 
   // Добавляем эффект для обновления позиции бара при изменении видео
@@ -207,11 +266,23 @@ export function TimelineBar({
     // Если видео изменилось, обновляем позицию бара
     if (video && video.id && sectorDate && timelineContext) {
       // Проверяем, не отправляли ли мы уже это время для этого сектора
+      // Для активного сектора используем меньший порог различия
+      const timeDiffThreshold = isActive ? 0.01 : 0.1
       if (
         lastSentTimeRef.current.sectorId === sectorDate &&
-        Math.abs(lastSentTimeRef.current.time - displayTime) < 0.01
+        Math.abs(lastSentTimeRef.current.time - displayTime) < timeDiffThreshold
       ) {
         // Пропускаем отправку, если время почти не изменилось
+        return
+      }
+
+      // Добавляем дополнительную проверку на частоту обновлений
+      const now = Date.now()
+      const lastUpdateTime = lastSentTimeRef.current.timestamp || 0
+
+      // Для активного сектора обновляем чаще
+      const updateInterval = isActive ? 100 : 333
+      if (now - lastUpdateTime < updateInterval) {
         return
       }
 
@@ -219,17 +290,14 @@ export function TimelineBar({
       lastSentTimeRef.current = {
         sectorId: sectorDate,
         time: displayTime,
+        timestamp: now,
       }
 
       // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
-      timelineContext.setSectorTime(sectorDate, displayTime, false)
-
-      // Отключаем логирование для уменьшения количества сообщений
-      // console.log(
-      //   `[TimelineBar] Отправлено событие SET_SECTOR_TIME для сектора ${sectorDate} с displayTime=${displayTime.toFixed(2)}`,
-      // )
+      // Устанавливаем isActiveOnly=true, чтобы обновлять только активный сектор
+      timelineContext.setSectorTime(sectorDate, displayTime, true)
     }
-  }, [video?.id, sectorDate, displayTime, timelineContext])
+  }, [video?.id, sectorDate, displayTime, timelineContext, isActive])
 
   // Если позиция отрицательная, устанавливаем ее в 0
   const displayPosition = position < 0 ? 0 : position
@@ -238,8 +306,52 @@ export function TimelineBar({
   const borderColor = isActive ? "border-t-red-600" : "border-t-gray-400"
   const barWidth = isActive ? "w-[3px]" : "w-[2px]" // Увеличиваем ширину активного бара
 
+  // Используем сохраненную позицию бара, если она есть и если идет переключение камеры
+  // Это предотвратит исчезновение бара при переключении между дорожками
+  const isChangingCameraRef = useRef(false)
+
+  // Обновляем isChangingCameraRef при изменении isChangingCamera
+  useEffect(() => {
+    // Функция для проверки состояния isChangingCamera
+    const checkIsChangingCamera = () => {
+      isChangingCameraRef.current = window.playerContext?.isChangingCamera || false
+    }
+
+    // Проверяем состояние сразу
+    checkIsChangingCamera()
+
+    // Создаем интервал для периодической проверки состояния
+    const intervalId = setInterval(checkIsChangingCamera, 100)
+
+    // Очищаем интервал при размонтировании
+    return () => {
+      clearInterval(intervalId)
+    }
+  }, [])
+
   // Рассчитываем позицию бара
-  const barPosition = displayPosition
+  // Если идет переключение камеры и есть сохраненная позиция, используем ее
+  // Иначе используем текущую позицию
+  const barPosition = (() => {
+    // Если это не активный сектор, всегда используем текущую позицию
+    if (!isActive) {
+      return displayPosition
+    }
+
+    // Если идет переключение камеры и есть сохраненная позиция, используем ее
+    if (isChangingCameraRef.current && preservedPosition !== null) {
+      // Преобразуем время в проценты
+      const calculatedPosition =
+        (preservedPosition / (normalizedEndTime - normalizedStartTime)) * 100
+      console.log(
+        `[TimelineBar] Используем сохраненную позицию: ${calculatedPosition.toFixed(2)}% для сектора ${sectorDate}`,
+      )
+      return calculatedPosition
+    }
+
+    // В остальных случаях используем текущую позицию
+    return displayPosition
+  })()
 
   return (
     <div
@@ -255,6 +367,8 @@ export function TimelineBar({
           transform: "translateX(-50%)",
           height: `${height}px`,
           zIndex: 400,
+          transition: isActive ? "none" : "left 0.3s ease-out, opacity 0.2s ease-out", // Убираем анимацию для активного бара для более точного движения
+          opacity: barPosition < 0 ? 0 : 1, // Скрываем бар только если позиция отрицательная
         }}
         // Добавляем дополнительные атрибуты для отладки
         data-position={barPosition}

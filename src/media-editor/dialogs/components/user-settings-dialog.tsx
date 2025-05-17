@@ -26,6 +26,7 @@ import {
   PreviewClickBehavior,
 } from "@/media-editor/browser/machines/user-settings-machine"
 import { useUserSettings } from "@/media-editor/browser/providers/user-settings-provider"
+import { ScreenshotSettings } from "@/media-editor/settings/components/screenshot-settings"
 
 interface UserSettingsDialogProps {
   open: boolean
@@ -268,6 +269,11 @@ export function UserSettingsDialog({ open, onOpenChange }: UserSettingsDialogPro
                 </button>
               )}
             </div>
+          </div>
+
+          {/* Добавляем компонент настроек скриншотов */}
+          <div className="mt-4">
+            <ScreenshotSettings />
           </div>
         </div>
         <DialogFooter className="flex justify-between space-x-4">

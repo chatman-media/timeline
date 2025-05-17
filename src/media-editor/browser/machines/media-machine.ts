@@ -3,7 +3,7 @@ import { assign, createMachine, fromPromise } from "xstate"
 import { indexedDBService } from "@/media-editor/browser/services/indexed-db-service"
 import { socketService } from "@/media-editor/browser/services/socket-service"
 import { MediaFile } from "@/types/media"
-import { FileWatcherEvent, FileWatcherData } from "@/types/socket"
+import { FileWatcherData,FileWatcherEvent } from "@/types/socket"
 
 export type FavoritesType = {
   [key: string]: any[]
@@ -279,7 +279,7 @@ export const mediaMachine = createMachine({
                     return {
                       ...file,
                       isIncluded: true,
-                      lastCheckedAt: Date.now() // Обновляем временную метку
+                      lastCheckedAt: Date.now(), // Обновляем временную метку
                     }
                   }
                   return file
@@ -301,7 +301,7 @@ export const mediaMachine = createMachine({
                     return {
                       ...file,
                       isIncluded: false,
-                      lastCheckedAt: Date.now() // Обновляем временную метку
+                      lastCheckedAt: Date.now(), // Обновляем временную метку
                     }
                   }
                   return file
@@ -323,7 +323,7 @@ export const mediaMachine = createMachine({
                   return {
                     ...file,
                     isIncluded: false,
-                    lastCheckedAt: now // Обновляем временную метку
+                    lastCheckedAt: now, // Обновляем временную метку
                   }
                 })
               },
@@ -384,7 +384,7 @@ export const mediaMachine = createMachine({
                   return {
                     ...file,
                     isIncluded: isInEventFiles,
-                    lastCheckedAt: now // Обновляем временную метку
+                    lastCheckedAt: now, // Обновляем временную метку
                   }
                 })
               },
@@ -406,7 +406,7 @@ export const mediaMachine = createMachine({
                     return {
                       ...file,
                       isUnavailable: true,
-                      lastCheckedAt: now // Обновляем временную метку
+                      lastCheckedAt: now, // Обновляем временную метку
                     }
                   }
                   return file

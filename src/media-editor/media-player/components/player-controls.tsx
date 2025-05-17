@@ -830,13 +830,13 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
           <div className="flex-1">
             <div className="relative h-1 w-full rounded-full border border-white bg-gray-800">
               <div
-                className="absolute top-0 left-0 h-full rounded-full bg-white"
+                className="absolute top-0 left-0 h-full rounded-full bg-white transition-all duration-200 ease-out"
                 style={{
                   width: `${(Math.max(0, calculatedDisplayTime) / (getDisplayVideo()?.duration || 100)) * 100}%`,
                 }}
               />
               <div
-                className="absolute top-1/2 h-[13px] w-[13px] -translate-y-1/2 rounded-full border border-white bg-white"
+                className="absolute top-1/2 h-[13px] w-[13px] -translate-y-1/2 rounded-full border border-white bg-white transition-all duration-200 ease-out"
                 style={{
                   left: `calc(${(Math.max(0, calculatedDisplayTime) / (getDisplayVideo()?.duration || 100)) * 100}% - 6px)`,
                 }}
@@ -852,13 +852,13 @@ export function PlayerControls({ currentTime }: PlayerControlsProps) {
               />
             </div>
           </div>
-          <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
+          <span className="rounded-md bg-white px-1 text-xs text-black transition-opacity duration-200 ease-out dark:bg-black dark:text-white">
             {currentTime > 365 * 24 * 60 * 60
               ? formatSectorTime(Math.max(0, calculatedDisplayTime), getDisplayVideo()?.startTime)
               : formatRelativeTime(Math.max(0, calculatedDisplayTime))}
           </span>
           <span className="mb-[3px]">/</span>
-          <span className="rounded-md bg-white px-1 text-xs text-black dark:bg-black dark:text-white">
+          <span className="rounded-md bg-white px-1 text-xs text-black transition-opacity duration-200 ease-out dark:bg-black dark:text-white">
             {currentTime > 365 * 24 * 60 * 60
               ? formatSectorTime(getDisplayVideo()?.duration || 0, getDisplayVideo()?.startTime)
               : formatRelativeTime(getDisplayVideo()?.duration || 0)}

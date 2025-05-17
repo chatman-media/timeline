@@ -457,6 +457,95 @@ export function MediaPlayer() {
   // Ref для отслеживания обновления шаблона, чтобы избежать бесконечных циклов
   const isUpdatingTemplateRef = useRef(false)
 
+  // Эффект для обработки события sync-parallel-videos-playback
+  useEffect(() => {
+    const handleSyncParallelVideosPlayback = (e: CustomEvent) => {
+      const { activeVideoId } = e.detail || {}
+
+      if (!activeVideoId || !videoRefs || !parallelVideos) return
+
+      console.log(
+        `[MediaPlayer] Получено событие sync-parallel-videos-playback для видео ${activeVideoId}`,
+      )
+
+      // Получаем текущее время из активного видео
+      const activeVideo = parallelVideos.find((v) => v.id === activeVideoId)
+      if (!activeVideo || !videoRefs[activeVideoId]) return
+
+      const currentDisplayTime = window.playerContext?.currentTime || 0
+
+      // Синхронизируем воспроизведение для всех параллельных видео
+      parallelVideos.forEach((video) => {
+        if (!video.id || !videoRefs[video.id]) return
+
+        const videoElement = videoRefs[video.id]
+
+        // Получаем startTime и endTime видео
+        const videoStartTime = video.startTime || 0
+        const videoEndTime = videoStartTime + (video.duration || 0)
+
+        // Проверяем, находится ли текущее время в диапазоне видео
+        const isTimeInRange =
+          currentDisplayTime >= videoStartTime && currentDisplayTime <= videoEndTime
+
+        if (isTimeInRange) {
+          // Если время в диапазоне, устанавливаем локальное время видео
+          const localTime = Math.max(0, currentDisplayTime - videoStartTime)
+
+          // Устанавливаем время видео
+          if (Math.abs(videoElement.currentTime - localTime) > 0.3) {
+            console.log(
+              `[MediaPlayer] Устанавливаем время ${localTime.toFixed(2)} для видео ${video.id}`,
+            )
+            videoElement.currentTime = localTime
+          }
+
+          // Воспроизводим видео, если нужно
+          if (isPlaying && videoElement.paused) {
+            console.log(`[MediaPlayer] Запускаем воспроизведение видео ${video.id}`)
+            videoElement.play().catch((err) => {
+              console.error(`[MediaPlayer] Ошибка при воспроизведении видео ${video.id}:`, err)
+            })
+          } else if (!isPlaying && !videoElement.paused) {
+            console.log(`[MediaPlayer] Ставим на паузу видео ${video.id}`)
+            videoElement.pause()
+          }
+        } else {
+          // Если время вне диапазона
+          if (currentDisplayTime < videoStartTime) {
+            // Если время меньше начала видео, показываем первый кадр
+            console.log(
+              `[MediaPlayer] Показываем первый кадр для видео ${video.id} (время ${currentDisplayTime.toFixed(2)} < ${videoStartTime.toFixed(2)})`,
+            )
+            videoElement.currentTime = 0
+            videoElement.pause()
+          } else if (currentDisplayTime > videoEndTime) {
+            // Если время больше конца видео, показываем последний кадр
+            console.log(
+              `[MediaPlayer] Показываем последний кадр для видео ${video.id} (время ${currentDisplayTime.toFixed(2)} > ${videoEndTime.toFixed(2)})`,
+            )
+            videoElement.currentTime = video.duration || 0
+            videoElement.pause()
+          }
+        }
+      })
+    }
+
+    // Добавляем обработчик события
+    window.addEventListener(
+      "sync-parallel-videos-playback",
+      handleSyncParallelVideosPlayback as EventListener,
+    )
+
+    // Удаляем обработчик при размонтировании
+    return () => {
+      window.removeEventListener(
+        "sync-parallel-videos-playback",
+        handleSyncParallelVideosPlayback as EventListener,
+      )
+    }
+  }, [videoRefs, parallelVideos, isPlaying])
+
   // Эффект для синхронизации времени сектора из контекста таймлайна
   // и обновления шаблона при изменении сектора
   useEffect(() => {
@@ -886,8 +975,8 @@ export function MediaPlayer() {
 
       // Проверяем время с последнего обновления, чтобы не вызывать слишком частые изменения состояния
       const now = performance.now()
-      // Увеличиваем порог до 200мс для уменьшения частоты обновлений
-      if (now - lastUpdateTimeRef.current < 200) return
+      // Увеличиваем порог до 100мс для уменьшения нагрузки (10 обновлений в секунду)
+      if (now - lastUpdateTimeRef.current < 100) return
 
       // Обновляем currentTime только если не идет перемотка (внутренняя или внешняя)
       // и не меняется камера
@@ -898,15 +987,65 @@ export function MediaPlayer() {
         // Если текущее глобальное время - Unix timestamp, обрабатываем особым образом
         if (currentTime > 365 * 24 * 60 * 60) {
           // Обновляем displayTime в контексте для синхронизации с TimelineBar
-          // Всегда обновляем displayTime при каждом событии timeupdate
+          // Обновляем displayTime при каждом событии timeupdate с учетом дебаунсинга
           // Это необходимо для плавного движения таймлайн бара
-          setDisplayTime(localVideoTime)
 
-          // Логируем только при существенном изменении времени, чтобы не засорять консоль
-          if (Math.abs(localVideoTime - displayTime) > 0.1) {
-            console.log(
-              `[MediaPlayer] Обновлен displayTime в контексте: ${localVideoTime.toFixed(3)}, старое значение: ${displayTime.toFixed(3)}`,
-            )
+          // Важно: устанавливаем флаг isActiveOnly=true, чтобы обновлять только активный сектор
+          // Это предотвратит движение баров на других секторах
+          if (setDisplayTime) {
+            // Сохраняем текущий сектор перед обновлением displayTime
+            const currentSector = currentSectorRef.current
+
+            // Получаем текущий сектор из видео
+            const videoSectorDate =
+              video && video.startTime
+                ? new Date(video.startTime * 1000).toISOString().split("T")[0]
+                : currentSector || ""
+
+            // Проверяем, что сектор определен
+            if (videoSectorDate) {
+              // Обновляем displayTime только для текущего сектора
+              // Принудительно обновляем время для активного сектора
+              setDisplayTime(localVideoTime, true, videoSectorDate)
+
+              // Отправляем событие только если прошло достаточно времени с последнего обновления
+              // и только в 5% случаев для минимизации количества событий
+              if (
+                typeof window !== "undefined" &&
+                window.dispatchEvent &&
+                now - lastUpdateTimeRef.current > 500 &&
+                Math.random() < 0.05
+              ) {
+                // Отправляем событие с явным указанием sectorId и флагом isActiveOnly=true
+                // Это гарантирует, что событие будет обработано только для активного сектора
+                window.dispatchEvent(
+                  new CustomEvent("display-time-change", {
+                    detail: {
+                      time: localVideoTime,
+                      isActiveOnly: true,
+                      sectorId: videoSectorDate,
+                    },
+                  }),
+                )
+
+                // Логируем только в 5% случаев для уменьшения спама
+                if (Math.random() < 0.05) {
+                  console.log(
+                    `[MediaPlayer] Отправлено событие display-time-change для активного сектора ${videoSectorDate} с временем ${localVideoTime.toFixed(3)}`,
+                  )
+                }
+              }
+            }
+
+            // Обновляем время последнего обновления
+            lastUpdateTimeRef.current = now
+
+            // Логируем обновления displayTime только в 5% случаев для уменьшения спама
+            if (Math.random() < 0.05) {
+              console.log(
+                `[MediaPlayer] Обновлен displayTime в контексте: ${localVideoTime.toFixed(3)}, старое значение: ${displayTime.toFixed(3)}, сектор: ${videoSectorDate || currentSector || "не определен"}, isActiveOnly=true, stack=${new Error().stack?.split("\n").slice(2, 4).join(" <- ")}`,
+              )
+            }
           }
 
           // Сохраняем относительный прогресс (без учета startTime)
@@ -1318,40 +1457,71 @@ export function MediaPlayer() {
             videoElement.currentTime = localTime
           }
 
-          // Проверяем готовность видео к воспроизведению
-          if (videoElement.readyState >= 2) {
-            // HAVE_CURRENT_DATA или выше
+          // Пытаемся воспроизвести видео независимо от readyState
+          // Это позволит начать воспроизведение как можно раньше
+          try {
             // Используем более надежный способ воспроизведения с обработкой ошибок
             const playPromise = videoElement.play()
 
             // Обрабатываем promise только если он возвращен
             if (playPromise !== undefined) {
               playPromise.catch((playErr) => {
-                // Игнорируем ошибки прерывания воспроизведения, так как они ожидаемы
-                // при быстром переключении между видео
-                if (playErr.name !== "AbortError") {
+                // Если видео не готово (NotAllowedError), пробуем загрузить его и воспроизвести снова
+                if (playErr.name === "NotAllowedError" || playErr.name === "NotSupportedError") {
+                  console.log(
+                    "[PlayVideo] Видео не готово, пробуем загрузить и воспроизвести снова",
+                  )
+
+                  // Загружаем видео
+                  videoElement.load()
+
+                  // Добавляем одноразовый слушатель для запуска после загрузки
+                  const handleLoaded = () => {
+                    if (isPlaying) {
+                      console.log("[PlayVideo] Видео загружено, пробуем воспроизвести")
+                      videoElement.play().catch((retryErr) => {
+                        if (retryErr.name !== "AbortError") {
+                          console.error("[PlayVideo] Ошибка повторного воспроизведения:", retryErr)
+                          setIsPlaying(false)
+                        }
+                      })
+                    }
+                    // Удаляем слушатель после первого срабатывания
+                    videoElement.removeEventListener("loadeddata", handleLoaded)
+                  }
+
+                  // Пробуем воспроизвести сразу после загрузки данных
+                  videoElement.addEventListener("loadeddata", handleLoaded, { once: true })
+
+                  // Также пробуем воспроизвести при событии canplay
+                  const handleCanPlay = () => {
+                    if (isPlaying) {
+                      console.log("[PlayVideo] Получено событие canplay, пробуем воспроизвести")
+                      videoElement.play().catch((canPlayErr) => {
+                        if (canPlayErr.name !== "AbortError") {
+                          console.error(
+                            "[PlayVideo] Ошибка воспроизведения при canplay:",
+                            canPlayErr,
+                          )
+                        }
+                      })
+                    }
+                    // Удаляем слушатель после первого срабатывания
+                    videoElement.removeEventListener("canplay", handleCanPlay)
+                  }
+
+                  videoElement.addEventListener("canplay", handleCanPlay, { once: true })
+                }
+                // Игнорируем ошибки прерывания воспроизведения
+                else if (playErr.name !== "AbortError") {
                   console.error("[PlayVideo] Ошибка воспроизведения:", playErr)
                   setIsPlaying(false)
                 }
               })
             }
-          } else {
-            // Если видео не готово, добавляем одноразовый слушатель для запуска
-            console.log("[PlayVideo] Видео не готово, ожидаем событие canplay")
-            const handleCanPlay = () => {
-              if (isPlaying) {
-                // Проверяем, что состояние не изменилось
-                videoElement.play().catch((playErr) => {
-                  if (playErr.name !== "AbortError") {
-                    console.error("[PlayVideo] Ошибка отложенного воспроизведения:", playErr)
-                    setIsPlaying(false)
-                  }
-                })
-              }
-              // Удаляем слушатель после первого срабатывания
-              videoElement.removeEventListener("canplay", handleCanPlay)
-            }
-            videoElement.addEventListener("canplay", handleCanPlay, { once: true })
+          } catch (error) {
+            console.error("[PlayVideo] Необработанная ошибка при воспроизведении:", error)
+            setIsPlaying(false)
           }
         } else {
           // Пауза в любом случае, если isPlaying = false
@@ -2575,6 +2745,11 @@ export function MediaPlayer() {
           `[MediaPlayer] Используем активное видео ${video.id} из источника ${videoSources[video.id] || "неизвестно"}`,
         )
       }
+
+      // Добавляем дополнительное логирование для отладки
+      console.log(
+        `[MediaPlayer] Видео для отображения: ${newVideosToDisplay.length}, шаблон: ${appliedTemplate?.template ? appliedTemplate.template.id : "нет"}`,
+      )
     }
     // Если нет примененного шаблона и нет активного видео,
     // но есть параллельные видео
@@ -3224,8 +3399,38 @@ export function MediaPlayer() {
                                       `[MediaPlayer] Устанавливаем src для видео ${videoItem.id}: ${videoItem.path}`,
                                     )
                                   }
+
+                                  // Устанавливаем атрибуты для ускорения загрузки
+                                  el.preload = "auto"
+                                  el.autoplay = false
+
+                                  // Устанавливаем источник и начинаем загрузку
                                   el.src = videoItem.path
-                                  el.load()
+
+                                  // Используем requestIdleCallback для загрузки видео в фоновом режиме
+                                  if (window.requestIdleCallback) {
+                                    window.requestIdleCallback(
+                                      () => {
+                                        el.load()
+
+                                        // Предварительно загружаем первые кадры
+                                        if (videoItem.id === activeId) {
+                                          el.currentTime = 0
+                                        }
+                                      },
+                                      { timeout: 1000 },
+                                    )
+                                  } else {
+                                    // Запасной вариант для браузеров без поддержки requestIdleCallback
+                                    setTimeout(() => {
+                                      el.load()
+
+                                      // Предварительно загружаем первые кадры
+                                      if (videoItem.id === activeId) {
+                                        el.currentTime = 0
+                                      }
+                                    }, 0)
+                                  }
                                 } else {
                                   console.error(
                                     `[MediaPlayer] Ошибка: путь к видео ${videoItem.id} не определен`,
@@ -3275,6 +3480,24 @@ export function MediaPlayer() {
                                     ...prev,
                                     [videoItem.id]: Math.max(prev[videoItem.id] || 0, 3), // HAVE_FUTURE_DATA
                                   }))
+
+                                  // Если это активное видео и плеер в состоянии воспроизведения,
+                                  // запускаем воспроизведение немедленно
+                                  if (videoItem.id === activeId && isPlaying && el.paused) {
+                                    // Используем requestAnimationFrame для запуска в следующем кадре отрисовки
+                                    requestAnimationFrame(() => {
+                                      if (el && document.body.contains(el) && isPlaying) {
+                                        el.play().catch((err) => {
+                                          if (err.name !== "AbortError") {
+                                            console.error(
+                                              `[MediaPlayer] Ошибка воспроизведения при canplay:`,
+                                              err,
+                                            )
+                                          }
+                                        })
+                                      }
+                                    })
+                                  }
                                 }
 
                                 // Устанавливаем обработчик для события canplaythrough

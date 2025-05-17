@@ -6,8 +6,10 @@ import type { AppProps } from "next/app"
 import { ThemeProvider } from "next-themes"
 import { useEffect } from "react"
 
+import { Toaster } from "@/components/ui/sonner"
 import { isSupportedLanguage } from "@/i18n/constants"
 import { Providers } from "@/media-editor/providers"
+import { screenshotNotificationService } from "@/media-editor/services/screenshot-notification-service"
 
 export default function App({ Component, pageProps }: AppProps) {
   // Инициализируем Service Worker
@@ -30,6 +32,10 @@ export default function App({ Component, pageProps }: AppProps) {
         })
         .then(() => {
           console.log("[App] Socket.IO сервер инициализирован")
+
+          // Инициализируем сервис уведомлений о скриншотах
+          screenshotNotificationService.initialize()
+          console.log("[App] Сервис уведомлений о скриншотах инициализирован")
         })
         .catch((error) => {
           console.error("[App] Ошибка при инициализации Socket.IO сервера:", error)
@@ -56,6 +62,7 @@ export default function App({ Component, pageProps }: AppProps) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <Providers>
         <Component {...pageProps} />
+        <Toaster />
       </Providers>
     </ThemeProvider>
   )

@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
   },
   // Конфигурация для Turbopack (используется в режиме development)
   turbopack: {
-    loaders: {
+    rules: {
       // Добавляем правила для Turbopack
       ".worker.ts": ["worker-loader"],
     },

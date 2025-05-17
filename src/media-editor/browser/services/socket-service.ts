@@ -1,5 +1,6 @@
 import { io, Socket } from "socket.io-client"
-import { FileWatcherEvent, FileWatcherData } from "@/types/socket"
+
+import { FileWatcherData,FileWatcherEvent } from "@/types/socket"
 
 /**
  * Тип обработчика событий Socket.IO
@@ -68,9 +69,11 @@ export class SocketService {
         this.socket.on("connect_error", (error) => {
           console.error(`[SocketService] Ошибка подключения: ${error.message}`)
           this.reconnectAttempts++
-          
+
           if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-            console.error(`[SocketService] Превышено количество попыток подключения (${this.maxReconnectAttempts})`)
+            console.error(
+              `[SocketService] Превышено количество попыток подключения (${this.maxReconnectAttempts})`,
+            )
             this.socket?.disconnect()
           }
         })
@@ -106,13 +109,13 @@ export class SocketService {
   public on(event: FileWatcherEvent, handler: EventHandler): void {
     // Получаем список обработчиков для события
     const handlers = this.eventHandlers.get(event) || []
-    
+
     // Добавляем обработчик
     handlers.push(handler)
-    
+
     // Обновляем список обработчиков
     this.eventHandlers.set(event, handlers)
-    
+
     // Если подключены, регистрируем обработчик
     if (this.socket) {
       this.socket.on(event, handler)
@@ -127,15 +130,15 @@ export class SocketService {
   public off(event: FileWatcherEvent, handler: EventHandler): void {
     // Получаем список обработчиков для события
     const handlers = this.eventHandlers.get(event) || []
-    
+
     // Удаляем обработчик
     const index = handlers.indexOf(handler)
     if (index !== -1) {
       handlers.splice(index, 1)
-      
+
       // Обновляем список обработчиков
       this.eventHandlers.set(event, handlers)
-      
+
       // Если подключены, удаляем обработчик
       if (this.socket) {
         this.socket.off(event, handler)

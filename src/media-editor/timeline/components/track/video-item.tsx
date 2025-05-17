@@ -7,6 +7,8 @@ import { useDisplayTime } from "@/media-editor/media-player/contexts"
 import { useTimeline } from "@/media-editor/timeline/services"
 import { MediaFile, Track, VideoSegment } from "@/types/media"
 
+import { YoloDataVisualization } from "./yolo-data-visualization"
+
 interface VideoItemProps {
   video: MediaFile
   segment?: VideoSegment
@@ -50,7 +52,8 @@ export const VideoItem = memo(function VideoItem({
   } = usePlayerContext()
 
   // Получаем displayTime и setDisplayTime из контекста displayTime
-  const { displayTime, setDisplayTime } = useDisplayTime()
+  const displayTimeContext = useDisplayTime()
+  const { displayTime, setDisplayTime } = displayTimeContext
 
   // Функция для установки источника видео
   const setVideoSource = (videoId: string, source: "media" | "timeline"): void => {
@@ -254,13 +257,92 @@ export const VideoItem = memo(function VideoItem({
             )
             seek(videoStartTime)
 
-            // Также обновляем displayTime для синхронизации
-            if (setDisplayTime) {
-              setDisplayTime(0)
-              console.log(`[VideoItem] Сбрасываем displayTime в 0 для параллельного видео`)
+            // ВАЖНО: Сначала отправляем событие SET_SECTOR_TIME с абсолютным временем,
+            // затем устанавливаем displayTime в 0 и отправляем событие display-time-change
+            // Это обеспечит, что бар будет установлен в начало видео
+
+            // Получаем дату сектора из startTime видео
+            const videoSectorDate = video.startTime
+              ? new Date(video.startTime * 1000).toISOString().split("T")[0]
+              : null
+
+            // Рассчитываем относительное время для этого видео (0 - начало видео)
+            const relativeTime = 0 // Всегда устанавливаем в начало видео при клике
+
+            // 1. Сначала отправляем событие SET_SECTOR_TIME для установки времени сектора
+            // Используем абсолютное время начала видео для правильного отображения на баре
+            if (videoSectorDate) {
+              setSectorTime(videoSectorDate, videoStartTime, true)
+              console.log(
+                `[VideoItem] Отправлено событие SET_SECTOR_TIME для сектора ${videoSectorDate} с абсолютным временем ${videoStartTime.toFixed(2)} (параллельное видео)`,
+              )
+
+              // Небольшая задержка перед установкой displayTime
+              setTimeout(() => {
+                // 2. Затем устанавливаем displayTime в 0
+                // Обновляем displayTime для этого сектора через контекст
+                if (displayTimeContext && displayTimeContext.setDisplayTime) {
+                  // Передаем sectorId при вызове setDisplayTime
+                  displayTimeContext.setDisplayTime(relativeTime, true, videoSectorDate)
+                  console.log(
+                    `[VideoItem] Обновлено displayTime для сектора ${videoSectorDate} через контекст (relativeTime=${relativeTime}, isActiveOnly=true, sectorId=${videoSectorDate})`,
+                  )
+                }
+
+                // Также обновляем displayTime для синхронизации
+                // Устанавливаем displayTime в 0, так как это относительное время от начала видео
+                if (setDisplayTime) {
+                  // Устанавливаем isActiveOnly=true и передаем sectorId, чтобы обновлять только этот сектор
+                  setDisplayTime(relativeTime, true, videoSectorDate)
+                  console.log(
+                    `[VideoItem] Устанавливаем displayTime в ${relativeTime} для сектора ${videoSectorDate} (относительное время от начала параллельного видео, isActiveOnly=true)`,
+                  )
+                }
+
+                // 3. Наконец, отправляем событие для обновления позиции бара
+                if (typeof window !== "undefined" && window.dispatchEvent) {
+                  window.dispatchEvent(
+                    new CustomEvent("display-time-change", {
+                      detail: {
+                        time: relativeTime,
+                        isActiveOnly: true,
+                        sectorId: videoSectorDate,
+                      },
+                    }),
+                  )
+                  console.log(
+                    `[VideoItem] Отправлено событие display-time-change с временем ${relativeTime} для сектора ${videoSectorDate} (параллельное видео)`,
+                  )
+                }
+              }, 50) // Небольшая задержка для гарантии правильного порядка выполнения
+            }
+
+            // Отправляем событие для синхронизации воспроизведения всех параллельных видео
+            if (window.dispatchEvent && typeof window.CustomEvent === "function") {
+              window.dispatchEvent(
+                new CustomEvent("sync-parallel-videos-playback", {
+                  detail: { activeVideoId: video.id },
+                }),
+              )
+              console.log(
+                `[VideoItem] Отправлено событие sync-parallel-videos-playback для видео ${video.id}`,
+              )
             }
           }
           // Иначе не меняем текущее время, так как оно уже находится в пределах видео
+          else if (isTimeInVideoRange) {
+            // Отправляем событие для синхронизации воспроизведения всех параллельных видео
+            if (window.dispatchEvent && typeof window.CustomEvent === "function") {
+              window.dispatchEvent(
+                new CustomEvent("sync-parallel-videos-playback", {
+                  detail: { activeVideoId: video.id },
+                }),
+              )
+              console.log(
+                `[VideoItem] Отправлено событие sync-parallel-videos-playback для видео ${video.id} (время в пределах видео)`,
+              )
+            }
+          }
         } else {
           console.log(
             `[VideoItem] Устанавливаем время на начало видео: ${videoStartTime.toFixed(2)} (текущее время ${effectiveCurrentTime.toFixed(2)} вне пределов видео ${videoStartTime.toFixed(2)}-${videoEndTime.toFixed(2)})`,
@@ -268,11 +350,75 @@ export const VideoItem = memo(function VideoItem({
           // Устанавливаем время на начало видео
           seek(videoStartTime)
 
-          // Также обновляем displayTime для синхронизации
-          if (setDisplayTime) {
-            setDisplayTime(0)
+          // ВАЖНО: Сначала отправляем событие SET_SECTOR_TIME с абсолютным временем,
+          // затем устанавливаем displayTime в 0 и отправляем событие display-time-change
+          // Это обеспечит, что бар будет установлен в начало видео
+
+          // Получаем дату сектора из startTime видео
+          const videoSectorDate = video.startTime
+            ? new Date(video.startTime * 1000).toISOString().split("T")[0]
+            : null
+
+          // Рассчитываем относительное время для этого видео (0 - начало видео)
+          const relativeTime = 0 // Всегда устанавливаем в начало видео при клике
+
+          // 1. Сначала отправляем событие SET_SECTOR_TIME для установки времени сектора
+          // Используем абсолютное время начала видео для правильного отображения на баре
+          if (videoSectorDate) {
+            setSectorTime(videoSectorDate, videoStartTime, true)
             console.log(
-              `[VideoItem] Сбрасываем displayTime в 0 при установке времени на начало видео`,
+              `[VideoItem] Отправлено событие SET_SECTOR_TIME для сектора ${videoSectorDate} с абсолютным временем ${videoStartTime.toFixed(2)}`,
+            )
+
+            // Небольшая задержка перед установкой displayTime
+            setTimeout(() => {
+              // 2. Затем устанавливаем displayTime в 0
+              // Обновляем displayTime для этого сектора через контекст
+              if (displayTimeContext && displayTimeContext.setDisplayTime) {
+                // Передаем sectorId при вызове setDisplayTime
+                displayTimeContext.setDisplayTime(relativeTime, true, videoSectorDate)
+                console.log(
+                  `[VideoItem] Обновлено displayTime для сектора ${videoSectorDate} через контекст (relativeTime=${relativeTime}, isActiveOnly=true, sectorId=${videoSectorDate})`,
+                )
+              }
+
+              // Также обновляем displayTime для синхронизации
+              // Устанавливаем displayTime в 0, так как это относительное время от начала видео
+              if (setDisplayTime) {
+                // Устанавливаем isActiveOnly=true и передаем sectorId, чтобы обновлять только этот сектор
+                setDisplayTime(relativeTime, true, videoSectorDate)
+                console.log(
+                  `[VideoItem] Устанавливаем displayTime в ${relativeTime} для сектора ${videoSectorDate} (относительное время от начала видео, isActiveOnly=true)`,
+                )
+              }
+
+              // 3. Наконец, отправляем событие для обновления позиции бара
+              if (typeof window !== "undefined" && window.dispatchEvent) {
+                window.dispatchEvent(
+                  new CustomEvent("display-time-change", {
+                    detail: {
+                      time: relativeTime,
+                      isActiveOnly: true,
+                      sectorId: videoSectorDate,
+                    },
+                  }),
+                )
+                console.log(
+                  `[VideoItem] Отправлено событие display-time-change с временем ${relativeTime} для сектора ${videoSectorDate}`,
+                )
+              }
+            }, 50) // Небольшая задержка для гарантии правильного порядка выполнения
+          }
+
+          // Отправляем событие для синхронизации воспроизведения всех параллельных видео
+          if (window.dispatchEvent && typeof window.CustomEvent === "function") {
+            window.dispatchEvent(
+              new CustomEvent("sync-parallel-videos-playback", {
+                detail: { activeVideoId: video.id },
+              }),
+            )
+            console.log(
+              `[VideoItem] Отправлено событие sync-parallel-videos-playback для видео ${video.id}`,
             )
           }
         }
@@ -285,27 +431,77 @@ export const VideoItem = memo(function VideoItem({
 
         // Если есть дата сектора, обновляем время сектора через машину состояний
         if (sectorDate) {
-          // Вычисляем относительное время для бара
-          let barTime = 0
-          if (isTimeInVideoRange) {
-            // Если время в пределах видео, используем относительное время
-            barTime = currentTime > 365 * 24 * 60 * 60 ? displayTime : currentTime - videoStartTime
-          }
+          // Используем абсолютное время начала видео для бара
+          // Это обеспечит, что при клике на видео бар всегда будет показывать
+          // абсолютное время начала этого видео (например, 12:43:23)
+          const absoluteTime = videoStartTime
+
+          // Рассчитываем относительное время для этого видео (0 - начало видео)
+          const relativeTime = 0 // Всегда устанавливаем в начало видео при клике
+
+          console.log(
+            `[VideoItem] Устанавливаем время бара на абсолютное время начала видео: ${absoluteTime.toFixed(2)}`,
+          )
 
           // Устанавливаем активный сектор
           console.log(`[VideoItem] Устанавливаем активный сектор: ${sectorDate}`)
           setActiveSector(sectorDate)
 
-          // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
-          setSectorTime(sectorDate, barTime, false)
+          // ВАЖНО: Сначала отправляем событие SET_SECTOR_TIME с абсолютным временем,
+          // затем устанавливаем displayTime в 0 и отправляем событие display-time-change
+          // Это обеспечит, что бар будет установлен в начало видео
+
+          // 1. Сначала отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
+          // Используем абсолютное время для правильного отображения на баре
+          setSectorTime(sectorDate, absoluteTime, true) // Изменяем false на true, чтобы обновить только активный сектор
+
+          // Небольшая задержка перед установкой displayTime
+          setTimeout(() => {
+            // 2. Затем устанавливаем displayTime в 0
+            // Обновляем displayTime для этого сектора через контекст
+            if (displayTimeContext && displayTimeContext.setDisplayTime) {
+              // Передаем sectorId при вызове setDisplayTime
+              displayTimeContext.setDisplayTime(relativeTime, true, sectorDate)
+              console.log(
+                `[VideoItem] Обновлено displayTime для сектора ${sectorDate} через контекст (relativeTime=${relativeTime}, isActiveOnly=true, sectorId=${sectorDate})`,
+              )
+            }
+
+            // Устанавливаем displayTime в 0, чтобы компонент useSectionTime мог установить бар в начало видео
+            if (setDisplayTime) {
+              // Получаем дату сектора из startTime видео
+              const videoSectorDate = video.startTime
+                ? new Date(video.startTime * 1000).toISOString().split("T")[0]
+                : undefined
+
+              // Устанавливаем isActiveOnly=true и передаем sectorId, чтобы обновлять только этот сектор
+              setDisplayTime(relativeTime, true, videoSectorDate)
+              console.log(
+                `[VideoItem] Установлен displayTime в ${relativeTime} для видео ${video.id} в секторе ${videoSectorDate} (isActiveOnly=true)`,
+              )
+            }
+
+            // 3. Наконец, отправляем событие для обновления позиции бара
+            if (typeof window !== "undefined" && window.dispatchEvent) {
+              window.dispatchEvent(
+                new CustomEvent("display-time-change", {
+                  detail: {
+                    time: relativeTime,
+                    isActiveOnly: true,
+                    sectorId: sectorDate,
+                  },
+                }),
+              )
+              console.log(
+                `[VideoItem] Отправлено событие display-time-change с временем ${relativeTime} для сектора ${sectorDate}`,
+              )
+            }
+          }, 50) // Небольшая задержка для гарантии правильного порядка выполнения
 
           console.log(
-            `[VideoItem] Отправлено событие SET_SECTOR_TIME для сектора ${sectorDate} со временем ${barTime.toFixed(2)}`,
+            `[VideoItem] Отправлено событие SET_SECTOR_TIME для сектора ${sectorDate} с абсолютным временем ${absoluteTime.toFixed(2)}`,
           )
         }
-
-        // Не устанавливаем displayTime в 0, так как это делает компонент TimelineBarPosition
-        // Это позволяет избежать конфликтов и дублирования кода
 
         // Проверяем, загружено ли видео уже в кэше
         // Используем sessionStorage для кэширования загруженных видео
@@ -387,6 +583,7 @@ export const VideoItem = memo(function VideoItem({
       isTrackLocked, // Добавляем isTrackLocked в зависимость
       setActiveSector, // Добавляем setActiveSector в зависимость
       setSectorTime, // Добавляем setSectorTime в зависимость
+      displayTimeContext, // Добавляем displayTimeContext в зависимость
     ],
   )
 
@@ -402,16 +599,19 @@ export const VideoItem = memo(function VideoItem({
     const allTracks = tracks
 
     // Массив для хранения параллельных видео
-    const parallelVideos: MediaFile[] = [currentVideo]
+    const parallelVideos: MediaFile[] = []
 
     // Создаем Set для отслеживания уже добавленных ID видео
-    const addedVideoIds = new Set<string>([currentVideo.id])
+    const addedVideoIds = new Set<string>()
 
-    // Ищем видео с тем же startTime на других треках
+    // Сначала добавляем текущее видео в список параллельных
+    if (currentVideo.id) {
+      parallelVideos.push(currentVideo)
+      addedVideoIds.add(currentVideo.id)
+    }
+
+    // Ищем видео с тем же startTime на всех треках
     for (const t of allTracks) {
-      // Пропускаем текущий трек
-      if (t.id === activeTrackId) continue
-
       // Ищем видео с тем же startTime на этом треке
       const matchingVideos =
         t.videos?.filter(
@@ -510,7 +710,8 @@ export const VideoItem = memo(function VideoItem({
         lastSavedSectorRef.current = sectorDate
 
         // Отправляем событие SET_SECTOR_TIME в машину состояний таймлайна
-        setSectorTime(sectorDate, time, false)
+        // Устанавливаем isActiveOnly=true, чтобы обновлять только активный сектор
+        setSectorTime(sectorDate, time, true)
 
         // Логируем только в режиме разработки и только при значительных изменениях
         if (process.env.NODE_ENV === "development") {
@@ -535,7 +736,7 @@ export const VideoItem = memo(function VideoItem({
       // Получаем дату сектора из startTime видео
       const sectorDate = video.startTime
         ? new Date(video.startTime * 1000).toISOString().split("T")[0]
-        : null
+        : undefined
 
       // Если есть дата сектора, планируем сохранение времени для этого сектора
       if (sectorDate) {
@@ -607,6 +808,13 @@ export const VideoItem = memo(function VideoItem({
               : "0 2px 4px rgba(0, 0, 0, 0.3)",
           }}
         >
+          {/* Добавляем компонент визуализации данных YOLO */}
+          <YoloDataVisualization
+            video={video}
+            width={(widthPercent * window.innerWidth) / 100}
+            height={50}
+            className="opacity-70"
+          />
           <span className="mr-1 rounded px-1 text-xs whitespace-nowrap dark:bg-[#033032]">
             {video.probeData?.streams[0]?.codec_type === "audio"
               ? t("timeline.tracks.audioWithNumber", {

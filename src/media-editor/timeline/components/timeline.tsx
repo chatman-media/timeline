@@ -81,6 +81,117 @@ export function Timeline() {
     fitToScreen,
   } = context
 
+  // Функция для синхронизации громкости параллельных видео
+  const syncParallelVideosVolume = (activeVideoId: string) => {
+    if (!window.playerContext) return
+
+    const { videoRefs, parallelVideos, volume } = window.playerContext
+
+    // Если нет параллельных видео, выходим
+    if (!parallelVideos || parallelVideos.length < 2) return
+
+    console.log(
+      `[Timeline] Синхронизация громкости для ${parallelVideos.length} параллельных видео, активное: ${activeVideoId}`,
+    )
+
+    // Устанавливаем громкость для всех параллельных видео
+    parallelVideos.forEach((video) => {
+      if (!video.id || !videoRefs[video.id]) return
+
+      const videoElement = videoRefs[video.id]
+      const isActive = video.id === activeVideoId
+
+      // Устанавливаем громкость (звук только для активного видео)
+      if (isActive) {
+        videoElement.volume = volume
+        videoElement.muted = false
+        console.log(`[Timeline] Включен звук для активного видео ${video.id}`)
+      } else {
+        videoElement.volume = 0
+        videoElement.muted = true
+        console.log(`[Timeline] Отключен звук для неактивного видео ${video.id}`)
+      }
+    })
+
+    // Отправляем событие для синхронизации воспроизведения всех видео
+    window.dispatchEvent(
+      new CustomEvent("sync-parallel-videos-playback", {
+        detail: { activeVideoId },
+      }),
+    )
+  }
+
+  // Функция для синхронизации воспроизведения параллельных видео
+  const syncParallelVideosPlayback = (activeVideoId: string, currentDisplayTime: number) => {
+    if (!window.playerContext) return
+
+    const { videoRefs, parallelVideos, isPlaying } = window.playerContext
+
+    // Если нет параллельных видео, выходим
+    if (!parallelVideos || parallelVideos.length < 2) return
+
+    console.log(
+      `[Timeline] Синхронизация воспроизведения для ${parallelVideos.length} параллельных видео, активное: ${activeVideoId}`,
+    )
+
+    // Синхронизируем воспроизведение для всех параллельных видео
+    parallelVideos.forEach((video) => {
+      if (!video.id || !videoRefs[video.id]) return
+
+      const videoElement = videoRefs[video.id]
+      const isActive = video.id === activeVideoId
+
+      // Получаем startTime и endTime видео
+      const videoStartTime = video.startTime || 0
+      const videoEndTime = videoStartTime + (video.duration || 0)
+
+      // Проверяем, находится ли текущее время в диапазоне видео
+      const isTimeInRange =
+        currentDisplayTime >= videoStartTime && currentDisplayTime <= videoEndTime
+
+      if (isTimeInRange) {
+        // Если время в диапазоне, устанавливаем локальное время видео
+        const localTime = Math.max(0, currentDisplayTime - videoStartTime)
+
+        // Устанавливаем время видео
+        if (Math.abs(videoElement.currentTime - localTime) > 0.3) {
+          console.log(
+            `[Timeline] Устанавливаем время ${localTime.toFixed(2)} для видео ${video.id}`,
+          )
+          videoElement.currentTime = localTime
+        }
+
+        // Воспроизводим видео, если нужно
+        if (isPlaying && videoElement.paused) {
+          console.log(`[Timeline] Запускаем воспроизведение видео ${video.id}`)
+          videoElement.play().catch((err) => {
+            console.error(`[Timeline] Ошибка при воспроизведении видео ${video.id}:`, err)
+          })
+        } else if (!isPlaying && !videoElement.paused) {
+          console.log(`[Timeline] Ставим на паузу видео ${video.id}`)
+          videoElement.pause()
+        }
+      } else {
+        // Если время вне диапазона
+        if (currentDisplayTime < videoStartTime) {
+          // Если время меньше начала видео, показываем первый кадр
+          console.log(
+            `[Timeline] Показываем первый кадр для видео ${video.id} (время ${currentDisplayTime.toFixed(2)} < ${videoStartTime.toFixed(2)})`,
+          )
+          videoElement.currentTime = 0
+          videoElement.pause()
+        } else if (currentDisplayTime > videoEndTime) {
+          // Если время больше конца видео, показываем последний кадр
+          console.log(
+            `[Timeline] Показываем последний кадр для видео ${video.id} (время ${currentDisplayTime.toFixed(2)} > ${videoEndTime.toFixed(2)})`,
+          )
+          videoElement.currentTime = video.duration || 0
+          videoElement.pause()
+        }
+      }
+    })
+  }
+
   // Состояние для редактирования названия трека
   const [editingTrackId, setEditingTrackId] = useState<string | null>(null)
   const [editingTrackName, setEditingTrackName] = useState<string>("")
@@ -89,9 +200,22 @@ export function Timeline() {
   const [sectionZoomLevels, setSectionZoomLevels] = useState<Record<string, number>>({})
 
   // Отображаем треки и видео на таймлайне
-  const { isRecording, setIsRecording, setVideo, video, currentTime, isPlaying } =
-    usePlayerContext()
+  const {
+    isRecording,
+    setIsRecording,
+    setVideo,
+    video,
+    currentTime,
+    isPlaying,
+    setIsChangingCamera,
+  } = usePlayerContext()
   const activeVideo = video
+
+  // Состояние для хранения текущего времени воспроизведения
+  const [displayTime, setDisplayTime] = useState<number>(0)
+
+  // Получаем контекст таймлайна
+  const timelineContext = useTimeline()
 
   const [activeDate, setActiveDate] = useState<string | null>(null)
   const [deletingSectionDate, setDeletingSectionDate] = useState<string | null>(null)
@@ -390,6 +514,172 @@ export function Timeline() {
 
   // Эффекты для обработки событий
 
+  // Обработчик нажатия клавиш 1-5 для переключения между камерами
+  React.useEffect(() => {
+    const handleCameraSwitch = (e: KeyboardEvent) => {
+      // Проверяем, что нажата клавиша 1-5
+      if (e.key >= "1" && e.key <= "5") {
+        // Получаем номер камеры (0-4)
+        const cameraIndex = parseInt(e.key) - 1
+
+        // Получаем активный сектор
+        const activeSector = timelineContext?.activeSector
+        if (!activeSector) return
+
+        // Получаем все дорожки с параллельными видео
+        const parallelTracks = activeSector.tracks.filter(
+          (track: any) => track.type === "parallel" || track.isParallel,
+        )
+
+        // Если нет параллельных дорожек, выходим
+        if (parallelTracks.length === 0) return
+
+        // Получаем дорожку по индексу (с циклическим переходом)
+        const trackIndex = cameraIndex % parallelTracks.length
+        const track = parallelTracks[trackIndex]
+
+        // Если нет дорожки или видео, выходим
+        if (!track || !track.videos || track.videos.length === 0) {
+          console.log(`[Timeline] Нет видео на дорожке ${trackIndex + 1}`)
+          return
+        }
+
+        // Получаем первое видео на дорожке
+        const video = track.videos[0]
+
+        // Если нет видео, выходим
+        if (!video) return
+
+        // Проверяем, содержит ли видео текущее время
+        const videoStartTime = video.startTime || 0
+        const videoDuration = video.duration || 0
+        const videoEndTime = videoStartTime + videoDuration
+
+        // Получаем текущее время воспроизведения
+        const currentTime = displayTime || 0
+
+        // Проверяем, находится ли текущее время в диапазоне видео
+        // Для абсолютного времени (Unix timestamp) проверяем, что текущее время находится в диапазоне видео
+        if (videoStartTime > 0 && currentTime > 0) {
+          const isTimeInRange = currentTime >= videoStartTime && currentTime <= videoEndTime
+
+          if (!isTimeInRange) {
+            console.log(
+              `[Timeline] Видео ${video.id} не содержит текущее время ${currentTime.toFixed(2)}. Диапазон видео: ${videoStartTime.toFixed(2)} - ${videoEndTime.toFixed(2)}`,
+            )
+            // Показываем сообщение пользователю через событие
+            window.dispatchEvent(
+              new CustomEvent("show-toast", {
+                detail: {
+                  message: `Видео на дорожке ${trackIndex + 1} не содержит текущий кадр`,
+                  type: "warning",
+                  duration: 3000,
+                },
+              }),
+            )
+            return
+          }
+        }
+
+        console.log(`[Timeline] Переключение на камеру ${cameraIndex + 1}: ${video.id}`)
+
+        // Устанавливаем флаг, что меняем камеру, но не скрываем бар
+        // Вместо этого сохраняем его видимость и позицию
+        setIsChangingCamera(true)
+
+        // Используем уже полученное текущее время воспроизведения
+        // Сохраняем текущую позицию бара, чтобы она не исчезала при переключении
+        // Отправляем событие для сохранения позиции бара только для активного сектора
+        window.dispatchEvent(
+          new CustomEvent("preserve-bar-position", {
+            detail: {
+              position: currentTime, // Используем уже определенное currentTime
+              videoId: video.id,
+              sectorId: activeSector.id, // Добавляем ID сектора, чтобы обрабатывать событие только для нужного сектора
+            },
+          }),
+        )
+
+        // Сохраняем текущее время для сектора перед переключением камеры
+        // Это предотвратит сброс времени сектора на 0
+        if (timelineContext && activeSector.id) {
+          // Получаем абсолютное время для сектора
+          const absoluteTime = video.startTime ? video.startTime + currentTime : currentTime
+
+          // Сохраняем время для сектора (только для активного сектора)
+          timelineContext.setSectorTime(activeSector.id, absoluteTime, true)
+          console.log(
+            `[Timeline] Сохраняем абсолютное время ${absoluteTime.toFixed(2)} для сектора ${activeSector.id} перед переключением камеры`,
+          )
+        }
+
+        // Устанавливаем активную дорожку
+        setActiveTrack(track.id)
+
+        // Устанавливаем активное видео
+        setVideo(video)
+
+        // Плавно обновляем отображаемое время для предотвращения скачков
+        // Сначала сохраняем текущее время
+        const prevDisplayTime = displayTime || 0
+
+        // Вычисляем целевое время для новой камеры
+        const targetDisplayTime = currentTime
+
+        // Создаем анимацию для плавного перехода времени
+        let startTime: number | null = null
+        const duration = 200 // Длительность анимации в мс
+
+        const animateTimeTransition = (timestamp: number) => {
+          if (!startTime) startTime = timestamp
+          const elapsed = timestamp - startTime
+          const progress = Math.min(elapsed / duration, 1)
+
+          // Используем функцию плавности для более естественного перехода
+          const easeOutProgress = 1 - Math.pow(1 - progress, 2)
+
+          // Вычисляем промежуточное значение времени
+          const intermediateTime =
+            prevDisplayTime + (targetDisplayTime - prevDisplayTime) * easeOutProgress
+
+          // Используем локальную функцию setDisplayTime из хука useDisplayTime
+          // Это обеспечит плавное обновление времени
+          setDisplayTime(intermediateTime)
+
+          // Продолжаем анимацию, если она не завершена
+          if (progress < 1) {
+            requestAnimationFrame(animateTimeTransition)
+          } else {
+            // Синхронизируем воспроизведение всех параллельных видео после завершения анимации
+            syncParallelVideosPlayback(video.id, targetDisplayTime)
+
+            // Сбрасываем флаг изменения камеры
+            setIsChangingCamera(false)
+          }
+        }
+
+        // Запускаем анимацию
+        requestAnimationFrame(animateTimeTransition)
+      }
+    }
+
+    // Добавляем обработчик события
+    window.addEventListener("keydown", handleCameraSwitch)
+
+    // Удаляем обработчик при размонтировании
+    return () => {
+      window.removeEventListener("keydown", handleCameraSwitch)
+    }
+  }, [
+    timelineContext?.activeSector,
+    setActiveTrack,
+    setVideo,
+    setIsChangingCamera,
+    displayTime,
+    syncParallelVideosPlayback,
+    timelineContext,
+  ])
+
   // Эффект для обработки нажатий клавиш
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
@@ -428,15 +718,30 @@ export function Timeline() {
               setTimeout(() => {
                 setActiveTrack(targetTrack.id)
 
-                // Всегда берем первое видео из трека и устанавливаем время на его начало
+                // Берем первое видео из трека, но сохраняем текущее время воспроизведения
                 if (targetTrack.videos?.length) {
                   const firstVideo = targetTrack.videos[0]
-                  setVideo(firstVideo)
-                  const videoStartTime = firstVideo.startTime ?? 0
+
+                  // Получаем текущее время воспроизведения
+                  const currentVideoTime = window.playerContext?.currentTime || 0
                   console.log(
-                    `[Timeline] Устанавливаем время на начало видео при записи: ${videoStartTime}`,
+                    `[Timeline] Сохраняем текущее время воспроизведения при записи: ${currentVideoTime}`,
                   )
-                  seek(videoStartTime)
+
+                  // Устанавливаем видео
+                  setVideo(firstVideo)
+
+                  // Используем текущее время воспроизведения вместо начала видео
+                  console.log(
+                    `[Timeline] Устанавливаем сохраненное время при записи: ${currentVideoTime}`,
+                  )
+                  seek(currentVideoTime)
+
+                  // Управляем громкостью и синхронизируем воспроизведение для всех параллельных видео
+                  setTimeout(() => {
+                    syncParallelVideosVolume(firstVideo.id)
+                    syncParallelVideosPlayback(firstVideo.id, currentVideoTime)
+                  }, 100)
                 }
 
                 // Возобновляем запись
@@ -448,13 +753,26 @@ export function Timeline() {
 
           setActiveTrack(targetTrack.id)
 
-          // Всегда берем первое видео из трека и устанавливаем время на его начало
+          // Берем первое видео из трека, но сохраняем текущее время воспроизведения
           if (targetTrack.videos?.length) {
             const firstVideo = targetTrack.videos[0]
+
+            // Получаем текущее время воспроизведения из контекста
+            const currentVideoTime = window.playerContext?.currentTime || 0
+            console.log(`[Timeline] Сохраняем текущее время воспроизведения: ${currentVideoTime}`)
+
+            // Устанавливаем видео
             setVideo(firstVideo)
-            const videoStartTime = firstVideo.startTime ?? 0
-            console.log(`[Timeline] Устанавливаем время на начало видео: ${videoStartTime}`)
-            seek(videoStartTime)
+
+            // Используем текущее время воспроизведения вместо начала видео
+            console.log(`[Timeline] Устанавливаем сохраненное время: ${currentVideoTime}`)
+            seek(currentVideoTime)
+
+            // Управляем громкостью и синхронизируем воспроизведение для всех параллельных видео
+            setTimeout(() => {
+              syncParallelVideosVolume(firstVideo.id)
+              syncParallelVideosPlayback(firstVideo.id, currentVideoTime)
+            }, 100)
           }
         }
       }

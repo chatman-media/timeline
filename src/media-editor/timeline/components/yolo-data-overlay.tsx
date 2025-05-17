@@ -1,0 +1,209 @@
+import React, { useEffect, useState } from "react"
+import { useTranslation } from "react-i18next"
+
+import { toast } from "@/components/ui/use-toast"
+import { useYoloData } from "@/media-editor/hooks/use-yolo-data"
+import { usePlayerContext } from "@/media-editor/media-player"
+import { useTimeline } from "@/media-editor/timeline/services"
+import { YoloDetection } from "@/types/yolo"
+
+/**
+ * Компонент для отображения данных YOLO поверх видео
+ */
+export function YoloDataOverlay() {
+  const { t } = useTranslation()
+  const { currentTime, video } = usePlayerContext()
+  const { activeSector } = useTimeline()
+  const { getYoloDataAtTimestamp, loadYoloDataForVideo } = useYoloData()
+
+  const [detections, setDetections] = useState<YoloDetection[]>([])
+  const [loading, setLoading] = useState(false)
+  const [hasYoloData, setHasYoloData] = useState(false)
+
+  // Загружаем данные YOLO при изменении видео
+  useEffect(() => {
+    if (!video || !video.id) return
+
+    const checkYoloData = async () => {
+      setLoading(true)
+      try {
+        const data = await loadYoloDataForVideo(video.id)
+        setHasYoloData(!!data)
+        if (!data) {
+          console.log(`[YoloDataOverlay] Нет данных YOLO для видео ${video.id}`)
+        }
+      } catch (error) {
+        console.error(`[YoloDataOverlay] Ошибка при загрузке данных YOLO:`, error)
+        setHasYoloData(false)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    checkYoloData()
+  }, [video, loadYoloDataForVideo])
+
+  // Обновляем данные при изменении времени
+  useEffect(() => {
+    if (!video || !video.id || !hasYoloData) return
+
+    const updateDetections = async () => {
+      try {
+        // Рассчитываем относительное время от начала видео
+        let timestamp = currentTime
+        if (video.startTime && currentTime > 365 * 24 * 60 * 60) {
+          // Если currentTime - это Unix timestamp, вычисляем относительное время
+          timestamp = currentTime - video.startTime
+        }
+
+        const data = await getYoloDataAtTimestamp(video.id, timestamp)
+        setDetections(data)
+      } catch (error) {
+        console.error(`[YoloDataOverlay] Ошибка при получении данных YOLO:`, error)
+      }
+    }
+
+    updateDetections()
+  }, [video, currentTime, hasYoloData, getYoloDataAtTimestamp])
+
+  // Если нет данных YOLO, не отображаем компонент
+  if (!hasYoloData || loading || !video) {
+    return null
+  }
+
+  return (
+    <div className="pointer-events-none absolute inset-0">
+      {detections.map((detection, index) => (
+        <DetectionBox key={index} detection={detection} />
+      ))}
+
+      {/* Кнопка для генерации контекста сцены для ИИ */}
+      <button
+        className="pointer-events-auto absolute right-4 bottom-4 rounded bg-blue-500 px-4 py-2 text-white"
+        onClick={() => {
+          // Копируем контекст сцены в буфер обмена
+          navigator.clipboard.writeText(
+            JSON.stringify(
+              {
+                currentVideo: {
+                  id: video.id,
+                  name: video.name,
+                  timestamp: currentTime,
+                },
+                detectedObjects: detections.map((d) => ({
+                  class: d.class,
+                  confidence: d.confidence,
+                  position: calculatePosition(d),
+                  size: calculateSize(d),
+                })),
+              },
+              null,
+              2,
+            ),
+          )
+
+          toast({
+            title: t("Контекст сцены скопирован"),
+            description: t("Данные о распознанных объектах скопированы в буфер обмена"),
+            variant: "success",
+          })
+        }}
+      >
+        {t("Скопировать контекст сцены")}
+      </button>
+    </div>
+  )
+}
+
+/**
+ * Компонент для отображения рамки вокруг обнаруженного объекта
+ */
+function DetectionBox({ detection }: { detection: YoloDetection }) {
+  // Определяем цвет рамки в зависимости от класса объекта
+  const getColorForClass = (className: string): string => {
+    const colors: Record<string, string> = {
+      person: "rgba(255, 0, 0, 0.5)",
+      car: "rgba(0, 255, 0, 0.5)",
+      dog: "rgba(0, 0, 255, 0.5)",
+      cat: "rgba(255, 255, 0, 0.5)",
+    }
+
+    return colors[className] || "rgba(255, 165, 0, 0.5)"
+  }
+
+  const { x, y, width, height } = detection.bbox
+  const color = getColorForClass(detection.class)
+
+  return (
+    <div
+      className="absolute flex items-end justify-start border-2"
+      style={{
+        left: `${x * 100}%`,
+        top: `${y * 100}%`,
+        width: `${width * 100}%`,
+        height: `${height * 100}%`,
+        borderColor: color,
+      }}
+    >
+      <div
+        className="max-w-full truncate px-1 text-xs text-white"
+        style={{ backgroundColor: color }}
+      >
+        {detection.class} ({Math.round(detection.confidence * 100)}%)
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Рассчитать позицию объекта в кадре
+ * @param detection Информация об обнаруженном объекте
+ * @returns Текстовое описание позиции
+ */
+function calculatePosition(detection: YoloDetection): string {
+  // Рассчитываем центр объекта
+  const centerX = detection.bbox.x + detection.bbox.width / 2
+
+  // Определяем горизонтальную позицию
+  let horizontalPosition: string
+  if (centerX < 0.33) {
+    horizontalPosition = "left"
+  } else if (centerX < 0.66) {
+    horizontalPosition = "center"
+  } else {
+    horizontalPosition = "right"
+  }
+
+  // Рассчитываем вертикальную позицию
+  const centerY = detection.bbox.y + detection.bbox.height / 2
+  let verticalPosition: string
+  if (centerY < 0.33) {
+    verticalPosition = "top"
+  } else if (centerY < 0.66) {
+    verticalPosition = "middle"
+  } else {
+    verticalPosition = "bottom"
+  }
+
+  // Возвращаем комбинированную позицию
+  return `${verticalPosition}-${horizontalPosition}`
+}
+
+/**
+ * Рассчитать размер объекта в кадре
+ * @param detection Информация об обнаруженном объекте
+ * @returns Текстовое описание размера
+ */
+function calculateSize(detection: YoloDetection): string {
+  // Рассчитываем площадь объекта относительно всего кадра
+  const area = detection.bbox.width * detection.bbox.height
+
+  // Определяем размер
+  if (area < 0.05) {
+    return "small"
+  } else if (area < 0.15) {
+    return "medium"
+  } else {
+    return "large"
+  }
+}

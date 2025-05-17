@@ -1,8 +1,9 @@
-import { NextApiRequest } from "next"
 import { Server as NetServer } from "http"
+import { NextApiRequest } from "next"
 import { Server as SocketIOServer } from "socket.io"
-import { NextApiResponseServerIO } from "@/types/socket"
+
 import { fileWatcherService } from "@/server/services/file-watcher-service"
+import { NextApiResponseServerIO } from "@/types/socket"
 
 /**
  * Глобальная переменная для хранения Socket.IO сервера
@@ -12,10 +13,7 @@ let io: SocketIOServer | null = null
 /**
  * API-маршрут для инициализации Socket.IO сервера
  */
-export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponseServerIO
-): void {
+export default function handler(req: NextApiRequest, res: NextApiResponseServerIO): void {
   // Если сервер уже инициализирован, возвращаем успешный ответ
   if (res.socket.server.io) {
     console.log("[API] Socket.IO сервер уже инициализирован")

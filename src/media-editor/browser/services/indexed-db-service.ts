@@ -1,4 +1,5 @@
 import { get, set } from "idb-keyval"
+
 import { MediaFile } from "@/types/media"
 
 // Ключи для хранения данных в IndexedDB
@@ -23,13 +24,50 @@ export class IndexedDBService {
   }
 
   /**
+   * Рекурсивно удаляет функции из объекта для безопасной сериализации
+   * @param obj Объект для обработки
+   * @returns Объект без функций
+   */
+  private removeFunctions(obj: any): any {
+    if (obj === null || obj === undefined) {
+      return obj
+    }
+
+    if (typeof obj === "function") {
+      // Для функций возвращаем строку с описанием
+      return "[Function]"
+    }
+
+    if (typeof obj !== "object") {
+      return obj
+    }
+
+    // Для массивов
+    if (Array.isArray(obj)) {
+      return obj.map((item) => this.removeFunctions(item))
+    }
+
+    // Для объектов
+    const result: Record<string, any> = {}
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        result[key] = this.removeFunctions(obj[key])
+      }
+    }
+    return result
+  }
+
+  /**
    * Сохраняет медиафайлы в IndexedDB
    * @param files Массив медиафайлов
    */
   public async saveMediaFiles(files: MediaFile[]): Promise<void> {
     try {
+      // Удаляем функции из объекта перед сохранением
+      const safeFiles = this.removeFunctions(files)
+
       // Сохраняем файлы
-      await set(MEDIA_FILES_KEY, files)
+      await set(MEDIA_FILES_KEY, safeFiles)
       // Сохраняем временную метку
       await set(MEDIA_FILES_TIMESTAMP_KEY, Date.now())
       console.log(`[IndexedDBService] Сохранено ${files.length} файлов в IndexedDB`)
@@ -78,9 +116,9 @@ export class IndexedDBService {
    */
   public updateLastCheckedTimestamp(files: MediaFile[]): MediaFile[] {
     const now = Date.now()
-    return files.map(file => ({
+    return files.map((file) => ({
       ...file,
-      lastCheckedAt: now
+      lastCheckedAt: now,
     }))
   }
 
@@ -92,7 +130,7 @@ export class IndexedDBService {
   public async shouldRefreshData(maxAgeMs: number = 3600000): Promise<boolean> {
     const timestamp = await this.getLastSaveTimestamp()
     if (!timestamp) return true
-    
+
     const now = Date.now()
     const age = now - timestamp
     return age > maxAgeMs

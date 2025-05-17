@@ -8,6 +8,11 @@ import { MediaFile } from "@/types/media"
 declare global {
   interface Window {
     videoElementCache?: Map<string, HTMLVideoElement>
+    requestIdleCallback(
+      callback: (deadline: { didTimeout: boolean; timeRemaining: () => number }) => void,
+      options?: { timeout: number },
+    ): number
+    cancelIdleCallback(handle: number): void
   }
 }
 

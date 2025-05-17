@@ -1,6 +1,7 @@
 // Импортируем необходимые модули
-import { Server as SocketIOServer } from "socket.io"
 import { createServer } from "http"
+import { Server as SocketIOServer } from "socket.io"
+
 import { fileWatcherService } from "./services/file-watcher-service"
 
 // Функция для создания Socket.IO сервера
@@ -30,9 +31,9 @@ function createSocketServer(): void {
   fileWatcherService.initialize(io)
   fileWatcherService.startWatching()
 
-  // Запускаем HTTP сервер на порту 3001
-  httpServer.listen(3001, () => {
-    console.log("[SocketServer] Socket.IO сервер запущен на порту 3001")
+  // Запускаем HTTP сервер на порту 3002
+  httpServer.listen(3002, () => {
+    console.log("[SocketServer] Socket.IO сервер запущен на порту 3002")
   })
 }
 
