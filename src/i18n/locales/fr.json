@@ -965,6 +965,29 @@
     "exportProject": "Exporter le projet",
     "importProject": "Importer un projet"
   },
+  "settings": {
+    "saved": "Paramètres enregistrés",
+    "savedDescription": "Vos paramètres ont été enregistrés avec succès",
+    "error": "Erreur d'enregistrement des paramètres",
+    "errorDescription": "Une erreur s'est produite lors de l'enregistrement de vos paramètres. Veuillez réessayer.",
+    "reset": "Réinitialiser",
+    "screenshots": {
+      "title": "Paramètres des captures d'écran",
+      "description": "Configurer les paramètres de génération et de traitement des captures d'écran vidéo",
+      "interval": "Intervalle de capture",
+      "intervalDescription": "Temps entre les captures en secondes. Des valeurs plus basses créent plus de captures.",
+      "maxScreenshots": "Maximum de captures",
+      "maxScreenshotsDescription": "Limiter le nombre total de captures pouvant être générées. Désactiver pour des captures illimitées.",
+      "initialCount": "Captures initiales",
+      "initialCountDescription": "Nombre de captures à générer lors du premier traitement d'une vidéo.",
+      "path": "Chemin des captures",
+      "pathDescription": "Répertoire où les captures d'écran seront enregistrées.",
+      "objectDetection": "Détection d'objets",
+      "objectDetectionDescription": "Activer la détection d'objets par IA dans les captures d'écran.",
+      "confidenceThreshold": "Seuil de confiance",
+      "confidenceThresholdDescription": "Niveau de confiance minimum pour les objets détectés. Des valeurs plus élevées réduisent les faux positifs."
+    }
+  },
   "timeline": {
     "resources": {
       "title": "Ressources",

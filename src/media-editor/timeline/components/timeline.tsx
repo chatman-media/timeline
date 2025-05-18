@@ -1012,8 +1012,8 @@ export function Timeline() {
     <div className="flex h-full w-full flex-col">
       <div className="timeline-container flex-1 overflow-hidden" ref={timelineContainerRef}>
         <ResizablePanelGroup direction="horizontal" className="h-full">
-          {/* Левая панель (15% ширины) - Ресурсы */}
-          <ResizablePanel defaultSize={15} minSize={10} maxSize={30}>
+          {/* Левая панель - Ресурсы */}
+          <ResizablePanel defaultSize={15} minSize={5} maxSize={30}>
             <TimelineResources />
           </ResizablePanel>
 

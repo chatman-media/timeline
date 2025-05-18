@@ -820,6 +820,29 @@
     "exportProject": "Projekt exportieren",
     "importProject": "Projekt importieren"
   },
+  "settings": {
+    "saved": "Einstellungen gespeichert",
+    "savedDescription": "Ihre Einstellungen wurden erfolgreich gespeichert",
+    "error": "Fehler beim Speichern der Einstellungen",
+    "errorDescription": "Beim Speichern Ihrer Einstellungen ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    "reset": "Auf Standardwerte zurücksetzen",
+    "screenshots": {
+      "title": "Screenshot-Einstellungen",
+      "description": "Konfigurieren Sie Einstellungen für die Erstellung und Verarbeitung von Video-Screenshots",
+      "interval": "Screenshot-Intervall",
+      "intervalDescription": "Zeit zwischen Screenshots in Sekunden. Niedrigere Werte erzeugen mehr Screenshots.",
+      "maxScreenshots": "Maximale Screenshots",
+      "maxScreenshotsDescription": "Begrenzen Sie die Gesamtzahl der generierbaren Screenshots. Deaktivieren für unbegrenzte Screenshots.",
+      "initialCount": "Anfängliche Screenshots",
+      "initialCountDescription": "Anzahl der Screenshots, die bei der ersten Verarbeitung eines Videos generiert werden.",
+      "path": "Screenshot-Pfad",
+      "pathDescription": "Verzeichnis, in dem Screenshots gespeichert werden.",
+      "objectDetection": "Objekterkennung",
+      "objectDetectionDescription": "Aktivieren Sie KI-gestützte Objekterkennung in Screenshots.",
+      "confidenceThreshold": "Vertrauensschwelle",
+      "confidenceThresholdDescription": "Mindestwert für die Zuverlässigkeit erkannter Objekte. Höhere Werte reduzieren Falschmeldungen."
+    }
+  },
   "timeline": {
     "resources": {
       "title": "Ressourcen",

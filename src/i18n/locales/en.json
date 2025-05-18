@@ -1004,6 +1004,29 @@
     "exportProject": "Export Project",
     "importProject": "Import Project"
   },
+  "settings": {
+    "saved": "Settings saved",
+    "savedDescription": "Your settings have been saved successfully",
+    "error": "Error saving settings",
+    "errorDescription": "There was an error saving your settings. Please try again.",
+    "reset": "Reset to defaults",
+    "screenshots": {
+      "title": "Screenshot Settings",
+      "description": "Configure settings for generating and processing video screenshots",
+      "interval": "Screenshot Interval",
+      "intervalDescription": "Time between screenshots in seconds. Lower values create more screenshots.",
+      "maxScreenshots": "Maximum Screenshots",
+      "maxScreenshotsDescription": "Limit the total number of screenshots that can be generated. Disable for unlimited screenshots.",
+      "initialCount": "Initial Screenshots",
+      "initialCountDescription": "Number of screenshots to generate when first processing a video.",
+      "path": "Screenshots Path",
+      "pathDescription": "Directory where screenshots will be saved.",
+      "objectDetection": "Object Detection",
+      "objectDetectionDescription": "Enable AI-powered object detection in screenshots.",
+      "confidenceThreshold": "Confidence Threshold",
+      "confidenceThresholdDescription": "Minimum confidence level for detected objects. Higher values reduce false positives."
+    }
+  },
     "resources": {
       "title": "Resources",
       "all": "All",

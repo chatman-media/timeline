@@ -1024,5 +1024,28 @@
     "deleteProject": "Eliminar proyecto",
     "exportProject": "Exportar proyecto",
     "importProject": "Importar proyecto"
+  },
+  "settings": {
+    "saved": "Configuración guardada",
+    "savedDescription": "Tu configuración ha sido guardada correctamente",
+    "error": "Error al guardar la configuración",
+    "errorDescription": "Hubo un error al guardar tu configuración. Por favor, inténtalo de nuevo.",
+    "reset": "Restablecer valores predeterminados",
+    "screenshots": {
+      "title": "Configuración de capturas",
+      "description": "Configura los ajustes para generar y procesar capturas de pantalla de vídeo",
+      "interval": "Intervalo de capturas",
+      "intervalDescription": "Tiempo entre capturas en segundos. Valores más bajos crean más capturas.",
+      "maxScreenshots": "Máximo de capturas",
+      "maxScreenshotsDescription": "Limita el número total de capturas que se pueden generar. Desactiva para capturas ilimitadas.",
+      "initialCount": "Capturas iniciales",
+      "initialCountDescription": "Número de capturas a generar al procesar un vídeo por primera vez.",
+      "path": "Ruta de capturas",
+      "pathDescription": "Directorio donde se guardarán las capturas de pantalla.",
+      "objectDetection": "Detección de objetos",
+      "objectDetectionDescription": "Habilitar detección de objetos con IA en las capturas.",
+      "confidenceThreshold": "Umbral de confianza",
+      "confidenceThresholdDescription": "Nivel mínimo de confianza para los objetos detectados. Valores más altos reducen los falsos positivos."
+    }
   }
 }
