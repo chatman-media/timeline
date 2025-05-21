@@ -1003,7 +1003,7 @@ export function getVideoStyleForTemplate(
         }
       }
     }
-  } else if (template.split === "resizable") {
+  } else {
     // Для настраиваемых шаблонов с возможностью изменения размеров
     // Здесь мы не задаем стили, так как они будут определены компонентом ResizableTemplate
     return {
